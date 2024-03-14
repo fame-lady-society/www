@@ -11,10 +11,10 @@ const config = createConfig(
     transports: {
       // RPC URL for each chain
       [mainnet.id]: http(
-        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
+        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
       ),
       [sepolia.id]: http(
-        `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
+        `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
       ),
     },
 
@@ -28,7 +28,9 @@ const config = createConfig(
     appDescription: "The good place",
     appUrl: "https://fameladysociety.com", // your app's url
     appIcon: "https://fameladysociety.com/images/fls-wrap.gif",
-  })
+
+    ssr: typeof window === "undefined",
+  }),
 );
 
 const queryClient = new QueryClient();

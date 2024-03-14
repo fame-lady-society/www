@@ -7,7 +7,6 @@ import FormGroup from "@mui/material/FormGroup";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
-import { BigNumber, utils } from "ethers";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
@@ -16,7 +15,7 @@ import { useAccount, useEnsAddress } from "wagmi";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import { isAddress } from "viem";
 
-export const UnwrapCardContent: FC<{
+export const UnwrapCard: FC<{
   transactionInProgress?: boolean;
   onUnwrapMany: (args: [string, bigint[]]) => void;
 }> = ({ transactionInProgress, onUnwrapMany }) => {
@@ -50,6 +49,7 @@ export const UnwrapCardContent: FC<{
     [setTokenIds],
   );
 
+  const resolvedAddress = sendTo || sendToInput;
   return (
     <Card>
       <CardContent>
@@ -137,15 +137,18 @@ export const UnwrapCardContent: FC<{
                 if (
                   selectedTokenIds.length &&
                   transferTo &&
-                  sendTo &&
-                  isAddress(sendToInput)
+                  resolvedAddress &&
+                  isAddress(resolvedAddress)
                 ) {
                   return (
                     <Typography variant="body2" color="text.secondary">
-                      {`send unwrapped tokens to ${sendTo}`}
+                      {`send unwrapped tokens to ${resolvedAddress}`}
                     </Typography>
                   );
-                } else if (transferTo && !(sendTo || isAddress(sendToInput))) {
+                } else if (
+                  transferTo &&
+                  !(resolvedAddress && isAddress(resolvedAddress))
+                ) {
                   return (
                     <Typography variant="body2" color="error">
                       invalid address
@@ -171,7 +174,7 @@ export const UnwrapCardContent: FC<{
           disabled={
             transactionInProgress ||
             selectedTokenIds.length === 0 ||
-            (transferTo && !(sendTo || isAddress(sendToInput)))
+            (transferTo && !(resolvedAddress && isAddress(resolvedAddress)))
           }
         >
           unwrap

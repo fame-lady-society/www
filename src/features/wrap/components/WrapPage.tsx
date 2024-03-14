@@ -2,17 +2,7 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { MintCard } from "@/features/wrap/components/MintCard";
 import Grid2 from "@mui/material/Unstable_Grid2";
-import {
-  FC,
-  FormEventHandler,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { BetaTurboWrap } from "@/features/wrap/components/BetaTurboWrap";
-import { BetaWrapCard } from "@/features/wrap/components/BetaWrapCard";
-import { UnwrapCard } from "@/features/wrap/components/UnWrapCard";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import useLocalStorage from "use-local-storage";
 import { AgreeModal } from "@/features/wrap/components/AgreeModal";
 import {
@@ -20,17 +10,24 @@ import {
   bulkMinterAddress,
   wrappedNftAbi,
   wrappedNftAddress,
+  fameLadySocietyAbi,
+  fameLadySocietyAddress,
+  fameLadySquadAddress,
+  fameLadySquadAbi,
 } from "@/wagmi";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+} from "wagmi";
 import { WriteContractData } from "wagmi/query";
-import { TipCloseReason } from "./DevTipModal";
 import { useRouter } from "next/router";
-import { WrapCardContent } from "./SepoliaWrapCardContent";
-import { TurboWrapContent } from "./SepoliaTurboWrapContent";
+import { WrapCard } from "./WrapCard";
+import { TurboWrap } from "./TurboWrap";
 import { TransactionsModal } from "./TransactionsModal";
 import { Transaction } from "../types";
-import { wrap } from "module";
-import { UnwrapCardContent } from "./SepoliaUnwrapCardContent";
+import { UnwrapCard } from "./UnwrapCard";
 
 export const WrapPage: FC<{
   hasMint?: boolean;
@@ -79,6 +76,23 @@ export const WrapPage: FC<{
     setPendingTransactions(false);
   }, []);
 
+  const targetNftAbi =
+    chain?.id === 11155111 ? bulkMinterAbi : fameLadySquadAbi;
+  const targetNftAddress =
+    chain?.id === 11155111
+      ? bulkMinterAddress[chain?.id]
+      : chain?.id === 1
+        ? fameLadySquadAddress[chain?.id]
+        : undefined;
+  const wrapperNftAbi =
+    chain?.id === 11155111 ? wrappedNftAbi : fameLadySocietyAbi;
+  const wrapperNftAddress =
+    chain?.id === 11155111
+      ? wrappedNftAddress[chain?.id]
+      : chain?.id === 1
+        ? fameLadySocietyAddress[chain?.id]
+        : undefined;
+
   const onMint = useCallback(
     async (count: bigint) => {
       if (writeContractAsync) {
@@ -104,29 +118,21 @@ export const WrapPage: FC<{
     [writeContractAsync],
   );
 
-  const isValidToCheckApproval =
-    address && wrappedNftAddress[chain?.id] !== undefined;
+  const isValidToCheckApproval = address && wrapperNftAddress !== undefined;
 
   const {
     data: isWrappedApprovedForAll,
     refetch: refetchWrappedIsApprovedForAll,
   } = useReadContract({
-    abi: bulkMinterAbi,
-    address: bulkMinterAddress[chain?.id],
+    abi: targetNftAbi,
+    address: targetNftAddress,
     functionName: "isApprovedForAll",
     ...(isValidToCheckApproval && {
-      args: [address, wrappedNftAddress[chain?.id]],
+      args: [address, wrapperNftAddress],
     }),
   });
 
-  const { data: balanceOf } = useReadContract({
-    abi: bulkMinterAbi,
-    address: bulkMinterAddress[chain?.id],
-    functionName: "balanceOf",
-    ...(address !== undefined && {
-      args: [address],
-    }),
-  });
+  // This only work on the test bulk minter contract, not fame lady squad
   const { data: ownedTestTokens, refetch: refetchTokens } = useReadContract({
     abi: bulkMinterAbi,
     address: bulkMinterAddress[chain?.id],
@@ -134,11 +140,41 @@ export const WrapPage: FC<{
     args: [address],
   });
 
-  const tokenIds = ownedTestTokens;
+  // This is only needed for fame lady squad
+  const { data: balanceOf } = useReadContract({
+    abi: targetNftAbi,
+    address: targetNftAddress,
+    functionName: "balanceOf",
+    ...(address !== undefined && {
+      args: [address],
+    }),
+  });
+
+  const { data: fameLadySquadTokens, refetch: refetchFameLadySquadTokens } =
+    useReadContracts({
+      contracts: Array.from({ length: balanceOf ? Number(balanceOf) : 0 })?.map(
+        (_, index) => ({
+          abi: fameLadySquadAbi,
+          address: fameLadySquadAddress[chain?.id],
+          functionName: "tokenOfOwnerByIndex",
+          args: [address, BigInt(index)],
+        }),
+      ) as {
+        abi: typeof fameLadySquadAbi;
+        address: `0x${string}`;
+        functionName: "tokenOfOwnerByIndex";
+        args: [`0x${string}`, bigint];
+      }[],
+    });
+
+  const tokenIds = useMemo(
+    () => ownedTestTokens || (fameLadySquadTokens?.map((t) => t.result) ?? []),
+    [ownedTestTokens, fameLadySquadTokens],
+  );
 
   const { data: wrapCost } = useReadContract({
-    abi: wrappedNftAbi,
-    address: wrappedNftAddress[chain?.id],
+    abi: wrapperNftAbi,
+    address: wrapperNftAddress,
     functionName: "wrapCost",
   });
 
@@ -147,8 +183,8 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
-            abi: wrappedNftAbi,
-            address: wrappedNftAddress[chain?.id],
+            abi: wrapperNftAbi,
+            address: wrapperNftAddress,
             functionName: "wrapTo",
             args,
             value,
@@ -165,7 +201,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [chain?.id, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
   );
 
   const onWrap = useCallback(
@@ -173,8 +209,8 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
-            abi: wrappedNftAbi,
-            address: wrappedNftAddress[chain?.id],
+            abi: wrapperNftAbi,
+            address: wrapperNftAddress,
             functionName: "wrap",
             args,
             value,
@@ -191,7 +227,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [chain?.id, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
   );
 
   const onUnwrapMany = useCallback(
@@ -199,8 +235,8 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
-            abi: wrappedNftAbi,
-            address: wrappedNftAddress[chain?.id],
+            abi: wrapperNftAbi,
+            address: wrapperNftAddress,
             functionName: "unwrapMany",
             args,
           });
@@ -216,17 +252,17 @@ export const WrapPage: FC<{
         }
       }
     },
-    [chain?.id, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
   );
 
   const onApprove = useCallback(async () => {
     if (writeContractAsync) {
       try {
         const response = await writeContractAsync({
-          abi: wrappedNftAbi,
-          address: wrappedNftAddress[chain?.id],
+          abi: targetNftAbi,
+          address: targetNftAddress,
           functionName: "setApprovalForAll",
-          args: [bulkMinterAddress[chain?.id], true],
+          args: [wrapperNftAddress, true],
         });
         setActiveTransactionHashList((txs) => [
           ...txs,
@@ -239,7 +275,7 @@ export const WrapPage: FC<{
         console.error(e);
       }
     }
-  }, [chain?.id, writeContractAsync]);
+  }, [targetNftAbi, targetNftAddress, wrapperNftAddress, writeContractAsync]);
 
   const onTransactionConfirmed = useCallback(
     (tx: Transaction) => {
@@ -327,7 +363,7 @@ export const WrapPage: FC<{
           ) : null}
           <Grid2 xs={12} sm={12} md={12}>
             <Box component="div" sx={{ mt: 4 }}>
-              <TurboWrapContent
+              <TurboWrap
                 isApprovedForAll={isWrappedApprovedForAll}
                 onApprove={onApprove}
                 tokenIds={tokenIds ?? []}
@@ -342,7 +378,7 @@ export const WrapPage: FC<{
           </Grid2>
           <Grid2 xs={12} sm={12} md={12}>
             <Box component="div" sx={{ mt: 4 }}>
-              <WrapCardContent
+              <WrapCard
                 isApprovedForAll={isWrappedApprovedForAll}
                 onApprove={onApprove}
                 tokenIds={tokenIds ?? []}
@@ -357,7 +393,7 @@ export const WrapPage: FC<{
           </Grid2>
           <Grid2 xs={12} sm={12} md={12}>
             <Box component="div" sx={{ mt: 4 }}>
-              <UnwrapCardContent
+              <UnwrapCard
                 onUnwrapMany={onUnwrapMany}
                 transactionInProgress={unwrapTransactionInProgress}
               />

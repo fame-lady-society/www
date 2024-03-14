@@ -13,30 +13,6 @@ export const MintCard: FC<{
 }> = ({ onMint, transactionInProgress }) => {
   // const { address: selectedAddress, chain: currentChain } = useAccount();
   const [count, setCount] = useState("");
-  // const [mintProgress, setMintProgress] = useState(false);
-
-  // const [transactionResult, setTransactionResult] =
-  //   useState<WriteContractData>();
-
-  // const { writeContractAsync } = useWriteContract();
-  // const onMint = useCallback(async () => {
-  //   if (writeContractAsync) {
-  //     try {
-  //       setMintProgress(true);
-  //       const response = await writeContractAsync({
-  //         args: [1n],
-  //         abi: bulkMinterAbi,
-  //         address: bulkMinterAddress[11155111],
-  //         functionName: "mint",
-  //       });
-  //       setTransactionResult(response);
-  //     } catch (e) {
-  //       console.error(e);
-  //       setTransactionResult(undefined);
-  //       setMintProgress(false);
-  //     }
-  //   }
-  // }, [writeContractAsync]);
 
   const countError =
     count.length && (count === "0" || !Number.isInteger(Number(count)));
@@ -47,18 +23,13 @@ export const MintCard: FC<{
   const onSubmit: FormEventHandler = useCallback(
     (e) => {
       e.preventDefault();
-      onMint(bigint(count));
+      onMint(BigInt(count));
     },
     [count, onMint],
   );
   const onClick = useCallback(() => {
-    onMint(Number(count));
+    onMint(BigInt(count));
   }, [count, onMint]);
-  // const onMintSuccess = useCallback(() => {
-  //   setMintProgress(false);
-  //   setTransactionResult(undefined);
-  // }, []);
-
   return (
     <Card>
       <CardContent>
