@@ -1,0 +1,12 @@
+query tokensToWrap($userAddress: String!, $contractAddress: String!, $contractSlug: String!, $testnet: Boolean, $cursor: String, $page: Int, $pageSize: Int) {
+   assetsForUserInExactCollection(address: $userAddress, collectionSlug: $contractSlug, contractAddress: $contractAddress, testnet: $testnet, cursor: $cursor, page: $page, pageSize: $pageSize) {
+    cursor
+    page
+    assets {
+      id
+      tokenId
+      name
+      thumbnailUrl
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react/no-unknown-property": [1, { "ignore": ["metalness", "position", "transparent", "attach", "intensity", "lookAt", "args", "rotation", "roughness", "map", "reflectivity", "object"] }]
+  }
+}
