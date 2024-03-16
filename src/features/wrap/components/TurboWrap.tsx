@@ -33,7 +33,6 @@ export const TurboWrap: FC<{
   onWrapTo,
   onWrap,
 }) => {
-  const router = useRouter();
   const [transferTo, setTransferTo] = useState(false);
   const [isTipRequested, setIsTipRequested] = useState(false);
   const [tipState, setTipState] = useState<{
@@ -190,6 +189,7 @@ export const TurboWrap: FC<{
         open={isTipRequested}
         handleClose={onHandleTipClose}
         numberOfTokens={tokenIds.length}
+        wrapCost={wrapCost}
       />
     </>
   );

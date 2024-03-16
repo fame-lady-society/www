@@ -4,6 +4,7 @@ export type Transaction = {
     | "wrap to"
     | "wrap"
     | "unwrap"
-    | "approve collection to be wrapped";
+    | "approve collection to be wrapped"
+    | "set wrap cost";
   hash: `0x${string}`;
 };

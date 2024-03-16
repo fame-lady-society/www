@@ -1,3 +1,5 @@
+import { siweClient } from "@/utils/siweClient";
+import { SIWESession } from "connectkit";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -39,7 +41,18 @@ export const Web3Provider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>{children}</ConnectKitProvider>
+        <siweClient.Provider
+          enabled={true} // defaults true
+          nonceRefetchInterval={300000} // in milliseconds, defaults to 5 minutes
+          sessionRefetchInterval={300000} // in milliseconds, defaults to 5 minutes
+          signOutOnDisconnect={true} // defaults true
+          signOutOnAccountChange={true} // defaults true
+          signOutOnNetworkChange={true} // defaults true
+          onSignIn={(session?: SIWESession) => void 0}
+          onSignOut={() => void 0}
+        >
+          <ConnectKitProvider>{children}</ConnectKitProvider>
+        </siweClient.Provider>
       </QueryClientProvider>
     </WagmiProvider>
   );

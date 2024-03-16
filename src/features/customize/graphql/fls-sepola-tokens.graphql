@@ -1,0 +1,5 @@
+query SepoliaTokenByOwner($owner: Bytes!) {
+  ownerships(where: { owner: $owner }) {
+    tokenId
+  }
+}

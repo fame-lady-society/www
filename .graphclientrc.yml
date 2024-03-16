@@ -1,0 +1,8 @@
+sources:
+  - name: fls-sepolia
+    handler:
+      graphql:
+        endpoint: https://api.studio.thegraph.com/proxy/67995/fls-sepolia/v0.0.5
+
+documents:
+  - ./src/**/graphql/*.graphql

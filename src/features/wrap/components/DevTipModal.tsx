@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { styled } from "@mui/material/styles";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
@@ -78,16 +78,32 @@ const TipSlider: FC<{
 };
 
 export const DevTipModal: FC<{
+  wrapCost: bigint;
   numberOfTokens: number;
   open: boolean;
   handleClose: (reason: TipCloseReason, tip?: bigint) => void;
-}> = ({ open, handleClose, numberOfTokens }) => {
+}> = ({ wrapCost, open, handleClose, numberOfTokens }) => {
   const [tip, setTip] = useState<bigint | undefined>();
   const [tipPerToken, setTipPerToken] = useState(0);
   useEffect(() => {
     setTip(parseEther((tipPerToken * numberOfTokens).toString()));
   }, [numberOfTokens, tipPerToken]);
-  const tipString = `${formatEther(tip || 0n)} ETH`;
+  const tipString = useMemo(
+    () =>
+      `${formatEther(tip || 0n)
+        .slice(0, 6)
+        .replace(/0+$/, "")} ETH`,
+    [tip],
+  );
+  const totalValueStr = useMemo(
+    () =>
+      wrapCost
+        ? formatEther(wrapCost * BigInt(numberOfTokens) + (tip || 0n))
+            .slice(0, 6)
+            .replace(/0+$/, "")
+        : "0",
+    [wrapCost, numberOfTokens, tip],
+  );
   return (
     <Modal
       open={open}
@@ -156,6 +172,15 @@ export const DevTipModal: FC<{
               <br />
               <br />a donation is completely optional and is not required to
               wrap your tokens
+              {wrapCost > 0n && (
+                <>
+                  <br />
+                  <br />
+                  With wrap cost of {formatEther(wrapCost)} ETH per token, the
+                  total cost of wrapping (before gas fees) will be{" "}
+                  {totalValueStr} ETH
+                </>
+              )}
             </Typography>
             <TipSlider onChange={setTipPerToken} value={tipPerToken} />
           </CardContent>
@@ -166,7 +191,7 @@ export const DevTipModal: FC<{
               color="success"
               fullWidth
             >
-              {`Confirm ${tipString}`}
+              {`Confirm ${totalValueStr !== "0" ? `${totalValueStr} E (${tipString} tip)` : `${tipString} E`}`}
             </Button>
           </CardActions>
           <CardActions>

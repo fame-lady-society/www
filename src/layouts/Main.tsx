@@ -12,17 +12,16 @@ import { AppBar } from "@/features/appbar/components/appBar";
 
 export const Main: FC<
   PropsWithChildren<{
-    onFlick?: MouseEventHandler;
     menu: ReactNode;
     title?: ReactNode;
+    right?: ReactNode;
   }>
-> = ({ children, menu, title, onFlick }) => {
+> = ({ children, menu, title, right }) => {
   const targetRef = useRef<HTMLDivElement>(null);
-  const toolbarRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
-      <AppBar menu={menu} title={title} />
+      <AppBar menu={menu} title={title} right={right} />
       <Box
         ref={targetRef}
         component="main"

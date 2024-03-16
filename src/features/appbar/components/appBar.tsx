@@ -14,7 +14,8 @@ import { ConnectKitButton } from "connectkit";
 export const AppBar: FC<{
   menu: ReactNode;
   title?: ReactNode;
-}> = ({ menu, title }) => {
+  right?: ReactNode;
+}> = ({ menu, title, right }) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<Element | null>(null);
 
   const onMenuClose = useCallback(() => {
@@ -30,6 +31,8 @@ export const AppBar: FC<{
           <MenuIcon onClick={handleMenu} />
           {title}
           <Box sx={{ flexGrow: 1 }} component="span" />
+          {right}
+          <Box ml={2} component="span" />
           <ConnectKitButton />
         </Toolbar>
       </MuiAppBar>

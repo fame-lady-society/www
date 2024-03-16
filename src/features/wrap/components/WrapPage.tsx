@@ -8,10 +8,6 @@ import { AgreeModal } from "@/features/wrap/components/AgreeModal";
 import {
   bulkMinterAbi,
   bulkMinterAddress,
-  wrappedNftAbi,
-  wrappedNftAddress,
-  fameLadySocietyAbi,
-  fameLadySocietyAddress,
   fameLadySquadAddress,
   fameLadySquadAbi,
 } from "@/wagmi";
@@ -28,6 +24,7 @@ import { TurboWrap } from "./TurboWrap";
 import { TransactionsModal } from "./TransactionsModal";
 import { Transaction } from "../types";
 import { UnwrapCard } from "./UnwrapCard";
+import { useChainContracts } from "@/hooks/useChainContracts";
 
 export const WrapPage: FC<{
   hasMint?: boolean;
@@ -76,22 +73,12 @@ export const WrapPage: FC<{
     setPendingTransactions(false);
   }, []);
 
-  const targetNftAbi =
-    chain?.id === 11155111 ? bulkMinterAbi : fameLadySquadAbi;
-  const targetNftAddress =
-    chain?.id === 11155111
-      ? bulkMinterAddress[chain?.id]
-      : chain?.id === 1
-        ? fameLadySquadAddress[chain?.id]
-        : undefined;
-  const wrapperNftAbi =
-    chain?.id === 11155111 ? wrappedNftAbi : fameLadySocietyAbi;
-  const wrapperNftAddress =
-    chain?.id === 11155111
-      ? wrappedNftAddress[chain?.id]
-      : chain?.id === 1
-        ? fameLadySocietyAddress[chain?.id]
-        : undefined;
+  const {
+    targetContractAbi: targetNftAbi,
+    targetContractAddress: targetNftAddress,
+    wrappedNftContractAbi: wrapperNftAbi,
+    wrappedNftContractAddress: wrapperNftAddress,
+  } = useChainContracts();
 
   const onMint = useCallback(
     async (count: bigint) => {

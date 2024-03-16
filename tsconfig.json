@@ -16,6 +16,8 @@
     "incremental": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@/graphclient": ["./.graphclient/index"],
+      "@/graphclient/*": ["./.graphclient/*"],
     },
     "plugins": [
       {
@@ -27,7 +29,4 @@
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"],
-  "references": [
-    
-  ]
 }

@@ -265,6 +265,7 @@ export const WrapCard: FC<{
         handleClose={onHandleTipClose}
         open={isTipRequested}
         numberOfTokens={selectedTokenIds.length}
+        wrapCost={wrapCost}
       />
     </>
   );
