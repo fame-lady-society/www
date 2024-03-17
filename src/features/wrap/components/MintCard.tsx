@@ -37,7 +37,7 @@ export const MintCard: FC<{
           Mint testnet FLS
         </Typography>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
-          For testing purposes, any available token ID can be minted
+          For testing purposes, as many tokens as you like can be minted
         </Typography>
         <FormGroup onSubmit={onSubmit}>
           <TextField
