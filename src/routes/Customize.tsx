@@ -22,7 +22,7 @@ const Content: FC<{ prefix?: string; network: "mainnet" | "sepolia" }> = ({
   const { chain } = useAccount();
   if (chain && chain?.name.toLowerCase() !== network) {
     const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
-    replace(`/${name}/wrap`);
+    replace(`/${name}/customize`);
   }
 
   if (chain && ![1, 11155111].includes(chain?.id)) {
