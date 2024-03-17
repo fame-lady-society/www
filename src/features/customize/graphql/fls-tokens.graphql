@@ -1,0 +1,5 @@
+query MainnetTokenByOwner($owner: Bytes!) {
+  ownerships(where: { owner: $owner }) {
+    tokenId
+  }
+}

@@ -1,3 +1,4 @@
+"use client";
 import Head from "next/head";
 import Container from "@mui/material/Container";
 import { DefaultProvider } from "@/context/default";
@@ -8,10 +9,36 @@ import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SelectPage } from "@/features/customize/SelectPage";
+import { FC } from "react";
+import { useAccount } from "wagmi";
+import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
+import { useRouter } from "next/navigation";
+
+const Content: FC<{ prefix?: string; network: "mainnet" | "sepolia" }> = ({
+  network,
+  prefix = "",
+}) => {
+  const { replace } = useRouter();
+  const { chain } = useAccount();
+  if (chain && chain?.name.toLowerCase() !== network) {
+    const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
+    replace(`/${name}/wrap`);
+  }
+
+  if (chain && ![1, 11155111].includes(chain?.id)) {
+    return <UnsupportedNetwork />;
+  }
+  return (
+    <Container maxWidth="lg" sx={{ py: 2, mt: 4 }}>
+      <SelectPage prefix={prefix} />
+    </Container>
+  );
+};
 
 const Customize: NextPage<{
+  network: "mainnet" | "sepolia";
   prefix?: string;
-}> = ({ prefix = "" }) => {
+}> = ({ prefix = "", network }) => {
   return (
     <DefaultProvider>
       <Head>
@@ -23,7 +50,7 @@ const Customize: NextPage<{
           <>
             <MenuList dense disablePadding>
               <LinksMenuItems />
-              <SiteMenu isWrap />
+              <SiteMenu isCustomize />
             </MenuList>
           </>
         }
@@ -33,9 +60,7 @@ const Customize: NextPage<{
           </Typography>
         }
       >
-        <Container maxWidth="lg" sx={{ py: 2, mt: 4 }}>
-          <SelectPage prefix={prefix} />
-        </Container>
+        <Content prefix={prefix} network={network} />
       </Main>
     </DefaultProvider>
   );

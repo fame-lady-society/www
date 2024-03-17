@@ -9,6 +9,7 @@ import Image from "next/image";
 import { OpenSeaIcon } from "@/components/icons/opensea";
 import Divider from "@mui/material/Divider";
 import { WrappedLink } from "@/components/WrappedLink";
+import { MagicEdenIcon } from "@/components/icons/magiceden";
 
 export const LinksMenuItems: FC<{}> = ({}) => {
   return (
@@ -59,16 +60,16 @@ export const LinksMenuItems: FC<{}> = ({}) => {
       </MenuItem>
       <MenuItem
         component={WrappedLink}
-        href="https://opensea.io/collection/fameladysociety"
+        href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
         target="_blank"
         rel="noopener noreferrer"
       >
         <ListItemIcon>
-          <OpenSeaIcon />
+          <MagicEdenIcon />
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right">OpenSea Collection</Typography>
+            <Typography textAlign="right">Magic Eden Collection</Typography>
           }
         />
       </MenuItem>

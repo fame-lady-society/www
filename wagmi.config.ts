@@ -18,13 +18,19 @@ export default defineConfig({
         {
           name: "BulkMinter",
           address: {
-            [sepolia.id]: "0xb40d9f7D68f200650f9286138d520975603ae687",
+            [sepolia.id]: "0x71E57b37b4BeA589673D0aFE1992A6457ca754b3",
           },
         },
         {
           name: "WrappedNFT",
           address: {
-            [sepolia.id]: "0x384fCcC4E11B95379831151a44D10096Ec568277",
+            [sepolia.id]: "0x9EFf37047657a0f50b989165b48012834eDB2212",
+          },
+        },
+        {
+          name: "NamedLadyRenderer",
+          address: {
+            [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
           },
         },
       ],

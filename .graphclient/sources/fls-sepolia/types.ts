@@ -404,31 +404,31 @@ export type Ownership_orderBy =
   | 'tokenId';
 
 export type Query = {
-  approval?: Maybe<Approval>;
-  approvals: Array<Approval>;
-  approvalForAll?: Maybe<ApprovalForAll>;
-  approvalForAlls: Array<ApprovalForAll>;
-  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
-  batchMetadataUpdates: Array<BatchMetadataUpdate>;
-  metadataUpdate?: Maybe<MetadataUpdate>;
-  metadataUpdates: Array<MetadataUpdate>;
-  transfer?: Maybe<Transfer>;
-  transfers: Array<Transfer>;
-  ownership?: Maybe<Ownership>;
-  ownerships: Array<Ownership>;
+  sepolia_approval?: Maybe<Approval>;
+  sepolia_approvals: Array<Approval>;
+  sepolia_approvalForAll?: Maybe<ApprovalForAll>;
+  sepolia_approvalForAlls: Array<ApprovalForAll>;
+  sepolia_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  sepolia_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  sepolia_metadataUpdate?: Maybe<MetadataUpdate>;
+  sepolia_metadataUpdates: Array<MetadataUpdate>;
+  sepolia_transfer?: Maybe<Transfer>;
+  sepolia_transfers: Array<Transfer>;
+  sepolia_ownership?: Maybe<Ownership>;
+  sepolia_ownerships: Array<Ownership>;
   /** Access to subgraph metadata */
-  _meta?: Maybe<_Meta_>;
+  sepolia__meta?: Maybe<_Meta_>;
 };
 
 
-export type QueryapprovalArgs = {
+export type Querysepolia_approvalArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QueryapprovalsArgs = {
+export type Querysepolia_approvalsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Approval_orderBy>;
@@ -439,14 +439,14 @@ export type QueryapprovalsArgs = {
 };
 
 
-export type QueryapprovalForAllArgs = {
+export type Querysepolia_approvalForAllArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QueryapprovalForAllsArgs = {
+export type Querysepolia_approvalForAllsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<ApprovalForAll_orderBy>;
@@ -457,14 +457,14 @@ export type QueryapprovalForAllsArgs = {
 };
 
 
-export type QuerybatchMetadataUpdateArgs = {
+export type Querysepolia_batchMetadataUpdateArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QuerybatchMetadataUpdatesArgs = {
+export type Querysepolia_batchMetadataUpdatesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
@@ -475,14 +475,14 @@ export type QuerybatchMetadataUpdatesArgs = {
 };
 
 
-export type QuerymetadataUpdateArgs = {
+export type Querysepolia_metadataUpdateArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QuerymetadataUpdatesArgs = {
+export type Querysepolia_metadataUpdatesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<MetadataUpdate_orderBy>;
@@ -493,14 +493,14 @@ export type QuerymetadataUpdatesArgs = {
 };
 
 
-export type QuerytransferArgs = {
+export type Querysepolia_transferArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QuerytransfersArgs = {
+export type Querysepolia_transfersArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Transfer_orderBy>;
@@ -511,14 +511,14 @@ export type QuerytransfersArgs = {
 };
 
 
-export type QueryownershipArgs = {
+export type Querysepolia_ownershipArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type QueryownershipsArgs = {
+export type Querysepolia_ownershipsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Ownership_orderBy>;
@@ -529,36 +529,36 @@ export type QueryownershipsArgs = {
 };
 
 
-export type Query_metaArgs = {
+export type Querysepolia__metaArgs = {
   block?: InputMaybe<Block_height>;
 };
 
 export type Subscription = {
-  approval?: Maybe<Approval>;
-  approvals: Array<Approval>;
-  approvalForAll?: Maybe<ApprovalForAll>;
-  approvalForAlls: Array<ApprovalForAll>;
-  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
-  batchMetadataUpdates: Array<BatchMetadataUpdate>;
-  metadataUpdate?: Maybe<MetadataUpdate>;
-  metadataUpdates: Array<MetadataUpdate>;
-  transfer?: Maybe<Transfer>;
-  transfers: Array<Transfer>;
-  ownership?: Maybe<Ownership>;
-  ownerships: Array<Ownership>;
+  sepolia_approval?: Maybe<Approval>;
+  sepolia_approvals: Array<Approval>;
+  sepolia_approvalForAll?: Maybe<ApprovalForAll>;
+  sepolia_approvalForAlls: Array<ApprovalForAll>;
+  sepolia_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  sepolia_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  sepolia_metadataUpdate?: Maybe<MetadataUpdate>;
+  sepolia_metadataUpdates: Array<MetadataUpdate>;
+  sepolia_transfer?: Maybe<Transfer>;
+  sepolia_transfers: Array<Transfer>;
+  sepolia_ownership?: Maybe<Ownership>;
+  sepolia_ownerships: Array<Ownership>;
   /** Access to subgraph metadata */
-  _meta?: Maybe<_Meta_>;
+  sepolia__meta?: Maybe<_Meta_>;
 };
 
 
-export type SubscriptionapprovalArgs = {
+export type Subscriptionsepolia_approvalArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptionapprovalsArgs = {
+export type Subscriptionsepolia_approvalsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Approval_orderBy>;
@@ -569,14 +569,14 @@ export type SubscriptionapprovalsArgs = {
 };
 
 
-export type SubscriptionapprovalForAllArgs = {
+export type Subscriptionsepolia_approvalForAllArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptionapprovalForAllsArgs = {
+export type Subscriptionsepolia_approvalForAllsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<ApprovalForAll_orderBy>;
@@ -587,14 +587,14 @@ export type SubscriptionapprovalForAllsArgs = {
 };
 
 
-export type SubscriptionbatchMetadataUpdateArgs = {
+export type Subscriptionsepolia_batchMetadataUpdateArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptionbatchMetadataUpdatesArgs = {
+export type Subscriptionsepolia_batchMetadataUpdatesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
@@ -605,14 +605,14 @@ export type SubscriptionbatchMetadataUpdatesArgs = {
 };
 
 
-export type SubscriptionmetadataUpdateArgs = {
+export type Subscriptionsepolia_metadataUpdateArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptionmetadataUpdatesArgs = {
+export type Subscriptionsepolia_metadataUpdatesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<MetadataUpdate_orderBy>;
@@ -623,14 +623,14 @@ export type SubscriptionmetadataUpdatesArgs = {
 };
 
 
-export type SubscriptiontransferArgs = {
+export type Subscriptionsepolia_transferArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptiontransfersArgs = {
+export type Subscriptionsepolia_transfersArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Transfer_orderBy>;
@@ -641,14 +641,14 @@ export type SubscriptiontransfersArgs = {
 };
 
 
-export type SubscriptionownershipArgs = {
+export type Subscriptionsepolia_ownershipArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
 
 
-export type SubscriptionownershipsArgs = {
+export type Subscriptionsepolia_ownershipsArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Ownership_orderBy>;
@@ -659,7 +659,7 @@ export type SubscriptionownershipsArgs = {
 };
 
 
-export type Subscription_metaArgs = {
+export type Subscriptionsepolia__metaArgs = {
   block?: InputMaybe<Block_height>;
 };
 
@@ -788,31 +788,31 @@ export type _SubgraphErrorPolicy_ =
 
   export type QuerySdk = {
       /** null **/
-  approval: InContextSdkMethod<Query['approval'], QueryapprovalArgs, MeshContext>,
+  sepolia_approval: InContextSdkMethod<Query['sepolia_approval'], Querysepolia_approvalArgs, MeshContext>,
   /** null **/
-  approvals: InContextSdkMethod<Query['approvals'], QueryapprovalsArgs, MeshContext>,
+  sepolia_approvals: InContextSdkMethod<Query['sepolia_approvals'], Querysepolia_approvalsArgs, MeshContext>,
   /** null **/
-  approvalForAll: InContextSdkMethod<Query['approvalForAll'], QueryapprovalForAllArgs, MeshContext>,
+  sepolia_approvalForAll: InContextSdkMethod<Query['sepolia_approvalForAll'], Querysepolia_approvalForAllArgs, MeshContext>,
   /** null **/
-  approvalForAlls: InContextSdkMethod<Query['approvalForAlls'], QueryapprovalForAllsArgs, MeshContext>,
+  sepolia_approvalForAlls: InContextSdkMethod<Query['sepolia_approvalForAlls'], Querysepolia_approvalForAllsArgs, MeshContext>,
   /** null **/
-  batchMetadataUpdate: InContextSdkMethod<Query['batchMetadataUpdate'], QuerybatchMetadataUpdateArgs, MeshContext>,
+  sepolia_batchMetadataUpdate: InContextSdkMethod<Query['sepolia_batchMetadataUpdate'], Querysepolia_batchMetadataUpdateArgs, MeshContext>,
   /** null **/
-  batchMetadataUpdates: InContextSdkMethod<Query['batchMetadataUpdates'], QuerybatchMetadataUpdatesArgs, MeshContext>,
+  sepolia_batchMetadataUpdates: InContextSdkMethod<Query['sepolia_batchMetadataUpdates'], Querysepolia_batchMetadataUpdatesArgs, MeshContext>,
   /** null **/
-  metadataUpdate: InContextSdkMethod<Query['metadataUpdate'], QuerymetadataUpdateArgs, MeshContext>,
+  sepolia_metadataUpdate: InContextSdkMethod<Query['sepolia_metadataUpdate'], Querysepolia_metadataUpdateArgs, MeshContext>,
   /** null **/
-  metadataUpdates: InContextSdkMethod<Query['metadataUpdates'], QuerymetadataUpdatesArgs, MeshContext>,
+  sepolia_metadataUpdates: InContextSdkMethod<Query['sepolia_metadataUpdates'], Querysepolia_metadataUpdatesArgs, MeshContext>,
   /** null **/
-  transfer: InContextSdkMethod<Query['transfer'], QuerytransferArgs, MeshContext>,
+  sepolia_transfer: InContextSdkMethod<Query['sepolia_transfer'], Querysepolia_transferArgs, MeshContext>,
   /** null **/
-  transfers: InContextSdkMethod<Query['transfers'], QuerytransfersArgs, MeshContext>,
+  sepolia_transfers: InContextSdkMethod<Query['sepolia_transfers'], Querysepolia_transfersArgs, MeshContext>,
   /** null **/
-  ownership: InContextSdkMethod<Query['ownership'], QueryownershipArgs, MeshContext>,
+  sepolia_ownership: InContextSdkMethod<Query['sepolia_ownership'], Querysepolia_ownershipArgs, MeshContext>,
   /** null **/
-  ownerships: InContextSdkMethod<Query['ownerships'], QueryownershipsArgs, MeshContext>,
+  sepolia_ownerships: InContextSdkMethod<Query['sepolia_ownerships'], Querysepolia_ownershipsArgs, MeshContext>,
   /** Access to subgraph metadata **/
-  _meta: InContextSdkMethod<Query['_meta'], Query_metaArgs, MeshContext>
+  sepolia__meta: InContextSdkMethod<Query['sepolia__meta'], Querysepolia__metaArgs, MeshContext>
   };
 
   export type MutationSdk = {
@@ -821,31 +821,31 @@ export type _SubgraphErrorPolicy_ =
 
   export type SubscriptionSdk = {
       /** null **/
-  approval: InContextSdkMethod<Subscription['approval'], SubscriptionapprovalArgs, MeshContext>,
+  sepolia_approval: InContextSdkMethod<Subscription['sepolia_approval'], Subscriptionsepolia_approvalArgs, MeshContext>,
   /** null **/
-  approvals: InContextSdkMethod<Subscription['approvals'], SubscriptionapprovalsArgs, MeshContext>,
+  sepolia_approvals: InContextSdkMethod<Subscription['sepolia_approvals'], Subscriptionsepolia_approvalsArgs, MeshContext>,
   /** null **/
-  approvalForAll: InContextSdkMethod<Subscription['approvalForAll'], SubscriptionapprovalForAllArgs, MeshContext>,
+  sepolia_approvalForAll: InContextSdkMethod<Subscription['sepolia_approvalForAll'], Subscriptionsepolia_approvalForAllArgs, MeshContext>,
   /** null **/
-  approvalForAlls: InContextSdkMethod<Subscription['approvalForAlls'], SubscriptionapprovalForAllsArgs, MeshContext>,
+  sepolia_approvalForAlls: InContextSdkMethod<Subscription['sepolia_approvalForAlls'], Subscriptionsepolia_approvalForAllsArgs, MeshContext>,
   /** null **/
-  batchMetadataUpdate: InContextSdkMethod<Subscription['batchMetadataUpdate'], SubscriptionbatchMetadataUpdateArgs, MeshContext>,
+  sepolia_batchMetadataUpdate: InContextSdkMethod<Subscription['sepolia_batchMetadataUpdate'], Subscriptionsepolia_batchMetadataUpdateArgs, MeshContext>,
   /** null **/
-  batchMetadataUpdates: InContextSdkMethod<Subscription['batchMetadataUpdates'], SubscriptionbatchMetadataUpdatesArgs, MeshContext>,
+  sepolia_batchMetadataUpdates: InContextSdkMethod<Subscription['sepolia_batchMetadataUpdates'], Subscriptionsepolia_batchMetadataUpdatesArgs, MeshContext>,
   /** null **/
-  metadataUpdate: InContextSdkMethod<Subscription['metadataUpdate'], SubscriptionmetadataUpdateArgs, MeshContext>,
+  sepolia_metadataUpdate: InContextSdkMethod<Subscription['sepolia_metadataUpdate'], Subscriptionsepolia_metadataUpdateArgs, MeshContext>,
   /** null **/
-  metadataUpdates: InContextSdkMethod<Subscription['metadataUpdates'], SubscriptionmetadataUpdatesArgs, MeshContext>,
+  sepolia_metadataUpdates: InContextSdkMethod<Subscription['sepolia_metadataUpdates'], Subscriptionsepolia_metadataUpdatesArgs, MeshContext>,
   /** null **/
-  transfer: InContextSdkMethod<Subscription['transfer'], SubscriptiontransferArgs, MeshContext>,
+  sepolia_transfer: InContextSdkMethod<Subscription['sepolia_transfer'], Subscriptionsepolia_transferArgs, MeshContext>,
   /** null **/
-  transfers: InContextSdkMethod<Subscription['transfers'], SubscriptiontransfersArgs, MeshContext>,
+  sepolia_transfers: InContextSdkMethod<Subscription['sepolia_transfers'], Subscriptionsepolia_transfersArgs, MeshContext>,
   /** null **/
-  ownership: InContextSdkMethod<Subscription['ownership'], SubscriptionownershipArgs, MeshContext>,
+  sepolia_ownership: InContextSdkMethod<Subscription['sepolia_ownership'], Subscriptionsepolia_ownershipArgs, MeshContext>,
   /** null **/
-  ownerships: InContextSdkMethod<Subscription['ownerships'], SubscriptionownershipsArgs, MeshContext>,
+  sepolia_ownerships: InContextSdkMethod<Subscription['sepolia_ownerships'], Subscriptionsepolia_ownershipsArgs, MeshContext>,
   /** Access to subgraph metadata **/
-  _meta: InContextSdkMethod<Subscription['_meta'], Subscription_metaArgs, MeshContext>
+  sepolia__meta: InContextSdkMethod<Subscription['sepolia__meta'], Subscriptionsepolia__metaArgs, MeshContext>
   };
 
   export type Context = {

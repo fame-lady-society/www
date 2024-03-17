@@ -43,7 +43,7 @@ const TipSlider: FC<{
   };
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box component="div" sx={{ width: "100%" }}>
       <Typography id="input-slider" gutterBottom color="text.primary">
         per token tip
       </Typography>
@@ -90,9 +90,9 @@ export const DevTipModal: FC<{
   }, [numberOfTokens, tipPerToken]);
   const tipString = useMemo(
     () =>
-      `${formatEther(tip || 0n)
+      formatEther(tip || 0n)
         .slice(0, 6)
-        .replace(/0+$/, "")} ETH`,
+        .replace(/0+$/, ""),
     [tip],
   );
   const totalValueStr = useMemo(
@@ -101,7 +101,7 @@ export const DevTipModal: FC<{
         ? formatEther(wrapCost * BigInt(numberOfTokens) + (tip || 0n))
             .slice(0, 6)
             .replace(/0+$/, "")
-        : "0",
+        : "",
     [wrapCost, numberOfTokens, tip],
   );
   return (
@@ -191,7 +191,7 @@ export const DevTipModal: FC<{
               color="success"
               fullWidth
             >
-              {`Confirm ${totalValueStr !== "0" ? `${totalValueStr} E (${tipString} tip)` : `${tipString} E`}`}
+              {`Confirm ${totalValueStr !== "" ? `${totalValueStr} E (${tipString} tip)` : tipString !== "" ? `${tipString} E` : ""}`}
             </Button>
           </CardActions>
           <CardActions>

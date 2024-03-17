@@ -1,3 +1,4 @@
+"use client";
 import { siweClient } from "@/utils/siweClient";
 import { SIWESession } from "connectkit";
 import { WagmiProvider, createConfig, http } from "wagmi";

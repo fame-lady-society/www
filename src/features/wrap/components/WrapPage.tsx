@@ -18,7 +18,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { WriteContractData } from "wagmi/query";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { WrapCard } from "./WrapCard";
 import { TurboWrap } from "./TurboWrap";
 import { TransactionsModal } from "./TransactionsModal";
@@ -27,8 +27,8 @@ import { UnwrapCard } from "./UnwrapCard";
 import { useChainContracts } from "@/hooks/useChainContracts";
 
 export const WrapPage: FC<{
-  hasMint?: boolean;
-}> = ({ hasMint = true }) => {
+  network: "mainnet" | "sepolia";
+}> = ({ network }) => {
   const router = useRouter();
   const { address, chain } = useAccount();
   const [hasAgreed, setHasAgreed] = useLocalStorage("agree-to-risk", false);
@@ -37,7 +37,7 @@ export const WrapPage: FC<{
 
   const [pendingTransactions, setPendingTransactions] = useState(false);
   const [activeTransactionHashList, setActiveTransactionHashList] = useState<
-    Transaction[]
+    Transaction<unknown>[]
   >([]);
   const [completedTransactionHashList, setCompletedTransactionHashList] =
     useState<{ kind: string; hash: WriteContractData }[]>([]);
@@ -122,9 +122,9 @@ export const WrapPage: FC<{
   // This only work on the test bulk minter contract, not fame lady squad
   const { data: ownedTestTokens, refetch: refetchTokens } = useReadContract({
     abi: bulkMinterAbi,
-    address: bulkMinterAddress[chain?.id],
+    address: chain?.id && bulkMinterAddress[chain?.id],
     functionName: "tokensOfOwner",
-    args: [address],
+    args: address && [address],
   });
 
   // This is only needed for fame lady squad
@@ -142,7 +142,7 @@ export const WrapPage: FC<{
       contracts: Array.from({ length: balanceOf ? Number(balanceOf) : 0 })?.map(
         (_, index) => ({
           abi: fameLadySquadAbi,
-          address: fameLadySquadAddress[chain?.id],
+          address: chain?.id && fameLadySquadAddress[chain?.id],
           functionName: "tokenOfOwnerByIndex",
           args: [address, BigInt(index)],
         }),
@@ -155,7 +155,12 @@ export const WrapPage: FC<{
     });
 
   const tokenIds = useMemo(
-    () => ownedTestTokens || (fameLadySquadTokens?.map((t) => t.result) ?? []),
+    () =>
+      ownedTestTokens ||
+      (fameLadySquadTokens
+        ?.filter((t) => t.status === "success")
+        .map((t) => t.result!) ??
+        []),
     [ownedTestTokens, fameLadySquadTokens],
   );
 
@@ -166,12 +171,18 @@ export const WrapPage: FC<{
   });
 
   const onWrapTo = useCallback(
-    async ({ args, value }: { args: [string, bigint[]]; value: bigint }) => {
+    async ({
+      args,
+      value,
+    }: {
+      args: [`0x${string}`, bigint[]];
+      value: bigint;
+    }) => {
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
             abi: wrapperNftAbi,
-            address: wrapperNftAddress,
+            address: wrapperNftAddress!,
             functionName: "wrapTo",
             args,
             value,
@@ -181,6 +192,7 @@ export const WrapPage: FC<{
             {
               kind: "wrap to",
               hash: response,
+              context: args[0],
             },
           ]);
         } catch (e) {
@@ -197,7 +209,7 @@ export const WrapPage: FC<{
         try {
           const response = await writeContractAsync({
             abi: wrapperNftAbi,
-            address: wrapperNftAddress,
+            address: wrapperNftAddress!,
             functionName: "wrap",
             args,
             value,
@@ -207,6 +219,7 @@ export const WrapPage: FC<{
             {
               kind: "wrap",
               hash: response,
+              context: args[0],
             },
           ]);
         } catch (e) {
@@ -218,12 +231,12 @@ export const WrapPage: FC<{
   );
 
   const onUnwrapMany = useCallback(
-    async (args: [string, bigint[]]) => {
+    async (args: [`0x${string}`, bigint[]]) => {
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
             abi: wrapperNftAbi,
-            address: wrapperNftAddress,
+            address: wrapperNftAddress!,
             functionName: "unwrapMany",
             args,
           });
@@ -247,9 +260,9 @@ export const WrapPage: FC<{
       try {
         const response = await writeContractAsync({
           abi: targetNftAbi,
-          address: targetNftAddress,
+          address: targetNftAddress!,
           functionName: "setApprovalForAll",
-          args: [wrapperNftAddress, true],
+          args: [wrapperNftAddress!, true],
         });
         setActiveTransactionHashList((txs) => [
           ...txs,
@@ -265,9 +278,10 @@ export const WrapPage: FC<{
   }, [targetNftAbi, targetNftAddress, wrapperNftAddress, writeContractAsync]);
 
   const onTransactionConfirmed = useCallback(
-    (tx: Transaction) => {
+    (tx: Transaction<unknown>) => {
       switch (tx.kind) {
         case "wrap": {
+          const t = tx as Transaction<[bigint[]]>;
           setCompletedTransactionHashList((txs) => [
             ...txs,
             {
@@ -276,12 +290,13 @@ export const WrapPage: FC<{
             },
           ]);
           const params = new URLSearchParams();
-          params.set("tokenIds", tokenIds.join(","));
+          params.set("tokenIds", t.context!.map((t) => t.toString()).join(","));
           params.set("txHash", tx.hash ?? "");
           router.push(`/wrap/success?${params.toString()}`);
           break;
         }
         case "wrap to": {
+          const t = tx as Transaction<[bigint[]]>;
           setCompletedTransactionHashList((txs) => [
             ...txs,
             {
@@ -290,7 +305,7 @@ export const WrapPage: FC<{
             },
           ]);
           const params = new URLSearchParams();
-          params.set("tokenIds", tokenIds.join(","));
+          params.set("tokenIds", t.context!.map((t) => t.toString()).join(","));
           params.set("txHash", tx.hash ?? "");
           router.push(`/wrap/success?${params.toString()}`);
           break;
@@ -331,14 +346,14 @@ export const WrapPage: FC<{
         txs.filter((t) => tx.hash !== t.hash),
       );
     },
-    [refetchWrappedIsApprovedForAll, refetchTokens, router, tokenIds],
+    [refetchWrappedIsApprovedForAll, refetchTokens, router],
   );
 
   return (
     <>
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ mt: 6 }}>
         <Grid2 container spacing={2}>
-          {hasMint ? (
+          {network === "sepolia" ? (
             <Grid2 xs={12} sm={12} md={12}>
               <Box component="div" sx={{ mt: 4 }}>
                 <MintCard

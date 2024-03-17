@@ -13,7 +13,8 @@ import { fetch as fetchFn } from '@whatwg-node/fetch';
 import { MeshResolvedSource } from '@graphql-mesh/runtime';
 import { MeshTransform, MeshPlugin } from '@graphql-mesh/types';
 import GraphqlHandler from "@graphql-mesh/graphql"
-import BareMerger from "@graphql-mesh/merger-bare";
+import PrefixTransform from "@graphql-mesh/transform-prefix";
+import StitchingMerger from "@graphql-mesh/merger-stitching";
 import { printWithCache } from '@graphql-mesh/utils';
 import { createMeshHTTPHandler, MeshHTTPHandler } from '@graphql-mesh/http';
 import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext, MeshInstance } from '@graphql-mesh/runtime';
@@ -21,7 +22,9 @@ import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
 import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
+import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
 import * as importedModule$0 from "./sources/fls-sepolia/introspectionSchema";
+import * as importedModule$1 from "./sources/fls-mainnet/introspectionSchema";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -42,6 +45,520 @@ export type Scalars = {
   BigInt: any;
   Bytes: any;
   Int8: any;
+};
+
+export type Query = {
+  sepolia_approval?: Maybe<Approval>;
+  sepolia_approvals: Array<Approval>;
+  sepolia_approvalForAll?: Maybe<ApprovalForAll>;
+  sepolia_approvalForAlls: Array<ApprovalForAll>;
+  sepolia_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  sepolia_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  sepolia_metadataUpdate?: Maybe<MetadataUpdate>;
+  sepolia_metadataUpdates: Array<MetadataUpdate>;
+  sepolia_transfer?: Maybe<Transfer>;
+  sepolia_transfers: Array<Transfer>;
+  sepolia_ownership?: Maybe<Ownership>;
+  sepolia_ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  sepolia__meta?: Maybe<_Meta_>;
+  approval?: Maybe<Approval>;
+  approvals: Array<Approval>;
+  approvalForAll?: Maybe<ApprovalForAll>;
+  approvalForAlls: Array<ApprovalForAll>;
+  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  metadataUpdate?: Maybe<MetadataUpdate>;
+  metadataUpdates: Array<MetadataUpdate>;
+  transfer?: Maybe<Transfer>;
+  transfers: Array<Transfer>;
+  ownership?: Maybe<Ownership>;
+  ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  _meta?: Maybe<_Meta_>;
+};
+
+
+export type Querysepolia_approvalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_approvalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_approvalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_approvalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_batchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_batchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_metadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_metadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_transferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_transfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_ownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia_ownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querysepolia__metaArgs = {
+  block?: InputMaybe<Block_height>;
+};
+
+
+export type QueryapprovalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryapprovalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryapprovalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryapprovalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerybatchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerybatchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerymetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerymetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerytransferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerytransfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Query_metaArgs = {
+  block?: InputMaybe<Block_height>;
+};
+
+export type Subscription = {
+  sepolia_approval?: Maybe<Approval>;
+  sepolia_approvals: Array<Approval>;
+  sepolia_approvalForAll?: Maybe<ApprovalForAll>;
+  sepolia_approvalForAlls: Array<ApprovalForAll>;
+  sepolia_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  sepolia_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  sepolia_metadataUpdate?: Maybe<MetadataUpdate>;
+  sepolia_metadataUpdates: Array<MetadataUpdate>;
+  sepolia_transfer?: Maybe<Transfer>;
+  sepolia_transfers: Array<Transfer>;
+  sepolia_ownership?: Maybe<Ownership>;
+  sepolia_ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  sepolia__meta?: Maybe<_Meta_>;
+  approval?: Maybe<Approval>;
+  approvals: Array<Approval>;
+  approvalForAll?: Maybe<ApprovalForAll>;
+  approvalForAlls: Array<ApprovalForAll>;
+  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  metadataUpdate?: Maybe<MetadataUpdate>;
+  metadataUpdates: Array<MetadataUpdate>;
+  transfer?: Maybe<Transfer>;
+  transfers: Array<Transfer>;
+  ownership?: Maybe<Ownership>;
+  ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  _meta?: Maybe<_Meta_>;
+};
+
+
+export type Subscriptionsepolia_approvalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_approvalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_approvalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_approvalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_batchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_batchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_metadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_metadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_transferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_transfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_ownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia_ownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionsepolia__metaArgs = {
+  block?: InputMaybe<Block_height>;
+};
+
+
+export type SubscriptionapprovalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionapprovalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionapprovalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionapprovalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionbatchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionbatchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionmetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionmetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptiontransferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptiontransfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscription_metaArgs = {
+  block?: InputMaybe<Block_height>;
 };
 
 export type Aggregation_interval =
@@ -425,266 +942,6 @@ export type Ownership_orderBy =
   | 'owner'
   | 'tokenId';
 
-export type Query = {
-  approval?: Maybe<Approval>;
-  approvals: Array<Approval>;
-  approvalForAll?: Maybe<ApprovalForAll>;
-  approvalForAlls: Array<ApprovalForAll>;
-  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
-  batchMetadataUpdates: Array<BatchMetadataUpdate>;
-  metadataUpdate?: Maybe<MetadataUpdate>;
-  metadataUpdates: Array<MetadataUpdate>;
-  transfer?: Maybe<Transfer>;
-  transfers: Array<Transfer>;
-  ownership?: Maybe<Ownership>;
-  ownerships: Array<Ownership>;
-  /** Access to subgraph metadata */
-  _meta?: Maybe<_Meta_>;
-};
-
-
-export type QueryapprovalArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QueryapprovalsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Approval_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Approval_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QueryapprovalForAllArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QueryapprovalForAllsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<ApprovalForAll_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerybatchMetadataUpdateArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerybatchMetadataUpdatesArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<BatchMetadataUpdate_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerymetadataUpdateArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerymetadataUpdatesArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<MetadataUpdate_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerytransferArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QuerytransfersArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Transfer_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Transfer_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QueryownershipArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type QueryownershipsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Ownership_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Ownership_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type Query_metaArgs = {
-  block?: InputMaybe<Block_height>;
-};
-
-export type Subscription = {
-  approval?: Maybe<Approval>;
-  approvals: Array<Approval>;
-  approvalForAll?: Maybe<ApprovalForAll>;
-  approvalForAlls: Array<ApprovalForAll>;
-  batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
-  batchMetadataUpdates: Array<BatchMetadataUpdate>;
-  metadataUpdate?: Maybe<MetadataUpdate>;
-  metadataUpdates: Array<MetadataUpdate>;
-  transfer?: Maybe<Transfer>;
-  transfers: Array<Transfer>;
-  ownership?: Maybe<Ownership>;
-  ownerships: Array<Ownership>;
-  /** Access to subgraph metadata */
-  _meta?: Maybe<_Meta_>;
-};
-
-
-export type SubscriptionapprovalArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionapprovalsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Approval_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Approval_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionapprovalForAllArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionapprovalForAllsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<ApprovalForAll_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionbatchMetadataUpdateArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionbatchMetadataUpdatesArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<BatchMetadataUpdate_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionmetadataUpdateArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionmetadataUpdatesArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<MetadataUpdate_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptiontransferArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptiontransfersArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Transfer_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Transfer_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionownershipArgs = {
-  id: Scalars['ID'];
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type SubscriptionownershipsArgs = {
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Ownership_orderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Ownership_filter>;
-  block?: InputMaybe<Block_height>;
-  subgraphError?: _SubgraphErrorPolicy_;
-};
-
-
-export type Subscription_metaArgs = {
-  block?: InputMaybe<Block_height>;
-};
-
 export type Transfer = {
   id: Scalars['Bytes'];
   from: Scalars['Bytes'];
@@ -894,6 +1151,8 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
+  Query: ResolverTypeWrapper<{}>;
+  Subscription: ResolverTypeWrapper<{}>;
   Aggregation_interval: Aggregation_interval;
   Approval: ResolverTypeWrapper<Approval>;
   ApprovalForAll: ResolverTypeWrapper<ApprovalForAll>;
@@ -921,9 +1180,7 @@ export type ResolversTypes = ResolversObject<{
   Ownership: ResolverTypeWrapper<Ownership>;
   Ownership_filter: Ownership_filter;
   Ownership_orderBy: Ownership_orderBy;
-  Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
-  Subscription: ResolverTypeWrapper<{}>;
   Transfer: ResolverTypeWrapper<Transfer>;
   Transfer_filter: Transfer_filter;
   Transfer_orderBy: Transfer_orderBy;
@@ -934,6 +1191,8 @@ export type ResolversTypes = ResolversObject<{
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
+  Query: {};
+  Subscription: {};
   Approval: Approval;
   ApprovalForAll: ApprovalForAll;
   ApprovalForAll_filter: ApprovalForAll_filter;
@@ -954,9 +1213,7 @@ export type ResolversParentTypes = ResolversObject<{
   MetadataUpdate_filter: MetadataUpdate_filter;
   Ownership: Ownership;
   Ownership_filter: Ownership_filter;
-  Query: {};
   String: Scalars['String'];
-  Subscription: {};
   Transfer: Transfer;
   Transfer_filter: Transfer_filter;
   _Block_: _Block_;
@@ -978,6 +1235,64 @@ export type derivedFromDirectiveArgs = {
 };
 
 export type derivedFromDirectiveResolver<Result, Parent, ContextType = MeshContext, Args = derivedFromDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
+export type QueryResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  sepolia_approval?: Resolver<Maybe<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querysepolia_approvalArgs, 'id' | 'subgraphError'>>;
+  sepolia_approvals?: Resolver<Array<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querysepolia_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_approvalForAll?: Resolver<Maybe<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<Querysepolia_approvalForAllArgs, 'id' | 'subgraphError'>>;
+  sepolia_approvalForAlls?: Resolver<Array<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<Querysepolia_approvalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_batchMetadataUpdate?: Resolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<Querysepolia_batchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  sepolia_batchMetadataUpdates?: Resolver<Array<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<Querysepolia_batchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_metadataUpdate?: Resolver<Maybe<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<Querysepolia_metadataUpdateArgs, 'id' | 'subgraphError'>>;
+  sepolia_metadataUpdates?: Resolver<Array<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<Querysepolia_metadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_transfer?: Resolver<Maybe<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<Querysepolia_transferArgs, 'id' | 'subgraphError'>>;
+  sepolia_transfers?: Resolver<Array<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<Querysepolia_transfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_ownership?: Resolver<Maybe<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<Querysepolia_ownershipArgs, 'id' | 'subgraphError'>>;
+  sepolia_ownerships?: Resolver<Array<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<Querysepolia_ownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia__meta?: Resolver<Maybe<ResolversTypes['_Meta_']>, ParentType, ContextType, Partial<Querysepolia__metaArgs>>;
+  approval?: Resolver<Maybe<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<QueryapprovalArgs, 'id' | 'subgraphError'>>;
+  approvals?: Resolver<Array<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<QueryapprovalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  approvalForAll?: Resolver<Maybe<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<QueryapprovalForAllArgs, 'id' | 'subgraphError'>>;
+  approvalForAlls?: Resolver<Array<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<QueryapprovalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  batchMetadataUpdate?: Resolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<QuerybatchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  batchMetadataUpdates?: Resolver<Array<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<QuerybatchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  metadataUpdate?: Resolver<Maybe<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<QuerymetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  metadataUpdates?: Resolver<Array<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<QuerymetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  transfer?: Resolver<Maybe<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<QuerytransferArgs, 'id' | 'subgraphError'>>;
+  transfers?: Resolver<Array<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<QuerytransfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  ownership?: Resolver<Maybe<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<QueryownershipArgs, 'id' | 'subgraphError'>>;
+  ownerships?: Resolver<Array<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<QueryownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  _meta?: Resolver<Maybe<ResolversTypes['_Meta_']>, ParentType, ContextType, Partial<Query_metaArgs>>;
+}>;
+
+export type SubscriptionResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
+  sepolia_approval?: SubscriptionResolver<Maybe<ResolversTypes['Approval']>, "sepolia_approval", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalArgs, 'id' | 'subgraphError'>>;
+  sepolia_approvals?: SubscriptionResolver<Array<ResolversTypes['Approval']>, "sepolia_approvals", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_approvalForAll?: SubscriptionResolver<Maybe<ResolversTypes['ApprovalForAll']>, "sepolia_approvalForAll", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalForAllArgs, 'id' | 'subgraphError'>>;
+  sepolia_approvalForAlls?: SubscriptionResolver<Array<ResolversTypes['ApprovalForAll']>, "sepolia_approvalForAlls", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_batchMetadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, "sepolia_batchMetadataUpdate", ParentType, ContextType, RequireFields<Subscriptionsepolia_batchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  sepolia_batchMetadataUpdates?: SubscriptionResolver<Array<ResolversTypes['BatchMetadataUpdate']>, "sepolia_batchMetadataUpdates", ParentType, ContextType, RequireFields<Subscriptionsepolia_batchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_metadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['MetadataUpdate']>, "sepolia_metadataUpdate", ParentType, ContextType, RequireFields<Subscriptionsepolia_metadataUpdateArgs, 'id' | 'subgraphError'>>;
+  sepolia_metadataUpdates?: SubscriptionResolver<Array<ResolversTypes['MetadataUpdate']>, "sepolia_metadataUpdates", ParentType, ContextType, RequireFields<Subscriptionsepolia_metadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_transfer?: SubscriptionResolver<Maybe<ResolversTypes['Transfer']>, "sepolia_transfer", ParentType, ContextType, RequireFields<Subscriptionsepolia_transferArgs, 'id' | 'subgraphError'>>;
+  sepolia_transfers?: SubscriptionResolver<Array<ResolversTypes['Transfer']>, "sepolia_transfers", ParentType, ContextType, RequireFields<Subscriptionsepolia_transfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia_ownership?: SubscriptionResolver<Maybe<ResolversTypes['Ownership']>, "sepolia_ownership", ParentType, ContextType, RequireFields<Subscriptionsepolia_ownershipArgs, 'id' | 'subgraphError'>>;
+  sepolia_ownerships?: SubscriptionResolver<Array<ResolversTypes['Ownership']>, "sepolia_ownerships", ParentType, ContextType, RequireFields<Subscriptionsepolia_ownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  sepolia__meta?: SubscriptionResolver<Maybe<ResolversTypes['_Meta_']>, "sepolia__meta", ParentType, ContextType, Partial<Subscriptionsepolia__metaArgs>>;
+  approval?: SubscriptionResolver<Maybe<ResolversTypes['Approval']>, "approval", ParentType, ContextType, RequireFields<SubscriptionapprovalArgs, 'id' | 'subgraphError'>>;
+  approvals?: SubscriptionResolver<Array<ResolversTypes['Approval']>, "approvals", ParentType, ContextType, RequireFields<SubscriptionapprovalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  approvalForAll?: SubscriptionResolver<Maybe<ResolversTypes['ApprovalForAll']>, "approvalForAll", ParentType, ContextType, RequireFields<SubscriptionapprovalForAllArgs, 'id' | 'subgraphError'>>;
+  approvalForAlls?: SubscriptionResolver<Array<ResolversTypes['ApprovalForAll']>, "approvalForAlls", ParentType, ContextType, RequireFields<SubscriptionapprovalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  batchMetadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, "batchMetadataUpdate", ParentType, ContextType, RequireFields<SubscriptionbatchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  batchMetadataUpdates?: SubscriptionResolver<Array<ResolversTypes['BatchMetadataUpdate']>, "batchMetadataUpdates", ParentType, ContextType, RequireFields<SubscriptionbatchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  metadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['MetadataUpdate']>, "metadataUpdate", ParentType, ContextType, RequireFields<SubscriptionmetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  metadataUpdates?: SubscriptionResolver<Array<ResolversTypes['MetadataUpdate']>, "metadataUpdates", ParentType, ContextType, RequireFields<SubscriptionmetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  transfer?: SubscriptionResolver<Maybe<ResolversTypes['Transfer']>, "transfer", ParentType, ContextType, RequireFields<SubscriptiontransferArgs, 'id' | 'subgraphError'>>;
+  transfers?: SubscriptionResolver<Array<ResolversTypes['Transfer']>, "transfers", ParentType, ContextType, RequireFields<SubscriptiontransfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  ownership?: SubscriptionResolver<Maybe<ResolversTypes['Ownership']>, "ownership", ParentType, ContextType, RequireFields<SubscriptionownershipArgs, 'id' | 'subgraphError'>>;
+  ownerships?: SubscriptionResolver<Array<ResolversTypes['Ownership']>, "ownerships", ParentType, ContextType, RequireFields<SubscriptionownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  _meta?: SubscriptionResolver<Maybe<ResolversTypes['_Meta_']>, "_meta", ParentType, ContextType, Partial<Subscription_metaArgs>>;
+}>;
 
 export type ApprovalResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Approval'] = ResolversParentTypes['Approval']> = ResolversObject<{
   id?: Resolver<ResolversTypes['Bytes'], ParentType, ContextType>;
@@ -1043,38 +1358,6 @@ export type OwnershipResolvers<ContextType = MeshContext, ParentType extends Res
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type QueryResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  approval?: Resolver<Maybe<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<QueryapprovalArgs, 'id' | 'subgraphError'>>;
-  approvals?: Resolver<Array<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<QueryapprovalsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  approvalForAll?: Resolver<Maybe<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<QueryapprovalForAllArgs, 'id' | 'subgraphError'>>;
-  approvalForAlls?: Resolver<Array<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<QueryapprovalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  batchMetadataUpdate?: Resolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<QuerybatchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
-  batchMetadataUpdates?: Resolver<Array<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<QuerybatchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
-  metadataUpdate?: Resolver<Maybe<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<QuerymetadataUpdateArgs, 'id' | 'subgraphError'>>;
-  metadataUpdates?: Resolver<Array<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<QuerymetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
-  transfer?: Resolver<Maybe<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<QuerytransferArgs, 'id' | 'subgraphError'>>;
-  transfers?: Resolver<Array<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<QuerytransfersArgs, 'skip' | 'first' | 'subgraphError'>>;
-  ownership?: Resolver<Maybe<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<QueryownershipArgs, 'id' | 'subgraphError'>>;
-  ownerships?: Resolver<Array<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<QueryownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  _meta?: Resolver<Maybe<ResolversTypes['_Meta_']>, ParentType, ContextType, Partial<Query_metaArgs>>;
-}>;
-
-export type SubscriptionResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
-  approval?: SubscriptionResolver<Maybe<ResolversTypes['Approval']>, "approval", ParentType, ContextType, RequireFields<SubscriptionapprovalArgs, 'id' | 'subgraphError'>>;
-  approvals?: SubscriptionResolver<Array<ResolversTypes['Approval']>, "approvals", ParentType, ContextType, RequireFields<SubscriptionapprovalsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  approvalForAll?: SubscriptionResolver<Maybe<ResolversTypes['ApprovalForAll']>, "approvalForAll", ParentType, ContextType, RequireFields<SubscriptionapprovalForAllArgs, 'id' | 'subgraphError'>>;
-  approvalForAlls?: SubscriptionResolver<Array<ResolversTypes['ApprovalForAll']>, "approvalForAlls", ParentType, ContextType, RequireFields<SubscriptionapprovalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  batchMetadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, "batchMetadataUpdate", ParentType, ContextType, RequireFields<SubscriptionbatchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
-  batchMetadataUpdates?: SubscriptionResolver<Array<ResolversTypes['BatchMetadataUpdate']>, "batchMetadataUpdates", ParentType, ContextType, RequireFields<SubscriptionbatchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
-  metadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['MetadataUpdate']>, "metadataUpdate", ParentType, ContextType, RequireFields<SubscriptionmetadataUpdateArgs, 'id' | 'subgraphError'>>;
-  metadataUpdates?: SubscriptionResolver<Array<ResolversTypes['MetadataUpdate']>, "metadataUpdates", ParentType, ContextType, RequireFields<SubscriptionmetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
-  transfer?: SubscriptionResolver<Maybe<ResolversTypes['Transfer']>, "transfer", ParentType, ContextType, RequireFields<SubscriptiontransferArgs, 'id' | 'subgraphError'>>;
-  transfers?: SubscriptionResolver<Array<ResolversTypes['Transfer']>, "transfers", ParentType, ContextType, RequireFields<SubscriptiontransfersArgs, 'skip' | 'first' | 'subgraphError'>>;
-  ownership?: SubscriptionResolver<Maybe<ResolversTypes['Ownership']>, "ownership", ParentType, ContextType, RequireFields<SubscriptionownershipArgs, 'id' | 'subgraphError'>>;
-  ownerships?: SubscriptionResolver<Array<ResolversTypes['Ownership']>, "ownerships", ParentType, ContextType, RequireFields<SubscriptionownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
-  _meta?: SubscriptionResolver<Maybe<ResolversTypes['_Meta_']>, "_meta", ParentType, ContextType, Partial<Subscription_metaArgs>>;
-}>;
-
 export type TransferResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Transfer'] = ResolversParentTypes['Transfer']> = ResolversObject<{
   id?: Resolver<ResolversTypes['Bytes'], ParentType, ContextType>;
   from?: Resolver<ResolversTypes['Bytes'], ParentType, ContextType>;
@@ -1102,6 +1385,8 @@ export type _Meta_Resolvers<ContextType = MeshContext, ParentType extends Resolv
 }>;
 
 export type Resolvers<ContextType = MeshContext> = ResolversObject<{
+  Query?: QueryResolvers<ContextType>;
+  Subscription?: SubscriptionResolvers<ContextType>;
   Approval?: ApprovalResolvers<ContextType>;
   ApprovalForAll?: ApprovalForAllResolvers<ContextType>;
   BatchMetadataUpdate?: BatchMetadataUpdateResolvers<ContextType>;
@@ -1111,8 +1396,6 @@ export type Resolvers<ContextType = MeshContext> = ResolversObject<{
   Int8?: GraphQLScalarType;
   MetadataUpdate?: MetadataUpdateResolvers<ContextType>;
   Ownership?: OwnershipResolvers<ContextType>;
-  Query?: QueryResolvers<ContextType>;
-  Subscription?: SubscriptionResolvers<ContextType>;
   Transfer?: TransferResolvers<ContextType>;
   _Block_?: _Block_Resolvers<ContextType>;
   _Meta_?: _Meta_Resolvers<ContextType>;
@@ -1124,7 +1407,7 @@ export type DirectiveResolvers<ContextType = MeshContext> = ResolversObject<{
   derivedFrom?: derivedFromDirectiveResolver<any, any, ContextType>;
 }>;
 
-export type MeshContext = FlsSepoliaTypes.Context & BaseMeshContext;
+export type MeshContext = FlsSepoliaTypes.Context & FlsMainnetTypes.Context & BaseMeshContext;
 
 
 import { fileURLToPath } from '@graphql-mesh/utils';
@@ -1135,6 +1418,9 @@ const importFn: ImportFn = <T>(moduleId: string) => {
   switch(relativeModuleId) {
     case ".graphclient/sources/fls-sepolia/introspectionSchema":
       return Promise.resolve(importedModule$0) as T;
+    
+    case ".graphclient/sources/fls-mainnet/introspectionSchema":
+      return Promise.resolve(importedModule$1) as T;
     
     default:
       return Promise.reject(new Error(`Cannot find module '${relativeModuleId}'.`));
@@ -1167,10 +1453,11 @@ const sources: MeshResolvedSource[] = [];
 const transforms: MeshTransform[] = [];
 const additionalEnvelopPlugins: MeshPlugin<any>[] = [];
 const flsSepoliaTransforms = [];
+const flsMainnetTransforms = [];
 const additionalTypeDefs = [] as any[];
 const flsSepoliaHandler = new GraphqlHandler({
               name: "fls-sepolia",
-              config: {"endpoint":"https://api.studio.thegraph.com/proxy/67995/fls-sepolia/v0.0.5"},
+              config: {"endpoint":"https://api.studio.thegraph.com/proxy/67995/fls-sepolia/v0.0.6"},
               baseDir,
               cache,
               pubsub,
@@ -1178,17 +1465,41 @@ const flsSepoliaHandler = new GraphqlHandler({
               logger: logger.child("fls-sepolia"),
               importFn,
             });
+const flsMainnetHandler = new GraphqlHandler({
+              name: "fls-mainnet",
+              config: {"endpoint":"https://api.studio.thegraph.com/query/67995/fls/v0.0.1"},
+              baseDir,
+              cache,
+              pubsub,
+              store: sourcesStore.child("fls-mainnet"),
+              logger: logger.child("fls-mainnet"),
+              importFn,
+            });
+sources[1] = {
+          name: 'fls-mainnet',
+          handler: flsMainnetHandler,
+          transforms: flsMainnetTransforms
+        }
+flsSepoliaTransforms[0] = new PrefixTransform({
+                  apiName: "fls-sepolia",
+                  config: {"value":"sepolia_","includeRootOperations":true,"includeTypes":false},
+                  baseDir,
+                  cache,
+                  pubsub,
+                  importFn,
+                  logger,
+                });
 sources[0] = {
           name: 'fls-sepolia',
           handler: flsSepoliaHandler,
           transforms: flsSepoliaTransforms
         }
 const additionalResolvers = [] as any[]
-const merger = new(BareMerger as any)({
+const merger = new(StitchingMerger as any)({
         cache,
         pubsub,
-        logger: logger.child('bareMerger'),
-        store: rootStore.child('bareMerger')
+        logger: logger.child('stitchingMerger'),
+        store: rootStore.child('stitchingMerger')
       })
 
   return {
@@ -1209,6 +1520,12 @@ const merger = new(BareMerger as any)({
           return printWithCache(SepoliaTokenByOwnerDocument);
         },
         location: 'SepoliaTokenByOwnerDocument.graphql'
+      },{
+        document: MainnetTokenByOwnerDocument,
+        get rawSDL() {
+          return printWithCache(MainnetTokenByOwnerDocument);
+        },
+        location: 'MainnetTokenByOwnerDocument.graphql'
       }
     ];
     },
@@ -1252,16 +1569,31 @@ export type SepoliaTokenByOwnerQueryVariables = Exact<{
 }>;
 
 
-export type SepoliaTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'tokenId'>> };
+export type SepoliaTokenByOwnerQuery = { sepolia_ownerships: Array<Pick<Ownership, 'tokenId'>> };
+
+export type MainnetTokenByOwnerQueryVariables = Exact<{
+  owner: Scalars['Bytes'];
+}>;
+
+
+export type MainnetTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'tokenId'>> };
 
 
 export const SepoliaTokenByOwnerDocument = gql`
     query SepoliaTokenByOwner($owner: Bytes!) {
-  ownerships(where: {owner: $owner}) {
+  sepolia_ownerships(where: {owner: $owner}) {
     tokenId
   }
 }
     ` as unknown as DocumentNode<SepoliaTokenByOwnerQuery, SepoliaTokenByOwnerQueryVariables>;
+export const MainnetTokenByOwnerDocument = gql`
+    query MainnetTokenByOwner($owner: Bytes!) {
+  ownerships(where: {owner: $owner}) {
+    tokenId
+  }
+}
+    ` as unknown as DocumentNode<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>;
+
 
 
 export type Requester<C = {}, E = unknown> = <R, V>(doc: DocumentNode, vars?: V, options?: C) => Promise<R> | AsyncIterable<R>
@@ -1269,6 +1601,9 @@ export function getSdk<C, E>(requester: Requester<C, E>) {
   return {
     SepoliaTokenByOwner(variables: SepoliaTokenByOwnerQueryVariables, options?: C): Promise<SepoliaTokenByOwnerQuery> {
       return requester<SepoliaTokenByOwnerQuery, SepoliaTokenByOwnerQueryVariables>(SepoliaTokenByOwnerDocument, variables, options) as Promise<SepoliaTokenByOwnerQuery>;
+    },
+    MainnetTokenByOwner(variables: MainnetTokenByOwnerQueryVariables, options?: C): Promise<MainnetTokenByOwnerQuery> {
+      return requester<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>(MainnetTokenByOwnerDocument, variables, options) as Promise<MainnetTokenByOwnerQuery>;
     }
   };
 }

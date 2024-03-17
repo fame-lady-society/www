@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   execute,
   SepoliaTokenByOwnerQuery,
   getBuiltGraphSDK,
+  MainnetTokenByOwnerQuery,
 } from "@/graphclient";
+import { useAccount } from "wagmi";
 
 export function useLadies({
   owner,
@@ -12,7 +14,11 @@ export function useLadies({
   owner?: `0x${string}`;
   sorted?: "asc" | "desc";
 }) {
-  const [data, setData] = useState<SepoliaTokenByOwnerQuery>();
+  const { chainId } = useAccount();
+
+  const [data, setData] = useState<
+    SepoliaTokenByOwnerQuery | MainnetTokenByOwnerQuery
+  >();
   const [error, setError] = useState<Error>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,9 +26,18 @@ export function useLadies({
     if (owner) {
       setIsLoading(true);
       const sdk = getBuiltGraphSDK();
-      sdk
-        .SepoliaTokenByOwner({ owner })
-        .then((result) => {
+
+      const action =
+        chainId === 1
+          ? sdk.MainnetTokenByOwner.bind(sdk)
+          : chainId === 11155111
+            ? sdk.SepoliaTokenByOwner.bind(sdk)
+            : undefined;
+      if (!action) {
+        throw new Error("Unsupported chainId");
+      }
+      action({ owner })
+        .then((result: SepoliaTokenByOwnerQuery | MainnetTokenByOwnerQuery) => {
           setData(result);
         })
         .catch((e) => {
@@ -32,18 +47,30 @@ export function useLadies({
           setIsLoading(false);
         });
     }
-  }, [owner, setData]);
+  }, [chainId, owner, setData]);
 
-  const tokenIds =
-    data?.ownerships
-      .filter((o) => o?.tokenId !== null || typeof o?.tokenId !== "undefined")
-      .map((o) => BigInt(o.tokenId.toString())) ?? [];
-
-  if (sorted === "asc") {
-    tokenIds.sort((a, b) => Number(a) - Number(b));
-  } else if (sorted === "desc") {
-    tokenIds.sort((a, b) => Number(b) - Number(a));
-  }
+  const lookup =
+    chainId === 1
+      ? "ownerships"
+      : chainId === 11155111
+        ? "sepolia_ownerships"
+        : undefined;
+  const tokenIds = useMemo(() => {
+    const t =
+      (lookup &&
+        (data?.[lookup] as MainnetTokenByOwnerQuery["ownerships"] | undefined)
+          ?.filter(
+            (o) => o?.tokenId !== null || typeof o?.tokenId !== "undefined",
+          )
+          .map((o) => BigInt(o.tokenId.toString()))) ??
+      [];
+    if (sorted === "asc") {
+      t.sort((a, b) => Number(a) - Number(b));
+    } else if (sorted === "desc") {
+      t.sort((a, b) => Number(b) - Number(a));
+    }
+    return t;
+  }, [data, lookup, sorted]);
 
   return { data: tokenIds, error, isLoading };
 }

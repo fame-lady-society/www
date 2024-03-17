@@ -4,7 +4,7 @@ import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
-import { imageUrl } from "@/service/image";
+import { thumbnailImageUrl } from "@/utils/metadata";
 
 export interface TokenProps {
   tokenId?: bigint;
@@ -23,7 +23,7 @@ export const TokenSelect: FC<{
             <CardHeader title={`FLS ${t}`} />
             <CardMedia
               component="img"
-              image={imageUrl(t)}
+              image={thumbnailImageUrl(t)}
               sx={{
                 objectFit: "contain",
                 width: "100%",

@@ -8,10 +8,7 @@
     "build:prod": "AWS_PROFILE=0xflick-portfolio-admin node build.mjs fameladysociety.com",
     "start": "next start",
     "lint": "next lint",
-    "generate": "yarn generate:schema && yarn generate:introspection && yarn generate:types",
-    "generate:schema": "yarn --cwd ../../packages/graphql schema:build",
-    "generate:introspection": "node scripts/possibleTypes.cjs",
-    "generate:types": "graphql-codegen --config codegen.yml"
+    "schema:types": "graphclient build"
   },
   "dependencies": {
     "@apollo/client": "^3.7.2",
@@ -19,6 +16,7 @@
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
     "@ethersproject/providers": "^5.7.2",
+    "@graphql-mesh/transform-prefix": "^0.97.4",
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/onboarding": "^1.0.1",
     "@metamask/providers": "^9.0.0",
@@ -48,11 +46,13 @@
     "isomorphic-fetch": "^3.0.0",
     "isomorphic-unfetch": "^3.1.0",
     "jose": "^4.8.1",
+    "kubo-rpc-client": "^3.0.4",
     "merge-anything": "^5.0.2",
     "micro": "^9.4.0",
     "motion-sensors-polyfill": "^0.3.1",
-    "next": "^12.2.2",
+    "next": "^14.1.3",
     "next-auth": "^4.5.0",
+    "pino-pretty": "^10.3.1",
     "react": "^18",
     "react-countdown": "^2.3.5",
     "react-dom": "^18.2.0",
@@ -92,7 +92,6 @@
     "eslint-config-next": "12.1.6",
     "eth-provider": "^0.13.6",
     "local-ssl-proxy": "^1.3.0",
-    "next-transpile-modules": "^9.0.0",
     "prettier": "^3.2.5",
     "typechain": "^8.1.0",
     "typescript": "5.0.4"

@@ -25,7 +25,7 @@ export const WrapCard: FC<{
   transactionInProgress?: boolean;
   onWrapTo: (o: { args: [string, bigint[]]; value: bigint }) => void;
   onWrap: (o: { args: [bigint[]]; value: bigint }) => void;
-  wrapCost: bigint;
+  wrapCost?: bigint;
   onApprove: () => void;
 }> = ({
   isApprovedForAll,
@@ -33,7 +33,7 @@ export const WrapCard: FC<{
   transactionInProgress,
   onWrapTo,
   onWrap,
-  wrapCost,
+  wrapCost = 0n,
   onApprove,
 }) => {
   // const router = useRouter();
@@ -69,12 +69,13 @@ export const WrapCard: FC<{
       if (tipState.wrapTo) {
         onWrapTo({
           args: [
-            sendTo || sendToInput,
+            (sendTo || sendToInput) as `0x${string}`,
             selectedTokenIds
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
           ],
-          value: wrapCost * BigInt(selectedTokenIds.length) + tipState.value,
+          value:
+            wrapCost * BigInt(selectedTokenIds.length) + (tipState.value || 0n),
         });
       } else {
         onWrap({
@@ -83,7 +84,8 @@ export const WrapCard: FC<{
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
           ],
-          value: wrapCost * BigInt(selectedTokenIds.length) + tipState.value,
+          value:
+            wrapCost * BigInt(selectedTokenIds.length) + (tipState.value || 0n),
         });
       }
     }

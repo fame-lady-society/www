@@ -8,6 +8,8 @@ import {
   fameLadySquadAddress,
   fameLadySocietyAbi,
   fameLadySocietyAddress,
+  namedLadyRendererAbi,
+  namedLadyRendererAddress,
 } from "@/wagmi";
 
 export function useChainContracts() {
@@ -27,10 +29,14 @@ export function useChainContracts() {
       : chainId === 11155111
         ? wrappedNftAddress[chainId]
         : undefined;
+
   return {
     targetContractAbi,
     targetContractAddress,
     wrappedNftContractAbi,
     wrappedNftContractAddress,
+    namedLadyRendererAbi,
+    namedLadyRendererAddress:
+      chainId === 11155111 ? namedLadyRendererAddress[chainId] : undefined,
   };
 }

@@ -19,7 +19,7 @@ import { isAddress } from "viem";
 export const TurboWrap: FC<{
   tokenIds: readonly bigint[];
   isApprovedForAll?: boolean;
-  wrapCost: bigint;
+  wrapCost?: bigint;
   transactionInProgress?: boolean;
   onApprove: () => void;
   onWrapTo: (o: { args: [string, bigint[]]; value: bigint }) => void;
@@ -27,7 +27,7 @@ export const TurboWrap: FC<{
 }> = ({
   tokenIds,
   isApprovedForAll,
-  wrapCost,
+  wrapCost = 0n,
   transactionInProgress,
   onApprove,
   onWrapTo,
@@ -69,7 +69,7 @@ export const TurboWrap: FC<{
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
           ],
-          value: wrapCost * BigInt(tokenIds.length) + tipState.value,
+          value: wrapCost * BigInt(tokenIds.length) + (tipState.value || 0n),
         });
       } else {
         onWrap({
@@ -78,7 +78,7 @@ export const TurboWrap: FC<{
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
           ],
-          value: wrapCost * BigInt(tokenIds.length) + tipState.value,
+          value: wrapCost * BigInt(tokenIds.length) + (tipState.value || 0n),
         });
       }
     }
@@ -123,7 +123,7 @@ export const TurboWrap: FC<{
               }}
             />
           </FormGroup>
-          <Box sx={{ height: 32 }}>
+          <Box component="div" sx={{ height: 32 }}>
             {transactionInProgress && isApprovedForAll === false && (
               <Typography variant="body2" color="text.warning">
                 you must approve the contract to wrap your tokens

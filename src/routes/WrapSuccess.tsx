@@ -1,3 +1,4 @@
+"use client";
 import Head from "next/head";
 import { DefaultProvider } from "@/context/default";
 import { NextPage } from "next";
@@ -9,7 +10,7 @@ import { FC, useEffect, useState } from "react";
 import { Success } from "../features/wrap/components/Success";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 
-const TestSuccessPage: NextPage<{}> = () => {
+const WrapSuccessPage: NextPage<{}> = () => {
   const [tokenIds, setTokenIds] = useState<string[]>([]);
   const [txHash, setTxHash] = useState<string>("");
 
@@ -46,4 +47,4 @@ const TestSuccessPage: NextPage<{}> = () => {
     </DefaultProvider>
   );
 };
-export default TestSuccessPage;
+export default WrapSuccessPage;
