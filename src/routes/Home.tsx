@@ -8,7 +8,7 @@ import Container from "@mui/material/Container";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { CountDown } from "@/components/CountDown";
-import NextImage from "next/legacy/image";
+import NextImage from "next/image";
 import { RandomWrapVideo } from "@/features/reveal/components/RandomWrapVideo";
 import { PostReveal } from "@/features/reveal/components/PostReveal";
 import { useState } from "react";
@@ -74,10 +74,13 @@ const HomePage: NextPage<{}> = () => {
               <NextImage
                 src="/images/Flsociety_morg_mock.png"
                 alt="hero"
-                layout="responsive"
                 width={1920}
                 height={1080}
-              />
+                sizes="100vw"
+                style={{
+                  width: "100%",
+                  height: "auto"
+                }} />
             </Box>
             <Box component="div" sx={{ mt: 4 }}>
               <CountDown onEnd={() => setIsRevealed(true)} />

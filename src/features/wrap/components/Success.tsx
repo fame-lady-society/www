@@ -10,7 +10,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import NextImage from "next/legacy/image";
+import NextImage from "next/image";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import BackIcon from "@mui/icons-material/ArrowBack";
 import { EtherscanIcon } from "@/components/icons/etherscan";

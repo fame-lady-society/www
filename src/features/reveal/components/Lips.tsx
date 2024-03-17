@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { useSpring, animated, to } from "@react-spring/web";
-import NextImage from "next/legacy/image";
+import NextImage from "next/image";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 
@@ -28,10 +28,13 @@ export const Lips: FC = () => {
         <NextImage
           src="/images/Flsociety_morg_mock.png"
           alt="hero"
-          layout="responsive"
           width={1920}
           height={1080}
-        />
+          sizes="100vw"
+          style={{
+            width: "100%",
+            height: "auto"
+          }} />
         <AnimatedBox
           sx={{
             mt: 10,

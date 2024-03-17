@@ -1,8 +1,6 @@
-import { FC, useEffect, useRef, useState } from "react";
 import { Parallax, ParallaxLayer } from "@react-spring/parallax";
-import { useScroll, animated, useSpring } from "@react-spring/web";
 
-import NextImage from "next/legacy/image";
+import NextImage from "next/image";
 
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
@@ -15,14 +13,18 @@ export const PostReveal = () => {
     <>
       <Parallax pages={3}>
         <ParallaxLayer offset={0} speed={0.5}>
-          <Container maxWidth="lg">
-            <Box component="div" sx={{ mt: 4 }}>
+          <Container maxWidth="lg" sx={{ mt: 6 }}>
+            <Box component="div">
               <NextImage
                 src="/images/Flsociety_morg_mock.png"
                 alt="hero"
-                layout="responsive"
                 width={1920}
                 height={1080}
+                sizes="100vw"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                }}
               />
             </Box>
 
@@ -74,9 +76,13 @@ export const PostReveal = () => {
                   <NextImage
                     src="/images/Flsociety_morg_mock.png"
                     alt="hero"
-                    layout="responsive"
                     width={640}
                     height={480}
+                    sizes="100vw"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                    }}
                   />
                   <Box
                     component="div"
@@ -102,9 +108,13 @@ export const PostReveal = () => {
                         <NextImage
                           src="/images/reveal/discord-dark.png"
                           alt="discord"
-                          layout="responsive"
                           width={240}
                           height={60}
+                          sizes="100vw"
+                          style={{
+                            width: "100%",
+                            height: "auto",
+                          }}
                         />
                       </Box>
                       <Typography variant="h6" align="center">
@@ -130,9 +140,13 @@ export const PostReveal = () => {
                 <NextImage
                   src="/images/reveal/fls_wrap.png"
                   alt="hero"
-                  layout="responsive"
                   width={440}
                   height={800}
+                  sizes="100vw"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                  }}
                 />
               </Grid2>
             </Grid2>

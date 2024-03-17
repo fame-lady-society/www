@@ -1,7 +1,7 @@
 import { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-import NextImage from "next/legacy/image";
+import NextImage from "next/image";
 import { Box } from "@mui/material";
 import { FullscreenCanvas } from "../three/components/FullscreenCanvas";
 
