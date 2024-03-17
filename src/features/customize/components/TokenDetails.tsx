@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo, useState } from "react";
 import { useSIWE } from "connectkit";
 import Grid2 from "@mui/material/Unstable_Grid2";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";

@@ -2,7 +2,7 @@ import { FC, useEffect, useRef, useState } from "react";
 import { Parallax, ParallaxLayer } from "@react-spring/parallax";
 import { useScroll, animated, useSpring } from "@react-spring/web";
 
-import NextImage from "next/image";
+import NextImage from "next/legacy/image";
 
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";

@@ -5,7 +5,7 @@ import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { TwitterIcon } from "@/components/icons/twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import { OpenSeaIcon } from "@/components/icons/opensea";
 import Divider from "@mui/material/Divider";
 import { WrappedLink } from "@/components/WrappedLink";

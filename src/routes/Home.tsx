@@ -8,7 +8,7 @@ import Container from "@mui/material/Container";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { CountDown } from "@/components/CountDown";
-import NextImage from "next/image";
+import NextImage from "next/legacy/image";
 import { RandomWrapVideo } from "@/features/reveal/components/RandomWrapVideo";
 import { PostReveal } from "@/features/reveal/components/PostReveal";
 import { useState } from "react";

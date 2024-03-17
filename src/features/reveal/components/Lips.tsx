@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { useSpring, animated, to } from "@react-spring/web";
-import NextImage from "next/image";
+import NextImage from "next/legacy/image";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 
