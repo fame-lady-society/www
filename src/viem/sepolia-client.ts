@@ -36,9 +36,8 @@ export const walletClient = createWalletClient({
   chain: sepolia,
 });
 
-export const signerAccount = privateKeyToAccount(
-  process.env.SEPOLIA_SIGNER_PRIVATE_KEY! as `0x${string}`,
-);
+export const createSignerAccount = () =>
+  privateKeyToAccount(process.env.SEPOLIA_SIGNER_PRIVATE_KEY! as `0x${string}`);
 
 export const flsTokenAddress = wrappedNftAddress[sepolia.id];
 export const namedLadyRendererAddress = namedLadyRendererAddressAll[sepolia.id];

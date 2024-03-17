@@ -31,7 +31,9 @@ export const HomeMenu: FC<PropsWithChildren<IProps>> = ({
         horizontal: "right",
       }}
     >
-      <Box sx={{ width: 320 }}>{children}</Box>
+      <Box component="div" sx={{ width: 320 }}>
+        {children}
+      </Box>
     </Menu>
   );
 };

@@ -15,7 +15,7 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import BackIcon from "@mui/icons-material/ArrowBack";
 import { EtherscanIcon } from "@/components/icons/etherscan";
 import { OpenSeaIcon } from "@/components/icons/opensea";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { IconButton } from "@mui/material";
 import { WrappedLink } from "@/components/WrappedLink";
 
@@ -42,6 +42,7 @@ export const Success: FC<{
                 }}
               >
                 <Box
+                  component="div"
                   display="flex"
                   justifyContent="center"
                   mb={2}
@@ -101,6 +102,7 @@ export const Success: FC<{
               <Grid2 container rowSpacing={8}>
                 <Grid2 xs={12}>
                   <Box
+                    component="div"
                     display="flex"
                     justifyContent="center"
                     mb={2}
@@ -130,6 +132,7 @@ export const Success: FC<{
                 </Grid2>
                 <Grid2 xs={12} lg={6}>
                   <Box
+                    component="div"
                     display="flex"
                     justifyContent="center"
                     mb={2}
@@ -163,6 +166,7 @@ export const Success: FC<{
                 </Grid2>
                 <Grid2 xs={12} lg={6}>
                   <Box
+                    component="div"
                     display="flex"
                     justifyContent="center"
                     mb={2}

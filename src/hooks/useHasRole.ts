@@ -19,13 +19,7 @@ export function useHasRole(roleName: "TREASURER_ROLE") {
     abi: wrappedNftContractAbi,
     address: wrappedNftContractAddress,
     functionName: "hasRole",
-    args: [roleToBytes32(roleName), address],
-  });
-  console.log({
-    hasRole,
-    isLoading,
-    address,
-    roleName: roleToBytes32(roleName),
+    args: address ? [roleToBytes32(roleName), address] : undefined,
   });
   return {
     hasRole,

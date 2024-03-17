@@ -36,9 +36,8 @@ export const walletClient = createWalletClient({
   chain: mainnet,
 });
 
-export const signerAccount = privateKeyToAccount(
-  process.env.MAINNET_SIGNER_PRIVATE_KEY! as `0x${string}`,
-);
+export const createSignerAccount = () =>
+  privateKeyToAccount(process.env.MAINNET_SIGNER_PRIVATE_KEY! as `0x${string}`);
 
 export const flsTokenAddress = fameLadySocietyAddress[mainnet.id];
 export const namedLadyRendererAddress = undefined; //namedLadyRendererAddressAll[mainnet.id];

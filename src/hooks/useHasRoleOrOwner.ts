@@ -31,7 +31,7 @@ export function useHasRoleOrOwner(roleName: "TREASURER_ROLE") {
       abi: wrappedNftContractAbi,
       address: wrappedNftContractAddress,
       functionName: "hasRole",
-      args: [role, address],
+      args: role && address ? [role, address] : undefined,
     });
 
   const isLoading = rolesIsLoading || hasTreasurerRoleIsLoading;

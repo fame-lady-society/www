@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "DEPLOYMENT=localhost-fls AWS_PROFILE=0xflick-portfolio-admin next dev",
-    "build:dev": "AWS_PROFILE=0xflick-portfolio-admin node build.mjs fls.0xflick.com",
-    "build:prod": "AWS_PROFILE=0xflick-portfolio-admin node build.mjs fameladysociety.com",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "schema:types": "graphclient build"
@@ -42,10 +41,8 @@
     "formik-mui": "^5.0.0-alpha.0",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
-    "ipfs-http-client": "^57.0.1",
     "isomorphic-fetch": "^3.0.0",
     "isomorphic-unfetch": "^3.1.0",
-    "jose": "^4.8.1",
     "kubo-rpc-client": "^3.0.4",
     "merge-anything": "^5.0.2",
     "micro": "^9.4.0",
@@ -75,7 +72,6 @@
     "@graphql-codegen/typescript-operations": "^2.5.11",
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@openzeppelin/contracts": "^4.6.0",
-    "@sls-next/lambda-at-edge": "3.8.0-alpha.0",
     "@typechain/ethers-v5": "^10.1.0",
     "@types/isomorphic-fetch": "^0.0.36",
     "@types/motion-sensors-polyfill": "^0.3.1",

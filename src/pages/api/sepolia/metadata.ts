@@ -3,7 +3,7 @@ import {
   flsTokenAddress,
   namedLadyRendererAddress,
   walletClient,
-  signerAccount,
+  createSignerAccount,
 } from "@/viem/sepolia-client";
 import { createWalletClient, encodePacked, erc721Abi, keccak256 } from "viem";
 import { readContract, signMessage } from "viem/actions";
@@ -24,9 +24,7 @@ export default (async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
-  console.log("checking session");
   const { address, chainId } = await siweServer.getSession(req, res);
-  console.log("session", address, chainId);
   if (!address) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -37,7 +35,6 @@ export default (async function handler(req, res) {
   const { name, description, tokenId } = JSON.parse(
     req.body,
   ) as IUpdateMetadata;
-  console.log("name", name, "description", description, "tokenId", tokenId);
   if (!name && !description) {
     return res.status(400).json({ error: "Invalid request" });
   }
@@ -76,26 +73,20 @@ export default (async function handler(req, res) {
     const metadata = await fetchJson<IMetadata>({
       cid: tokenUri.replace("ipfs://", ""),
     });
-    console.log("Fetched metadata");
     metadata.name = name;
     metadata.description =
       typeof description !== "undefined" && description.length > 0
         ? `${description}\n\n${defaultDescription}`
         : defaultDescription;
 
-    console.log("Metadata updated, uploading to IPFS");
-
     const cid = await upload(JSON.stringify(metadata));
-    console.log("Uploaded to IPFS", cid);
     const tokenUriRequest = encodePacked(
       ["uint256", "string", "uint256"],
       [BigInt(tokenId), `ipfs://${cid}`, nonce],
     );
-    console.log(`Signing with ${signerAccount.address}`);
     const hash = keccak256(tokenUriRequest);
-    console.log("hash", hash);
     const signature = await signMessage(walletClient, {
-      account: signerAccount,
+      account: createSignerAccount(),
       message: {
         raw: hash,
       },

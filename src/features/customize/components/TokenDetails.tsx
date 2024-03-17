@@ -193,84 +193,86 @@ export const TokenDetails: FC<{
     segments.pop();
     push(segments.join("/"));
   }, [push]);
-  return <>
-    <Grid2 container spacing={2}>
-      <Grid2 xs={12}>
-        <IconButton onClick={onBack}>
-          <BackIcon />
-        </IconButton>
-      </Grid2>
-      <Grid2 xs={12}>
-        <EditableNameAndDescription
-          isPending={isPending}
-          initialName={metadata.name!}
-          initialDescription={initialDescription!}
-          onSubmit={onSubmit}
-        />
-      </Grid2>
-      <Grid2 xs={12} lg={6}>
-        <Paper
-          elevation={3}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            height: "100%",
-          }}
-        >
-          <Typography variant="h4" align="center">
-            {metadata.name}
-          </Typography>
-          <Box
-            component="div"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignContent="center"
+  return (
+    <>
+      <Grid2 container spacing={2}>
+        <Grid2 xs={12}>
+          <IconButton onClick={onBack}>
+            <BackIcon />
+          </IconButton>
+        </Grid2>
+        <Grid2 xs={12}>
+          <EditableNameAndDescription
+            isPending={isPending}
+            initialName={metadata.name!}
+            initialDescription={initialDescription!}
+            onSubmit={onSubmit}
+          />
+        </Grid2>
+        <Grid2 xs={12} lg={6}>
+          <Paper
+            elevation={3}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "100%",
+            }}
           >
-            <Image
-              src={imageUrl(tokenId)}
-              width={800}
-              height={800}
-              alt="Fame Lady Society Token Image"
-              sizes="100vw"
-              style={{
-                width: "100%",
-                height: "auto",
-                maxWidth: "100%",
-                height: "auto"
-              }} />
-          </Box>
-        </Paper>
-      </Grid2>
-      <Grid2 xs={12} lg={6}>
-        <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
-          <Typography variant="body1" color="text.secondary">
-            {metadata.description?.split("\n").map((line) => (
-              <>
-                {line}
-                <br />
-              </>
-            ))}
-          </Typography>
-          {metadata.attributes?.map(({ trait_type, value }) => {
-            return (
-              <Attribute
-                key={`${trait_type}:${value}`}
-                name={trait_type}
-                value={value}
+            <Typography variant="h4" align="center">
+              {metadata.name}
+            </Typography>
+            <Box
+              component="div"
+              display="flex"
+              flexDirection="row"
+              justifyContent="center"
+              alignContent="center"
+            >
+              <Image
+                src={imageUrl(tokenId)}
+                width={800}
+                height={800}
+                alt="Fame Lady Society Token Image"
+                sizes="100vw"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  maxWidth: "100%",
+                }}
               />
-            );
-          })}
-        </Paper>
+            </Box>
+          </Paper>
+        </Grid2>
+        <Grid2 xs={12} lg={6}>
+          <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
+            <Typography variant="body1" color="text.secondary">
+              {metadata.description?.split("\n").map((line) => (
+                <>
+                  {line}
+                  <br />
+                </>
+              ))}
+            </Typography>
+            {metadata.attributes?.map(({ trait_type, value }) => {
+              return (
+                <Attribute
+                  key={`${trait_type}:${value}`}
+                  name={trait_type}
+                  value={value}
+                />
+              );
+            })}
+          </Paper>
+        </Grid2>
       </Grid2>
-    </Grid2>
-    <TransactionsModal
-      open={!!transactionHash}
-      transactions={pendingTransactions}
-      onTransactionConfirmed={onTransactionConfirmed}
-      onClose={onClosed}
-    />
-  </>;
+      <TransactionsModal
+        open={!!transactionHash}
+        transactions={pendingTransactions}
+        onTransactionConfirmed={onTransactionConfirmed}
+        onClose={onClosed}
+      />
+    </>
+  );
 };
 7;

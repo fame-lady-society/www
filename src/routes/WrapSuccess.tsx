@@ -6,7 +6,7 @@ import MenuList from "@mui/material/MenuList";
 import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { FC, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Success } from "../features/wrap/components/Success";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 

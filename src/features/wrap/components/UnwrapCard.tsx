@@ -31,7 +31,7 @@ export const UnwrapCard: FC<{
   });
 
   const onRequestWrapTip = useCallback(() => {
-    onUnwrapMany([sendTo || sendToInput || address, selectedTokenIds]);
+    onUnwrapMany([sendTo || sendToInput || address!, selectedTokenIds]);
   }, [address, onUnwrapMany, selectedTokenIds, sendTo, sendToInput]);
   const onTokenIdsUpdates = useCallback(
     (e: string) => {
@@ -108,7 +108,7 @@ export const UnwrapCard: FC<{
                 </Typography>
               )}
               {(() => {
-                if (sendTo || isAddress(sendToInput)) {
+                if (sendTo || isAddress(sendToInput ?? "")) {
                   switch (selectedTokenIds.length) {
                     case 0:
                       return (

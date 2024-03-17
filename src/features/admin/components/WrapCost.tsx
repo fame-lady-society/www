@@ -43,8 +43,8 @@ export const WrapCost: FC<{}> = ({}) => {
   const isValidCostInput = !Number.isNaN(Number(sendToInput));
   const onSubmit = useCallback(() => {
     writeContractAsync({
-      args: [parseEther(sendToInput)],
-      address: wrappedNftContractAddress,
+      args: [parseEther(sendToInput!)],
+      address: wrappedNftContractAddress!,
       abi: wrappedNftContractAbi,
       functionName: "setWrapCost",
     }).then((hash) => {
@@ -97,7 +97,7 @@ export const WrapCost: FC<{}> = ({}) => {
               sx={{
                 my: 1,
               }}
-              label={`update wrap cost${wrapCostIsLoading ? "" : ` (current cost: ${formatEther(wrapCost)} E)`}`}
+              label={`update wrap cost${wrapCostIsLoading ? "" : ` (current cost: ${formatEther(wrapCost!)} E)`}`}
               variant="outlined"
               onChange={(e) => {
                 setSendToInput(e.target.value);

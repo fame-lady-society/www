@@ -33,8 +33,9 @@ export const Lips: FC = () => {
           sizes="100vw"
           style={{
             width: "100%",
-            height: "auto"
-          }} />
+            height: "auto",
+          }}
+        />
         <AnimatedBox
           sx={{
             mt: 10,
@@ -46,13 +47,14 @@ export const Lips: FC = () => {
             transform: to(
               [props.x, props.scale],
               (value, scale) =>
-                `rotateY(${value}rad) scale(${scale}) rotateZ(0deg)`
+                `rotateY(${value}rad) scale(${scale}) rotateZ(0deg)`,
             ),
           }}
         >
           <AnimatedImage
             src="/images/lips.webp"
             layout="fill"
+            alt="lips"
             // style={{
             //   transform: to(
             //     [props.x, props.scale],

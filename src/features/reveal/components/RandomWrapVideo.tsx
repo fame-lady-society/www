@@ -24,7 +24,7 @@ export const RandomWrapVideo: React.FC<RandomWrapVideoProps> = ({
   const matchesSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const matchesMediumScreen = useMediaQuery(theme.breakpoints.only("md"));
 
-  const changeVideo = () => {
+  const changeVideo = useCallback(() => {
     setCurrentUrl((currentUrl) => {
       do {
         const randomIndex = Math.floor(Math.random() * urls.length);
@@ -35,7 +35,7 @@ export const RandomWrapVideo: React.FC<RandomWrapVideoProps> = ({
       } while (true);
     });
     setVideoReady(false);
-  };
+  }, [urls]);
 
   const positionVideoOffScreen = useCallback(() => {
     if (videoRef.current) {
@@ -70,7 +70,7 @@ export const RandomWrapVideo: React.FC<RandomWrapVideoProps> = ({
 
   useEffect(() => {
     changeVideo();
-  }, []);
+  }, [changeVideo]);
 
   useEffect(() => {
     if (videoReady) {
@@ -95,7 +95,7 @@ export const RandomWrapVideo: React.FC<RandomWrapVideoProps> = ({
         clearTimeout(timer);
       };
     }
-  }, [interval, videoReady, positionVideoOffScreen, moveVideo]);
+  }, [interval, videoReady, positionVideoOffScreen, moveVideo, changeVideo]);
 
   const move = useSpring({
     left: coords.x,
