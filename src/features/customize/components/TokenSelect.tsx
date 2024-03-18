@@ -7,20 +7,40 @@ import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { thumbnailImageUrl } from "@/utils/metadata";
 import { useAccount } from "wagmi";
 import { useLadies } from "../hooks/useLadies";
+import { Empty } from "./Empty";
 
 export interface TokenProps {
   tokenId?: bigint;
   url?: string;
 }
 
+const NotConnected: FC<{}> = () => {
+  return (
+    <Grid2 xs={12}>
+      <Box
+        component="div"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        my={2}
+      >
+        <Typography variant="h6" color="text.secondary">
+          Connect your wallet to see your Fame Ladies
+        </Typography>
+      </Box>
+    </Grid2>
+  );
+};
+
 export const TokenSelect: FC<{
   prefix?: string;
 }> = ({ prefix = "" }) => {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [couldLoadMore, setCouldLoreMore] = useState(true);
   const first =
     typeof window !== "undefined"
@@ -66,6 +86,7 @@ export const TokenSelect: FC<{
   );
   return (
     <Grid2 container spacing={1}>
+      {!isLoading && tokens.length === 0 && <Empty />}
       {tokens.map(({ tokenId, url }, i) => {
         return (
           <Grid2 xs={12} sm={6} md={4} lg={3} key={tokenId}>
@@ -87,9 +108,10 @@ export const TokenSelect: FC<{
           alignItems="center"
           my={2}
         >
-          {isLoading ? (
+          {!isConnected && <NotConnected />}
+          {isLoading && isConnected ? (
             <CircularProgress />
-          ) : (
+          ) : tokens.length > 0 ? (
             <Button
               disabled={!couldLoadMore}
               onClick={() => {
@@ -101,7 +123,7 @@ export const TokenSelect: FC<{
             >
               Load more
             </Button>
-          )}
+          ) : null}
         </Box>
       </Grid2>
     </Grid2>
