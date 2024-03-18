@@ -6,11 +6,13 @@ import FormGroup from "@mui/material/FormGroup";
 import TextField from "@mui/material/TextField";
 import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
+import { useNotifications } from "@/features/notifications/Context";
 
 export const MintCard: FC<{
   onMint(count: bigint): void;
   transactionInProgress?: boolean;
 }> = ({ onMint, transactionInProgress }) => {
+  const { addNotification } = useNotifications();
   // const { address: selectedAddress, chain: currentChain } = useAccount();
   const [count, setCount] = useState("");
 
@@ -28,8 +30,17 @@ export const MintCard: FC<{
     [count, onMint],
   );
   const onClick = useCallback(() => {
-    onMint(BigInt(count));
-  }, [count, onMint]);
+    const bcount = BigInt(count);
+    if (bcount > 25n) {
+      addNotification({
+        id: "mint-error",
+        message: "You can only mint 25 tokens at a time",
+        type: "error",
+      });
+      return;
+    }
+    onMint(bcount);
+  }, [addNotification, count, onMint]);
   return (
     <Card>
       <CardContent>
