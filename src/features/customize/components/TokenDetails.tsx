@@ -126,10 +126,13 @@ export const TokenDetails: FC<{
   const { namedLadyRendererAbi, namedLadyRendererAddress } =
     useChainContracts();
   const { writeContractAsync } = useWriteContract();
-  const initialDescription = useMemo(
-    () => metadata.description?.split(defaultDescription)[0]?.trim(),
-    [metadata.description],
-  );
+  const initialDescription = useMemo(() => {
+    const chunks = metadata.description?.split(defaultDescription);
+    if (chunks && chunks.length > 1) {
+      return chunks[0].trim();
+    }
+    return "";
+  }, [metadata.description]);
   const onSubmit = useCallback(
     (name: string, description: string) => {
       if (name !== metadata.name || initialDescription !== description) {
