@@ -21,8 +21,8 @@ import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
-import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
 import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
+import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
 import * as importedModule$0 from "./sources/fls-sepolia/introspectionSchema";
 import * as importedModule$1 from "./sources/fls-mainnet/introspectionSchema";
 export type Maybe<T> = T | null;
@@ -1566,6 +1566,9 @@ export function getBuiltGraphSDK<TGlobalContext = any, TOperationContext = any>(
 }
 export type SepoliaTokenByOwnerQueryVariables = Exact<{
   owner: Scalars['Bytes'];
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
 }>;
 
 
@@ -1573,6 +1576,9 @@ export type SepoliaTokenByOwnerQuery = { sepolia_ownerships: Array<Pick<Ownershi
 
 export type MainnetTokenByOwnerQueryVariables = Exact<{
   owner: Scalars['Bytes'];
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
 }>;
 
 
@@ -1580,15 +1586,25 @@ export type MainnetTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'toke
 
 
 export const SepoliaTokenByOwnerDocument = gql`
-    query SepoliaTokenByOwner($owner: Bytes!) {
-  sepolia_ownerships(where: {owner: $owner}) {
+    query SepoliaTokenByOwner($owner: Bytes!, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  sepolia_ownerships(
+    where: {owner: $owner}
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+  ) {
     tokenId
   }
 }
     ` as unknown as DocumentNode<SepoliaTokenByOwnerQuery, SepoliaTokenByOwnerQueryVariables>;
 export const MainnetTokenByOwnerDocument = gql`
-    query MainnetTokenByOwner($owner: Bytes!) {
-  ownerships(where: {owner: $owner}) {
+    query MainnetTokenByOwner($owner: Bytes!, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  ownerships(
+    where: {owner: $owner}
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+  ) {
     tokenId
   }
 }

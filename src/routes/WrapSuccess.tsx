@@ -1,16 +1,15 @@
 "use client";
 import Head from "next/head";
 import { DefaultProvider } from "@/context/default";
-import { NextPage } from "next";
 import MenuList from "@mui/material/MenuList";
 import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Success } from "../features/wrap/components/Success";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 
-const WrapSuccessPage: NextPage<{}> = () => {
+const WrapSuccessPage: FC<{}> = () => {
   const [tokenIds, setTokenIds] = useState<string[]>([]);
   const [txHash, setTxHash] = useState<string>("");
 

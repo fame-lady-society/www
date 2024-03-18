@@ -4,14 +4,19 @@ import {
   SepoliaTokenByOwnerQuery,
   getBuiltGraphSDK,
   MainnetTokenByOwnerQuery,
+  MainnetTokenByOwnerQueryVariables,
 } from "@/graphclient";
 import { useAccount } from "wagmi";
 
 export function useLadies({
   owner,
+  first = 100,
+  skip,
   sorted,
 }: {
   owner?: `0x${string}`;
+  first?: number;
+  skip?: number;
   sorted?: "asc" | "desc";
 }) {
   const { chainId } = useAccount();
@@ -23,11 +28,14 @@ export function useLadies({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log({ owner, first, skip, sorted, chainId });
     if (owner) {
       setIsLoading(true);
       const sdk = getBuiltGraphSDK();
 
-      const action =
+      const action: (
+        v: MainnetTokenByOwnerQueryVariables,
+      ) => Promise<MainnetTokenByOwnerQuery | SepoliaTokenByOwnerQuery> =
         chainId === 1
           ? sdk.MainnetTokenByOwner.bind(sdk)
           : chainId === 11155111
@@ -36,8 +44,8 @@ export function useLadies({
       if (!action) {
         throw new Error("Unsupported chainId");
       }
-      action({ owner })
-        .then((result: SepoliaTokenByOwnerQuery | MainnetTokenByOwnerQuery) => {
+      action({ owner, first, skip, orderDirection: sorted })
+        .then((result) => {
           setData(result);
         })
         .catch((e) => {
@@ -47,7 +55,7 @@ export function useLadies({
           setIsLoading(false);
         });
     }
-  }, [chainId, owner, setData]);
+  }, [chainId, first, owner, setData, skip, sorted]);
 
   const lookup =
     chainId === 1
@@ -64,13 +72,8 @@ export function useLadies({
           )
           .map((o) => BigInt(o.tokenId.toString()))) ??
       [];
-    if (sorted === "asc") {
-      t.sort((a, b) => Number(a) - Number(b));
-    } else if (sorted === "desc") {
-      t.sort((a, b) => Number(b) - Number(a));
-    }
     return t;
-  }, [data, lookup, sorted]);
+  }, [data, lookup]);
 
   return { data: tokenIds, error, isLoading };
 }

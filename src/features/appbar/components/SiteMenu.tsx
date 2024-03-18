@@ -27,7 +27,11 @@ export const SiteMenu: FC<{
           <ExchangeIcon />
         </ListItemIcon>
         <ListItemText
-          primary={<Typography textAlign="right">Wrap</Typography>}
+          primary={
+            <Typography textAlign="right" color="white">
+              Wrap
+            </Typography>
+          }
         />
       </MenuItem>
       <MenuItem
@@ -39,7 +43,11 @@ export const SiteMenu: FC<{
           <UpdateIcon />
         </ListItemIcon>
         <ListItemText
-          primary={<Typography textAlign="right">Customize</Typography>}
+          primary={
+            <Typography textAlign="right" color="white">
+              Customize
+            </Typography>
+          }
         />
       </MenuItem>
       <MenuItem component={WrappedLink} href="/faq" disabled={isFaq}>
@@ -47,7 +55,11 @@ export const SiteMenu: FC<{
           <QAIcon />
         </ListItemIcon>
         <ListItemText
-          primary={<Typography textAlign="right">FAQ</Typography>}
+          primary={
+            <Typography textAlign="right" color="white">
+              FAQ
+            </Typography>
+          }
         />
       </MenuItem>
       <MenuItem component={WrappedLink} href="/" disabled={isHome}>
@@ -55,7 +67,11 @@ export const SiteMenu: FC<{
           <InputIcon />
         </ListItemIcon>
         <ListItemText
-          primary={<Typography textAlign="right">home</Typography>}
+          primary={
+            <Typography textAlign="right" color="white">
+              home
+            </Typography>
+          }
         />
       </MenuItem>
     </>

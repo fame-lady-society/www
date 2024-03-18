@@ -1,10 +1,16 @@
-import React, { FC, useMemo, useState } from "react";
+"use client";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import { thumbnailImageUrl } from "@/utils/metadata";
+import { useAccount } from "wagmi";
+import { useLadies } from "../hooks/useLadies";
 
 export interface TokenProps {
   tokenId?: bigint;
@@ -12,8 +18,31 @@ export interface TokenProps {
 }
 
 export const TokenSelect: FC<{
-  tokens: readonly TokenProps[];
-}> = ({ tokens }) => {
+  prefix?: string;
+}> = ({ prefix = "" }) => {
+  const { address } = useAccount();
+  const [couldLoadMore, setCouldLoreMore] = useState(true);
+  const first =
+    typeof window !== "undefined"
+      ? Math.floor(window.innerHeight / 300) * 8
+      : 64;
+  const [skip, setSkip] = useState(0);
+  const [tokens, setTokens] = useState<TokenProps[]>([]);
+  const { data, isLoading } = useLadies({
+    owner: address,
+    sorted: "asc",
+    first,
+    skip,
+  });
+  useEffect(() => {
+    if (data) {
+      const newTokens = data.map((tokenId) => ({
+        tokenId,
+        url: `${prefix}/${tokenId}`,
+      }));
+      setTokens((prevTokens) => [...prevTokens, ...newTokens]);
+    }
+  }, [data, prefix]);
   const gridTokens = useMemo(
     () =>
       tokens.map(({ tokenId }) => {
@@ -50,6 +79,31 @@ export const TokenSelect: FC<{
           </Grid2>
         );
       })}
+      <Grid2 xs={12}>
+        <Box
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          my={2}
+        >
+          {isLoading ? (
+            <CircularProgress />
+          ) : (
+            <Button
+              disabled={!couldLoadMore}
+              onClick={() => {
+                setSkip((prev) => prev + first);
+              }}
+              sx={{
+                width: "100%",
+              }}
+            >
+              Load more
+            </Button>
+          )}
+        </Box>
+      </Grid2>
     </Grid2>
   );
 };
