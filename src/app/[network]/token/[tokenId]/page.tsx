@@ -28,7 +28,8 @@ export async function generateMetadata(
     title: "Fame Lady Society",
     description: "It's a wrap!",
     openGraph: {
-      images: [`/og/${network}/token/${tokenId}`],
+      images: [`/${network}/og/token/${tokenId}`],
+      url: `/${network}/token/${tokenId}`,
     },
   };
 }
