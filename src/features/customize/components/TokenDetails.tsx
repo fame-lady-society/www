@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from "react";
+import React, { FC, useCallback, useMemo, useRef, useState } from "react";
 import * as sentry from "@sentry/nextjs";
 import { useSIWE } from "connectkit";
 import Grid2 from "@mui/material/Unstable_Grid2";
@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { Transaction } from "@/features/wrap/types";
 import IconButton from "@mui/material/IconButton";
 import BackIcon from "@mui/icons-material/ArrowBack";
+import { ServiceModal } from "./ServiceModal";
 
 const EditableNameAndDescription: FC<{
   initialName: string;
@@ -27,19 +28,19 @@ const EditableNameAndDescription: FC<{
   onSubmit: (name: string, description: string) => void;
   isPending: boolean;
 }> = ({ initialName, initialDescription, onSubmit, isPending }) => {
-  const [wantToUpdate, setWantToUpdate] = useState(false);
+  const wantToUpdate = useRef(false);
   const { addNotification } = useNotifications();
   const [name, setName] = useState(initialName);
   const { isLoading, isSignedIn, signIn } = useSIWE({
     onSignIn: () => {
-      if (wantToUpdate) {
+      if (wantToUpdate.current) {
         onSubmit(name, initialDescription);
-        setWantToUpdate(false);
+        wantToUpdate.current = false;
       }
     },
     onSignOut: () => {
       if (wantToUpdate) {
-        setWantToUpdate(false);
+        wantToUpdate.current = false;
         addNotification({
           id: "sign-out",
           message: "You need to sign in with ethereum to update the token",
@@ -51,8 +52,8 @@ const EditableNameAndDescription: FC<{
   const [description, setDescription] = useState(initialDescription);
   const doSubmit = useCallback(() => {
     if (!isSignedIn) {
-      setWantToUpdate(true);
-      signIn();
+      wantToUpdate.current = true;
+      setTimeout(() => signIn());
     } else {
       onSubmit(name, description);
     }
@@ -120,6 +121,7 @@ export const TokenDetails: FC<{
 }> = ({ metadata, tokenId }) => {
   const { refresh, push } = useRouter();
   const { addNotification } = useNotifications();
+
   const [transactionHash, setTransactionHash] = useState<Transaction | null>(
     null,
   );
@@ -288,6 +290,7 @@ export const TokenDetails: FC<{
           </Paper>
         </Grid2>
       </Grid2>
+      <ServiceModal open={isPending} message="Preparing metadata" />
       <TransactionsModal
         open={!!transactionHash}
         transactions={pendingTransactions}

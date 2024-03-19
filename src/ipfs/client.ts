@@ -51,6 +51,5 @@ export async function upload(data: Buffer | string): Promise<string> {
     body: formData,
   });
   const details = await response.json();
-  console.log("details", details);
   return details.Hash;
 }
