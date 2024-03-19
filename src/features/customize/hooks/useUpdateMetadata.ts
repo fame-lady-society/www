@@ -20,7 +20,8 @@ export function useUpdateMetadata() {
           body: JSON.stringify({ tokenId, name, description }),
         },
       );
-      return (await response.json()) as {
+      const r = await response.json();
+      return r as {
         tokenUri: string;
         signature: `0x${string}`;
       };

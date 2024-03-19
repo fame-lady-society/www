@@ -1,3 +1,4 @@
+import * as sentry from "@sentry/nextjs";
 import {
   client as viemClient,
   flsTokenAddress,
@@ -94,6 +95,7 @@ export default (async function handler(req, res) {
     res.status(200).json({ tokenUri: `ipfs://${cid}`, signature });
   } catch (error) {
     console.error(error);
+    sentry.captureException(error);
     res.status(500).json({ error: "Internal server error" });
   }
 } as NextApiHandler);

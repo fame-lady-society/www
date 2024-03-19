@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from "react";
+import * as sentry from "@sentry/nextjs";
 import { useSIWE } from "connectkit";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Image from "next/image";
@@ -136,8 +137,8 @@ export const TokenDetails: FC<{
   const onSubmit = useCallback(
     (name: string, description: string) => {
       if (name !== metadata.name || initialDescription !== description) {
-        mutateAsync({ tokenId, name, description }).then(
-          ({ tokenUri, signature }) =>
+        mutateAsync({ tokenId, name, description })
+          .then(({ tokenUri, signature }) =>
             writeContractAsync({
               abi: namedLadyRendererAbi,
               address: namedLadyRendererAddress!,
@@ -157,8 +158,26 @@ export const TokenDetails: FC<{
                   type: "error",
                   autoHideMs: 5000,
                 });
+                sentry.captureException(e, {
+                  tags: {
+                    tokenId: tokenId.toString(),
+                  },
+                });
               }),
-        );
+          )
+          .catch((e) => {
+            addNotification({
+              id: "update-metadata",
+              message: "Failed to submit metadata update",
+              type: "error",
+              autoHideMs: 5000,
+            });
+            sentry.captureException(e, {
+              tags: {
+                tokenId: tokenId.toString(),
+              },
+            });
+          });
       } else {
         addNotification({
           id: "no-change",
