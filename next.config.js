@@ -19,6 +19,9 @@ const nextConfig = {
         pathname:
           "/ipfs/bafybeifrehxmpmvh4hiywtpmuuuvt4lotol7wl7dnxlsxikfevn2ivvm7m/*.png",
       },
+      {
+        hostname: "ipfs.fameladysociety.com",
+      },
     ],
   },
 };

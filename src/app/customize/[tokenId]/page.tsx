@@ -11,5 +11,5 @@ export default async function Page({
 }: {
   params: { tokenId: string; network: string };
 }) {
-  return redirect(`/mainnet/customize/${params.tokenId}`);
+  redirect(`/mainnet/customize/${params.tokenId}`);
 }

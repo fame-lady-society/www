@@ -11,5 +11,6 @@ export default async function Page({
 }: {
   params: { network: string };
 }) {
-  return redirect(`/mainnet/wrap`);
+  redirect(`/mainnet/wrap`);
+  return null;
 }

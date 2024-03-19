@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Customize from "@/routes/Customize";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -12,7 +11,8 @@ export default async function Page({
 }: {
   params: { network: string };
 }) {
-  return redirect(`/mainnet/customize`);
+  redirect(`/mainnet/customize`);
+  return null;
 }
 
 export const dynamic = "force-dynamic";

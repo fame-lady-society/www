@@ -7,10 +7,10 @@ import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
-import { TokenDetails } from "@/features/customize/components/TokenDetails";
 import { IMetadata } from "@/utils/metadata";
+import { Token } from "@/components/Token";
 
-const Details: NextPage<{
+const Page: NextPage<{
   metadata: IMetadata;
   tokenId: number;
 }> = ({ metadata, tokenId }) => {
@@ -21,7 +21,7 @@ const Details: NextPage<{
           <>
             <MenuList dense disablePadding>
               <LinksMenuItems />
-              <SiteMenu isCustomize />
+              <SiteMenu />
             </MenuList>
           </>
         }
@@ -32,10 +32,10 @@ const Details: NextPage<{
         }
       >
         <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
-          <TokenDetails metadata={metadata} tokenId={tokenId} />
+          <Token metadata={metadata} tokenId={tokenId} />
         </Container>
       </Main>
     </DefaultProvider>
   );
 };
-export default Details;
+export default Page;

@@ -31,5 +31,5 @@ export function thumbnailImageUrl(tokenId: string | number) {
 }
 
 export function imageUrl(tokenId: string | number) {
-  return `https://ipfs.io/ipfs/bafybeifrehxmpmvh4hiywtpmuuuvt4lotol7wl7dnxlsxikfevn2ivvm7m/${tokenId}.png`;
+  return `https://ipfs.fameladysociety.com/bafybeifrehxmpmvh4hiywtpmuuuvt4lotol7wl7dnxlsxikfevn2ivvm7m/${tokenId}.png`;
 }
