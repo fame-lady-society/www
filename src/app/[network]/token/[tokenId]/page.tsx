@@ -26,6 +26,7 @@ export async function generateMetadata(
   const network = asNetwork(params.network);
 
   return {
+    metadataBase: new URL(process.env.OG_BASE_URL!),
     title: "Fame Lady Society",
     description: "It's a wrap!",
     openGraph: {
