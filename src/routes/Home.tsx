@@ -30,14 +30,14 @@ const HomePage: NextPage<{}> = () => {
         <meta property="og:description" content={description} />
         <meta
           property="og:image"
-          content="https://fameladysociety.com/images/fls-wrap.gif"
+          content="https://fls-www.vercel.app/images/fls-wrap.gif"
         />
         <meta property="twitter:title" content={title} />
         <meta property="twitter:description" content={description} />
         <meta content="verification" name="LR1011" />
         <meta
           property="twitter:image"
-          content="https://fameladysociety.com/images/Flsociety_morg_mock.jpeg"
+          content="https://fls-www.vercel.app/images/Flsociety_morg_mock.jpeg"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:creator" content="@FameLadySociety" />
@@ -79,8 +79,9 @@ const HomePage: NextPage<{}> = () => {
                 sizes="100vw"
                 style={{
                   width: "100%",
-                  height: "auto"
-                }} />
+                  height: "auto",
+                }}
+              />
             </Box>
             <Box component="div" sx={{ mt: 4 }}>
               <CountDown onEnd={() => setIsRevealed(true)} />
