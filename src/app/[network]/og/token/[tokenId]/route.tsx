@@ -68,6 +68,9 @@ export async function GET(
     if (chunks && chunks.length > 1) {
       description = chunks[0].trim();
     }
+    const ogRank = metadata.attributes?.find(
+      (attr) => attr.trait_type === "OG Rank",
+    );
     return new ImageResponse(
       (
         <div
@@ -189,6 +192,45 @@ export async function GET(
               >
                 {description ? description : defaultDescription}
               </p>
+              {ogRank && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    alignContent: "flex-end",
+                    width: "100%",
+                  }}
+                >
+                  <p
+                    style={{
+                      justifySelf: "center",
+                      alignSelf: "center",
+                      marginRight: "12px",
+                      fontSize: "24px",
+                    }}
+                  >
+                    Rank
+                  </p>
+                  <div
+                    style={{
+                      backgroundImage: `url(${process.env.OG_BASE_URL}/images/badge.png)`,
+                      backgroundSize: "100% 100%",
+                      // image is 400, but scale to 100x100
+                      width: "100px",
+                      height: "100px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: "24px",
+                      fontSize:
+                        ogRank.value.toString().length > 2 ? "24px" : "32px",
+                    }}
+                  >
+                    <p>{`#${ogRank.value}`}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

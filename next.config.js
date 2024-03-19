@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   env: {
     LOG_LEVEL: "debug",
-    OG_BASE_URL: "https://fls-www.vercel.app",
+    OG_BASE_URL: process.env.OG_BASE_URL || "https://fls-www.vercel.app",
   },
   webpack: (config) => {
     // config.externals.push("tls", "net", "fs", "path");
