@@ -143,7 +143,7 @@ export const TokenDetails: FC<{
           .then(({ tokenUri, signature }) =>
             writeContractAsync({
               abi: namedLadyRendererAbi,
-              address: namedLadyRendererAddress!,
+              address: namedLadyRendererAddress,
               functionName: "setTokenUri",
               args: [BigInt(tokenId), tokenUri, signature],
             })

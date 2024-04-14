@@ -40,4 +40,4 @@ export const createSignerAccount = () =>
   privateKeyToAccount(process.env.MAINNET_SIGNER_PRIVATE_KEY! as `0x${string}`);
 
 export const flsTokenAddress = fameLadySocietyAddress[mainnet.id];
-export const namedLadyRendererAddress = undefined; //namedLadyRendererAddressAll[mainnet.id];
+export const namedLadyRendererAddress = namedLadyRendererAddressAll[mainnet.id];

@@ -21,8 +21,8 @@ import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
-import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
 import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
+import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
 import * as importedModule$0 from "./sources/fls-sepolia/introspectionSchema";
 import * as importedModule$1 from "./sources/fls-mainnet/introspectionSchema";
 export type Maybe<T> = T | null;

@@ -1307,7 +1307,8 @@ export const fameLadySquadConfig = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const namedLadyRendererAbi = [
   {
@@ -1585,14 +1586,17 @@ export const namedLadyRendererAbi = [
 ] as const
 
 /**
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const namedLadyRendererAddress = {
+  1: '0xC7A29659c34CB2551Aec0dc589e6450aF342bf24',
   11155111: '0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a',
 } as const
 
 /**
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const namedLadyRendererConfig = {
   address: namedLadyRendererAddress,
@@ -4089,7 +4093,8 @@ export const useWatchFameLadySquadTransferEvent =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRenderer = /*#__PURE__*/ createUseReadContract({
   abi: namedLadyRendererAbi,
@@ -4099,7 +4104,8 @@ export const useReadNamedLadyRenderer = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"currentNonce"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererCurrentNonce =
   /*#__PURE__*/ createUseReadContract({
@@ -4111,7 +4117,8 @@ export const useReadNamedLadyRendererCurrentNonce =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"hasAllRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererHasAllRoles =
   /*#__PURE__*/ createUseReadContract({
@@ -4123,7 +4130,8 @@ export const useReadNamedLadyRendererHasAllRoles =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"hasAnyRole"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererHasAnyRole =
   /*#__PURE__*/ createUseReadContract({
@@ -4135,7 +4143,8 @@ export const useReadNamedLadyRendererHasAnyRole =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"hashUpdateRequest"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererHashUpdateRequest =
   /*#__PURE__*/ createUseReadContract({
@@ -4147,7 +4156,8 @@ export const useReadNamedLadyRendererHashUpdateRequest =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"metadataEmit"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererMetadataEmit =
   /*#__PURE__*/ createUseReadContract({
@@ -4159,7 +4169,8 @@ export const useReadNamedLadyRendererMetadataEmit =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"metadataRole"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererMetadataRole =
   /*#__PURE__*/ createUseReadContract({
@@ -4171,7 +4182,8 @@ export const useReadNamedLadyRendererMetadataRole =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"owner"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererOwner =
   /*#__PURE__*/ createUseReadContract({
@@ -4183,7 +4195,8 @@ export const useReadNamedLadyRendererOwner =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererOwnershipHandoverExpiresAt =
   /*#__PURE__*/ createUseReadContract({
@@ -4195,7 +4208,8 @@ export const useReadNamedLadyRendererOwnershipHandoverExpiresAt =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"rolesOf"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererRolesOf =
   /*#__PURE__*/ createUseReadContract({
@@ -4207,7 +4221,8 @@ export const useReadNamedLadyRendererRolesOf =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"signerRole"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererSignerRole =
   /*#__PURE__*/ createUseReadContract({
@@ -4219,7 +4234,8 @@ export const useReadNamedLadyRendererSignerRole =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"tokenURI"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererTokenUri =
   /*#__PURE__*/ createUseReadContract({
@@ -4231,7 +4247,8 @@ export const useReadNamedLadyRendererTokenUri =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"trustRole"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useReadNamedLadyRendererTrustRole =
   /*#__PURE__*/ createUseReadContract({
@@ -4243,7 +4260,8 @@ export const useReadNamedLadyRendererTrustRole =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRenderer = /*#__PURE__*/ createUseWriteContract({
   abi: namedLadyRendererAbi,
@@ -4253,7 +4271,8 @@ export const useWriteNamedLadyRenderer = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"ban"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererBan =
   /*#__PURE__*/ createUseWriteContract({
@@ -4265,7 +4284,8 @@ export const useWriteNamedLadyRendererBan =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererCancelOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -4277,7 +4297,8 @@ export const useWriteNamedLadyRendererCancelOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererCompleteOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -4289,7 +4310,8 @@ export const useWriteNamedLadyRendererCompleteOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"grantRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererGrantRoles =
   /*#__PURE__*/ createUseWriteContract({
@@ -4301,7 +4323,8 @@ export const useWriteNamedLadyRendererGrantRoles =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererRenounceOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -4313,7 +4336,8 @@ export const useWriteNamedLadyRendererRenounceOwnership =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"renounceRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererRenounceRoles =
   /*#__PURE__*/ createUseWriteContract({
@@ -4325,7 +4349,8 @@ export const useWriteNamedLadyRendererRenounceRoles =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererRequestOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -4337,7 +4362,8 @@ export const useWriteNamedLadyRendererRequestOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"revokeRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererRevokeRoles =
   /*#__PURE__*/ createUseWriteContract({
@@ -4349,7 +4375,8 @@ export const useWriteNamedLadyRendererRevokeRoles =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setBaseURI"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererSetBaseUri =
   /*#__PURE__*/ createUseWriteContract({
@@ -4361,7 +4388,8 @@ export const useWriteNamedLadyRendererSetBaseUri =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setSigner"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererSetSigner =
   /*#__PURE__*/ createUseWriteContract({
@@ -4373,7 +4401,8 @@ export const useWriteNamedLadyRendererSetSigner =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setTokenUri"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererSetTokenUri =
   /*#__PURE__*/ createUseWriteContract({
@@ -4385,7 +4414,8 @@ export const useWriteNamedLadyRendererSetTokenUri =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWriteNamedLadyRendererTransferOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -4397,7 +4427,8 @@ export const useWriteNamedLadyRendererTransferOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRenderer =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4408,7 +4439,8 @@ export const useSimulateNamedLadyRenderer =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"ban"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererBan =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4420,7 +4452,8 @@ export const useSimulateNamedLadyRendererBan =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererCancelOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4432,7 +4465,8 @@ export const useSimulateNamedLadyRendererCancelOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererCompleteOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4444,7 +4478,8 @@ export const useSimulateNamedLadyRendererCompleteOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"grantRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererGrantRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4456,7 +4491,8 @@ export const useSimulateNamedLadyRendererGrantRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererRenounceOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4468,7 +4504,8 @@ export const useSimulateNamedLadyRendererRenounceOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"renounceRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererRenounceRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4480,7 +4517,8 @@ export const useSimulateNamedLadyRendererRenounceRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererRequestOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4492,7 +4530,8 @@ export const useSimulateNamedLadyRendererRequestOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"revokeRoles"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererRevokeRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4504,7 +4543,8 @@ export const useSimulateNamedLadyRendererRevokeRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setBaseURI"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererSetBaseUri =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4516,7 +4556,8 @@ export const useSimulateNamedLadyRendererSetBaseUri =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setSigner"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererSetSigner =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4528,7 +4569,8 @@ export const useSimulateNamedLadyRendererSetSigner =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"setTokenUri"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererSetTokenUri =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4540,7 +4582,8 @@ export const useSimulateNamedLadyRendererSetTokenUri =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useSimulateNamedLadyRendererTransferOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -4552,7 +4595,8 @@ export const useSimulateNamedLadyRendererTransferOwnership =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link namedLadyRendererAbi}__
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWatchNamedLadyRendererEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -4563,7 +4607,8 @@ export const useWatchNamedLadyRendererEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWatchNamedLadyRendererOwnershipHandoverCanceledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -4575,7 +4620,8 @@ export const useWatchNamedLadyRendererOwnershipHandoverCanceledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWatchNamedLadyRendererOwnershipHandoverRequestedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -4587,7 +4633,8 @@ export const useWatchNamedLadyRendererOwnershipHandoverRequestedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `eventName` set to `"OwnershipTransferred"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWatchNamedLadyRendererOwnershipTransferredEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -4599,7 +4646,8 @@ export const useWatchNamedLadyRendererOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link namedLadyRendererAbi}__ and `eventName` set to `"RolesUpdated"`
  *
- * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xC7A29659c34CB2551Aec0dc589e6450aF342bf24)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a)
  */
 export const useWatchNamedLadyRendererRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({

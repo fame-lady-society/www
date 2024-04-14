@@ -3,6 +3,8 @@ import { useAccount } from "wagmi";
 
 export function useUpdateMetadata() {
   const { chain } = useAccount();
+  console.log(chain?.name?.toLowerCase());
+
   return useMutation({
     mutationFn: async ({
       tokenId,

@@ -12,8 +12,25 @@ import {
   namedLadyRendererAddress,
 } from "@/wagmi";
 
+function isSupportChain(chainId: number): chainId is 1 | 11155111 {
+  return [1, 11155111].includes(chainId);
+}
+
 export function useChainContracts() {
   const chainId = useChainId();
+
+  if (!isSupportChain(chainId)) {
+    // return mainnet contracts for unsupported chains
+    return {
+      targetContractAbi: fameLadySquadAbi,
+      targetContractAddress: fameLadySquadAddress[1],
+      wrappedNftContractAbi: wrappedNftAbi,
+      wrappedNftContractAddress: wrappedNftAddress[1],
+      namedLadyRendererAbi,
+      namedLadyRendererAddress: namedLadyRendererAddress[1],
+    };
+  }
+
   const targetContractAbi = chainId === 1 ? fameLadySquadAbi : bulkMinterAbi;
   const targetContractAddress =
     chainId === 1
@@ -36,7 +53,6 @@ export function useChainContracts() {
     wrappedNftContractAbi,
     wrappedNftContractAddress,
     namedLadyRendererAbi,
-    namedLadyRendererAddress:
-      chainId === 11155111 ? namedLadyRendererAddress[chainId] : undefined,
+    namedLadyRendererAddress: namedLadyRendererAddress[chainId] ?? undefined,
   };
 }

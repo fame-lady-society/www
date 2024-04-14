@@ -32,7 +32,7 @@ const config = createConfig(
     appUrl: "https://fameladysociety.com", // your app's url
     appIcon: "https://fameladysociety.com/images/fls-wrap.gif",
 
-    ssr: typeof window === "undefined",
+    ssr: true,
   }),
 );
 

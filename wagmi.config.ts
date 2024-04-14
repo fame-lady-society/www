@@ -27,12 +27,6 @@ export default defineConfig({
             [sepolia.id]: "0x9EFf37047657a0f50b989165b48012834eDB2212",
           },
         },
-        {
-          name: "NamedLadyRenderer",
-          address: {
-            [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
-          },
-        },
       ],
     }),
     etherscan({
@@ -49,6 +43,13 @@ export default defineConfig({
           name: "FameLadySquad",
           address: {
             [mainnet.id]: "0xf3E6DbBE461C6fa492CeA7Cb1f5C5eA660EB1B47",
+          },
+        },
+        {
+          name: "NamedLadyRenderer",
+          address: {
+            [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
+            [mainnet.id]: "0xC7A29659c34CB2551Aec0dc589e6450aF342bf24",
           },
         },
       ],
