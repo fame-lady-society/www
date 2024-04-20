@@ -136,6 +136,30 @@ export async function GET(
                   width: "100%",
                 }}
               >
+                <h1
+                  style={{
+                    alignSelf: "flex-start",
+                    marginLeft: "24px",
+                    // shadow
+                    textShadow: "2px 2px 6px #000000",
+                  }}
+                >
+                  {metadata.name}
+                </h1>
+              </div>
+
+              <p
+                style={{
+                  fontSize: 20,
+                  paddingLeft: "24px",
+                  paddingRight: "24px",
+                  width: "100%",
+                }}
+              >
+                {description ? description : defaultDescription}
+              </p>
+
+              <div style={{ display: "flex", alignItems: "center" }}>
                 {ensAvatar && (
                   <img
                     src={ensAvatar}
@@ -150,48 +174,28 @@ export async function GET(
                     alt=""
                   />
                 )}
-                <h1
-                  style={{
-                    alignSelf: "flex-start",
-                    marginLeft: "24px",
-                    // shadow
-                    textShadow: "2px 2px 6px #000000",
-                  }}
-                >
-                  {metadata.name}
-                </h1>
+                {ensName ? (
+                  <p
+                    style={{
+                      alignSelf: "flex-start",
+                      marginLeft: "24px",
+                      fontSize: "32px",
+                    }}
+                  >
+                    {ensName}
+                  </p>
+                ) : (
+                  <p
+                    style={{
+                      fontSize: "18px",
+                      alignSelf: "flex-start",
+                      marginLeft: "24px",
+                    }}
+                  >
+                    {owner}
+                  </p>
+                )}
               </div>
-              {ensName ? (
-                <p
-                  style={{
-                    alignSelf: "flex-start",
-                    marginLeft: "24px",
-                    fontSize: "32px",
-                  }}
-                >
-                  {ensName}
-                </p>
-              ) : (
-                <p
-                  style={{
-                    fontSize: "18px",
-                    alignSelf: "flex-start",
-                    marginLeft: "24px",
-                  }}
-                >
-                  {owner}
-                </p>
-              )}
-              <p
-                style={{
-                  fontSize: 20,
-                  paddingLeft: "24px",
-                  paddingRight: "24px",
-                  width: "100%",
-                }}
-              >
-                {description ? description : defaultDescription}
-              </p>
               {ogRank && (
                 <div
                   style={{
@@ -212,6 +216,7 @@ export async function GET(
                   >
                     Rank
                   </p>
+
                   <div
                     style={{
                       backgroundImage: `url(${process.env.OG_BASE_URL}/images/badge.png)`,

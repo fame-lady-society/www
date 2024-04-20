@@ -21,6 +21,7 @@ import { Transaction } from "@/features/wrap/types";
 import IconButton from "@mui/material/IconButton";
 import BackIcon from "@mui/icons-material/ArrowBack";
 import { ServiceModal } from "./ServiceModal";
+import { SocialShareDialog } from "./SocialShare";
 
 const EditableNameAndDescription: FC<{
   initialName: string;
@@ -122,6 +123,7 @@ export const TokenDetails: FC<{
   const { refresh, push } = useRouter();
   const { addNotification } = useNotifications();
 
+  const [shareOpen, setShareOpen] = useState(false);
   const [transactionHash, setTransactionHash] = useState<Transaction | null>(
     null,
   );
@@ -206,6 +208,7 @@ export const TokenDetails: FC<{
   );
   const onTransactionConfirmed = useCallback(() => {
     setTransactionHash(null);
+    setShareOpen(true);
     refresh();
   }, [refresh]);
   const onClosed = useCallback(() => {
@@ -220,10 +223,13 @@ export const TokenDetails: FC<{
   return (
     <>
       <Grid2 container spacing={2}>
-        <Grid2 xs={12}>
+        <Grid2 xs={12} display="flex" alignItems="center" justifyItems="center">
           <IconButton onClick={onBack}>
             <BackIcon />
           </IconButton>
+          {metadata.name && (
+            <Button onClick={() => setShareOpen(true)}>Share</Button>
+          )}
         </Grid2>
         <Grid2 xs={12}>
           <EditableNameAndDescription
@@ -296,6 +302,12 @@ export const TokenDetails: FC<{
         transactions={pendingTransactions}
         onTransactionConfirmed={onTransactionConfirmed}
         onClose={onClosed}
+      />
+      <SocialShareDialog
+        name={metadata.name!}
+        tokenId={BigInt(tokenId)}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
       />
     </>
   );
