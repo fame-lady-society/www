@@ -50,5 +50,7 @@ export default async function Page({ params }: Props) {
         return metadata;
       }),
   ]);
-  return <Token tokenId={Number(tokenId)} metadata={metadata} />;
+  return (
+    <Token tokenId={Number(tokenId)} metadata={metadata} network={network} />
+  );
 }

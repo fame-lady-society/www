@@ -119,7 +119,8 @@ const Attribute: FC<{ name: string; value: string | number }> = ({
 export const TokenDetails: FC<{
   metadata: IMetadata;
   tokenId: number;
-}> = ({ metadata, tokenId }) => {
+  network?: "mainnet" | "sepolia";
+}> = ({ metadata, tokenId, network }) => {
   const { refresh, push } = useRouter();
   const { addNotification } = useNotifications();
 
@@ -308,6 +309,7 @@ export const TokenDetails: FC<{
         tokenId={BigInt(tokenId)}
         open={shareOpen}
         onClose={() => setShareOpen(false)}
+        network={network}
       />
     </>
   );

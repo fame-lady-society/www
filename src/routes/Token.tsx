@@ -13,7 +13,8 @@ import { Token } from "@/components/Token";
 const Page: NextPage<{
   metadata: IMetadata;
   tokenId: number;
-}> = ({ metadata, tokenId }) => {
+  network?: "mainnet" | "sepolia";
+}> = ({ metadata, tokenId, network }) => {
   return (
     <DefaultProvider>
       <Main
@@ -32,7 +33,7 @@ const Page: NextPage<{
         }
       >
         <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
-          <Token metadata={metadata} tokenId={tokenId} />
+          <Token metadata={metadata} tokenId={tokenId} network={network} />
         </Container>
       </Main>
     </DefaultProvider>

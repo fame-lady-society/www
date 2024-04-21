@@ -1,10 +1,12 @@
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Image from "next/image";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import { IMetadata, imageUrl } from "@/utils/metadata";
+import { SocialShareDialog } from "@/features/customize/components/SocialShare";
+import Button from "@mui/material/Button";
 
 const Attribute: FC<{ name: string; value: string | number }> = ({
   name,
@@ -30,7 +32,9 @@ const Attribute: FC<{ name: string; value: string | number }> = ({
 export const Token: FC<{
   metadata: IMetadata;
   tokenId: number;
-}> = ({ metadata, tokenId }) => {
+  network?: "mainnet" | "sepolia";
+}> = ({ metadata, tokenId, network }) => {
+  const [shareOpen, setShareOpen] = useState(false);
   return (
     <>
       <Grid2 container spacing={2}>
@@ -44,6 +48,9 @@ export const Token: FC<{
               height: "100%",
             }}
           >
+            {metadata.name && (
+              <Button onClick={() => setShareOpen(true)}>Share</Button>
+            )}
             <Typography variant="h4" align="center">
               {metadata.name}
             </Typography>
@@ -91,6 +98,13 @@ export const Token: FC<{
           </Paper>
         </Grid2>
       </Grid2>
+      <SocialShareDialog
+        name={metadata.name!}
+        tokenId={BigInt(tokenId)}
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        network={network}
+      />
     </>
   );
 };

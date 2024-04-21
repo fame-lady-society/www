@@ -35,7 +35,13 @@ export default async function Page({
       const metadata = await fetchJson<IMetadata>({
         cid: tokenUri.replace("ipfs://", ""),
       });
-      return <Details metadata={metadata} tokenId={Number(tokenId)} />;
+      return (
+        <Details
+          metadata={metadata}
+          tokenId={Number(tokenId)}
+          network="sepolia"
+        />
+      );
     }
     case "mainnet": {
       const tokenUri = await readContract(mainnetClient, {
@@ -47,7 +53,13 @@ export default async function Page({
       const metadata = await fetchJson<IMetadata>({
         cid: tokenUri.replace("ipfs://", ""),
       });
-      return <Details metadata={metadata} tokenId={Number(tokenId)} />;
+      return (
+        <Details
+          metadata={metadata}
+          tokenId={Number(tokenId)}
+          network="mainnet"
+        />
+      );
     }
   }
 }

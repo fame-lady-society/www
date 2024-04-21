@@ -22,12 +22,18 @@ export const SocialShareDialog: FC<{
   name: string;
   tokenId: bigint;
   open: boolean;
+  network?: "mainnet" | "sepolia";
   onClose: () => void;
-}> = ({ name, tokenId, open, onClose }) => {
+}> = ({ name, tokenId, open, onClose, network }) => {
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <SocialShare name={name} tokenId={tokenId} onClose={onClose} />
+        <SocialShare
+          name={name}
+          tokenId={tokenId}
+          onClose={onClose}
+          network={network}
+        />
       </Dialog>
     </>
   );
@@ -36,10 +42,12 @@ export const SocialShareDialog: FC<{
 export const SocialShare: FC<{
   tokenId: bigint;
   name: string;
+  network?: "mainnet" | "sepolia";
   onClose?: () => void;
-}> = ({ tokenId, name, onClose }) => {
+}> = ({ tokenId, name, network: propsNetwork, onClose }) => {
   const chainId = useChainId();
-  const network = chainId === mainnet.id ? "mainnet" : "sepolia";
+  const network =
+    propsNetwork ?? chainId === mainnet.id ? "mainnet" : "sepolia";
   const imgUrl = `${process.env.OG_BASE_URL}/${network}/og/token/${tokenId}`;
   const shareUrl = `${process.env.OG_BASE_URL}/${network}/token/${tokenId}`;
 
@@ -56,7 +64,7 @@ export const SocialShare: FC<{
       )}
       <CardMedia
         component="img"
-        src={`/${network}/og/token/${tokenId}`}
+        src={imgUrl}
         onLoad={() => setImageLoaded(true)}
         style={{ display: imageLoaded ? "block" : "none" }}
       />
