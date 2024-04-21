@@ -71,6 +71,21 @@ export async function GET(
     const ogRank = metadata.attributes?.find(
       (attr) => attr.trait_type === "OG Rank",
     );
+    const paragraphs = (description ? description : defaultDescription).split(
+      /\n+/,
+    );
+    let fontSize;
+    if (description && description.length > 800) {
+      fontSize = 14;
+    } else if (description && description.length > 512) {
+      fontSize = 16;
+    } else {
+      fontSize = 20;
+    }
+
+    fontSize -= Math.floor(paragraphs.length / 2);
+    fontSize = Math.max(fontSize, 10);
+
     return new ImageResponse(
       (
         <div
@@ -148,16 +163,19 @@ export async function GET(
                 </h1>
               </div>
 
-              <p
-                style={{
-                  fontSize: 20,
-                  paddingLeft: "24px",
-                  paddingRight: "24px",
-                  width: "100%",
-                }}
-              >
-                {description ? description : defaultDescription}
-              </p>
+              {paragraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  style={{
+                    fontSize: fontSize,
+                    paddingLeft: "24px",
+                    paddingRight: "24px",
+                    width: "100%",
+                  }}
+                >
+                  {paragraph}
+                </p>
+              ))}
 
               <div style={{ display: "flex", alignItems: "center" }}>
                 {ensAvatar && (
