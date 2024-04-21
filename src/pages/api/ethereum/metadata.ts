@@ -79,6 +79,18 @@ export default (async function handler(req, res) {
       typeof description !== "undefined" && description.length > 0
         ? `${description}\n\n${defaultDescription}`
         : defaultDescription;
+    // find an existing property with the "Named" attribute
+    const namedAttribute = metadata.attributes?.find(
+      (attribute) => attribute.trait_type === "Named",
+    );
+    if (namedAttribute) {
+      namedAttribute.value = "true";
+    } else {
+      metadata.attributes?.push({
+        trait_type: "Named",
+        value: "true",
+      });
+    }
 
     const cid = await upload(JSON.stringify(metadata));
     const tokenUriRequest = encodePacked(
