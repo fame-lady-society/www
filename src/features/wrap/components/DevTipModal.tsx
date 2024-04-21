@@ -191,7 +191,7 @@ export const DevTipModal: FC<{
               color="success"
               fullWidth
             >
-              {`Confirm ${totalValueStr !== "" ? `${totalValueStr} E (${tipString} tip)` : tipString !== "" ? `${tipString} E` : ""}`}
+              {`Confirm ${totalValueStr !== "" ? `${totalValueStr} ${tipString !== "" ? `E (${tipString} tip)` : ""}` : tipString !== "" ? `${tipString} E` : ""}`}
             </Button>
           </CardActions>
           <CardActions>

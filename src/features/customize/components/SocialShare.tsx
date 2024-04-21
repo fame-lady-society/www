@@ -70,7 +70,7 @@ export const SocialShare: FC<{
       </CardContent>
       <CardActions>
         <Button
-          href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(tokenId, name)}`}
+          href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(tokenId, name)}%0A&url=${url}`}
           target="_blank"
           rel="noopener noreferrer"
           startIcon={<XIcon />}
