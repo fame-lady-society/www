@@ -40,7 +40,9 @@ export const SocialShare: FC<{
 }> = ({ tokenId, name, onClose }) => {
   const chainId = useChainId();
   const network = chainId === mainnet.id ? "mainnet" : "sepolia";
-  const url = `${process.env.OG_BASE_URL}/${network}/og/token/${tokenId}`;
+  const imgUrl = `${process.env.OG_BASE_URL}/${network}/og/token/${tokenId}`;
+  const shareUrl = `${process.env.OG_BASE_URL}/${network}/token/${tokenId}`;
+
   const [imageLoaded, setImageLoaded] = useState(false);
   return (
     <Card>
@@ -70,7 +72,7 @@ export const SocialShare: FC<{
       </CardContent>
       <CardActions>
         <Button
-          href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(tokenId, name)}%0A&url=${url}`}
+          href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(tokenId, name)}%0A&url=${shareUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           startIcon={<XIcon />}
@@ -78,7 +80,7 @@ export const SocialShare: FC<{
           Twitter
         </Button>
         <Button
-          href={`https://warpcast.com/~/compose?text=${SHARE_TEXT(tokenId, name)}&embeds[]=${url}`}
+          href={`https://warpcast.com/~/compose?text=${SHARE_TEXT(tokenId, name)}&embeds[]=${shareUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           startIcon={
