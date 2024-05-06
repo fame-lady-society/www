@@ -48,13 +48,44 @@ const Content: FC<{
         </>
       }
       title={
-        <Typography variant="h5" component="h1" marginLeft={2}>
+        <Typography
+          variant="h5"
+          component="h1"
+          marginLeft={2}
+          sx={{
+            display: {
+              xs: "none",
+              md: "block",
+            },
+          }}
+        >
           it&apos;s a wrap
         </Typography>
       }
       right={
-        <Typography variant="h6" component="h1" marginLeft={2}>
-          {wrapCost ? `wrap fee: ${formatEther(wrapCost)} ETH` : null}
+        <Typography
+          variant="h6"
+          component="h1"
+          marginLeft={2}
+          sx={{
+            fontSize: {
+              xs: "0.75rem",
+              sm: "1rem",
+              md: "1.25rem",
+              lg: "1.5rem",
+            },
+            display: "flex",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ whiteSpace: "nowrap", marginRight: "0.5rem" }}>
+            wrap fee:
+          </span>
+          {wrapCost ? (
+            <span style={{ whiteSpace: "nowrap" }}>
+              {formatEther(wrapCost)} ETH
+            </span>
+          ) : null}
         </Typography>
       }
     >

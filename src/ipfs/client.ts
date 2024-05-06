@@ -1,14 +1,3 @@
-// import { create } from "kubo-rpc-client";
-// import type { IPFSPath } from "kubo-rpc-client/dist/src/types";
-
-// export const client = create({
-//   url: `https://ipfs.infura.io:5001/api/v0/`,
-//   headers: {
-// Authorization: `Basic ${Buffer.from(
-//   `${process.env.INFURA_KEY}:${process.env.INFURA_IPFS_KEY}`,
-// ).toString("base64")}`,
-//   },
-// });
 
 export async function fetchJson<T>({ cid }: { cid: string }): Promise<T> {
   return JSON.parse(new TextDecoder().decode(await fetchBuffer({ cid })));

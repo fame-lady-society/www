@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
@@ -13,7 +13,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { DevTipModal, TipCloseReason } from "./DevTipModal";
 import { useAccount, useEnsAddress } from "wagmi";
 import CheckCircle from "@mui/icons-material/CheckCircle";
-import { useRouter } from "next/router";
 import { isAddress } from "viem";
 
 export const TurboWrap: FC<{
@@ -22,7 +21,7 @@ export const TurboWrap: FC<{
   wrapCost?: bigint;
   transactionInProgress?: boolean;
   onApprove: () => void;
-  onWrapTo: (o: { args: [string, bigint[]]; value: bigint }) => void;
+  onWrapTo: (o: { args: [`0x${string}`, bigint[]]; value: bigint }) => void;
   onWrap: (o: { args: [bigint[]]; value: bigint }) => void;
 }> = ({
   tokenIds,
@@ -61,10 +60,10 @@ export const TurboWrap: FC<{
   );
   useEffect(() => {
     if (tipState.reason === "confirm") {
-      if (tipState.wrapTo) {
+      if (tipState.wrapTo && isAddress(sendToInput)) {
         onWrapTo({
           args: [
-            sendTo as `0x${string}`,
+            sendTo || sendToInput,
             tokenIds
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
@@ -82,7 +81,16 @@ export const TurboWrap: FC<{
         });
       }
     }
-  }, [tipState, transferTo, sendTo, tokenIds, onWrapTo, onWrap, wrapCost]);
+  }, [
+    tipState,
+    transferTo,
+    sendTo,
+    tokenIds,
+    onWrapTo,
+    onWrap,
+    wrapCost,
+    sendToInput,
+  ]);
 
   const resolvedAddress = sendTo || sendToInput;
   return (
