@@ -84,7 +84,7 @@ export async function GET(
     }
 
     fontSize -= Math.floor(paragraphs.length / 2);
-    fontSize = Math.max(fontSize, 10);
+    fontSize = Math.max(fontSize, 8);
 
     return new ImageResponse(
       (
@@ -163,97 +163,100 @@ export async function GET(
                 </h1>
               </div>
 
-              {paragraphs.map((paragraph, index) => (
-                <p
-                  key={index}
-                  style={{
-                    fontSize: fontSize,
-                    paddingLeft: "24px",
-                    paddingRight: "24px",
-                    width: "100%",
-                  }}
-                >
-                  {paragraph}
-                </p>
-              ))}
-
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {ensAvatar && (
-                  <img
-                    src={ensAvatar}
-                    style={{
-                      width: "50px",
-                      height: "50px",
-                      borderRadius: "50%",
-                      alignSelf: "center",
-                      justifySelf: "flex-end",
-                      marginLeft: "24px",
-                    }}
-                    alt=""
-                  />
-                )}
-                {ensName ? (
-                  <p
-                    style={{
-                      alignSelf: "flex-start",
-                      marginLeft: "24px",
-                      fontSize: "32px",
-                    }}
-                  >
-                    {ensName}
-                  </p>
+              {paragraphs.map((paragraph, index) =>
+                paragraph.trim() === "" ? (
+                  <br key={index} style={{ marginBottom: "0.75em" }} />
                 ) : (
                   <p
+                    key={index}
                     style={{
-                      fontSize: "18px",
-                      alignSelf: "flex-start",
-                      marginLeft: "24px",
+                      fontSize: fontSize,
+                      paddingLeft: "24px",
+                      paddingRight: "24px",
+                      width: "100%",
+                      margin: "0.125em 0", // Adjust this value to change the line spacing
                     }}
                   >
-                    {owner}
+                    {paragraph}
                   </p>
+                ),
+              )}
+              <div
+                style={{
+                  display: "block",
+                  flexGrow: 1,
+                }}
+              ></div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignContent: "flex-end",
+                  width: "100%",
+                  paddingBottom: "24px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {ensAvatar && (
+                    <img
+                      src={ensAvatar}
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        borderRadius: "50%",
+                        alignSelf: "center",
+                        justifySelf: "center",
+                        marginLeft: "24px",
+                      }}
+                      alt=""
+                    />
+                  )}
+                  {ensName ? (
+                    <p
+                      style={{
+                        marginLeft: "24px",
+                        fontSize: ensName.length > 18 ? "24px" : "32px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {ensName}
+                    </p>
+                  ) : null}
+                </div>
+                {ogRank && (
+                  <>
+                    <p
+                      style={{
+                        justifySelf: "center",
+                        alignSelf: "center",
+                        marginRight: "12px",
+                        fontSize: "24px",
+                      }}
+                    >
+                      Rank
+                    </p>
+
+                    <div
+                      style={{
+                        backgroundImage: `url(${process.env.OG_BASE_URL}/images/badge.png)`,
+                        backgroundSize: "100% 100%",
+                        // image is 400, but scale to 100x100
+                        width: "100px",
+                        height: "100px",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: "24px",
+                        fontSize:
+                          ogRank.value.toString().length > 2 ? "24px" : "32px",
+                      }}
+                    >
+                      <p>{`#${ogRank.value}`}</p>
+                    </div>
+                  </>
                 )}
               </div>
-              {ogRank && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "flex-end",
-                    alignContent: "flex-end",
-                    width: "100%",
-                  }}
-                >
-                  <p
-                    style={{
-                      justifySelf: "center",
-                      alignSelf: "center",
-                      marginRight: "12px",
-                      fontSize: "24px",
-                    }}
-                  >
-                    Rank
-                  </p>
-
-                  <div
-                    style={{
-                      backgroundImage: `url(${process.env.OG_BASE_URL}/images/badge.png)`,
-                      backgroundSize: "100% 100%",
-                      // image is 400, but scale to 100x100
-                      width: "100px",
-                      height: "100px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      marginRight: "24px",
-                      fontSize:
-                        ogRank.value.toString().length > 2 ? "24px" : "32px",
-                    }}
-                  >
-                    <p>{`#${ogRank.value}`}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
