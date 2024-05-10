@@ -25,6 +25,8 @@ import { TransactionsModal } from "./TransactionsModal";
 import { Transaction } from "../types";
 import { UnwrapCard } from "./UnwrapCard";
 import { useChainContracts } from "@/hooks/useChainContracts";
+import { useNotifications } from "@/features/notifications/Context";
+import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
 
 export const WrapPage: FC<{
   network: "mainnet" | "sepolia";
@@ -32,8 +34,27 @@ export const WrapPage: FC<{
   const router = useRouter();
   const { address, chain } = useAccount();
   const [hasAgreed, setHasAgreed] = useLocalStorage("agree-to-risk", false);
-
-  const { writeContractAsync } = useWriteContract();
+  const [nonce, setNonce] = useState<number>(0);
+  const { addNotification } = useNotifications();
+  const { writeContractAsync } = useWriteContract({
+    mutation: {
+      onError: (e) => {
+        let message = e.message;
+        if (e.cause instanceof UserRejectedRequestError) {
+          message = e.cause.details;
+        } else if (e.cause instanceof ContractFunctionRevertedError) {
+          message = e.cause.shortMessage;
+        }
+        addNotification({
+          id: "error",
+          message,
+          type: "error",
+          autoHideMs: 5000,
+        });
+        setNonce((n) => n + 1);
+      },
+    },
+  });
 
   const [pendingTransactions, setPendingTransactions] = useState(false);
   const [activeTransactionHashList, setActiveTransactionHashList] = useState<
@@ -375,6 +396,7 @@ export const WrapPage: FC<{
                 transactionInProgress={
                   wrapTransactionInProgress || approveTransactionInProgress
                 }
+                nonce={nonce}
               />
             </Box>
           </Grid2>
@@ -390,6 +412,7 @@ export const WrapPage: FC<{
                 transactionInProgress={
                   wrapTransactionInProgress || approveTransactionInProgress
                 }
+                nonce={nonce}
               />
             </Box>
           </Grid2>

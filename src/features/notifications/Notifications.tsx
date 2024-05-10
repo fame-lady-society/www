@@ -41,12 +41,15 @@ export const Notifications: FC = () => {
       onClose={handleClose}
       message={messageInfo?.message}
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      ContentProps={{
+        sx: {
+          backgroundColor: messageInfo?.type === "error" ? "red" : "white",
+          color: "white",
+        },
+      }}
       style={{
         // translate down 50px to avoid the header
         top: "80px",
-        // style based on the type of notification
-        backgroundColor: messageInfo?.type === "error" ? "red" : "green",
-        color: "white",
       }}
     />
   );

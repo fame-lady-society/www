@@ -27,6 +27,7 @@ export const WrapCard: FC<{
   onWrap: (o: { args: [bigint[]]; value: bigint }) => void;
   wrapCost?: bigint;
   onApprove: () => void;
+  nonce: number;
 }> = ({
   isApprovedForAll,
   tokenIds,
@@ -35,6 +36,7 @@ export const WrapCard: FC<{
   onWrap,
   wrapCost = 0n,
   onApprove,
+  nonce,
 }) => {
   const [selectedTokenIds, setTokenIds] = useState<bigint[]>([]);
   const [transferTo, setTransferTo] = useState(false);
@@ -50,6 +52,12 @@ export const WrapCard: FC<{
     name: sendToInput,
   });
 
+  useEffect(() => {
+    if (nonce) {
+      setTipState({});
+    }
+  }, [nonce]);
+
   const onRequestWrapTip = useCallback(() => {
     setIsTipRequested(true);
   }, []);
@@ -57,18 +65,22 @@ export const WrapCard: FC<{
     async (reason: TipCloseReason, tip?: bigint) => {
       setIsTipRequested(false);
       if (reason === "confirm") {
-        setTipState({ reason, value: tip, wrapTo: transferTo && !!sendTo });
+        setTipState({
+          reason,
+          value: tip,
+          wrapTo: transferTo && isAddress(sendTo || sendToInput),
+        });
       }
     },
-    [sendTo, transferTo],
+    [sendTo, sendToInput, transferTo],
   );
 
   useEffect(() => {
     if (tipState.reason === "confirm") {
-      if (tipState.wrapTo && isAddress(sendToInput)) {
+      if (tipState.wrapTo && isAddress(sendTo || sendToInput)) {
         onWrapTo({
           args: [
-            sendTo || sendToInput,
+            (sendTo || sendToInput) as `0x${string}`,
             selectedTokenIds
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),

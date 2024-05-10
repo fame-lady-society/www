@@ -23,6 +23,7 @@ export const TurboWrap: FC<{
   onApprove: () => void;
   onWrapTo: (o: { args: [`0x${string}`, bigint[]]; value: bigint }) => void;
   onWrap: (o: { args: [bigint[]]; value: bigint }) => void;
+  nonce: number;
 }> = ({
   tokenIds,
   isApprovedForAll,
@@ -31,6 +32,7 @@ export const TurboWrap: FC<{
   onApprove,
   onWrapTo,
   onWrap,
+  nonce,
 }) => {
   const [transferTo, setTransferTo] = useState(false);
   const [isTipRequested, setIsTipRequested] = useState(false);
@@ -46,6 +48,11 @@ export const TurboWrap: FC<{
 
   const { address } = useAccount();
 
+  useEffect(() => {
+    if (nonce) {
+      setTipState({});
+    }
+  }, [nonce]);
   const onRequestWrapTip = useCallback(() => {
     setIsTipRequested(true);
   }, []);
@@ -53,17 +60,21 @@ export const TurboWrap: FC<{
     async (reason: TipCloseReason, tip?: bigint) => {
       setIsTipRequested(false);
       if (reason === "confirm") {
-        setTipState({ reason, value: tip, wrapTo: transferTo && !!sendTo });
+        setTipState({
+          reason,
+          value: tip,
+          wrapTo: transferTo && isAddress(sendTo || sendToInput),
+        });
       }
     },
-    [sendTo, transferTo],
+    [sendTo, sendToInput, transferTo],
   );
   useEffect(() => {
     if (tipState.reason === "confirm") {
-      if (tipState.wrapTo && isAddress(sendToInput)) {
+      if (tipState.wrapTo && isAddress(sendTo || sendToInput)) {
         onWrapTo({
           args: [
-            sendTo || sendToInput,
+            (sendTo || sendToInput) as `0x${string}`,
             tokenIds
               .filter((tokenId) => tokenId !== null)
               .map((n) => BigInt(n)),
