@@ -16,5 +16,4 @@ export async function GET(req: NextRequest) {
   return response;
 }
 
-export const revalidate = 86400;
-export const fetchCache = "only-cache";
+export const dynamic = "force-dynamic";

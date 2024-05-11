@@ -9,7 +9,6 @@ const nextConfig = {
     // config.externals.push("tls", "net", "fs", "path");
     return config;
   },
-  staticPageGenerationTimeout: 360,
   images: {
     remotePatterns: [
       {
