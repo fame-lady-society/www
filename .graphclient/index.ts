@@ -21,8 +21,8 @@ import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
-import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
 import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
+import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
 import * as importedModule$0 from "./sources/fls-sepolia/introspectionSchema";
 import * as importedModule$1 from "./sources/fls-mainnet/introspectionSchema";
 export type Maybe<T> = T | null;
@@ -45,6 +45,7 @@ export type Scalars = {
   BigInt: any;
   Bytes: any;
   Int8: any;
+  Timestamp: any;
 };
 
 export type Query = {
@@ -1181,6 +1182,7 @@ export type ResolversTypes = ResolversObject<{
   Ownership_filter: Ownership_filter;
   Ownership_orderBy: Ownership_orderBy;
   String: ResolverTypeWrapper<Scalars['String']>;
+  Timestamp: ResolverTypeWrapper<Scalars['Timestamp']>;
   Transfer: ResolverTypeWrapper<Transfer>;
   Transfer_filter: Transfer_filter;
   Transfer_orderBy: Transfer_orderBy;
@@ -1214,6 +1216,7 @@ export type ResolversParentTypes = ResolversObject<{
   Ownership: Ownership;
   Ownership_filter: Ownership_filter;
   String: Scalars['String'];
+  Timestamp: Scalars['Timestamp'];
   Transfer: Transfer;
   Transfer_filter: Transfer_filter;
   _Block_: _Block_;
@@ -1358,6 +1361,10 @@ export type OwnershipResolvers<ContextType = MeshContext, ParentType extends Res
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export interface TimestampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Timestamp'], any> {
+  name: 'Timestamp';
+}
+
 export type TransferResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Transfer'] = ResolversParentTypes['Transfer']> = ResolversObject<{
   id?: Resolver<ResolversTypes['Bytes'], ParentType, ContextType>;
   from?: Resolver<ResolversTypes['Bytes'], ParentType, ContextType>;
@@ -1396,6 +1403,7 @@ export type Resolvers<ContextType = MeshContext> = ResolversObject<{
   Int8?: GraphQLScalarType;
   MetadataUpdate?: MetadataUpdateResolvers<ContextType>;
   Ownership?: OwnershipResolvers<ContextType>;
+  Timestamp?: GraphQLScalarType;
   Transfer?: TransferResolvers<ContextType>;
   _Block_?: _Block_Resolvers<ContextType>;
   _Meta_?: _Meta_Resolvers<ContextType>;
@@ -1515,6 +1523,18 @@ const merger = new(StitchingMerger as any)({
     get documents() {
       return [
       {
+        document: MainnetMintsDocument,
+        get rawSDL() {
+          return printWithCache(MainnetMintsDocument);
+        },
+        location: 'MainnetMintsDocument.graphql'
+      },{
+        document: MainnetOwnersDocument,
+        get rawSDL() {
+          return printWithCache(MainnetOwnersDocument);
+        },
+        location: 'MainnetOwnersDocument.graphql'
+      },{
         document: SepoliaTokenByOwnerDocument,
         get rawSDL() {
           return printWithCache(SepoliaTokenByOwnerDocument);
@@ -1564,6 +1584,23 @@ export function getBuiltGraphSDK<TGlobalContext = any, TOperationContext = any>(
   const sdkRequester$ = getBuiltGraphClient().then(({ sdkRequesterFactory }) => sdkRequesterFactory(globalContext));
   return getSdk<TOperationContext, TGlobalContext>((...args) => sdkRequester$.then(sdkRequester => sdkRequester(...args)));
 }
+export type MainnetMintsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
+}>;
+
+
+export type MainnetMintsQuery = { transfers: Array<Pick<Transfer, 'FameLadySociety_id' | 'blockNumber' | 'blockTimestamp'>> };
+
+export type MainnetOwnersQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type MainnetOwnersQuery = { ownerships: Array<Pick<Ownership, 'tokenId' | 'owner'>> };
+
 export type SepoliaTokenByOwnerQueryVariables = Exact<{
   owner: Scalars['Bytes'];
   first?: InputMaybe<Scalars['Int']>;
@@ -1585,6 +1622,28 @@ export type MainnetTokenByOwnerQueryVariables = Exact<{
 export type MainnetTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'tokenId'>> };
 
 
+export const MainnetMintsDocument = gql`
+    query MainnetMints($first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  transfers(
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+    where: {from: "0x0000000000000000000000000000000000000000"}
+  ) {
+    FameLadySociety_id
+    blockNumber
+    blockTimestamp
+  }
+}
+    ` as unknown as DocumentNode<MainnetMintsQuery, MainnetMintsQueryVariables>;
+export const MainnetOwnersDocument = gql`
+    query MainnetOwners($first: Int, $skip: Int) {
+  ownerships(first: $first, skip: $skip) {
+    tokenId
+    owner
+  }
+}
+    ` as unknown as DocumentNode<MainnetOwnersQuery, MainnetOwnersQueryVariables>;
 export const SepoliaTokenByOwnerDocument = gql`
     query SepoliaTokenByOwner($owner: Bytes!, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
   sepolia_ownerships(
@@ -1612,9 +1671,17 @@ export const MainnetTokenByOwnerDocument = gql`
 
 
 
+
+
 export type Requester<C = {}, E = unknown> = <R, V>(doc: DocumentNode, vars?: V, options?: C) => Promise<R> | AsyncIterable<R>
 export function getSdk<C, E>(requester: Requester<C, E>) {
   return {
+    MainnetMints(variables?: MainnetMintsQueryVariables, options?: C): Promise<MainnetMintsQuery> {
+      return requester<MainnetMintsQuery, MainnetMintsQueryVariables>(MainnetMintsDocument, variables, options) as Promise<MainnetMintsQuery>;
+    },
+    MainnetOwners(variables?: MainnetOwnersQueryVariables, options?: C): Promise<MainnetOwnersQuery> {
+      return requester<MainnetOwnersQuery, MainnetOwnersQueryVariables>(MainnetOwnersDocument, variables, options) as Promise<MainnetOwnersQuery>;
+    },
     SepoliaTokenByOwner(variables: SepoliaTokenByOwnerQueryVariables, options?: C): Promise<SepoliaTokenByOwnerQuery> {
       return requester<SepoliaTokenByOwnerQuery, SepoliaTokenByOwnerQueryVariables>(SepoliaTokenByOwnerDocument, variables, options) as Promise<SepoliaTokenByOwnerQuery>;
     },

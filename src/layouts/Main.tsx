@@ -12,7 +12,7 @@ import { AppBar } from "@/features/appbar/components/appBar";
 
 export const Main: FC<
   PropsWithChildren<{
-    menu: ReactNode;
+    menu?: ReactNode;
     title?: ReactNode;
     right?: ReactNode;
   }>

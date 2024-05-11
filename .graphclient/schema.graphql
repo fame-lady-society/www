@@ -1050,6 +1050,12 @@ enum Ownership_orderBy {
   tokenId
 }
 
+"""
+A string representation of microseconds UNIX timestamp (16 digits)
+
+"""
+scalar Timestamp
+
 type Transfer {
   id: Bytes!
   from: Bytes!

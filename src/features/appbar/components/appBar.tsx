@@ -12,7 +12,7 @@ import { HomeMenu } from "./HomeMenu";
 import { ConnectKitButton } from "connectkit";
 
 export const AppBar: FC<{
-  menu: ReactNode;
+  menu?: ReactNode;
   title?: ReactNode;
   right?: ReactNode;
 }> = ({ menu, title, right }) => {
@@ -28,7 +28,7 @@ export const AppBar: FC<{
     <>
       <MuiAppBar color="default">
         <Toolbar>
-          <MenuIcon onClick={handleMenu} />
+          {menu && <MenuIcon onClick={handleMenu} />}
           {title}
           <Box sx={{ flexGrow: 1 }} component="span" />
           {right}
@@ -36,9 +36,11 @@ export const AppBar: FC<{
           <ConnectKitButton />
         </Toolbar>
       </MuiAppBar>
-      <HomeMenu anchorEl={menuAnchorEl} handleClose={onMenuClose}>
-        {menu}
-      </HomeMenu>
+      {menu && (
+        <HomeMenu anchorEl={menuAnchorEl} handleClose={onMenuClose}>
+          {menu}
+        </HomeMenu>
+      )}
     </>
   );
 };

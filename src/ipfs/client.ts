@@ -1,9 +1,26 @@
-
-export async function fetchJson<T>({ cid }: { cid: string }): Promise<T> {
-  return JSON.parse(new TextDecoder().decode(await fetchBuffer({ cid })));
+export async function fetchJson<T>({
+  cid,
+  next,
+}: {
+  cid: string;
+  next?: {
+    cache?: RequestCache;
+    revalidate?: number;
+  };
+}): Promise<T> {
+  return JSON.parse(new TextDecoder().decode(await fetchBuffer({ cid, next })));
 }
 
-export async function fetchBuffer({ cid }: { cid: string }): Promise<Buffer> {
+export async function fetchBuffer({
+  cid,
+  next,
+}: {
+  cid: string;
+  next?: {
+    cache?: RequestCache;
+    revalidate?: number;
+  };
+}): Promise<Buffer> {
   const response = await fetch(
     `https://ipfs.infura.io:5001/api/v0/cat?arg=${cid}`,
     {
@@ -13,6 +30,9 @@ export async function fetchBuffer({ cid }: { cid: string }): Promise<Buffer> {
           `${process.env.INFURA_KEY}:${process.env.INFURA_IPFS_KEY}`,
         ).toString("base64")}`,
       },
+      ...(next && {
+        next,
+      }),
     },
   );
 
