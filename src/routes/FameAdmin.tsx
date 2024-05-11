@@ -40,7 +40,7 @@ const NextPage: NextPage<{}> = () => {
                 <CardActionArea>
                   <Button
                     startIcon={<DownloadIcon />}
-                    href="/fame/admin/claim.csv"
+                    href="/fame-fls-snapshot.csv"
                     download
                   >
                     download
