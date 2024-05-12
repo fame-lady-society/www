@@ -154,6 +154,7 @@ export function zipUp(
 }
 
 export async function fetchFameClaimData() {
+  console.log("fetching metadata, mints, and owners");
   const [metadatas, mints, owners] = await Promise.all([
     new Promise<IMetadata[]>((resolve, reject) => {
       const metadatas: IMetadata[] = [];
