@@ -16,8 +16,8 @@ function formatUnit(amount: bigint) {
 
 export const AdjustableChecker: FC<{}> = ({}) => {
   const [address, setAddress] = useState("");
-  const [rankBoost, setRankBoost] = useState(2);
-  const [ageBoost, setAgeBoost] = useState(2);
+  const [rankBoost, setRankBoost] = useState(1.5);
+  const [ageBoost, setAgeBoost] = useState(1.5);
   const { data: ensAddress } = useEnsAddress({
     name: address,
   });
@@ -43,6 +43,9 @@ export const AdjustableChecker: FC<{}> = ({}) => {
           onChange={(e) => setAddress(e.target.value)}
           fullWidth
         />
+        <Typography variant="body1" marginY={2}>
+          Rank Boost
+        </Typography>
         <Box
           component="div"
           display="flex"
@@ -74,6 +77,9 @@ export const AdjustableChecker: FC<{}> = ({}) => {
           />
         </Box>
 
+        <Typography variant="body1" marginY={2}>
+          Age Boost
+        </Typography>
         <Box
           component="div"
           display="flex"
@@ -107,16 +113,27 @@ export const AdjustableChecker: FC<{}> = ({}) => {
         <Typography variant="body1">Address: {ensAddress}</Typography>
         <Typography variant="body1">Rank Boost: {rankBoost}</Typography>
         <Typography variant="body1">Age Boost: {ageBoost}</Typography>
-        <Typography variant="body1">FLS: {formatUnit(fls)}</Typography>
-        <Typography variant="body1">Hunnys: {formatUnit(hunnys)}</Typography>
         <Typography variant="body1">
-          Mermaids: {formatUnit(mermaids)}
+          FLS: {formatUnit(fls).toLocaleString()}
         </Typography>
         <Typography variant="body1">
-          Metavixens: {formatUnit(metavixens)}
+          Hunnys: {formatUnit(hunnys).toLocaleString()}
         </Typography>
         <Typography variant="body1">
-          Total: {formatUnit(fls + hunnys + mermaids + metavixens)}
+          Mermaids: {formatUnit(mermaids).toLocaleString()}
+        </Typography>
+        <Typography variant="body1">
+          Metavixens: {formatUnit(metavixens).toLocaleString()}
+        </Typography>
+        <Typography variant="body1">
+          Total:{" "}
+          {formatUnit(fls + hunnys + mermaids + metavixens).toLocaleString()}
+        </Typography>
+        <Typography variant="body1">
+          Total $FAME NFTs:{" "}
+          {Math.floor(
+            formatUnit(fls + hunnys + mermaids + metavixens) / 1_000_000,
+          )}
         </Typography>
       </CardContent>
     </Card>
