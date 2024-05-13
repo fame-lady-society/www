@@ -31,7 +31,6 @@ const StickyImage: FC<PropsWithChildren> = ({ children }) => {
     const handleScroll = () => {
       const newHeight = Math.max(window.innerHeight - window.scrollY, 650);
       setHeight(`${newHeight}px`);
-      console.log(newHeight);
       if (newHeight > 650) {
         const newPaddingTop = Math.max(window.scrollY, 0);
         setPaddingTop(newPaddingTop);
