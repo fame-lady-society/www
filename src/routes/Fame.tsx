@@ -15,12 +15,12 @@ import Button from "@mui/material/Button";
 import DownloadIcon from "@mui/icons-material/Download";
 import NextImage from "next/image";
 import { AdjustableChecker } from "@/features/claim/components/AdjustableChecker";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useInView } from "react-intersection-observer";
 import { useSpring, animated } from "react-spring";
-import { Parallax, ParallaxProvider } from "react-scroll-parallax";
+import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
 import { Sticky } from "react-sticky";
 
 const StickyImage: FC<PropsWithChildren> = ({ children }) => {
@@ -55,10 +55,6 @@ const StickyImage: FC<PropsWithChildren> = ({ children }) => {
       {children}
     </div>
   );
-};
-
-const ParallaxImage: FC<PropsWithChildren> = ({ children, ...rest }) => {
-  return <Parallax translateY={[-20, 20]}>{children}</Parallax>;
 };
 
 const AnimatedBox = animated(Box);
@@ -131,13 +127,13 @@ const AnimatedSlideInLeft: FC<PropsWithChildren<BoxProps>> = ({
   ...rest
 }) => {
   const { ref, inView } = useInView({
-    threshold: 0.5, // Adjusts when the animation triggers
+    threshold: 0.1, // Adjusts when the animation triggers
   });
 
   const props = useSpring({
     opacity: inView ? 1 : 0,
     transform: inView ? "translateX(0)" : "translateX(-150px)",
-    config: { mass: 1, tension: 210, friction: 20 },
+    config: { mass: 2, tension: 50, friction: 20 },
   });
 
   return (
@@ -152,13 +148,13 @@ const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
   ...rest
 }) => {
   const { ref, inView } = useInView({
-    threshold: 0.5, // Adjusts when the animation triggers
+    threshold: 0.1, // Adjusts when the animation triggers
   });
 
   const props = useSpring({
     opacity: inView ? 1 : 0,
     transform: inView ? "translateX(0)" : "translateX(150px)",
-    config: { mass: 1, tension: 210, friction: 20 },
+    config: { mass: 2, tension: 50, friction: 20 },
   });
 
   return (
@@ -173,6 +169,15 @@ const Content: FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const imageWidth = isSmallScreen ? window.innerWidth : 1000;
   const imageHeight = 383;
+  const eyesRef = useRef<HTMLImageElement>(null);
+  const eyesContainer = useParallax<HTMLDivElement>({
+    onProgressChange: (progress) => {
+      if (eyesRef.current) {
+        // when progress is at 0.5, opacity is 1, when progress is at 0 or 1, opacity is 0
+        eyesRef.current.style.opacity = (progress * (1 - progress)).toString();
+      }
+    },
+  });
 
   return (
     <Main
@@ -184,7 +189,13 @@ const Content: FC = () => {
     >
       <Container sx={{ mt: 2 }}>
         <Grid2 container spacing={2}>
-          <Grid2 xs={12}>
+          <Grid2
+            xs={12}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
             <AnimatedBoxFallIn
               component="div"
               display="flex"
@@ -202,14 +213,19 @@ const Content: FC = () => {
                     width: "100%",
                     height: "auto",
                   }}
-                  layout="responsive"
                   width={imageWidth}
                   height={imageWidth * (imageHeight / imageWidth)}
                 />
               </StickyImage>
             </AnimatedBoxFallIn>
           </Grid2>
-          <Grid2 xs={12}>
+          <Grid2
+            xs={12}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
             <AnimatedBoxFadeIn
               component="div"
               display="flex"
@@ -349,8 +365,46 @@ const Content: FC = () => {
               </Typography>
             </AnimatedBoxPopAndFadeIn>
           </Grid2>
+          <Grid2
+            ref={eyesContainer.ref}
+            xs={12}
+            marginBottom={20}
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <Parallax speed={-30}>
+              <NextImage
+                ref={eyesRef}
+                src="/images/fame/eyes.png"
+                alt="Fame Society"
+                width={1000}
+                height={500}
+                style={{
+                  position: "relative",
+                  top: 180,
+                  marginBottom: 32,
+                }}
+              />
+            </Parallax>
+            <Parallax speed={10}>
+              <Typography
+                variant="h3"
+                textTransform="uppercase"
+                textAlign="center"
+                position="relative"
+                top={-100}
+                marginTop={2}
+                marginBottom={50}
+              >
+                a DN404 project
+              </Typography>
+            </Parallax>
+          </Grid2>
           <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
+            <AnimatedBoxFadeIn
               component="div"
               display="flex"
               justifyContent="center"
@@ -358,16 +412,40 @@ const Content: FC = () => {
               marginTop={2}
               marginBottom={8}
             >
-              <NextImage
-                src="/images/fame/eyes.png"
-                alt="Fame Society"
-                width={1000}
-                height={500}
-              />
-            </AnimatedBoxPopAndFadeIn>
+              <Typography variant="h5" textAlign="left">
+                The Fame Lady Society (FLSoc) is a vibrant community of NFT
+                collectors and creators dedicated to the original Fame Lady
+                Squad (FLS) NFTs, the pioneering all-female generative PFP
+                project on the Ethereum blockchain. With a strong focus on
+                transparency, community governance, inclusivity, and
+                women&apos;s empowerment, FLSoc aims to transform Web3 into
+                &lsquo;webWE,&rsquo; fostering a collaborative and supportive
+                environment.
+              </Typography>
+            </AnimatedBoxFadeIn>
           </Grid2>
           <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
+            <AnimatedBoxFadeIn
+              component="div"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              marginTop={2}
+              marginBottom={8}
+            >
+              <Typography variant="h5" textAlign="left">
+                Fame Lady Society&apos;s mission is to ensure that every member
+                has a voice in shaping the project&apos;s future, promoting true
+                decentralization and sustainability for the benefit of the
+                entire community. FLSoc emerged from the challenges faced by the
+                original FLS, including a fraudulent foundation and a
+                community-driven takeover led by passionate members determined
+                to reclaim and honor the project&apos;s promise.
+              </Typography>
+            </AnimatedBoxFadeIn>
+          </Grid2>
+          <Grid2 xs={12}>
+            <AnimatedBoxFadeIn
               component="div"
               display="flex"
               justifyContent="center"
@@ -375,32 +453,16 @@ const Content: FC = () => {
               marginTop={2}
               marginBottom={50}
             >
-              <Typography
-                variant="h3"
-                textTransform="uppercase"
-                textAlign="center"
-              >
-                a DN404 project
+              <Typography variant="h5" textAlign="left">
+                Established on December 11, 2022, the Fame Lady Society
+                continues to fight for the return of the original smart contract
+                while offering an alternative through a newly created smart
+                contract by a dedicated developer. This effort ensures that the
+                community can maintain ownership and governance of their assets,
+                reinforcing the society&apos;s commitment to a decentralized and
+                inclusive future.
               </Typography>
-            </AnimatedBoxPopAndFadeIn>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={50}
-            >
-              <Typography
-                variant="h3"
-                textTransform="uppercase"
-                textAlign="center"
-              >
-                coming soon....
-              </Typography>
-            </AnimatedBoxPopAndFadeIn>
+            </AnimatedBoxFadeIn>
           </Grid2>
         </Grid2>
       </Container>
