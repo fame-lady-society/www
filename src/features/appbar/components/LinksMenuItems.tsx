@@ -76,6 +76,33 @@ export const LinksMenuItems: FC<{}> = ({}) => {
       </MenuItem>
       <MenuItem
         component={WrappedLink}
+        href="https://buy.fameladysociety.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ListItemIcon>
+          <Image
+            src="/images/logos/reservoir.svg"
+            alt="reservoir"
+            width={25}
+            height={25}
+            style={{
+              maxWidth: "100%",
+              height: "auto",
+              marginRight: 8,
+            }}
+          />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              Our Marketplace
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
         href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
         target="_blank"
         rel="noopener noreferrer"

@@ -22,6 +22,10 @@ import { useInView } from "react-intersection-observer";
 import { useSpring, animated } from "react-spring";
 import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
 import { Sticky } from "react-sticky";
+import { TwitterIcon } from "@/components/icons/twitter";
+import { WrappedLink } from "@/components/WrappedLink";
+import { MagicEdenIcon } from "@/components/icons/magiceden";
+import { SlimChecker } from "@/features/claim/components/SlimChecker";
 
 const StickyImage: FC<PropsWithChildren> = ({ children }) => {
   const [height, setHeight] = useState("100vh");
@@ -71,6 +75,28 @@ const AnimatedBoxFallIn: FC<PropsWithChildren<BoxProps>> = ({
   const props = useSpring({
     opacity: inView ? 1 : 0,
     transform: inView ? "translateY(0)" : "translateY(-150px)",
+    config: { mass: 1, tension: 210, friction: 20 },
+  });
+
+  return (
+    <AnimatedBox style={props} ref={ref} {...rest}>
+      {children}
+    </AnimatedBox>
+  );
+};
+
+const AnimatedBoxFallUp: FC<PropsWithChildren<BoxProps>> = ({
+  children,
+  ...rest
+}) => {
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.5, // Adjusts when the animation triggers
+  });
+
+  const props = useSpring({
+    opacity: inView ? 1 : 0,
+    transform: inView ? "translateY(0)" : "translateY(150px)",
     config: { mass: 1, tension: 210, friction: 20 },
   });
 
@@ -451,16 +477,185 @@ const Content: FC = () => {
               justifyContent="center"
               alignItems="center"
               marginTop={2}
-              marginBottom={50}
+              marginBottom={16}
             >
               <Typography variant="h5" textAlign="left">
                 Established on December 11, 2022, the Fame Lady Society
                 continues to fight for the return of the original smart contract
                 while offering an alternative through a newly created smart
-                contract by a dedicated developer. This effort ensures that the
-                community can maintain ownership and governance of their assets,
-                reinforcing the society&apos;s commitment to a decentralized and
-                inclusive future.
+                contract by 0xflick. This effort ensures that the community can
+                maintain ownership and governance of their assets, reinforcing
+                the society&apos;s commitment to a decentralized and inclusive
+                future.
+              </Typography>
+            </AnimatedBoxFadeIn>
+          </Grid2>
+          <Grid2 xs={12} marginY="4">
+            <AnimatedBoxFadeIn
+              component="div"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              marginTop={2}
+              marginBottom={8}
+            >
+              <Typography variant="h4" textAlign="center">
+                Join the Society
+              </Typography>
+            </AnimatedBoxFadeIn>
+          </Grid2>
+          <Grid2
+            xs={12}
+            sm={6}
+            md={3}
+            marginBottom={2}
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <AnimatedBoxFallUp component="div">
+              <WrappedLink
+                href="https://x.com/fameladysociety"
+                underline="none"
+                target="_blank"
+                rel="noreferrer"
+                display="flex"
+                flexDirection="row"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <TwitterIcon sx={{ marginRight: 1 }} />
+                <Typography variant="body1">Twitter</Typography>
+              </WrappedLink>
+            </AnimatedBoxFallUp>
+          </Grid2>
+          <Grid2
+            xs={12}
+            sm={6}
+            md={3}
+            marginBottom={2}
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <AnimatedBoxFallUp component="div">
+              <WrappedLink
+                href="https://discord.gg/fameladysociety"
+                underline="none"
+                target="_blank"
+                rel="noreferrer"
+                display="flex"
+                flexDirection="row"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <NextImage
+                  src="/images/reveal/discord-dark.png"
+                  alt="discord"
+                  width={90}
+                  height={25}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    marginRight: 8,
+                  }}
+                />
+                <Typography variant="body1" color="white">
+                  invite
+                </Typography>
+              </WrappedLink>
+            </AnimatedBoxFallUp>
+          </Grid2>
+          <Grid2
+            xs={12}
+            sm={6}
+            md={3}
+            marginBottom={2}
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <AnimatedBoxFallUp component="div">
+              <WrappedLink
+                href="https://buy.fameladysociety.com"
+                underline="none"
+                target="_blank"
+                rel="noreferrer"
+                display="flex"
+                flexDirection="row"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <NextImage
+                  src="/images/logos/reservoir.svg"
+                  alt="reservoir"
+                  width={25}
+                  height={25}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    marginRight: 8,
+                  }}
+                />
+                <Typography variant="body1">Marketplace</Typography>
+              </WrappedLink>
+            </AnimatedBoxFallUp>
+          </Grid2>
+          <Grid2
+            xs={12}
+            sm={6}
+            md={3}
+            marginBottom={2}
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+          >
+            <AnimatedBoxFallUp component="div">
+              <WrappedLink
+                href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
+                underline="none"
+                target="_blank"
+                rel="noreferrer"
+                display="flex"
+                flexDirection="row"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MagicEdenIcon sx={{ marginRight: 1 }} />
+                <Typography variant="body1">Magic Eden</Typography>
+              </WrappedLink>
+            </AnimatedBoxFallUp>
+          </Grid2>
+          <Grid2
+            xs={12}
+            sx={{
+              marginTop: 8,
+              marginBottom: 8,
+            }}
+          >
+            <SlimChecker ageBoost={1.5} rankBoost={2} />
+          </Grid2>
+          <Grid2 xs={12} marginY="4">
+            <AnimatedBoxFadeIn
+              component="div"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              marginTop={2}
+              marginBottom={8}
+            >
+              <Typography variant="body1" textAlign="center">
+                $FAME is a community token for the Fame Lady Society. No
+                intrinsic value, expectation of financial return, or utility is
+                guaranteed outside of the use of the token within the community.
               </Typography>
             </AnimatedBoxFadeIn>
           </Grid2>
