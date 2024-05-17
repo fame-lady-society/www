@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const metadata: Metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL(process.env.OG_BASE_URL!),
 };
 
