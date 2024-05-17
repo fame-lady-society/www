@@ -24,7 +24,7 @@ export const SlimChecker: FC<
     name: address,
   });
 
-  const addressToUse = ensAddress || address;
+  const addressToUse = ensAddress || address || wagmiAddress || "";
 
   const { fls, hunnys, mermaids, metavixens } = useAllocation({
     address: isAddress(addressToUse) ? addressToUse : undefined,
@@ -46,7 +46,6 @@ export const SlimChecker: FC<
           Rank Boost
         </Typography>
 
-        <Typography variant="body1">Address: {ensAddress}</Typography>
         <Typography variant="body1">
           FLS: {formatUnit(fls).toLocaleString()}
         </Typography>
