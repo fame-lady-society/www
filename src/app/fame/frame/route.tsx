@@ -72,7 +72,7 @@ const handleRequest = frames(async (ctx) => {
       imageOptions: {
         aspectRatio: "1:1",
       },
-      image: `${baseUrl}/images/fame/zepeto.png`,
+      image: `${baseUrl}/images/fame/zepeto_square_sm.png`,
       textInput: "Address or tokenId",
       buttons: [
         <Button action="post" target={`${baseUrl}/fame/frame`}>
