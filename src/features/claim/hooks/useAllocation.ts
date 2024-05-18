@@ -1,18 +1,17 @@
 import { useMemo } from "react";
 import { erc721Abi } from "viem";
 import { useReadContracts } from "wagmi";
-import snapshot from "@/app/fame/admin/test-claim.json";
 import { mainnet, polygon } from "viem/chains";
-import { allocatePercentages, allocatePool } from "@/utils/claim";
-
-const HUNNYS_CONTRACT = "0x5dfeb75abae11b138a16583e03a2be17740eaded";
-const METAVIXEN_CONTRACT = "0xe1c7be9a91bb376acbb7c205f1f733a3468153b4";
-const MERMAIDS_CONTRACT = "0x4ea5f0949107f13f9514e0cb485a49f52bf759a6";
-
-const MARKET_CAP = 10172.92;
-const TOTAL_TOKENS = 888_000_000n * 10n ** 18n;
-const FLS_TOKENS = (TOTAL_TOKENS * 235n) / 1000n;
-const SISTER_TOKENS = (TOTAL_TOKENS * 15n) / 1000n;
+import { allocatePercentages } from "@/utils/claim";
+import {
+  HUNNYS_CONTRACT,
+  MERMAIDS_CONTRACT,
+  METAVIXEN_CONTRACT,
+  FLS_TOKENS,
+  MARKET_CAP,
+  SISTER_TOKENS,
+} from "./constants";
+import { useSnapshot } from "./useSnapshot";
 
 export function useAllocation({
   address,
@@ -61,32 +60,7 @@ export function useAllocation({
   const mainnetHunnys = mainnetData?.[0]?.result;
   const mainnetMermaids = mainnetData?.[1]?.result;
   const polygonMetavixens = polygonData?.[0]?.result;
-  const flsPoolAllocation = useMemo(() => {
-    // find the max blockHeightMinted
-    let maxBlockHeightMinted = 0;
-    for (const item of snapshot) {
-      if (
-        item.blockHeightMinted &&
-        Number(item.blockHeightMinted) > maxBlockHeightMinted
-      ) {
-        maxBlockHeightMinted = Number(item.blockHeightMinted);
-      }
-    }
-    return allocatePercentages(
-      snapshot.map(({ ogRank, tokenId, blockHeightMinted }) => ({
-        blockHeightMinted:
-          (blockHeightMinted && Number(blockHeightMinted)) ||
-          maxBlockHeightMinted,
-        ogRank: Number(ogRank),
-        tokenId: Number(tokenId),
-      })),
-      rankBoost,
-      ageBoost,
-    ).reduce((acc, { tokenId, percentage }) => {
-      acc.set(tokenId, BigInt(percentage * Number(FLS_TOKENS)));
-      return acc;
-    }, new Map<number, bigint>());
-  }, [rankBoost, ageBoost]);
+  const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
   return useMemo(() => {
     const lowerCaseAddress = address?.toLowerCase();
@@ -122,6 +96,11 @@ export function useAllocation({
       mermaids: mermaidsAllocation,
       metavixens: metavixensAllocation,
       fls: flsAllocation,
+      total:
+        flsAllocation +
+        hunnysAllocation +
+        mermaidsAllocation +
+        metavixensAllocation,
     };
   }, [
     address,
@@ -129,5 +108,6 @@ export function useAllocation({
     mainnetHunnys,
     mainnetMermaids,
     polygonMetavixens,
+    snapshot,
   ]);
 }

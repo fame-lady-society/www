@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, Fragment, useState } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Image from "next/image";
 import Typography from "@mui/material/Typography";
@@ -7,6 +7,7 @@ import Paper from "@mui/material/Paper";
 import { IMetadata, imageUrl } from "@/utils/metadata";
 import { SocialShareDialog } from "@/features/customize/components/SocialShare";
 import Button from "@mui/material/Button";
+import { formatEther } from "viem";
 
 const Attribute: FC<{ name: string; value: string | number }> = ({
   name,
@@ -33,8 +34,10 @@ export const Token: FC<{
   metadata: IMetadata;
   tokenId: number;
   network?: "mainnet" | "sepolia";
-}> = ({ metadata, tokenId, network }) => {
+  allocation?: bigint;
+}> = ({ allocation, metadata, tokenId, network }) => {
   const [shareOpen, setShareOpen] = useState(false);
+
   return (
     <>
       <Grid2 container spacing={2}>
@@ -54,6 +57,11 @@ export const Token: FC<{
             <Typography variant="h4" align="center">
               {metadata.name}
             </Typography>
+            {typeof allocation !== "undefined" && (
+              <Typography variant="body1" align="center">
+                Allocation: {formatEther(allocation).split(".")[0]} $FAME
+              </Typography>
+            )}
             <Box
               component="div"
               display="flex"
@@ -80,10 +88,10 @@ export const Token: FC<{
           <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
             <Typography variant="body1" color="text.secondary">
               {metadata.description?.split("\n").map((line) => (
-                <>
+                <Fragment key={line}>
                   {line}
                   <br />
-                </>
+                </Fragment>
               ))}
             </Typography>
             {metadata.attributes?.map(({ trait_type, value }) => {

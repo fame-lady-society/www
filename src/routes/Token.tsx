@@ -9,6 +9,24 @@ import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { IMetadata } from "@/utils/metadata";
 import { Token } from "@/components/Token";
+import { FC } from "react";
+import { useFlsTokenAllocation } from "@/features/token/hooks/useFlsTokenAllocation";
+
+const Content: FC<{
+  metadata: IMetadata;
+  tokenId: number;
+  network?: "mainnet" | "sepolia";
+}> = ({ metadata, tokenId, network }) => {
+  const allocation = useFlsTokenAllocation(tokenId);
+  return (
+    <Token
+      metadata={metadata}
+      tokenId={tokenId}
+      network={network}
+      allocation={allocation}
+    />
+  );
+};
 
 const Page: NextPage<{
   metadata: IMetadata;
@@ -28,12 +46,12 @@ const Page: NextPage<{
         }
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>
-            customize
+            {metadata.name}
           </Typography>
         }
       >
         <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
-          <Token metadata={metadata} tokenId={tokenId} network={network} />
+          <Content metadata={metadata} tokenId={tokenId} network={network} />
         </Container>
       </Main>
     </DefaultProvider>

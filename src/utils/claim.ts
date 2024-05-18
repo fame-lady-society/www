@@ -9,14 +9,6 @@ interface ItemPercentage {
   percentage: number;
 }
 
-/**
- * Calculate the percentages each item receives based on rank and blockHeightMinted factors.
- *
- * @param items - List of items to calculate for.
- * @param rankFactor - Multiplicative boost for the rank 1 item over the highest rank item.
- * @param ageFactor - Multiplicative boost for the oldest item over the youngest item.
- * @returns An array containing the percentage of the pool each item receives.
- */
 export function allocatePercentages(
   items: Item[],
   rankFactor: number,

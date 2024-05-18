@@ -1546,6 +1546,18 @@ const merger = new(StitchingMerger as any)({
           return printWithCache(MainnetTokenByOwnerDocument);
         },
         location: 'MainnetTokenByOwnerDocument.graphql'
+      },{
+        document: MainnetTokenMintedOnDocument,
+        get rawSDL() {
+          return printWithCache(MainnetTokenMintedOnDocument);
+        },
+        location: 'MainnetTokenMintedOnDocument.graphql'
+      },{
+        document: SepoliaTokenMintedOnDocument,
+        get rawSDL() {
+          return printWithCache(SepoliaTokenMintedOnDocument);
+        },
+        location: 'SepoliaTokenMintedOnDocument.graphql'
       }
     ];
     },
@@ -1621,6 +1633,26 @@ export type MainnetTokenByOwnerQueryVariables = Exact<{
 
 export type MainnetTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'tokenId'>> };
 
+export type MainnetTokenMintedOnQueryVariables = Exact<{
+  tokenId?: InputMaybe<Scalars['BigInt']>;
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
+}>;
+
+
+export type MainnetTokenMintedOnQuery = { transfers: Array<Pick<Transfer, 'FameLadySociety_id' | 'blockNumber' | 'blockTimestamp'>> };
+
+export type SepoliaTokenMintedOnQueryVariables = Exact<{
+  tokenId?: InputMaybe<Scalars['BigInt']>;
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
+}>;
+
+
+export type SepoliaTokenMintedOnQuery = { sepolia_transfers: Array<Pick<Transfer, 'FameLadySociety_id' | 'blockNumber' | 'blockTimestamp'>> };
+
 
 export const MainnetMintsDocument = gql`
     query MainnetMints($first: Int, $skip: Int, $orderDirection: OrderDirection) {
@@ -1668,6 +1700,36 @@ export const MainnetTokenByOwnerDocument = gql`
   }
 }
     ` as unknown as DocumentNode<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>;
+export const MainnetTokenMintedOnDocument = gql`
+    query MainnetTokenMintedOn($tokenId: BigInt, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  transfers(
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+    where: {from: "0x0000000000000000000000000000000000000000", FameLadySociety_id: $tokenId}
+  ) {
+    FameLadySociety_id
+    blockNumber
+    blockTimestamp
+  }
+}
+    ` as unknown as DocumentNode<MainnetTokenMintedOnQuery, MainnetTokenMintedOnQueryVariables>;
+export const SepoliaTokenMintedOnDocument = gql`
+    query SepoliaTokenMintedOn($tokenId: BigInt, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  sepolia_transfers(
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+    where: {from: "0x0000000000000000000000000000000000000000", FameLadySociety_id: $tokenId}
+  ) {
+    FameLadySociety_id
+    blockNumber
+    blockTimestamp
+  }
+}
+    ` as unknown as DocumentNode<SepoliaTokenMintedOnQuery, SepoliaTokenMintedOnQueryVariables>;
+
+
 
 
 
@@ -1687,6 +1749,12 @@ export function getSdk<C, E>(requester: Requester<C, E>) {
     },
     MainnetTokenByOwner(variables: MainnetTokenByOwnerQueryVariables, options?: C): Promise<MainnetTokenByOwnerQuery> {
       return requester<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>(MainnetTokenByOwnerDocument, variables, options) as Promise<MainnetTokenByOwnerQuery>;
+    },
+    MainnetTokenMintedOn(variables?: MainnetTokenMintedOnQueryVariables, options?: C): Promise<MainnetTokenMintedOnQuery> {
+      return requester<MainnetTokenMintedOnQuery, MainnetTokenMintedOnQueryVariables>(MainnetTokenMintedOnDocument, variables, options) as Promise<MainnetTokenMintedOnQuery>;
+    },
+    SepoliaTokenMintedOn(variables?: SepoliaTokenMintedOnQueryVariables, options?: C): Promise<SepoliaTokenMintedOnQuery> {
+      return requester<SepoliaTokenMintedOnQuery, SepoliaTokenMintedOnQueryVariables>(SepoliaTokenMintedOnDocument, variables, options) as Promise<SepoliaTokenMintedOnQuery>;
     }
   };
 }

@@ -12,6 +12,8 @@ import { IMetadata } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
 import Token from "@/routes/Token";
 import { asNetwork } from "@/routes/utils";
+import { fetchMetadata } from "frames.js/next";
+import { baseUrl } from "@/app/frames/frames";
 
 interface Props {
   params: { tokenId: string; network: string };
@@ -23,8 +25,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   // read route params
   const { tokenId } = params;
-  const network = asNetwork(params.network);
-
+  const network = asNetwork(params.network) || "mainnet";
   return {
     metadataBase: new URL(process.env.OG_BASE_URL!),
     title: "Fame Lady Society",
@@ -33,6 +34,10 @@ export async function generateMetadata(
       images: [`/${network}/og/token/${tokenId}`],
       url: `/${network}/token/${tokenId}`,
     },
+
+    other: await fetchMetadata(
+      new URL(`/${network}/token/${tokenId}/frame`, baseUrl),
+    ),
   };
 }
 

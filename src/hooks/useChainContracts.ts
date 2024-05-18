@@ -16,8 +16,11 @@ function isSupportChain(chainId: number): chainId is 1 | 11155111 {
   return [1, 11155111].includes(chainId);
 }
 
-export function useChainContracts() {
-  const chainId = useChainId();
+export function useChainContracts(chainId?: number) {
+  const detectedChainId = useChainId();
+  if (chainId === undefined) {
+    chainId = detectedChainId;
+  }
 
   if (!isSupportChain(chainId)) {
     // return mainnet contracts for unsupported chains
