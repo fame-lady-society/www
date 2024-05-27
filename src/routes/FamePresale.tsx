@@ -60,18 +60,7 @@ export const FamePresale: FC<{
         <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
           <Grid2 container spacing={2}>
             <Content network={network}>
-              <Grid2 xs={12}>
-                <AllowedCard />
-              </Grid2>
-              <Grid2 xs={12} md={6}>
-                <PresaleGauge />
-              </Grid2>
-              <Grid2 xs={12} md={6}>
-                <PersonalGauge />
-              </Grid2>
-              <Grid2 xs={12} md={6}>
-                <PresaleCard />
-              </Grid2>
+              <PresaleCard />
               <Grid2 xs={12} md={6}>
                 <InfoCard />
               </Grid2>

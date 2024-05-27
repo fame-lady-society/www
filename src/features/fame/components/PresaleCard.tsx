@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import * as sentry from "@sentry/nextjs";
+import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
@@ -33,6 +34,7 @@ import MuiInput from "@mui/material/Input";
 import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
 import { fameSaleAddress, fameSaleTokenAddress } from "../contract";
+import { ContributionGauge } from "./ContributionGauge";
 
 const Input = styled(MuiInput)`
   width: 96px;
@@ -56,7 +58,15 @@ export const PresaleCard: FC<{}> = () => {
   });
 
   const {
-    data: [remaining, canProve, maxBuy, paused, currentBalance] = [],
+    data: [
+      remaining,
+      canProve,
+      maxBuy,
+      paused,
+      currentBalance,
+      totalSupply,
+      maxRaise,
+    ] = [],
     refetch,
   } = useReadContracts({
     contracts: [
@@ -87,8 +97,32 @@ export const PresaleCard: FC<{}> = () => {
         functionName: "balanceOf",
         args: address ? [address] : undefined,
       },
+      {
+        abi: fameSaleAbi,
+        address: fameSaleAddress(chainId),
+        functionName: "fameTotalSupply",
+      },
+      {
+        abi: fameSaleAbi,
+        address: fameSaleAddress(chainId),
+        functionName: "maxRaise",
+      },
     ],
   });
+
+  const totalRaiseContributed =
+    totalSupply?.status === "success"
+      ? Number(formatEther(totalSupply.result))
+      : 0;
+  const maxAvailableRaise =
+    maxRaise?.status === "success" ? Number(formatEther(maxRaise.result)) : 6;
+
+  const totalPersonalContributed =
+    currentBalance?.status === "success"
+      ? Number(formatEther(currentBalance.result))
+      : 0;
+  const maxPersonal =
+    maxBuy?.status === "success" ? Number(formatEther(maxBuy.result)) : 1;
 
   const remainingBuy =
     currentBalance?.status === "success" &&
@@ -252,64 +286,131 @@ export const PresaleCard: FC<{}> = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader title="Presale" />
-        {hasFullContribution ? (
-          <ThankYouCard />
-        ) : (
-          <>
-            <CardContent>
-              {canProve?.status === "success" && !canProve.result && (
-                <Typography variant="body2" color="error">
-                  Invalid proof
+      <Grid2 xs={12}>
+        <Card>
+          <CardHeader title="Presale status" />
+          <CardContent>
+            <>
+              {currentBalance?.status === "success" &&
+                maxBuy?.status === "success" &&
+                canProve?.status === "success" &&
+                currentBalance.result < maxBuy.result && (
+                  <Typography variant="body1">
+                    {canProve.result
+                      ? "You are allowed to participate in the presale."
+                      : "Your address is not allowed to participate in the presale."}
+                  </Typography>
+                )}
+
+              {currentBalance?.status === "success" &&
+                maxBuy?.status === "success" &&
+                currentBalance.result >= maxBuy.result && (
+                  <Typography variant="body1">
+                    You have already contributed the maximum amount.
+                  </Typography>
+                )}
+              {remaining?.status === "success" && remaining.result > 0n && (
+                <Typography variant="body1">
+                  {paused?.result
+                    ? "The presale is paused."
+                    : "The presale is currently running."}
                 </Typography>
               )}
-              <Typography variant="body2" component="p">
-                Your max remaining contribution: {formatEther(remainingBuy)} E
-              </Typography>
-              <Typography variant="body2" component="p">
-                Your wallet balance: {formatEther(userBalance?.value ?? 0n)} E
-              </Typography>
-              <FormGroup
-                onSubmit={onBuy}
-                sx={{
-                  mt: 2,
-                  mb: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="buy-input"
-                >
-                  Amount
+              {remaining?.status === "success" && remaining.result === 0n && (
+                <Typography variant="body1">The presale is full.</Typography>
+              )}
+            </>
+          </CardContent>
+        </Card>
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <Card>
+          <CardHeader title="Your contribution" />
+          <CardContent>
+            <ContributionGauge
+              value={totalPersonalContributed}
+              step={0.05}
+              min={0}
+              max={maxPersonal}
+              formatStepLabel={(value) => `${value} E`}
+            />
+          </CardContent>
+        </Card>
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <Card>
+          <CardHeader title="Presale progress" />
+          <CardContent>
+            <ContributionGauge
+              value={totalRaiseContributed}
+              step={0.5}
+              min={0}
+              max={maxAvailableRaise}
+              formatStepLabel={(value) => `${value} E`}
+            />
+          </CardContent>
+        </Card>
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <Card>
+          <CardHeader title="Presale" />
+          {hasFullContribution ? (
+            <ThankYouCard />
+          ) : (
+            <>
+              <CardContent>
+                {canProve?.status === "success" && !canProve.result && (
+                  <Typography variant="body2" color="error">
+                    Invalid proof
+                  </Typography>
+                )}
+                <Typography variant="body2" component="p">
+                  Your max remaining contribution: {formatEther(remainingBuy)} E
                 </Typography>
-                <Input
-                  value={inputValue}
-                  onChange={onInputChanged}
-                  onBlur={onInputBlur}
-                  inputProps={{
-                    step: 0.01,
-                    min: 0,
-                    max: formatEther(remainingBuy),
-                    type: "number",
+                <Typography variant="body2" component="p">
+                  Your wallet balance: {formatEther(userBalance?.value ?? 0n)} E
+                </Typography>
+                <FormGroup
+                  onSubmit={onBuy}
+                  sx={{
+                    mt: 2,
+                    mb: 1,
                   }}
-                />
-              </FormGroup>
-              <Typography variant="body2" color="error">
-                {paused?.status === "success" && paused.result
-                  ? "presale paused"
-                  : buyInputError || "\u00A0"}
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button onClick={onBuy} disabled={!isValidBuy}>
-                buy
-              </Button>
-            </CardActions>
-          </>
-        )}
-      </Card>
+                >
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="buy-input"
+                  >
+                    Amount
+                  </Typography>
+                  <Input
+                    value={inputValue}
+                    onChange={onInputChanged}
+                    onBlur={onInputBlur}
+                    inputProps={{
+                      step: 0.01,
+                      min: 0,
+                      max: formatEther(remainingBuy),
+                      type: "number",
+                    }}
+                  />
+                </FormGroup>
+                <Typography variant="body2" color="error">
+                  {paused?.status === "success" && paused.result
+                    ? "presale paused"
+                    : buyInputError || "\u00A0"}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button onClick={onBuy} disabled={!isValidBuy}>
+                  buy
+                </Button>
+              </CardActions>
+            </>
+          )}
+        </Card>
+      </Grid2>
       <TransactionsModal
         open={!!isPendingTransaction}
         onClose={onCloseTransactionModal}
