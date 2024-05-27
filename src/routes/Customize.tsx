@@ -1,5 +1,4 @@
 "use client";
-import Head from "next/head";
 import Container from "@mui/material/Container";
 import { DefaultProvider } from "@/context/default";
 import { NextPage } from "next";
@@ -41,10 +40,6 @@ const Customize: NextPage<{
 }> = ({ prefix = "", network }) => {
   return (
     <DefaultProvider>
-      <Head>
-        <title>Fame Lady Society Customize</title>
-        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-      </Head>
       <Main
         menu={
           <>

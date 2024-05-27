@@ -1,5 +1,4 @@
 "use client";
-import Head from "next/head";
 import { DefaultProvider } from "@/context/default";
 import MenuList from "@mui/material/MenuList";
 import Typography from "@mui/material/Typography";
@@ -9,7 +8,7 @@ import { FC, useEffect, useState } from "react";
 import { Success } from "../features/wrap/components/Success";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 
-const WrapSuccessPage: FC<{}> = () => {
+export const WrapSuccessPage: FC<{}> = () => {
   const [tokenIds, setTokenIds] = useState<string[]>([]);
   const [txHash, setTxHash] = useState<string>("");
 
@@ -22,10 +21,6 @@ const WrapSuccessPage: FC<{}> = () => {
   }, []);
   return (
     <DefaultProvider>
-      <Head>
-        <title>Fame Lady Society Wrap</title>
-        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-      </Head>
       <Main
         menu={
           <>
@@ -46,4 +41,3 @@ const WrapSuccessPage: FC<{}> = () => {
     </DefaultProvider>
   );
 };
-export default WrapSuccessPage;

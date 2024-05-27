@@ -27,6 +27,18 @@ export default defineConfig({
             [sepolia.id]: "0x9EFf37047657a0f50b989165b48012834eDB2212",
           },
         },
+        {
+          name: "FameSale",
+          address: {
+            [sepolia.id]: "0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3",
+          },
+        },
+        {
+          name: "FameSaleToken",
+          address: {
+            [sepolia.id]: "0x233A9630e1fC80688E5cc2bb988836e0D5034328",
+          },
+        },
       ],
     }),
     etherscan({

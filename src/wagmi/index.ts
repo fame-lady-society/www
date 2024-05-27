@@ -1303,6 +1303,763 @@ export const fameLadySquadConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameSale
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const fameSaleAbi = [
+  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'MaxBuyExceeded' },
+  { type: 'error', inputs: [], name: 'MaxRaisedExceeded' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoFundsAvailable' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NoRefundAvailable' },
+  { type: 'error', inputs: [], name: 'NotAllowed' },
+  { type: 'error', inputs: [], name: 'Paused' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'merkleProof', internalType: 'bytes32[]', type: 'bytes32[]' },
+    ],
+    name: 'buy',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'proof', internalType: 'bytes32[]', type: 'bytes32[]' },
+      { name: 'check', internalType: 'address', type: 'address' },
+    ],
+    name: 'canProve',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
+    name: 'fameBalanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fameSaleToken',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fameTotalSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'isPaused',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'maxBuy',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'maxRaise',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'merkleRoot',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'pause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'raiseRemaining',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'refund',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleAllowlist',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleExecutive',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleTreasurer',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_maxBuy', internalType: 'uint256', type: 'uint256' }],
+    name: 'setMaxBuy',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_maxRaise', internalType: 'uint256', type: 'uint256' }],
+    name: 'setMaxRaise',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_merkleRoot', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'setMerkleRoot',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'unpause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const fameSaleAddress = {
+  11155111: '0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3',
+} as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const fameSaleConfig = {
+  address: fameSaleAddress,
+  abi: fameSaleAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameSaleToken
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const fameSaleTokenAbi = [
+  {
+    type: 'constructor',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'AllowanceOverflow' },
+  { type: 'error', inputs: [], name: 'AllowanceUnderflow' },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'InsufficientAllowance' },
+  { type: 'error', inputs: [], name: 'InsufficientBalance' },
+  { type: 'error', inputs: [], name: 'InvalidPermit' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'PermitExpired' },
+  { type: 'error', inputs: [], name: 'TotalSupplyOverflow' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'spender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'Transfer',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'DOMAIN_SEPARATOR',
+    outputs: [{ name: 'result', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'spender', internalType: 'address', type: 'address' },
+    ],
+    name: 'allowance',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'burn',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
+    name: 'hasHolder',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'holders',
+    outputs: [{ name: '', internalType: 'address[]', type: 'address[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'mint',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'nonces',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'value', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'v', internalType: 'uint8', type: 'uint8' },
+      { name: 'r', internalType: 'bytes32', type: 'bytes32' },
+      { name: 's', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'permit',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleBurner',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleController',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleMinter',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transfer',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transferFrom',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+] as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const fameSaleTokenAddress = {
+  11155111: '0x233A9630e1fC80688E5cc2bb988836e0D5034328',
+} as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const fameSaleTokenConfig = {
+  address: fameSaleTokenAddress,
+  abi: fameSaleTokenAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // NamedLadyRenderer
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4087,6 +4844,1299 @@ export const useWatchFameLadySquadTransferEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: fameLadySquadAbi,
     address: fameLadySquadAddress,
+    eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSale = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"canProve"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleCanProve = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'canProve',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"fameBalanceOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleFameBalanceOf = /*#__PURE__*/ createUseReadContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'fameBalanceOf' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"fameSaleToken"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleFameSaleToken = /*#__PURE__*/ createUseReadContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'fameSaleToken' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"fameTotalSupply"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleFameTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'fameTotalSupply',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"hasAllRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleHasAllRoles = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'hasAllRoles',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"hasAnyRole"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleHasAnyRole = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'hasAnyRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"isPaused"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleIsPaused = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'isPaused',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"maxBuy"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleMaxBuy = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'maxBuy',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"maxRaise"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleMaxRaise = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'maxRaise',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"merkleRoot"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleMerkleRoot = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'merkleRoot',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"raiseRemaining"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleRaiseRemaining =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'raiseRemaining',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"roleAllowlist"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleRoleAllowlist = /*#__PURE__*/ createUseReadContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'roleAllowlist' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"roleExecutive"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleRoleExecutive = /*#__PURE__*/ createUseReadContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'roleExecutive' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"roleTreasurer"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleRoleTreasurer = /*#__PURE__*/ createUseReadContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'roleTreasurer' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"rolesOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useReadFameSaleRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSale = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"buy"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleBuy = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'buy',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleGrantRoles = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'grantRoles',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"pause"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSalePause = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'pause',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"refund"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleRefund = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'refund',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleRevokeRoles = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'revokeRoles' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMaxBuy"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleSetMaxBuy = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'setMaxBuy',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMaxRaise"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleSetMaxRaise = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'setMaxRaise' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMerkleRoot"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleSetMerkleRoot =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'setMerkleRoot',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"unpause"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleUnpause = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'unpause',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"withdraw"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWriteFameSaleWithdraw = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSale = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"buy"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleBuy = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+  functionName: 'buy',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"pause"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSalePause = /*#__PURE__*/ createUseSimulateContract(
+  { abi: fameSaleAbi, address: fameSaleAddress, functionName: 'pause' },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"refund"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleRefund =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'refund',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMaxBuy"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleSetMaxBuy =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'setMaxBuy',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMaxRaise"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleSetMaxRaise =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'setMaxRaise',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"setMerkleRoot"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleSetMerkleRoot =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'setMerkleRoot',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"unpause"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleUnpause =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleAbi}__ and `functionName` set to `"withdraw"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useSimulateFameSaleWithdraw =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    functionName: 'withdraw',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWatchFameSaleEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: fameSaleAbi,
+  address: fameSaleAddress,
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWatchFameSaleOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWatchFameSaleOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWatchFameSaleOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleAbi}__ and `eventName` set to `"RolesUpdated"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3)
+ */
+export const useWatchFameSaleRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleAbi,
+    address: fameSaleAddress,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleToken = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenDomainSeparator =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'DOMAIN_SEPARATOR',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"allowance"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenAllowance =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'allowance',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"balanceOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenBalanceOf =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'balanceOf',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"decimals"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenDecimals = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'decimals',
+  },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"hasAllRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenHasAllRoles =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'hasAllRoles',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"hasAnyRole"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenHasAnyRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'hasAnyRole',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"hasHolder"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenHasHolder =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'hasHolder',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"holders"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenHolders = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'holders',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"name"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenName = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"nonces"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenNonces = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'nonces',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"roleBurner"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenRoleBurner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'roleBurner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"roleController"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenRoleController =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'roleController',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"roleMinter"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenRoleMinter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'roleMinter',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"rolesOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"symbol"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"totalSupply"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useReadFameSaleTokenTotalSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'totalSupply',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleToken = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"approve"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenApprove =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'approve',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"burn"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenBurn = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'burn',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenGrantRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenMint = /*#__PURE__*/ createUseWriteContract({
+  abi: fameSaleTokenAbi,
+  address: fameSaleTokenAddress,
+  functionName: 'mint',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"permit"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenPermit = /*#__PURE__*/ createUseWriteContract(
+  {
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'permit',
+  },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transfer"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenTransfer =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transfer',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transferFrom"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWriteFameSaleTokenTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleToken = /*#__PURE__*/ createUseSimulateContract(
+  { abi: fameSaleTokenAbi, address: fameSaleTokenAddress },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"approve"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'approve',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"burn"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenBurn =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'burn',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"mint"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenMint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'mint',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"permit"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenPermit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'permit',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transfer"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenTransfer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transfer',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transferFrom"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useSimulateFameSaleTokenTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"Approval"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    eventName: 'Approval',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"RolesUpdated"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameSaleTokenAbi}__ and `eventName` set to `"Transfer"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x233A9630e1fC80688E5cc2bb988836e0D5034328)
+ */
+export const useWatchFameSaleTokenTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameSaleTokenAbi,
+    address: fameSaleTokenAddress,
     eventName: 'Transfer',
   })
 

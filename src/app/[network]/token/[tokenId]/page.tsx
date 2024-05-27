@@ -10,7 +10,7 @@ import {
 import { erc721Abi } from "viem";
 import { IMetadata } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
-import Token from "@/routes/Token";
+import { TokenPage } from "@/routes/Token";
 import { asNetwork } from "@/routes/utils";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
@@ -65,7 +65,7 @@ export default async function Page({ params }: Props) {
       }),
   ]);
   return (
-    <Token
+    <TokenPage
       tokenId={Number(tokenId)}
       metadata={metadata}
       network={network === "mainnet" ? "mainnet" : "sepolia"}

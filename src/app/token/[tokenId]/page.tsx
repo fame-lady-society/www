@@ -6,7 +6,7 @@ import {
 import { erc721Abi } from "viem";
 import { IMetadata } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
-import Token from "@/routes/Token";
+import { TokenPage } from "@/routes/Token";
 
 interface Props {
   params: { tokenId: string };
@@ -51,6 +51,10 @@ export default async function Page({ params }: Props) {
       }),
   ]);
   return (
-    <Token tokenId={Number(tokenId)} metadata={metadata} network={network} />
+    <TokenPage
+      tokenId={Number(tokenId)}
+      metadata={metadata}
+      network={network}
+    />
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Fame from "@/routes/Fame";
+import { Fame } from "@/routes/Fame";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
 

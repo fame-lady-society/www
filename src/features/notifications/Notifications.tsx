@@ -44,7 +44,7 @@ export const Notifications: FC = () => {
       ContentProps={{
         sx: {
           backgroundColor: messageInfo?.type === "error" ? "red" : "white",
-          color: "white",
+          color: messageInfo?.type === "error" ? "white" : "black",
         },
       }}
       style={{

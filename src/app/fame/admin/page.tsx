@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import FameAdmin from "@/routes/FameAdmin";
+import { FameAdminPage } from "@/routes/FameAdmin";
 
 export const metadata: Metadata = {
   title: "Fame admin page",
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page({}: {}) {
-  return <FameAdmin />;
+  return <FameAdminPage />;
 }
 
 export const dynamic = "force-dynamic";

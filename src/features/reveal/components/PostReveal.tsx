@@ -2,17 +2,74 @@ import { Parallax, ParallaxLayer } from "@react-spring/parallax";
 
 import NextImage from "next/image";
 
+import { useInView } from "react-intersection-observer";
+import { useSpring, animated } from "react-spring";
 import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
+import Box, { BoxProps } from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { Card, CardActionArea, Typography } from "@mui/material";
 import { WrappedLink } from "@/components/WrappedLink";
+import { FC, PropsWithChildren, useLayoutEffect } from "react";
+
+const AnimatedBox = animated(Box);
+
+const AnimatedBoxPopAndFadeIn: FC<PropsWithChildren<BoxProps>> = ({
+  children,
+  ...rest
+}) => {
+  const { ref, inView } = useInView({
+    threshold: 0.5, // Adjusts when the animation triggers
+  });
+
+  const props = useSpring({
+    opacity: inView ? 1 : 0,
+    transform: inView ? "scale(1)" : "scale(0.5)",
+    config: { mass: 1, tension: 210, friction: 20 },
+  });
+
+  return (
+    <AnimatedBox style={props} ref={ref} {...rest}>
+      {children}
+    </AnimatedBox>
+  );
+};
+
+const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
+  children,
+  ...rest
+}) => {
+  const { ref, inView } = useInView({
+    threshold: 0.1, // Adjusts when the animation triggers
+  });
+
+  const props = useSpring({
+    opacity: inView ? 1 : 0,
+    transform: inView ? "translateX(0)" : "translateX(150px)",
+    config: { mass: 2, tension: 50, friction: 20 },
+  });
+
+  return (
+    <AnimatedBox style={props} ref={ref} {...rest}>
+      {children}
+    </AnimatedBox>
+  );
+};
 
 export const PostReveal = () => {
+  useLayoutEffect(() => {
+    // find the body tag and add an overflow hidden style
+    const body = document.querySelector("body");
+    if (body) {
+      body.style.overflow = "hidden";
+      return () => {
+        body.style.removeProperty("overflow");
+      };
+    }
+  }, []);
   return (
     <>
       <Parallax pages={3}>
-        <ParallaxLayer offset={0} speed={0.5}>
+        <ParallaxLayer offset={0} speed={1}>
           <Container maxWidth="lg" sx={{ mt: 6 }}>
             <Box component="div">
               <NextImage
@@ -36,28 +93,64 @@ export const PostReveal = () => {
             </Typography>
           </Container>
         </ParallaxLayer>
-        <ParallaxLayer offset={1} speed={0.5}>
-          <Container maxWidth="xl">
-            <WrappedLink href="/wrap">
+        <ParallaxLayer offset={1} speed={1.5}>
+          <Container component={WrappedLink} maxWidth="xl" href="/fame">
+            <AnimatedBoxPopAndFadeIn
+              component="div"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              marginTop={2}
+              marginBottom={2}
+            >
+              <NextImage
+                src="/images/fame/fame.png"
+                alt="Fame Society"
+                width={500}
+                height={500}
+              />
+            </AnimatedBoxPopAndFadeIn>
+            <AnimatedSlideInRight
+              component="div"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              marginTop={4}
+              marginBottom={8}
+            >
               <Typography
-                variant="h2"
-                align="center"
-                sx={{
-                  textShadow: "0 0 3px #FF0000, 0 0 5px #0000FF",
-                }}
+                variant="h3"
+                textTransform="uppercase"
+                textAlign="center"
               >
-                #itsawrap
+                coming soon
               </Typography>
-            </WrappedLink>
+            </AnimatedSlideInRight>
           </Container>
         </ParallaxLayer>
-        <ParallaxLayer
-          offset={2.1}
-          onClick={() => {
-            // send user to https://discord.gg/fameladysociety in a new tab
-            window.open("https://discord.gg/fameladysociety", "_blank");
-          }}
-        >
+
+        <ParallaxLayer offset={2.1}>
+          <Container maxWidth="xl">
+            <Grid2 container justifyContent="flex-end" alignContent="end">
+              <Grid2 xs={6} sm={6} md={4} lg={3}>
+                <NextImage
+                  src="/images/reveal/fls_wrap.png"
+                  alt="hero"
+                  width={440}
+                  height={800}
+                  sizes="100vw"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                  }}
+                />
+              </Grid2>
+            </Grid2>
+          </Container>
+        </ParallaxLayer>
+        <ParallaxLayer offset={2.1}>
           <Container maxWidth="xl">
             <Grid2 container justifyContent="flex-start" alignContent="start">
               <Grid2
@@ -95,11 +188,10 @@ export const PostReveal = () => {
                     }}
                   />
                   <Card variant="elevation">
-                    <CardActionArea
-                      sx={{
-                        my: 4,
-                      }}
+                    <WrappedLink
                       href="https://discord.gg/fameladysociety"
+                      target="_blank"
+                      rel="noreferrer noopener"
                     >
                       <Typography variant="h6" align="center">
                         Join our
@@ -120,34 +212,9 @@ export const PostReveal = () => {
                       <Typography variant="h6" align="center">
                         for more information
                       </Typography>
-                    </CardActionArea>
+                    </WrappedLink>
                   </Card>
                 </Box>
-              </Grid2>
-            </Grid2>
-          </Container>
-        </ParallaxLayer>
-        <ParallaxLayer
-          offset={2.1}
-          onClick={() => {
-            // send user to https://discord.gg/fameladysociety in a new tab
-            window.open("https://discord.gg/fameladysociety", "_blank");
-          }}
-        >
-          <Container maxWidth="xl">
-            <Grid2 container justifyContent="flex-end" alignContent="end">
-              <Grid2 xs={6} sm={6} md={4} lg={3}>
-                <NextImage
-                  src="/images/reveal/fls_wrap.png"
-                  alt="hero"
-                  width={440}
-                  height={800}
-                  sizes="100vw"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                  }}
-                />
               </Grid2>
             </Grid2>
           </Container>

@@ -1,3 +1,4 @@
+"use client";
 import Head from "next/head";
 import { DefaultProvider } from "@/context/default";
 import { NextPage } from "next";
@@ -18,7 +19,6 @@ import { WrappedLink } from "@/components/WrappedLink";
 const HomePage: NextPage<{}> = () => {
   const title = "Fame Lady Society";
   const description = "Unstoppable";
-  const [isRevealed, setIsRevealed] = useState(false);
 
   return (
     <DefaultProvider>
@@ -54,58 +54,18 @@ const HomePage: NextPage<{}> = () => {
         title={
           <>
             <Typography variant="h5" component="h1" marginLeft={2}>
-              {isRevealed ? "Fame Lady Society" : "coming soon"}
+              Fame Lady Society
             </Typography>
-            {isRevealed ? (
-              <WrappedLink href="/wrap">
-                <Typography variant="h5" component="h1" marginLeft={2}>
-                  wrap here
-                </Typography>
-              </WrappedLink>
-            ) : null}
+            <WrappedLink href="/wrap">
+              <Typography variant="h5" component="h1" marginLeft={2}>
+                wrap here
+              </Typography>
+            </WrappedLink>
           </>
         }
       >
-        {isRevealed ? (
-          <PostReveal />
-        ) : (
-          <Container maxWidth="lg">
-            <Box component="div" sx={{ mt: 4 }}>
-              <NextImage
-                src="/images/Flsociety_morg_mock.png"
-                alt="hero"
-                width={1920}
-                height={1080}
-                sizes="100vw"
-                style={{
-                  width: "100%",
-                  height: "auto",
-                }}
-              />
-            </Box>
-            <Box component="div" sx={{ mt: 4 }}>
-              <CountDown onEnd={() => setIsRevealed(true)} />
-            </Box>
-          </Container>
-        )}
+        <PostReveal />
       </Main>
-      {isRevealed ? null : (
-        <RandomWrapVideo
-          urls={[
-            "/videos/wrap1.mp4",
-            "/videos/wrap2.mp4",
-            "/videos/wrap3.mp4",
-            "/videos/wrap4.mp4",
-            "/videos/wrap5.mp4",
-            "/videos/wrap6.mp4",
-            "/videos/wrap7.mp4",
-            "/videos/wrap8.mp4",
-            "/videos/wrap9.mp4",
-            "/videos/wrap10.mp4",
-          ]}
-          interval={10000}
-        />
-      )}
     </DefaultProvider>
   );
 };

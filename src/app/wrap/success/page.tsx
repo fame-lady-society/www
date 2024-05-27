@@ -1,4 +1,4 @@
-import WrapSuccessPage from "@/routes/WrapSuccess";
+import { WrapSuccessPage } from "@/routes/WrapSuccess";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

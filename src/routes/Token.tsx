@@ -28,7 +28,7 @@ const Content: FC<{
   );
 };
 
-const Page: NextPage<{
+export const TokenPage: FC<{
   metadata: IMetadata;
   tokenId: number;
   network?: "mainnet" | "sepolia";
@@ -57,4 +57,3 @@ const Page: NextPage<{
     </DefaultProvider>
   );
 };
-export default Page;

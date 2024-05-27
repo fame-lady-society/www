@@ -1,4 +1,4 @@
-import { FC, useCallback } from "react";
+import rEACT, { FC, useCallback } from "react";
 import Dialog from "@mui/material/Dialog";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -6,11 +6,16 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import UploadIcon from "@mui/icons-material/Upload";
 import { TransactionProgress } from "@/components/TransactionProgress";
-import { Transaction } from "../types";
+
+export type Transaction<T = unknown> = {
+  kind: string;
+  hash: `0x${string}`;
+  context?: T;
+};
 
 const TransactionItem: FC<{
-  transaction: Transaction;
-  onConfirmed: (tx: Transaction) => void;
+  transaction: Transaction<unknown>;
+  onConfirmed: (tx: Transaction<unknown>) => void;
 }> = ({ transaction, onConfirmed: doConfirmed }) => {
   const onConfirmed = useCallback(() => {
     doConfirmed(transaction);
@@ -31,8 +36,8 @@ const TransactionItem: FC<{
 export const TransactionsModal: FC<{
   open: boolean;
   onClose: () => void;
-  transactions?: Transaction[];
-  onTransactionConfirmed: (tx: Transaction) => void;
+  transactions?: Transaction<unknown>[];
+  onTransactionConfirmed: (tx: Transaction<unknown>) => void;
 }> = ({ open, onClose, transactions, onTransactionConfirmed }) => {
   return (
     <Dialog open={open} onClose={onClose}>
