@@ -17,6 +17,7 @@ import { base, sepolia } from "viem/chains";
 import { PresaleGauge } from "@/features/fame/components/PresaleGauge";
 import { PersonalGauge } from "@/features/fame/components/PersonalGauge";
 import { AllowedCard } from "@/features/fame/components/AllowedCard";
+import { InfoCard } from "@/features/fame/components/InfoCard";
 
 const Content: FC<
   PropsWithChildren<{ network?: "base" | "sepolia"; wrongChain?: ReactNode }>
@@ -68,8 +69,11 @@ export const FamePresale: FC<{
               <Grid2 xs={12} md={6}>
                 <PersonalGauge />
               </Grid2>
-              <Grid2 xs={12}>
+              <Grid2 xs={12} md={6}>
                 <PresaleCard />
+              </Grid2>
+              <Grid2 xs={12} md={6}>
+                <InfoCard />
               </Grid2>
             </Content>
           </Grid2>

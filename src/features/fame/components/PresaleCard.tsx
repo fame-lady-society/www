@@ -48,7 +48,11 @@ export const PresaleCard: FC<{}> = () => {
   const chainId = useChainId() as 11155111 | 8453;
   const { proof } = useProof();
   const { data: balance } = useBalance({
-    address: fameSaleAddress[chainId],
+    address: fameSaleAddress(chainId),
+  });
+
+  const { data: userBalance } = useBalance({
+    address,
   });
 
   const {
@@ -118,7 +122,7 @@ export const PresaleCard: FC<{}> = () => {
       try {
         const result = await writeFameSaleBuy({
           abi: fameSaleAbi,
-          address: fameSaleAddress[chainId],
+          address: fameSaleAddress(chainId),
           functionName: "buy",
           args: [proof],
           value: requestBuy,
@@ -262,6 +266,9 @@ export const PresaleCard: FC<{}> = () => {
               )}
               <Typography variant="body2" component="p">
                 Your max remaining contribution: {formatEther(remainingBuy)} E
+              </Typography>
+              <Typography variant="body2" component="p">
+                Your wallet balance: {formatEther(userBalance?.value ?? 0n)} E
               </Typography>
               <FormGroup
                 onSubmit={onBuy}
