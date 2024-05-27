@@ -12,7 +12,7 @@ import { FC, PropsWithChildren, ReactNode, useEffect } from "react";
 import { useFlsTokenAllocation } from "@/features/token/hooks/useFlsTokenAllocation";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { PresaleCard } from "@/features/fame/components/PresaleCard";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { base, sepolia } from "viem/chains";
 import { PresaleGauge } from "@/features/fame/components/PresaleGauge";
 import { PersonalGauge } from "@/features/fame/components/PersonalGauge";
@@ -21,12 +21,13 @@ import { AllowedCard } from "@/features/fame/components/AllowedCard";
 const Content: FC<
   PropsWithChildren<{ network?: "base" | "sepolia"; wrongChain?: ReactNode }>
 > = ({ children, network, wrongChain }) => {
-  const { isConnected, chain } = useAccount();
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const correctChain =
     isConnected &&
-    ((network === "base" && chain?.id === base.id) ||
-      (network === "sepolia" && chain?.id === sepolia.id));
+    ((network === "base" && chainId === base.id) ||
+      (network === "sepolia" && chainId === sepolia.id));
   useEffect(() => {
     if (isConnected && !correctChain) {
       switchChain({ chainId: network === "sepolia" ? sepolia.id : base.id });
