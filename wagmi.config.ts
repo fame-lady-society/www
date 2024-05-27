@@ -31,12 +31,14 @@ export default defineConfig({
           name: "FameSale",
           address: {
             [sepolia.id]: "0x740Af42cff003acd5e366b3A5392E38FF6b9e4F3",
+            // [base.id]: "0x2d78B13a2E735Bc96ec797A37AaF4e17C4431C83",
           },
         },
         {
           name: "FameSaleToken",
           address: {
             [sepolia.id]: "0x233A9630e1fC80688E5cc2bb988836e0D5034328",
+            // [base.id]: "0xf09326082a0B360567c72b6FEd67c22Fe2f76B60",
           },
         },
       ],

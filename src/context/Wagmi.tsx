@@ -2,7 +2,7 @@
 import { siweClient } from "@/utils/siweClient";
 import { SIWESession } from "connectkit";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
+import { base, mainnet, sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren } from "react";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
@@ -10,7 +10,7 @@ import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
-    chains: [mainnet, sepolia],
+    chains: [mainnet, sepolia, base],
     transports: {
       // RPC URL for each chain
       [mainnet.id]: http(
@@ -19,6 +19,7 @@ const config = createConfig(
       [sepolia.id]: http(
         `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
       ),
+      [base.id]: http(base.rpcUrls.default.http[0]),
     },
 
     // Required API Keys

@@ -12,15 +12,11 @@ import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import { useNotifications } from "@/features/notifications/Context";
-import {
-  fameSaleAbi,
-  fameSaleAddress,
-  fameSaleTokenAddress,
-  fameSaleTokenAbi,
-} from "@/wagmi";
+import { fameSaleAbi, fameSaleTokenAbi } from "@/wagmi";
 import {
   useAccount,
   useBalance,
+  useChainId,
   useReadContracts,
   useWriteContract,
 } from "wagmi";
@@ -36,6 +32,7 @@ import { styled } from "@mui/material/styles";
 import MuiInput from "@mui/material/Input";
 import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
+import { fameSaleAddress, fameSaleTokenAddress } from "../contract";
 
 const Input = styled(MuiInput)`
   width: 96px;
@@ -48,9 +45,7 @@ export const PresaleCard: FC<{}> = () => {
   const [requestBuy, setRequestBuy] = useState<bigint>(0n);
 
   const { address, chain } = useAccount();
-  const { id: chainId } = chain ?? {
-    id: 11155111,
-  };
+  const chainId = useChainId() as 11155111 | 8453;
   const { proof } = useProof();
   const { data: balance } = useBalance({
     address: fameSaleAddress[chainId],
@@ -63,28 +58,28 @@ export const PresaleCard: FC<{}> = () => {
     contracts: [
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress[chainId],
+        address: fameSaleAddress(chainId),
         functionName: "raiseRemaining",
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress[chainId],
+        address: fameSaleAddress(chainId),
         functionName: "canProve",
         args: proof && address ? [proof, address] : undefined,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress[chainId],
+        address: fameSaleAddress(chainId),
         functionName: "maxBuy",
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress[chainId],
+        address: fameSaleAddress(chainId),
         functionName: "isPaused",
       },
       {
         abi: fameSaleTokenAbi,
-        address: fameSaleTokenAddress[chainId],
+        address: fameSaleTokenAddress(chainId),
         functionName: "balanceOf",
         args: address ? [address] : undefined,
       },
