@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     owners.set(item.owner, (owners.get(item.owner) ?? 0) + 1);
   }
 
-  let csvData = `owner\n,amount\n`;
+  let csvData = `owner,amount\n`;
   for (const [owner, amount] of [...owners.entries()].sort(
     (a, b) => b[1] - a[1],
   )) {
