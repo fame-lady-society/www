@@ -6,15 +6,15 @@ export async function GET(req: NextRequest) {
   let data = await fetchAllOwners();
   data = data.filter((item) => item.owner && item.owner !== zeroAddress);
 
-  const owners = new Set<string>();
+  const owners = new Map<string, number>();
   for (const item of data) {
-    owners.add(item.owner);
+    owners.set(item.owner, (owners.get(item.owner) ?? 0) + 1);
   }
 
-  let csvData = `owner\n`;
-  for (const owner of owners) {
+  let csvData = `owner\n,amount\n`;
+  for (const [owner, amount] of owners.entries()) {
     if (!owner) continue;
-    csvData += `${owner}\n`;
+    csvData += `${owner},${amount}\n`;
   }
   const response = new NextResponse(csvData, {
     headers: {
