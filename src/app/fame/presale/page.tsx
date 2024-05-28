@@ -11,6 +11,14 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "The FAMEus Presale",
       title: "$FAME",
     },
+    other: {
+      ["twitter:card"]: "summary",
+      ["twitter:site"]: "@FameLadySociety",
+      ["twitter:creator"]: "@0xflick",
+      ["twitter:title"]: "$FAME",
+      ["twitter:description"]: "The FAMEus Presale",
+      ["twitter:image"]: "https://fameladysociety.com/images/fame/eyes.png",
+    },
   };
 }
 

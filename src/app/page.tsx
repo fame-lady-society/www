@@ -17,7 +17,8 @@ export const metadata: Metadata = {
     ["twitter:image"]:
       "https://fameladysociety.com/images/Flsociety_morg_mock.jpeg",
     ["twitter:card"]: "summary_large_image",
-    ["twitter:creator"]: "@FameLadySociety",
+    ["twitter:site"]: "@FameLadySociety",
+    ["twitter:creator"]: "@0xflick",
   },
 };
 
