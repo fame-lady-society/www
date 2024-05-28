@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
   }
 
   let csvData = `owner\n,amount\n`;
-  for (const [owner, amount] of owners.entries()) {
+  for (const [owner, amount] of [...owners.entries()].sort(
+    (a, b) => b[1] - a[1],
+  )) {
     if (!owner) continue;
     csvData += `${owner},${amount}\n`;
   }
