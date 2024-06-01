@@ -13,8 +13,6 @@ import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { FC } from "react";
 
 export const FaqPage: FC<{}> = () => {
-  const title = "Fame Lady Society - FAQ";
-  const description = "Frequently Asked Questions about wrapping";
   const roomForTitle = useMediaQuery(theme.breakpoints.up("sm"));
   return (
     <DefaultProvider>

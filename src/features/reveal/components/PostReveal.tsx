@@ -56,21 +56,11 @@ const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
 };
 
 export const PostReveal = () => {
-  useLayoutEffect(() => {
-    // find the body tag and add an overflow hidden style
-    const body = document.querySelector("body");
-    if (body) {
-      body.style.overflow = "hidden";
-      return () => {
-        body.style.removeProperty("overflow");
-      };
-    }
-  }, []);
   return (
     <>
       <Parallax pages={3}>
         <ParallaxLayer offset={0} speed={1}>
-          <Container maxWidth="lg" sx={{ mt: 6 }}>
+          <Container maxWidth="lg" sx={{ mt: 8 }}>
             <Box component="div">
               <NextImage
                 src="/images/Flsociety_morg_mock.png"

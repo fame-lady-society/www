@@ -5,16 +5,19 @@ import InputIcon from "@mui/icons-material/Input";
 import UpdateIcon from "@mui/icons-material/Update";
 import QAIcon from "@mui/icons-material/QuestionAnswer";
 import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import DollarIcon from "@mui/icons-material/MonetizationOn";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { WrappedLink } from "@/components/WrappedLink";
 
 export const SiteMenu: FC<{
+  isFame?: boolean;
   isFaq?: boolean;
   isCustomize?: boolean;
   isHome?: boolean;
   isWrap?: boolean;
 }> = ({
+  isFame = false,
   isHome = false,
   isCustomize = false,
   isFaq = false,
@@ -30,6 +33,18 @@ export const SiteMenu: FC<{
           primary={
             <Typography textAlign="right" color="white">
               Wrap
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/fame" disabled={isFame}>
+        <ListItemIcon>
+          <DollarIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              $FAME
             </Typography>
           }
         />

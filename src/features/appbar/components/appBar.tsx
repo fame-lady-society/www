@@ -9,6 +9,8 @@ import {
 import { AppBar as MuiAppBar, Toolbar, Box, Typography } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { HomeMenu } from "./HomeMenu";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import theme from "@/theme";
 import { ConnectKitButton } from "connectkit";
 
 export const AppBar: FC<{
@@ -16,6 +18,7 @@ export const AppBar: FC<{
   title?: ReactNode;
   right?: ReactNode;
 }> = ({ menu, title, right }) => {
+  const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [menuAnchorEl, setMenuAnchorEl] = useState<Element | null>(null);
 
   const onMenuClose = useCallback(() => {
@@ -33,7 +36,7 @@ export const AppBar: FC<{
           <Box sx={{ flexGrow: 1 }} component="span" />
           {right}
           <Box ml={2} component="span" />
-          <ConnectKitButton />
+          <ConnectKitButton showAvatar={!tinyScreen} />
         </Toolbar>
       </MuiAppBar>
       {menu && (

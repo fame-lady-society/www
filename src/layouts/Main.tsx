@@ -17,24 +17,16 @@ export const Main: FC<
     right?: ReactNode;
   }>
 > = ({ children, menu, title, right }) => {
-  const targetRef = useRef<HTMLDivElement>(null);
-
   return (
     <>
-      <AppBar menu={menu} title={title} right={right} />
       <Box
-        ref={targetRef}
         component="main"
-        display="flex"
         sx={{
-          mt: 4,
           backgroundColor: "background.default",
-          flexFlow: "column",
         }}
       >
-        <Box component="div" display="flex" sx={{ flex: "1 1 auto" }}>
-          {children}
-        </Box>
+        <AppBar menu={menu} title={title} right={right} />
+        {children}
       </Box>
     </>
   );

@@ -372,60 +372,58 @@ export const WrapPage: FC<{
 
   return (
     <>
-      <Container maxWidth="lg" sx={{ mt: 6 }}>
-        <Grid2 container spacing={2}>
-          {network === "sepolia" ? (
-            <Grid2 xs={12} sm={12} md={12}>
-              <Box component="div" sx={{ mt: 4 }}>
-                <MintCard
-                  onMint={onMint}
-                  transactionInProgress={mintTransactionInProgress}
-                />
-              </Box>
-            </Grid2>
-          ) : null}
+      <Grid2 container spacing={2} maxWidth="lg" sx={{ mt: 6, mx: 4 }}>
+        {network === "sepolia" ? (
           <Grid2 xs={12} sm={12} md={12}>
             <Box component="div" sx={{ mt: 4 }}>
-              <TurboWrap
-                isApprovedForAll={isWrappedApprovedForAll}
-                onApprove={onApprove}
-                tokenIds={tokenIds ?? []}
-                wrapCost={wrapCost}
-                onWrap={onWrap}
-                onWrapTo={onWrapTo}
-                transactionInProgress={
-                  wrapTransactionInProgress || approveTransactionInProgress
-                }
-                nonce={nonce}
+              <MintCard
+                onMint={onMint}
+                transactionInProgress={mintTransactionInProgress}
               />
             </Box>
           </Grid2>
-          <Grid2 xs={12} sm={12} md={12}>
-            <Box component="div" sx={{ mt: 4 }}>
-              <WrapCard
-                isApprovedForAll={isWrappedApprovedForAll}
-                onApprove={onApprove}
-                tokenIds={tokenIds ?? []}
-                wrapCost={wrapCost}
-                onWrap={onWrap}
-                onWrapTo={onWrapTo}
-                transactionInProgress={
-                  wrapTransactionInProgress || approveTransactionInProgress
-                }
-                nonce={nonce}
-              />
-            </Box>
-          </Grid2>
-          <Grid2 xs={12} sm={12} md={12}>
-            <Box component="div" sx={{ mt: 4 }}>
-              <UnwrapCard
-                onUnwrapMany={onUnwrapMany}
-                transactionInProgress={unwrapTransactionInProgress}
-              />
-            </Box>
-          </Grid2>
+        ) : null}
+        <Grid2 xs={12} sm={12} md={12}>
+          <Box component="div" sx={{ mt: 4 }}>
+            <TurboWrap
+              isApprovedForAll={isWrappedApprovedForAll}
+              onApprove={onApprove}
+              tokenIds={tokenIds ?? []}
+              wrapCost={wrapCost}
+              onWrap={onWrap}
+              onWrapTo={onWrapTo}
+              transactionInProgress={
+                wrapTransactionInProgress || approveTransactionInProgress
+              }
+              nonce={nonce}
+            />
+          </Box>
         </Grid2>
-      </Container>
+        <Grid2 xs={12} sm={12} md={12}>
+          <Box component="div" sx={{ mt: 4 }}>
+            <WrapCard
+              isApprovedForAll={isWrappedApprovedForAll}
+              onApprove={onApprove}
+              tokenIds={tokenIds ?? []}
+              wrapCost={wrapCost}
+              onWrap={onWrap}
+              onWrapTo={onWrapTo}
+              transactionInProgress={
+                wrapTransactionInProgress || approveTransactionInProgress
+              }
+              nonce={nonce}
+            />
+          </Box>
+        </Grid2>
+        <Grid2 xs={12} sm={12} md={12}>
+          <Box component="div" sx={{ mt: 4 }}>
+            <UnwrapCard
+              onUnwrapMany={onUnwrapMany}
+              transactionInProgress={unwrapTransactionInProgress}
+            />
+          </Box>
+        </Grid2>
+      </Grid2>
       {!hasAgreed && (
         <AgreeModal open={!hasAgreed} onClose={() => setHasAgreed(true)} />
       )}

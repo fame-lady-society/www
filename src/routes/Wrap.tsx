@@ -21,8 +21,10 @@ const Content: FC<{
   const { replace } = useRouter();
   const { chain } = useAccount();
   if (chain && chain?.name.toLowerCase() !== network) {
-    const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
-    replace(`/${name}/wrap`);
+    if ([1, 11155111].includes(chain?.id)) {
+      const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
+      replace(`/${name}/wrap`);
+    }
   }
 
   const { wrappedNftContractAbi, wrappedNftContractAddress } =

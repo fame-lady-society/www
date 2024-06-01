@@ -16,6 +16,9 @@ import { TwitterIcon } from "@/components/icons/twitter";
 import { WrappedLink } from "@/components/WrappedLink";
 import { MagicEdenIcon } from "@/components/icons/magiceden";
 import { SlimChecker } from "@/features/claim/components/SlimChecker";
+import MenuList from "@mui/material/MenuList";
+import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
+import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 
 const StickyImage: FC<PropsWithChildren> = ({ children }) => {
   const [height, setHeight] = useState("100vh");
@@ -23,9 +26,9 @@ const StickyImage: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const newHeight = Math.max(window.innerHeight - window.scrollY, 650);
+      const newHeight = Math.max(window.innerHeight - window.scrollY, 150);
       setHeight(`${newHeight}px`);
-      if (newHeight > 650) {
+      if (newHeight > 150) {
         const newPaddingTop = Math.max(window.scrollY, 0);
         setPaddingTop(newPaddingTop);
       }
@@ -196,471 +199,466 @@ const Content: FC = () => {
   });
 
   return (
-    <Main
-      title={
-        <Typography variant="h5" component="h1" marginLeft={2}>
-          $FAME
-        </Typography>
-      }
-    >
-      <Container sx={{ mt: 2 }}>
-        <Grid2 container spacing={2}>
-          <Grid2
-            xs={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <StickyImage>
-                <NextImage
-                  src="/images/fame/Cool_Lady.jpeg"
-                  alt="Fame Society"
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    height: "auto",
-                  }}
-                  width={imageWidth}
-                  height={imageWidth * (imageHeight / imageWidth)}
-                />
-              </StickyImage>
-            </AnimatedBoxFallIn>
-          </Grid2>
-          <Grid2
-            xs={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={6}
-            >
-              <Typography variant="h2" textTransform="uppercase">
-                presents
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <NextImage
-                src="/images/fame/fame.png"
-                alt="Fame Society"
-                width={500}
-                height={500}
-              />
-            </AnimatedBoxPopAndFadeIn>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography
-                variant="h3"
-                textTransform="uppercase"
-                textAlign="center"
-              >
-                a community token
-              </Typography>
-            </AnimatedBoxPopAndFadeIn>
-          </Grid2>
-          <Grid2
-            lg={3}
-            sm={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedSlideInLeft
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <NextImage
-                src="/images/fame/bala.png"
-                alt="Fame Society"
-                width={300}
-                height={300}
-                style={{ marginTop: 32 }}
-              />
-            </AnimatedSlideInLeft>
-          </Grid2>
-          <Grid2
-            lg={6}
-            sm={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <NextImage
-                src="/images/fame/zepeto.png"
-                alt="Fame Society"
-                width={550}
-                height={400}
-              />
-            </AnimatedBoxFallIn>
-          </Grid2>
-          <Grid2
-            lg={3}
-            sm={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedSlideInRight
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <NextImage
-                src="/images/fame/gm-bri-bam2.png"
-                alt="Fame Society"
-                width={250}
-                height={400}
-              />
-            </AnimatedSlideInRight>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxPopAndFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography
-                variant="h3"
-                textTransform="uppercase"
-                textAlign="center"
-              >
-                by and for the fame ladies
-              </Typography>
-            </AnimatedBoxPopAndFadeIn>
-          </Grid2>
-          <Grid2
-            ref={eyesContainer.ref}
-            xs={12}
-            marginBottom={20}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <Parallax speed={-30}>
-              <NextImage
-                ref={eyesRef}
-                src="/images/fame/eyes.png"
-                alt="Fame Society"
-                width={1000}
-                height={500}
-                style={{
-                  position: "relative",
-                  top: 180,
-                  marginBottom: 32,
-                }}
-              />
-            </Parallax>
-            <Parallax speed={10}>
-              <Typography
-                variant="h3"
-                textTransform="uppercase"
-                textAlign="center"
-                position="relative"
-                top={-100}
-                marginTop={2}
-                marginBottom={50}
-              >
-                a DN404 project
-              </Typography>
-            </Parallax>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography variant="h5" textAlign="left">
-                The Fame Lady Society (FLSoc) is a vibrant community of NFT
-                collectors and creators dedicated to the original Fame Lady
-                Squad (FLS) NFTs, the pioneering all-female generative PFP
-                project on the Ethereum blockchain. With a strong focus on
-                transparency, community governance, inclusivity, and
-                women&apos;s empowerment, FLSoc aims to transform Web3 into
-                &lsquo;webWE,&rsquo; fostering a collaborative and supportive
-                environment.
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography variant="h5" textAlign="left">
-                Fame Lady Society&apos;s mission is to ensure that every member
-                has a voice in shaping the project&apos;s future, promoting true
-                decentralization and sustainability for the benefit of the
-                entire community. FLSoc emerged from the challenges faced by the
-                original FLS, including a fraudulent foundation and a
-                community-driven takeover led by passionate members determined
-                to reclaim and honor the project&apos;s promise.
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-          <Grid2 xs={12}>
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={16}
-            >
-              <Typography variant="h5" textAlign="left">
-                Established on December 11, 2022, the Fame Lady Society
-                continues to fight for the return of the original smart contract
-                while offering an alternative through a newly created smart
-                contract by 0xflick. This effort ensures that the community can
-                maintain ownership and governance of their assets, reinforcing
-                the society&apos;s commitment to a decentralized and inclusive
-                future.
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-          <Grid2 xs={12} marginY="4">
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography variant="h4" textAlign="center">
-                Join the Society
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-          <Grid2
-            xs={12}
-            sm={6}
-            md={3}
-            marginBottom={2}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallUp component="div">
-              <WrappedLink
-                href="https://x.com/fameladysociety"
-                underline="none"
-                target="_blank"
-                rel="noreferrer"
-                display="flex"
-                flexDirection="row"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <TwitterIcon sx={{ marginRight: 1 }} />
-                <Typography variant="body1">Twitter</Typography>
-              </WrappedLink>
-            </AnimatedBoxFallUp>
-          </Grid2>
-          <Grid2
-            xs={12}
-            sm={6}
-            md={3}
-            marginBottom={2}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallUp component="div">
-              <WrappedLink
-                href="https://discord.gg/fameladysociety"
-                underline="none"
-                target="_blank"
-                rel="noreferrer"
-                display="flex"
-                flexDirection="row"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <NextImage
-                  src="/images/reveal/discord-dark.png"
-                  alt="discord"
-                  width={90}
-                  height={25}
-                  style={{
-                    maxWidth: "100%",
-                    height: "auto",
-                    marginRight: 8,
-                  }}
-                />
-                <Typography variant="body1" color="white">
-                  invite
-                </Typography>
-              </WrappedLink>
-            </AnimatedBoxFallUp>
-          </Grid2>
-          <Grid2
-            xs={12}
-            sm={6}
-            md={3}
-            marginBottom={2}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallUp component="div">
-              <WrappedLink
-                href="https://buy.fameladysociety.com"
-                underline="none"
-                target="_blank"
-                rel="noreferrer"
-                display="flex"
-                flexDirection="row"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <NextImage
-                  src="/images/logos/reservoir.svg"
-                  alt="reservoir"
-                  width={25}
-                  height={25}
-                  style={{
-                    maxWidth: "100%",
-                    height: "auto",
-                    marginRight: 8,
-                  }}
-                />
-                <Typography variant="body1">Marketplace</Typography>
-              </WrappedLink>
-            </AnimatedBoxFallUp>
-          </Grid2>
-          <Grid2
-            xs={12}
-            sm={6}
-            md={3}
-            marginBottom={2}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-          >
-            <AnimatedBoxFallUp component="div">
-              <WrappedLink
-                href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
-                underline="none"
-                target="_blank"
-                rel="noreferrer"
-                display="flex"
-                flexDirection="row"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <MagicEdenIcon sx={{ marginRight: 1 }} />
-                <Typography variant="body1">Magic Eden</Typography>
-              </WrappedLink>
-            </AnimatedBoxFallUp>
-          </Grid2>
-          <Grid2
-            xs={12}
-            sx={{
-              marginTop: 8,
-              marginBottom: 8,
+    <Grid2 container spacing={2} sx={{ mt: 2, mx: 4 }}>
+      <Grid2
+        xs={12}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <NextImage
+            src="/images/fame/Cool_Lady.jpeg"
+            alt="Fame Society"
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
             }}
+            width={imageWidth}
+            height={imageWidth * (imageHeight / imageWidth)}
+          />
+        </AnimatedBoxFallIn>
+      </Grid2>
+      <Grid2
+        xs={12}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={6}
+        >
+          <Typography variant="h2" textTransform="uppercase">
+            presents
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxPopAndFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <NextImage
+            src="/images/fame/fame.png"
+            alt="Fame Society"
+            width={500}
+            height={500}
+          />
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxPopAndFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h3" textTransform="uppercase" textAlign="center">
+            a community token
+          </Typography>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2
+        lg={3}
+        sm={12}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedSlideInLeft
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <NextImage
+            src="/images/fame/bala.png"
+            alt="Fame Society"
+            width={300}
+            height={300}
+            style={{ marginTop: 32 }}
+          />
+        </AnimatedSlideInLeft>
+      </Grid2>
+      <Grid2
+        lg={6}
+        sm={12}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <NextImage
+            src="/images/fame/zepeto.png"
+            alt="Fame Society"
+            width={550}
+            height={400}
+          />
+        </AnimatedBoxFallIn>
+      </Grid2>
+      <Grid2
+        lg={3}
+        sm={12}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedSlideInRight
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <NextImage
+            src="/images/fame/gm-bri-bam2.png"
+            alt="Fame Society"
+            width={250}
+            height={400}
+          />
+        </AnimatedSlideInRight>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxPopAndFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h3" textTransform="uppercase" textAlign="center">
+            by and for the fame ladies
+          </Typography>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2
+        ref={eyesContainer.ref}
+        xs={12}
+        marginBottom={20}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+        overflow="hidden"
+      >
+        <Parallax speed={-30}>
+          <NextImage
+            ref={eyesRef}
+            src="/images/fame/eyes.png"
+            alt="Fame Society"
+            width={1000}
+            height={500}
+            style={{
+              position: "relative",
+              top: 180,
+              marginBottom: 32,
+            }}
+          />
+        </Parallax>
+        <Parallax speed={10}>
+          <Typography
+            variant="h3"
+            textTransform="uppercase"
+            textAlign="center"
+            marginTop={2}
+            marginBottom={50}
+            position="relative"
+            top={-100}
           >
-            <SlimChecker ageBoost={1.5} rankBoost={2} />
-          </Grid2>
-          <Grid2 xs={12} marginY="4">
-            <AnimatedBoxFadeIn
-              component="div"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              marginTop={2}
-              marginBottom={8}
-            >
-              <Typography variant="body1" textAlign="center">
-                $FAME is a community token for the Fame Lady Society. No
-                intrinsic value, expectation of financial return, or utility is
-                guaranteed outside of the use of the token within the community.
-              </Typography>
-            </AnimatedBoxFadeIn>
-          </Grid2>
-        </Grid2>
-      </Container>
-    </Main>
+            a DN404 project
+          </Typography>
+        </Parallax>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h5" textAlign="left">
+            The Fame Lady Society (FLSoc) is a vibrant community of NFT
+            collectors and creators dedicated to the original Fame Lady Squad
+            (FLS) NFTs, the pioneering all-female generative PFP project on the
+            Ethereum blockchain. With a strong focus on transparency, community
+            governance, inclusivity, and women&apos;s empowerment, FLSoc aims to
+            transform Web3 into &lsquo;webWE,&rsquo; fostering a collaborative
+            and supportive environment.
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h5" textAlign="left">
+            Fame Lady Society&apos;s mission is to ensure that every member has
+            a voice in shaping the project&apos;s future, promoting true
+            decentralization and sustainability for the benefit of the entire
+            community. FLSoc emerged from the challenges faced by the original
+            FLS, including a fraudulent foundation and a community-driven
+            takeover led by passionate members determined to reclaim and honor
+            the project&apos;s promise.
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={16}
+        >
+          <Typography variant="h5" textAlign="left">
+            Established on December 11, 2022, the Fame Lady Society continues to
+            fight for the return of the original smart contract while offering
+            an alternative through a newly created smart contract by 0xflick.
+            This effort ensures that the community can maintain ownership and
+            governance of their assets, reinforcing the society&apos;s
+            commitment to a decentralized and inclusive future.
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+      <Grid2 xs={12} marginY="4">
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h4" textAlign="center">
+            Join the Society
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallUp component="div">
+          <WrappedLink
+            href="https://x.com/fameladysociety"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <TwitterIcon sx={{ marginRight: 1 }} />
+            <Typography variant="body1">Twitter</Typography>
+          </WrappedLink>
+        </AnimatedBoxFallUp>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallUp component="div">
+          <WrappedLink
+            href="https://discord.gg/fameladysociety"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NextImage
+              src="/images/reveal/discord-dark.png"
+              alt="discord"
+              width={90}
+              height={25}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginRight: 8,
+              }}
+            />
+            <Typography variant="body1" color="white">
+              invite
+            </Typography>
+          </WrappedLink>
+        </AnimatedBoxFallUp>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallUp component="div">
+          <WrappedLink
+            href="https://buy.fameladysociety.com"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NextImage
+              src="/images/logos/reservoir.svg"
+              alt="reservoir"
+              width={25}
+              height={25}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginRight: 8,
+              }}
+            />
+            <Typography variant="body1">Marketplace</Typography>
+          </WrappedLink>
+        </AnimatedBoxFallUp>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxFallUp component="div">
+          <WrappedLink
+            href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <MagicEdenIcon sx={{ marginRight: 1 }} />
+            <Typography variant="body1">Magic Eden</Typography>
+          </WrappedLink>
+        </AnimatedBoxFallUp>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sx={{
+          marginTop: 8,
+          marginBottom: 8,
+        }}
+      >
+        <SlimChecker ageBoost={1.5} rankBoost={2} />
+      </Grid2>
+      <Grid2 xs={12} marginY="4">
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="body1" textAlign="center">
+            $FAME is a community token for the Fame Lady Society. No intrinsic
+            value, expectation of financial return, or utility is guaranteed
+            outside of the use of the token within the community.
+          </Typography>
+        </AnimatedBoxFadeIn>
+      </Grid2>
+    </Grid2>
   );
 };
 
 export const Fame: FC<{}> = () => {
   return (
     <DefaultProvider>
-      <ParallaxProvider>
-        <Content />
-      </ParallaxProvider>
+      <Main
+        menu={
+          <>
+            <MenuList dense disablePadding>
+              <LinksMenuItems />
+              <SiteMenu isFame />
+            </MenuList>
+          </>
+        }
+        title={
+          <Typography variant="h5" component="h1" marginLeft={2}>
+            $FAME
+          </Typography>
+        }
+      >
+        <ParallaxProvider>
+          <Content />
+        </ParallaxProvider>
+      </Main>
     </DefaultProvider>
   );
 };
