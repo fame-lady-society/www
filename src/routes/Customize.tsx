@@ -39,7 +39,7 @@ const Customize: NextPage<{
   prefix?: string;
 }> = ({ prefix = "", network }) => {
   return (
-    <DefaultProvider>
+    <DefaultProvider siwe>
       <Main
         menu={
           <>

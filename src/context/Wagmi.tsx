@@ -39,12 +39,16 @@ const config = createConfig(
 
 const queryClient = new QueryClient();
 
-export const Web3Provider: FC<PropsWithChildren> = ({ children }) => {
+export const Web3Provider: FC<
+  PropsWithChildren<{
+    siwe?: boolean;
+  }>
+> = ({ children, siwe = false }) => {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <siweClient.Provider
-          enabled={true} // defaults true
+          enabled={siwe}
           nonceRefetchInterval={300000} // in milliseconds, defaults to 5 minutes
           sessionRefetchInterval={300000} // in milliseconds, defaults to 5 minutes
           signOutOnDisconnect={true} // defaults true

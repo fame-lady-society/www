@@ -4,7 +4,6 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
-import { WrappedLink } from "@/components/WrappedLink";
 
 const QA: FC<{ question: ReactNode; answer: ReactNode }> = ({
   question,

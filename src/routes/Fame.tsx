@@ -19,40 +19,17 @@ import { SlimChecker } from "@/features/claim/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-
-const StickyImage: FC<PropsWithChildren> = ({ children }) => {
-  const [height, setHeight] = useState("100vh");
-  const [paddingTop, setPaddingTop] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const newHeight = Math.max(window.innerHeight - window.scrollY, 150);
-      setHeight(`${newHeight}px`);
-      if (newHeight > 150) {
-        const newPaddingTop = Math.max(window.scrollY, 0);
-        setPaddingTop(newPaddingTop);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  return (
-    <div
-      style={{
-        overflow: "hidden",
-        paddingTop: `${paddingTop}px`,
-        height,
-      }}
-    >
-      {children}
-    </div>
-  );
-};
+import { useAccount, useReadContract } from "wagmi";
+import {
+  fameLadySocietyAbi,
+  fameLadySocietyAddress,
+  fameSaleAbi,
+} from "@/wagmi";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import { fameSaleAddress } from "@/features/fame/contract";
+import { FameFAQ } from "@/features/fame/components/FameFAQ";
 
 const AnimatedBox = animated(Box);
 
@@ -186,7 +163,8 @@ const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
 const Content: FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
-  const imageWidth = isSmallScreen ? window.innerWidth : 1000;
+  const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const imageWidth = isSmallScreen ? window.innerWidth * 0.8 : 1000;
   const imageHeight = 383;
   const eyesRef = useRef<HTMLImageElement>(null);
   const eyesContainer = useParallax<HTMLDivElement>({
@@ -198,6 +176,8 @@ const Content: FC = () => {
     },
   });
 
+  console.log({ imageWidth });
+
   return (
     <Grid2 container spacing={2} sx={{ mt: 2, mx: 4 }}>
       <Grid2
@@ -206,27 +186,15 @@ const Content: FC = () => {
         justifyContent="center"
         alignItems="center"
         width="100%"
+        mt={8}
+        overflow="hidden"
       >
-        <AnimatedBoxFallIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <NextImage
-            src="/images/fame/Cool_Lady.jpeg"
-            alt="Fame Society"
-            style={{
-              display: "block",
-              width: "100%",
-              height: "auto",
-            }}
-            width={imageWidth}
-            height={imageWidth * (imageHeight / imageWidth)}
-          />
-        </AnimatedBoxFallIn>
+        <NextImage
+          src="/images/fame/Cool_Lady.jpeg"
+          alt="Fame Society"
+          width={Math.floor(imageWidth)}
+          height={Math.floor(imageWidth * 0.683)}
+        />
       </Grid2>
       <Grid2
         xs={12}
@@ -234,6 +202,7 @@ const Content: FC = () => {
         justifyContent="center"
         alignItems="center"
         width="100%"
+        overflow="hidden"
       >
         <AnimatedBoxFadeIn
           component="div"
@@ -256,12 +225,13 @@ const Content: FC = () => {
           alignItems="center"
           marginTop={2}
           marginBottom={8}
+          overflow="hidden"
         >
           <NextImage
             src="/images/fame/fame.png"
             alt="Fame Society"
-            width={500}
-            height={500}
+            width={isTinyScreen ? 250 : 500}
+            height={isTinyScreen ? 250 : 500}
           />
         </AnimatedBoxPopAndFadeIn>
       </Grid2>
@@ -273,6 +243,7 @@ const Content: FC = () => {
           alignItems="center"
           marginTop={2}
           marginBottom={8}
+          overflow="hidden"
         >
           <Typography variant="h3" textTransform="uppercase" textAlign="center">
             a community token
@@ -286,6 +257,7 @@ const Content: FC = () => {
         justifyContent="center"
         alignItems="center"
         width="100%"
+        overflow="hidden"
       >
         <AnimatedSlideInLeft
           component="div"
@@ -298,8 +270,8 @@ const Content: FC = () => {
           <NextImage
             src="/images/fame/bala.png"
             alt="Fame Society"
-            width={300}
-            height={300}
+            width={isTinyScreen ? 150 : 300}
+            height={isTinyScreen ? 150 : 300}
             style={{ marginTop: 32 }}
           />
         </AnimatedSlideInLeft>
@@ -311,6 +283,7 @@ const Content: FC = () => {
         justifyContent="center"
         alignItems="center"
         width="100%"
+        overflow="hidden"
       >
         <AnimatedBoxFallIn
           component="div"
@@ -323,8 +296,8 @@ const Content: FC = () => {
           <NextImage
             src="/images/fame/zepeto.png"
             alt="Fame Society"
-            width={550}
-            height={400}
+            width={isTinyScreen ? 225 : 550}
+            height={isTinyScreen ? 200 : 400}
           />
         </AnimatedBoxFallIn>
       </Grid2>
@@ -335,6 +308,7 @@ const Content: FC = () => {
         justifyContent="center"
         alignItems="center"
         width="100%"
+        overflow="hidden"
       >
         <AnimatedSlideInRight
           component="div"
@@ -347,12 +321,12 @@ const Content: FC = () => {
           <NextImage
             src="/images/fame/gm-bri-bam2.png"
             alt="Fame Society"
-            width={250}
-            height={400}
+            width={isTinyScreen ? 125 : 250}
+            height={isTinyScreen ? 200 : 400}
           />
         </AnimatedSlideInRight>
       </Grid2>
-      <Grid2 xs={12}>
+      <Grid2 xs={12} overflow="hidden">
         <AnimatedBoxPopAndFadeIn
           component="div"
           display="flex"
@@ -612,53 +586,92 @@ const Content: FC = () => {
         xs={12}
         sx={{
           marginTop: 8,
-          marginBottom: 8,
         }}
       >
         <SlimChecker ageBoost={1.5} rankBoost={2} />
       </Grid2>
       <Grid2 xs={12} marginY="4">
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="body1" textAlign="center">
-            $FAME is a community token for the Fame Lady Society. No intrinsic
-            value, expectation of financial return, or utility is guaranteed
-            outside of the use of the token within the community.
-          </Typography>
-        </AnimatedBoxFadeIn>
+        <Typography variant="body1" textAlign="center">
+          $FAME is a community token for the Fame Lady Society. No intrinsic
+          value, expectation of financial return, or utility is guaranteed
+          outside of the use of the token within the community.
+        </Typography>
+      </Grid2>
+
+      <Grid2 xs={12} marginY="4">
+        <Card>
+          <CardContent>
+            <FameFAQ />
+          </CardContent>
+        </Card>
       </Grid2>
     </Grid2>
+  );
+};
+
+const Header: FC = () => {
+  const { address } = useAccount();
+  const { data: balance } = useReadContract({
+    address: fameLadySocietyAddress[1],
+    abi: fameLadySocietyAbi,
+    chainId: 1,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
+  const { data: isPaused } = useReadContract({
+    abi: fameSaleAbi,
+    address: fameSaleAddress(8453),
+    functionName: "isPaused",
+    chainId: 1,
+  });
+
+  const theme = useTheme();
+  const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
+
+  return (
+    <Main
+      menu={
+        <>
+          <MenuList dense disablePadding>
+            <LinksMenuItems />
+            <SiteMenu isFame />
+          </MenuList>
+        </>
+      }
+      title={
+        <>
+          {tinyScreen ? null : (
+            <Typography variant="h5" component="h1" marginLeft={2}>
+              $FAME
+            </Typography>
+          )}
+          {balance && !isPaused && (
+            <Button
+              component={WrappedLink}
+              href="/fame/presale"
+              variant="outlined"
+              sx={{ ml: 2 }}
+            >
+              <Typography variant="h5" component="h1">
+                {smallScreen ? "presale" : "join the presale"}
+              </Typography>
+            </Button>
+          )}
+        </>
+      }
+    >
+      <ParallaxProvider>
+        <Content />
+      </ParallaxProvider>
+    </Main>
   );
 };
 
 export const Fame: FC<{}> = () => {
   return (
     <DefaultProvider>
-      <Main
-        menu={
-          <>
-            <MenuList dense disablePadding>
-              <LinksMenuItems />
-              <SiteMenu isFame />
-            </MenuList>
-          </>
-        }
-        title={
-          <Typography variant="h5" component="h1" marginLeft={2}>
-            $FAME
-          </Typography>
-        }
-      >
-        <ParallaxProvider>
-          <Content />
-        </ParallaxProvider>
-      </Main>
+      <Header />
     </DefaultProvider>
   );
 };

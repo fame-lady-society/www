@@ -22,8 +22,12 @@ import {
   useWriteContract,
 } from "wagmi";
 import { useProof } from "../hooks/useProof";
-import { ContractFunctionExecutionError, formatEther, parseUnits } from "viem";
-import CircularProgress from "@mui/material/CircularProgress";
+import {
+  ContractFunctionExecutionError,
+  formatEther,
+  formatUnits,
+  parseUnits,
+} from "viem";
 import FormGroup from "@mui/material/FormGroup";
 import Button from "@mui/material/Button";
 import { WrappedLink } from "@/components/WrappedLink";
@@ -35,6 +39,8 @@ import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
 import { fameSaleAddress, fameSaleTokenAddress } from "../contract";
 import { ContributionGauge } from "./ContributionGauge";
+import { useAllocation } from "@/features/claim/hooks/useAllocation";
+import { ClaimEnoughModal } from "./ClaimEnoughModal";
 
 const Input = styled(MuiInput)`
   width: 96px;
@@ -43,12 +49,24 @@ const Input = styled(MuiInput)`
 const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => (e > m ? e : m));
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
+function formatUnit(amount: bigint) {
+  return Math.floor(Number(formatUnits(amount, 18)));
+}
+
 export const PresaleCard: FC<{}> = () => {
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [requestBuy, setRequestBuy] = useState<bigint>(0n);
 
   const { address, chain } = useAccount();
   const chainId = useChainId() as 11155111 | 8453;
   const { proof } = useProof();
+
+  const { total } = useAllocation({
+    address,
+    rankBoost: 3,
+    ageBoost: 1.5,
+  });
+
   const { data: balance } = useBalance({
     address: fameSaleAddress(chainId),
   });
@@ -351,72 +369,62 @@ export const PresaleCard: FC<{}> = () => {
           </CardContent>
         </Card>
       </Grid2>
-      <Grid2 xs={12} md={6}>
-        <Card>
-          <CardHeader title="Presale" />
-          {hasFullContribution ? (
-            <ThankYouCard />
-          ) : (
-            <>
-              <CardContent>
-                {canProve?.status === "success" && !canProve.result && (
+      {canProve?.status === "success" && canProve.result && (
+        <Grid2 xs={12}>
+          <Card>
+            <CardHeader title="Presale" />
+            {hasFullContribution ? (
+              <ThankYouCard />
+            ) : (
+              <>
+                <CardContent>
+                  <Typography variant="body2" component="p">
+                    Your current free claim allocation:{" "}
+                    {formatUnit(total).toLocaleString()} $FAME
+                  </Typography>
+                  <Typography variant="body2" component="p">
+                    Your max remaining contribution: {formatEther(remainingBuy)}{" "}
+                    E
+                  </Typography>
+                  <Typography variant="body2" component="p">
+                    Your wallet balance: {formatEther(userBalance?.value ?? 0n)}{" "}
+                    E
+                  </Typography>
                   <Typography variant="body2" color="error">
-                    Invalid proof
+                    {paused?.status === "success" && paused.result
+                      ? "presale paused"
+                      : buyInputError || "\u00A0"}
                   </Typography>
-                )}
-                <Typography variant="body2" component="p">
-                  Your max remaining contribution: {formatEther(remainingBuy)} E
-                </Typography>
-                <Typography variant="body2" component="p">
-                  Your wallet balance: {formatEther(userBalance?.value ?? 0n)} E
-                </Typography>
-                <FormGroup
-                  onSubmit={onBuy}
-                  sx={{
-                    mt: 2,
-                    mb: 1,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    component="label"
-                    htmlFor="buy-input"
-                  >
-                    Amount
-                  </Typography>
-                  <Input
-                    value={inputValue}
-                    onChange={onInputChanged}
-                    onBlur={onInputBlur}
-                    inputProps={{
-                      step: 0.01,
-                      min: 0,
-                      max: formatEther(remainingBuy),
-                      type: "number",
-                    }}
-                  />
-                </FormGroup>
-                <Typography variant="body2" color="error">
-                  {paused?.status === "success" && paused.result
-                    ? "presale paused"
-                    : buyInputError || "\u00A0"}
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button onClick={onBuy} disabled={!isValidBuy}>
-                  buy
-                </Button>
-              </CardActions>
-            </>
-          )}
-        </Card>
-      </Grid2>
+                </CardContent>
+                <CardActions>
+                  <Button onClick={() => setIsBuyModalOpen(true)}>buy</Button>
+                </CardActions>
+              </>
+            )}
+          </Card>
+        </Grid2>
+      )}
+
       <TransactionsModal
         open={!!isPendingTransaction}
         onClose={onCloseTransactionModal}
         transactions={isPendingTransaction ? isPendingTransaction : []}
         onTransactionConfirmed={onTransactionConfirmed}
       />
+      {isBuyModalOpen && (
+        <ClaimEnoughModal
+          currentBuyin={currentBalance?.result ?? 0n}
+          remainingBuy={remainingBuy}
+          totalAllocation={total}
+          onUpdateBuy={(value) => {
+            if (value) {
+              setRequestBuy(value);
+            }
+          }}
+          onClose={() => setIsBuyModalOpen(false)}
+          onBuy={onBuy}
+        />
+      )}
     </>
   );
 };

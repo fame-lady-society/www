@@ -12,63 +12,72 @@ function formatUnit(amount: bigint) {
   return Math.floor(Number(formatUnits(amount, 18)));
 }
 
+const NotConnected: FC = () => {
+  return (
+    <>
+      <CardHeader title="Token Claim Simulator" />
+      <CardContent>
+        <Typography variant="body1">
+          Please connect your wallet to simulate token claims.
+        </Typography>
+      </CardContent>
+    </>
+  );
+};
+
 export const SlimChecker: FC<
   {
     ageBoost: number;
     rankBoost: number;
   } & CardProps
 > = ({ ageBoost, rankBoost, ...cardProps }) => {
-  const { address: wagmiAddress } = useAccount();
-  const [address, setAddress] = useState("");
-  const { data: ensAddress } = useEnsAddress({
-    name: address,
-  });
-
-  const addressToUse = ensAddress || address || wagmiAddress || "";
+  const { address } = useAccount();
 
   const { fls, hunnys, mermaids, metavixens } = useAllocation({
-    address: isAddress(addressToUse) ? addressToUse : undefined,
+    address,
     rankBoost,
     ageBoost,
   });
 
   return (
     <Card {...cardProps}>
-      <CardHeader title="Token Claim Simulator" />
-      <CardContent>
-        <TextField
-          label="Address"
-          value={address || wagmiAddress}
-          onChange={(e) => setAddress(e.target.value)}
-          fullWidth
-        />
-        <Typography variant="body1" marginY={2}>
-          Rank Boost
-        </Typography>
+      {!address ? (
+        <NotConnected />
+      ) : (
+        <>
+          <CardHeader title="Token Claim Simulator" />
+          <CardContent>
+            <Typography variant="body1" marginY={2}>
+              Rank Boost
+            </Typography>
 
-        <Typography variant="body1">
-          FLS: {formatUnit(fls).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Hunnys: {formatUnit(hunnys).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Mermaids: {formatUnit(mermaids).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Metavixens: {formatUnit(metavixens).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Total $FAME:{" "}
-          {formatUnit(fls + hunnys + mermaids + metavixens).toLocaleString()}
-        </Typography>
-        <Typography variant="body1">
-          Total $FAME NFTs:{" "}
-          {Math.floor(
-            formatUnit(fls + hunnys + mermaids + metavixens) / 1_000_000,
-          )}
-        </Typography>
-      </CardContent>
+            <Typography variant="body1">
+              FLS: {formatUnit(fls).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Hunnys: {formatUnit(hunnys).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Mermaids: {formatUnit(mermaids).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Metavixens: {formatUnit(metavixens).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Total $FAME:{" "}
+              {formatUnit(
+                fls + hunnys + mermaids + metavixens,
+              ).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Total $FAME NFTs:{" "}
+              {Math.floor(
+                formatUnit(fls + hunnys + mermaids + metavixens) / 1_000_000,
+              )}
+            </Typography>
+          </CardContent>
+        </>
+      )}
     </Card>
   );
 };
