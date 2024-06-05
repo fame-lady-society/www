@@ -60,12 +60,31 @@ export const FameFAQ: FC = () => {
               tokens needed to mint a society NFT, the society NFT will be
               automatically burned.
             </Typography>
-            <Typography component="p" mb={2}>
+            <Typography component="p">
               This process is automatic and requires no action from the wallet.
             </Typography>
+          </>
+        }
+      />
+      <QA
+        question="Can I transfer my Society NFT?"
+        answer={
+          <>
             <Typography component="p">
-              If a society NFT is transferred to another wallet, the linked 1
+              If you transfer your Society NFT to another wallet, the linked 1
               million $FAME tokens will be transferred with it.
+            </Typography>
+          </>
+        }
+      />
+      <QA
+        question="What happens when I sell my $FAME?"
+        answer={
+          <>
+            <Typography component="p">
+              If you sell enough $FAME to bring your balance below the 1 million
+              $FAME tokens needed to mint a Society NFT, the Society NFT will be
+              automatically burned.
             </Typography>
           </>
         }
@@ -134,16 +153,6 @@ export const FameFAQ: FC = () => {
                 </span>
               </div>
             </div>
-          </>
-        }
-      />
-      <QA
-        question="What is locked liquidity?"
-        answer={
-          <>
-            Locked liquidity is liquidity that is locked in a smart contract and
-            cannot be accessed by anyone. This ensures that there is always
-            liquidity for the token.
           </>
         }
       />

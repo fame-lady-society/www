@@ -67,10 +67,6 @@ export const PresaleCard: FC<{}> = () => {
     ageBoost: 1.5,
   });
 
-  const { data: balance } = useBalance({
-    address: fameSaleAddress(chainId),
-  });
-
   const { data: userBalance } = useBalance({
     address,
   });
@@ -163,7 +159,6 @@ export const PresaleCard: FC<{}> = () => {
   const [isPendingTransaction, setIsPendingTransaction] = useState<
     false | null | Transaction[]
   >(false);
-  const [buyInputError, setBuyInputError] = useState("");
   const { addNotification, removeNotification } = useNotifications();
   const onBuy = useCallback(async () => {
     if (isValidBuy && !proof) {
@@ -267,40 +262,13 @@ export const PresaleCard: FC<{}> = () => {
     }
   }, [isPendingTransaction, proof, onBuy]);
 
-  const [inputValue, setInputValue] = useState("");
-  const onInputChanged: ChangeEventHandler<
-    HTMLInputElement | HTMLTextAreaElement
-  > = useCallback(
-    (e) => {
-      if (Number.isNaN(Number(e.target.value))) {
-        return setBuyInputError("invalid input");
-      }
-
-      const newValue = parseUnits(e.target.value, 18);
-      if (newValue > remainingBuy) {
-        setBuyInputError("allocation exceeded");
-      } else {
-        setBuyInputError("");
-      }
-
-      setRequestBuy(newValue);
-      setInputValue(e.target.value);
-    },
-    [remainingBuy],
-  );
-
-  const onInputBlur = useCallback(() => {
-    if (requestBuy > remainingBuy) {
-      setRequestBuy(remainingBuy);
-      setInputValue(formatEther(remainingBuy));
-      setBuyInputError("");
-    }
-  }, [requestBuy, remainingBuy]);
-
   const hasFullContribution =
     currentBalance?.status === "success" &&
     maxBuy?.status === "success" &&
     currentBalance.result === maxBuy.result;
+
+  const onBuyClick = useCallback(() => setIsBuyModalOpen(true), []);
+  const onCloseModal = useCallback(() => setIsBuyModalOpen(false), []);
 
   return (
     <>
@@ -341,6 +309,36 @@ export const PresaleCard: FC<{}> = () => {
           </CardContent>
         </Card>
       </Grid2>
+      {canProve?.status === "success" && canProve.result && (
+        <Grid2 xs={12}>
+          <Card>
+            <CardHeader title="Presale" />
+            {hasFullContribution ? (
+              <ThankYouCard />
+            ) : (
+              <>
+                <CardContent>
+                  <Typography variant="body2" component="p">
+                    Your current free claim allocation:{" "}
+                    {formatUnit(total).toLocaleString()} $FAME
+                  </Typography>
+                  <Typography variant="body2" component="p">
+                    Your max remaining contribution: {formatEther(remainingBuy)}{" "}
+                    E
+                  </Typography>
+                  <Typography variant="body2" component="p">
+                    Your wallet balance: {formatEther(userBalance?.value ?? 0n)}{" "}
+                    E
+                  </Typography>
+                </CardContent>
+                <CardActions>
+                  <Button onClick={onBuyClick}>buy</Button>
+                </CardActions>
+              </>
+            )}
+          </Card>
+        </Grid2>
+      )}
       <Grid2 xs={12} md={6}>
         <Card>
           <CardHeader title="Your contribution" />
@@ -369,41 +367,6 @@ export const PresaleCard: FC<{}> = () => {
           </CardContent>
         </Card>
       </Grid2>
-      {canProve?.status === "success" && canProve.result && (
-        <Grid2 xs={12}>
-          <Card>
-            <CardHeader title="Presale" />
-            {hasFullContribution ? (
-              <ThankYouCard />
-            ) : (
-              <>
-                <CardContent>
-                  <Typography variant="body2" component="p">
-                    Your current free claim allocation:{" "}
-                    {formatUnit(total).toLocaleString()} $FAME
-                  </Typography>
-                  <Typography variant="body2" component="p">
-                    Your max remaining contribution: {formatEther(remainingBuy)}{" "}
-                    E
-                  </Typography>
-                  <Typography variant="body2" component="p">
-                    Your wallet balance: {formatEther(userBalance?.value ?? 0n)}{" "}
-                    E
-                  </Typography>
-                  <Typography variant="body2" color="error">
-                    {paused?.status === "success" && paused.result
-                      ? "presale paused"
-                      : buyInputError || "\u00A0"}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button onClick={() => setIsBuyModalOpen(true)}>buy</Button>
-                </CardActions>
-              </>
-            )}
-          </Card>
-        </Grid2>
-      )}
 
       <TransactionsModal
         open={!!isPendingTransaction}
@@ -421,7 +384,7 @@ export const PresaleCard: FC<{}> = () => {
               setRequestBuy(value);
             }
           }}
-          onClose={() => setIsBuyModalOpen(false)}
+          onClose={onCloseModal}
           onBuy={onBuy}
         />
       )}
