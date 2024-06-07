@@ -19,7 +19,7 @@ const config = createConfig(
       [sepolia.id]: http(
         `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
       ),
-      [base.id]: http(base.rpcUrls.default.http[0]),
+      [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL!),
     },
 
     // Required API Keys
@@ -30,8 +30,8 @@ const config = createConfig(
 
     // Optional App Info
     appDescription: "The good place",
-    appUrl: "https://fameladysociety.com", // your app's url
-    appIcon: "https://fameladysociety.com/images/fls-wrap.gif",
+    appUrl: "https://www.fameladysociety.com", // your app's url
+    appIcon: "https://www.fameladysociety.com/images/fame/bala.png",
 
     ssr: true,
   }),
