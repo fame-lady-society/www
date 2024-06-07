@@ -176,8 +176,6 @@ const Content: FC = () => {
     },
   });
 
-  console.log({ imageWidth });
-
   return (
     <Grid2 container spacing={2} sx={{ mt: 2, mx: 4 }}>
       <Grid2

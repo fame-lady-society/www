@@ -24,7 +24,7 @@ export const AdjustableChecker: FC<{}> = ({}) => {
 
   const addressToUse = ensAddress || address;
 
-  const { fls, hunnys, mermaids, metavixens } = useAllocation({
+  const { fls, hunnys, mermaids, metavixens, squad, total } = useAllocation({
     address: isAddress(addressToUse) ? addressToUse : undefined,
     rankBoost,
     ageBoost,
@@ -114,7 +114,10 @@ export const AdjustableChecker: FC<{}> = ({}) => {
         <Typography variant="body1">Rank Boost: {rankBoost}</Typography>
         <Typography variant="body1">Age Boost: {ageBoost}</Typography>
         <Typography variant="body1">
-          FLS: {formatUnit(fls).toLocaleString()}
+          Society: {formatUnit(fls).toLocaleString()}
+        </Typography>
+        <Typography variant="body1">
+          Squad: {formatUnit(squad).toLocaleString()}
         </Typography>
         <Typography variant="body1">
           Hunnys: {formatUnit(hunnys).toLocaleString()}
@@ -126,14 +129,10 @@ export const AdjustableChecker: FC<{}> = ({}) => {
           Metavixens: {formatUnit(metavixens).toLocaleString()}
         </Typography>
         <Typography variant="body1">
-          Total:{" "}
-          {formatUnit(fls + hunnys + mermaids + metavixens).toLocaleString()}
+          Total: {formatUnit(total).toLocaleString()}
         </Typography>
         <Typography variant="body1">
-          Total $FAME NFTs:{" "}
-          {Math.floor(
-            formatUnit(fls + hunnys + mermaids + metavixens) / 1_000_000,
-          )}
+          Total $FAME NFTs: {Math.floor(formatUnit(total) / 1_000_000)}
         </Typography>
       </CardContent>
     </Card>

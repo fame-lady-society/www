@@ -1,17 +1,18 @@
 import { useMemo } from "react";
 import { erc721Abi } from "viem";
-import { useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 import { mainnet, polygon } from "viem/chains";
 import { allocatePercentages } from "@/utils/claim";
 import {
   HUNNYS_CONTRACT,
   MERMAIDS_CONTRACT,
   METAVIXEN_CONTRACT,
-  FLS_TOKENS,
+  SQUAD_CONTRACT,
   MARKET_CAP,
   SISTER_TOKENS,
 } from "./constants";
 import { useSnapshot } from "./useSnapshot";
+import { fameLadySquadAbi } from "@/wagmi";
 
 export function useAllocation({
   address,
@@ -39,6 +40,13 @@ export function useAllocation({
             args: [address],
             chainId: mainnet.id,
           },
+          {
+            abi: fameLadySquadAbi,
+            address: SQUAD_CONTRACT,
+            functionName: "balanceOf",
+            args: [address],
+            chainId: mainnet.id,
+          },
         ]
       : [],
   });
@@ -57,9 +65,28 @@ export function useAllocation({
       : [],
   });
 
+  const squadBalance = mainnetData?.[2]?.result;
+  const { data: squadTokenResults } = useReadContracts({
+    contracts: address
+      ? Array.from({
+          length: squadBalance ? Number(squadBalance) : 0,
+        }).map(
+          (_, index) =>
+            ({
+              abi: fameLadySquadAbi,
+              address: SQUAD_CONTRACT,
+              functionName: "tokenOfOwnerByIndex",
+              args: [address, BigInt(index)],
+              chainId: mainnet.id,
+            }) as const,
+        )
+      : [],
+  });
+
   const mainnetHunnys = mainnetData?.[0]?.result;
   const mainnetMermaids = mainnetData?.[1]?.result;
   const polygonMetavixens = polygonData?.[0]?.result;
+
   const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
   return useMemo(() => {
@@ -73,6 +100,22 @@ export function useAllocation({
       (acc, allocation) => acc + allocation,
       0n,
     );
+
+    const squadTokenIds =
+      squadTokenResults
+        ?.filter(({ status }) => status === "success")
+        .map((result) => result.result as bigint) ?? [];
+
+    const squadAllocation = lowerCaseAddress
+      ? snapshot
+          .filter((item) => squadTokenIds.includes(BigInt(item.tokenId)))
+          .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!)
+      : [];
+    const squadTotal = squadAllocation.reduce(
+      (acc, allocation) => acc + allocation,
+      0n,
+    );
+
     const hunnysAllocation = mainnetHunnys
       ? BigInt(
           ((Number(mainnetHunnys) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
@@ -96,11 +139,13 @@ export function useAllocation({
       mermaids: mermaidsAllocation,
       metavixens: metavixensAllocation,
       fls: flsAllocation,
+      squad: squadTotal,
       total:
         flsAllocation +
         hunnysAllocation +
         mermaidsAllocation +
-        metavixensAllocation,
+        metavixensAllocation +
+        squadTotal,
     };
   }, [
     address,
@@ -109,5 +154,6 @@ export function useAllocation({
     mainnetMermaids,
     polygonMetavixens,
     snapshot,
+    squadTokenResults,
   ]);
 }

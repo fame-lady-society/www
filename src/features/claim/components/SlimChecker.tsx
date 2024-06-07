@@ -33,7 +33,7 @@ export const SlimChecker: FC<
 > = ({ ageBoost, rankBoost, ...cardProps }) => {
   const { address } = useAccount();
 
-  const { fls, hunnys, mermaids, metavixens } = useAllocation({
+  const { fls, hunnys, mermaids, metavixens, squad, total } = useAllocation({
     address,
     rankBoost,
     ageBoost,
@@ -52,7 +52,10 @@ export const SlimChecker: FC<
             </Typography>
 
             <Typography variant="body1">
-              FLS: {formatUnit(fls).toLocaleString()}
+              Fame Lady Society: {formatUnit(fls).toLocaleString()}
+            </Typography>
+            <Typography variant="body1">
+              Fame Lady Squad (if wrapped): {formatUnit(squad).toLocaleString()}
             </Typography>
             <Typography variant="body1">
               Hunnys: {formatUnit(hunnys).toLocaleString()}
@@ -64,16 +67,10 @@ export const SlimChecker: FC<
               Metavixens: {formatUnit(metavixens).toLocaleString()}
             </Typography>
             <Typography variant="body1">
-              Total $FAME:{" "}
-              {formatUnit(
-                fls + hunnys + mermaids + metavixens,
-              ).toLocaleString()}
+              Total $FAME: {formatUnit(total).toLocaleString()}
             </Typography>
             <Typography variant="body1">
-              Total $FAME NFTs:{" "}
-              {Math.floor(
-                formatUnit(fls + hunnys + mermaids + metavixens) / 1_000_000,
-              )}
+              Total $FAME NFTs: {Math.floor(formatUnit(total) / 1_000_000)}
             </Typography>
           </CardContent>
         </>
