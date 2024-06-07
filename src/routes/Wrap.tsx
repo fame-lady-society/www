@@ -80,13 +80,15 @@ const Content: FC<{
             flexWrap: "wrap",
           }}
         >
-          <span style={{ whiteSpace: "nowrap", marginRight: "0.5rem" }}>
-            wrap fee:
-          </span>
           {wrapCost ? (
-            <span style={{ whiteSpace: "nowrap" }}>
-              {formatEther(wrapCost)} ETH
-            </span>
+            <>
+              <span style={{ whiteSpace: "nowrap", marginRight: "0.5rem" }}>
+                wrap fee:
+              </span>
+              <span style={{ whiteSpace: "nowrap" }}>
+                {formatEther(wrapCost)} ETH
+              </span>
+            </>
           ) : null}
         </Typography>
       }
