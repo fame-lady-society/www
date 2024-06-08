@@ -24,6 +24,7 @@ const config = createConfig(
 
     // Required API Keys
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+    multiInjectedProviderDiscovery: true,
 
     // Required App Info
     appName: "Fame Lady Society",
