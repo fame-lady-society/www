@@ -7,6 +7,8 @@ import { erc721Abi } from "viem";
 import { IMetadata } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
 import { TokenPage } from "@/routes/Token";
+import { fetchMetadata } from "frames.js/next";
+import { baseUrl } from "@/app/frames/frames";
 
 interface Props {
   params: { tokenId: string };
@@ -28,6 +30,9 @@ export async function generateMetadata(
       images: [`/${network}/og/token/${tokenId}`],
       url: `/${network}/token/${tokenId}`,
     },
+    other: await fetchMetadata(
+      new URL(`/${network}/token/${tokenId}/frame`, baseUrl),
+    ),
   };
 }
 

@@ -50,7 +50,7 @@ export const TokenPage: FC<{
           </Typography>
         }
       >
-        <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
+        <Container maxWidth="xl" sx={{ py: 2, mt: 8 }}>
           <Content metadata={metadata} tokenId={tokenId} network={network} />
         </Container>
       </Main>
