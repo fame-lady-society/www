@@ -339,6 +339,395 @@ export const bulkMinterConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ClaimToFame
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const claimToFameAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: '_fameToken', internalType: 'address', type: 'address' },
+      { name: '_signer', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' },
+      { name: 'signature', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'claimWithData',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
+      { name: 'signature', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'claimWithTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fameToken',
+    outputs: [{ name: '', internalType: 'contract IERC20', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'generatePackedData',
+    outputs: [{ name: '', internalType: 'bytes', type: 'bytes' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'packedData', internalType: 'bytes', type: 'bytes' }],
+    name: 'generateTokenIds',
+    outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' },
+      { name: 'nonce', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hashClaimDataRequest',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
+      { name: 'nonce', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hashClaimTokensRequest',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'nonce', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hashUpdateRequest',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'isClaimed',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'isClaimedBatch',
+    outputs: [{ name: '', internalType: 'bool[]', type: 'bool[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' }],
+    name: 'primeClaim',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' }],
+    name: 'primeClaimWithData',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleClaimPrimer',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleSigner',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleTreasurer',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_signer', internalType: 'address', type: 'address' }],
+    name: 'setSigner',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'address', type: 'address' }],
+    name: 'signatureNonces',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' },
+      { name: 'signature', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'verifyClaimDataRequest',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
+      { name: 'signature', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'verifyClaimTokensRequest',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'withdrawErc20',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'amount', internalType: 'uint256', type: 'uint256' }],
+    name: 'withdrawEth',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'AlreadyCalimed',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'InvalidSignature' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'PastDeadline' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameLadySociety
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -3387,6 +3776,520 @@ export const useWatchBulkMinterTransferEvent =
     abi: bulkMinterAbi,
     address: bulkMinterAddress,
     eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__
+ */
+export const useReadClaimToFame = /*#__PURE__*/ createUseReadContract({
+  abi: claimToFameAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"fameToken"`
+ */
+export const useReadClaimToFameFameToken = /*#__PURE__*/ createUseReadContract({
+  abi: claimToFameAbi,
+  functionName: 'fameToken',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"generatePackedData"`
+ */
+export const useReadClaimToFameGeneratePackedData =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'generatePackedData',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"generateTokenIds"`
+ */
+export const useReadClaimToFameGenerateTokenIds =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'generateTokenIds',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hasAllRoles"`
+ */
+export const useReadClaimToFameHasAllRoles =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'hasAllRoles',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hasAnyRole"`
+ */
+export const useReadClaimToFameHasAnyRole = /*#__PURE__*/ createUseReadContract(
+  { abi: claimToFameAbi, functionName: 'hasAnyRole' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hashClaimDataRequest"`
+ */
+export const useReadClaimToFameHashClaimDataRequest =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'hashClaimDataRequest',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hashClaimTokensRequest"`
+ */
+export const useReadClaimToFameHashClaimTokensRequest =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'hashClaimTokensRequest',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hashUpdateRequest"`
+ */
+export const useReadClaimToFameHashUpdateRequest =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'hashUpdateRequest',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"isClaimed"`
+ */
+export const useReadClaimToFameIsClaimed = /*#__PURE__*/ createUseReadContract({
+  abi: claimToFameAbi,
+  functionName: 'isClaimed',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"isClaimedBatch"`
+ */
+export const useReadClaimToFameIsClaimedBatch =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'isClaimedBatch',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadClaimToFameOwner = /*#__PURE__*/ createUseReadContract({
+  abi: claimToFameAbi,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadClaimToFameOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"roleClaimPrimer"`
+ */
+export const useReadClaimToFameRoleClaimPrimer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'roleClaimPrimer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"roleSigner"`
+ */
+export const useReadClaimToFameRoleSigner = /*#__PURE__*/ createUseReadContract(
+  { abi: claimToFameAbi, functionName: 'roleSigner' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"roleTreasurer"`
+ */
+export const useReadClaimToFameRoleTreasurer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'roleTreasurer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"rolesOf"`
+ */
+export const useReadClaimToFameRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: claimToFameAbi,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"signatureNonces"`
+ */
+export const useReadClaimToFameSignatureNonces =
+  /*#__PURE__*/ createUseReadContract({
+    abi: claimToFameAbi,
+    functionName: 'signatureNonces',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__
+ */
+export const useWriteClaimToFame = /*#__PURE__*/ createUseWriteContract({
+  abi: claimToFameAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteClaimToFameCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"claimWithData"`
+ */
+export const useWriteClaimToFameClaimWithData =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'claimWithData',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"claimWithTokens"`
+ */
+export const useWriteClaimToFameClaimWithTokens =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'claimWithTokens',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteClaimToFameCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useWriteClaimToFameGrantRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"primeClaim"`
+ */
+export const useWriteClaimToFamePrimeClaim =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'primeClaim',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"primeClaimWithData"`
+ */
+export const useWriteClaimToFamePrimeClaimWithData =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'primeClaimWithData',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteClaimToFameRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useWriteClaimToFameRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteClaimToFameRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useWriteClaimToFameRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"setSigner"`
+ */
+export const useWriteClaimToFameSetSigner =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'setSigner',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteClaimToFameTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"verifyClaimDataRequest"`
+ */
+export const useWriteClaimToFameVerifyClaimDataRequest =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'verifyClaimDataRequest',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"verifyClaimTokensRequest"`
+ */
+export const useWriteClaimToFameVerifyClaimTokensRequest =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'verifyClaimTokensRequest',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"withdrawErc20"`
+ */
+export const useWriteClaimToFameWithdrawErc20 =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'withdrawErc20',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"withdrawEth"`
+ */
+export const useWriteClaimToFameWithdrawEth =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: claimToFameAbi,
+    functionName: 'withdrawEth',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__
+ */
+export const useSimulateClaimToFame = /*#__PURE__*/ createUseSimulateContract({
+  abi: claimToFameAbi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateClaimToFameCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"claimWithData"`
+ */
+export const useSimulateClaimToFameClaimWithData =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'claimWithData',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"claimWithTokens"`
+ */
+export const useSimulateClaimToFameClaimWithTokens =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'claimWithTokens',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateClaimToFameCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useSimulateClaimToFameGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"primeClaim"`
+ */
+export const useSimulateClaimToFamePrimeClaim =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'primeClaim',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"primeClaimWithData"`
+ */
+export const useSimulateClaimToFamePrimeClaimWithData =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'primeClaimWithData',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateClaimToFameRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useSimulateClaimToFameRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateClaimToFameRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useSimulateClaimToFameRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"setSigner"`
+ */
+export const useSimulateClaimToFameSetSigner =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'setSigner',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateClaimToFameTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"verifyClaimDataRequest"`
+ */
+export const useSimulateClaimToFameVerifyClaimDataRequest =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'verifyClaimDataRequest',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"verifyClaimTokensRequest"`
+ */
+export const useSimulateClaimToFameVerifyClaimTokensRequest =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'verifyClaimTokensRequest',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"withdrawErc20"`
+ */
+export const useSimulateClaimToFameWithdrawErc20 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'withdrawErc20',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"withdrawEth"`
+ */
+export const useSimulateClaimToFameWithdrawEth =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: claimToFameAbi,
+    functionName: 'withdrawEth',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link claimToFameAbi}__
+ */
+export const useWatchClaimToFameEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: claimToFameAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link claimToFameAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchClaimToFameOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: claimToFameAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link claimToFameAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchClaimToFameOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: claimToFameAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link claimToFameAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchClaimToFameOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: claimToFameAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link claimToFameAbi}__ and `eventName` set to `"RolesUpdated"`
+ */
+export const useWatchClaimToFameRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: claimToFameAbi,
+    eventName: 'RolesUpdated',
   })
 
 /**

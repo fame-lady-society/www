@@ -31,6 +31,7 @@
     "@sentry/nextjs": "^7.105.0",
     "@tanstack/react-query": "^5.25.0",
     "@use-gesture/react": "^10.2.15",
+    "@vercel/kv": "^2.0.0",
     "@vercel/og": "^0.6.2",
     "apollo-server-core": "^3.10.0",
     "apollo-server-micro": "^3.10.0",

@@ -4711,6 +4711,13 @@
     "@typescript-eslint/types" "5.62.0"
     eslint-visitor-keys "^3.3.0"
 
+"@upstash/redis@^1.31.3":
+  version "1.31.3"
+  resolved "https://registry.yarnpkg.com/@upstash/redis/-/redis-1.31.3.tgz#a7f99430e7256b441a2eb5729fe3809dbc02eff9"
+  integrity sha512-KtVgWBUEx/LGbR8oRwYexwzHh3s5DNqYW0bjkD+gjFZVOnREJITvK+hC4PjSSD+8D4qJ+Xbkfmy8ANADZ9EUFg==
+  dependencies:
+    crypto-js "^4.2.0"
+
 "@use-gesture/core@10.3.0":
   version "10.3.0"
   resolved "https://registry.npmjs.org/@use-gesture/core/-/core-10.3.0.tgz"
@@ -4722,6 +4729,13 @@
   integrity sha512-3zc+Ve99z4usVP6l9knYVbVnZgfqhKah7sIG+PS2w+vpig2v2OLct05vs+ZXMzwxdNCMka8B+8WlOo0z6Pn6DA==
   dependencies:
     "@use-gesture/core" "10.3.0"
+
+"@vercel/kv@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@vercel/kv/-/kv-2.0.0.tgz#a0baa12563946cb35cee23d638b68f0fbbf76172"
+  integrity sha512-zdVrhbzZBYo5d1Hfn4bKtqCeKf0FuzW8rSHauzQVMUgv1+1JOwof2mWcBuI+YMJy8s0G0oqAUfQ7HgUDzb8EbA==
+  dependencies:
+    "@upstash/redis" "^1.31.3"
 
 "@vercel/og@^0.6.2":
   version "0.6.2"

@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { defineConfig } from "@wagmi/cli";
-import { etherscan, react } from "@wagmi/cli/plugins";
-import { sepolia, mainnet } from "wagmi/chains";
+import { etherscan, react, foundry } from "@wagmi/cli/plugins";
+import { sepolia, mainnet, base } from "wagmi/chains";
 
 config({
   path: ".env.local",
@@ -67,6 +67,10 @@ export default defineConfig({
           },
         },
       ],
+    }),
+    foundry({
+      project: "../fame-contracts",
+      include: ["ClaimToFame.sol/**"],
     }),
     react(),
   ],
