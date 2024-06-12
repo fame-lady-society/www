@@ -1,7 +1,7 @@
 "use client";
 import { siweClient } from "@/utils/siweClient";
 import { SIWESession } from "connectkit";
-import { WagmiProvider, createConfig, http } from "wagmi";
+import { WagmiProvider, createConfig, fallback, http } from "wagmi";
 import { base, mainnet, sepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren } from "react";
@@ -19,7 +19,14 @@ const config = createConfig(
       [sepolia.id]: http(
         `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
       ),
-      [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC_URL!),
+      [base.id]: fallback([
+        http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1!, {
+          batch: true,
+        }),
+        http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2!, {
+          batch: true,
+        }),
+      ]),
     },
 
     // Required API Keys
