@@ -130,7 +130,7 @@ export async function GET(
               height: "100%",
               backgroundColor: "slate-700",
               justifyContent: "center",
-              backgroundImage: `url('${ensAvatar || "/images/fame/bala.png"}')`,
+              backgroundImage: `url('${ensAvatar || `${baseUrl}/images/fame/bala.png`}')`,
               backgroundSize: "100% 100%",
               color: "black",
               fontFamily: "Roboto",
@@ -186,8 +186,10 @@ export async function GET(
                 <div style={{ ...flexColumnStyle }}>
                   <p style={{ ...commonStyle }}>FL Squad:</p>
                   <p style={{ ...commonStyle }}>{squadAllocationStr}</p>
-                  <p style={{ ...commonStyle }}>(if wrapped)</p>
                 </div>
+              ) : null}
+              {squadTotal ? (
+                <p style={{ ...commonStyle }}>(if wrapped)</p>
               ) : null}
 
               {hunnysAllocation && hunnysAllocationStr ? (
