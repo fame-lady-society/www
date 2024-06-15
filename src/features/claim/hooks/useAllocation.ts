@@ -157,6 +157,7 @@ export function useAllocation({
       squad: squadTotal,
       total:
         flsAllocation +
+        squadTotal +
         hunnysAllocation +
         mermaidsAllocation +
         metavixensAllocation +

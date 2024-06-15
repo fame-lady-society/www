@@ -30,6 +30,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/fame/components/FameFAQ";
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 
 const AnimatedBox = animated(Box);
 
@@ -586,7 +587,7 @@ const Content: FC = () => {
           marginTop: 8,
         }}
       >
-        <SlimChecker ageBoost={1.5} rankBoost={2} />
+        <SlimChecker ageBoost={OG_AGE_BOOST} rankBoost={OG_RANK_BOOST} />
       </Grid2>
       <Grid2 xs={12} marginY="4">
         <Typography variant="body1" textAlign="center">
