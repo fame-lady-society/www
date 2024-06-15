@@ -1,9 +1,10 @@
 import type { Metadata, ResolvingMetadata } from "next";
 import FameClaimStatus from "@/routes/FameClaimStatus";
 import { client as mainnetClient } from "@/viem/mainnet-client";
-import { isAddress } from "viem";
+import { formatEther, isAddress } from "viem";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
+import { fetchAllocationData } from "@/service/fetchAllocationData";
 
 interface Params {
   address: string;
@@ -27,10 +28,14 @@ export async function generateMetadata(
   }
   const ensName = await mainnetClient.getEnsName({ address });
   const name = ensName || address;
+  const { total } = await fetchAllocationData({ address });
   return {
     metadataBase: new URL(baseUrl),
     title: `$FAME for ${name}`,
-    description: "Claim to $FAME",
+    description:
+      total === 0n
+        ? "Claim to $FAME"
+        : `Claim to ${Number(formatEther(total).split(".")[0]).toLocaleString("en").replace(",", " ")} $FAME`,
     openGraph: {
       images: [`/fame/claim/${address}/og`],
       url: `/fame/claim/${address}`,
