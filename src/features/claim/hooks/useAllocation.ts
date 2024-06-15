@@ -157,6 +157,7 @@ export function useAllocation({
   }, [
     address,
     flsPoolAllocation,
+    flsTokenIds,
     mainnetHunnys,
     mainnetMermaids,
     polygonMetavixens,

@@ -27,9 +27,9 @@ const handleRequest = frames(async (ctx) => {
     return {
       state,
       imageOptions: {
-        aspectRatio: "1:1",
+        aspectRatio: "1.91:1",
       },
-      image: `${baseUrl}/fame/frame/address/${addressOrTokenId}`,
+      image: `${baseUrl}/fame/claim/${addressOrTokenId}/og`,
       textInput: "Address or tokenId",
       buttons: [
         <Button action="post" target={`${baseUrl}/fame/frame`}>

@@ -29,9 +29,11 @@ export const SlimChecker: FC<
   {
     ageBoost: number;
     rankBoost: number;
+    address?: `0x${string}`;
   } & CardProps
-> = ({ ageBoost, rankBoost, ...cardProps }) => {
-  const { address } = useAccount();
+> = ({ ageBoost, rankBoost, address: defaultAddress, ...cardProps }) => {
+  const { address: currentAddress } = useAccount();
+  const address = defaultAddress || currentAddress;
 
   const { fls, hunnys, mermaids, metavixens, squad, total } = useAllocation({
     address,
@@ -47,10 +49,6 @@ export const SlimChecker: FC<
         <>
           <CardHeader title="Token Claim Simulator" />
           <CardContent>
-            <Typography variant="body1" marginY={2}>
-              Rank Boost
-            </Typography>
-
             <Typography variant="body1">
               Fame Lady Society: {formatUnit(fls).toLocaleString()}
             </Typography>
