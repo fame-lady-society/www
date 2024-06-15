@@ -160,8 +160,7 @@ export function useAllocation({
         squadTotal +
         hunnysAllocation +
         mermaidsAllocation +
-        metavixensAllocation +
-        squadTotal,
+        metavixensAllocation,
     };
   }, [
     address,
