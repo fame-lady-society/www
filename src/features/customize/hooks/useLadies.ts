@@ -13,20 +13,22 @@ export function useLadies({
   first = 100,
   skip,
   sorted,
+  chainId: defaultChainId,
 }: {
   owner?: `0x${string}`;
   first?: number;
   skip?: number;
   sorted?: "asc" | "desc";
+  chainId?: number;
 }) {
-  const { chainId } = useAccount();
+  const { chainId: accountChainId } = useAccount();
 
   const [data, setData] = useState<
     SepoliaTokenByOwnerQuery | MainnetTokenByOwnerQuery
   >();
   const [error, setError] = useState<Error>();
   const [isLoading, setIsLoading] = useState(true);
-
+  const chainId = defaultChainId ?? accountChainId;
   useEffect(() => {
     console.log({ owner, first, skip, sorted, chainId });
     if (owner) {
@@ -44,7 +46,7 @@ export function useLadies({
       if (!action) {
         throw new Error("Unsupported chainId");
       }
-      action({ owner, first, skip, orderDirection: sorted })
+      action({ owner, first, skip: skip ?? 0, orderDirection: sorted ?? "asc" })
         .then((result) => {
           setData(result);
         })

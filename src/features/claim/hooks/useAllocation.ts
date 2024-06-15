@@ -13,6 +13,7 @@ import {
 } from "./constants";
 import { useSnapshot } from "./useSnapshot";
 import { fameLadySquadAbi } from "@/wagmi";
+import { useLadies } from "@/features/customize/hooks/useLadies";
 
 export function useAllocation({
   address,
@@ -89,11 +90,17 @@ export function useAllocation({
 
   const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
+  const { data: flsTokenIds } = useLadies({
+    owner: address,
+    first: 1000,
+    chainId: 1,
+  });
+
   return useMemo(() => {
     const lowerCaseAddress = address?.toLowerCase();
     const flsTokens = lowerCaseAddress
       ? snapshot
-          .filter((item) => item.owner?.toLowerCase() === lowerCaseAddress)
+          .filter((item) => flsTokenIds.includes(BigInt(item.tokenId)))
           .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!)
       : [];
     const flsAllocation = flsTokens.reduce(
