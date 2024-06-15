@@ -7,3 +7,6 @@ export const MARKET_CAP = 10172.92;
 export const TOTAL_TOKENS = 888_000_000n * 10n ** 18n;
 export const FLS_TOKENS = (TOTAL_TOKENS * 235n) / 1000n;
 export const SISTER_TOKENS = (TOTAL_TOKENS * 15n) / 1000n;
+
+export const OG_RANK_BOOST = 3;
+export const OG_AGE_BOOST = 2;

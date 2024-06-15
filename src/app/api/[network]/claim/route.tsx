@@ -15,6 +15,7 @@ import {
 import { claimToFameAbi } from "@/wagmi";
 import { encodePacked, formatUnits, keccak256 } from "viem";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 
 interface Input {
   address: `0x${string}`;
@@ -119,7 +120,7 @@ async function signClaimRequest({
   });
 }
 
-const allocation = getFlsPoolAllocation(1.5, 3);
+const allocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);
 
 export async function POST(
   req: NextRequest,

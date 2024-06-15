@@ -7,6 +7,7 @@ import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
 
 import { formatEther } from "viem";
 import { baseUrl } from "@/app/frames/frames";
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 
 function formatUnit(amount: bigint) {
   return Math.floor(Number(formatEther(amount)));
@@ -16,7 +17,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { tokenId: string } },
 ) {
-  const flsPoolAllocation = getFlsPoolAllocation(3, 1.5);
+  const flsPoolAllocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);
   const allocation = flsPoolAllocation.get(Number(params.tokenId))!;
 
   return new ImageResponse(

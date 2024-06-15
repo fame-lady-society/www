@@ -12,6 +12,8 @@ import {
   MARKET_CAP,
   MERMAIDS_CONTRACT,
   METAVIXEN_CONTRACT,
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
   SISTER_TOKENS,
 } from "@/features/claim/hooks/constants";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
@@ -52,7 +54,7 @@ export async function GET(
     ],
   );
 
-  const flsPoolAllocation = getFlsPoolAllocation(3, 1.5);
+  const flsPoolAllocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);
   const lowerCaseAddress = address?.toLowerCase();
   const flsTokens = lowerCaseAddress
     ? snapshot

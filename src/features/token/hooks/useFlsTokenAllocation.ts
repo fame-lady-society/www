@@ -1,7 +1,8 @@
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 import { useSnapshot } from "@/features/claim/hooks/useSnapshot";
 
 export function useFlsTokenAllocation(tokenId?: number) {
-  const { flsPoolAllocation } = useSnapshot(3, 1.5);
+  const { flsPoolAllocation } = useSnapshot(OG_RANK_BOOST, OG_AGE_BOOST);
   const allocation =
     typeof tokenId !== "undefined" ? flsPoolAllocation.get(tokenId) ?? 0n : 0n;
   return allocation;

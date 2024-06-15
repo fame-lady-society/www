@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import { formatUnits, isAddress } from "viem";
 import { useAllocation } from "../hooks/useAllocation";
 import { useEnsAddress } from "wagmi";
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "../hooks/constants";
 
 function formatUnit(amount: bigint) {
   return Math.floor(Number(formatUnits(amount, 18)));
@@ -16,8 +17,8 @@ function formatUnit(amount: bigint) {
 
 export const AdjustableChecker: FC<{}> = ({}) => {
   const [address, setAddress] = useState("");
-  const [rankBoost, setRankBoost] = useState(1.5);
-  const [ageBoost, setAgeBoost] = useState(1.5);
+  const [rankBoost, setRankBoost] = useState(OG_RANK_BOOST);
+  const [ageBoost, setAgeBoost] = useState(OG_AGE_BOOST);
   const { data: ensAddress } = useEnsAddress({
     name: address,
   });

@@ -14,6 +14,7 @@ import { erc721Abi, formatEther } from "viem";
 import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 
 export async function GET(
   req: NextRequest,
@@ -69,7 +70,10 @@ export async function GET(
       (attr) => attr.trait_type === "OG Rank",
     );
 
-    const flsTokenAllocation = getFlsPoolAllocation(3, 1.5);
+    const flsTokenAllocation = getFlsPoolAllocation(
+      OG_RANK_BOOST,
+      OG_AGE_BOOST,
+    );
     const allocation = flsTokenAllocation.get(Number(tokenId)) ?? 0n;
     const allocationStr = `Allocation: ${Number(formatEther(allocation).split(".")[0]).toLocaleString("en").replace(",", " ")} $FAME`;
     const fontSize = allocationStr.length > 26 ? "24px" : "32px";
