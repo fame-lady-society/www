@@ -123,24 +123,22 @@ export async function GET(
             backgroundColor: "white",
           }}
         >
-          {ensAvatar && (
-            <div
-              style={{
-                display: "flex",
-                width: "50%",
-                height: "100%",
-                backgroundColor: "slate-700",
-                justifyContent: "center",
-                backgroundImage: `url('${ensAvatar}')`,
-                backgroundSize: "100% 100%",
-                color: "black",
-                fontFamily: "Roboto",
-                fontWeight: 400,
-                // red border
-                border: "8px solid red",
-              }}
-            />
-          )}
+          <div
+            style={{
+              display: "flex",
+              width: "50%",
+              height: "100%",
+              backgroundColor: "slate-700",
+              justifyContent: "center",
+              backgroundImage: `url('${ensAvatar || "/images/fame/bala.png"}')`,
+              backgroundSize: "100% 100%",
+              color: "black",
+              fontFamily: "Roboto",
+              fontWeight: 400,
+              // red border
+              border: "8px solid red",
+            }}
+          />
           <div
             style={{
               display: "flex",
