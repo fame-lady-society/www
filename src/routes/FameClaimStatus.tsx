@@ -45,6 +45,7 @@ const NextPage: FC<{
               {isValid && (
                 <SlimChecker
                   address={address}
+                  chainId={8453}
                   ageBoost={OG_AGE_BOOST}
                   rankBoost={OG_RANK_BOOST}
                 />
