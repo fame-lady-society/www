@@ -70,8 +70,8 @@ export async function fetchAllocationData({
         )
       : [];
 
-  const societyTokenIds = result.ownerships.map(
-    (ownership) => ownership.tokenId,
+  const societyTokenIds = result.ownerships.map((ownership) =>
+    BigInt(ownership.tokenId),
   );
 
   const flsPoolAllocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);

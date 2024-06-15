@@ -2,17 +2,21 @@
 /* eslint-disable @next/next/no-img-element */
 import { NextRequest, NextResponse } from "next/server";
 import { ImageResponse } from "@vercel/og";
-import {
-  client as mainnetClient,
-  flsTokenAddress as mainnetFlsTokenAddress,
-} from "@/viem/mainnet-client";
+import { client as mainnetClient } from "@/viem/mainnet-client";
+import { client as baseClient } from "@/viem/base-client";
 import { formatEther, isAddress, parseEther } from "viem";
 import { fetchAllocationData } from "@/service/fetchAllocationData";
 import { CSSProperties } from "react";
 import { baseUrl } from "@/app/frames/frames";
+import { fameSaleAbi, fameSaleTokenAbi } from "@/wagmi";
+import {
+  fameSaleAddress,
+  fameSaleTokenAddress,
+} from "@/features/fame/contract";
+import { presaleAmountToTokens } from "@/utils/presaleMath";
 
 const formatAllocationString = (amount: bigint) =>
-  `${Number(formatEther(amount).split(".")[0]).toLocaleString("en").replace(",", " ")} $FAME`;
+  `${Number(formatEther(amount).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
 function formatUnit(amount: bigint) {
   return Math.floor(Number(formatEther(amount)));
 }
@@ -36,16 +40,33 @@ export async function GET(
         })
       : null;
 
-    const {
-      flsAllocation,
-      squadTotal,
-      hunnysAllocation,
-      mermaidsAllocation,
-      metavixensAllocation,
-      total,
-    } = await fetchAllocationData({
-      address: params.address,
-    });
+    const [
+      {
+        flsAllocation,
+        squadTotal,
+        hunnysAllocation,
+        mermaidsAllocation,
+        metavixensAllocation,
+        total: allocationTotal,
+      },
+      presaleBalance,
+      maxRaise,
+    ] = await Promise.all([
+      fetchAllocationData({
+        address: params.address,
+      }),
+      baseClient.readContract({
+        abi: fameSaleTokenAbi,
+        address: fameSaleTokenAddress(8453),
+        functionName: "balanceOf",
+        args: [params.address],
+      }),
+      baseClient.readContract({
+        abi: fameSaleAbi,
+        address: fameSaleAddress(8453),
+        functionName: "maxRaise",
+      }),
+    ]);
 
     const flsAllocationStr = formatAllocationString(flsAllocation);
     const squadAllocationStr = formatAllocationString(squadTotal);
@@ -53,8 +74,11 @@ export async function GET(
     const mermaidsAllocationStr = formatAllocationString(mermaidsAllocation);
     const metavixensAllocationStr =
       formatAllocationString(metavixensAllocation);
-    const totalAllocationStr = formatAllocationString(total);
 
+    const presaleTokens = presaleAmountToTokens(presaleBalance, maxRaise);
+
+    const total = allocationTotal + presaleTokens;
+    const totalAllocationStr = formatAllocationString(total);
     const totalNftsStr = `${Math.floor(formatUnit(total) / 1_000_000)}`;
 
     const fontSize =
@@ -186,6 +210,15 @@ export async function GET(
                 <div style={{ ...flexColumnStyle }}>
                   <p style={{ ...commonStyle }}>Metavixen:</p>
                   <p style={{ ...commonStyle }}>{metavixensAllocationStr}</p>
+                </div>
+              ) : null}
+
+              {presaleTokens ? (
+                <div style={{ ...flexColumnStyle }}>
+                  <p style={{ ...commonStyle }}>Presale:</p>
+                  <p style={{ ...commonStyle }}>
+                    {formatAllocationString(presaleTokens)}
+                  </p>
                 </div>
               ) : null}
 

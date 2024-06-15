@@ -75,7 +75,7 @@ export async function GET(
       OG_AGE_BOOST,
     );
     const allocation = flsTokenAllocation.get(Number(tokenId)) ?? 0n;
-    const allocationStr = `Allocation: ${Number(formatEther(allocation).split(".")[0]).toLocaleString("en").replace(",", " ")} $FAME`;
+    const allocationStr = `Allocation: ${Number(formatEther(allocation).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
     const fontSize = allocationStr.length > 26 ? "24px" : "32px";
 
     return new ImageResponse(
