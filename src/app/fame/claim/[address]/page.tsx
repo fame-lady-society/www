@@ -64,8 +64,8 @@ export async function generateMetadata(
     title,
     description,
     openGraph: {
-      images: [`/fame/claim/${address}/og`],
-      url: `/fame/claim/${address}`,
+      images: [`${baseUrl}/fame/claim/${address}/og`],
+      url: `${baseUrl}/fame/claim/${address}`,
     },
     other: {
       ...((await fetchMetadata(
