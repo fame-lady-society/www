@@ -54,21 +54,30 @@ export async function generateMetadata(
   const name = ensName || address;
   const presaleTokens = presaleAmountToTokens(presaleBalance, maxRaise);
   const total = allocationTotal + presaleTokens;
-
+  const title = `$FAME for ${name}`;
+  const description =
+    total === 0n
+      ? "Claim to $FAME"
+      : `Claim to ${Number(formatEther(total).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
   return {
     metadataBase: new URL(baseUrl),
-    title: `$FAME for ${name}`,
-    description:
-      total === 0n
-        ? "Claim to $FAME"
-        : `Claim to ${Number(formatEther(total).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`,
+    title,
+    description,
     openGraph: {
       images: [`/fame/claim/${address}/og`],
       url: `/fame/claim/${address}`,
     },
-    other: await fetchMetadata(
-      new URL(`/fame/claim/${address}/frame`, baseUrl),
-    ),
+    other: {
+      ...((await fetchMetadata(
+        new URL(`/fame/claim/${address}/frame`, baseUrl),
+      )) as any),
+      ["twitter:card"]: "summary",
+      ["twitter:site"]: "@FameLadySociety",
+      ["twitter:creator"]: "@0xflick",
+      ["twitter:title"]: title,
+      ["twitter:description"]: description,
+      ["twitter:image"]: `${baseUrl}/fame/claim/${address}/og`,
+    },
   };
 }
 

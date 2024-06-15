@@ -24,65 +24,68 @@ export function useAllocation({
   rankBoost: number;
   ageBoost: number;
 }) {
-  const { data: mainnetData } = useReadContracts({
-    contracts: address
-      ? [
-          {
-            abi: erc721Abi,
-            address: HUNNYS_CONTRACT,
-            functionName: "balanceOf",
-            args: [address],
-            chainId: mainnet.id,
-          },
-          {
-            abi: erc721Abi,
-            address: MERMAIDS_CONTRACT,
-            functionName: "balanceOf",
-            args: [address],
-            chainId: mainnet.id,
-          },
-          {
-            abi: fameLadySquadAbi,
-            address: SQUAD_CONTRACT,
-            functionName: "balanceOf",
-            args: [address],
-            chainId: mainnet.id,
-          },
-        ]
-      : [],
-  });
-
-  const { data: polygonData } = useReadContracts({
-    contracts: address
-      ? [
-          {
-            abi: erc721Abi,
-            address: METAVIXEN_CONTRACT,
-            functionName: "balanceOf",
-            args: [address],
-            chainId: polygon.id,
-          },
-        ]
-      : [],
-  });
-
-  const squadBalance = mainnetData?.[2]?.result;
-  const { data: squadTokenResults } = useReadContracts({
-    contracts: address
-      ? Array.from({
-          length: squadBalance ? Number(squadBalance) : 0,
-        }).map(
-          (_, index) =>
-            ({
+  const { data: mainnetData, isLoading: isContractDataLoading } =
+    useReadContracts({
+      contracts: address
+        ? [
+            {
+              abi: erc721Abi,
+              address: HUNNYS_CONTRACT,
+              functionName: "balanceOf",
+              args: [address],
+              chainId: mainnet.id,
+            },
+            {
+              abi: erc721Abi,
+              address: MERMAIDS_CONTRACT,
+              functionName: "balanceOf",
+              args: [address],
+              chainId: mainnet.id,
+            },
+            {
               abi: fameLadySquadAbi,
               address: SQUAD_CONTRACT,
-              functionName: "tokenOfOwnerByIndex",
-              args: [address, BigInt(index)],
+              functionName: "balanceOf",
+              args: [address],
               chainId: mainnet.id,
-            }) as const,
-        )
-      : [],
-  });
+            },
+          ]
+        : [],
+    });
+
+  const { data: polygonData, isLoading: isPolygonDataLoading } =
+    useReadContracts({
+      contracts: address
+        ? [
+            {
+              abi: erc721Abi,
+              address: METAVIXEN_CONTRACT,
+              functionName: "balanceOf",
+              args: [address],
+              chainId: polygon.id,
+            },
+          ]
+        : [],
+    });
+
+  const squadBalance = mainnetData?.[2]?.result;
+  const { data: squadTokenResults, isLoading: isSquadDataLoading } =
+    useReadContracts({
+      contracts: address
+        ? Array.from({
+            length: squadBalance ? Number(squadBalance) : 0,
+          }).map(
+            (_, index) =>
+              ({
+                abi: fameLadySquadAbi,
+                address: SQUAD_CONTRACT,
+                functionName: "tokenOfOwnerByIndex",
+                args: [address, BigInt(index)],
+                chainId: mainnet.id,
+              }) as const,
+          )
+        : [],
+    });
 
   const mainnetHunnys = mainnetData?.[0]?.result;
   const mainnetMermaids = mainnetData?.[1]?.result;
@@ -90,7 +93,7 @@ export function useAllocation({
 
   const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
-  const { data: flsTokenIds } = useLadies({
+  const { data: flsTokenIds, isLoading: isGraphqlLoading } = useLadies({
     owner: address,
     first: 1000,
     chainId: 1,
@@ -142,6 +145,11 @@ export function useAllocation({
       : 0n;
 
     return {
+      isLoading:
+        isContractDataLoading ||
+        isPolygonDataLoading ||
+        isGraphqlLoading ||
+        isSquadDataLoading,
       hunnys: hunnysAllocation,
       mermaids: mermaidsAllocation,
       metavixens: metavixensAllocation,
@@ -158,6 +166,10 @@ export function useAllocation({
     address,
     flsPoolAllocation,
     flsTokenIds,
+    isContractDataLoading,
+    isGraphqlLoading,
+    isPolygonDataLoading,
+    isSquadDataLoading,
     mainnetHunnys,
     mainnetMermaids,
     polygonMetavixens,
