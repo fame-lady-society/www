@@ -138,10 +138,10 @@ export const SlimChecker: FC<
               </Typography>
             ) : null}
           </CardContent>
-          {presaleAmount && presaleAmount > 0n && (
+          {total && total > 0n && (
             <CardActions>
               <Button
-                href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(address, presaleAmount)}%0A&url=${shareUrl}`}
+                href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(address, total)}%0A&url=${shareUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 startIcon={<XIcon />}
@@ -149,7 +149,7 @@ export const SlimChecker: FC<
                 Share on Twitter
               </Button>
               <Button
-                href={`https://warpcast.com/~/compose?text=${SHARE_TEXT(address, presaleAmount)}&embeds[]=${shareUrl}`}
+                href={`https://warpcast.com/~/compose?text=${SHARE_TEXT(address, total)}&embeds[]=${shareUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 startIcon={
