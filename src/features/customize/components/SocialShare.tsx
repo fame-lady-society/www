@@ -15,16 +15,14 @@ import { mainnet } from "viem/chains";
 import { useChainId } from "wagmi";
 import Skeleton from "@mui/material/Skeleton";
 
-const SHARE_TEXT = (tokenId: bigint, name: string) =>
-  `My lady is not number ${tokenId}%0A%0AIntroducing ${name}!`;
-
 export const SocialShareDialog: FC<{
   name: string;
   tokenId: bigint;
   open: boolean;
   network?: "mainnet" | "sepolia";
+  textProvider: (tokenId: bigint, name: string) => string;
   onClose: () => void;
-}> = ({ name, tokenId, open, onClose, network }) => {
+}> = ({ name, tokenId, open, onClose, network, textProvider }) => {
   return (
     <>
       <Dialog open={open} onClose={onClose}>
@@ -33,6 +31,7 @@ export const SocialShareDialog: FC<{
           tokenId={tokenId}
           onClose={onClose}
           network={network}
+          textProvider={textProvider}
         />
       </Dialog>
     </>
@@ -43,8 +42,9 @@ export const SocialShare: FC<{
   tokenId: bigint;
   name: string;
   network?: "mainnet" | "sepolia";
+  textProvider: (tokenId: bigint, name: string) => string;
   onClose?: () => void;
-}> = ({ tokenId, name, network: propsNetwork, onClose }) => {
+}> = ({ tokenId, name, network: propsNetwork, textProvider, onClose }) => {
   const chainId = useChainId();
   const network =
     propsNetwork ?? chainId === mainnet.id ? "mainnet" : "sepolia";
@@ -80,7 +80,7 @@ export const SocialShare: FC<{
       </CardContent>
       <CardActions>
         <Button
-          href={`https://twitter.com/intent/tweet?text=${SHARE_TEXT(tokenId, name)}%0A&url=${shareUrl}`}
+          href={`https://twitter.com/intent/tweet?text=${textProvider(tokenId, name)}%0A&url=${shareUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           startIcon={<XIcon />}
@@ -88,7 +88,7 @@ export const SocialShare: FC<{
           Twitter
         </Button>
         <Button
-          href={`https://warpcast.com/~/compose?text=${SHARE_TEXT(tokenId, name)}&embeds[]=${shareUrl}`}
+          href={`https://warpcast.com/~/compose?text=${textProvider(tokenId, name)}&embeds[]=${shareUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           startIcon={

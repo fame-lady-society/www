@@ -61,6 +61,7 @@ export async function generateMetadata(
       : `Claim to ${Number(formatEther(total).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
   return {
     metadataBase: new URL(baseUrl),
+    applicationName: "Fame Lady Society",
     title,
     description,
     openGraph: {

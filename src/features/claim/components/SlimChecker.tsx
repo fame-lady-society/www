@@ -31,8 +31,19 @@ const NotConnected: FC = () => {
   );
 };
 
-const SHARE_TEXT = (address: string, claimAmount: bigint) =>
-  `WOW! I can claim ${formatAllocationString(claimAmount)}!`;
+const SHARE_TEXT = (address: string, claimAmount: bigint) => {
+  switch (Math.floor(Math.random() * 2)) {
+    case 0:
+      return `💋 OMG! I can claim ${formatAllocationString(
+        claimAmount,
+      )}!💰 Flaunt with @fameladysociety and embrace WebWE!`;
+    case 1:
+    default:
+      return `✨Feeling fabulous with ${formatAllocationString(
+        claimAmount,
+      )}!💰 Join me in flaunting @fameladysociety and the power of WebWE!`;
+  }
+};
 
 export const SlimChecker: FC<
   {

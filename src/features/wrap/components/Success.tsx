@@ -20,7 +20,7 @@ import { IconButton } from "@mui/material";
 import { WrappedLink } from "@/components/WrappedLink";
 
 const tweetText = encodeURIComponent(
-  "Just wrapped my FameLadySquad tokens into the @FameLadySociety collection! Flaunt to support a true community-run project & excited for what's next! Join me in embracing transparency in WebWE:🎉💪💋 #itsawrap",
+  "🔥 Just wrapped my FameLadySquad tokens into the @FameLadySociety collection! Flaunt with us, be a part of HERstory in this true community-run project, and embrace WebWE transparency! 🎉💪💋 #ItsAWrap",
 );
 
 export const Success: FC<{

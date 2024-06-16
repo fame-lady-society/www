@@ -112,6 +112,19 @@ export const Token: FC<{
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         network={network}
+        textProvider={(_: bigint, name: string) => {
+          switch (Math.floor(Math.random() * 4)) {
+            case 0:
+              return `Meet @fameladysociety's gem ${name}. She's a BIG DEAL! WE💋 feel the FAME, do you?`;
+            case 1:
+              return `💃 Flaunting the fabulous @fameladysociety ${name} 🔥 Check her out! Join us & feel the Fame!💋`;
+            case 2:
+              return `👀 Look at this glowing star! Check out @fameladysociety's ${name} She’s HOT & WE💋 feel it! 🔥 !`;
+            case 3:
+            default:
+              return `💃WE are Flaunt READY! Excited to show off @fameladysociety's ${name} 🌟 💋 get FAMEUS with US!`;
+          }
+        }}
       />
     </>
   );

@@ -310,6 +310,23 @@ export const TokenDetails: FC<{
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         network={network}
+        textProvider={(tokenId: bigint, name: string) => {
+          switch (Math.floor(Math.random() * 6)) {
+            case 0:
+              return `💋 My Lady is NOT number ${tokenId}. Say hi to ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥`;
+            case 1:
+              return `💋 My Lady is NOT number ${tokenId}. Get ready to wink at ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
+            case 2:
+              return `💋 My Lady is NOT number ${tokenId}. Bite your lip at ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
+            case 3:
+              return `💋 My Lady is NOT number ${tokenId}. Get fired up for ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
+            case 4:
+              return `💋 My Lady is NOT number ${tokenId}. Feel the fame for ${name} and HERstory is all WE need as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
+            case 5:
+            default:
+              return `💋 My Lady is NOT number ${tokenId}. Say Hello to ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥`;
+          }
+        }}
       />
     </>
   );
