@@ -15,8 +15,9 @@ export const Main: FC<
     menu?: ReactNode;
     title?: ReactNode;
     right?: ReactNode;
+    disableConnect?: boolean;
   }>
-> = ({ children, menu, title, right }) => {
+> = ({ children, disableConnect, menu, title, right }) => {
   return (
     <>
       <Box
@@ -25,7 +26,12 @@ export const Main: FC<
           backgroundColor: "background.default",
         }}
       >
-        <AppBar menu={menu} title={title} right={right} />
+        <AppBar
+          menu={menu}
+          title={title}
+          right={right}
+          disableConnect={disableConnect}
+        />
         {children}
       </Box>
     </>

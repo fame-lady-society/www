@@ -30,7 +30,6 @@ export function useLadies({
   const [isLoading, setIsLoading] = useState(true);
   const chainId = defaultChainId ?? accountChainId;
   useEffect(() => {
-    console.log({ owner, first, skip, sorted, chainId });
     if (owner) {
       setIsLoading(true);
       const sdk = getBuiltGraphSDK();
@@ -76,6 +75,5 @@ export function useLadies({
       [];
     return t;
   }, [data, lookup]);
-
   return { data: tokenIds, error, isLoading };
 }

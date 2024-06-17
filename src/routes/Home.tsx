@@ -16,7 +16,7 @@ const HomePage: NextPage<{}> = () => {
   const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const roomForTitle = useMediaQuery(theme.breakpoints.up("md"));
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet base>
       <Main
         menu={
           <>

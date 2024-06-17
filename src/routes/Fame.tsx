@@ -669,7 +669,7 @@ const Header: FC = () => {
 
 export const Fame: FC<{}> = () => {
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet base>
       <Header />
     </DefaultProvider>
   );

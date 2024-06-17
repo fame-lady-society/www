@@ -16,7 +16,7 @@ const Details: NextPage<{
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet>
       <Main
         menu={
           <>
@@ -32,7 +32,7 @@ const Details: NextPage<{
           </Typography>
         }
       >
-        <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
+        <Container maxWidth="xl" sx={{ py: 2, mt: 8 }}>
           <TokenDetails
             metadata={metadata}
             tokenId={tokenId}

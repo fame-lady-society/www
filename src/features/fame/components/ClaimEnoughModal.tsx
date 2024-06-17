@@ -35,10 +35,20 @@ function minAllocation(totalAllocation: bigint, currentBuyin: bigint) {
   );
 }
 
-function maxAllocation(totalAllocation: bigint, currentBuyin: bigint) {
+function maxAllocation(
+  totalAllocation: bigint,
+  currentBuyin: bigint,
+  remainingBuy: bigint,
+) {
   return Math.floor(
     Number(formatUnits(totalAllocation / 1000000n, 18)) +
-      Number(formatUnits(currentBuyin, 18)) / 0.035,
+      Number(
+        formatUnits(
+          currentBuyin > remainingBuy ? remainingBuy : currentBuyin,
+          18,
+        ),
+      ) /
+        0.035,
   );
 }
 
@@ -102,7 +112,9 @@ export const ClaimEnoughModal: FC<{
 
       setRequestBuy(newValue);
       setInputValue(e.target.value);
-      setNumberOfNFTs(maxAllocation(totalAllocation, currentBuyin + newValue));
+      setNumberOfNFTs(
+        maxAllocation(totalAllocation, currentBuyin + newValue, remainingBuy),
+      );
       onUpdateBuy(newValue);
     },
     [currentBuyin, onUpdateBuy, remainingBuy, totalAllocation],
@@ -130,12 +142,15 @@ export const ClaimEnoughModal: FC<{
           setRequestBuy(0n);
           setInputValue("0");
         }
-        const remainingBuyNeeded = neededAllocation * 0.035 * 1.05;
+        let remainingBuyNeeded = neededAllocation * 0.035 * 1.05;
+        if (parseEther(remainingBuyNeeded.toString()) > remainingBuy) {
+          remainingBuyNeeded = Number(formatEther(remainingBuy));
+        }
         setRequestBuy(parseEther(remainingBuyNeeded.toString()));
         setInputValue(remainingBuyNeeded.toString());
         onUpdateBuy(parseEther(remainingBuyNeeded.toString()));
       },
-      [currentBuyin, onUpdateBuy, totalAllocation],
+      [currentBuyin, onUpdateBuy, remainingBuy, totalAllocation],
     );
 
   return (

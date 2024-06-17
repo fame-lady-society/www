@@ -476,17 +476,6 @@ export const claimToFameAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'uri', internalType: 'string', type: 'string' },
-      { name: 'nonce', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hashUpdateRequest',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
     inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
     name: 'isClaimed',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
@@ -724,6 +713,475 @@ export const claimToFameAbi = [
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'PastDeadline' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Fame
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const fameAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'name_', internalType: 'string', type: 'string' },
+      { name: 'symbol_', internalType: 'string', type: 'string' },
+      { name: 'initialSupplyOwner', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'fallback', stateMutability: 'payable' },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'spender', internalType: 'address', type: 'address' },
+    ],
+    name: 'allowance',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'burnedPoolManager',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract IBurnedPoolManager',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'fromTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'toTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'emitBatchMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'emitMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fameMirror',
+    outputs: [
+      { name: '', internalType: 'contract FameMirror', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'getSkipNFT',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'mirrorERC721',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renderer',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract ITokenURIGenerator',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleBurnPoolManager',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleMetadata',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleRenderer',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'baseURI_', internalType: 'string', type: 'string' }],
+    name: 'setBaseURI',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'newBurnedPoolManager',
+        internalType: 'address',
+        type: 'address',
+      },
+    ],
+    name: 'setBurnedPoolManager',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newRenderer', internalType: 'address', type: 'address' }],
+    name: 'setRenderer',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'skipNFT', internalType: 'bool', type: 'bool' }],
+    name: 'setSkipNFT',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transfer',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transferFrom',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'unit',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'spender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'status', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'SkipNFTSet',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'Transfer',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'ApprovalCallerNotOwnerNorApproved' },
+  { type: 'error', inputs: [], name: 'DNAlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'DNNotInitialized' },
+  { type: 'error', inputs: [], name: 'FnSelectorNotRecognized' },
+  { type: 'error', inputs: [], name: 'InsufficientAllowance' },
+  { type: 'error', inputs: [], name: 'InsufficientBalance' },
+  { type: 'error', inputs: [], name: 'InvalidUnit' },
+  { type: 'error', inputs: [], name: 'LinkMirrorContractFailed' },
+  { type: 'error', inputs: [], name: 'MirrorAddressIsZero' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NoTransferWhenStaked' },
+  { type: 'error', inputs: [], name: 'SenderNotMirror' },
+  { type: 'error', inputs: [], name: 'TokenDoesNotExist' },
+  { type: 'error', inputs: [], name: 'TotalSupplyOverflow' },
+  { type: 'error', inputs: [], name: 'TransferCallerNotOwnerNorApproved' },
+  { type: 'error', inputs: [], name: 'TransferFromIncorrectOwner' },
+  { type: 'error', inputs: [], name: 'TransferToZeroAddress' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
 ] as const
 
@@ -1690,6 +2148,299 @@ export const fameLadySquadConfig = {
   address: fameLadySquadAddress,
   abi: fameLadySquadAbi,
 } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameMirror
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const fameMirrorAbi = [
+  {
+    type: 'constructor',
+    inputs: [{ name: '_owner', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'fallback', stateMutability: 'payable' },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'nftOwner', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'baseERC20',
+    outputs: [{ name: 'base', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'fromTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'toTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'emitBatchMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'emitMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'uint256', type: 'uint256' }],
+    name: 'getApproved',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'nftOwner', internalType: 'address', type: 'address' },
+      { name: 'operator', internalType: 'address', type: 'address' },
+    ],
+    name: 'isApprovedForAll',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'uint256', type: 'uint256' }],
+    name: 'ownerAt',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'uint256', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'pullOwner',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'approved', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setApprovalForAll',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: 'result', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transferFrom',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: true },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'isApproved',
+        internalType: 'bool',
+        type: 'bool',
+        indexed: false,
+      },
+    ],
+    name: 'ApprovalForAll',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: '_fromTokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: '_toTokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'BatchMetadataUpdate',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: '_tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'MetadataUpdate',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: true },
+    ],
+    name: 'Transfer',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyLinked' },
+  { type: 'error', inputs: [], name: 'CannotLink' },
+  { type: 'error', inputs: [], name: 'FnSelectorNotRecognized' },
+  { type: 'error', inputs: [], name: 'NotLinked' },
+  { type: 'error', inputs: [], name: 'OnlyERC20CanCall' },
+  { type: 'error', inputs: [], name: 'SenderNotBase' },
+  { type: 'error', inputs: [], name: 'SenderNotDeployer' },
+  { type: 'error', inputs: [], name: 'TransferToNonERC721ReceiverImplementer' },
+] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameSale
@@ -3846,15 +4597,6 @@ export const useReadClaimToFameHashClaimTokensRequest =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"hashUpdateRequest"`
- */
-export const useReadClaimToFameHashUpdateRequest =
-  /*#__PURE__*/ createUseReadContract({
-    abi: claimToFameAbi,
-    functionName: 'hashUpdateRequest',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link claimToFameAbi}__ and `functionName` set to `"isClaimed"`
  */
 export const useReadClaimToFameIsClaimed = /*#__PURE__*/ createUseReadContract({
@@ -4290,6 +5032,567 @@ export const useWatchClaimToFameRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: claimToFameAbi,
     eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__
+ */
+export const useReadFame = /*#__PURE__*/ createUseReadContract({ abi: fameAbi })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"allowance"`
+ */
+export const useReadFameAllowance = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'allowance',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"balanceOf"`
+ */
+export const useReadFameBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'balanceOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"burnedPoolManager"`
+ */
+export const useReadFameBurnedPoolManager = /*#__PURE__*/ createUseReadContract(
+  { abi: fameAbi, functionName: 'burnedPoolManager' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"decimals"`
+ */
+export const useReadFameDecimals = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'decimals',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"fameMirror"`
+ */
+export const useReadFameFameMirror = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'fameMirror',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"getSkipNFT"`
+ */
+export const useReadFameGetSkipNft = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'getSkipNFT',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"hasAllRoles"`
+ */
+export const useReadFameHasAllRoles = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'hasAllRoles',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"hasAnyRole"`
+ */
+export const useReadFameHasAnyRole = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'hasAnyRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"mirrorERC721"`
+ */
+export const useReadFameMirrorErc721 = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'mirrorERC721',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"name"`
+ */
+export const useReadFameName = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadFameOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadFameOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renderer"`
+ */
+export const useReadFameRenderer = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'renderer',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleBurnPoolManager"`
+ */
+export const useReadFameRoleBurnPoolManager =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameAbi,
+    functionName: 'roleBurnPoolManager',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleMetadata"`
+ */
+export const useReadFameRoleMetadata = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'roleMetadata',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleRenderer"`
+ */
+export const useReadFameRoleRenderer = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'roleRenderer',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"rolesOf"`
+ */
+export const useReadFameRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"symbol"`
+ */
+export const useReadFameSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"totalSupply"`
+ */
+export const useReadFameTotalSupply = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'totalSupply',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"unit"`
+ */
+export const useReadFameUnit = /*#__PURE__*/ createUseReadContract({
+  abi: fameAbi,
+  functionName: 'unit',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__
+ */
+export const useWriteFame = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"approve"`
+ */
+export const useWriteFameApprove = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteFameCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteFameCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useWriteFameEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useWriteFameEmitMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useWriteFameGrantRoles = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'grantRoles',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteFameRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useWriteFameRenounceRoles = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'renounceRoles',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteFameRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useWriteFameRevokeRoles = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'revokeRoles',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBaseURI"`
+ */
+export const useWriteFameSetBaseUri = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'setBaseURI',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBurnedPoolManager"`
+ */
+export const useWriteFameSetBurnedPoolManager =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'setBurnedPoolManager',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setRenderer"`
+ */
+export const useWriteFameSetRenderer = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'setRenderer',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setSkipNFT"`
+ */
+export const useWriteFameSetSkipNft = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'setSkipNFT',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transfer"`
+ */
+export const useWriteFameTransfer = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'transfer',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useWriteFameTransferFrom = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'transferFrom',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteFameTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"withdraw"`
+ */
+export const useWriteFameWithdraw = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__
+ */
+export const useSimulateFame = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameAbi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"approve"`
+ */
+export const useSimulateFameApprove = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameAbi,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateFameCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateFameCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useSimulateFameEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useSimulateFameEmitMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useSimulateFameGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateFameRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useSimulateFameRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateFameRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useSimulateFameRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBaseURI"`
+ */
+export const useSimulateFameSetBaseUri =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'setBaseURI',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBurnedPoolManager"`
+ */
+export const useSimulateFameSetBurnedPoolManager =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'setBurnedPoolManager',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setRenderer"`
+ */
+export const useSimulateFameSetRenderer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'setRenderer',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setSkipNFT"`
+ */
+export const useSimulateFameSetSkipNft =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'setSkipNFT',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transfer"`
+ */
+export const useSimulateFameTransfer = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameAbi,
+  functionName: 'transfer',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useSimulateFameTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateFameTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"withdraw"`
+ */
+export const useSimulateFameWithdraw = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameAbi,
+  functionName: 'withdraw',
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__
+ */
+export const useWatchFameEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: fameAbi,
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"Approval"`
+ */
+export const useWatchFameApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'Approval',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchFameOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchFameOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchFameOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"RolesUpdated"`
+ */
+export const useWatchFameRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"SkipNFTSet"`
+ */
+export const useWatchFameSkipNftSetEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'SkipNFTSet',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameAbi}__ and `eventName` set to `"Transfer"`
+ */
+export const useWatchFameTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameAbi,
+    eventName: 'Transfer',
   })
 
 /**
@@ -5747,6 +7050,306 @@ export const useWatchFameLadySquadTransferEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: fameLadySquadAbi,
     address: fameLadySquadAddress,
+    eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__
+ */
+export const useReadFameMirror = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"balanceOf"`
+ */
+export const useReadFameMirrorBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'balanceOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"baseERC20"`
+ */
+export const useReadFameMirrorBaseErc20 = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'baseERC20',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"getApproved"`
+ */
+export const useReadFameMirrorGetApproved = /*#__PURE__*/ createUseReadContract(
+  { abi: fameMirrorAbi, functionName: 'getApproved' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"isApprovedForAll"`
+ */
+export const useReadFameMirrorIsApprovedForAll =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMirrorAbi,
+    functionName: 'isApprovedForAll',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"name"`
+ */
+export const useReadFameMirrorName = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadFameMirrorOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"ownerAt"`
+ */
+export const useReadFameMirrorOwnerAt = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'ownerAt',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"ownerOf"`
+ */
+export const useReadFameMirrorOwnerOf = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'ownerOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"supportsInterface"`
+ */
+export const useReadFameMirrorSupportsInterface =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMirrorAbi,
+    functionName: 'supportsInterface',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"symbol"`
+ */
+export const useReadFameMirrorSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"tokenURI"`
+ */
+export const useReadFameMirrorTokenUri = /*#__PURE__*/ createUseReadContract({
+  abi: fameMirrorAbi,
+  functionName: 'tokenURI',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"totalSupply"`
+ */
+export const useReadFameMirrorTotalSupply = /*#__PURE__*/ createUseReadContract(
+  { abi: fameMirrorAbi, functionName: 'totalSupply' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__
+ */
+export const useWriteFameMirror = /*#__PURE__*/ createUseWriteContract({
+  abi: fameMirrorAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"approve"`
+ */
+export const useWriteFameMirrorApprove = /*#__PURE__*/ createUseWriteContract({
+  abi: fameMirrorAbi,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useWriteFameMirrorEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMirrorAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useWriteFameMirrorEmitMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMirrorAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"pullOwner"`
+ */
+export const useWriteFameMirrorPullOwner = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameMirrorAbi, functionName: 'pullOwner' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useWriteFameMirrorSafeTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMirrorAbi,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useWriteFameMirrorSetApprovalForAll =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMirrorAbi,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useWriteFameMirrorTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMirrorAbi,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__
+ */
+export const useSimulateFameMirror = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameMirrorAbi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"approve"`
+ */
+export const useSimulateFameMirrorApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'approve',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useSimulateFameMirrorEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useSimulateFameMirrorEmitMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"pullOwner"`
+ */
+export const useSimulateFameMirrorPullOwner =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'pullOwner',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useSimulateFameMirrorSafeTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useSimulateFameMirrorSetApprovalForAll =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMirrorAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useSimulateFameMirrorTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMirrorAbi,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__
+ */
+export const useWatchFameMirrorEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: fameMirrorAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"Approval"`
+ */
+export const useWatchFameMirrorApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
+    eventName: 'Approval',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"ApprovalForAll"`
+ */
+export const useWatchFameMirrorApprovalForAllEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
+    eventName: 'ApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"BatchMetadataUpdate"`
+ */
+export const useWatchFameMirrorBatchMetadataUpdateEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
+    eventName: 'BatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"MetadataUpdate"`
+ */
+export const useWatchFameMirrorMetadataUpdateEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
+    eventName: 'MetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchFameMirrorOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMirrorAbi}__ and `eventName` set to `"Transfer"`
+ */
+export const useWatchFameMirrorTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMirrorAbi,
     eventName: 'Transfer',
   })
 

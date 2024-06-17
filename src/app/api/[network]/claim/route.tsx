@@ -17,12 +17,12 @@ import { encodePacked, formatUnits, keccak256 } from "viem";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 
-interface Input {
+export interface Input {
   address: `0x${string}`;
   tokenIds: number[];
 }
 
-interface Claim {
+export interface Claim {
   tokenIds: number[];
   destination: `0x${string}`;
   deadlineSeconds: number;
@@ -109,13 +109,15 @@ async function signClaimRequest({
   tokenIds: number[];
   nonce: bigint;
 }) {
-  const signature = encodePacked(
-    ["address", "uint256", "uint256", "uint16[]", "uint256"],
-    [address, amount, BigInt(deadlineSeconds), tokenIds, nonce],
+  const hash = keccak256(
+    encodePacked(
+      ["address", "uint256", "uint256", "uint16[]", "uint256"],
+      [address, amount, BigInt(deadlineSeconds), tokenIds, nonce],
+    ),
   );
-  const hash = keccak256(signature);
+
   return await client.signMessage({
-    message: hash,
+    message: { raw: hash },
     account,
   });
 }
@@ -140,9 +142,12 @@ export async function POST(
       return NextResponse.json({ error: "invalid input" }, { status: 400 });
     }
 
+    // console.log("data", data);
+
     // expect all tokens to be found in the allocation
     for (const tokenId of data.tokenIds) {
       if (!allocation.has(tokenId)) {
+        console.warn("token not found in allocation", tokenId);
         return NextResponse.json(
           { error: "token not found in allocation", tokenId },
           { status: 400 },
@@ -152,7 +157,13 @@ export async function POST(
 
     // expect all tokens to be unclaimed
     const claimed = await wasClaimed(network, data.tokenIds);
-    if (claimed.some((isClaimed) => isClaimed)) {
+    if (claimed.includes(true)) {
+      console.warn(
+        `some tokens [${claimed
+          .map((c, i) => (c ? data.tokenIds[i] : null))
+          .filter(Boolean)
+          .join(", ")}] already claimed for address ${data.address}`,
+      );
       return NextResponse.json(
         {
           error: "some tokens already claimed",
@@ -167,85 +178,120 @@ export async function POST(
       url: process.env.KV_REST_API_URL,
     });
 
+    // console.log("kv connected");
+
     const tokensAlreadyHasActiveClaimId = new Map<number, string>();
     // For each token, check if it exists in the KV store
-    for (const tokenId of data.tokenIds) {
-      const claim = await kv.get<string>(`claim-id:${network}:${tokenId}`);
-      if (claim) {
-        tokensAlreadyHasActiveClaimId.set(tokenId, claim);
-      }
-    }
+    await Promise.all(
+      data.tokenIds.map(async (tokenId) => {
+        const claim = await kv.get<string>(`claim-id:${network}:${tokenId}`);
+        if (claim) {
+          console.log(
+            `Token ${tokenId} already has an active signature: ${claim}`,
+          );
+          tokensAlreadyHasActiveClaimId.set(tokenId, claim);
+        }
+      }),
+    );
     const uniqueClaimIds = new Set<string>();
     const tokensAlreadyHasActiveClaim = new Map<string, Claim>();
     // For each token, check if it exists in the KV store
-    for (const claimId of tokensAlreadyHasActiveClaimId.values()) {
+    const claimPromises = Array.from(
+      tokensAlreadyHasActiveClaimId.values(),
+    ).map(async (claimId) => {
       if (uniqueClaimIds.has(claimId)) {
-        continue;
+        return;
       }
       uniqueClaimIds.add(claimId);
       const claim = await kv.get<Claim>(`claim:${claimId}`);
       if (claim) {
         tokensAlreadyHasActiveClaim.set(claimId, claim);
       }
-    }
-
-    if (tokensAlreadyHasActiveClaim.size > 0) {
-      // We found some claims that are already active. Return them but don't create a new claim.
-      return NextResponse.json(
-        {
-          error: "some tokens already have an active claim",
-          tokenIds: Array.from(tokensAlreadyHasActiveClaimId.keys()),
-          claims: Array.from(tokensAlreadyHasActiveClaim.values()),
-        },
-        { status: 409 },
-      );
-    }
-    const client = publicClientForNetwork(network);
-    const claimToFameAddress = claimToFameAddressForNetwork(network);
-    const account = createSignerAccountForNetwork(network);
-    const nonce = await client.readContract({
-      abi: claimToFameAbi,
-      address: claimToFameAddress,
-      functionName: "signatureNonces",
-      args: [data.address],
-    });
-    const amount = data.tokenIds.reduce(
-      (acc, tokenId) => acc + BigInt(allocation.get(tokenId)!),
-      0n,
-    );
-    const deadlineSeconds = Math.floor((Date.now() + 1000 * 60) / 100); // 10 minutes
-    const signature = await signClaimRequest({
-      account,
-      address: data.address,
-      amount,
-      client: walletClientForNetwork(network),
-      deadlineSeconds,
-      network,
-      nonce,
-      tokenIds: data.tokenIds,
     });
 
-    const claim: Claim = {
-      tokenIds: data.tokenIds,
-      destination: data.address,
-      signature,
-      nonce: Number(nonce),
-      address: data.address,
-      amount: formatUnits(amount, 18),
-      deadlineSeconds,
-    };
+    // console.log("checking active claims");
+    await Promise.all(claimPromises);
+    // console.log("checked active claims");
+    // if (tokensAlreadyHasActiveClaim.size > 0) {
+    //   console.warn(
+    //     `Found ${tokensAlreadyHasActiveClaim.size} tokens with active claims: ${JSON.stringify(Array.from(tokensAlreadyHasActiveClaim.values()))}`,
+    //   );
+    // }
 
-    await kv.set(`claim:${signature}`, claim, {
-      ex: 60 * 10, // 10 minutes
-    });
-    for (const tokenId of data.tokenIds) {
-      await kv.set(`claim-id:${network}:${tokenId}`, signature, {
-        ex: 60 * 10, // 10 minutes
+    // Filter out tokens that already have an active claim
+    const tokensWithoutActiveClaim = data.tokenIds
+      .filter((tokenId) => !tokensAlreadyHasActiveClaimId.has(tokenId))
+      .sort((a, b) => a - b);
+
+    // console.log(
+    //   `Found ${tokensWithoutActiveClaim.length} tokens without active claims`,
+    // );
+
+    let claims = Array.from(tokensAlreadyHasActiveClaim.values());
+    if (tokensWithoutActiveClaim.length > 0) {
+      const client = publicClientForNetwork(network);
+      const claimToFameAddress = claimToFameAddressForNetwork(network);
+      const account = createSignerAccountForNetwork(network);
+
+      const nonce = await client.readContract({
+        abi: claimToFameAbi,
+        address: claimToFameAddress,
+        functionName: "signatureNonces",
+        args: [data.address],
       });
-    }
+      // console.log("nonce", nonce);
 
-    return NextResponse.json({ claim });
+      const amount = tokensWithoutActiveClaim.reduce(
+        (acc, tokenId) => acc + allocation.get(tokenId)!,
+        0n,
+      );
+      const deadlineSeconds = Math.floor((Date.now() + 1000 * 60 * 8) / 1000); // 8 minutes
+      // console.log(`Signing claim with ${account.address}`);
+      const signature = await signClaimRequest({
+        account,
+        address: data.address,
+        amount,
+        client: walletClientForNetwork(network),
+        deadlineSeconds,
+        network,
+        nonce,
+        tokenIds: tokensWithoutActiveClaim,
+      });
+
+      // console.log("signature", signature);
+
+      const claim: Claim = {
+        tokenIds: tokensWithoutActiveClaim,
+        destination: data.address,
+        signature,
+        nonce: Number(nonce),
+        address: data.address,
+        amount: formatUnits(amount, 18),
+        deadlineSeconds,
+      };
+
+      await Promise.all([
+        kv.set(`claim:${signature}`, claim, {
+          ex: 60 * 10, // 10 minutes
+        }),
+        ...tokensWithoutActiveClaim.map((tokenId) =>
+          kv.set(`claim-id:${network}:${tokenId}`, signature, {
+            ex: 60 * 10, // 10 minutes
+          }),
+        ),
+      ]);
+      claims.push(claim);
+    }
+    // Sort claims in ascending nonce order
+    claims.sort((a, b) => a.nonce - b.nonce);
+    return NextResponse.json({ claims });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "server error" }, { status: 400 });
   }
 }
+
+export type Output = {
+  claims?: Claim[];
+  error?: string;
+};

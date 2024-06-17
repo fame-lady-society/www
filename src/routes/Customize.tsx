@@ -28,7 +28,7 @@ const Content: FC<{ prefix?: string; network: "mainnet" | "sepolia" }> = ({
     return <UnsupportedNetwork />;
   }
   return (
-    <Container maxWidth="lg" sx={{ py: 2, mt: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 2, mt: 8 }}>
       <SelectPage prefix={prefix} />
     </Container>
   );
@@ -39,7 +39,7 @@ const Customize: NextPage<{
   prefix?: string;
 }> = ({ prefix = "", network }) => {
   return (
-    <DefaultProvider siwe>
+    <DefaultProvider siwe mainnet>
       <Main
         menu={
           <>

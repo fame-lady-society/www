@@ -5,7 +5,7 @@ import {
   fameSaleAddress,
   fameSaleTokenAddress,
 } from "@/features/fame/contract";
-import { presaleAmountToTokens } from "@/utils/presaleMath";
+import { presaleAmountToTokens } from "@/utils/fame";
 
 export function usePresaleAmount({
   address,

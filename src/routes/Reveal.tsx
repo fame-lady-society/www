@@ -12,7 +12,7 @@ const RevealPage: NextPage<{}> = () => {
   const title = "Fame Lady Society";
   const description = "Unstoppable";
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet>
       <Head>
         <title>Fame Lady Society</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />

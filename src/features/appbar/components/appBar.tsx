@@ -17,7 +17,8 @@ export const AppBar: FC<{
   menu?: ReactNode;
   title?: ReactNode;
   right?: ReactNode;
-}> = ({ menu, title, right }) => {
+  disableConnect?: boolean;
+}> = ({ disableConnect, menu, title, right }) => {
   const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [menuAnchorEl, setMenuAnchorEl] = useState<Element | null>(null);
 
@@ -36,7 +37,9 @@ export const AppBar: FC<{
           <Box sx={{ flexGrow: 1 }} component="span" />
           {right}
           <Box ml={2} component="span" />
-          <ConnectKitButton showAvatar={!tinyScreen} />
+          {disableConnect ? null : (
+            <ConnectKitButton showAvatar={!tinyScreen} />
+          )}
         </Toolbar>
       </MuiAppBar>
       {menu && (

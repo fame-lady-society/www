@@ -14,7 +14,7 @@ import { FC } from "react";
 
 export const FameAdminPage: FC<{}> = () => {
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet base>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

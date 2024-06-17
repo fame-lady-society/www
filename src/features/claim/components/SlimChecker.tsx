@@ -10,7 +10,7 @@ import XIcon from "@mui/icons-material/X";
 import { formatUnits, isAddress } from "viem";
 import { useAllocation } from "../hooks/useAllocation";
 import { useAccount, useChainId, useEnsAddress } from "wagmi";
-import { formatAllocationString } from "@/utils/presaleMath";
+import { formatFame } from "@/utils/fame";
 import { usePresaleAmount } from "../hooks/usePresale";
 import { base, sepolia } from "viem/chains";
 
@@ -34,12 +34,12 @@ const NotConnected: FC = () => {
 const SHARE_TEXT = (address: string, claimAmount: bigint) => {
   switch (Math.floor(Math.random() * 2)) {
     case 0:
-      return `💋 OMG! I can claim ${formatAllocationString(
+      return `💋 OMG! I can claim ${formatFame(
         claimAmount,
       )}!💰 Flaunt with @fameladysociety and embrace WebWE!`;
     case 1:
     default:
-      return `✨Feeling fabulous with ${formatAllocationString(
+      return `✨Feeling fabulous with ${formatFame(
         claimAmount,
       )}!💰 Join me in flaunting @fameladysociety and the power of WebWE!`;
   }

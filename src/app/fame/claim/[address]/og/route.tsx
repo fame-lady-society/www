@@ -13,7 +13,7 @@ import {
   fameSaleAddress,
   fameSaleTokenAddress,
 } from "@/features/fame/contract";
-import { presaleAmountToTokens } from "@/utils/presaleMath";
+import { presaleAmountToTokens } from "@/utils/fame";
 
 const formatAllocationString = (amount: bigint) =>
   `${Number(formatEther(amount).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;

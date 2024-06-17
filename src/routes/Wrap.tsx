@@ -102,7 +102,7 @@ const Wrap: NextPage<{
   network: "mainnet" | "sepolia";
 }> = ({ network }) => {
   return (
-    <DefaultProvider>
+    <DefaultProvider mainnet>
       <Head>
         <title>Fame Lady Society Wrap</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />

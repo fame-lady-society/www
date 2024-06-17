@@ -9,5 +9,5 @@ export function presaleAmountToTokens(amount: bigint, maxBuy: bigint) {
   );
 }
 
-export const formatAllocationString = (amount: bigint) =>
+export const formatFame = (amount: bigint) =>
   `${Number(formatEther(amount).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
