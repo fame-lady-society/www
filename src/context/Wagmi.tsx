@@ -2,7 +2,7 @@
 import { siweClient } from "@/utils/siweClient";
 import { SIWESession } from "connectkit";
 import { WagmiProvider, createConfig, fallback, http } from "wagmi";
-import { base, mainnet, sepolia } from "wagmi/chains";
+import { base, mainnet, sepolia, polygon as polygonChain } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
@@ -37,7 +37,21 @@ export const baseSepolia = {
   },
 } as const;
 
-const defaultConfig = {
+export const polygonOnly = {
+  chains: [polygonChain],
+  transports: {
+    [polygonChain.id]: fallback([
+      http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_1!, {
+        batch: true,
+      }),
+      http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_2!, {
+        batch: true,
+      }),
+    ]),
+  },
+} as const;
+
+export const defaultConfig = {
   // Required API Keys
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   multiInjectedProviderDiscovery: true,

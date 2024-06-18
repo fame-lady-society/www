@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import { erc721Abi } from "viem";
-import { useReadContract, useReadContracts } from "wagmi";
+import {
+  Config,
+  UseConfigReturnType,
+  useReadContract,
+  useReadContracts,
+} from "wagmi";
+import { createConfig } from "wagmi";
 import { mainnet, polygon } from "viem/chains";
+import { getDefaultConfig } from "connectkit";
 import { allocatePercentages } from "@/utils/claim";
 import {
   HUNNYS_CONTRACT,
@@ -13,7 +20,15 @@ import {
 } from "./constants";
 import { useSnapshot } from "./useSnapshot";
 import { fameLadySquadAbi } from "@/wagmi";
+import { polygonOnly, defaultConfig } from "@/context/Wagmi";
 import { useLadies } from "@/features/customize/hooks/useLadies";
+
+const polygonWagmiConfig = createConfig(
+  getDefaultConfig({
+    ...polygonOnly,
+    ...defaultConfig,
+  }),
+);
 
 export function useAllocation({
   address,
@@ -55,6 +70,7 @@ export function useAllocation({
 
   const { data: polygonData, isLoading: isPolygonDataLoading } =
     useReadContracts({
+      config: polygonWagmiConfig,
       contracts: address
         ? [
             {
