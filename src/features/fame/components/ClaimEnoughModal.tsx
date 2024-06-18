@@ -19,6 +19,7 @@ import FormGroup from "@mui/material/FormGroup";
 import { styled } from "@mui/material/styles";
 import { formatEther, formatUnits, parseEther, parseUnits } from "viem";
 import Box from "@mui/material/Box";
+import { presaleAmountToTokens } from "@/utils/fame";
 
 const Input = styled(MuiInput)`
   width: 100%;
@@ -56,6 +57,7 @@ export const ClaimEnoughModal: FC<{
   totalAllocation: bigint;
   currentBuyin: bigint;
   remainingBuy: bigint;
+  maxRaise: bigint;
   onClose: () => void;
   onUpdateBuy: (amount: bigint) => void;
   onBuy: () => void;
@@ -63,23 +65,31 @@ export const ClaimEnoughModal: FC<{
   totalAllocation,
   currentBuyin,
   remainingBuy,
+  maxRaise,
   onClose,
   onBuy,
   onUpdateBuy,
 }) => {
   const [numberOfNFTs, setNumberOfNFTs] = useState(
-    minAllocation(totalAllocation, currentBuyin),
+    Math.ceil(
+      Number(formatUnits(totalAllocation / 1000000n, 18)) +
+        Number(
+          presaleAmountToTokens(currentBuyin, maxRaise) / 10n ** 18n / 1000000n,
+        ),
+    ),
   );
   const currentBuyPrice = useMemo(() => {
     const currentAllocation =
       Number(formatUnits(totalAllocation / 1000000n, 18)) +
-      Number(formatUnits(currentBuyin, 18)) / 0.035;
+      Number(
+        presaleAmountToTokens(currentBuyin, maxRaise) / 10n ** 18n / 1000000n,
+      );
     const neededAllocation = numberOfNFTs - currentAllocation;
     if (neededAllocation <= 0) {
       return 0;
     }
-    return neededAllocation * 0.035 * 1.05;
-  }, [currentBuyin, numberOfNFTs, totalAllocation]);
+    return neededAllocation * 0.035;
+  }, [currentBuyin, maxRaise, numberOfNFTs, totalAllocation]);
 
   const [requestBuy, setRequestBuy] = useState<bigint>(
     parseEther(currentBuyPrice.toString()),
@@ -91,7 +101,9 @@ export const ClaimEnoughModal: FC<{
 
   const starterAllocation = Math.floor(
     Number(formatUnits(totalAllocation / 1000000n, 18)) +
-      Number(formatUnits(currentBuyin, 18)) / 0.035,
+      Number(
+        presaleAmountToTokens(currentBuyin, maxRaise) / 10n ** 18n / 1000000n,
+      ),
   );
   const isLessThanNextNft = numberOfNFTs <= starterAllocation;
 
@@ -136,13 +148,17 @@ export const ClaimEnoughModal: FC<{
         setNumberOfNFTs(value as number);
         const currentAllocation =
           Number(formatUnits(totalAllocation / 1000000n, 18)) +
-          Number(formatUnits(currentBuyin, 18)) / 0.035;
+          Number(
+            presaleAmountToTokens(currentBuyin, maxRaise) /
+              10n ** 18n /
+              1000000n,
+          );
         const neededAllocation = Number(value) - currentAllocation;
         if (neededAllocation <= 0) {
           setRequestBuy(0n);
           setInputValue("0");
         }
-        let remainingBuyNeeded = neededAllocation * 0.035 * 1.05;
+        let remainingBuyNeeded = neededAllocation * 0.035;
         if (parseEther(remainingBuyNeeded.toString()) > remainingBuy) {
           remainingBuyNeeded = Number(formatEther(remainingBuy));
         }
@@ -150,9 +166,23 @@ export const ClaimEnoughModal: FC<{
         setInputValue(remainingBuyNeeded.toString());
         onUpdateBuy(parseEther(remainingBuyNeeded.toString()));
       },
-      [currentBuyin, onUpdateBuy, remainingBuy, totalAllocation],
+      [currentBuyin, maxRaise, onUpdateBuy, remainingBuy, totalAllocation],
     );
 
+  const onHandleMax = useCallback(() => {
+    setNumberOfNFTs(
+      Math.floor(
+        Number(formatUnits(totalAllocation / 1000000n, 18)) +
+          Number(
+            presaleAmountToTokens(currentBuyin + remainingBuy, maxRaise) /
+              10n ** 18n /
+              1000000n,
+          ),
+      ),
+    );
+    setRequestBuy(remainingBuy);
+    setInputValue(formatEther(remainingBuy));
+  }, [currentBuyin, maxRaise, remainingBuy, totalAllocation]);
   return (
     <Dialog open onClose={() => onClose()}>
       <Card sx={{ pb: 1 }}>
@@ -192,7 +222,17 @@ export const ClaimEnoughModal: FC<{
               id="buy-slider"
               value={numberOfNFTs}
               min={minAllocation(totalAllocation, currentBuyin)}
-              max={27}
+              max={Math.floor(
+                Number(formatUnits(totalAllocation / 1000000n, 18)) +
+                  Number(
+                    presaleAmountToTokens(
+                      currentBuyin + remainingBuy,
+                      maxRaise,
+                    ) /
+                      10n ** 18n /
+                      1000000n,
+                  ),
+              )}
               step={1}
               valueLabelDisplay="auto"
               valueLabelFormat={(value) =>
@@ -235,6 +275,9 @@ export const ClaimEnoughModal: FC<{
         </CardContent>
         <CardActionArea>
           <Button onClick={onHandleBuy}>Buy</Button>
+          <Button disabled={remainingBuy === requestBuy} onClick={onHandleMax}>
+            Max
+          </Button>
         </CardActionArea>
       </Card>
     </Dialog>

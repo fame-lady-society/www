@@ -52,6 +52,7 @@ export const polygonOnly = {
 } as const;
 
 export const defaultConfig = {
+  ...mainnetSepolia,
   // Required API Keys
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   multiInjectedProviderDiscovery: true,
@@ -80,9 +81,9 @@ export const Web3Provider: FC<
     () =>
       createConfig(
         getDefaultConfig({
-          chains,
-          transports,
           ...defaultConfig,
+          ...(chains && chains.length && { chains }),
+          ...(transports && { transports }),
         }),
       ),
     [chains, transports],

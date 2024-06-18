@@ -379,6 +379,7 @@ export const PresaleCard: FC<{}> = () => {
           currentBuyin={currentBalance?.result ?? 0n}
           remainingBuy={remainingBuy}
           totalAllocation={total}
+          maxRaise={maxRaise?.result ?? 0n}
           onUpdateBuy={(value) => {
             if (value) {
               setRequestBuy(value);
