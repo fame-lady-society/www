@@ -15,6 +15,33 @@ import { client as polygonClient } from "@/viem/polygon-client";
 import { fameLadySquadAbi } from "@/wagmi";
 import { erc721Abi } from "viem";
 import snapshot from "@/app/fame/admin/test-claim.json";
+import bannedClaimAddresses from "./bannedClaimAddresses";
+
+export async function fetchBannedTokenIds() {
+  // For each address in bannedClaimAddresses, fetch the token IDs in the squad contract
+  const bannedTokenIds = await Promise.all(
+    bannedClaimAddresses.map(async (address) => {
+      const result = await mainnetClient.readContract({
+        abi: erc721Abi,
+        address: SQUAD_CONTRACT,
+        functionName: "balanceOf",
+        args: [address],
+      });
+
+      return await Promise.all(
+        Array.from({ length: Number(result) }, (_, i) =>
+          mainnetClient.readContract({
+            abi: fameLadySquadAbi,
+            address: SQUAD_CONTRACT,
+            functionName: "tokenOfOwnerByIndex",
+            args: [address, BigInt(i)],
+          }),
+        ),
+      );
+    }),
+  );
+  return bannedTokenIds.flat();
+}
 
 export async function fetchAllocationData({
   address,

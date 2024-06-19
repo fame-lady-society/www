@@ -1,15 +1,9 @@
 import { useMemo } from "react";
 import { erc721Abi } from "viem";
-import {
-  Config,
-  UseConfigReturnType,
-  useReadContract,
-  useReadContracts,
-} from "wagmi";
+import { useReadContracts } from "wagmi";
 import { createConfig } from "wagmi";
 import { mainnet, polygon } from "viem/chains";
 import { getDefaultConfig } from "connectkit";
-import { allocatePercentages } from "@/utils/claim";
 import {
   HUNNYS_CONTRACT,
   MERMAIDS_CONTRACT,
@@ -120,6 +114,7 @@ export function useAllocation({
     const flsTokens = lowerCaseAddress
       ? snapshot
           .filter((item) => flsTokenIds.includes(BigInt(item.tokenId)))
+          .filter(({ tokenId }) => flsPoolAllocation.has(Number(tokenId)))
           .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!)
       : [];
     const flsAllocation = flsTokens.reduce(
@@ -135,6 +130,7 @@ export function useAllocation({
     const squadAllocation = lowerCaseAddress
       ? snapshot
           .filter((item) => squadTokenIds.includes(BigInt(item.tokenId)))
+          .filter(({ tokenId }) => flsPoolAllocation.has(Number(tokenId)))
           .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!)
       : [];
     const squadTotal = squadAllocation.reduce(

@@ -1,6 +1,7 @@
 import { allocatePercentages } from "@/utils/claim";
 import { useMemo } from "react";
 import snapshot from "@/app/fame/admin/test-claim.json";
+import { isBannedToken } from "@/service/bannedTokenIds";
 import { FLS_TOKENS } from "./constants";
 
 export function getFlsPoolAllocation(rankBoost: number, ageBoost: number) {
@@ -15,13 +16,15 @@ export function getFlsPoolAllocation(rankBoost: number, ageBoost: number) {
     }
   }
   return allocatePercentages(
-    snapshot.map(({ ogRank, tokenId, blockHeightMinted }) => ({
-      blockHeightMinted:
-        (blockHeightMinted && Number(blockHeightMinted)) ||
-        maxBlockHeightMinted,
-      ogRank: Number(ogRank),
-      tokenId: Number(tokenId),
-    })),
+    snapshot
+      .filter(({ tokenId }) => !isBannedToken(tokenId))
+      .map(({ ogRank, tokenId, blockHeightMinted }) => ({
+        blockHeightMinted:
+          (blockHeightMinted && Number(blockHeightMinted)) ||
+          maxBlockHeightMinted,
+        ogRank: Number(ogRank),
+        tokenId: Number(tokenId),
+      })),
     rankBoost,
     ageBoost,
   ).reduce((acc, { tokenId, percentage }) => {

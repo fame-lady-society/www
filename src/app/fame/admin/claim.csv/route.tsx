@@ -3,9 +3,9 @@ import { fetchFameClaimData } from "@/service/fameClaimData";
 
 export async function GET(req: NextRequest) {
   const data = await fetchFameClaimData();
-  let csvData = `tokenId,ogRank,blockHeightMinted,blockTimestampMinted,owner\n`;
+  let csvData = `tokenId,ogRank,blockHeightMinted,blockTimestampMinted,banned,owner\n`;
   for (const item of data) {
-    csvData += `${item.tokenId},${item.ogRank},${item.blockHeightMinted ?? ""},${item.blockTimestampMinted ?? ""},${item.owner ?? ""}\n`;
+    csvData += `${item.tokenId},${item.ogRank},${item.blockHeightMinted ?? ""},${item.blockTimestampMinted ?? ""},${item.banned},${item.owner ?? ""}\n`;
   }
   const response = new NextResponse(csvData, {
     headers: {
