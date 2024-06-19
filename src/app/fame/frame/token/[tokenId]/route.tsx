@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { ImageResponse } from "@vercel/og";
 
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
-
+import { isBannedToken } from "@/service/bannedTokenIds";
 import { formatEther } from "viem";
 import { baseUrl } from "@/app/frames/frames";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
@@ -19,7 +19,7 @@ export async function GET(
 ) {
   const flsPoolAllocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);
   const allocation = flsPoolAllocation.get(Number(params.tokenId))!;
-
+  const banned = isBannedToken(Number(params.tokenId));
   return new ImageResponse(
     (
       <div
@@ -80,7 +80,10 @@ export async function GET(
                 margin: "0.125em 0",
               }}
             >
-              {formatUnit(allocation).toLocaleString()} $FAME
+              {banned
+                ? "This token was owned by the prior team and is not eligible for a claim to $FAME"
+                : formatUnit(allocation).toLocaleString()}{" "}
+              $FAME
             </p>
 
             <div

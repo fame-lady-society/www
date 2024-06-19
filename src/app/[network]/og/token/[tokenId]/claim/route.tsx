@@ -10,11 +10,12 @@ import {
   client as sepoliaClient,
   flsTokenAddress as sepoliaFlsTokenAddress,
 } from "@/viem/sepolia-client";
-import { erc721Abi, formatEther } from "viem";
-import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
+import { ContractFunctionExecutionError, erc721Abi, formatEther } from "viem";
+import { IMetadata, thumbnailImageUrl } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import { isBannedToken } from "@/service/bannedTokenIds";
 
 export async function GET(
   req: NextRequest,
@@ -32,6 +33,7 @@ export async function GET(
   const tokenId = params.tokenId;
 
   try {
+    let isWrapped = true;
     const [[ensName, ensAvatar], metadata] = await Promise.all([
       viemClient
         .readContract({
@@ -40,16 +42,26 @@ export async function GET(
           functionName: "ownerOf",
           args: [BigInt(tokenId)],
         })
+        .catch((err) => {
+          if (err instanceof ContractFunctionExecutionError) {
+            isWrapped = false;
+            return null;
+          }
+          throw err;
+        })
         .then(async (owner) => {
-          const ensName = await viemClient.getEnsName({
-            address: owner,
-          });
-          const ensAvatar = ensName
-            ? await viemClient.getEnsAvatar({
-                name: ensName,
-              })
-            : null;
-          return [ensName, ensAvatar];
+          if (owner) {
+            const ensName = await viemClient.getEnsName({
+              address: owner,
+            });
+            const ensAvatar = ensName
+              ? await viemClient.getEnsAvatar({
+                  name: ensName,
+                })
+              : null;
+            return [ensName, ensAvatar] as const;
+          }
+          return [null, null] as const;
         }),
       viemClient
         .readContract({
@@ -74,9 +86,11 @@ export async function GET(
       OG_RANK_BOOST,
       OG_AGE_BOOST,
     );
-    const allocation = flsTokenAllocation.get(Number(tokenId)) ?? 0n;
+    const t = Number(tokenId);
+    const allocation = flsTokenAllocation.get(t) ?? 0n;
     const allocationStr = `Allocation: ${Number(formatEther(allocation).split(".")[0]).toLocaleString("en").replaceAll(",", " ")} $FAME`;
     const fontSize = allocationStr.length > 26 ? "24px" : "32px";
+    const banned = isBannedToken(t);
 
     return new ImageResponse(
       (
@@ -97,7 +111,7 @@ export async function GET(
               height: "100%",
               backgroundColor: "slate-700",
               justifyContent: "center",
-              backgroundImage: `url('${imageUrl(tokenId)}')`,
+              backgroundImage: `url('${thumbnailImageUrl(tokenId)}')`,
               backgroundSize: "100% 100%",
               color: "black",
               fontFamily: "Roboto",
@@ -160,6 +174,20 @@ export async function GET(
                   flexGrow: 1,
                 }}
               ></div>
+              {!isWrapped && !banned && (
+                <p
+                  style={{
+                    fontSize: "24px",
+                    paddingLeft: "24px",
+                    paddingRight: "24px",
+                    width: "100%",
+                    margin: "0.125em 0",
+                  }}
+                >
+                  This token needs to be wrapped to be eligible for a claim to
+                  $FAME
+                </p>
+              )}
               <p
                 style={{
                   fontSize,
@@ -169,7 +197,9 @@ export async function GET(
                   margin: "0.125em 0", // Adjust this value to change the line spacing
                 }}
               >
-                {allocationStr}
+                {banned
+                  ? "This token was owned by the prior team and is not eligible for a claim to $FAME"
+                  : allocationStr}
               </p>
               <div
                 style={{
@@ -259,6 +289,7 @@ export async function GET(
   } catch (error) {
     // no owner, token does not exist
     // do better
+    console.error(error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }

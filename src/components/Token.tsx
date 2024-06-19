@@ -8,6 +8,8 @@ import { IMetadata, imageUrl } from "@/utils/metadata";
 import { SocialShareDialog } from "@/features/customize/components/SocialShare";
 import Button from "@mui/material/Button";
 import { formatEther } from "viem";
+import { isBannedToken } from "@/service/bannedTokenIds";
+import { boba } from "viem/chains";
 
 const Attribute: FC<{ name: string; value: string | number }> = ({
   name,
@@ -49,6 +51,9 @@ export const Token: FC<{
               flexDirection: "column",
               justifyContent: "center",
               height: "100%",
+              ...(isBannedToken(tokenId) && {
+                border: "2px solid red",
+              }),
             }}
           >
             {metadata.name && (
@@ -57,6 +62,12 @@ export const Token: FC<{
             <Typography variant="h4" align="center">
               {metadata.name}
             </Typography>
+            {isBannedToken(tokenId) && (
+              <Typography variant="body1" align="center">
+                This token has been banned from the $FAME allocation because it
+                was owned by the prior team.
+              </Typography>
+            )}
             {typeof allocation !== "undefined" && (
               <Typography variant="body1" align="center">
                 Allocation: {formatEther(allocation).split(".")[0]} $FAME

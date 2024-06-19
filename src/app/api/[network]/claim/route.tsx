@@ -145,29 +145,30 @@ export async function POST(
     // console.log("data", data);
 
     // expect all tokens to be found in the allocation
+    const tokenIds: number[] = [];
+    const bannedTokenIds: number[] = [];
+
     for (const tokenId of data.tokenIds) {
-      if (!allocation.has(tokenId)) {
-        console.warn("token not found in allocation", tokenId);
-        return NextResponse.json(
-          { error: "token not found in allocation", tokenId },
-          { status: 400 },
-        );
+      if (allocation.has(tokenId)) {
+        tokenIds.push(tokenId);
+      } else {
+        bannedTokenIds.push(tokenId);
       }
     }
 
     // expect all tokens to be unclaimed
-    const claimed = await wasClaimed(network, data.tokenIds);
+    const claimed = await wasClaimed(network, tokenIds);
     if (claimed.includes(true)) {
       console.warn(
         `some tokens [${claimed
-          .map((c, i) => (c ? data.tokenIds[i] : null))
+          .map((c, i) => (c ? tokenIds[i] : null))
           .filter(Boolean)
           .join(", ")}] already claimed for address ${data.address}`,
       );
       return NextResponse.json(
         {
           error: "some tokens already claimed",
-          tokenIds: data.tokenIds.filter((_, i) => claimed[i]),
+          tokenIds: tokenIds.filter((_, i) => claimed[i]),
         },
         { status: 400 },
       );
@@ -183,7 +184,7 @@ export async function POST(
     const tokensAlreadyHasActiveClaimId = new Map<number, string>();
     // For each token, check if it exists in the KV store
     await Promise.all(
-      data.tokenIds.map(async (tokenId) => {
+      tokenIds.map(async (tokenId) => {
         const claim = await kv.get<string>(`claim-id:${network}:${tokenId}`);
         if (claim) {
           console.log(
@@ -219,7 +220,7 @@ export async function POST(
     // }
 
     // Filter out tokens that already have an active claim
-    const tokensWithoutActiveClaim = data.tokenIds
+    const tokensWithoutActiveClaim = tokenIds
       .filter((tokenId) => !tokensAlreadyHasActiveClaimId.has(tokenId))
       .sort((a, b) => a - b);
 
@@ -284,7 +285,10 @@ export async function POST(
     }
     // Sort claims in ascending nonce order
     claims.sort((a, b) => a.nonce - b.nonce);
-    return NextResponse.json({ claims });
+    return NextResponse.json({
+      claims,
+      ...(bannedTokenIds.length ? { bannedTokenIds } : {}),
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "server error" }, { status: 400 });
@@ -293,5 +297,6 @@ export async function POST(
 
 export type Output = {
   claims?: Claim[];
+  bannedTokenIds?: number[];
   error?: string;
 };
