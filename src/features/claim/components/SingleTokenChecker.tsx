@@ -12,6 +12,7 @@ import { useSnapshot } from "../hooks/useSnapshot";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "../hooks/constants";
 import { useReadContract } from "wagmi";
 import { fameLadySocietyAddress, fameLadySquadAddress } from "@/wagmi";
+import { isBannedToken } from "@/service/bannedTokenIds";
 
 const Input = styled(MuiInput)`
   width: 100%;
@@ -64,14 +65,19 @@ export const SingleTokenChecker: FC<{}> = () => {
     }
   }, []);
 
+  const isBanned = tokenId !== null && isBannedToken(Number(tokenId));
+
   return (
     <Card>
       <CardHeader title="Token ID Claim Checker" />
       <CardContent>
         {isSuccess ? (
           <>
+            <Typography variant="body1" color="red">
+              {isBanned === true ? "This token cannot claim $FAME" : ""}
+            </Typography>
             <Typography variant="body1">
-              {isSquad === true
+              {isSquad === true && !isBanned
                 ? "This token needs to be wrapped in order to claim $FAME"
                 : "\u00A0"}
             </Typography>
