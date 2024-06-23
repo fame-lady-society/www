@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import NextImage from "next/image";
 import XIcon from "@mui/icons-material/X";
-import { formatUnits, isAddress } from "viem";
+import { formatUnits } from "viem";
 import { useAllocation } from "../hooks/useAllocation";
 import { useAccount, useChainId, useEnsAddress } from "wagmi";
 import { formatFame } from "@/utils/fame";

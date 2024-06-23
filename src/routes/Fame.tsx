@@ -31,6 +31,7 @@ import CardContent from "@mui/material/CardContent";
 import { fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/fame/components/FameFAQ";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import { SingleTokenChecker } from "@/features/claim/components/SingleTokenChecker";
 
 const AnimatedBox = animated(Box);
 
@@ -580,6 +581,14 @@ const Content: FC = () => {
             <Typography variant="body1">Magic Eden</Typography>
           </WrappedLink>
         </AnimatedBoxFallUp>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sx={{
+          marginTop: 8,
+        }}
+      >
+        <SingleTokenChecker />
       </Grid2>
       <Grid2
         xs={12}

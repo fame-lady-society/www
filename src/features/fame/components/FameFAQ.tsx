@@ -90,6 +90,16 @@ export const FameFAQ: FC = () => {
         }
       />
       <QA
+        question="How is the $FAME allocation calculated?"
+        answer={
+          <>
+            <Typography component="p">
+              The $FAME allocation is rank and
+            </Typography>
+          </>
+        }
+      />
+      <QA
         question="Tokenomics?"
         answer={
           <>
