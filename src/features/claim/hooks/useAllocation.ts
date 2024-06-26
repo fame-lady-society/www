@@ -9,8 +9,8 @@ import {
   MERMAIDS_CONTRACT,
   METAVIXEN_CONTRACT,
   SQUAD_CONTRACT,
-  MARKET_CAP,
-  SISTER_TOKENS,
+  ALLOCATION_PER_SISTER_TOKEN,
+  METAVIXEN_BOOST,
 } from "./constants";
 import { useSnapshot } from "./useSnapshot";
 import { fameLadySquadAbi } from "@/wagmi";
@@ -139,21 +139,13 @@ export function useAllocation({
     );
 
     const hunnysAllocation = mainnetHunnys
-      ? BigInt(
-          ((Number(mainnetHunnys) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-        )
+      ? mainnetHunnys * ALLOCATION_PER_SISTER_TOKEN
       : 0n;
     const mermaidsAllocation = mainnetMermaids
-      ? BigInt(
-          ((Number(mainnetMermaids) * 0.03) / MARKET_CAP) *
-            Number(SISTER_TOKENS),
-        )
+      ? mainnetMermaids * ALLOCATION_PER_SISTER_TOKEN
       : 0n;
     const metavixensAllocation = polygonMetavixens
-      ? BigInt(
-          ((Number(polygonMetavixens) * 0.03) / MARKET_CAP) *
-            Number(SISTER_TOKENS),
-        )
+      ? polygonMetavixens * ALLOCATION_PER_SISTER_TOKEN * METAVIXEN_BOOST
       : 0n;
 
     return {

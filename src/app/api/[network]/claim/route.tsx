@@ -93,6 +93,7 @@ async function wasClaimed(network: "base" | "sepolia", tokenIds: number[]) {
 
 async function signClaimRequest({
   address,
+  contractAddress,
   account,
   client,
   amount,
@@ -101,6 +102,7 @@ async function signClaimRequest({
   nonce,
 }: {
   address: `0x${string}`;
+  contractAddress: `0x${string}`;
   account: ReturnType<typeof createSignerAccountForNetwork>;
   client: ReturnType<typeof walletClientForNetwork>;
   amount: bigint;
@@ -180,12 +182,14 @@ export async function POST(
     });
 
     // console.log("kv connected");
-
+    const claimToFameAddress = claimToFameAddressForNetwork(network);
     const tokensAlreadyHasActiveClaimId = new Map<number, string>();
     // For each token, check if it exists in the KV store
     await Promise.all(
       tokenIds.map(async (tokenId) => {
-        const claim = await kv.get<string>(`claim-id:${network}:${tokenId}`);
+        const claim = await kv.get<string>(
+          `claim-id:${network}:${claimToFameAddress}:${tokenId}`,
+        );
         if (claim) {
           console.log(
             `Token ${tokenId} already has an active signature: ${claim}`,
@@ -231,7 +235,6 @@ export async function POST(
     let claims = Array.from(tokensAlreadyHasActiveClaim.values());
     if (tokensWithoutActiveClaim.length > 0) {
       const client = publicClientForNetwork(network);
-      const claimToFameAddress = claimToFameAddressForNetwork(network);
       const account = createSignerAccountForNetwork(network);
 
       const nonce = await client.readContract({
@@ -250,6 +253,7 @@ export async function POST(
       // console.log(`Signing claim with ${account.address}`);
       const signature = await signClaimRequest({
         account,
+        contractAddress: claimToFameAddress,
         address: data.address,
         amount,
         client: walletClientForNetwork(network),
@@ -276,9 +280,13 @@ export async function POST(
           ex: 60 * 10, // 10 minutes
         }),
         ...tokensWithoutActiveClaim.map((tokenId) =>
-          kv.set(`claim-id:${network}:${tokenId}`, signature, {
-            ex: 60 * 10, // 10 minutes
-          }),
+          kv.set(
+            `claim-id:${network}:${claimToFameAddress}:${tokenId}`,
+            signature,
+            {
+              ex: 60 * 10, // 10 minutes
+            },
+          ),
         ),
       ]);
       claims.push(claim);

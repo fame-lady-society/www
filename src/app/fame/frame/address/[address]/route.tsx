@@ -8,13 +8,13 @@ import {
 } from "@/viem/mainnet-client";
 import { client as polygonClient } from "@/viem/polygon-client";
 import {
+  ALLOCATION_PER_SISTER_TOKEN,
   HUNNYS_CONTRACT,
-  MARKET_CAP,
   MERMAIDS_CONTRACT,
+  METAVIXEN_BOOST,
   METAVIXEN_CONTRACT,
   OG_AGE_BOOST,
   OG_RANK_BOOST,
-  SISTER_TOKENS,
 } from "@/features/claim/hooks/constants";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
 
@@ -66,20 +66,13 @@ export async function GET(
     0n,
   );
   const hunnysAllocation = mainnetHunnys
-    ? BigInt(
-        ((Number(mainnetHunnys) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-      )
+    ? mainnetHunnys * ALLOCATION_PER_SISTER_TOKEN
     : 0n;
   const mermaidsAllocation = mainnetMermaids
-    ? BigInt(
-        ((Number(mainnetMermaids) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-      )
+    ? mainnetMermaids * ALLOCATION_PER_SISTER_TOKEN
     : 0n;
   const metavixensAllocation = polygonMetavixens
-    ? BigInt(
-        ((Number(polygonMetavixens) * 0.03) / MARKET_CAP) *
-          Number(SISTER_TOKENS),
-      )
+    ? polygonMetavixens * ALLOCATION_PER_SISTER_TOKEN * METAVIXEN_BOOST
     : 0n;
 
   return new ImageResponse(

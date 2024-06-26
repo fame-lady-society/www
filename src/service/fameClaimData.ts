@@ -3,11 +3,14 @@ import { retryWithBackOff } from "@/utils/retry";
 import { mergeMap, catchError } from "rxjs/operators";
 import { range, EMPTY } from "rxjs";
 import { type IMetadata } from "@/utils/metadata";
+import { checksumAddress, isAddress, zeroAddress } from "viem";
 import {
   getBuiltGraphSDK,
   MainnetMintsQuery,
   MainnetOwnersQuery,
 } from "@/graphclient";
+import { fetchAllOwnersIterable } from "./fetchAllOwnersIterable";
+import { fameLadySocietyAddress } from "@/wagmi";
 
 const FAME_LADY_SOCIETY_IPFS_METADATA_CID =
   "bafybeifilzfx3asubemd3sgirkgeaeymu3d3n5qg6ekxakobldmnfkb3zu";
@@ -112,31 +115,26 @@ export async function fetchAllOwners() {
 export function zipUp(
   metadatas: IMetadata[],
   mints: MainnetMintsQuery["transfers"],
-  owners: MainnetOwnersQuery["ownerships"],
+  owners: Map<bigint, `0x${string}`>,
 ) {
   const tokenMintMap = new Map<number, MainnetMintsQuery["transfers"][0]>();
-  const tokenOwnerMap = new Map<number, MainnetOwnersQuery["ownerships"][0]>();
 
   for (const mint of mints) {
     tokenMintMap.set(Number(mint.FameLadySociety_id), mint);
   }
 
-  for (const owner of owners) {
-    tokenOwnerMap.set(Number(owner.tokenId), owner);
-  }
-
   const result: {
-    tokenId: number;
-    blockHeightMinted?: number;
-    blockTimestampMinted?: number;
-    owner?: string;
-    ogRank: number;
+    readonly tokenId: number;
+    readonly blockHeightMinted?: string;
+    readonly blockTimestampMinted?: string;
+    readonly owner?: string;
+    readonly ogRank: number;
   }[] = [];
   for (let i = 0; i < metadatas.length; i++) {
     const metadata = metadatas[i];
     const tokenId = Number(metadata.tokenId!);
     const mint = tokenMintMap.get(tokenId);
-    const owner = tokenOwnerMap.get(tokenId);
+    const owner = owners.get(BigInt(tokenId));
     const ogRank = Number(
       metadata.attributes?.find((attr) => attr.trait_type === "OG Rank")?.value,
     );
@@ -146,7 +144,9 @@ export function zipUp(
         blockHeightMinted: mint.blockNumber,
         blockTimestampMinted: mint.blockTimestamp,
       }),
-      ...(owner && { owner: owner.owner }),
+      ...(owner &&
+        isAddress(owner) &&
+        owner !== zeroAddress && { owner: checksumAddress(owner) }),
       ogRank: ogRank!,
     });
   }
@@ -172,7 +172,11 @@ export async function fetchFameClaimData() {
       });
     }),
     fetchAllMints().then(reduceMints),
-    fetchAllOwners(),
+    fetchAllOwnersIterable({
+      contractAddress: fameLadySocietyAddress[1],
+      totalSupply: 8888n,
+      zeroIndex: true,
+    }),
   ]);
   console.log("done fetching metadata, mints, and owners");
 
@@ -180,7 +184,7 @@ export async function fetchFameClaimData() {
 
   console.log("fetched", metadatas.length, "metadata");
   console.log("fetched", allMints.length, "mints");
-  console.log("fetched", owners.length, "owners");
+  console.log("fetched", owners.size, "owners");
   const data = zipUp(metadatas, allMints, owners);
   return data;
 }

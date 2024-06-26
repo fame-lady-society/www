@@ -1,11 +1,11 @@
 import {
+  ALLOCATION_PER_SISTER_TOKEN,
   HUNNYS_CONTRACT,
-  MARKET_CAP,
   MERMAIDS_CONTRACT,
+  METAVIXEN_BOOST,
   METAVIXEN_CONTRACT,
   OG_AGE_BOOST,
   OG_RANK_BOOST,
-  SISTER_TOKENS,
   SQUAD_CONTRACT,
 } from "@/features/claim/hooks/constants";
 import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
@@ -45,8 +45,16 @@ export async function fetchBannedTokenIds() {
 
 export async function fetchAllocationData({
   address,
+  snapshot: snapshotData = snapshot,
 }: {
   address: `0x${string}`;
+  snapshot?: {
+    tokenId: number;
+    ogRank: number;
+    blockHeightMinted?: string;
+    blockTimestampMinted?: string;
+    owner?: string;
+  }[];
 }) {
   const sdk = getBuiltGraphSDK();
   const [result, hunnysResult, squadResult, mermaidsResult, metavixenResult] =
@@ -103,14 +111,14 @@ export async function fetchAllocationData({
 
   const flsPoolAllocation = getFlsPoolAllocation(OG_RANK_BOOST, OG_AGE_BOOST);
 
-  const flsTokens = snapshot
+  const flsTokens = snapshotData
     .filter((item) => societyTokenIds.includes(BigInt(item.tokenId)))
     .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!);
   const flsAllocation = flsTokens.reduce(
     (acc, allocation) => acc + allocation,
     0n,
   );
-  const squadAllocation = snapshot
+  const squadAllocation = snapshotData
     .filter((item) => squadTokenIds.includes(BigInt(item.tokenId)))
     .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!);
   const squadTotal = squadAllocation.reduce(
@@ -119,19 +127,13 @@ export async function fetchAllocationData({
   );
 
   const hunnysAllocation = hunnysResult
-    ? BigInt(
-        ((Number(hunnysResult) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-      )
+    ? hunnysResult * ALLOCATION_PER_SISTER_TOKEN
     : 0n;
   const mermaidsAllocation = mermaidsResult
-    ? BigInt(
-        ((Number(mermaidsResult) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-      )
+    ? mermaidsResult * ALLOCATION_PER_SISTER_TOKEN
     : 0n;
   const metavixensAllocation = metavixenResult
-    ? BigInt(
-        ((Number(metavixenResult) * 0.03) / MARKET_CAP) * Number(SISTER_TOKENS),
-      )
+    ? metavixenResult * ALLOCATION_PER_SISTER_TOKEN * METAVIXEN_BOOST
     : 0n;
 
   return {
