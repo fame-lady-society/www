@@ -10,7 +10,7 @@ import { AdjustableChecker } from "@/features/claim/components/AdjustableChecker
 
 const NextPage: FC<{}> = () => {
   return (
-    <DefaultProvider mainnet>
+    <DefaultProvider mainnet polygon>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

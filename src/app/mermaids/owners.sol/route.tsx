@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { zeroAddress, checksumAddress, isAddress } from "viem";
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
-import { HUNNYS_CONTRACT } from "@/features/claim/hooks/constants";
+import { MERMAIDS_CONTRACT } from "@/features/claim/hooks/constants";
 
 export async function GET(req: NextRequest) {
   const data = await fetchAllOwnersIterable({
-    contractAddress: HUNNYS_CONTRACT,
+    contractAddress: MERMAIDS_CONTRACT,
   });
 
   const ownerAmounts = new Map<`0x${string}`, bigint>();
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const sol = `// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-contract HunnysOwners {
+contract MermaidPowerOwners {
     mapping(address => uint256) public balanceOf;
 
     constructor() {
@@ -38,7 +38,7 @@ ${[...ownerAmounts.keys()].map((owner, index) => `        owners[${index}] = ${o
   const response = new NextResponse(sol, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Content-Disposition": "attachment; filename=HunnysOwners.sol",
+      "Content-Disposition": "attachment; filename=MermaidPowerOwners.sol",
     },
   });
   return response;

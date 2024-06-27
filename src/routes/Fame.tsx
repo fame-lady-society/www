@@ -678,7 +678,7 @@ const Header: FC = () => {
 
 export const Fame: FC<{}> = () => {
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider mainnet base polygon>
       <Header />
     </DefaultProvider>
   );

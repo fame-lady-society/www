@@ -3,7 +3,12 @@ import * as Sentry from "@sentry/nextjs";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import flsTheme from "@/theme";
-import { Web3Provider, baseSepolia, mainnetSepolia } from "./Wagmi";
+import {
+  Web3Provider,
+  baseSepolia,
+  mainnetSepolia,
+  polygonOnly,
+} from "./Wagmi";
 import { NotificationsProvider } from "@/features/notifications/Context";
 import { Notifications } from "@/features/notifications/Notifications";
 import { useAccount, useEnsName } from "wagmi";
@@ -24,8 +29,13 @@ const Config: FC<PropsWithChildren> = ({ children }) => {
 };
 
 export const DefaultProvider: FC<
-  PropsWithChildren<{ siwe?: boolean; mainnet?: boolean; base?: boolean }>
-> = ({ siwe, children, mainnet, base }) => {
+  PropsWithChildren<{
+    siwe?: boolean;
+    mainnet?: boolean;
+    base?: boolean;
+    polygon?: boolean;
+  }>
+> = ({ siwe, children, mainnet, base, polygon }) => {
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
     if (mainnet) {
@@ -38,8 +48,13 @@ export const DefaultProvider: FC<
         chainSet.add(chain);
       }
     }
+    if (polygon) {
+      for (const chain of polygonOnly.chains) {
+        chainSet.add(chain);
+      }
+    }
     return Array.from(chainSet) as [Chain, ...Chain[]];
-  }, [mainnet, base]);
+  }, [mainnet, base, polygon]);
 
   const transports = useMemo(() => {
     const transportMap: Record<number, Transport> = {};
@@ -57,8 +72,15 @@ export const DefaultProvider: FC<
         transportMap[Number(chainId)] = transport;
       }
     }
+    if (polygon) {
+      for (const [chainId, transport] of Object.entries(
+        polygonOnly.transports,
+      )) {
+        transportMap[Number(chainId)] = transport;
+      }
+    }
     return transportMap;
-  }, [mainnet, base]);
+  }, [mainnet, base, polygon]);
 
   return (
     <ThemeProvider theme={flsTheme}>

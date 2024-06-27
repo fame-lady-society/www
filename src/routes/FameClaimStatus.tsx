@@ -18,7 +18,7 @@ const NextPage: FC<{
 }> = ({ address }) => {
   const isValid = isAddress(address);
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider mainnet base polygon>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

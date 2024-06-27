@@ -17,13 +17,6 @@ import { fameLadySquadAbi } from "@/wagmi";
 import { polygonOnly, defaultConfig } from "@/context/Wagmi";
 import { useLadies } from "@/features/customize/hooks/useLadies";
 
-const polygonWagmiConfig = createConfig(
-  getDefaultConfig({
-    ...polygonOnly,
-    ...defaultConfig,
-  }),
-);
-
 export function useAllocation({
   address,
   rankBoost,
@@ -64,7 +57,6 @@ export function useAllocation({
 
   const { data: polygonData, isLoading: isPolygonDataLoading } =
     useReadContracts({
-      config: polygonWagmiConfig,
       contracts: address
         ? [
             {

@@ -43,9 +43,9 @@ export async function fetchAllOwnersIterable({
   const ownerTokenMap = new Map<bigint, `0x${string}`>();
   await Promise.all(
     Array.from({ length: Number(totalSupply) }).map(async (_, index) => {
+      const tokenId = BigInt(index + (zeroIndex ? 0 : 1));
       try {
-        const tokenId = BigInt(index + (zeroIndex ? 0 : 1));
-        const owner = await mainnetClient.readContract({
+        const owner = await client.readContract({
           abi: ABI,
           address: contractAddress,
           functionName: "ownerOf",

@@ -1,11 +1,15 @@
 import { NextResponse, NextRequest } from "next/server";
 import { zeroAddress, checksumAddress, isAddress } from "viem";
+import { client as polygonClient } from "@/viem/polygon-client";
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
-import { HUNNYS_CONTRACT } from "@/features/claim/hooks/constants";
+import { METAVIXEN_CONTRACT } from "@/features/claim/hooks/constants";
 
 export async function GET(req: NextRequest) {
   const data = await fetchAllOwnersIterable({
-    contractAddress: HUNNYS_CONTRACT,
+    contractAddress: METAVIXEN_CONTRACT,
+    client: polygonClient,
+    totalSupply: 1000n,
+    zeroIndex: true,
   });
 
   const ownerAmounts = new Map<`0x${string}`, bigint>();
@@ -19,7 +23,7 @@ export async function GET(req: NextRequest) {
   const sol = `// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-contract HunnysOwners {
+contract MetavixenOwners {
     mapping(address => uint256) public balanceOf;
 
     constructor() {
@@ -38,7 +42,7 @@ ${[...ownerAmounts.keys()].map((owner, index) => `        owners[${index}] = ${o
   const response = new NextResponse(sol, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Content-Disposition": "attachment; filename=HunnysOwners.sol",
+      "Content-Disposition": "attachment; filename=MetavixenOwners.sol",
     },
   });
   return response;
