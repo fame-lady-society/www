@@ -14,8 +14,9 @@ import { SlimChecker } from "@/features/claim/components/SlimChecker";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 import { isAddress } from "viem";
 import { useAccount } from "wagmi";
-import { ClaimCard } from "@/features/claim/components/ClaimCards";
+import { FameLadySocietyClaimCard } from "@/features/claim/components/FameLadySocietyClaimCard";
 import { base, sepolia } from "viem/chains";
+import { FameBalanceCard } from "@/features/claim/components/FameBalanceCard";
 
 const Content: FC<{
   address: `0x${string}`;
@@ -39,6 +40,10 @@ const Content: FC<{
             </CardContent>
           </Card>
         </Grid2>
+
+        <Grid2 xs={12}>
+          <FameBalanceCard chainId={chainId} />
+        </Grid2>
         <Grid2 xs={12}>
           <SlimChecker
             address={address}
@@ -51,7 +56,7 @@ const Content: FC<{
           <Grid2 xs={12}>
             <Card>
               <CardActionArea
-                href={`/${chainId === sepolia.id ? "sepolia" : ""}/claim/${account.address}`}
+                href={`${chainId === sepolia.id ? "/sepolia" : "/base"}/claim/${account.address}`}
               >
                 <CardContent>
                   <Typography variant="body1">
@@ -63,7 +68,11 @@ const Content: FC<{
             </Card>
           </Grid2>
         )}
-        {account.address === address && <ClaimCard chainId={chainId} />}
+        {account.address === address && (
+          <>
+            <FameLadySocietyClaimCard chainId={chainId} />
+          </>
+        )}
         <Grid2 xs={12}>
           <Card>
             <CardActionArea href="/fame">
@@ -85,7 +94,7 @@ const NextPage: FC<{
 }> = ({ address, chainId }) => {
   const isValid = isAddress(address);
   return (
-    <DefaultProvider base>
+    <DefaultProvider base siwe mainnet>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

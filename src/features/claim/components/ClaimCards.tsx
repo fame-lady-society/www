@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
@@ -22,28 +21,28 @@ import {
   useSimulateContract,
 } from "wagmi";
 import { base, sepolia } from "viem/chains";
-import { useLadies } from "@/features/customize/hooks/useLadies";
 import { useClaim } from "../hooks/useClaim";
 import { formatFame } from "@/utils/fame";
 import { useNotifications } from "@/features/notifications/Context";
 import { TransactionProgress } from "@/components/TransactionProgress";
-import { Claim } from "@/app/api/[network]/claim/route";
+import { Claim } from "@/app/api/[network]/[contractAddress]/claim/route";
+import { useSIWE } from "connectkit";
 
 export const ClaimCard: FC<{
   chainId: typeof sepolia.id | typeof base.id;
-}> = ({ chainId }) => {
+  contractAddress: `0x${string}`;
+  tokenIds: number[];
+  title?: string;
+}> = ({ chainId, contractAddress, tokenIds, title }) => {
   const { addNotification } = useNotifications();
   const { address } = useAccount();
-  const { data: ladies, isLoading: isLadiesLoading } = useLadies({
-    owner: address,
-    chainId,
-    first: 1000,
-  });
+  const { isSignedIn } = useSIWE();
 
   const {
-    data: [signatureNonces, isClaimedBatch, fameBalance] = [],
+    data: [signatureNonces, isClaimedBatch] = [],
     isLoading: isReadContractLoading,
     refetch,
+    error: readContractError,
   } = useReadContracts({
     allowFailure: false,
     contracts: [
@@ -59,14 +58,7 @@ export const ClaimCard: FC<{
         address: claimToFameFromNetwork(chainId),
         functionName: "isClaimedBatch",
         chainId,
-        args: [ladies],
-      },
-      {
-        abi: fameAbi,
-        address: fameFromNetwork(chainId),
-        functionName: "balanceOf",
-        chainId,
-        args: address ? [address] : undefined,
+        args: [contractAddress, tokenIds.map(BigInt)],
       },
     ],
   });
@@ -79,10 +71,10 @@ export const ClaimCard: FC<{
     error: writeError,
     reset,
   } = useWriteContract();
-  const tokenIds = useMemo(() => ladies.map((lady) => Number(lady)), [ladies]);
 
   useEffect(() => {
     if (writeError instanceof ContractFunctionExecutionError) {
+      console.error(writeError);
       addNotification({
         message: "Transaction simulation failed",
         id: "claim-error",
@@ -103,11 +95,18 @@ export const ClaimCard: FC<{
       isClaimedBatch?.length === tokenIds.length
         ? tokenIds.filter((_, index) => !isClaimedBatch[index])
         : undefined,
-    [isClaimedBatch, tokenIds],
+    [isClaimedBatch, tokenIds]
   );
 
-  const { data: claimData, isLoading: isClaimLoading } = useClaim({
+  const {
+    data: claimData,
+    isLoading: isClaimLoading,
+    refetch: refetchClaim,
+    isFetched,
+  } = useClaim({
+    enabled: isSignedIn,
     chainId,
+    contractAddress,
     address,
     tokenIds: notYetClaimedTokenIds ?? [],
   });
@@ -147,15 +146,26 @@ export const ClaimCard: FC<{
     address: claimToFameFromNetwork(chainId),
     functionName: "claimWithTokens",
     args: unconfirmedClaim
-      ? [
+      ? ([
           unconfirmedClaim.address,
+          contractAddress,
           parseUnits(unconfirmedClaim.amount, 18),
           BigInt(unconfirmedClaim.deadlineSeconds),
           unconfirmedClaim.tokenIds,
           unconfirmedClaim.signature,
-        ]
+        ] as const)
       : undefined,
   });
+
+  const simulationErrorMessage = useMemo(() => {
+    if (
+      isSimulationError &&
+      simulationError instanceof ContractFunctionExecutionError
+    ) {
+      return simulationError.message;
+    }
+    return undefined;
+  }, [isSimulationError, simulationError]);
 
   const onClaim = useCallback(() => {
     if (notYetClaimedTokenIds && address && unconfirmedClaim) {
@@ -165,12 +175,13 @@ export const ClaimCard: FC<{
           functionName: "claimWithTokens",
           args: [
             unconfirmedClaim.address,
+            contractAddress,
             parseUnits(unconfirmedClaim.amount, 18),
             BigInt(unconfirmedClaim.deadlineSeconds),
             unconfirmedClaim.tokenIds,
             unconfirmedClaim.signature,
           ],
-        })}`,
+        })}`
       );
       writeContract({
         abi: claimToFameAbi,
@@ -179,6 +190,7 @@ export const ClaimCard: FC<{
         functionName: "claimWithTokens",
         /*
           address account,
+          address contractAddress
           uint256 amount,
           uint256 deadline,
           uint16[] calldata tokenIds,
@@ -186,6 +198,7 @@ export const ClaimCard: FC<{
         */
         args: [
           unconfirmedClaim.address,
+          contractAddress,
           parseUnits(unconfirmedClaim.amount, 18),
           BigInt(unconfirmedClaim.deadlineSeconds),
           unconfirmedClaim.tokenIds,
@@ -209,6 +222,7 @@ export const ClaimCard: FC<{
     notYetClaimedTokenIds,
     address,
     unconfirmedClaim,
+    contractAddress,
     writeContract,
     chainId,
     addNotification,
@@ -218,61 +232,59 @@ export const ClaimCard: FC<{
     refetch();
     reset();
   }, [refetch, reset]);
-
+  console.error(simulationError);
   return (
     <>
-      <Grid2 xs={12}>
-        <Card>
-          <CardHeader title="Claim" />
-          <CardContent>
-            {isClaimLoading ? (
-              <Typography variant="body1" marginY={2}>
-                Fetching claim data...
-              </Typography>
-            ) : null}
-            {typeof fameBalance !== "undefined" ? (
-              <Typography variant="body1" marginY={2}>
-                You have {formatFame(fameBalance)}
-              </Typography>
-            ) : null}
-            {!isSimulationError && unconfirmedClaim ? (
-              <Typography variant="body1" marginY={2}>
-                Claiming {formatFame(parseUnits(unconfirmedClaim.amount, 18))}
-              </Typography>
-            ) : null}
-            {notYetClaimedTokenIds?.length && isSimulationError ? (
+      <Card>
+        <CardHeader title={title ?? "Claim"} />
+        <CardContent>
+          {isClaimLoading ? (
+            <Typography variant="body1" marginY={2}>
+              Fetching claim data...
+            </Typography>
+          ) : null}
+          {!isSimulationError && unconfirmedClaim ? (
+            <Typography variant="body1" marginY={2}>
+              Claiming {formatFame(parseUnits(unconfirmedClaim.amount, 18))}
+            </Typography>
+          ) : null}
+          {notYetClaimedTokenIds?.length && isSimulationError ? (
+            <>
               <Typography variant="body1" color="red" marginY={2}>
                 Simulation failed....
               </Typography>
-            ) : null}
-            {hash ? (
-              <TransactionProgress
-                transactionHash={hash}
-                onConfirmed={onSubmitted}
-              />
-            ) : (
-              <Box component="div" height={32} />
-            )}
-          </CardContent>
-          <CardActions>
-            <Button
-              onClick={onClaim}
-              disabled={
-                !!hash ||
-                !notYetClaimedTokenIds ||
-                notYetClaimedTokenIds?.length === 0 ||
-                !address ||
-                isClaimLoading ||
-                isWritePending
-              }
-            >
-              {notYetClaimedTokenIds && notYetClaimedTokenIds.length
-                ? `Claim ${notYetClaimedTokenIds.length} token${notYetClaimedTokenIds.length > 1 ? "s" : ""}`
-                : "no claim available"}
-            </Button>
-          </CardActions>
-        </Card>
-      </Grid2>
+              <Typography variant="body1" color="red" marginY={2}>
+                {simulationErrorMessage}
+              </Typography>
+            </>
+          ) : null}
+          {hash ? (
+            <TransactionProgress
+              transactionHash={hash}
+              onConfirmed={onSubmitted}
+            />
+          ) : (
+            <Box component="div" height={32} />
+          )}
+        </CardContent>
+        <CardActions>
+          <Button
+            onClick={onClaim}
+            disabled={
+              !!hash ||
+              !notYetClaimedTokenIds ||
+              notYetClaimedTokenIds?.length === 0 ||
+              !address ||
+              isClaimLoading ||
+              isWritePending
+            }
+          >
+            {notYetClaimedTokenIds && notYetClaimedTokenIds.length
+              ? `Claim ${notYetClaimedTokenIds.length} token${notYetClaimedTokenIds.length > 1 ? "s" : ""}`
+              : "no claim available"}
+          </Button>
+        </CardActions>
+      </Card>
     </>
   );
 };
