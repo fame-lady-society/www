@@ -14,7 +14,6 @@ import {
 } from "./constants";
 import { useSnapshot } from "./useSnapshot";
 import { fameLadySquadAbi } from "@/wagmi";
-import { polygonOnly, defaultConfig } from "@/context/Wagmi";
 import { useLadies } from "@/features/customize/hooks/useLadies";
 
 export function useAllocation({

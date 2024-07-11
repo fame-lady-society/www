@@ -1,3 +1,4 @@
+import { claimToFameFromNetwork } from "@/features/claim/contracts";
 import {
   wrappedNftAddress,
   namedLadyRendererAddress as namedLadyRendererAddressAll,
@@ -41,5 +42,4 @@ export const createSignerAccount = () =>
 
 export const flsTokenAddress = wrappedNftAddress[sepolia.id];
 export const namedLadyRendererAddress = namedLadyRendererAddressAll[sepolia.id];
-export const claimToFameAddress =
-  "0x75e4AdB3b0125C9c5E4dB92350cbe92CD76A3199" as const;
+export const claimToFameAddress = claimToFameFromNetwork(sepolia.id);

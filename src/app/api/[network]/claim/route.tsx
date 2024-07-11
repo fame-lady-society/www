@@ -113,8 +113,15 @@ async function signClaimRequest({
 }) {
   const hash = keccak256(
     encodePacked(
-      ["address", "uint256", "uint256", "uint16[]", "uint256"],
-      [address, amount, BigInt(deadlineSeconds), tokenIds, nonce],
+      ["address", "address", "uint256", "uint256", "uint16[]", "uint256"],
+      [
+        address,
+        contractAddress,
+        amount,
+        BigInt(deadlineSeconds),
+        tokenIds,
+        nonce,
+      ],
     ),
   );
 

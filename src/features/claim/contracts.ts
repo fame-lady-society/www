@@ -5,8 +5,8 @@ export function claimToFameFromNetwork(
 ) {
   switch (chainId) {
     case sepolia.id:
-      return "0x75e4AdB3b0125C9c5E4dB92350cbe92CD76A3199" as const;
+      return "0x4b455Cf06719515bb73b94647a6b56e7924B756e" as const;
     case base.id:
-      return "0x75e4AdB3b0125C9c5E4dB92350cbe92CD76A3199" as const;
+      return "0x4b455Cf06719515bb73b94647a6b56e7924B756e" as const;
   }
 }

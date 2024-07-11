@@ -1,12 +1,14 @@
 "use client";
 import { siweClient } from "@/utils/siweClient";
-import { SIWESession } from "connectkit";
+import { SIWEConfig, SIWESession } from "connectkit";
 import { WagmiProvider, createConfig, fallback, http } from "wagmi";
 import { base, mainnet, sepolia, polygon as polygonChain } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
+import { SiweMessage } from "siwe";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Chain, Transport } from "viem";
+import { SerializedSession } from "@/service/session";
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -51,6 +53,8 @@ export const polygonOnly = {
   },
 } as const;
 
+const SIWE_API_PATH = "/siwe";
+
 export const defaultConfig = {
   ...mainnetSepolia,
   // Required API Keys
@@ -67,6 +71,43 @@ export const defaultConfig = {
 
   ssr: true,
 };
+
+const siweConfig = {
+  getNonce: async () => {
+    const res = await fetch(SIWE_API_PATH, { method: "PUT" });
+    if (!res.ok) throw new Error("Failed to fetch SIWE nonce");
+    return res.text();
+  },
+  createMessage: ({ nonce, address, chainId }) => {
+    return new SiweMessage({
+      nonce,
+      chainId,
+      address,
+      version: "1",
+      uri: window.location.origin,
+      domain: window.location.host,
+      statement: "Sign In With Ethereum to prove you control this wallet.",
+    }).prepareMessage();
+  },
+  verifyMessage: async ({ message, signature }) => {
+    const res = await fetch(SIWE_API_PATH, {
+      method: "POST",
+      body: JSON.stringify({ message, signature }),
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.ok;
+  },
+  getSession: async () => {
+    const res = await fetch(SIWE_API_PATH);
+    if (!res.ok) throw new Error("Failed to fetch SIWE session");
+    const { address, chainId } = (await res.json()) as SerializedSession;
+    return address && chainId ? { address, chainId } : null;
+  },
+  signOut: async () => {
+    const res = await fetch(SIWE_API_PATH, { method: "DELETE" });
+    return res.ok;
+  },
+} satisfies SIWEConfig;
 
 const queryClient = new QueryClient();
 
@@ -98,8 +139,7 @@ export const Web3Provider: FC<
           signOutOnDisconnect={true} // defaults true
           signOutOnAccountChange={true} // defaults true
           signOutOnNetworkChange={true} // defaults true
-          onSignIn={(session?: SIWESession) => void 0}
-          onSignOut={() => void 0}
+          {...siweConfig}
         >
           <ConnectKitProvider>{children}</ConnectKitProvider>
         </siweClient.Provider>
