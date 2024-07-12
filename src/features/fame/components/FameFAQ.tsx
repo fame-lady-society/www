@@ -279,7 +279,7 @@ export const FameFAQ: FC = () => {
               need to bridge ether from the Ethereum chain to the Base chain.
               You can then use the Base chain to swap your ether for $FAME.
               $FAME can be purchased{" "}
-              <WrappedLink href="https://app.uniswap.org/swap?chain=base&outputCurrency=0xdEc4147F7Ca99FCDA8CF082e2288F6edC4A34ca8">
+              <WrappedLink href="https://app.uniswap.org/swap?chain=base&outputCurrency=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418">
                 here
               </WrappedLink>
               .
