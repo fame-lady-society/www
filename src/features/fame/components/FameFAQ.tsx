@@ -1,5 +1,9 @@
 import React, { FC } from "react";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+// @ts-ignore
+import Video from "next-video";
 import { QA } from "./QA";
 import { WrappedLink } from "@/components/WrappedLink";
 
@@ -264,12 +268,51 @@ export const FameFAQ: FC = () => {
       />
       <QA
         question="When is the $FAME launch?"
+        answer={<>The launch is planned for July 12th 2024 at 5pm PST</>}
+      />
+      <QA
+        question="How can I get $FAME?"
         answer={
           <>
-            There is no ETA for the launch of $FAME. The smart contracts are
-            still being developed and tested. The art for the Society NFTs is
-            still being created. The launch will happen when the community
-            decides it is ready.
+            <Typography component="p" mb={2}>
+              $FAME will be available on the Base chain. To get $FAME, you will
+              need to bridge ether from the Ethereum chain to the Base chain.
+              You can then use the Base chain to swap your ether for $FAME.
+              $FAME can be purchased{" "}
+              <WrappedLink href="https://app.uniswap.org/swap?chain=base&outputCurrency=0xdEc4147F7Ca99FCDA8CF082e2288F6edC4A34ca8">
+                here
+              </WrappedLink>
+              .
+            </Typography>
+            <Card
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <div>
+                <Video src="/videos/swap.mp4" height={800} width={400} />
+              </div>
+            </Card>
+          </>
+        }
+      />
+      <QA
+        question="Where can I get DeFi resources?"
+        answer={
+          <>
+            <Typography component="p" mb={2}>
+              You can find more information on DeFi at{" "}
+              <WrappedLink
+                href="https://cryptofinally.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                cryptofinally.io
+              </WrappedLink>
+            </Typography>
           </>
         }
       />

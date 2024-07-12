@@ -3,8 +3,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   client as mainnetClient,
   flsTokenAddress,
-  onChainGasAddress,
-  onChainCheckGasAddress,
 } from "@/viem/mainnet-client";
 import {
   client as baseClient,
@@ -148,8 +146,8 @@ async function signClaimRequest({
         BigInt(deadlineSeconds),
         tokenIds,
         nonce,
-      ]
-    )
+      ],
+    ),
   );
 
   return await client.signMessage({
@@ -170,7 +168,7 @@ class BannedTokenId extends Error {
   public tokenIds: bigint[];
   constructor(tokenIds: bigint[]) {
     super(
-      `Token${tokenIds.length > 1 ? "s" : ""} ${tokenIds.join(", ")} is banned`
+      `Token${tokenIds.length > 1 ? "s" : ""} ${tokenIds.join(", ")} is banned`,
     );
     this.tokenIds = tokenIds;
   }
@@ -202,8 +200,8 @@ async function verifyClaim({
             error = new NotAnOwnerError();
           }
           return tokenId;
-        })
-    )
+        }),
+    ),
   ).then(() => {
     if (error) {
       throw error;
@@ -218,8 +216,8 @@ async function societyClaim(address: `0x${string}`, tokenIds: bigint[]) {
   ) {
     throw new BannedTokenId(
       tokenIds.filter(
-        (tokenId) => allocation.get(Number(tokenId)) === undefined
-      )
+        (tokenId) => allocation.get(Number(tokenId)) === undefined,
+      ),
     );
   }
   await verifyClaim({
@@ -231,32 +229,8 @@ async function societyClaim(address: `0x${string}`, tokenIds: bigint[]) {
 
   return tokenIds.reduce(
     (acc, tokenId) => acc + allocation.get(Number(tokenId))!,
-    0n
+    0n,
   );
-}
-async function onChainGasClaim(address: `0x${string}`, tokenIds: bigint[]) {
-  await verifyClaim({
-    address,
-    contractAddress: onChainGasAddress,
-    tokenIds,
-    client: mainnetClient,
-  });
-
-  return (BigInt(tokenIds.length) * (TOTAL_TOKENS * 5n)) / 1000000n;
-}
-
-async function onChainCheckGasClaim(
-  address: `0x${string}`,
-  tokenIds: bigint[]
-) {
-  await verifyClaim({
-    address,
-    contractAddress: onChainCheckGasAddress,
-    tokenIds,
-    client: mainnetClient,
-  });
-
-  return (BigInt(tokenIds.length) * (TOTAL_TOKENS * 5n)) / 1000000n;
 }
 
 async function verifyClaimForContract({
@@ -271,10 +245,6 @@ async function verifyClaimForContract({
   switch (contractAddress) {
     case flsTokenAddress:
       return societyClaim(address, tokenIds);
-    case onChainGasAddress:
-      return onChainGasClaim(address, tokenIds);
-    case onChainCheckGasAddress:
-      return onChainCheckGasClaim(address, tokenIds);
     default:
       throw new Error("invalid contract address");
   }
@@ -316,14 +286,14 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
         `some tokens [${claimed
           .map((c, i) => (c ? tokenIds[i] : null))
           .filter(Boolean)
-          .join(", ")}] already claimed for address ${data.address}`
+          .join(", ")}] already claimed for address ${data.address}`,
       );
       return NextResponse.json(
         {
           error: "some tokens already claimed",
           tokenIds: tokenIds.filter((_, i) => claimed[i]),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -341,17 +311,17 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
         const claim = await kv.get<string>(`claim-id:${network}:${tokenId}`);
         if (claim) {
           console.log(
-            `Token ${tokenId} already has an active signature: ${claim}`
+            `Token ${tokenId} already has an active signature: ${claim}`,
           );
           tokensAlreadyHasActiveClaimId.set(tokenId, claim);
         }
-      })
+      }),
     );
     const uniqueClaimIds = new Set<string>();
     const tokensAlreadyHasActiveClaim = new Map<string, Claim>();
     // For each token, check if it exists in the KV store
     const claimPromises = Array.from(
-      tokensAlreadyHasActiveClaimId.values()
+      tokensAlreadyHasActiveClaimId.values(),
     ).map(async (claimId) => {
       if (uniqueClaimIds.has(claimId)) {
         return;
@@ -434,7 +404,7 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
         ...tokensWithoutActiveClaim.map((tokenId) =>
           kv.set(`claim-id:${network}:${tokenId}`, signature, {
             ex: 60 * 10, // 10 minutes
-          })
+          }),
         ),
       ]);
       claims.push(claim);
@@ -452,7 +422,7 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
     if (error instanceof BannedTokenId) {
       return NextResponse.json(
         { error: error.message, bannedTokenIds: error.tokenIds },
-        { status: 400 }
+        { status: 400 },
       );
     }
     return NextResponse.json({ error: "server error" }, { status: 500 });

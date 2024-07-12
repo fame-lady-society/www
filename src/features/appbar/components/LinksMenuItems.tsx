@@ -144,6 +144,32 @@ export const LinksMenuItems: FC<{}> = ({}) => {
           }
         />
       </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="https://t.me/+RYjY8hmjLtxlYmVh"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ListItemIcon>
+          <Image
+            src="/images/logos/telegram.png"
+            alt="telegram"
+            width={22}
+            height={22}
+            style={{
+              maxWidth: "100%",
+              height: "auto",
+            }}
+          />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              Join Telegram Group
+            </Typography>
+          }
+        />
+      </MenuItem>
       <Divider component="li" />
     </>
   );

@@ -70,7 +70,12 @@ export default defineConfig({
     }),
     foundry({
       project: "../fame-contracts",
-      include: ["ClaimToFame.sol/**", "Fame.sol/**", "FameMirror.sol/**"],
+      include: [
+        "ClaimToFame.sol/**",
+        "Fame.sol/**",
+        "FameMirror.sol/**",
+        "IBalanceOf.sol/**",
+      ],
     }),
     react(),
   ],

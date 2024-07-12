@@ -376,6 +376,7 @@ export const claimToFameAbi = [
     type: 'function',
     inputs: [
       { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
       { name: 'amount', internalType: 'uint256', type: 'uint256' },
       { name: 'deadline', internalType: 'uint256', type: 'uint256' },
       { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
@@ -465,6 +466,7 @@ export const claimToFameAbi = [
     type: 'function',
     inputs: [
       { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
       { name: 'amount', internalType: 'uint256', type: 'uint256' },
       { name: 'deadline', internalType: 'uint256', type: 'uint256' },
       { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
@@ -476,7 +478,10 @@ export const claimToFameAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
     name: 'isClaimed',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
@@ -484,6 +489,7 @@ export const claimToFameAbi = [
   {
     type: 'function',
     inputs: [
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
       { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
     ],
     name: 'isClaimedBatch',
@@ -508,14 +514,20 @@ export const claimToFameAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' }],
+    inputs: [
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
+    ],
     name: 'primeClaim',
     outputs: [],
     stateMutability: 'nonpayable',
   },
   {
     type: 'function',
-    inputs: [{ name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' }],
+    inputs: [
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
+      { name: 'packedTokenIds', internalType: 'bytes', type: 'bytes' },
+    ],
     name: 'primeClaimWithData',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -618,6 +630,7 @@ export const claimToFameAbi = [
     type: 'function',
     inputs: [
       { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'contractAddress', internalType: 'address', type: 'address' },
       { name: 'amount', internalType: 'uint256', type: 'uint256' },
       { name: 'deadline', internalType: 'uint256', type: 'uint256' },
       { name: 'tokenIds', internalType: 'uint16[]', type: 'uint16[]' },
@@ -726,7 +739,7 @@ export const fameAbi = [
     inputs: [
       { name: 'name_', internalType: 'string', type: 'string' },
       { name: 'symbol_', internalType: 'string', type: 'string' },
-      { name: 'initialSupplyOwner', internalType: 'address', type: 'address' },
+      { name: 'claimToFameAddress', internalType: 'address', type: 'address' },
     ],
     stateMutability: 'nonpayable',
   },
@@ -825,7 +838,7 @@ export const fameAbi = [
     type: 'function',
     inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
     name: 'getSkipNFT',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    outputs: [{ name: 'result', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
   },
   {
@@ -857,6 +870,13 @@ export const fameAbi = [
     name: 'hasAnyRole',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'launchPublic',
+    outputs: [],
+    stateMutability: 'payable',
   },
   {
     type: 'function',
@@ -934,38 +954,10 @@ export const fameAbi = [
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'roleBurnPoolManager',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'roleMetadata',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'roleRenderer',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
     inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
     name: 'rolesOf',
     outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'baseURI_', internalType: 'string', type: 'string' }],
-    name: 'setBaseURI',
-    outputs: [],
-    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -996,6 +988,16 @@ export const fameAbi = [
   },
   {
     type: 'function',
+    inputs: [
+      { name: 'account', internalType: 'address', type: 'address' },
+      { name: 'skip', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setSkipNftForAccount',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [],
     name: 'symbol',
     outputs: [{ name: '', internalType: 'string', type: 'string' }],
@@ -1012,7 +1014,7 @@ export const fameAbi = [
     type: 'function',
     inputs: [
       { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'value', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'transfer',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
@@ -1164,6 +1166,7 @@ export const fameAbi = [
     name: 'Transfer',
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'AlreadyLaunched' },
   { type: 'error', inputs: [], name: 'ApprovalCallerNotOwnerNorApproved' },
   { type: 'error', inputs: [], name: 'DNAlreadyInitialized' },
   { type: 'error', inputs: [], name: 'DNNotInitialized' },
@@ -1175,7 +1178,7 @@ export const fameAbi = [
   { type: 'error', inputs: [], name: 'MirrorAddressIsZero' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  { type: 'error', inputs: [], name: 'NoTransferWhenStaked' },
+  { type: 'error', inputs: [], name: 'NotLaunched' },
   { type: 'error', inputs: [], name: 'SenderNotMirror' },
   { type: 'error', inputs: [], name: 'TokenDoesNotExist' },
   { type: 'error', inputs: [], name: 'TotalSupplyOverflow' },
@@ -2433,7 +2436,6 @@ export const fameMirrorAbi = [
     name: 'Transfer',
   },
   { type: 'error', inputs: [], name: 'AlreadyLinked' },
-  { type: 'error', inputs: [], name: 'CannotLink' },
   { type: 'error', inputs: [], name: 'FnSelectorNotRecognized' },
   { type: 'error', inputs: [], name: 'NotLinked' },
   { type: 'error', inputs: [], name: 'OnlyERC20CanCall' },
@@ -3198,6 +3200,20 @@ export const fameSaleTokenConfig = {
   address: fameSaleTokenAddress,
   abi: fameSaleTokenAbi,
 } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IBalanceOf
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const iBalanceOfAbi = [
+  {
+    type: 'function',
+    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // NamedLadyRenderer
@@ -5144,31 +5160,6 @@ export const useReadFameRenderer = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleBurnPoolManager"`
- */
-export const useReadFameRoleBurnPoolManager =
-  /*#__PURE__*/ createUseReadContract({
-    abi: fameAbi,
-    functionName: 'roleBurnPoolManager',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleMetadata"`
- */
-export const useReadFameRoleMetadata = /*#__PURE__*/ createUseReadContract({
-  abi: fameAbi,
-  functionName: 'roleMetadata',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"roleRenderer"`
- */
-export const useReadFameRoleRenderer = /*#__PURE__*/ createUseReadContract({
-  abi: fameAbi,
-  functionName: 'roleRenderer',
-})
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"rolesOf"`
  */
 export const useReadFameRolesOf = /*#__PURE__*/ createUseReadContract({
@@ -5260,6 +5251,14 @@ export const useWriteFameGrantRoles = /*#__PURE__*/ createUseWriteContract({
 })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"launchPublic"`
+ */
+export const useWriteFameLaunchPublic = /*#__PURE__*/ createUseWriteContract({
+  abi: fameAbi,
+  functionName: 'launchPublic',
+})
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceOwnership"`
  */
 export const useWriteFameRenounceOwnership =
@@ -5294,14 +5293,6 @@ export const useWriteFameRevokeRoles = /*#__PURE__*/ createUseWriteContract({
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBaseURI"`
- */
-export const useWriteFameSetBaseUri = /*#__PURE__*/ createUseWriteContract({
-  abi: fameAbi,
-  functionName: 'setBaseURI',
-})
-
-/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBurnedPoolManager"`
  */
 export const useWriteFameSetBurnedPoolManager =
@@ -5325,6 +5316,15 @@ export const useWriteFameSetSkipNft = /*#__PURE__*/ createUseWriteContract({
   abi: fameAbi,
   functionName: 'setSkipNFT',
 })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setSkipNftForAccount"`
+ */
+export const useWriteFameSetSkipNftForAccount =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameAbi,
+    functionName: 'setSkipNftForAccount',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"transfer"`
@@ -5420,6 +5420,15 @@ export const useSimulateFameGrantRoles =
   })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"launchPublic"`
+ */
+export const useSimulateFameLaunchPublic =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'launchPublic',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"renounceOwnership"`
  */
 export const useSimulateFameRenounceOwnership =
@@ -5456,15 +5465,6 @@ export const useSimulateFameRevokeRoles =
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBaseURI"`
- */
-export const useSimulateFameSetBaseUri =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: fameAbi,
-    functionName: 'setBaseURI',
-  })
-
-/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setBurnedPoolManager"`
  */
 export const useSimulateFameSetBurnedPoolManager =
@@ -5489,6 +5489,15 @@ export const useSimulateFameSetSkipNft =
   /*#__PURE__*/ createUseSimulateContract({
     abi: fameAbi,
     functionName: 'setSkipNFT',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameAbi}__ and `functionName` set to `"setSkipNftForAccount"`
+ */
+export const useSimulateFameSetSkipNftForAccount =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameAbi,
+    functionName: 'setSkipNftForAccount',
   })
 
 /**
@@ -8645,6 +8654,21 @@ export const useWatchFameSaleTokenTransferEvent =
     address: fameSaleTokenAddress,
     eventName: 'Transfer',
   })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iBalanceOfAbi}__
+ */
+export const useReadIBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: iBalanceOfAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iBalanceOfAbi}__ and `functionName` set to `"balanceOf"`
+ */
+export const useReadIBalanceOfBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: iBalanceOfAbi,
+  functionName: 'balanceOf',
+})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link namedLadyRendererAbi}__
