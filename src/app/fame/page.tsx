@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "$FAME",
     description: "The home of $FAME.",
     openGraph: {
-      images: ["/images/fame/fame.png"],
+      images: ["/images/fame/gold-leaf.png"],
     },
     other: await fetchMetadata(new URL(`/fame/frame`, baseUrl)),
   };
