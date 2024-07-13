@@ -23,6 +23,6 @@ export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
     case sepolia.id:
       return "0x59affac6818b58324487be3c8b49cf1de1224928" as const;
     case base.id:
-      return "0x59affac6818b58324487be3c8b49cf1de1224928" as const;
+      return "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418" as const;
   }
 }
