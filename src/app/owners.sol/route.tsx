@@ -18,12 +18,11 @@ export async function GET(req: NextRequest) {
   // Create airdrop amount for each owner
   const airdropMap = new Map<`0x${string}`, bigint>();
   for (const owner of owners) {
-    const { total: totalWithSquad, squadTotal } = await fetchAllocationData({
+    const { flsAllocation } = await fetchAllocationData({
       address: owner,
       snapshot: data,
     });
-    const total = totalWithSquad - squadTotal;
-    airdropMap.set(owner, total);
+    airdropMap.set(owner, flsAllocation);
   }
 
   const tokenIds = new Set<number>();
