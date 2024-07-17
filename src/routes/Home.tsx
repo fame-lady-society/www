@@ -6,9 +6,9 @@ import MenuList from "@mui/material/MenuList";
 import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { PostReveal } from "@/features/reveal/components/PostReveal";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { WrappedLink } from "@/components/WrappedLink";
+import { Layout as Content } from "@/features/home/Layout";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import theme from "@/theme";
 
@@ -56,7 +56,7 @@ const HomePage: NextPage<{}> = () => {
           </>
         }
       >
-        <PostReveal />
+        <Content />
       </Main>
     </DefaultProvider>
   );
