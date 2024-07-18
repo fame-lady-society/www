@@ -25,7 +25,7 @@ export const AnimatedBoxPopAndFadeIn: FC<
     ...springProps,
     opacity: inView ? 1 : 0,
     transform: inView ? "scale(1)" : "scale(0.5)",
-    config: { mass: 1, tension: 210, friction: 20, ...springProps?.config },
+    config: { mass: 1, tension: 210, friction: 20 },
   });
 
   return (

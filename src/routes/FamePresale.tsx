@@ -8,10 +8,10 @@ import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { FC, PropsWithChildren, ReactNode, useEffect } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
-import { PresaleCard } from "@/features/fame/components/PresaleCard";
+import { PresaleCard } from "@/features/presale/components/PresaleCard";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { base, sepolia } from "viem/chains";
-import { InfoCard } from "@/features/fame/components/InfoCard";
+import { InfoCard } from "@/features/presale/components/InfoCard";
 
 const Content: FC<PropsWithChildren<{ network?: "base" | "sepolia" }>> = ({
   children,

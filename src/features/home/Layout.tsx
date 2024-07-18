@@ -11,18 +11,17 @@ import { WrappedLink } from "@/components/WrappedLink";
 import { AnimatedBoxPopAndFadeIn } from "./AnimatedBoxPopAndFadeIn";
 import { AnimatedSlideInRight } from "./AnimatedSlideInRight";
 import { useCallback, useEffect, useState } from "react";
-import useLocalStorage from "use-local-storage";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FameLaunchModal } from "./FameLaunchModal";
 import { useSeeFameLaunch } from "./hooks/useSeeFameLaunch";
 
 export const Layout = () => {
   const [shouldShowFameLaunchModal, seenFameLaunch] = useSeeFameLaunch();
-
+  const router = useRouter();
   const onFameLaunchCtaClick = useCallback(() => {
     seenFameLaunch();
-    redirect("/fame");
-  }, [seenFameLaunch]);
+    router.push("/fame");
+  }, [router, seenFameLaunch]);
   return (
     <>
       <FameLaunchModal

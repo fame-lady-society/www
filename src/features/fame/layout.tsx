@@ -13,12 +13,16 @@ import { useInView } from "react-intersection-observer";
 import { useSpring, animated } from "react-spring";
 import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
 import { TwitterIcon } from "@/components/icons/twitter";
+import { CopyToClipboard } from "@/components/CopyToClipboard";
 import { WrappedLink } from "@/components/WrappedLink";
 import { MagicEdenIcon } from "@/components/icons/magiceden";
 import { SlimChecker } from "@/features/claim/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import IconButton from "@mui/material/IconButton";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
+import { styled } from "@mui/material/styles";
 import { useAccount, useReadContract } from "wagmi";
 import {
   fameLadySocietyAbi,
@@ -28,7 +32,8 @@ import {
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { fameSaleAddress } from "@/features/fame/contract";
+import CardActionArea from "@mui/material/CardActionArea";
+import { fameFromNetwork, fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/presale/components/FameFAQ";
 import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
 import { SingleTokenChecker } from "@/features/claim/components/SingleTokenChecker";
@@ -90,6 +95,26 @@ const AnimatedBoxFadeIn: FC<PropsWithChildren<BoxProps>> = ({
   const props = useSpring({
     opacity: inView ? 1 : 0,
     config: { mass: 10, tension: 120, friction: 50 },
+  });
+
+  return (
+    <AnimatedBox style={props} ref={ref} {...rest}>
+      {children}
+    </AnimatedBox>
+  );
+};
+
+const AnimatedBoxSlowFadeIn: FC<PropsWithChildren<BoxProps>> = ({
+  children,
+  ...rest
+}) => {
+  const { ref, inView } = useInView({
+    threshold: 1, // Adjusts when the animation triggers
+  });
+
+  const props = useSpring({
+    opacity: inView ? 1 : 0,
+    config: { mass: 10, tension: 75, friction: 26 },
   });
 
   return (
@@ -162,12 +187,18 @@ const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
   );
 };
 
+const CopyButton = styled(Button)({
+  border: 0,
+  justifyContent: "start",
+  textTransform: "none", // Keeps the text style similar to Typography
+});
+
 const Content: FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const imageWidth = isSmallScreen ? window.innerWidth * 0.8 : 1000;
-  const imageHeight = 383;
+  const imageWidth = isSmallScreen ? Math.floor(window.innerWidth * 0.8) : 400;
+  const imageHeight = Math.floor(imageWidth * 2);
   const eyesRef = useRef<HTMLImageElement>(null);
   const eyesContainer = useParallax<HTMLDivElement>({
     onProgressChange: (progress) => {
@@ -179,7 +210,7 @@ const Content: FC = () => {
   });
 
   return (
-    <Grid2 container spacing={2} sx={{ mt: 2, mx: 4 }}>
+    <Grid2 container spacing={2} sx={{ mt: 4, mx: 4, pt: 2 }}>
       <Grid2
         xs={12}
         display="flex"
@@ -189,12 +220,14 @@ const Content: FC = () => {
         mt={8}
         overflow="hidden"
       >
-        <NextImage
-          src="/images/fame/Cool_Lady.jpeg"
-          alt="Fame Society"
-          width={Math.floor(imageWidth)}
-          height={Math.floor(imageWidth * 0.683)}
-        />
+        <AnimatedBoxSlowFadeIn>
+          <NextImage
+            src="/images/fame/gold-leaf-square-nobg.png"
+            alt="Fame Society"
+            width={imageWidth}
+            height={imageHeight}
+          />
+        </AnimatedBoxSlowFadeIn>
       </Grid2>
       <Grid2
         xs={12}
@@ -204,7 +237,7 @@ const Content: FC = () => {
         width="100%"
         overflow="hidden"
       >
-        <AnimatedBoxFadeIn
+        <AnimatedBoxSlowFadeIn
           component="div"
           display="flex"
           justifyContent="center"
@@ -213,7 +246,383 @@ const Content: FC = () => {
           marginBottom={6}
         >
           <Typography variant="h2" textTransform="uppercase">
-            presents
+            $FAME Society
+          </Typography>
+        </AnimatedBoxSlowFadeIn>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxPopAndFadeIn component="div">
+          <WrappedLink
+            href="https://t.me/famesocietybase"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NextImage
+              src="/images/logos/telegram.png"
+              alt="reservoir"
+              width={25}
+              height={25}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginRight: 8,
+              }}
+            />
+            <Typography variant="body1">Telegram</Typography>
+          </WrappedLink>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginTop={2}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxPopAndFadeIn component="div">
+          <WrappedLink
+            href="https://x.com/fameladysociety"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <TwitterIcon sx={{ marginRight: 1 }} />
+            <Typography variant="body1">Twitter</Typography>
+          </WrappedLink>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxPopAndFadeIn component="div">
+          <WrappedLink
+            href="https://discord.gg/fameladysociety"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NextImage
+              src="/images/logos/discord-dark.png"
+              alt="discord"
+              width={25}
+              height={25}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginRight: 8,
+              }}
+            />
+            <Typography variant="body1">Discord</Typography>
+          </WrappedLink>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+
+      <Grid2
+        xs={12}
+        sm={6}
+        md={3}
+        marginBottom={2}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+      >
+        <AnimatedBoxPopAndFadeIn component="div">
+          <WrappedLink
+            href="https://warpcast.com/fameladysociety"
+            underline="none"
+            target="_blank"
+            rel="noreferrer"
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <NextImage
+              src="/images/logos/warpcast.png"
+              alt="discord"
+              width={25}
+              height={25}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginRight: 8,
+              }}
+            />
+            <Typography variant="body1">Farcaster</Typography>
+          </WrappedLink>
+        </AnimatedBoxPopAndFadeIn>
+      </Grid2>
+      <Grid2 xs={12} height="464px" marginBottom={4}>
+        <Box
+          component="div"
+          sx={{
+            position: "absolute",
+            left: "50%",
+            width: "100vw",
+            height: "480px", // Adjust height as needed
+            backgroundColor: "white",
+            transform: "translateX(-50%)",
+            zIndex: 1, // Ensure it's above other content
+          }}
+        >
+          <Grid2
+            container
+            justifyContent="flex-start"
+            alignItems="center"
+            spacing="4"
+            color="black"
+          >
+            <Grid2 xs={4} md={2} px={2}>
+              <Typography variant="h3" textAlign="start">
+                chain
+              </Typography>
+            </Grid2>
+            <Grid2 xs={8} md={10} px={2}>
+              <Typography variant="h3" mt={0.05}>
+                base
+              </Typography>
+            </Grid2>
+
+            <Grid2 xs={12} md={2} px={2}>
+              <Typography variant="h3" textAlign="start">
+                erc20
+              </Typography>
+            </Grid2>
+            <Grid2 xs={12} md={10} pl={1}>
+              <CopyToClipboard text={fameFromNetwork(8453)}>
+                {(handleClick) => (
+                  <CopyButton
+                    endIcon={
+                      <IconButton aria-label="copy" size="small">
+                        <ContentCopyIcon
+                          sx={{
+                            color: "black",
+                          }}
+                        />
+                      </IconButton>
+                    }
+                    onClick={handleClick}
+                  >
+                    <Typography variant="h3" mt={0.05} color="black">
+                      {fameFromNetwork(8453)}
+                    </Typography>
+                  </CopyButton>
+                )}
+              </CopyToClipboard>
+            </Grid2>
+            <Grid2 xs={12} md={2} px={2}>
+              <Typography variant="h3" textAlign="start">
+                erc721
+              </Typography>
+            </Grid2>
+            <Grid2 xs={12} md={10} pl={1}>
+              <CopyToClipboard text={fameFromNetwork(8453)}>
+                {(handleClick) => (
+                  <CopyButton
+                    endIcon={
+                      <IconButton aria-label="copy" size="small">
+                        <ContentCopyIcon
+                          sx={{
+                            color: "black",
+                          }}
+                        />
+                      </IconButton>
+                    }
+                    onClick={handleClick}
+                  >
+                    <Typography variant="h3" mt={0.05} color="black">
+                      0xbb5ed04dd7b207592429eb8d599d103ccad646c4
+                    </Typography>
+                  </CopyButton>
+                )}
+              </CopyToClipboard>
+            </Grid2>
+            <Grid2 xs={6} md={3} p={4}>
+              <Card>
+                <CardActionArea
+                  href="https://app.uniswap.org/swap?chain=base&outputCurrency=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <CardContent
+                    sx={{
+                      height: "220px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      textAlign="center"
+                      textTransform="uppercase"
+                      sx={{
+                        width: "100%",
+                      }}
+                    >
+                      uniswap
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid2>
+            <Grid2 xs={6} md={3} p={4}>
+              <Card>
+                <CardActionArea
+                  href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <CardContent
+                    sx={{
+                      height: "220px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      textAlign="center"
+                      textTransform="uppercase"
+                      sx={{
+                        width: "100%",
+                      }}
+                    >
+                      dexscreener
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid2>
+            <Grid2 xs={6} md={3} p={4}>
+              <Card>
+                <CardActionArea
+                  href="https://v3.nftx.io/base/collections/famesociety/info/society-8"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <CardContent
+                    sx={{
+                      height: "220px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      textAlign="center"
+                      textTransform="uppercase"
+                      sx={{
+                        width: "100%",
+                      }}
+                    >
+                      nftx vault
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid2>
+            <Grid2 xs={6} md={3} p={4}>
+              <Card>
+                <CardActionArea
+                  href="https://magiceden.io/collections/base/0xbb5ed04dd7b207592429eb8d599d103ccad646c4"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <CardContent
+                    sx={{
+                      height: "220px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      textAlign="center"
+                      textTransform="uppercase"
+                      sx={{
+                        width: "100%",
+                      }}
+                    >
+                      magic eden
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid2>
+          </Grid2>
+        </Box>
+      </Grid2>
+      <Grid2 xs={12}>
+        <AnimatedBoxFadeIn
+          component="div"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flexDirection="column"
+          marginTop={2}
+          marginBottom={8}
+        >
+          <Typography variant="h5" textAlign="center">
+            1 million $FAME = 1 Society NFT
+          </Typography>
+          <Typography textAlign="center" marginY={2}>
+            WE are the Fame Lady Society and this is $FAME, a revolutionary
+            DN-404 project featuring 888 stunning Fame inspired female NFT’s
+            liquidity backed by 888 million $FAME tokens.
+          </Typography>
+          <Typography textAlign="center" marginY={2}>
+            Buy 1 million $FAME and one of our rare and exclusive Society Ladies
+            mint into your wallet making you feel special and complete.
+          </Typography>
+          <Typography textAlign="center" marginY={2}>
+            Sell any portion of that million $FAME and she will disappear
+            leaving you heart broken and bewildered.
+          </Typography>
+          <Typography textAlign="center" marginY={2}>
+            So the choice is yours.
+          </Typography>
+          <Typography textAlign="center" marginY={2}>
+            One thing is for sure the $FAME/Society token/NFT will change the
+            way the World thinks about NFT assets and how they can be traded and
+            gamified.
           </Typography>
         </AnimatedBoxFadeIn>
       </Grid2>
@@ -590,14 +999,7 @@ const Content: FC = () => {
       >
         <SingleTokenChecker />
       </Grid2>
-      <Grid2
-        xs={12}
-        sx={{
-          marginTop: 8,
-        }}
-      >
-        <SlimChecker ageBoost={OG_AGE_BOOST} rankBoost={OG_RANK_BOOST} />
-      </Grid2>
+
       <Grid2 xs={12} marginY="4">
         <Typography variant="body1" textAlign="center">
           $FAME is a community token for the Fame Lady Society. No intrinsic
@@ -676,7 +1078,7 @@ const Header: FC = () => {
   );
 };
 
-export const Fame: FC<{}> = () => {
+export const Layout: FC<{}> = () => {
   return (
     <DefaultProvider mainnet base polygon>
       <Header />

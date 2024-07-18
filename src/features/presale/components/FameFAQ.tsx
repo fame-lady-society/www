@@ -293,7 +293,14 @@ export const FameFAQ: FC = () => {
               }}
             >
               <div>
-                <Video src="/videos/swap.mp4" height={800} width={400} />
+                <Video
+                  src="/videos/swap.mp4"
+                  height={800}
+                  width={400}
+                  config={{
+                    path: "",
+                  }}
+                />
               </div>
             </Card>
           </>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fame } from "@/routes/Fame";
+import { Layout } from "@/features/fame/layout";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
 
@@ -16,5 +16,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page({}: {}) {
-  return <Fame />;
+  return <Layout />;
 }

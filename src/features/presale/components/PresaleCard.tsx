@@ -37,7 +37,7 @@ import { styled } from "@mui/material/styles";
 import MuiInput from "@mui/material/Input";
 import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
-import { fameSaleAddress, fameSaleTokenAddress } from "../contract";
+import { fameSaleAddress, fameSaleTokenAddress } from "../../fame/contract";
 import { ContributionGauge } from "./ContributionGauge";
 import { useAllocation } from "@/features/claim/hooks/useAllocation";
 import { ClaimEnoughModal } from "./ClaimEnoughModal";
