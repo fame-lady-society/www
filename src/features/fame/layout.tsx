@@ -197,7 +197,7 @@ const Content: FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const imageWidth = isSmallScreen ? Math.floor(window.innerWidth * 0.8) : 400;
+  const imageWidth = isSmallScreen ? 200 : 400;
   const imageHeight = Math.floor(imageWidth * 2);
   const eyesRef = useRef<HTMLImageElement>(null);
   const eyesContainer = useParallax<HTMLDivElement>({
@@ -245,7 +245,11 @@ const Content: FC = () => {
           marginTop={2}
           marginBottom={6}
         >
-          <Typography variant="h2" textTransform="uppercase">
+          <Typography
+            variant="h2"
+            textTransform="uppercase"
+            fontSize={isSmallScreen ? "32px" : "96px"}
+          >
             $FAME Society
           </Typography>
         </AnimatedBoxSlowFadeIn>
@@ -390,14 +394,18 @@ const Content: FC = () => {
           </WrappedLink>
         </AnimatedBoxPopAndFadeIn>
       </Grid2>
-      <Grid2 xs={12} height="464px" marginBottom={4}>
+      <Grid2
+        xs={12}
+        height={isSmallScreen ? "700px" : "420px"}
+        marginBottom={4}
+      >
         <Box
           component="div"
           sx={{
             position: "absolute",
             left: "50%",
             width: "100vw",
-            height: "480px", // Adjust height as needed
+            height: isSmallScreen ? "700px" : "420px",
             backgroundColor: "white",
             transform: "translateX(-50%)",
             zIndex: 1, // Ensure it's above other content
@@ -410,23 +418,35 @@ const Content: FC = () => {
             spacing="4"
             color="black"
           >
-            <Grid2 xs={4} md={2} px={2}>
-              <Typography variant="h3" textAlign="start">
+            <Grid2 xs={4} sm={2} px={2}>
+              <Typography
+                variant="h5"
+                textAlign="start"
+                fontSize={isSmallScreen ? "16px" : "24px"}
+              >
                 chain
               </Typography>
             </Grid2>
-            <Grid2 xs={8} md={10} px={2}>
-              <Typography variant="h3" mt={0.05}>
+            <Grid2 xs={8} sm={10} px={2}>
+              <Typography
+                variant="h5"
+                mt={0.05}
+                fontSize={isSmallScreen ? "16px" : "24px"}
+              >
                 base
               </Typography>
             </Grid2>
 
-            <Grid2 xs={12} md={2} px={2}>
-              <Typography variant="h3" textAlign="start">
+            <Grid2 xs={12} sm={2} px={2}>
+              <Typography
+                variant="h5"
+                textAlign="start"
+                fontSize={isSmallScreen ? "16px" : "24px"}
+              >
                 erc20
               </Typography>
             </Grid2>
-            <Grid2 xs={12} md={10} pl={1}>
+            <Grid2 xs={12} sm={10} pl={1}>
               <CopyToClipboard text={fameFromNetwork(8453)}>
                 {(handleClick) => (
                   <CopyButton
@@ -441,19 +461,28 @@ const Content: FC = () => {
                     }
                     onClick={handleClick}
                   >
-                    <Typography variant="h3" mt={0.05} color="black">
+                    <Typography
+                      variant="h5"
+                      mt={0.05}
+                      color="black"
+                      fontSize={isSmallScreen ? "16px" : "24px"}
+                    >
                       {fameFromNetwork(8453)}
                     </Typography>
                   </CopyButton>
                 )}
               </CopyToClipboard>
             </Grid2>
-            <Grid2 xs={12} md={2} px={2}>
-              <Typography variant="h3" textAlign="start">
+            <Grid2 xs={12} sm={2} px={2}>
+              <Typography
+                variant="h5"
+                textAlign="start"
+                fontSize={isSmallScreen ? "16px" : "24px"}
+              >
                 erc721
               </Typography>
             </Grid2>
-            <Grid2 xs={12} md={10} pl={1}>
+            <Grid2 xs={12} sm={10} pl={1}>
               <CopyToClipboard text={fameFromNetwork(8453)}>
                 {(handleClick) => (
                   <CopyButton
@@ -468,7 +497,12 @@ const Content: FC = () => {
                     }
                     onClick={handleClick}
                   >
-                    <Typography variant="h3" mt={0.05} color="black">
+                    <Typography
+                      variant="h5"
+                      mt={0.05}
+                      color="black"
+                      fontSize={isSmallScreen ? "16px" : "24px"}
+                    >
                       0xbb5ed04dd7b207592429eb8d599d103ccad646c4
                     </Typography>
                   </CopyButton>
@@ -490,7 +524,7 @@ const Content: FC = () => {
                     }}
                   >
                     <Typography
-                      variant="h5"
+                      variant={isTinyScreen ? "body1" : "h5"}
                       textAlign="center"
                       textTransform="uppercase"
                       sx={{
@@ -518,7 +552,7 @@ const Content: FC = () => {
                     }}
                   >
                     <Typography
-                      variant="h5"
+                      variant={isTinyScreen ? "body1" : "h5"}
                       textAlign="center"
                       textTransform="uppercase"
                       sx={{
@@ -546,7 +580,7 @@ const Content: FC = () => {
                     }}
                   >
                     <Typography
-                      variant="h5"
+                      variant={isTinyScreen ? "body1" : "h5"}
                       textAlign="center"
                       textTransform="uppercase"
                       sx={{
@@ -574,7 +608,7 @@ const Content: FC = () => {
                     }}
                   >
                     <Typography
-                      variant="h5"
+                      variant={isTinyScreen ? "body1" : "h5"}
                       textAlign="center"
                       textTransform="uppercase"
                       sx={{
