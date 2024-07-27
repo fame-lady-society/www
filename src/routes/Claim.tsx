@@ -65,9 +65,7 @@ const NextPage: FC<{
             Claim to $FAME
           </Typography>
         }
-      >
-        <Content chainId={chainId} />
-      </Main>
+      ></Main>
     </DefaultProvider>
   );
 };
