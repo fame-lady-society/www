@@ -1,12 +1,12 @@
-import { base, sepolia } from "viem/chains";
+import { sepolia, base } from "viem/chains";
 
-export function claimToFameFromNetwork(
-  chainId: typeof sepolia.id | typeof base.id,
-) {
+export function fameVestingFromNetwork(chainId: number) {
   switch (chainId) {
     case sepolia.id:
-      return "0x4b455Cf06719515bb73b94647a6b56e7924B756e" as const;
+      return "0x58d1a0DD3F3F7962C61433a320A09183e3BDb592";
     case base.id:
-      return "0xD6c1802eF7F59425F388764cA43C2e61c85A117A" as const;
+      return "0xf9301c6b2c6eF4F74f16d009C654097cbAdC95D2";
+    default:
+      return undefined;
   }
 }

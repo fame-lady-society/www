@@ -3202,6 +3202,248 @@ export const fameSaleTokenConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameVesting
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const fameVestingAbi = [
+  {
+    type: 'constructor',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'fallback', stateMutability: 'payable' },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [{ name: 'holder', internalType: 'address', type: 'address' }],
+    name: 'computeNextVestingScheduleIdForHolder',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'vestingScheduleId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'computeReleasableAmount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'holder', internalType: 'address', type: 'address' },
+      { name: 'index', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'computeVestingScheduleIdForAddressAndIndex',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_beneficiary', internalType: 'address', type: 'address' },
+      { name: '_start', internalType: 'uint256', type: 'uint256' },
+      { name: '_cliff', internalType: 'uint256', type: 'uint256' },
+      { name: '_duration', internalType: 'uint256', type: 'uint256' },
+      { name: '_slicePeriodSeconds', internalType: 'uint256', type: 'uint256' },
+      { name: '_revocable', internalType: 'bool', type: 'bool' },
+      { name: '_amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'createVestingSchedule',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'holder', internalType: 'address', type: 'address' }],
+    name: 'getLastVestingScheduleForHolder',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct TokenVesting.VestingSchedule',
+        type: 'tuple',
+        components: [
+          { name: 'beneficiary', internalType: 'address', type: 'address' },
+          { name: 'cliff', internalType: 'uint256', type: 'uint256' },
+          { name: 'start', internalType: 'uint256', type: 'uint256' },
+          { name: 'duration', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'slicePeriodSeconds',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'revocable', internalType: 'bool', type: 'bool' },
+          { name: 'amountTotal', internalType: 'uint256', type: 'uint256' },
+          { name: 'released', internalType: 'uint256', type: 'uint256' },
+          { name: 'revoked', internalType: 'bool', type: 'bool' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getToken',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
+    name: 'getVestingIdAtIndex',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'vestingScheduleId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'getVestingSchedule',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct TokenVesting.VestingSchedule',
+        type: 'tuple',
+        components: [
+          { name: 'beneficiary', internalType: 'address', type: 'address' },
+          { name: 'cliff', internalType: 'uint256', type: 'uint256' },
+          { name: 'start', internalType: 'uint256', type: 'uint256' },
+          { name: 'duration', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'slicePeriodSeconds',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'revocable', internalType: 'bool', type: 'bool' },
+          { name: 'amountTotal', internalType: 'uint256', type: 'uint256' },
+          { name: 'released', internalType: 'uint256', type: 'uint256' },
+          { name: 'revoked', internalType: 'bool', type: 'bool' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'holder', internalType: 'address', type: 'address' },
+      { name: 'index', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'getVestingScheduleByAddressAndIndex',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct TokenVesting.VestingSchedule',
+        type: 'tuple',
+        components: [
+          { name: 'beneficiary', internalType: 'address', type: 'address' },
+          { name: 'cliff', internalType: 'uint256', type: 'uint256' },
+          { name: 'start', internalType: 'uint256', type: 'uint256' },
+          { name: 'duration', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'slicePeriodSeconds',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'revocable', internalType: 'bool', type: 'bool' },
+          { name: 'amountTotal', internalType: 'uint256', type: 'uint256' },
+          { name: 'released', internalType: 'uint256', type: 'uint256' },
+          { name: 'revoked', internalType: 'bool', type: 'bool' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getVestingSchedulesCount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_beneficiary', internalType: 'address', type: 'address' },
+    ],
+    name: 'getVestingSchedulesCountByBeneficiary',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getVestingSchedulesTotalAmount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getWithdrawableAmount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'vestingScheduleId', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'release',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'vestingScheduleId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'revoke',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'amount', internalType: 'uint256', type: 'uint256' }],
+    name: 'withdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IBalanceOf
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8653,6 +8895,243 @@ export const useWatchFameSaleTokenTransferEvent =
     abi: fameSaleTokenAbi,
     address: fameSaleTokenAddress,
     eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__
+ */
+export const useReadFameVesting = /*#__PURE__*/ createUseReadContract({
+  abi: fameVestingAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"computeNextVestingScheduleIdForHolder"`
+ */
+export const useReadFameVestingComputeNextVestingScheduleIdForHolder =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'computeNextVestingScheduleIdForHolder',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"computeReleasableAmount"`
+ */
+export const useReadFameVestingComputeReleasableAmount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'computeReleasableAmount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"computeVestingScheduleIdForAddressAndIndex"`
+ */
+export const useReadFameVestingComputeVestingScheduleIdForAddressAndIndex =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'computeVestingScheduleIdForAddressAndIndex',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getLastVestingScheduleForHolder"`
+ */
+export const useReadFameVestingGetLastVestingScheduleForHolder =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getLastVestingScheduleForHolder',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getToken"`
+ */
+export const useReadFameVestingGetToken = /*#__PURE__*/ createUseReadContract({
+  abi: fameVestingAbi,
+  functionName: 'getToken',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingIdAtIndex"`
+ */
+export const useReadFameVestingGetVestingIdAtIndex =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingIdAtIndex',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingSchedule"`
+ */
+export const useReadFameVestingGetVestingSchedule =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingSchedule',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingScheduleByAddressAndIndex"`
+ */
+export const useReadFameVestingGetVestingScheduleByAddressAndIndex =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingScheduleByAddressAndIndex',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingSchedulesCount"`
+ */
+export const useReadFameVestingGetVestingSchedulesCount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingSchedulesCount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingSchedulesCountByBeneficiary"`
+ */
+export const useReadFameVestingGetVestingSchedulesCountByBeneficiary =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingSchedulesCountByBeneficiary',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getVestingSchedulesTotalAmount"`
+ */
+export const useReadFameVestingGetVestingSchedulesTotalAmount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getVestingSchedulesTotalAmount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"getWithdrawableAmount"`
+ */
+export const useReadFameVestingGetWithdrawableAmount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameVestingAbi,
+    functionName: 'getWithdrawableAmount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadFameVestingOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameVestingAbi,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__
+ */
+export const useWriteFameVesting = /*#__PURE__*/ createUseWriteContract({
+  abi: fameVestingAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"createVestingSchedule"`
+ */
+export const useWriteFameVestingCreateVestingSchedule =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameVestingAbi,
+    functionName: 'createVestingSchedule',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"release"`
+ */
+export const useWriteFameVestingRelease = /*#__PURE__*/ createUseWriteContract({
+  abi: fameVestingAbi,
+  functionName: 'release',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"revoke"`
+ */
+export const useWriteFameVestingRevoke = /*#__PURE__*/ createUseWriteContract({
+  abi: fameVestingAbi,
+  functionName: 'revoke',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteFameVestingTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameVestingAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"withdraw"`
+ */
+export const useWriteFameVestingWithdraw = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameVestingAbi, functionName: 'withdraw' },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__
+ */
+export const useSimulateFameVesting = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameVestingAbi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"createVestingSchedule"`
+ */
+export const useSimulateFameVestingCreateVestingSchedule =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameVestingAbi,
+    functionName: 'createVestingSchedule',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"release"`
+ */
+export const useSimulateFameVestingRelease =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameVestingAbi,
+    functionName: 'release',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"revoke"`
+ */
+export const useSimulateFameVestingRevoke =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameVestingAbi,
+    functionName: 'revoke',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateFameVestingTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameVestingAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameVestingAbi}__ and `functionName` set to `"withdraw"`
+ */
+export const useSimulateFameVestingWithdraw =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameVestingAbi,
+    functionName: 'withdraw',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameVestingAbi}__
+ */
+export const useWatchFameVestingEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: fameVestingAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameVestingAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchFameVestingOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameVestingAbi,
+    eventName: 'OwnershipTransferred',
   })
 
 /**

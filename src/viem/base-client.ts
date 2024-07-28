@@ -1,4 +1,4 @@
-import { claimToFameFromNetwork } from "@/features/claim/contracts";
+import { claimToFameFromNetwork } from "@/features/claim-to-fame/contracts";
 import { createPublicClient, http, fallback, createWalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";

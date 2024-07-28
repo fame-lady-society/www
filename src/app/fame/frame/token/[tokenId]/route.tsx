@@ -3,11 +3,14 @@
 import { NextRequest } from "next/server";
 import { ImageResponse } from "@vercel/og";
 
-import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
 import { isBannedToken } from "@/service/bannedTokenIds";
 import { formatEther } from "viem";
 import { baseUrl } from "@/app/frames/frames";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
 
 function formatUnit(amount: bigint) {
   return Math.floor(Number(formatEther(amount)));

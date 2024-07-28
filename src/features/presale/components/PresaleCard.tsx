@@ -39,7 +39,7 @@ import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
 import { fameSaleAddress, fameSaleTokenAddress } from "../../fame/contract";
 import { ContributionGauge } from "./ContributionGauge";
-import { useAllocation } from "@/features/claim/hooks/useAllocation";
+import { useAllocation } from "@/features/claim-to-fame/hooks/useAllocation";
 import { ClaimEnoughModal } from "./ClaimEnoughModal";
 
 const Input = styled(MuiInput)`

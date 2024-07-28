@@ -8,56 +8,53 @@ import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { WrappedLink } from "@/components/WrappedLink";
-import { Layout as Content } from "@/features/home/Layout";
+import { Layout } from "@/features/home/Layout";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import theme from "@/theme";
+import { FC } from "react";
 
-const HomePage: NextPage<{}> = () => {
+const Content: FC<{}> = () => {
   const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const roomForTitle = useMediaQuery(theme.breakpoints.up("md"));
   return (
+    <Main
+      menu={
+        <>
+          <MenuList dense disablePadding>
+            <LinksMenuItems />
+            <SiteMenu isHome />
+          </MenuList>
+        </>
+      }
+      title={
+        <>
+          {tinyScreen ? null : (
+            <Typography variant="h5" component="h1" marginLeft={2}>
+              {roomForTitle ? "Fame Lady Society" : "FLS"}
+            </Typography>
+          )}
+          <Button
+            component={WrappedLink}
+            href="/fame"
+            variant="outlined"
+            sx={{ ml: 2 }}
+          >
+            <Typography variant="h5" component="h1">
+              FAME
+            </Typography>
+          </Button>
+        </>
+      }
+    >
+      <Layout />
+    </Main>
+  );
+};
+
+const HomePage: NextPage<{}> = () => {
+  return (
     <DefaultProvider mainnet base>
-      <Main
-        menu={
-          <>
-            <MenuList dense disablePadding>
-              <LinksMenuItems />
-              <SiteMenu isHome />
-            </MenuList>
-          </>
-        }
-        title={
-          <>
-            {tinyScreen ? null : (
-              <Typography variant="h5" component="h1" marginLeft={2}>
-                {roomForTitle ? "Fame Lady Society" : "FLS"}
-              </Typography>
-            )}
-            <Button
-              component={WrappedLink}
-              href="/fame"
-              variant="outlined"
-              sx={{ ml: 2 }}
-            >
-              <Typography variant="h5" component="h1">
-                FAME
-              </Typography>
-            </Button>
-            <Button
-              component={WrappedLink}
-              href="/wrap"
-              variant="outlined"
-              sx={{ ml: 2 }}
-            >
-              <Typography variant="h5" component="h1">
-                {roomForTitle ? "wrap here" : "wrap"}
-              </Typography>
-            </Button>
-          </>
-        }
-      >
-        <Content />
-      </Main>
+      <Content />
     </DefaultProvider>
   );
 };

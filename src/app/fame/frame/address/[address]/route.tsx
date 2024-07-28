@@ -15,8 +15,8 @@ import {
   METAVIXEN_CONTRACT,
   OG_AGE_BOOST,
   OG_RANK_BOOST,
-} from "@/features/claim/hooks/constants";
-import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+} from "@/features/claim-to-fame/hooks/constants";
+import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
 
 import snapshot from "@/app/fame/admin/test-claim.json";
 import { erc721Abi, formatEther } from "viem";

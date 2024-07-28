@@ -7,8 +7,8 @@ import {
   OG_AGE_BOOST,
   OG_RANK_BOOST,
   SQUAD_CONTRACT,
-} from "@/features/claim/hooks/constants";
-import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+} from "@/features/claim-to-fame/hooks/constants";
+import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
 import { getBuiltGraphSDK } from "@/graphclient";
 import { client as mainnetClient } from "@/viem/mainnet-client";
 import { client as polygonClient } from "@/viem/polygon-client";

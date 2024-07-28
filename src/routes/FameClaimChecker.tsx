@@ -6,7 +6,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 
-import { AdjustableChecker } from "@/features/claim/components/AdjustableChecker";
+import { AdjustableChecker } from "@/features/claim-to-fame/components/AdjustableChecker";
 
 const NextPage: FC<{}> = () => {
   return (

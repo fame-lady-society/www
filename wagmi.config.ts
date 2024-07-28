@@ -75,6 +75,7 @@ export default defineConfig({
         "Fame.sol/**",
         "FameMirror.sol/**",
         "IBalanceOf.sol/**",
+        "FameVesting.sol/**",
       ],
     }),
     react(),

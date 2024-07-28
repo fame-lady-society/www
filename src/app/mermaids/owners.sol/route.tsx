@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { zeroAddress, checksumAddress, isAddress } from "viem";
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
-import { MERMAIDS_CONTRACT } from "@/features/claim/hooks/constants";
+import { MERMAIDS_CONTRACT } from "@/features/claim-to-fame/hooks/constants";
 
 export async function GET(req: NextRequest) {
   const data = await fetchAllOwnersIterable({

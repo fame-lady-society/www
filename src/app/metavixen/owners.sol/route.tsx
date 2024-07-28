@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { zeroAddress, checksumAddress, isAddress } from "viem";
 import { client as polygonClient } from "@/viem/polygon-client";
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
-import { METAVIXEN_CONTRACT } from "@/features/claim/hooks/constants";
+import { METAVIXEN_CONTRACT } from "@/features/claim-to-fame/hooks/constants";
 
 export async function GET(req: NextRequest) {
   const data = await fetchAllOwnersIterable({

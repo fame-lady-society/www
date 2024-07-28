@@ -18,12 +18,12 @@ import {
 } from "@/viem/sepolia-client";
 import { claimToFameAbi } from "@/wagmi";
 import { encodePacked, erc721Abi, formatUnits, keccak256 } from "viem";
-import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
+import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
 import {
   OG_AGE_BOOST,
   OG_RANK_BOOST,
   TOTAL_TOKENS,
-} from "@/features/claim/hooks/constants";
+} from "@/features/claim-to-fame/hooks/constants";
 import { sessionFromCookies } from "@/service/session";
 
 interface Params {

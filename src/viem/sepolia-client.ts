@@ -1,4 +1,4 @@
-import { claimToFameFromNetwork } from "@/features/claim/contracts";
+import { claimToFameFromNetwork } from "@/features/claim-to-fame/contracts";
 import {
   wrappedNftAddress,
   namedLadyRendererAddress as namedLadyRendererAddressAll,

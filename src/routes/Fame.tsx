@@ -15,7 +15,7 @@ import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
 import { TwitterIcon } from "@/components/icons/twitter";
 import { WrappedLink } from "@/components/WrappedLink";
 import { MagicEdenIcon } from "@/components/icons/magiceden";
-import { SlimChecker } from "@/features/claim/components/SlimChecker";
+import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
@@ -30,8 +30,11 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/presale/components/FameFAQ";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
-import { SingleTokenChecker } from "@/features/claim/components/SingleTokenChecker";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
+import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 
 const AnimatedBox = animated(Box);
 

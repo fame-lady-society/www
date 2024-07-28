@@ -16,7 +16,7 @@ import { TwitterIcon } from "@/components/icons/twitter";
 import { CopyToClipboard } from "@/components/CopyToClipboard";
 import { WrappedLink } from "@/components/WrappedLink";
 import { MagicEdenIcon } from "@/components/icons/magiceden";
-import { SlimChecker } from "@/features/claim/components/SlimChecker";
+import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -35,8 +35,11 @@ import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 import { fameFromNetwork, fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/presale/components/FameFAQ";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
-import { SingleTokenChecker } from "@/features/claim/components/SingleTokenChecker";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
+import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 
 const AnimatedBox = animated(Box);
 

@@ -9,8 +9,11 @@ import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 
 import { Main } from "@/layouts/Main";
-import { SlimChecker } from "@/features/claim/components/SlimChecker";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
 import { isAddress } from "viem";
 
 const NextPage: FC<{

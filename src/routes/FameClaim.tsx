@@ -10,13 +10,16 @@ import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 
 import { Main } from "@/layouts/Main";
-import { SlimChecker } from "@/features/claim/components/SlimChecker";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
 import { isAddress } from "viem";
 import { useAccount } from "wagmi";
-import { FameLadySocietyClaimCard } from "@/features/claim/components/FameLadySocietyClaimCard";
+import { FameLadySocietyClaimCard } from "@/features/claim-to-fame/components/FameLadySocietyClaimCard";
 import { base, sepolia } from "viem/chains";
-import { FameBalanceCard } from "@/features/claim/components/FameBalanceCard";
+import { FameBalanceCard } from "@/features/claim-to-fame/components/FameBalanceCard";
 
 const Content: FC<{
   address: `0x${string}`;

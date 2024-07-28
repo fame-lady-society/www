@@ -13,8 +13,11 @@ import {
 import { ContractFunctionExecutionError, erc721Abi, formatEther } from "viem";
 import { IMetadata, thumbnailImageUrl } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
-import { getFlsPoolAllocation } from "@/features/claim/hooks/useSnapshot";
-import { OG_AGE_BOOST, OG_RANK_BOOST } from "@/features/claim/hooks/constants";
+import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
+import {
+  OG_AGE_BOOST,
+  OG_RANK_BOOST,
+} from "@/features/claim-to-fame/hooks/constants";
 import { isBannedToken } from "@/service/bannedTokenIds";
 
 export async function GET(
