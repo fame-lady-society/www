@@ -486,7 +486,9 @@ const Content: FC = () => {
               </Typography>
             </Grid2>
             <Grid2 xs={12} sm={10} pl={1}>
-              <CopyToClipboard text={fameFromNetwork(8453)}>
+              <CopyToClipboard
+                text={"0xbb5ed04dd7b207592429eb8d599d103ccad646c4"}
+              >
                 {(handleClick) => (
                   <CopyButton
                     endIcon={
