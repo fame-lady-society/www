@@ -6,7 +6,7 @@ import { IMetadata } from "@/utils/metadata";
 import { societyFromNetwork } from "@/features/fame/contract";
 import { base } from "viem/chains";
 
-export async function fetchMetadata({
+async function fetchMetadata({
   client,
   address,
   tokenId,
