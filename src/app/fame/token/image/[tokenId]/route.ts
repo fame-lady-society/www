@@ -54,5 +54,9 @@ export async function GET(
       revalidate: 0,
     },
   });
-  return new Response(fetchImage.body);
+  return new Response(fetchImage.body, {
+    headers: {
+      "Content-Type": fetchImage.headers.get("Content-Type") || "",
+    },
+  });
 }
