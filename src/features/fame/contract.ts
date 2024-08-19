@@ -26,3 +26,14 @@ export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
       return "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418" as const;
   }
 }
+
+export function societyFromNetwork(
+  chainId: typeof sepolia.id | typeof base.id,
+) {
+  switch (chainId) {
+    case sepolia.id:
+      return "0xF661Af827B0E89Bf24B933A12Da44F411ABAED56" as const;
+    case base.id:
+      return "0xBB5ED04dD7B207592429eb8d599d103CCad646c4" as const;
+  }
+}
