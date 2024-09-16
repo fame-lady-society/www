@@ -1,49 +1,18 @@
-name: Deploy to Vercel Preview
-
+name: Deploy CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-
-permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
-      - uses: tspascoal/get-user-teams-membership@v3
-        id: isOrgMember
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deploy to Vercel Action
+        uses: BetaHuhn/deploy-to-vercel-action@v1
         with:
-          username: ${{ github.actor }}
-          team: www-deployers
-          GITHUB_TOKEN: ${{ secrets.ORG_READ_ACCESS_GITHUB_TOKEN }}
-      - name: Checkout code
-        if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
-        run: yarn
-
-      # - name: Authenticate with Vercel
-      #   if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
-      #   env:
-      #     VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      #   run: vercel login --token $VERCEL_TOKEN
-
-      - name: Deploy to Vercel
-        if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
-        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel --token $VERCEL_TOKEN
