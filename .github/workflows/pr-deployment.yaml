@@ -46,8 +46,9 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel --token $VERCEL_TOKEN  > deployment.txt
-        cat deployment.txt
+        run: |
+          vercel --token $VERCEL_TOKEN  > deployment.txt
+          cat deployment.txt
         continue-on-error: false
       - name: Extract Vercel URL
         id: extract-url
