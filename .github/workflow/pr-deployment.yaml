@@ -1,0 +1,44 @@
+name: Deploy to Vercel Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: tspascoal/get-user-teams-membership@v3
+        id: isOrgMember
+        with:
+          username: ${{ github.actor }}
+          team: www-deployers
+          GITHUB_TOKEN: ${{ secrets.ORG_READ_ACCESS_GITHUB_TOKEN }}
+      - name: Checkout code
+        if: ${{ isOrgMember.outputs.isTeamMember == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        if: ${{ isOrgMember.outputs.isTeamMember == 'true' }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        if: ${{ isOrgMember.outputs.isTeamMember == 'true' }}
+        run: npm install
+
+      - name: Deploy to Vercel
+        if: ${{ isOrgMember.outputs.isTeamMember == 'true' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install -g vercel
+          vercel pull --yes --environment=preview
+          vercel --prod --token=$VERCEL_TOKEN
