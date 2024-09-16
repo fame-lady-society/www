@@ -56,11 +56,21 @@ jobs:
           DEPLOYMENT_URL=$(grep -o 'https://.*\.vercel\.app' deployment.txt)
           echo "Deployment URL: $DEPLOYMENT_URL"
           echo "VERCEL_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
+
+      - name: Construct Branch Subdomain URL
+        id: construct-url
+        run: |
+          # Replace slashes in branch names with dashes to match Vercel's naming convention
+          BRANCH_NAME=${{ github.head_ref || github.ref_name }}
+          BRANCH_NAME=$(echo $BRANCH_NAME | sed 's#/##g')
+          SUBDOMAIN_URL="https://${BRANCH_NAME}-flicks-projects.vercel.app"
+          echo "Branch Subdomain URL: $SUBDOMAIN_URL"
+          echo "BRANCH_SUBDOMAIN_URL=$SUBDOMAIN_URL" >> $GITHUB_ENV
       - name: Comment on PR with Vercel deployment URL
         if: always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           message: |
             Vercel Deployment Preview:
             ${{ env.VERCEL_URL }}
+            ${{ env.BRANCH_SUBDOMAIN_URL }}
