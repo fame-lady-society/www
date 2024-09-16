@@ -21,7 +21,7 @@ jobs:
           team: www-deployers
           GITHUB_TOKEN: ${{ secrets.ORG_READ_ACCESS_GITHUB_TOKEN }}
       - name: Checkout code
-        if: ${{ isOrgMember.outputs.isTeamMember == 'true' }}
+        if: ${{ steps.isOrgMember.outputs.isTeamMember == 'true' }}
         uses: actions/checkout@v3
 
       - name: Setup Node.js
