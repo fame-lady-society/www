@@ -26,7 +26,7 @@ export default async function Home({
 }) {
   if (!isAddress(params.address)) {
     return (
-      <AppMain title="FAMEus">
+      <AppMain title="FAMEus" isDao>
         <section className="flex flex-col items-start justify-center h-full m-4 border rounded-lg p-6">
           <h1 className="text-4xl font-bold">FAMEus</h1>
         </section>
@@ -39,6 +39,11 @@ export default async function Home({
       <AppMain title="FAMEus DAO">
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold mb-6 text-center">Coming Soon</h1>
+            <p className="text-lg text-left mb-6">
+              The FAMEus DAO is currently under development. Check back soon for
+              updates!
+            </p>
             <h1 className="text-4xl font-bold mb-6 flex items-center">
               Liquid $FAME Ladies
               <InfoTooltip text="Liquid ladies are the native $FAME Society NFT that have 1 Million $FAME tokens backing them and are linked to the tokens" />

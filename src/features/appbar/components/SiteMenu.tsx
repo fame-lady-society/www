@@ -16,12 +16,14 @@ export const SiteMenu: FC<{
   isCustomize?: boolean;
   isHome?: boolean;
   isWrap?: boolean;
+  isDao?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
   isCustomize = false,
   isFaq = false,
   isWrap = false,
+  isDao = false,
 }) => {
   return (
     <>
@@ -45,6 +47,18 @@ export const SiteMenu: FC<{
           primary={
             <Typography textAlign="right" color="white">
               $FAME
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/fameus" disabled={isDao}>
+        <ListItemIcon>
+          <InputIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              FAMEus DAO
             </Typography>
           }
         />

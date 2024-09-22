@@ -13,12 +13,14 @@ export const SiteMenu: FC<{
   isCustomize?: boolean;
   isHome?: boolean;
   isWrap?: boolean;
+  isDao?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
   isCustomize = false,
   isFaq = false,
   isWrap = false,
+  isDao = false,
 }) => {
   return (
     <>
@@ -33,6 +35,13 @@ export const SiteMenu: FC<{
         disabled={isFame}
         icon={<DollarIcon />}
         text="$FAME"
+      />
+
+      <MenuItem
+        href="/fameus"
+        disabled={isDao}
+        icon={<InputIcon />}
+        text="FAMEus DAO"
       />
       <MenuItem
         href="/customize"
