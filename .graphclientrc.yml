@@ -2,8 +2,8 @@ sources:
   - name: fls-sepolia
     handler:
       graphql:
-        endpoint: https://api.studio.thegraph.com/proxy/67995/fls-sepolia/v0.0.6
-    transforms: # new 👇
+        endpoint: https://api.studio.thegraph.com/query/67995/fls-sepolia/version/latest
+    transforms:
       - prefix:
           value: sepolia_
           includeRootOperations: true
@@ -11,7 +11,15 @@ sources:
   - name: fls-mainnet
     handler:
       graphql:
-        endpoint: https://api.studio.thegraph.com/query/67995/fls/v0.0.1
-
+        endpoint: https://api.studio.thegraph.com/query/67995/fls/version/latest
+  - name: fame-nft-base
+    handler:
+      graphql:
+        endpoint: https://api.studio.thegraph.com/query/67995/fame-nft-base/version/latest
+    transforms:
+      - prefix:
+          value: base_fame_nft_
+          includeRootOperations: true
+          includeTypes: false
 documents:
   - ./src/**/*.graphql

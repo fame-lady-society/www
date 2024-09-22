@@ -1,0 +1,15 @@
+query BaseFameNftTokenByOwner(
+  $owner: Bytes!
+  $first: Int
+  $skip: Int
+  $orderDirection: OrderDirection
+) {
+  base_fame_nft_ownerships(
+    where: { owner: $owner }
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+  ) {
+    tokenId
+  }
+}

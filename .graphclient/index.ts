@@ -21,10 +21,12 @@ import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
-import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
+import type { FameNftBaseTypes } from './sources/fame-nft-base/types';
 import type { FlsSepoliaTypes } from './sources/fls-sepolia/types';
-import * as importedModule$0 from "./sources/fls-sepolia/introspectionSchema";
-import * as importedModule$1 from "./sources/fls-mainnet/introspectionSchema";
+import type { FlsMainnetTypes } from './sources/fls-mainnet/types';
+import * as importedModule$0 from "./sources/fame-nft-base/introspectionSchema";
+import * as importedModule$1 from "./sources/fls-sepolia/introspectionSchema";
+import * as importedModule$2 from "./sources/fls-mainnet/introspectionSchema";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -49,6 +51,20 @@ export type Scalars = {
 };
 
 export type Query = {
+  base_fame_nft_approval?: Maybe<Approval>;
+  base_fame_nft_approvals: Array<Approval>;
+  base_fame_nft_approvalForAll?: Maybe<ApprovalForAll>;
+  base_fame_nft_approvalForAlls: Array<ApprovalForAll>;
+  base_fame_nft_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  base_fame_nft_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  base_fame_nft_metadataUpdate?: Maybe<MetadataUpdate>;
+  base_fame_nft_metadataUpdates: Array<MetadataUpdate>;
+  base_fame_nft_transfer?: Maybe<Transfer>;
+  base_fame_nft_transfers: Array<Transfer>;
+  base_fame_nft_ownership?: Maybe<Ownership>;
+  base_fame_nft_ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  base_fame_nft__meta?: Maybe<_Meta_>;
   sepolia_approval?: Maybe<Approval>;
   sepolia_approvals: Array<Approval>;
   sepolia_approvalForAll?: Maybe<ApprovalForAll>;
@@ -77,6 +93,119 @@ export type Query = {
   ownerships: Array<Ownership>;
   /** Access to subgraph metadata */
   _meta?: Maybe<_Meta_>;
+};
+
+
+export type Querybase_fame_nft_approvalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_approvalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_approvalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_approvalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_batchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_batchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_metadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_metadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_transferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_transfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_ownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_ownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft__metaArgs = {
+  block?: InputMaybe<Block_height>;
 };
 
 
@@ -306,6 +435,20 @@ export type Query_metaArgs = {
 };
 
 export type Subscription = {
+  base_fame_nft_approval?: Maybe<Approval>;
+  base_fame_nft_approvals: Array<Approval>;
+  base_fame_nft_approvalForAll?: Maybe<ApprovalForAll>;
+  base_fame_nft_approvalForAlls: Array<ApprovalForAll>;
+  base_fame_nft_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
+  base_fame_nft_batchMetadataUpdates: Array<BatchMetadataUpdate>;
+  base_fame_nft_metadataUpdate?: Maybe<MetadataUpdate>;
+  base_fame_nft_metadataUpdates: Array<MetadataUpdate>;
+  base_fame_nft_transfer?: Maybe<Transfer>;
+  base_fame_nft_transfers: Array<Transfer>;
+  base_fame_nft_ownership?: Maybe<Ownership>;
+  base_fame_nft_ownerships: Array<Ownership>;
+  /** Access to subgraph metadata */
+  base_fame_nft__meta?: Maybe<_Meta_>;
   sepolia_approval?: Maybe<Approval>;
   sepolia_approvals: Array<Approval>;
   sepolia_approvalForAll?: Maybe<ApprovalForAll>;
@@ -334,6 +477,119 @@ export type Subscription = {
   ownerships: Array<Ownership>;
   /** Access to subgraph metadata */
   _meta?: Maybe<_Meta_>;
+};
+
+
+export type Subscriptionbase_fame_nft_approvalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_approvalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Approval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_approvalForAllArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_approvalForAllsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<ApprovalForAll_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<ApprovalForAll_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_batchMetadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_batchMetadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BatchMetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<BatchMetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_metadataUpdateArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_metadataUpdatesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<MetadataUpdate_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdate_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_transferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_transfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Transfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Transfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_ownershipArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_ownershipsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Ownership_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Ownership_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft__metaArgs = {
+  block?: InputMaybe<Block_height>;
 };
 
 
@@ -1240,6 +1496,19 @@ export type derivedFromDirectiveArgs = {
 export type derivedFromDirectiveResolver<Result, Parent, ContextType = MeshContext, Args = derivedFromDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type QueryResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  base_fame_nft_approval?: Resolver<Maybe<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_approvalArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_approvals?: Resolver<Array<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_approvalForAll?: Resolver<Maybe<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_approvalForAllArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_approvalForAlls?: Resolver<Array<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_approvalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_batchMetadataUpdate?: Resolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_batchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_batchMetadataUpdates?: Resolver<Array<ResolversTypes['BatchMetadataUpdate']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_batchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_metadataUpdate?: Resolver<Maybe<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_metadataUpdateArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_metadataUpdates?: Resolver<Array<ResolversTypes['MetadataUpdate']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_metadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_transfer?: Resolver<Maybe<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_transferArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_transfers?: Resolver<Array<ResolversTypes['Transfer']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_transfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_ownership?: Resolver<Maybe<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_ownershipArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_ownerships?: Resolver<Array<ResolversTypes['Ownership']>, ParentType, ContextType, RequireFields<Querybase_fame_nft_ownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft__meta?: Resolver<Maybe<ResolversTypes['_Meta_']>, ParentType, ContextType, Partial<Querybase_fame_nft__metaArgs>>;
   sepolia_approval?: Resolver<Maybe<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querysepolia_approvalArgs, 'id' | 'subgraphError'>>;
   sepolia_approvals?: Resolver<Array<ResolversTypes['Approval']>, ParentType, ContextType, RequireFields<Querysepolia_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
   sepolia_approvalForAll?: Resolver<Maybe<ResolversTypes['ApprovalForAll']>, ParentType, ContextType, RequireFields<Querysepolia_approvalForAllArgs, 'id' | 'subgraphError'>>;
@@ -1269,6 +1538,19 @@ export type QueryResolvers<ContextType = MeshContext, ParentType extends Resolve
 }>;
 
 export type SubscriptionResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
+  base_fame_nft_approval?: SubscriptionResolver<Maybe<ResolversTypes['Approval']>, "base_fame_nft_approval", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_approvalArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_approvals?: SubscriptionResolver<Array<ResolversTypes['Approval']>, "base_fame_nft_approvals", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_approvalForAll?: SubscriptionResolver<Maybe<ResolversTypes['ApprovalForAll']>, "base_fame_nft_approvalForAll", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_approvalForAllArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_approvalForAlls?: SubscriptionResolver<Array<ResolversTypes['ApprovalForAll']>, "base_fame_nft_approvalForAlls", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_approvalForAllsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_batchMetadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['BatchMetadataUpdate']>, "base_fame_nft_batchMetadataUpdate", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_batchMetadataUpdateArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_batchMetadataUpdates?: SubscriptionResolver<Array<ResolversTypes['BatchMetadataUpdate']>, "base_fame_nft_batchMetadataUpdates", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_batchMetadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_metadataUpdate?: SubscriptionResolver<Maybe<ResolversTypes['MetadataUpdate']>, "base_fame_nft_metadataUpdate", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_metadataUpdateArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_metadataUpdates?: SubscriptionResolver<Array<ResolversTypes['MetadataUpdate']>, "base_fame_nft_metadataUpdates", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_metadataUpdatesArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_transfer?: SubscriptionResolver<Maybe<ResolversTypes['Transfer']>, "base_fame_nft_transfer", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_transferArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_transfers?: SubscriptionResolver<Array<ResolversTypes['Transfer']>, "base_fame_nft_transfers", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_transfersArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft_ownership?: SubscriptionResolver<Maybe<ResolversTypes['Ownership']>, "base_fame_nft_ownership", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_ownershipArgs, 'id' | 'subgraphError'>>;
+  base_fame_nft_ownerships?: SubscriptionResolver<Array<ResolversTypes['Ownership']>, "base_fame_nft_ownerships", ParentType, ContextType, RequireFields<Subscriptionbase_fame_nft_ownershipsArgs, 'skip' | 'first' | 'subgraphError'>>;
+  base_fame_nft__meta?: SubscriptionResolver<Maybe<ResolversTypes['_Meta_']>, "base_fame_nft__meta", ParentType, ContextType, Partial<Subscriptionbase_fame_nft__metaArgs>>;
   sepolia_approval?: SubscriptionResolver<Maybe<ResolversTypes['Approval']>, "sepolia_approval", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalArgs, 'id' | 'subgraphError'>>;
   sepolia_approvals?: SubscriptionResolver<Array<ResolversTypes['Approval']>, "sepolia_approvals", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalsArgs, 'skip' | 'first' | 'subgraphError'>>;
   sepolia_approvalForAll?: SubscriptionResolver<Maybe<ResolversTypes['ApprovalForAll']>, "sepolia_approvalForAll", ParentType, ContextType, RequireFields<Subscriptionsepolia_approvalForAllArgs, 'id' | 'subgraphError'>>;
@@ -1415,7 +1697,7 @@ export type DirectiveResolvers<ContextType = MeshContext> = ResolversObject<{
   derivedFrom?: derivedFromDirectiveResolver<any, any, ContextType>;
 }>;
 
-export type MeshContext = FlsSepoliaTypes.Context & FlsMainnetTypes.Context & BaseMeshContext;
+export type MeshContext = FameNftBaseTypes.Context & FlsSepoliaTypes.Context & FlsMainnetTypes.Context & BaseMeshContext;
 
 
 import { fileURLToPath } from '@graphql-mesh/utils';
@@ -1424,11 +1706,14 @@ const baseDir = pathModule.join(pathModule.dirname(fileURLToPath(import.meta.url
 const importFn: ImportFn = <T>(moduleId: string) => {
   const relativeModuleId = (pathModule.isAbsolute(moduleId) ? pathModule.relative(baseDir, moduleId) : moduleId).split('\\').join('/').replace(baseDir + '/', '');
   switch(relativeModuleId) {
-    case ".graphclient/sources/fls-sepolia/introspectionSchema":
+    case ".graphclient/sources/fame-nft-base/introspectionSchema":
       return Promise.resolve(importedModule$0) as T;
     
-    case ".graphclient/sources/fls-mainnet/introspectionSchema":
+    case ".graphclient/sources/fls-sepolia/introspectionSchema":
       return Promise.resolve(importedModule$1) as T;
+    
+    case ".graphclient/sources/fls-mainnet/introspectionSchema":
+      return Promise.resolve(importedModule$2) as T;
     
     default:
       return Promise.reject(new Error(`Cannot find module '${relativeModuleId}'.`));
@@ -1462,10 +1747,11 @@ const transforms: MeshTransform[] = [];
 const additionalEnvelopPlugins: MeshPlugin<any>[] = [];
 const flsSepoliaTransforms = [];
 const flsMainnetTransforms = [];
+const fameNftBaseTransforms = [];
 const additionalTypeDefs = [] as any[];
 const flsSepoliaHandler = new GraphqlHandler({
               name: "fls-sepolia",
-              config: {"endpoint":"https://api.studio.thegraph.com/proxy/67995/fls-sepolia/v0.0.6"},
+              config: {"endpoint":"https://api.studio.thegraph.com/query/67995/fls-sepolia/version/latest"},
               baseDir,
               cache,
               pubsub,
@@ -1475,12 +1761,22 @@ const flsSepoliaHandler = new GraphqlHandler({
             });
 const flsMainnetHandler = new GraphqlHandler({
               name: "fls-mainnet",
-              config: {"endpoint":"https://api.studio.thegraph.com/query/67995/fls/v0.0.1"},
+              config: {"endpoint":"https://api.studio.thegraph.com/query/67995/fls/version/latest"},
               baseDir,
               cache,
               pubsub,
               store: sourcesStore.child("fls-mainnet"),
               logger: logger.child("fls-mainnet"),
+              importFn,
+            });
+const fameNftBaseHandler = new GraphqlHandler({
+              name: "fame-nft-base",
+              config: {"endpoint":"https://api.studio.thegraph.com/query/67995/fame-nft-base/version/latest"},
+              baseDir,
+              cache,
+              pubsub,
+              store: sourcesStore.child("fame-nft-base"),
+              logger: logger.child("fame-nft-base"),
               importFn,
             });
 sources[1] = {
@@ -1497,10 +1793,24 @@ flsSepoliaTransforms[0] = new PrefixTransform({
                   importFn,
                   logger,
                 });
+fameNftBaseTransforms[0] = new PrefixTransform({
+                  apiName: "fame-nft-base",
+                  config: {"value":"base_fame_nft_","includeRootOperations":true,"includeTypes":false},
+                  baseDir,
+                  cache,
+                  pubsub,
+                  importFn,
+                  logger,
+                });
 sources[0] = {
           name: 'fls-sepolia',
           handler: flsSepoliaHandler,
           transforms: flsSepoliaTransforms
+        }
+sources[2] = {
+          name: 'fame-nft-base',
+          handler: fameNftBaseHandler,
+          transforms: fameNftBaseTransforms
         }
 const additionalResolvers = [] as any[]
 const merger = new(StitchingMerger as any)({
@@ -1546,6 +1856,12 @@ const merger = new(StitchingMerger as any)({
           return printWithCache(MainnetTokenByOwnerDocument);
         },
         location: 'MainnetTokenByOwnerDocument.graphql'
+      },{
+        document: BaseFameNftTokenByOwnerDocument,
+        get rawSDL() {
+          return printWithCache(BaseFameNftTokenByOwnerDocument);
+        },
+        location: 'BaseFameNftTokenByOwnerDocument.graphql'
       },{
         document: MainnetTokenMintedOnDocument,
         get rawSDL() {
@@ -1633,6 +1949,16 @@ export type MainnetTokenByOwnerQueryVariables = Exact<{
 
 export type MainnetTokenByOwnerQuery = { ownerships: Array<Pick<Ownership, 'tokenId'>> };
 
+export type BaseFameNftTokenByOwnerQueryVariables = Exact<{
+  owner: Scalars['Bytes'];
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderDirection?: InputMaybe<OrderDirection>;
+}>;
+
+
+export type BaseFameNftTokenByOwnerQuery = { base_fame_nft_ownerships: Array<Pick<Ownership, 'tokenId'>> };
+
 export type MainnetTokenMintedOnQueryVariables = Exact<{
   tokenId?: InputMaybe<Scalars['BigInt']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -1700,6 +2026,18 @@ export const MainnetTokenByOwnerDocument = gql`
   }
 }
     ` as unknown as DocumentNode<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>;
+export const BaseFameNftTokenByOwnerDocument = gql`
+    query BaseFameNftTokenByOwner($owner: Bytes!, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
+  base_fame_nft_ownerships(
+    where: {owner: $owner}
+    first: $first
+    skip: $skip
+    orderDirection: $orderDirection
+  ) {
+    tokenId
+  }
+}
+    ` as unknown as DocumentNode<BaseFameNftTokenByOwnerQuery, BaseFameNftTokenByOwnerQueryVariables>;
 export const MainnetTokenMintedOnDocument = gql`
     query MainnetTokenMintedOn($tokenId: BigInt, $first: Int, $skip: Int, $orderDirection: OrderDirection) {
   transfers(
@@ -1735,6 +2073,7 @@ export const SepoliaTokenMintedOnDocument = gql`
 
 
 
+
 export type Requester<C = {}, E = unknown> = <R, V>(doc: DocumentNode, vars?: V, options?: C) => Promise<R> | AsyncIterable<R>
 export function getSdk<C, E>(requester: Requester<C, E>) {
   return {
@@ -1749,6 +2088,9 @@ export function getSdk<C, E>(requester: Requester<C, E>) {
     },
     MainnetTokenByOwner(variables: MainnetTokenByOwnerQueryVariables, options?: C): Promise<MainnetTokenByOwnerQuery> {
       return requester<MainnetTokenByOwnerQuery, MainnetTokenByOwnerQueryVariables>(MainnetTokenByOwnerDocument, variables, options) as Promise<MainnetTokenByOwnerQuery>;
+    },
+    BaseFameNftTokenByOwner(variables: BaseFameNftTokenByOwnerQueryVariables, options?: C): Promise<BaseFameNftTokenByOwnerQuery> {
+      return requester<BaseFameNftTokenByOwnerQuery, BaseFameNftTokenByOwnerQueryVariables>(BaseFameNftTokenByOwnerDocument, variables, options) as Promise<BaseFameNftTokenByOwnerQuery>;
     },
     MainnetTokenMintedOn(variables?: MainnetTokenMintedOnQueryVariables, options?: C): Promise<MainnetTokenMintedOnQuery> {
       return requester<MainnetTokenMintedOnQuery, MainnetTokenMintedOnQueryVariables>(MainnetTokenMintedOnDocument, variables, options) as Promise<MainnetTokenMintedOnQuery>;

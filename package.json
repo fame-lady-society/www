@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.9.3",
     "@ethersproject/providers": "^5.7.2",
     "@graphql-mesh/transform-prefix": "^0.97.4",
+    "@headlessui/react": "^2.1.8",
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/onboarding": "^1.0.1",
     "@metamask/providers": "^9.0.0",

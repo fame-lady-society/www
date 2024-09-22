@@ -1,3 +1,4 @@
+"use client";
 import { FC, PropsWithChildren, useEffect, useMemo } from "react";
 import * as Sentry from "@sentry/nextjs";
 import CssBaseline from "@mui/material/CssBaseline";

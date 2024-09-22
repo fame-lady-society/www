@@ -23,6 +23,9 @@ module.exports = {
       {
         hostname: "ipfs.fameladysociety.com",
       },
+      {
+        hostname: "dev.fame.support",
+      },
     ],
   },
 };
