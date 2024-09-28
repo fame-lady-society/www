@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Customize from "@/routes/Customize";
 import { redirect } from "next/navigation";
+import { RedirectType } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Customize Lady",
@@ -21,7 +22,7 @@ export default async function Page({
       return <Customize prefix="/mainnet/customize" network="mainnet" />;
     }
     default: {
-      redirect(`/mainnet/customize`);
+      redirect(`/mainnet/customize`, RedirectType.replace);
     }
   }
 }

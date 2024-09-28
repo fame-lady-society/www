@@ -16,7 +16,7 @@ export const AppBar: FC<AppBarProps> = ({
 }) => {
   return (
     <header className="bg-gray-900 text-white shadow full-width flex items-center h-20 lg:h-24">
-      <div className="flex flex-row items-center justify-start gap-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="flex flex-row items-center justify-start gap-4 mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <AppBarClientLeft menu={menu} />
         {title}
         <div className="flex-grow" />

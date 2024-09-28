@@ -11,9 +11,9 @@ import { fameVestingFromNetwork } from "./contracts";
 import { formatFame } from "@/utils/fame";
 import { useReleasableAmount } from "./hooks/useReleasableAmount";
 import { useChainId } from "wagmi";
+import { base } from "viem/chains";
 
 export const ClaimCard: FC<{}> = ({}) => {
-  const chainId = useChainId();
   const { isLoading, releasableAmount, vestingScheduleId } =
     useReleasableAmount();
   const { writeContract } = useWriteFameVestingRelease();
@@ -34,9 +34,10 @@ export const ClaimCard: FC<{}> = ({}) => {
       <CardActionArea>
         <Button
           onClick={() => {
-            const address = fameVestingFromNetwork(chainId);
+            const address = fameVestingFromNetwork(base.id);
             if (vestingScheduleId && releasableAmount && address) {
               writeContract({
+                chainId: base.id,
                 address,
                 args: [vestingScheduleId, releasableAmount],
               });

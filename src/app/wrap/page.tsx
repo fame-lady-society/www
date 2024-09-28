@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Wrap Your Lady",
@@ -11,6 +11,6 @@ export default async function Page({
 }: {
   params: { network: string };
 }) {
-  redirect(`/mainnet/wrap`);
+  redirect(`/mainnet/wrap`, RedirectType.replace);
   return null;
 }

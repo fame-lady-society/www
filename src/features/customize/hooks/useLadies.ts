@@ -43,7 +43,7 @@ export function useLadies({
             ? sdk.SepoliaTokenByOwner.bind(sdk)
             : undefined;
       if (!action) {
-        throw new Error("Unsupported chainId");
+        return;
       }
       action({ owner, first, skip: skip ?? 0, orderDirection: sorted ?? "asc" })
         .then((result) => {

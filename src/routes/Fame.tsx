@@ -170,7 +170,6 @@ const Content: FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const imageWidth = isSmallScreen ? window.innerWidth * 0.8 : 1000;
-  const imageHeight = 383;
   const eyesRef = useRef<HTMLImageElement>(null);
   const eyesContainer = useParallax<HTMLDivElement>({
     onProgressChange: (progress) => {
@@ -622,23 +621,8 @@ const Content: FC = () => {
 
 const Header: FC = () => {
   const { address } = useAccount();
-  const { data: balance } = useReadContract({
-    address: fameLadySocietyAddress[1],
-    abi: fameLadySocietyAbi,
-    chainId: 1,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-  });
-  const { data: isPaused } = useReadContract({
-    abi: fameSaleAbi,
-    address: fameSaleAddress(8453),
-    functionName: "isPaused",
-    chainId: 1,
-  });
-
   const theme = useTheme();
   const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <Main
@@ -656,18 +640,6 @@ const Header: FC = () => {
             <Typography variant="h5" component="h1" marginLeft={2}>
               $FAME
             </Typography>
-          )}
-          {balance && !isPaused && (
-            <Button
-              component={WrappedLink}
-              href="/fame/presale"
-              variant="outlined"
-              sx={{ ml: 2 }}
-            >
-              <Typography variant="h5" component="h1">
-                {smallScreen ? "presale" : "join the presale"}
-              </Typography>
-            </Button>
           )}
         </>
       }

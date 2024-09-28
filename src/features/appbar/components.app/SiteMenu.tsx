@@ -1,11 +1,15 @@
 import { FC } from "react";
 import InputIcon from "@mui/icons-material/Input";
-import UpdateIcon from "@mui/icons-material/Update";
-import QAIcon from "@mui/icons-material/QuestionAnswer";
 import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
-import DollarIcon from "@mui/icons-material/MonetizationOn";
+import QAIcon from "@mui/icons-material/QuestionAnswer";
+import EditIcon from "@mui/icons-material/Edit";
+import ReloadIcon from "@mui/icons-material/Replay";
+import BankIcon from "@mui/icons-material/AccountBalance";
 
 import NextLink from "next/link";
+import { MenuItem } from "./MenuItem";
+import { NetworkMenuItem } from "./NetworkMenuItem";
+import { mainnet } from "viem/chains";
 
 export const SiteMenu: FC<{
   isFame?: boolean;
@@ -24,8 +28,10 @@ export const SiteMenu: FC<{
 }) => {
   return (
     <>
-      <MenuItem
-        href="/wrap"
+      <MenuItem href="/" disabled={isHome} icon={<InputIcon />} text="home" />
+      <NetworkMenuItem
+        path="/wrap"
+        defaultChainId={mainnet.id}
         disabled={isWrap}
         icon={<ExchangeIcon />}
         text="Wrap"
@@ -33,39 +39,22 @@ export const SiteMenu: FC<{
       <MenuItem
         href="/fame"
         disabled={isFame}
-        icon={<DollarIcon />}
+        icon={<ReloadIcon />}
         text="$FAME"
       />
-
       <MenuItem
         href="/fameus"
         disabled={isDao}
-        icon={<InputIcon />}
+        icon={<BankIcon />}
         text="FAMEus DAO"
       />
       <MenuItem
         href="/customize"
         disabled={isCustomize}
-        icon={<UpdateIcon />}
+        icon={<EditIcon />}
         text="Customize"
       />
       <MenuItem href="/faq" disabled={isFaq} icon={<QAIcon />} text="FAQ" />
-      <MenuItem href="/" disabled={isHome} icon={<InputIcon />} text="home" />
     </>
   );
 };
-
-const MenuItem: FC<{
-  href: string;
-  disabled: boolean;
-  icon: React.ReactNode;
-  text: string;
-}> = ({ href, disabled, icon, text }) => (
-  <NextLink
-    href={href}
-    className={`flex items-center p-2 hover:bg-gray-700 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    <span className="mr-4 text-white">{icon}</span>
-    <span className="text-right text-white">{text}</span>
-  </NextLink>
-);

@@ -15,7 +15,7 @@ export async function fetchBaseNftLadiesData({
   const action = sdk.BaseFameNftTokenByOwner.bind(sdk);
 
   if (!action) {
-    throw new Error("Unsupported chainId");
+    return [];
   }
 
   const result = await action({ owner, first, skip, orderDirection: sorted });

@@ -5,14 +5,15 @@ import {
 } from "@/wagmi";
 import { fameVestingFromNetwork } from "../contracts";
 import { useEffect } from "react";
+import { base } from "viem/chains";
 
 export function useReleasableAmount() {
-  const chainId = useChainId();
   const { address } = useAccount();
 
   const { data: vestingScheduleId, isLoading: vestingScheduleIdIsLoading } =
     useReadFameVestingComputeVestingScheduleIdForAddressAndIndex({
-      address: fameVestingFromNetwork(chainId),
+      chainId: base.id,
+      address: fameVestingFromNetwork(base.id),
       args: address ? [address, 0n] : undefined,
     });
   const {
@@ -23,7 +24,8 @@ export function useReleasableAmount() {
     refetch: refetchReleasableAmount,
     isRefetching: isRefetchingReleasableAmount,
   } = useReadFameVestingComputeReleasableAmount({
-    address: fameVestingFromNetwork(chainId),
+    chainId: base.id,
+    address: fameVestingFromNetwork(base.id),
     args: vestingScheduleId ? [vestingScheduleId] : undefined,
   });
   const isLoading =
@@ -40,6 +42,7 @@ export function useReleasableAmount() {
     }, 3000);
     return () => clearInterval(interval);
   }, [refetchReleasableAmount]);
+
   return {
     isLoading,
     releasableAmount,

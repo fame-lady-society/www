@@ -15,6 +15,7 @@ import { useAccount } from "wagmi";
 import { FameLadySocietyClaimCard } from "@/features/claim-to-fame/components/FameLadySocietyClaimCard";
 import { base, sepolia } from "viem/chains";
 import { FameBalanceCard } from "@/features/claim-to-fame/components/FameBalanceCard";
+import { RedirectType } from "next/navigation";
 
 const Content: FC<{
   chainId: typeof sepolia.id | typeof base.id;
@@ -24,6 +25,7 @@ const Content: FC<{
     if (account.address && isAddress(account.address)) {
       redirect(
         `${chainId === sepolia.id ? "/sepolia" : "/base/"}/claim/${account.address}`,
+        RedirectType.replace,
       );
     }
   }, [chainId, account.address]);

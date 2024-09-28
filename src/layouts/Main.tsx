@@ -12,8 +12,6 @@ import { Box, Toolbar } from "@mui/material";
 
 import Button from "@mui/material/Button";
 import { AppBar } from "@/features/appbar/components/appBar";
-import { useChainId } from "wagmi";
-import { WrappedLink } from "@/components/WrappedLink";
 import Typography from "@mui/material/Typography";
 import { useReleasableAmount } from "@/features/claim/hooks/useReleasableAmount";
 import { ClaimModal } from "@/features/claim/ClaimModal";

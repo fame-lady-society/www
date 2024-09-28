@@ -49,9 +49,15 @@ export default async function Page({ params }: Props) {
         args: [BigInt(tokenId)],
       })
       .then(async (tokenUri) => {
-        const metadata = await fetchJson<IMetadata>({
-          cid: tokenUri.replace("ipfs://", ""),
-        });
+        const metadata = tokenUri.startsWith("ipfs://")
+          ? await fetchJson<IMetadata>({
+              cid: tokenUri.replace("ipfs://", ""),
+            })
+          : await (async () => {
+              const response = await fetch(tokenUri);
+              const metadata = await response.json();
+              return metadata as IMetadata;
+            })();
         return metadata;
       }),
   ]);

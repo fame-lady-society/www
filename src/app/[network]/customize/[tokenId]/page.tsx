@@ -32,9 +32,15 @@ export default async function Page({
         functionName: "tokenURI",
         args: [BigInt(tokenId)],
       });
-      const metadata = await fetchJson<IMetadata>({
-        cid: tokenUri.replace("ipfs://", ""),
-      });
+      const metadata = tokenUri.startsWith("ipfs://")
+        ? await fetchJson<IMetadata>({
+            cid: tokenUri.replace("ipfs://", ""),
+          })
+        : await (async () => {
+            const response = await fetch(tokenUri);
+            const metadata = await response.json();
+            return metadata as IMetadata;
+          })();
       return (
         <Details
           metadata={metadata}
@@ -50,9 +56,15 @@ export default async function Page({
         functionName: "tokenURI",
         args: [BigInt(tokenId)],
       });
-      const metadata = await fetchJson<IMetadata>({
-        cid: tokenUri.replace("ipfs://", ""),
-      });
+      const metadata = tokenUri.startsWith("ipfs://")
+        ? await fetchJson<IMetadata>({
+            cid: tokenUri.replace("ipfs://", ""),
+          })
+        : await (async () => {
+            const response = await fetch(tokenUri);
+            const metadata = await response.json();
+            return metadata as IMetadata;
+          })();
       return (
         <Details
           metadata={metadata}

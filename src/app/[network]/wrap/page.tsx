@@ -1,17 +1,8 @@
-import Wrap from "@/routes/Wrap";
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
+import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
+import { AppMain } from "@/layouts/AppMain";
 
-export const metadata: Metadata = {
-  title: "Wrap Your Lady",
-  description: "Wrap your Fame Lady.",
-};
-
-export default async function Page({
-  params,
-}: {
-  params: { network: string };
-}) {
+export default function Page({ params }: { params: { network: string } }) {
   const { network } = params;
   let resolvedNetwork: "sepolia" | "mainnet";
   switch (network) {
@@ -24,8 +15,13 @@ export default async function Page({
       break;
     }
     default: {
-      redirect(`/mainnet/wrap`);
+      redirect(`/mainnet/wrap`, RedirectType.replace);
     }
   }
-  return <Wrap network={resolvedNetwork} />;
+  return (
+    <>
+      <AppMain title="FAMEus" isDao></AppMain>
+      <RedirectWhenConnected pathPrefix={`/${resolvedNetwork}/wrap`} />
+    </>
+  );
 }

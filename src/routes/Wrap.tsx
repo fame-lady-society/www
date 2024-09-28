@@ -15,17 +15,11 @@ import { formatEther } from "viem";
 import { useRouter } from "next/navigation";
 import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
 
-const Content: FC<{
+export const Content: FC<{
   network: "mainnet" | "sepolia";
 }> = ({ network }) => {
   const { replace } = useRouter();
   const { chain } = useAccount();
-  if (chain && chain?.name.toLowerCase() !== network) {
-    if ([1, 11155111].includes(chain?.id)) {
-      const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
-      replace(`/${name}/wrap`);
-    }
-  }
 
   const { wrappedNftContractAbi, wrappedNftContractAddress } =
     useChainContracts();

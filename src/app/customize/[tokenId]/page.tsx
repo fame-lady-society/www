@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Customize Lady",
@@ -11,5 +11,5 @@ export default async function Page({
 }: {
   params: { tokenId: string; network: string };
 }) {
-  redirect(`/mainnet/customize/${params.tokenId}`);
+  redirect(`/mainnet/customize/${params.tokenId}`, RedirectType.replace);
 }

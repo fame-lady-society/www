@@ -1,3 +1,4 @@
+"use client";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { MintCard } from "@/features/wrap/components/MintCard";
@@ -27,12 +28,14 @@ import { UnwrapCard } from "./UnwrapCard";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { useNotifications } from "@/features/notifications/Context";
 import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
+import { useNetworkChain } from "../hooks/useNetworkChain";
 
 export const WrapPage: FC<{
   network: "mainnet" | "sepolia";
 }> = ({ network }) => {
   const router = useRouter();
-  const { address, chain } = useAccount();
+  const chain = useNetworkChain(network);
+  const { address } = useAccount();
   const [hasAgreed, setHasAgreed] = useLocalStorage("agree-to-risk", false);
   const [nonce, setNonce] = useState<number>(0);
   const { addNotification } = useNotifications();
@@ -107,6 +110,7 @@ export const WrapPage: FC<{
         try {
           const response = await writeContractAsync({
             args: [count],
+            chainId: chain?.id,
             abi: bulkMinterAbi,
             address: bulkMinterAddress[11155111],
             functionName: "mint",
@@ -123,7 +127,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [writeContractAsync],
+    [writeContractAsync, chain],
   );
 
   const isValidToCheckApproval = address && wrapperNftAddress !== undefined;
@@ -142,6 +146,7 @@ export const WrapPage: FC<{
 
   // This only work on the test bulk minter contract, not fame lady squad
   const { data: ownedTestTokens, refetch: refetchTokens } = useReadContract({
+    chainId: chain?.id,
     abi: bulkMinterAbi,
     address: chain?.id && bulkMinterAddress[chain?.id],
     functionName: "tokensOfOwner",
@@ -150,6 +155,7 @@ export const WrapPage: FC<{
 
   // This is only needed for fame lady squad
   const { data: balanceOf } = useReadContract({
+    chainId: chain?.id,
     abi: targetNftAbi,
     address: targetNftAddress,
     functionName: "balanceOf",
@@ -162,6 +168,7 @@ export const WrapPage: FC<{
     useReadContracts({
       contracts: Array.from({ length: balanceOf ? Number(balanceOf) : 0 })?.map(
         (_, index) => ({
+          chainId: chain?.id,
           abi: fameLadySquadAbi,
           address: chain?.id && fameLadySquadAddress[chain?.id],
           functionName: "tokenOfOwnerByIndex",
@@ -186,6 +193,7 @@ export const WrapPage: FC<{
   );
 
   const { data: wrapCost } = useReadContract({
+    chainId: chain?.id,
     abi: wrapperNftAbi,
     address: wrapperNftAddress,
     functionName: "wrapCost",
@@ -202,6 +210,7 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
+            chainId: chain?.id,
             abi: wrapperNftAbi,
             address: wrapperNftAddress!,
             functionName: "wrapTo",
@@ -229,6 +238,7 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
+            chainId: chain?.id,
             abi: wrapperNftAbi,
             address: wrapperNftAddress!,
             functionName: "wrap",
@@ -256,6 +266,7 @@ export const WrapPage: FC<{
       if (writeContractAsync) {
         try {
           const response = await writeContractAsync({
+            chainId: chain?.id,
             abi: wrapperNftAbi,
             address: wrapperNftAddress!,
             functionName: "unwrapMany",
@@ -280,6 +291,7 @@ export const WrapPage: FC<{
     if (writeContractAsync) {
       try {
         const response = await writeContractAsync({
+          chainId: chain?.id,
           abi: targetNftAbi,
           address: targetNftAddress!,
           functionName: "setApprovalForAll",

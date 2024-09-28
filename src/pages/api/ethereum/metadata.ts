@@ -71,9 +71,15 @@ export default (async function handler(req, res) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const metadata = await fetchJson<IMetadata>({
-      cid: tokenUri.replace("ipfs://", ""),
-    });
+    const metadata = tokenUri.startsWith("ipfs://")
+      ? await fetchJson<IMetadata>({
+          cid: tokenUri.replace("ipfs://", ""),
+        })
+      : await (async () => {
+          const response = await fetch(tokenUri);
+          const metadata = await response.json();
+          return metadata as IMetadata;
+        })();
     metadata.name = name;
     metadata.description =
       typeof description !== "undefined" && description.length > 0

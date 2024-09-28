@@ -1,4 +1,5 @@
 import { type Viewport } from "next";
+import "@/styles/tailwind.css";
 
 export const viewport: Viewport = {
   initialScale: 1.0,
