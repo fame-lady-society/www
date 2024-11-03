@@ -1095,18 +1095,6 @@ const Header: FC = () => {
               $FAME
             </Typography>
           )}
-          {balance && !isPaused && (
-            <Button
-              component={WrappedLink}
-              href="/fame/presale"
-              variant="outlined"
-              sx={{ ml: 2 }}
-            >
-              <Typography variant="h5" component="h1">
-                {smallScreen ? "presale" : "join the presale"}
-              </Typography>
-            </Button>
-          )}
         </>
       }
     >

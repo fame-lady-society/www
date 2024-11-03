@@ -25,6 +25,7 @@ type Approval {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  contract: Bytes!
 }
 
 type ApprovalForAll {
@@ -35,6 +36,7 @@ type ApprovalForAll {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  contract: Bytes!
 }
 
 input ApprovalForAll_filter {
@@ -98,6 +100,16 @@ input ApprovalForAll_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [ApprovalForAll_filter]
@@ -112,6 +124,7 @@ enum ApprovalForAll_orderBy {
   blockNumber
   blockTimestamp
   transactionHash
+  contract
 }
 
 input Approval_filter {
@@ -179,6 +192,16 @@ input Approval_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Approval_filter]
@@ -193,6 +216,7 @@ enum Approval_orderBy {
   blockNumber
   blockTimestamp
   transactionHash
+  contract
 }
 
 type BatchMetadataUpdate {
@@ -202,6 +226,7 @@ type BatchMetadataUpdate {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  contract: Bytes!
 }
 
 input BatchMetadataUpdate_filter {
@@ -257,6 +282,16 @@ input BatchMetadataUpdate_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [BatchMetadataUpdate_filter]
@@ -270,6 +305,7 @@ enum BatchMetadataUpdate_orderBy {
   blockNumber
   blockTimestamp
   transactionHash
+  contract
 }
 
 scalar BigDecimal
@@ -300,6 +336,7 @@ type MetadataUpdate {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  contract: Bytes!
 }
 
 input MetadataUpdate_filter {
@@ -347,6 +384,16 @@ input MetadataUpdate_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [MetadataUpdate_filter]
@@ -359,6 +406,7 @@ enum MetadataUpdate_orderBy {
   blockNumber
   blockTimestamp
   transactionHash
+  contract
 }
 
 """Defines the order direction, either ascending or descending"""
@@ -371,6 +419,7 @@ type Ownership {
   id: ID!
   owner: Bytes
   tokenId: BigInt
+  contract: Bytes!
 }
 
 input Ownership_filter {
@@ -400,6 +449,16 @@ input Ownership_filter {
   tokenId_lte: BigInt
   tokenId_in: [BigInt!]
   tokenId_not_in: [BigInt!]
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Ownership_filter]
@@ -410,6 +469,7 @@ enum Ownership_orderBy {
   id
   owner
   tokenId
+  contract
 }
 
 type Query {
@@ -439,6 +499,32 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Approval!]!
+  base_fame_nft_tokenApproval(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenApproval
+  base_fame_nft_tokenApprovals(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenApproval_orderBy
+    orderDirection: OrderDirection
+    where: TokenApproval_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenApproval!]!
   base_fame_nft_approvalForAll(
     id: ID!
     """
@@ -543,6 +629,32 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Transfer!]!
+  base_fame_nft_tokenTransfer(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenTransfer
+  base_fame_nft_tokenTransfers(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenTransfer_orderBy
+    orderDirection: OrderDirection
+    where: TokenTransfer_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenTransfer!]!
   base_fame_nft_ownership(
     id: ID!
     """
@@ -569,6 +681,32 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Ownership!]!
+  base_fame_nft_tokenBalance(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenBalance
+  base_fame_nft_tokenBalances(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenBalance_orderBy
+    orderDirection: OrderDirection
+    where: TokenBalance_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenBalance!]!
   """Access to subgraph metadata"""
   base_fame_nft__meta(block: Block_height): _Meta_
 }
@@ -600,6 +738,32 @@ type Subscription {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Approval!]!
+  base_fame_nft_tokenApproval(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenApproval
+  base_fame_nft_tokenApprovals(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenApproval_orderBy
+    orderDirection: OrderDirection
+    where: TokenApproval_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenApproval!]!
   base_fame_nft_approvalForAll(
     id: ID!
     """
@@ -704,6 +868,32 @@ type Subscription {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Transfer!]!
+  base_fame_nft_tokenTransfer(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenTransfer
+  base_fame_nft_tokenTransfers(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenTransfer_orderBy
+    orderDirection: OrderDirection
+    where: TokenTransfer_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenTransfer!]!
   base_fame_nft_ownership(
     id: ID!
     """
@@ -730,6 +920,32 @@ type Subscription {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): [Ownership!]!
+  base_fame_nft_tokenBalance(
+    id: ID!
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): TokenBalance
+  base_fame_nft_tokenBalances(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenBalance_orderBy
+    orderDirection: OrderDirection
+    where: TokenBalance_filter
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): [TokenBalance!]!
   """Access to subgraph metadata"""
   base_fame_nft__meta(block: Block_height): _Meta_
 }
@@ -740,6 +956,269 @@ A string representation of microseconds UNIX timestamp (16 digits)
 """
 scalar Timestamp
 
+type TokenApproval {
+  id: Bytes!
+  owner: Bytes!
+  spender: Bytes!
+  amount: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contract: Bytes!
+}
+
+input TokenApproval_filter {
+  id: Bytes
+  id_not: Bytes
+  id_gt: Bytes
+  id_lt: Bytes
+  id_gte: Bytes
+  id_lte: Bytes
+  id_in: [Bytes!]
+  id_not_in: [Bytes!]
+  id_contains: Bytes
+  id_not_contains: Bytes
+  owner: Bytes
+  owner_not: Bytes
+  owner_gt: Bytes
+  owner_lt: Bytes
+  owner_gte: Bytes
+  owner_lte: Bytes
+  owner_in: [Bytes!]
+  owner_not_in: [Bytes!]
+  owner_contains: Bytes
+  owner_not_contains: Bytes
+  spender: Bytes
+  spender_not: Bytes
+  spender_gt: Bytes
+  spender_lt: Bytes
+  spender_gte: Bytes
+  spender_lte: Bytes
+  spender_in: [Bytes!]
+  spender_not_in: [Bytes!]
+  spender_contains: Bytes
+  spender_not_contains: Bytes
+  amount: BigInt
+  amount_not: BigInt
+  amount_gt: BigInt
+  amount_lt: BigInt
+  amount_gte: BigInt
+  amount_lte: BigInt
+  amount_in: [BigInt!]
+  amount_not_in: [BigInt!]
+  blockNumber: BigInt
+  blockNumber_not: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_lt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_not_in: [BigInt!]
+  blockTimestamp: BigInt
+  blockTimestamp_not: BigInt
+  blockTimestamp_gt: BigInt
+  blockTimestamp_lt: BigInt
+  blockTimestamp_gte: BigInt
+  blockTimestamp_lte: BigInt
+  blockTimestamp_in: [BigInt!]
+  blockTimestamp_not_in: [BigInt!]
+  transactionHash: Bytes
+  transactionHash_not: Bytes
+  transactionHash_gt: Bytes
+  transactionHash_lt: Bytes
+  transactionHash_gte: Bytes
+  transactionHash_lte: Bytes
+  transactionHash_in: [Bytes!]
+  transactionHash_not_in: [Bytes!]
+  transactionHash_contains: Bytes
+  transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [TokenApproval_filter]
+  or: [TokenApproval_filter]
+}
+
+enum TokenApproval_orderBy {
+  id
+  owner
+  spender
+  amount
+  blockNumber
+  blockTimestamp
+  transactionHash
+  contract
+}
+
+type TokenBalance {
+  id: ID!
+  owner: Bytes
+  amount: BigInt
+  contract: Bytes!
+}
+
+input TokenBalance_filter {
+  id: ID
+  id_not: ID
+  id_gt: ID
+  id_lt: ID
+  id_gte: ID
+  id_lte: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  owner: Bytes
+  owner_not: Bytes
+  owner_gt: Bytes
+  owner_lt: Bytes
+  owner_gte: Bytes
+  owner_lte: Bytes
+  owner_in: [Bytes!]
+  owner_not_in: [Bytes!]
+  owner_contains: Bytes
+  owner_not_contains: Bytes
+  amount: BigInt
+  amount_not: BigInt
+  amount_gt: BigInt
+  amount_lt: BigInt
+  amount_gte: BigInt
+  amount_lte: BigInt
+  amount_in: [BigInt!]
+  amount_not_in: [BigInt!]
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [TokenBalance_filter]
+  or: [TokenBalance_filter]
+}
+
+enum TokenBalance_orderBy {
+  id
+  owner
+  amount
+  contract
+}
+
+type TokenTransfer {
+  id: Bytes!
+  from: Bytes!
+  to: Bytes!
+  amount: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  contract: Bytes!
+}
+
+input TokenTransfer_filter {
+  id: Bytes
+  id_not: Bytes
+  id_gt: Bytes
+  id_lt: Bytes
+  id_gte: Bytes
+  id_lte: Bytes
+  id_in: [Bytes!]
+  id_not_in: [Bytes!]
+  id_contains: Bytes
+  id_not_contains: Bytes
+  from: Bytes
+  from_not: Bytes
+  from_gt: Bytes
+  from_lt: Bytes
+  from_gte: Bytes
+  from_lte: Bytes
+  from_in: [Bytes!]
+  from_not_in: [Bytes!]
+  from_contains: Bytes
+  from_not_contains: Bytes
+  to: Bytes
+  to_not: Bytes
+  to_gt: Bytes
+  to_lt: Bytes
+  to_gte: Bytes
+  to_lte: Bytes
+  to_in: [Bytes!]
+  to_not_in: [Bytes!]
+  to_contains: Bytes
+  to_not_contains: Bytes
+  amount: BigInt
+  amount_not: BigInt
+  amount_gt: BigInt
+  amount_lt: BigInt
+  amount_gte: BigInt
+  amount_lte: BigInt
+  amount_in: [BigInt!]
+  amount_not_in: [BigInt!]
+  blockNumber: BigInt
+  blockNumber_not: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_lt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_not_in: [BigInt!]
+  blockTimestamp: BigInt
+  blockTimestamp_not: BigInt
+  blockTimestamp_gt: BigInt
+  blockTimestamp_lt: BigInt
+  blockTimestamp_gte: BigInt
+  blockTimestamp_lte: BigInt
+  blockTimestamp_in: [BigInt!]
+  blockTimestamp_not_in: [BigInt!]
+  transactionHash: Bytes
+  transactionHash_not: Bytes
+  transactionHash_gt: Bytes
+  transactionHash_lt: Bytes
+  transactionHash_gte: Bytes
+  transactionHash_lte: Bytes
+  transactionHash_in: [Bytes!]
+  transactionHash_not_in: [Bytes!]
+  transactionHash_contains: Bytes
+  transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [TokenTransfer_filter]
+  or: [TokenTransfer_filter]
+}
+
+enum TokenTransfer_orderBy {
+  id
+  from
+  to
+  amount
+  blockNumber
+  blockTimestamp
+  transactionHash
+  contract
+}
+
 type Transfer {
   id: Bytes!
   from: Bytes!
@@ -748,6 +1227,7 @@ type Transfer {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  contract: Bytes!
 }
 
 input Transfer_filter {
@@ -815,6 +1295,16 @@ input Transfer_filter {
   transactionHash_not_in: [Bytes!]
   transactionHash_contains: Bytes
   transactionHash_not_contains: Bytes
+  contract: Bytes
+  contract_not: Bytes
+  contract_gt: Bytes
+  contract_lt: Bytes
+  contract_gte: Bytes
+  contract_lte: Bytes
+  contract_in: [Bytes!]
+  contract_not_in: [Bytes!]
+  contract_contains: Bytes
+  contract_not_contains: Bytes
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [Transfer_filter]
@@ -829,6 +1319,7 @@ enum Transfer_orderBy {
   blockNumber
   blockTimestamp
   transactionHash
+  contract
 }
 
 type _Block_ {

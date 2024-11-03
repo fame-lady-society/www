@@ -1,0 +1,11 @@
+query FamePresaleTokenHolders {
+  base_fame_nft_tokenBalances(
+    where: {
+      contract: "0xf09326082a0B360567c72b6FEd67c22Fe2f76B60"
+      owner_not: "0x0000000000000000000000000000000000000000"
+    }
+  ) {
+    owner
+    amount
+  }
+}

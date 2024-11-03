@@ -230,7 +230,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync, chain],
   );
 
   const onWrap = useCallback(
@@ -258,7 +258,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync, chain],
   );
 
   const onUnwrapMany = useCallback(
@@ -284,7 +284,7 @@ export const WrapPage: FC<{
         }
       }
     },
-    [wrapperNftAbi, wrapperNftAddress, writeContractAsync],
+    [wrapperNftAbi, wrapperNftAddress, writeContractAsync, chain],
   );
 
   const onApprove = useCallback(async () => {

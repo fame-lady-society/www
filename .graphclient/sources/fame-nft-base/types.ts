@@ -35,6 +35,7 @@ export type Approval = {
   blockNumber: Scalars['BigInt'];
   blockTimestamp: Scalars['BigInt'];
   transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
 };
 
 export type ApprovalForAll = {
@@ -45,6 +46,7 @@ export type ApprovalForAll = {
   blockNumber: Scalars['BigInt'];
   blockTimestamp: Scalars['BigInt'];
   transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
 };
 
 export type ApprovalForAll_filter = {
@@ -108,6 +110,16 @@ export type ApprovalForAll_filter = {
   transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
   transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<ApprovalForAll_filter>>>;
@@ -121,7 +133,8 @@ export type ApprovalForAll_orderBy =
   | 'approved'
   | 'blockNumber'
   | 'blockTimestamp'
-  | 'transactionHash';
+  | 'transactionHash'
+  | 'contract';
 
 export type Approval_filter = {
   id?: InputMaybe<Scalars['Bytes']>;
@@ -188,6 +201,16 @@ export type Approval_filter = {
   transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
   transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Approval_filter>>>;
@@ -201,7 +224,8 @@ export type Approval_orderBy =
   | 'FameLadySociety_id'
   | 'blockNumber'
   | 'blockTimestamp'
-  | 'transactionHash';
+  | 'transactionHash'
+  | 'contract';
 
 export type BatchMetadataUpdate = {
   id: Scalars['Bytes'];
@@ -210,6 +234,7 @@ export type BatchMetadataUpdate = {
   blockNumber: Scalars['BigInt'];
   blockTimestamp: Scalars['BigInt'];
   transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
 };
 
 export type BatchMetadataUpdate_filter = {
@@ -265,6 +290,16 @@ export type BatchMetadataUpdate_filter = {
   transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
   transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<BatchMetadataUpdate_filter>>>;
@@ -277,7 +312,8 @@ export type BatchMetadataUpdate_orderBy =
   | '_toTokenId'
   | 'blockNumber'
   | 'blockTimestamp'
-  | 'transactionHash';
+  | 'transactionHash'
+  | 'contract';
 
 export type BlockChangedFilter = {
   number_gte: Scalars['Int'];
@@ -295,6 +331,7 @@ export type MetadataUpdate = {
   blockNumber: Scalars['BigInt'];
   blockTimestamp: Scalars['BigInt'];
   transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
 };
 
 export type MetadataUpdate_filter = {
@@ -342,6 +379,16 @@ export type MetadataUpdate_filter = {
   transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
   transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<MetadataUpdate_filter>>>;
@@ -353,7 +400,8 @@ export type MetadataUpdate_orderBy =
   | '_tokenId'
   | 'blockNumber'
   | 'blockTimestamp'
-  | 'transactionHash';
+  | 'transactionHash'
+  | 'contract';
 
 /** Defines the order direction, either ascending or descending */
 export type OrderDirection =
@@ -364,6 +412,7 @@ export type Ownership = {
   id: Scalars['ID'];
   owner?: Maybe<Scalars['Bytes']>;
   tokenId?: Maybe<Scalars['BigInt']>;
+  contract: Scalars['Bytes'];
 };
 
 export type Ownership_filter = {
@@ -393,6 +442,16 @@ export type Ownership_filter = {
   tokenId_lte?: InputMaybe<Scalars['BigInt']>;
   tokenId_in?: InputMaybe<Array<Scalars['BigInt']>>;
   tokenId_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Ownership_filter>>>;
@@ -402,11 +461,14 @@ export type Ownership_filter = {
 export type Ownership_orderBy =
   | 'id'
   | 'owner'
-  | 'tokenId';
+  | 'tokenId'
+  | 'contract';
 
 export type Query = {
   base_fame_nft_approval?: Maybe<Approval>;
   base_fame_nft_approvals: Array<Approval>;
+  base_fame_nft_tokenApproval?: Maybe<TokenApproval>;
+  base_fame_nft_tokenApprovals: Array<TokenApproval>;
   base_fame_nft_approvalForAll?: Maybe<ApprovalForAll>;
   base_fame_nft_approvalForAlls: Array<ApprovalForAll>;
   base_fame_nft_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
@@ -415,8 +477,12 @@ export type Query = {
   base_fame_nft_metadataUpdates: Array<MetadataUpdate>;
   base_fame_nft_transfer?: Maybe<Transfer>;
   base_fame_nft_transfers: Array<Transfer>;
+  base_fame_nft_tokenTransfer?: Maybe<TokenTransfer>;
+  base_fame_nft_tokenTransfers: Array<TokenTransfer>;
   base_fame_nft_ownership?: Maybe<Ownership>;
   base_fame_nft_ownerships: Array<Ownership>;
+  base_fame_nft_tokenBalance?: Maybe<TokenBalance>;
+  base_fame_nft_tokenBalances: Array<TokenBalance>;
   /** Access to subgraph metadata */
   base_fame_nft__meta?: Maybe<_Meta_>;
 };
@@ -435,6 +501,24 @@ export type Querybase_fame_nft_approvalsArgs = {
   orderBy?: InputMaybe<Approval_orderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
   where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_tokenApprovalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_tokenApprovalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenApproval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenApproval_filter>;
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
@@ -512,6 +596,24 @@ export type Querybase_fame_nft_transfersArgs = {
 };
 
 
+export type Querybase_fame_nft_tokenTransferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_tokenTransfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenTransfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenTransfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
 export type Querybase_fame_nft_ownershipArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
@@ -530,6 +632,24 @@ export type Querybase_fame_nft_ownershipsArgs = {
 };
 
 
+export type Querybase_fame_nft_tokenBalanceArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Querybase_fame_nft_tokenBalancesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenBalance_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenBalance_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
 export type Querybase_fame_nft__metaArgs = {
   block?: InputMaybe<Block_height>;
 };
@@ -537,6 +657,8 @@ export type Querybase_fame_nft__metaArgs = {
 export type Subscription = {
   base_fame_nft_approval?: Maybe<Approval>;
   base_fame_nft_approvals: Array<Approval>;
+  base_fame_nft_tokenApproval?: Maybe<TokenApproval>;
+  base_fame_nft_tokenApprovals: Array<TokenApproval>;
   base_fame_nft_approvalForAll?: Maybe<ApprovalForAll>;
   base_fame_nft_approvalForAlls: Array<ApprovalForAll>;
   base_fame_nft_batchMetadataUpdate?: Maybe<BatchMetadataUpdate>;
@@ -545,8 +667,12 @@ export type Subscription = {
   base_fame_nft_metadataUpdates: Array<MetadataUpdate>;
   base_fame_nft_transfer?: Maybe<Transfer>;
   base_fame_nft_transfers: Array<Transfer>;
+  base_fame_nft_tokenTransfer?: Maybe<TokenTransfer>;
+  base_fame_nft_tokenTransfers: Array<TokenTransfer>;
   base_fame_nft_ownership?: Maybe<Ownership>;
   base_fame_nft_ownerships: Array<Ownership>;
+  base_fame_nft_tokenBalance?: Maybe<TokenBalance>;
+  base_fame_nft_tokenBalances: Array<TokenBalance>;
   /** Access to subgraph metadata */
   base_fame_nft__meta?: Maybe<_Meta_>;
 };
@@ -565,6 +691,24 @@ export type Subscriptionbase_fame_nft_approvalsArgs = {
   orderBy?: InputMaybe<Approval_orderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
   where?: InputMaybe<Approval_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_tokenApprovalArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_tokenApprovalsArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenApproval_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenApproval_filter>;
   block?: InputMaybe<Block_height>;
   subgraphError?: _SubgraphErrorPolicy_;
 };
@@ -642,6 +786,24 @@ export type Subscriptionbase_fame_nft_transfersArgs = {
 };
 
 
+export type Subscriptionbase_fame_nft_tokenTransferArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_tokenTransfersArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenTransfer_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenTransfer_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
 export type Subscriptionbase_fame_nft_ownershipArgs = {
   id: Scalars['ID'];
   block?: InputMaybe<Block_height>;
@@ -660,9 +822,287 @@ export type Subscriptionbase_fame_nft_ownershipsArgs = {
 };
 
 
+export type Subscriptionbase_fame_nft_tokenBalanceArgs = {
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type Subscriptionbase_fame_nft_tokenBalancesArgs = {
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<TokenBalance_orderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<TokenBalance_filter>;
+  block?: InputMaybe<Block_height>;
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
 export type Subscriptionbase_fame_nft__metaArgs = {
   block?: InputMaybe<Block_height>;
 };
+
+export type TokenApproval = {
+  id: Scalars['Bytes'];
+  owner: Scalars['Bytes'];
+  spender: Scalars['Bytes'];
+  amount: Scalars['BigInt'];
+  blockNumber: Scalars['BigInt'];
+  blockTimestamp: Scalars['BigInt'];
+  transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
+};
+
+export type TokenApproval_filter = {
+  id?: InputMaybe<Scalars['Bytes']>;
+  id_not?: InputMaybe<Scalars['Bytes']>;
+  id_gt?: InputMaybe<Scalars['Bytes']>;
+  id_lt?: InputMaybe<Scalars['Bytes']>;
+  id_gte?: InputMaybe<Scalars['Bytes']>;
+  id_lte?: InputMaybe<Scalars['Bytes']>;
+  id_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  id_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  id_contains?: InputMaybe<Scalars['Bytes']>;
+  id_not_contains?: InputMaybe<Scalars['Bytes']>;
+  owner?: InputMaybe<Scalars['Bytes']>;
+  owner_not?: InputMaybe<Scalars['Bytes']>;
+  owner_gt?: InputMaybe<Scalars['Bytes']>;
+  owner_lt?: InputMaybe<Scalars['Bytes']>;
+  owner_gte?: InputMaybe<Scalars['Bytes']>;
+  owner_lte?: InputMaybe<Scalars['Bytes']>;
+  owner_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  owner_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  owner_contains?: InputMaybe<Scalars['Bytes']>;
+  owner_not_contains?: InputMaybe<Scalars['Bytes']>;
+  spender?: InputMaybe<Scalars['Bytes']>;
+  spender_not?: InputMaybe<Scalars['Bytes']>;
+  spender_gt?: InputMaybe<Scalars['Bytes']>;
+  spender_lt?: InputMaybe<Scalars['Bytes']>;
+  spender_gte?: InputMaybe<Scalars['Bytes']>;
+  spender_lte?: InputMaybe<Scalars['Bytes']>;
+  spender_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  spender_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  spender_contains?: InputMaybe<Scalars['Bytes']>;
+  spender_not_contains?: InputMaybe<Scalars['Bytes']>;
+  amount?: InputMaybe<Scalars['BigInt']>;
+  amount_not?: InputMaybe<Scalars['BigInt']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']>;
+  amount_lt?: InputMaybe<Scalars['BigInt']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TokenApproval_filter>>>;
+  or?: InputMaybe<Array<InputMaybe<TokenApproval_filter>>>;
+};
+
+export type TokenApproval_orderBy =
+  | 'id'
+  | 'owner'
+  | 'spender'
+  | 'amount'
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'transactionHash'
+  | 'contract';
+
+export type TokenBalance = {
+  id: Scalars['ID'];
+  owner?: Maybe<Scalars['Bytes']>;
+  amount?: Maybe<Scalars['BigInt']>;
+  contract: Scalars['Bytes'];
+};
+
+export type TokenBalance_filter = {
+  id?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  owner?: InputMaybe<Scalars['Bytes']>;
+  owner_not?: InputMaybe<Scalars['Bytes']>;
+  owner_gt?: InputMaybe<Scalars['Bytes']>;
+  owner_lt?: InputMaybe<Scalars['Bytes']>;
+  owner_gte?: InputMaybe<Scalars['Bytes']>;
+  owner_lte?: InputMaybe<Scalars['Bytes']>;
+  owner_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  owner_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  owner_contains?: InputMaybe<Scalars['Bytes']>;
+  owner_not_contains?: InputMaybe<Scalars['Bytes']>;
+  amount?: InputMaybe<Scalars['BigInt']>;
+  amount_not?: InputMaybe<Scalars['BigInt']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']>;
+  amount_lt?: InputMaybe<Scalars['BigInt']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TokenBalance_filter>>>;
+  or?: InputMaybe<Array<InputMaybe<TokenBalance_filter>>>;
+};
+
+export type TokenBalance_orderBy =
+  | 'id'
+  | 'owner'
+  | 'amount'
+  | 'contract';
+
+export type TokenTransfer = {
+  id: Scalars['Bytes'];
+  from: Scalars['Bytes'];
+  to: Scalars['Bytes'];
+  amount: Scalars['BigInt'];
+  blockNumber: Scalars['BigInt'];
+  blockTimestamp: Scalars['BigInt'];
+  transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
+};
+
+export type TokenTransfer_filter = {
+  id?: InputMaybe<Scalars['Bytes']>;
+  id_not?: InputMaybe<Scalars['Bytes']>;
+  id_gt?: InputMaybe<Scalars['Bytes']>;
+  id_lt?: InputMaybe<Scalars['Bytes']>;
+  id_gte?: InputMaybe<Scalars['Bytes']>;
+  id_lte?: InputMaybe<Scalars['Bytes']>;
+  id_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  id_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  id_contains?: InputMaybe<Scalars['Bytes']>;
+  id_not_contains?: InputMaybe<Scalars['Bytes']>;
+  from?: InputMaybe<Scalars['Bytes']>;
+  from_not?: InputMaybe<Scalars['Bytes']>;
+  from_gt?: InputMaybe<Scalars['Bytes']>;
+  from_lt?: InputMaybe<Scalars['Bytes']>;
+  from_gte?: InputMaybe<Scalars['Bytes']>;
+  from_lte?: InputMaybe<Scalars['Bytes']>;
+  from_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  from_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  from_contains?: InputMaybe<Scalars['Bytes']>;
+  from_not_contains?: InputMaybe<Scalars['Bytes']>;
+  to?: InputMaybe<Scalars['Bytes']>;
+  to_not?: InputMaybe<Scalars['Bytes']>;
+  to_gt?: InputMaybe<Scalars['Bytes']>;
+  to_lt?: InputMaybe<Scalars['Bytes']>;
+  to_gte?: InputMaybe<Scalars['Bytes']>;
+  to_lte?: InputMaybe<Scalars['Bytes']>;
+  to_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  to_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  to_contains?: InputMaybe<Scalars['Bytes']>;
+  to_not_contains?: InputMaybe<Scalars['Bytes']>;
+  amount?: InputMaybe<Scalars['BigInt']>;
+  amount_not?: InputMaybe<Scalars['BigInt']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']>;
+  amount_lt?: InputMaybe<Scalars['BigInt']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TokenTransfer_filter>>>;
+  or?: InputMaybe<Array<InputMaybe<TokenTransfer_filter>>>;
+};
+
+export type TokenTransfer_orderBy =
+  | 'id'
+  | 'from'
+  | 'to'
+  | 'amount'
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'transactionHash'
+  | 'contract';
 
 export type Transfer = {
   id: Scalars['Bytes'];
@@ -672,6 +1112,7 @@ export type Transfer = {
   blockNumber: Scalars['BigInt'];
   blockTimestamp: Scalars['BigInt'];
   transactionHash: Scalars['Bytes'];
+  contract: Scalars['Bytes'];
 };
 
 export type Transfer_filter = {
@@ -739,6 +1180,16 @@ export type Transfer_filter = {
   transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   transactionHash_contains?: InputMaybe<Scalars['Bytes']>;
   transactionHash_not_contains?: InputMaybe<Scalars['Bytes']>;
+  contract?: InputMaybe<Scalars['Bytes']>;
+  contract_not?: InputMaybe<Scalars['Bytes']>;
+  contract_gt?: InputMaybe<Scalars['Bytes']>;
+  contract_lt?: InputMaybe<Scalars['Bytes']>;
+  contract_gte?: InputMaybe<Scalars['Bytes']>;
+  contract_lte?: InputMaybe<Scalars['Bytes']>;
+  contract_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  contract_contains?: InputMaybe<Scalars['Bytes']>;
+  contract_not_contains?: InputMaybe<Scalars['Bytes']>;
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Transfer_filter>>>;
@@ -752,7 +1203,8 @@ export type Transfer_orderBy =
   | 'FameLadySociety_id'
   | 'blockNumber'
   | 'blockTimestamp'
-  | 'transactionHash';
+  | 'transactionHash'
+  | 'contract';
 
 export type _Block_ = {
   /** The hash of the block */
@@ -793,6 +1245,10 @@ export type _SubgraphErrorPolicy_ =
   /** null **/
   base_fame_nft_approvals: InContextSdkMethod<Query['base_fame_nft_approvals'], Querybase_fame_nft_approvalsArgs, MeshContext>,
   /** null **/
+  base_fame_nft_tokenApproval: InContextSdkMethod<Query['base_fame_nft_tokenApproval'], Querybase_fame_nft_tokenApprovalArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenApprovals: InContextSdkMethod<Query['base_fame_nft_tokenApprovals'], Querybase_fame_nft_tokenApprovalsArgs, MeshContext>,
+  /** null **/
   base_fame_nft_approvalForAll: InContextSdkMethod<Query['base_fame_nft_approvalForAll'], Querybase_fame_nft_approvalForAllArgs, MeshContext>,
   /** null **/
   base_fame_nft_approvalForAlls: InContextSdkMethod<Query['base_fame_nft_approvalForAlls'], Querybase_fame_nft_approvalForAllsArgs, MeshContext>,
@@ -809,9 +1265,17 @@ export type _SubgraphErrorPolicy_ =
   /** null **/
   base_fame_nft_transfers: InContextSdkMethod<Query['base_fame_nft_transfers'], Querybase_fame_nft_transfersArgs, MeshContext>,
   /** null **/
+  base_fame_nft_tokenTransfer: InContextSdkMethod<Query['base_fame_nft_tokenTransfer'], Querybase_fame_nft_tokenTransferArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenTransfers: InContextSdkMethod<Query['base_fame_nft_tokenTransfers'], Querybase_fame_nft_tokenTransfersArgs, MeshContext>,
+  /** null **/
   base_fame_nft_ownership: InContextSdkMethod<Query['base_fame_nft_ownership'], Querybase_fame_nft_ownershipArgs, MeshContext>,
   /** null **/
   base_fame_nft_ownerships: InContextSdkMethod<Query['base_fame_nft_ownerships'], Querybase_fame_nft_ownershipsArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenBalance: InContextSdkMethod<Query['base_fame_nft_tokenBalance'], Querybase_fame_nft_tokenBalanceArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenBalances: InContextSdkMethod<Query['base_fame_nft_tokenBalances'], Querybase_fame_nft_tokenBalancesArgs, MeshContext>,
   /** Access to subgraph metadata **/
   base_fame_nft__meta: InContextSdkMethod<Query['base_fame_nft__meta'], Querybase_fame_nft__metaArgs, MeshContext>
   };
@@ -825,6 +1289,10 @@ export type _SubgraphErrorPolicy_ =
   base_fame_nft_approval: InContextSdkMethod<Subscription['base_fame_nft_approval'], Subscriptionbase_fame_nft_approvalArgs, MeshContext>,
   /** null **/
   base_fame_nft_approvals: InContextSdkMethod<Subscription['base_fame_nft_approvals'], Subscriptionbase_fame_nft_approvalsArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenApproval: InContextSdkMethod<Subscription['base_fame_nft_tokenApproval'], Subscriptionbase_fame_nft_tokenApprovalArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenApprovals: InContextSdkMethod<Subscription['base_fame_nft_tokenApprovals'], Subscriptionbase_fame_nft_tokenApprovalsArgs, MeshContext>,
   /** null **/
   base_fame_nft_approvalForAll: InContextSdkMethod<Subscription['base_fame_nft_approvalForAll'], Subscriptionbase_fame_nft_approvalForAllArgs, MeshContext>,
   /** null **/
@@ -842,9 +1310,17 @@ export type _SubgraphErrorPolicy_ =
   /** null **/
   base_fame_nft_transfers: InContextSdkMethod<Subscription['base_fame_nft_transfers'], Subscriptionbase_fame_nft_transfersArgs, MeshContext>,
   /** null **/
+  base_fame_nft_tokenTransfer: InContextSdkMethod<Subscription['base_fame_nft_tokenTransfer'], Subscriptionbase_fame_nft_tokenTransferArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenTransfers: InContextSdkMethod<Subscription['base_fame_nft_tokenTransfers'], Subscriptionbase_fame_nft_tokenTransfersArgs, MeshContext>,
+  /** null **/
   base_fame_nft_ownership: InContextSdkMethod<Subscription['base_fame_nft_ownership'], Subscriptionbase_fame_nft_ownershipArgs, MeshContext>,
   /** null **/
   base_fame_nft_ownerships: InContextSdkMethod<Subscription['base_fame_nft_ownerships'], Subscriptionbase_fame_nft_ownershipsArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenBalance: InContextSdkMethod<Subscription['base_fame_nft_tokenBalance'], Subscriptionbase_fame_nft_tokenBalanceArgs, MeshContext>,
+  /** null **/
+  base_fame_nft_tokenBalances: InContextSdkMethod<Subscription['base_fame_nft_tokenBalances'], Subscriptionbase_fame_nft_tokenBalancesArgs, MeshContext>,
   /** Access to subgraph metadata **/
   base_fame_nft__meta: InContextSdkMethod<Subscription['base_fame_nft__meta'], Subscriptionbase_fame_nft__metaArgs, MeshContext>
   };

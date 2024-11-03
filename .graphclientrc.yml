@@ -15,7 +15,7 @@ sources:
   - name: fame-nft-base
     handler:
       graphql:
-        endpoint: https://api.studio.thegraph.com/query/67995/fame-nft-base/version/latest
+        endpoint: https://api.studio.thegraph.com/query/67995/fame-nft-base/v0.0.4
     transforms:
       - prefix:
           value: base_fame_nft_
