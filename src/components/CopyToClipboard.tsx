@@ -12,7 +12,7 @@ export const CopyToClipboard: FC<{
     if (navigator.share) {
       navigator.share({
         title: mobileShareMessage,
-        url: text,
+        text: text,
       });
     } else if (navigator.clipboard) {
       addNotification({
