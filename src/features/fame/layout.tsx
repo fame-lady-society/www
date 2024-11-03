@@ -223,14 +223,12 @@ const Content: FC = () => {
         mt={8}
         overflow="hidden"
       >
-        <AnimatedBoxSlowFadeIn>
-          <NextImage
-            src="/images/fame/gold-leaf-square-nobg.png"
-            alt="Fame Society"
-            width={imageWidth}
-            height={imageHeight}
-          />
-        </AnimatedBoxSlowFadeIn>
+        <NextImage
+          src="/images/fame/gold-leaf-square-nobg.png"
+          alt="Fame Society"
+          width={imageWidth}
+          height={imageHeight}
+        />
       </Grid2>
       <Grid2
         xs={12}
