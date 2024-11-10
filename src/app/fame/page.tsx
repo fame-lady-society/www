@@ -23,3 +23,5 @@ export default async function Page({ }: {}) {
   const { burnPool } = await getDN404Storage(baseClient, fameFromNetwork(base.id));
   return <Layout burnPool={burnPool.map((tokenId) => Number(tokenId))} />;
 }
+
+export const revalidate = 20;
