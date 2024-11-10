@@ -41,6 +41,18 @@ import {
 } from "@/features/claim-to-fame/hooks/constants";
 import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 
+const BASE_URL = "https://fame.support/thumb/";
+function ImageForToken({ tokenId }: { tokenId: bigint }) {
+  return (
+    <NextImage
+      src={`${BASE_URL}${tokenId.toString()}`}
+      alt={`Burned token ${tokenId.toString()}`}
+      width={400}
+      height={400}
+    />
+  );
+}
+
 const AnimatedBox = animated(Box);
 
 const AnimatedBoxFallIn: FC<PropsWithChildren<BoxProps>> = ({
@@ -196,7 +208,9 @@ const CopyButton = styled(Button)({
   textTransform: "none", // Keeps the text style similar to Typography
 });
 
-const Content: FC = () => {
+const Content: FC<{
+  burnPool: number[];
+}> = ({ burnPool }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -627,6 +641,14 @@ const Content: FC = () => {
           </Grid2>
         </Box>
       </Grid2>
+      {burnPool.length > 0 && <Grid2 xs={12}>
+        <Typography variant="h5" textAlign="center">The next $FAME Ladies to be minted</Typography>
+      </Grid2>}
+      {burnPool.map((tokenId) => (
+        <Grid2 xs={6} md={3} key={tokenId}>
+          <ImageForToken tokenId={BigInt(tokenId)} />
+        </Grid2>
+      ))}
       <Grid2 xs={12}>
         <AnimatedBoxFadeIn
           component="div"
@@ -1056,7 +1078,7 @@ const Content: FC = () => {
   );
 };
 
-const Header: FC = () => {
+const Header: FC<{ burnPool: number[] }> = ({ burnPool }) => {
   const { address } = useAccount();
   const { data: balance } = useReadContract({
     address: fameLadySocietyAddress[1],
@@ -1097,16 +1119,16 @@ const Header: FC = () => {
       }
     >
       <ParallaxProvider>
-        <Content />
+        <Content burnPool={burnPool} />
       </ParallaxProvider>
     </Main>
   );
 };
 
-export const Layout: FC<{}> = () => {
+export const Layout: FC<{ burnPool: number[] }> = ({ burnPool }) => {
   return (
     <DefaultProvider mainnet base polygon>
-      <Header />
+      <Header burnPool={burnPool} />
     </DefaultProvider>
   );
 };

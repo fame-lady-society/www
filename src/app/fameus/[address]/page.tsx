@@ -6,7 +6,7 @@ import NextImage from "next/image";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 import { InfoTooltip } from "@/components/InfoToolTip";
 
-const BASE_URL = "https://dev.fame.support/thumb/";
+const BASE_URL = "https://fame.support/thumb/";
 
 function ImageForToken({ tokenId }: { tokenId: bigint }) {
   return (

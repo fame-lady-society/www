@@ -21,6 +21,9 @@ export const client = createPublicClient({
     }),
   ]),
   chain: base,
+  batch: {
+    multicall: true,
+  },
 });
 
 export const walletClient = createWalletClient({

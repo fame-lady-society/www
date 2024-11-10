@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Layout } from "@/features/fame/layout";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
+import { getDN404Storage } from "@/service/fame";
+import { fameFromNetwork } from "@/features/fame/contract";
+import { client as baseClient } from "@/viem/base-client";
+import { base } from 'viem/chains'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -15,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Page({}: {}) {
-  return <Layout />;
+export default async function Page({ }: {}) {
+  const { burnPool } = await getDN404Storage(baseClient, fameFromNetwork(base.id));
+  return <Layout burnPool={burnPool.map((tokenId) => Number(tokenId))} />;
 }

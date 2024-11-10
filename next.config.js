@@ -26,6 +26,9 @@ module.exports = {
       {
         hostname: "dev.fame.support",
       },
+      {
+        hostname: "fame.support",
+      },
     ],
   },
 };

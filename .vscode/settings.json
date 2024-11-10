@@ -13,5 +13,6 @@
     "siwe",
     "stringifier",
     "Warpcast"
-  ]
+  ],
+  "editor.tabSize": 2
 }
