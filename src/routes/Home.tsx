@@ -43,6 +43,16 @@ const Content: FC<{}> = () => {
               FAME
             </Typography>
           </Button>
+          <Button
+            component={WrappedLink}
+            href="/wrap"
+            variant="outlined"
+            sx={{ ml: 2 }}
+          >
+            <Typography variant="h5" component="h1">
+              WRAP
+            </Typography>
+          </Button>
         </>
       }
     >
