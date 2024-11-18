@@ -52,13 +52,15 @@ export default async function Page({ }: {}) {
   const finalNftSupply = BigInt(burnPool.length) + totalNFTSupply;
 
   const uris = batches.map(([salt, startAtToken, length, baseUri]) => {
-    return Array.from({ length: Number(length) }, (_, i) => {
+    const metadatas = Array.from({ length: Number(length) }, (_, i) => {
       const currentTokenId = startAtToken + BigInt(i);
       if (currentTokenId <= finalNftSupply) {
         return null;
       }
       return { tokenId: currentTokenId, uri: `${baseUri}${BigInt(keccak256(encodePacked(['uint256', 'uint256'], [currentTokenId - startAtToken, salt]))).toString()}.json` };
     });
+    shuffleArray(metadatas);
+    return metadatas;
   }).flat().filter((uri): uri is { tokenId: bigint, uri: string } => uri !== null);
 
   const images = await Promise.all(uris.map(async ({ uri }) => {
