@@ -29,6 +29,9 @@ module.exports = {
       {
         hostname: "fame.support",
       },
+      {
+        hostname: "gateway.irys.xyz",
+      },
     ],
   },
 };

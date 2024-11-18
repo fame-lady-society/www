@@ -12,6 +12,18 @@ export default defineConfig({
   contracts: [],
   plugins: [
     etherscan({
+      apiKey: process.env.BASESCAN_API_KEY!,
+      chainId: base.id,
+      contracts: [
+        {
+          name: "UnrevealedLadyRenderer",
+          address: {
+            [base.id]: "0xa50c9a918c110ca159fb187f4a55896a4d063878",
+          },
+        },
+      ],
+    }),
+    etherscan({
       apiKey: process.env.ETHERSCAN_API_KEY!,
       chainId: sepolia.id,
       contracts: [
@@ -41,6 +53,7 @@ export default defineConfig({
             // [base.id]: "0xf09326082a0B360567c72b6FEd67c22Fe2f76B60",
           },
         },
+
       ],
     }),
     etherscan({
@@ -66,6 +79,7 @@ export default defineConfig({
             [mainnet.id]: "0xC7A29659c34CB2551Aec0dc589e6450aF342bf24",
           },
         },
+
       ],
     }),
     foundry({

@@ -210,7 +210,8 @@ const CopyButton = styled(Button)({
 
 const Content: FC<{
   burnPool: number[];
-}> = ({ burnPool }) => {
+  unrevealed: string[];
+}> = ({ burnPool, unrevealed }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -641,12 +642,27 @@ const Content: FC<{
           </Grid2>
         </Box>
       </Grid2>
-      {burnPool.length > 0 && <Grid2 xs={12}>
-        <Typography variant="h5" textAlign="center">The next $FAME Ladies to be minted</Typography>
+      {burnPool.length > 0 && <Grid2 xs={12} sx={{ marginTop: 4 }}>
+        <Typography variant="h4" textAlign="center">The next $FAME Ladies to be minted</Typography>
+        <Typography variant="h5" textAlign="center">In this order (left to right).</Typography>
       </Grid2>}
       {burnPool.map((tokenId) => (
         <Grid2 xs={6} md={3} key={tokenId}>
           <ImageForToken tokenId={BigInt(tokenId)} />
+        </Grid2>
+      ))}
+      {unrevealed.length > 0 && <Grid2 xs={12} sx={{ marginTop: 4 }}>
+        <Typography variant="h4" textAlign="center">The unrevealed $FAME Ladies.</Typography>
+        <Typography variant="h5" textAlign="center">In no particular order.</Typography>
+      </Grid2>}
+      {unrevealed.map((uri) => (
+        <Grid2 xs={6} md={3} key={uri}>
+          <NextImage
+            src={uri}
+            alt="Unrevealed"
+            width={400}
+            height={400}
+          />
         </Grid2>
       ))}
       <Grid2 xs={12}>
@@ -1078,7 +1094,7 @@ const Content: FC<{
   );
 };
 
-const Header: FC<{ burnPool: number[] }> = ({ burnPool }) => {
+const Header: FC<{ burnPool: number[], unrevealed: string[] }> = ({ burnPool, unrevealed }) => {
   const { address } = useAccount();
   const { data: balance } = useReadContract({
     address: fameLadySocietyAddress[1],
@@ -1119,16 +1135,16 @@ const Header: FC<{ burnPool: number[] }> = ({ burnPool }) => {
       }
     >
       <ParallaxProvider>
-        <Content burnPool={burnPool} />
+        <Content burnPool={burnPool} unrevealed={unrevealed} />
       </ParallaxProvider>
     </Main>
   );
 };
 
-export const Layout: FC<{ burnPool: number[] }> = ({ burnPool }) => {
+export const Layout: FC<{ burnPool: number[], unrevealed: string[] }> = ({ burnPool, unrevealed }) => {
   return (
     <DefaultProvider mainnet base polygon>
-      <Header burnPool={burnPool} />
+      <Header burnPool={burnPool} unrevealed={unrevealed} />
     </DefaultProvider>
   );
 };

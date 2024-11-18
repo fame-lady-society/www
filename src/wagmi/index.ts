@@ -3759,6 +3759,208 @@ export const namedLadyRendererConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UnrevealedLadyRenderer
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const unrevealedLadyRendererAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: '_childRenderer', internalType: 'address', type: 'address' },
+      { name: '_tokenemEmitable', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoBatchForTokenId' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'batches',
+    outputs: [
+      { name: 'salt', internalType: 'uint256', type: 'uint256' },
+      { name: 'startAtToken', internalType: 'uint256', type: 'uint256' },
+      { name: 'length', internalType: 'uint256', type: 'uint256' },
+      { name: 'baseUri', internalType: 'string', type: 'string' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'childRenderer',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract ITokenURIGenerator',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'maxTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'offsetForTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'salt', internalType: 'uint256', type: 'uint256' },
+      { name: 'length', internalType: 'uint256', type: 'uint256' },
+      { name: 'baseUri', internalType: 'string', type: 'string' },
+    ],
+    name: 'pushBatch',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'tokenemEmitable',
+    outputs: [
+      { name: '', internalType: 'contract ITokemEmitable', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const unrevealedLadyRendererAddress = {
+  8453: '0xA50C9a918C110CA159fb187F4a55896A4d063878',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const unrevealedLadyRendererConfig = {
+  address: unrevealedLadyRendererAddress,
+  abi: unrevealedLadyRendererAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WrappedNFT
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -9713,6 +9915,326 @@ export const useWatchNamedLadyRendererRolesUpdatedEvent =
     abi: namedLadyRendererAbi,
     address: namedLadyRendererAddress,
     eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRenderer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"batches"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererBatches =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'batches',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"childRenderer"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererChildRenderer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'childRenderer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"maxTokenId"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererMaxTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'maxTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"offsetForTokenId"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererOffsetForTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'offsetForTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"tokenURI"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererTokenUri =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'tokenURI',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"tokenemEmitable"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useReadUnrevealedLadyRendererTokenemEmitable =
+  /*#__PURE__*/ createUseReadContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'tokenemEmitable',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRenderer =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"pushBatch"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererPushBatch =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'pushBatch',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWriteUnrevealedLadyRendererTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRenderer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"pushBatch"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererPushBatch =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'pushBatch',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useSimulateUnrevealedLadyRendererTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWatchUnrevealedLadyRendererEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWatchUnrevealedLadyRendererOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWatchUnrevealedLadyRendererOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link unrevealedLadyRendererAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xa50c9a918c110ca159fb187f4a55896a4d063878)
+ */
+export const useWatchUnrevealedLadyRendererOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: unrevealedLadyRendererAbi,
+    address: unrevealedLadyRendererAddress,
+    eventName: 'OwnershipTransferred',
   })
 
 /**
