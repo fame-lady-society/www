@@ -5,8 +5,11 @@ import { baseUrl } from "@/app/frames/frames";
 import { getDN404Storage } from "@/service/fame";
 import { fameFromNetwork } from "@/features/fame/contract";
 import { client as baseClient } from "@/viem/base-client";
-import { base } from 'viem/chains'
-import { unrevealedLadyRendererAbi, unrevealedLadyRendererAddress } from "@/wagmi";
+import { base } from "viem/chains";
+import {
+  unrevealedLadyRendererAbi,
+  unrevealedLadyRendererAddress,
+} from "@/wagmi";
 import { encodePacked, keccak256 } from "viem";
 import { IMetadata } from "@/utils/metadata";
 
@@ -29,8 +32,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Page({ }: {}) {
-  const { burnPool, totalNFTSupply } = await getDN404Storage(baseClient, fameFromNetwork(base.id));
+export default async function Page({}: {}) {
+  const { burnPool, totalNFTSupply } = await getDN404Storage(
+    baseClient,
+    fameFromNetwork(base.id),
+  );
 
   const batches: [bigint, bigint, bigint, string][] = [];
   let batchIndex = 0;
@@ -51,26 +57,38 @@ export default async function Page({ }: {}) {
   }
   const finalNftSupply = BigInt(burnPool.length) + totalNFTSupply;
 
-  const uris = batches.map(([salt, startAtToken, length, baseUri]) => {
-    const metadatas = Array.from({ length: Number(length) }, (_, i) => {
-      const currentTokenId = startAtToken + BigInt(i);
-      if (currentTokenId <= finalNftSupply) {
-        return null;
-      }
-      return { tokenId: currentTokenId, uri: `${baseUri}${BigInt(keccak256(encodePacked(['uint256', 'uint256'], [currentTokenId - startAtToken, salt]))).toString()}.json` };
-    });
-    shuffleArray(metadatas);
-    return metadatas;
-  }).flat().filter((uri): uri is { tokenId: bigint, uri: string } => uri !== null);
+  const uris = batches
+    .map(([salt, startAtToken, length, baseUri]) => {
+      const metadatas = Array.from({ length: Number(length) }, (_, i) => {
+        const currentTokenId = startAtToken + BigInt(i);
+        if (currentTokenId <= finalNftSupply) {
+          return null;
+        }
+        return {
+          tokenId: currentTokenId,
+          uri: `${baseUri}${BigInt(keccak256(encodePacked(["uint256", "uint256"], [currentTokenId - startAtToken, salt]))).toString()}.json`,
+        };
+      });
+      shuffleArray(metadatas);
+      return metadatas;
+    })
+    .flat()
+    .filter((uri): uri is { tokenId: bigint; uri: string } => uri !== null);
 
-  const images = await Promise.all(uris.map(async ({ uri }) => {
-    const response = await fetch(uri);
-    const metadata: IMetadata = await response.json();
-    return metadata.image;
-  }))
-  shuffleArray(images);
+  const images = await Promise.all(
+    uris.map(async ({ uri }) => {
+      const response = await fetch(uri);
+      const metadata: IMetadata = await response.json();
+      return metadata.image;
+    }),
+  );
 
-  return <Layout burnPool={burnPool.map((tokenId) => Number(tokenId))} unrevealed={images} />;
+  return (
+    <Layout
+      burnPool={burnPool.map((tokenId) => Number(tokenId))}
+      unrevealed={images}
+    />
+  );
 }
 
 export const revalidate = 20;
