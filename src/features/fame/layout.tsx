@@ -530,7 +530,7 @@ const Content: FC<{
             <Grid2 xs={6} md={3} p={4}>
               <Card>
                 <CardActionArea
-                  href="https://app.uniswap.org/swap?chain=base&outputCurrency=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
+                  href="https://base.equalizer.exchange/swap?fromToken=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toToken=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
@@ -549,7 +549,7 @@ const Content: FC<{
                         width: "100%",
                       }}
                     >
-                      uniswap
+                      equalizer (swap)
                     </Typography>
                   </CardContent>
                 </CardActionArea>
@@ -642,27 +642,34 @@ const Content: FC<{
           </Grid2>
         </Box>
       </Grid2>
-      {burnPool.length > 0 && <Grid2 xs={12} sx={{ marginTop: 4 }}>
-        <Typography variant="h4" textAlign="center">The next $FAME Ladies to be minted</Typography>
-        <Typography variant="h5" textAlign="center">In this order (left to right).</Typography>
-      </Grid2>}
+      {burnPool.length > 0 && (
+        <Grid2 xs={12} sx={{ marginTop: 4 }}>
+          <Typography variant="h4" textAlign="center">
+            The next $FAME Ladies to be minted
+          </Typography>
+          <Typography variant="h5" textAlign="center">
+            In this order (left to right).
+          </Typography>
+        </Grid2>
+      )}
       {burnPool.map((tokenId) => (
         <Grid2 xs={6} md={3} key={tokenId}>
           <ImageForToken tokenId={BigInt(tokenId)} />
         </Grid2>
       ))}
-      {unrevealed.length > 0 && <Grid2 xs={12} sx={{ marginTop: 4 }}>
-        <Typography variant="h4" textAlign="center">The unrevealed $FAME Ladies.</Typography>
-        <Typography variant="h5" textAlign="center">In no particular order.</Typography>
-      </Grid2>}
+      {unrevealed.length > 0 && (
+        <Grid2 xs={12} sx={{ marginTop: 4 }}>
+          <Typography variant="h4" textAlign="center">
+            The unrevealed $FAME Ladies.
+          </Typography>
+          <Typography variant="h5" textAlign="center">
+            In no particular order.
+          </Typography>
+        </Grid2>
+      )}
       {unrevealed.map((uri) => (
         <Grid2 xs={6} md={3} key={uri}>
-          <NextImage
-            src={uri}
-            alt="Unrevealed"
-            width={400}
-            height={400}
-          />
+          <NextImage src={uri} alt="Unrevealed" width={400} height={400} />
         </Grid2>
       ))}
       <Grid2 xs={12}>
@@ -1094,7 +1101,10 @@ const Content: FC<{
   );
 };
 
-const Header: FC<{ burnPool: number[], unrevealed: string[] }> = ({ burnPool, unrevealed }) => {
+const Header: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
+  burnPool,
+  unrevealed,
+}) => {
   const { address } = useAccount();
   const { data: balance } = useReadContract({
     address: fameLadySocietyAddress[1],
@@ -1141,7 +1151,10 @@ const Header: FC<{ burnPool: number[], unrevealed: string[] }> = ({ burnPool, un
   );
 };
 
-export const Layout: FC<{ burnPool: number[], unrevealed: string[] }> = ({ burnPool, unrevealed }) => {
+export const Layout: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
+  burnPool,
+  unrevealed,
+}) => {
   return (
     <DefaultProvider mainnet base polygon>
       <Header burnPool={burnPool} unrevealed={unrevealed} />
