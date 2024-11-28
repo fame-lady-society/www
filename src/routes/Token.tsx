@@ -10,20 +10,17 @@ import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { IMetadata } from "@/utils/metadata";
 import { Token } from "@/components/Token";
 import { FC } from "react";
-import { useFlsTokenAllocation } from "@/features/token/hooks/useFlsTokenAllocation";
 
 const Content: FC<{
   metadata: IMetadata;
   tokenId: number;
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
-  const allocation = useFlsTokenAllocation(tokenId);
   return (
     <Token
       metadata={metadata}
       tokenId={tokenId}
       network={network}
-      allocation={allocation}
     />
   );
 };

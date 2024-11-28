@@ -7,28 +7,9 @@ type Params = { network: string; tokenId: string };
 
 const handleRequest = ({ network, tokenId }: Params) =>
   frames((ctx) => {
-    if (ctx.pressedButton?.index === 1) {
-      return {
-        image: `${baseUrl}/${network}/og/token/${tokenId}/claim`,
-        buttons: [
-          <Button
-            action="link"
-            target={`${baseUrl}/${network}/token/${tokenId}`}
-          >
-            details
-          </Button>,
-        ],
-      };
-    }
     return {
       image: `${baseUrl}/${network}/og/token/${tokenId}`,
       buttons: [
-        <Button
-          action="post"
-          target={`${baseUrl}/${network}/token/${tokenId}/frame`}
-        >
-          $FAME
-        </Button>,
         <Button action="link" target={`${baseUrl}/${network}/token/${tokenId}`}>
           details
         </Button>,
