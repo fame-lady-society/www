@@ -21,7 +21,7 @@ export function fameSaleTokenAddress(
 export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
   switch (chainId) {
     case sepolia.id:
-      return "0x59affac6818b58324487be3c8b49cf1de1224928" as const;
+      return "0xEaD0b62Deced7D0E56E4e3B13e246E183278CAEE" as const;
     case base.id:
       return "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418" as const;
   }

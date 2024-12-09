@@ -1,5 +1,5 @@
 import { AppMain } from "@/layouts/AppMain";
-import { fetchBaseNftLadiesData } from "@/features/fameus/service/graphql";
+import { fetchBaseNftLadiesData, fetchSepoliaNftLadiesData } from "@/features/fameus/service/graphql";
 import { isAddress } from "viem";
 import InfoIcon from "@mui/icons-material/Info";
 import NextImage from "next/image";
@@ -22,7 +22,7 @@ function ImageForToken({ tokenId }: { tokenId: bigint }) {
 export default async function Home({
   params,
 }: {
-  params: { address: string };
+  params: { address: string, network: string };
 }) {
   if (!isAddress(params.address)) {
     return (
@@ -33,7 +33,19 @@ export default async function Home({
       </AppMain>
     );
   }
-  const tokenIds = await fetchBaseNftLadiesData({ owner: params.address });
+
+  const chainId = params.network === "mainnet" ? 1 : params.network === "sepolia" ? 11155111 : null;
+  if (!chainId) {
+    return (
+      <AppMain title="FAMEus">
+        <section className="flex flex-col items-start justify-center h-full m-4 border rounded-lg p-6">
+          <h1 className="text-4xl font-bold">FAMEus</h1>
+        </section>
+      </AppMain>
+    );
+  }
+  const tokenIds = chainId === 1 ? await fetchBaseNftLadiesData({ owner: params.address }) : await fetchSepoliaNftLadiesData({ owner: params.address });
+
   return (
     <>
       <AppMain title="FAMEus DAO">
@@ -56,7 +68,7 @@ export default async function Home({
           </div>
         </div>
       </AppMain>
-      <RedirectWhenConnected pathPrefix="/fameus" />
+      <RedirectWhenConnected pathPrefix="fameus" toChain={chainId} />
     </>
   );
 }

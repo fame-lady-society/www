@@ -7,6 +7,7 @@ import { ClaimFame } from "@/features/appbar/components.app/ClaimFame";
 
 export function AppMain({
   headerLeft,
+  headerRight,
   children,
   isFame,
   isFaq,
@@ -19,7 +20,7 @@ export function AppMain({
   {
     title?: ReactNode;
     headerLeft?: ReactNode;
-
+    headerRight?: ReactNode;
     disableConnect?: boolean;
   } & ComponentPropsWithoutRef<typeof SiteMenu>
 >) {
@@ -48,7 +49,10 @@ export function AppMain({
             {headerLeft}
           </>
         }
-        right={<ClaimFame />}
+        right={<>
+          {headerRight}
+          <ClaimFame />
+        </>}
       />
       <div className="flex flex-grow min-h-screen-without-header">
         <div className="lg:flex hidden">

@@ -4,7 +4,6 @@ import { FC, ReactNode, useState } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import { HomeMenu } from "./HomeMenu";
 import { ConnectKitButton } from "connectkit";
-import { DesktopHomeMenu } from "./DesktopHomeMenu";
 
 interface AppBarLeftProps {
   menu?: ReactNode;

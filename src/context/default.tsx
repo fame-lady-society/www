@@ -9,6 +9,7 @@ import {
   baseSepolia,
   mainnetSepolia,
   polygonOnly,
+  sepoliaOnly,
 } from "./Wagmi";
 import { NotificationsProvider } from "@/features/notifications/Context";
 import { Notifications } from "@/features/notifications/Notifications";
@@ -35,8 +36,9 @@ export const DefaultProvider: FC<
     mainnet?: boolean;
     base?: boolean;
     polygon?: boolean;
+    sepolia?: boolean;
   }>
-> = ({ siwe, children, mainnet, base, polygon }) => {
+> = ({ siwe, children, mainnet, base, polygon, sepolia }) => {
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
     if (mainnet) {
@@ -54,8 +56,13 @@ export const DefaultProvider: FC<
         chainSet.add(chain);
       }
     }
+    if (sepolia) {
+      for (const chain of sepoliaOnly.chains) {
+        chainSet.add(chain);
+      }
+    }
     return Array.from(chainSet) as [Chain, ...Chain[]];
-  }, [mainnet, base, polygon]);
+  }, [mainnet, base, polygon, sepolia]);
 
   const transports = useMemo(() => {
     const transportMap: Record<number, Transport> = {};

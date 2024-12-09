@@ -22,6 +22,15 @@ export const mainnetSepolia = {
   },
 } as const;
 
+export const sepoliaOnly = {
+  chains: [sepolia],
+  transports: {
+    [sepolia.id]: http(
+      `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+    ),
+  },
+} as const;
+
 export const baseSepolia = {
   chains: [base, sepolia],
   transports: {

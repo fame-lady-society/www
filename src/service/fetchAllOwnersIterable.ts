@@ -1,5 +1,6 @@
 import { client as mainnetClient } from "@/viem/mainnet-client";
 import { client as polygonClient } from "@/viem/polygon-client";
+import { client as sepoliaClient } from "@/viem/sepolia-client";
 import { ContractFunctionExecutionError } from "viem";
 
 const ABI = [
@@ -28,17 +29,16 @@ export async function fetchAllOwnersIterable({
   contractAddress: `0x${string}`;
   totalSupply?: bigint;
   zeroIndex?: boolean;
-  client?: typeof mainnetClient | typeof polygonClient;
+  client?: typeof mainnetClient | typeof polygonClient | typeof sepoliaClient;
 }) {
+  client = client ?? mainnetClient;
   totalSupply =
     totalSupply ??
-    (await mainnetClient.readContract({
+    (await client.readContract({
       abi: ABI,
       address: contractAddress,
       functionName: "totalSupply",
     }));
-
-  client = client ?? mainnetClient;
 
   const ownerTokenMap = new Map<bigint, `0x${string}`>();
   await Promise.all(
