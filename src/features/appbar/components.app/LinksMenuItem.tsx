@@ -40,7 +40,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         <MagicEdenIcon className="w-5 h-5" />
         <MenuItemText>Magic Eden Collection</MenuItemText>
       </MenuItem>
-      <MenuItem href="https://discord.gg/fameladysociety">
+      <MenuItem href="https://discord.gg/jkAdAPXEpw">
         <Image
           src="/images/reveal/discord-dark.png"
           alt="discord"

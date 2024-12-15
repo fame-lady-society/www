@@ -120,7 +120,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
       </MenuItem>
       <MenuItem
         component={WrappedLink}
-        href="https://discord.gg/fameladysociety"
+        href="https://discord.gg/jkAdAPXEpw"
         target="_blank"
         rel="noopener noreferrer"
       >
