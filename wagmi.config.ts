@@ -53,7 +53,6 @@ export default defineConfig({
             // [base.id]: "0xf09326082a0B360567c72b6FEd67c22Fe2f76B60",
           },
         },
-
       ],
     }),
     etherscan({
@@ -79,7 +78,6 @@ export default defineConfig({
             [mainnet.id]: "0xC7A29659c34CB2551Aec0dc589e6450aF342bf24",
           },
         },
-
       ],
     }),
     foundry({
@@ -90,6 +88,7 @@ export default defineConfig({
         "FameMirror.sol/**",
         "IBalanceOf.sol/**",
         "FameVesting.sol/**",
+        "GovSociety.sol/**",
       ],
     }),
     react(),

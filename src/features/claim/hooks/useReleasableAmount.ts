@@ -26,7 +26,7 @@ export function useReleasableAmount() {
   } = useReadFameVestingComputeReleasableAmount({
     chainId: base.id,
     address: fameVestingFromNetwork(base.id),
-    args: vestingScheduleId ? [vestingScheduleId] : undefined,
+    ...(vestingScheduleId ? { args: [vestingScheduleId] } : {}),
   });
   const isLoading =
     vestingScheduleIdIsLoading ||
@@ -38,10 +38,11 @@ export function useReleasableAmount() {
   // Update releasable amount every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
+      if (!vestingScheduleId) return;
       refetchReleasableAmount();
     }, 3000);
     return () => clearInterval(interval);
-  }, [refetchReleasableAmount]);
+  }, [refetchReleasableAmount, vestingScheduleId]);
 
   return {
     isLoading,

@@ -494,7 +494,7 @@ const Content: FC = () => {
       >
         <AnimatedBoxFallUp component="div">
           <WrappedLink
-            href="https://discord.gg/fameladysociety"
+            href="https://discord.gg/jkAdAPXEpw"
             underline="none"
             target="_blank"
             rel="noreferrer"

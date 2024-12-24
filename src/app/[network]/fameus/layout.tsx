@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import "@/styles/tailwind.css";
 import { DefaultProvider } from "@/context/default";
+import { Notifications } from "@/features/notifications/Notifications";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,5 +48,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <DefaultProvider base sepolia>{children}</DefaultProvider>;
+  return (
+    <DefaultProvider base sepolia>
+      {children}
+    </DefaultProvider>
+  );
 }

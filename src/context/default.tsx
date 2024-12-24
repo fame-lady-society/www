@@ -37,8 +37,9 @@ export const DefaultProvider: FC<
     base?: boolean;
     polygon?: boolean;
     sepolia?: boolean;
+    initialState?: string;
   }>
-> = ({ siwe, children, mainnet, base, polygon, sepolia }) => {
+> = ({ siwe, children, mainnet, base, polygon, sepolia, initialState }) => {
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
     if (mainnet) {

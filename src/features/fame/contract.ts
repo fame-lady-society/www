@@ -37,3 +37,14 @@ export function societyFromNetwork(
       return "0xBB5ED04dD7B207592429eb8d599d103CCad646c4" as const;
   }
 }
+
+export function govSocietyFromNetwork(
+  chainId: typeof sepolia.id | typeof base.id,
+) {
+  switch (chainId) {
+    case sepolia.id:
+      return "0x41A3559E16A4aed2Bf02D4448b22a8E8370f51e6" as const;
+    case base.id:
+      return "0x0000000000000000000000000000000000000000" as const;
+  }
+}

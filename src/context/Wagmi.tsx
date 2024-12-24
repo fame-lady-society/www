@@ -1,7 +1,15 @@
 "use client";
+
 import { siweClient } from "@/utils/siweClient";
-import { SIWEConfig, SIWESession } from "connectkit";
-import { WagmiProvider, createConfig, fallback, http } from "wagmi";
+import { SIWEConfig } from "connectkit";
+import {
+  WagmiProvider,
+  createConfig,
+  fallback,
+  http,
+  cookieStorage,
+  createStorage,
+} from "wagmi";
 import { base, mainnet, sepolia, polygon as polygonChain } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
@@ -10,14 +18,20 @@ import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Chain, Transport } from "viem";
 import { SerializedSession } from "@/service/session";
 
+import { headers } from "next/headers";
+import { cookieToInitialState } from "wagmi";
+
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
   transports: {
     [mainnet.id]: http(
       `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+      { batch: true },
     ),
-    [sepolia.id]: http(
-      `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+    [sepolia.id]: fallback(
+      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+        http(rpc, { batch: true }),
+      ),
     ),
   },
 } as const;
@@ -25,8 +39,10 @@ export const mainnetSepolia = {
 export const sepoliaOnly = {
   chains: [sepolia],
   transports: {
-    [sepolia.id]: http(
-      `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+    [sepolia.id]: fallback(
+      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+        http(rpc, { batch: true }),
+      ),
     ),
   },
 } as const;
@@ -42,8 +58,10 @@ export const baseSepolia = {
         batch: true,
       }),
     ]),
-    [sepolia.id]: http(
-      `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+    [sepolia.id]: fallback(
+      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+        http(rpc, { batch: true }),
+      ),
     ),
   },
 } as const;
@@ -79,6 +97,10 @@ export const defaultConfig = {
   appIcon: "https://www.fameladysociety.com/images/fame/bala.png",
 
   ssr: true,
+
+  storage: createStorage({
+    storage: cookieStorage,
+  }),
 };
 
 const siweConfig = {
@@ -138,6 +160,7 @@ export const Web3Provider: FC<
       ),
     [chains, transports],
   );
+  // const initialState = cookieToInitialState(config, headers().get("cookie"));
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>

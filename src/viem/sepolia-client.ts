@@ -9,6 +9,9 @@ import { sepolia } from "viem/chains";
 
 export const client = createPublicClient({
   transport: fallback([
+    ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+      http(rpc, { batch: true }),
+    ),
     http(`https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`, {
       batch: true,
     }),
@@ -24,6 +27,9 @@ export const client = createPublicClient({
 
 export const walletClient = createWalletClient({
   transport: fallback([
+    ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+      http(rpc, { batch: true }),
+    ),
     http(`https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`, {
       batch: true,
     }),

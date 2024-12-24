@@ -3,7 +3,6 @@ import {
   useContext,
   createContext,
   useCallback,
-  type Context,
   type FC,
   type PropsWithChildren,
 } from "react";
@@ -23,8 +22,8 @@ type NotificationsContext = {
 
 const NotificationsContext = createContext<NotificationsContext>({
   notifications: [],
-  addNotification: () => {},
-  removeNotification: () => {},
+  addNotification: () => { },
+  removeNotification: () => { },
 });
 
 export const useNotifications = () => useContext(NotificationsContext);
@@ -45,6 +44,7 @@ export const NotificationsProvider: FC<PropsWithChildren> = ({ children }) => {
       return newNotifications;
     });
   }, []);
+
   return (
     <NotificationsContext.Provider
       value={{ notifications, addNotification, removeNotification }}

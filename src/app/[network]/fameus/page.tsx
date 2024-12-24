@@ -17,6 +17,9 @@ export default function Home({ params }: { params: { network: string } }) {
       toChain = 8453;
       break;
     }
+    default: {
+      return <div>Invalid network</div>;
+    }
   }
   return (
     <>

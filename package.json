@@ -39,7 +39,7 @@
     "apollo-server-micro": "^3.10.0",
     "aws-crt": "^1.14.1",
     "classnames": "^2.3.1",
-    "connectkit": "^1.7.2",
+    "connectkit": "^1.8.2",
     "connectkit-next-siwe": "^0.3.0",
     "csv-stringify": "^6.4.6",
     "ethers": "^5.7.2",
@@ -78,8 +78,8 @@
     "three": "^0.141.0",
     "use-local-storage": "^2.3.6",
     "uuid": "^8.3.2",
-    "viem": "^2.21.1",
-    "wagmi": "^2.12.8"
+    "viem": "^2.21.55",
+    "wagmi": "^2.14.1"
   },
   "devDependencies": {
     "@graphprotocol/client-cli": "^3.0.0",

@@ -150,7 +150,7 @@ export const Layout = () => {
                   />
                   <Card variant="elevation">
                     <WrappedLink
-                      href="https://discord.gg/fameladysociety"
+                      href="https://discord.gg/jkAdAPXEpw"
                       target="_blank"
                       rel="noreferrer noopener"
                     >
