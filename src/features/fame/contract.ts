@@ -43,7 +43,7 @@ export function govSocietyFromNetwork(
 ) {
   switch (chainId) {
     case sepolia.id:
-      return "0x41A3559E16A4aed2Bf02D4448b22a8E8370f51e6" as const;
+      return "0x6c4fBF1970c09ed22001d6A5dc3315Bc32DdF6a1" as const;
     case base.id:
       return "0x0000000000000000000000000000000000000000" as const;
   }

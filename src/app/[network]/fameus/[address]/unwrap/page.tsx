@@ -1,11 +1,11 @@
 
 import {
-  fetchBaseNftLadiesData,
-  fetchSepoliaNftLadiesData,
+  fetchBaseGovNftLadiesData,
+  fetchSepoliaGovNftLadiesData,
 } from "@/features/fameus/service/graphql";
 import { isAddress } from "viem";
-import { WrapTokens } from "./WrapTokens";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
+import { UnWrapTokens } from "./UnwrapTokens";
 import { FameusProvider } from "./context";
 
 export default async function Home({
@@ -30,18 +30,17 @@ export default async function Home({
 
   const tokenIds =
     chainId === 8453
-      ? await fetchBaseNftLadiesData({ owner: params.address })
-      : await fetchSepoliaNftLadiesData({ owner: params.address });
-
+      ? await fetchBaseGovNftLadiesData({ owner: params.address })
+      : await fetchSepoliaGovNftLadiesData({ owner: params.address });
 
   return (
     <FameusProvider
       address={params.address}
       network={params.network as "sepolia" | "mainnet"}
     >
-      <WrapTokens tokenIds={tokenIds} chainId={chainId} />
+      <UnWrapTokens tokenIds={tokenIds} chainId={chainId} />
 
-      <RedirectWhenConnected pathPrefix="fameus" toChain={chainId} />
+      <RedirectWhenConnected pathPrefix="fameus" pathPostfix="unwrap" toChain={chainId} />
     </FameusProvider>
   );
 }

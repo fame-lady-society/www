@@ -1,31 +1,30 @@
 "use client";
 import { FC } from "react";
-import { useFameusWrap } from "./context";
+import { useFameusUnwrap } from "./context";
 import { SelectableGrid } from "./SelectableGrid";
 import cn from "classnames";
 import { TransactionsModal } from "@/components/TransactionsModal";
-import { useApproveAndWrap } from "./useApproveAndWrap";
+import { useUnwrap } from "./useUnwrap";
 
-type WrapTokensProps = {
+type UnWrapTokensProps = {
   tokenIds: bigint[];
   chainId: 8453 | 11155111;
 };
 
-export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
+export const UnWrapTokens: FC<UnWrapTokensProps> = ({ tokenIds, chainId }) => {
   const {
-    toWrapSelectedTokenIds,
-    addToWrapSelectedTokenIds,
-    removeFromWrapSelectedTokenIds,
-    resetWrapSelectedTokenIds,
-  } = useFameusWrap();
+    toUnwrapSelectedTokenIds,
+    addToUnwrapSelectedTokenIds,
+    removeFromUnwrapSelectedTokenIds,
+    resetUnwrapSelectedTokenIds,
+  } = useFameusUnwrap();
 
   const {
     transactionState,
-    wrap,
+    unwrap,
     closeTransactionModal,
     onTransactionConfirmed,
-    isApprovedForAll,
-  } = useApproveAndWrap(chainId, toWrapSelectedTokenIds);
+  } = useUnwrap(chainId, toUnwrapSelectedTokenIds);
 
   return (
     <>
@@ -33,44 +32,44 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
         <div className="flex gap-2">
           <button
             className={cn("bg-blue-500 text-white px-4 py-2 rounded-md")}
-            disabled={isApprovedForAll && toWrapSelectedTokenIds.length === 0}
-            onClick={wrap}
+            disabled={toUnwrapSelectedTokenIds.length === 0}
+            onClick={unwrap}
           >
-            {isApprovedForAll ? "Wrap" : "Approve"}
+            Unwrap
           </button>
 
-          {toWrapSelectedTokenIds.length < tokenIds.length && tokenIds.length > 0 && (
+          {toUnwrapSelectedTokenIds.length < tokenIds.length && tokenIds.length > 0 && (
             <button
               className="bg-blue-400 text-white px-4 py-2 rounded-md"
               onClick={() => {
-                resetWrapSelectedTokenIds();
-                addToWrapSelectedTokenIds(...tokenIds);
+                resetUnwrapSelectedTokenIds();
+                addToUnwrapSelectedTokenIds(...tokenIds);
               }}
             >
               Select All
             </button>
           )}
 
-          {toWrapSelectedTokenIds.length > 0 && (
+          {toUnwrapSelectedTokenIds.length > 0 && (
             <button
               className="bg-blue-400 text-white px-4 py-2 rounded-md"
-              onClick={resetWrapSelectedTokenIds}
+              onClick={resetUnwrapSelectedTokenIds}
             >
               Reset
             </button>
           )}
         </div>
-        {toWrapSelectedTokenIds.length > 0 && (
+        {toUnwrapSelectedTokenIds.length > 0 && (
           <p className="text-sm text-gray-500">
-            {toWrapSelectedTokenIds.length} tokens selected
+            {toUnwrapSelectedTokenIds.length} tokens selected
           </p>
         )}
       </div>
       <SelectableGrid
         tokenIds={tokenIds}
-        selectedTokenIds={toWrapSelectedTokenIds}
-        onTokenSelected={addToWrapSelectedTokenIds}
-        onTokenUnselected={removeFromWrapSelectedTokenIds}
+        selectedTokenIds={toUnwrapSelectedTokenIds}
+        onTokenSelected={addToUnwrapSelectedTokenIds}
+        onTokenUnselected={removeFromUnwrapSelectedTokenIds}
       />
       <TransactionsModal
         open={transactionState.transactionModelOpen}

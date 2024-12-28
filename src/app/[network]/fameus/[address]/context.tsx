@@ -12,13 +12,9 @@ export type FameusContextType = {
   network: "mainnet" | "sepolia";
   chain: typeof base | typeof sepolia;
   toWrapSelectedTokenIds: bigint[];
-  toUnwrapSelectedTokenIds: bigint[];
   addToWrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
-  addToUnwrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
   removeFromWrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
-  removeFromUnwrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
   resetWrapSelectedTokenIds: () => void;
-  resetUnwrapSelectedTokenIds: () => void;
 };
 
 export const FameusContext = createContext<FameusContextType>({
@@ -26,13 +22,9 @@ export const FameusContext = createContext<FameusContextType>({
   network: "mainnet",
   chain: base,
   toWrapSelectedTokenIds: [],
-  toUnwrapSelectedTokenIds: [],
   addToWrapSelectedTokenIds: () => { },
-  addToUnwrapSelectedTokenIds: () => { },
   removeFromWrapSelectedTokenIds: () => { },
-  removeFromUnwrapSelectedTokenIds: () => { },
   resetWrapSelectedTokenIds: () => { },
-  resetUnwrapSelectedTokenIds: () => { },
 });
 
 export const FameusProvider = ({
@@ -47,16 +39,8 @@ export const FameusProvider = ({
   const [toWrapSelectedTokenIds, setToWrapSelectedTokenIds] = useState<
     bigint[]
   >([]);
-  const [toUnwrapSelectedTokenIds, setToUnwrapSelectedTokenIds] = useState<
-    bigint[]
-  >([]);
-
   const addToWrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
     setToWrapSelectedTokenIds((prev) => [...prev, ...tokenIds]);
-  }, []);
-
-  const addToUnwrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToUnwrapSelectedTokenIds((prev) => [...prev, ...tokenIds]);
   }, []);
 
   const removeFromWrapSelectedTokenIds = useCallback(
@@ -68,26 +52,17 @@ export const FameusProvider = ({
     [],
   );
 
-  const removeFromUnwrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToUnwrapSelectedTokenIds((prev) =>
-      prev.filter((id) => !tokenIds.includes(id)),
-    );
-  }, []);
 
   return (
     <FameusContext.Provider
       value={{
         toWrapSelectedTokenIds,
-        toUnwrapSelectedTokenIds,
         address,
         network,
         chain: network === "mainnet" ? base : sepolia,
         addToWrapSelectedTokenIds,
-        addToUnwrapSelectedTokenIds,
         removeFromWrapSelectedTokenIds,
-        removeFromUnwrapSelectedTokenIds,
         resetWrapSelectedTokenIds: () => setToWrapSelectedTokenIds([]),
-        resetUnwrapSelectedTokenIds: () => setToUnwrapSelectedTokenIds([]),
       }}
     >
       {children}

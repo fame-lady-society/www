@@ -17,8 +17,9 @@ function chainIdToChainName(chainId: number) {
 
 export const RedirectWhenConnected: FC<{
   pathPrefix: string;
+  pathPostfix?: string;
   toChain: number;
-}> = ({ pathPrefix, toChain }) => {
+}> = ({ pathPrefix, pathPostfix, toChain }) => {
   const [targetChainId, setTargetChainId] = useState<number | undefined>(
     toChain,
   );
@@ -27,15 +28,12 @@ export const RedirectWhenConnected: FC<{
   const { chains, switchChainAsync, isSuccess, isPending } = useSwitchChain({
     mutation: {
       onMutate(variables) {
-        console.log("onMutate", variables);
         setTargetChainId(variables.chainId);
       },
       onError(error, variables, context) {
-        console.log("onError", error, variables, context);
         setTargetChainId(toChain);
       },
       onSettled(data, error, variables, context) {
-        console.log("onSettled", data, error, variables, context);
       },
     },
   });
@@ -44,7 +42,6 @@ export const RedirectWhenConnected: FC<{
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("useEffect", targetChainId, chain, isSuccess, chainId);
     if (
       !isPending &&
       targetChainId &&
@@ -56,29 +53,19 @@ export const RedirectWhenConnected: FC<{
       switchChainAsync({ chainId: targetChainId }).then((newChain) => {
         if (newChain) {
           router.replace(
-            `/${chainIdToChainName(newChain.id)}/${pathPrefix}/${address}`,
+            `/${chainIdToChainName(newChain.id)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`,
           );
         }
       });
     }
-  }, [
-    targetChainId,
-    chain,
-    isSuccess,
-    chainId,
-    switchChainAsync,
-    router,
-    pathPrefix,
-    address,
-    isPending,
-  ]);
+  }, [targetChainId, chain, isSuccess, chainId, switchChainAsync, router, pathPrefix, address, isPending, pathPostfix]);
 
   useEffect(() => {
-    const possiblePath = `/${chainIdToChainName(chainId)}/${pathPrefix}/${address}`;
+    const possiblePath = `/${chainIdToChainName(chainId)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
     if (isConnected && address && pathname !== possiblePath) {
       router.replace(possiblePath);
     }
-  }, [isConnected, address, pathname, pathPrefix, router, chainId]);
+  }, [isConnected, address, pathname, pathPrefix, router, chainId, pathPostfix]);
 
   return null;
 };
