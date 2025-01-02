@@ -32,6 +32,9 @@ module.exports = {
       {
         hostname: "gateway.irys.xyz",
       },
+      {
+        hostname: "onchaingas.vercel.app",
+      },
     ],
   },
 };

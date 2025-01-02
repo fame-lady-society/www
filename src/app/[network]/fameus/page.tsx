@@ -1,6 +1,8 @@
-import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "./ChainSelector";
+import { VideoWipeInteraction } from "./VideoWipeInteraction";
+
+const videoWipeUrl = "/videos/wipe-1.mp4"
 
 export default function Home({ params }: { params: { network: string } }) {
   const { network } = params;
@@ -21,23 +23,24 @@ export default function Home({ params }: { params: { network: string } }) {
       return <div>Invalid network</div>;
     }
   }
+
   return (
     <>
       <AppMain title="FAMEus" isDao headerRight={<ChainSelector />}>
-        <div className="w-full px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold mb-6 text-center">Coming Soon</h1>
-            <p className="text-lg text-left mb-6">
-              The FAMEus DAO is currently under development. Check back soon for
-              updates!
-            </p>
-            <p className="text-lg text-left mb-6">
-              Connect your wallet to see your $FAME ladies.
-            </p>
+        <VideoWipeInteraction videoUrl={videoWipeUrl} redirectPath={`/${network}/fameus/onboarding`} redirectWhenConnectedPath={`/${network}/fameus/wrap`}>
+          <div className="w-full pl-4 py-8">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-4xl font-bold mb-6 text-center">Enter the FAMEus DAO</h1>
+              <p className="text-lg text-left mb-6">
+                The FAMEus DAO is a community-driven organization that empowers $FAME Society NFT holders to shape the future of the FAMEus DAO.
+              </p>
+              <p className="text-lg text-left mb-6">
+                Touch anywhere to continue.
+              </p>
+            </div>
           </div>
-        </div>
+        </VideoWipeInteraction>
       </AppMain>
-      <RedirectWhenConnected pathPrefix="fameus" toChain={toChain} />
     </>
   );
 }

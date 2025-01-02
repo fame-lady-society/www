@@ -5,28 +5,29 @@ import {
 import { getBuiltGraphSDK } from "@/graphclient";
 import { client as sepoliaClient } from "@/viem/sepolia-client";
 import { client as baseClient } from "@/viem/base-client";
-import { fameMirrorAbi, govSocietyAbi } from "@/wagmi";
+import { fameMirrorAbi } from "@/wagmi";
 import { erc721Abi } from "viem";
 import { sepolia, base } from "viem/chains";
 
-export async function fetchSepoliaGovNftLadiesData({
+async function fetchTokensByOwner({
+  client,
+  contractAddress,
+  totalSupply,
   owner,
+  abi = erc721Abi,
 }: {
+  client: typeof sepoliaClient | typeof baseClient;
+  totalSupply: bigint;
+  contractAddress: `0x${string}`;
   owner: `0x${string}`;
+  abi?: typeof erc721Abi;
 }) {
-  // Works a little different since we don't have an indexer for sepolia, so we will just the ownerOf each token
-  const totalSupply = await sepoliaClient.readContract({
-    abi: fameMirrorAbi,
-    address: societyFromNetwork(sepolia.id),
-    functionName: "totalSupply",
-  });
-  const contractAddress = govSocietyFromNetwork(sepolia.id);
   const tokenIds = await Promise.all(
     Array.from({ length: Number(totalSupply) }).map(async (_, index) => {
       const tokenId = BigInt(index + 1);
       try {
-        const thisOwner = await sepoliaClient.readContract({
-          abi: erc721Abi,
+        const thisOwner = await client.readContract({
+          abi,
           address: contractAddress,
           functionName: "ownerOf",
           args: [tokenId],
@@ -38,6 +39,19 @@ export async function fetchSepoliaGovNftLadiesData({
     }),
   );
   return tokenIds.filter((id) => id !== null) as bigint[];
+}
+
+export async function fetchSepoliaGovNftLadiesData({
+  owner,
+}: {
+  owner: `0x${string}`;
+}) {
+  return fetchTokensByOwner({
+    client: sepoliaClient,
+    contractAddress: govSocietyFromNetwork(sepolia.id),
+    totalSupply: BigInt(200),
+    owner,
+  });
 }
 
 export async function fetchBaseGovNftLadiesData({
@@ -45,30 +59,44 @@ export async function fetchBaseGovNftLadiesData({
 }: {
   owner: `0x${string}`;
 }) {
-  // Works a little different since we don't have an indexer for base, so we will just the ownerOf each token
-  const contractAddress = govSocietyFromNetwork(base.id);
-  const totalSupply = await baseClient.readContract({
-    abi: fameMirrorAbi,
-    address: societyFromNetwork(base.id),
-    functionName: "totalSupply",
+  return fetchTokensByOwner({
+    client: baseClient,
+    contractAddress: govSocietyFromNetwork(base.id),
+    totalSupply: BigInt(
+      await baseClient.readContract({
+        abi: fameMirrorAbi,
+        address: govSocietyFromNetwork(base.id),
+        functionName: "totalSupply",
+      }),
+    ),
+    owner,
   });
-  const tokenIds = await Promise.all(
-    Array.from({ length: Number(totalSupply) }).map(async (_, index) => {
-      const tokenId = BigInt(index + 1);
-      try {
-        const thisOwner = await baseClient.readContract({
-          abi: erc721Abi,
-          address: contractAddress,
-          functionName: "ownerOf",
-          args: [tokenId],
-        });
-        return owner === thisOwner ? tokenId : null;
-      } catch (e) {
-        return null;
-      }
-    }),
-  );
-  return tokenIds.filter((id) => id !== null) as bigint[];
+}
+
+export async function fetchBaseSchwingNftsData({
+  owner,
+}: {
+  owner: `0x${string}`;
+}) {
+  return fetchTokensByOwner({
+    client: baseClient,
+    contractAddress: "0x91d7950ac7CcB369589765e31d6D8996321556de", // $SCHWING Austin Powers NFT on base
+    totalSupply: 400n,
+    owner,
+  });
+}
+
+export async function fetchBaseGovSchwingNftsData({
+  owner,
+}: {
+  owner: `0x${string}`;
+}) {
+  return fetchTokensByOwner({
+    client: baseClient,
+    contractAddress: "0x1AA1702627f4491741944130f0fa975f90213851", // Governance $SCHWING Austin Powers NFT on base
+    totalSupply: 400n,
+    owner,
+  });
 }
 
 export async function fetchSepoliaNftLadiesData({
@@ -76,26 +104,13 @@ export async function fetchSepoliaNftLadiesData({
 }: {
   owner: `0x${string}`;
 }) {
-  // Works a little different since we don't have an indexer for sepolia, so we will just the ownerOf each token
   const contractAddress = societyFromNetwork(sepolia.id);
-  const totalSupply = await sepoliaClient.readContract({
-    abi: fameMirrorAbi,
-    address: contractAddress,
-    functionName: "totalSupply",
+  return fetchTokensByOwner({
+    client: sepoliaClient,
+    contractAddress,
+    totalSupply: 200n,
+    owner,
   });
-  const tokenIds = await Promise.all(
-    Array.from({ length: Number(totalSupply) }).map(async (_, index) => {
-      const tokenId = BigInt(index + 1);
-      const thisOwner = await sepoliaClient.readContract({
-        abi: fameMirrorAbi,
-        address: contractAddress,
-        functionName: "ownerOf",
-        args: [tokenId],
-      });
-      return owner === thisOwner ? tokenId : null;
-    }),
-  );
-  return tokenIds.filter((id) => id !== null) as bigint[];
 }
 
 export async function fetchBaseNftLadiesData({

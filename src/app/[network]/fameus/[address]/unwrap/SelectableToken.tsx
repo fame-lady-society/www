@@ -1,6 +1,7 @@
 import { FC, useCallback, useState } from "react";
 import cn from "classnames";
 import NextImage from "next/image";
+import { FlowerSelect } from "@/components/FlowerSelect";
 
 const BASE_URL = "https://fame.support/thumb/";
 
@@ -28,6 +29,7 @@ const ImageForToken: FC<{
   );
 };
 
+
 export const SelectableToken = ({
   tokenId,
   onTokenSelected,
@@ -39,6 +41,7 @@ export const SelectableToken = ({
   onTokenUnselected: (tokenId: bigint) => void;
   isSelected: boolean;
 }) => {
+  const [hasHovered, setHasHovered] = useState(false);
   const handleClick = useCallback(() => {
     if (isSelected) {
       onTokenUnselected(tokenId);
@@ -48,20 +51,23 @@ export const SelectableToken = ({
   }, [isSelected, onTokenSelected, onTokenUnselected, tokenId]);
 
   const handleHoverIn = useCallback(() => {
-    // TODO: Add hover in effect
+    setHasHovered(true);
   }, []);
 
   const handleHoverOut = useCallback(() => {
-    // TODO: Add hover out effect
+    setHasHovered(false);
   }, []);
 
   return (
-    <ImageForToken
-      tokenId={tokenId}
-      onClick={handleClick}
-      onHoverIn={handleHoverIn}
-      onHoverOut={handleHoverOut}
-      isSelected={isSelected}
-    />
+    <div className="relative">
+      <ImageForToken
+        tokenId={tokenId}
+        onClick={handleClick}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
+        isSelected={isSelected || hasHovered}
+      />
+      <FlowerSelect isSelected={isSelected} />
+    </div>
   );
 };

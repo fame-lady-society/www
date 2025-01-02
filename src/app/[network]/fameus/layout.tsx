@@ -3,9 +3,8 @@ import { Inter } from "next/font/google";
 
 import "@/styles/tailwind.css";
 import { DefaultProvider } from "@/context/default";
-import { Notifications } from "@/features/notifications/Notifications";
 
-const inter = Inter({ subsets: ["latin"] });
+export const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.OG_BASE_URL!),

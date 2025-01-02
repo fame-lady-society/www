@@ -5,6 +5,7 @@ import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { useRouter, usePathname } from "next/navigation";
 
 function chainIdToChainName(chainId: number) {
+  console.log("chainId in chainIdToChainName", chainId);
   switch (chainId) {
     case 11155111:
       return "sepolia";
@@ -50,6 +51,7 @@ export const RedirectWhenConnected: FC<{
       targetChainId !== chainId &&
       address
     ) {
+      console.log("switching chain", targetChainId);
       switchChainAsync({ chainId: targetChainId }).then((newChain) => {
         if (newChain) {
           router.replace(
@@ -63,6 +65,7 @@ export const RedirectWhenConnected: FC<{
   useEffect(() => {
     const possiblePath = `/${chainIdToChainName(chainId)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
     if (isConnected && address && pathname !== possiblePath) {
+      console.log(`redirecting to ${possiblePath} with chainId ${chainId}`);
       router.replace(possiblePath);
     }
   }, [isConnected, address, pathname, pathPrefix, router, chainId, pathPostfix]);
