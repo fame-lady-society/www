@@ -308,7 +308,7 @@ export const WrapPage: FC<{
         console.error(e);
       }
     }
-  }, [targetNftAbi, targetNftAddress, wrapperNftAddress, writeContractAsync]);
+  }, [chain?.id, targetNftAbi, targetNftAddress, wrapperNftAddress, writeContractAsync]);
 
   const onTransactionConfirmed = useCallback(
     (tx: Transaction<unknown>) => {

@@ -5,11 +5,11 @@ import { ChainSelector } from "./ChainSelector";
 export default function Home({ params }: { params: { network: string } }) {
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
-  let toChain: 8543 | 8453 | undefined;
+  let toChain: 11155111 | 8453 | undefined;
   switch (network) {
     case "sepolia": {
       resolvedNetwork = "sepolia";
-      toChain = 8543;
+      toChain = 11155111;
       break;
     }
     case "base": {
@@ -17,6 +17,9 @@ export default function Home({ params }: { params: { network: string } }) {
       toChain = 8453;
       break;
     }
+  }
+  if (!resolvedNetwork || !toChain) {
+    return <div>Invalid network</div>;
   }
   return (
     <>
