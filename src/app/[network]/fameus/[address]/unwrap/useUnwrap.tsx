@@ -4,9 +4,7 @@ import { BaseError } from "viem";
 import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
-import {
-  useWriteGovSocietyWithdrawTo,
-} from "@/wagmi";
+import { useWriteGovSocietyWithdrawTo } from "@/wagmi";
 import { govSocietyFromNetwork } from "@/features/fame/contract";
 import { type base, type sepolia } from "viem/chains";
 import { useAccount, useWaitForTransactionReceipt } from "wagmi";
@@ -38,14 +36,27 @@ type TransactionAction =
   | { type: "OPEN_MODAL" }
   | { type: "CLOSE_MODAL" }
   | { type: "ADD_ACTIVE_TX"; payload: { kind: TransactionKind } }
-  | { type: "SET_ACTIVE_TX_HASH"; payload: { kind: TransactionKind; hash: WriteContractData; context?: bigint[] } }
-  | { type: "REMOVE_ACTIVE_TX"; payload: { hash: WriteContractData | undefined } }
+  | {
+      type: "SET_ACTIVE_TX_HASH";
+      payload: {
+        kind: TransactionKind;
+        hash: WriteContractData;
+        context?: bigint[];
+      };
+    }
+  | {
+      type: "REMOVE_ACTIVE_TX";
+      payload: { hash: WriteContractData | undefined };
+    }
   | { type: "COMPLETE_TX"; payload: { kind: string; hash: WriteContractData } };
 
 // -------------------------------
 // Reducer
 // -------------------------------
-const transactionReducer = (state: TransactionState, action: TransactionAction): TransactionState => {
+const transactionReducer = (
+  state: TransactionState,
+  action: TransactionAction,
+): TransactionState => {
   switch (action.type) {
     case "OPEN_MODAL":
       return { ...state, transactionModelOpen: true };
@@ -56,7 +67,9 @@ const transactionReducer = (state: TransactionState, action: TransactionAction):
         ...state,
         transactionModelOpen: true,
         activeTransactionHashList: [
-          ...state.activeTransactionHashList.filter((t) => t.kind !== action.payload.kind),
+          ...state.activeTransactionHashList.filter(
+            (t) => t.kind !== action.payload.kind,
+          ),
           { kind: action.payload.kind },
         ],
       };
@@ -65,7 +78,9 @@ const transactionReducer = (state: TransactionState, action: TransactionAction):
         ...state,
         transactionModelOpen: true,
         activeTransactionHashList: [
-          ...state.activeTransactionHashList.filter((t) => t.kind !== action.payload.kind),
+          ...state.activeTransactionHashList.filter(
+            (t) => t.kind !== action.payload.kind,
+          ),
           {
             kind: action.payload.kind,
             hash: action.payload.hash,
@@ -76,7 +91,9 @@ const transactionReducer = (state: TransactionState, action: TransactionAction):
     case "REMOVE_ACTIVE_TX":
       return {
         ...state,
-        activeTransactionHashList: state.activeTransactionHashList.filter((t) => t.hash !== action.payload.hash),
+        activeTransactionHashList: state.activeTransactionHashList.filter(
+          (t) => t.hash !== action.payload.hash,
+        ),
         transactionModelOpen: state.activeTransactionHashList.length > 1, // If we remove the last item, close modal
       };
     case "COMPLETE_TX":
@@ -103,23 +120,26 @@ const initialTransactionState: TransactionState = {
 // -------------------------------
 export function useUnwrap(
   chainId: typeof sepolia.id | typeof base.id,
-  toWrapSelectedTokenIds: bigint[]
+  toWrapSelectedTokenIds: bigint[],
 ) {
-  const [transactionState, dispatch] = useReducer(transactionReducer, initialTransactionState);
+  const [transactionState, dispatch] = useReducer(
+    transactionReducer,
+    initialTransactionState,
+  );
   const { address } = useAccount();
   const { addNotification } = useNotifications();
 
   // Contract calls
-  const { writeContractAsync: writeGovSocietyWithdrawTo } = useWriteGovSocietyWithdrawTo();
+  const { writeContractAsync: writeGovSocietyWithdrawTo } =
+    useWriteGovSocietyWithdrawTo();
 
   // Transaction watchers
-  const { isSuccess: isSuccess0, isError: isError0 } = useWaitForTransactionReceipt({
-    hash: transactionState.activeTransactionHashList[0]?.hash,
-  });
+  const { isSuccess: isSuccess0, isError: isError0 } =
+    useWaitForTransactionReceipt({
+      hash: transactionState.activeTransactionHashList[0]?.hash,
+    });
 
-  const {
-    resetUnwrapSelectedTokenIds
-  } = useFameusUnwrap()
+  const { resetUnwrapSelectedTokenIds } = useFameusUnwrap();
 
   // -----------------------------------------
   // Effects for success/failure notifications
@@ -136,7 +156,10 @@ export function useUnwrap(
   }, [isSuccess0, addNotification]);
 
   if (isSuccess0 || isError0) {
-    dispatch({ type: "REMOVE_ACTIVE_TX", payload: { hash: transactionState.activeTransactionHashList[0]?.hash } });
+    dispatch({
+      type: "REMOVE_ACTIVE_TX",
+      payload: { hash: transactionState.activeTransactionHashList[0]?.hash },
+    });
   }
 
   // -----------------------------------------
@@ -157,15 +180,19 @@ export function useUnwrap(
 
       dispatch({
         type: "SET_ACTIVE_TX_HASH",
-        payload: { kind: "unwrap", hash: withdrawResponse, context: toWrapSelectedTokenIds },
+        payload: {
+          kind: "unwrap",
+          hash: withdrawResponse,
+          context: toWrapSelectedTokenIds,
+        },
       });
     } catch (error) {
       if (error instanceof BaseError) {
         dispatch({ type: "CLOSE_MODAL" });
         addNotification({
-          message: error.metaMessages?.length ? (
-            error.metaMessages.map((m) => <p key={m}>{m}</p>)
-          ) : error.message,
+          message: error.metaMessages?.length
+            ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+            : error.message,
           type: "error",
           id: "unwrap-error",
           autoHideMs: 5000,
@@ -179,12 +206,12 @@ export function useUnwrap(
     }
   }, [
     address,
+    writeGovSocietyWithdrawTo,
     chainId,
     toWrapSelectedTokenIds,
-    writeGovSocietyWithdrawTo,
+    resetUnwrapSelectedTokenIds,
     addNotification,
     transactionState.activeTransactionHashList.length,
-    dispatch,
   ]);
 
   // -----------------------------------------
