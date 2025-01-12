@@ -125,7 +125,6 @@ const initialTransactionState: TransactionState = {
 export function useLock(
   chainId: typeof sepolia.id | typeof base.id,
   toLockSelectedTokenIds: bigint[],
-  guardianAddress?: `0x${string}`,
 ) {
   const [transactionState, dispatch] = useReducer(
     transactionReducer,
@@ -136,6 +135,7 @@ export function useLock(
 
   const {
     addToPendingTokenIds,
+    addToCompletedTokenIds,
     resetUnwrapSelectedTokenIds,
     removeFromPendingTokenIds,
   } = useFameusUnwrap();
@@ -155,22 +155,16 @@ export function useLock(
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  useEffect(() => {
-    if (isSuccess0) {
-      addNotification({
-        message: "Lock successful",
-        type: "success",
-        id: "lock-success",
-        autoHideMs: 5000,
-      });
-      removeFromPendingTokenIds(...toLockSelectedTokenIds);
-    }
-  }, [
-    isSuccess0,
-    addNotification,
-    removeFromPendingTokenIds,
-    toLockSelectedTokenIds,
-  ]);
+  if (isSuccess0) {
+    addNotification({
+      message: "Lock successful",
+      type: "success",
+      id: "lock-success",
+      autoHideMs: 5000,
+    });
+    removeFromPendingTokenIds(...toLockSelectedTokenIds);
+    addToCompletedTokenIds(...toLockSelectedTokenIds);
+  }
 
   if (isSuccess0 || isError0) {
     dispatch({
@@ -182,63 +176,67 @@ export function useLock(
   // -----------------------------------------
   // Main unwrap call
   // -----------------------------------------
-  const lock = useCallback(async () => {
-    if (!address) return;
-    try {
-      dispatch({ type: "OPEN_MODAL" });
-      dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "unwrap" } });
+  const lock = useCallback(
+    async (guardianAddress?: `0x${string}`) => {
+      if (!address) return;
+      try {
+        dispatch({ type: "OPEN_MODAL" });
+        dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "unwrap" } });
 
-      addToPendingTokenIds(...toLockSelectedTokenIds);
-      const withdrawResponse = guardianAddress
-        ? await writeGovSocietyLockWithGuardianMany({
-            address: govSocietyFromNetwork(chainId),
-            args: [toLockSelectedTokenIds, guardianAddress],
-          })
-        : await writeGovSocietyLockMany({
-            address: govSocietyFromNetwork(chainId),
-            args: [toLockSelectedTokenIds],
-          });
+        addToPendingTokenIds(...toLockSelectedTokenIds);
+        const withdrawResponse = guardianAddress
+          ? await writeGovSocietyLockWithGuardianMany({
+              address: govSocietyFromNetwork(chainId),
+              args: [toLockSelectedTokenIds, guardianAddress],
+            })
+          : await writeGovSocietyLockMany({
+              address: govSocietyFromNetwork(chainId),
+              args: [toLockSelectedTokenIds],
+            });
 
-      resetUnwrapSelectedTokenIds();
+        resetUnwrapSelectedTokenIds();
 
-      dispatch({
-        type: "SET_ACTIVE_TX_HASH",
-        payload: {
-          kind: "lock",
-          hash: withdrawResponse,
-          context: toLockSelectedTokenIds,
-        },
-      });
-    } catch (error) {
-      if (error instanceof BaseError) {
-        dispatch({ type: "CLOSE_MODAL" });
-        addNotification({
-          message: error.metaMessages?.length
-            ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-            : error.message,
-          type: "error",
-          id: "lock-error",
-          autoHideMs: 5000,
+        dispatch({
+          type: "SET_ACTIVE_TX_HASH",
+          payload: {
+            kind: "lock",
+            hash: withdrawResponse,
+            context: toLockSelectedTokenIds,
+          },
         });
+      } catch (error) {
+        removeFromPendingTokenIds(...toLockSelectedTokenIds);
+        if (error instanceof BaseError) {
+          dispatch({ type: "CLOSE_MODAL" });
+          addNotification({
+            message: error.metaMessages?.length
+              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+              : error.message,
+            type: "error",
+            id: "lock-error",
+            autoHideMs: 5000,
+          });
+        }
+      } finally {
+        // If no active transactions, close the modal
+        if (!transactionState.activeTransactionHashList.length) {
+          dispatch({ type: "CLOSE_MODAL" });
+        }
       }
-    } finally {
-      // If no active transactions, close the modal
-      if (!transactionState.activeTransactionHashList.length) {
-        dispatch({ type: "CLOSE_MODAL" });
-      }
-    }
-  }, [
-    address,
-    addToPendingTokenIds,
-    toLockSelectedTokenIds,
-    guardianAddress,
-    writeGovSocietyLockWithGuardianMany,
-    chainId,
-    writeGovSocietyLockMany,
-    resetUnwrapSelectedTokenIds,
-    addNotification,
-    transactionState.activeTransactionHashList.length,
-  ]);
+    },
+    [
+      address,
+      addToPendingTokenIds,
+      toLockSelectedTokenIds,
+      writeGovSocietyLockWithGuardianMany,
+      chainId,
+      writeGovSocietyLockMany,
+      resetUnwrapSelectedTokenIds,
+      removeFromPendingTokenIds,
+      addNotification,
+      transactionState.activeTransactionHashList.length,
+    ],
+  );
 
   // -----------------------------------------
   // Handlers for the TransactionsModal

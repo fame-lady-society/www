@@ -28,10 +28,17 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
   } = useFameusUnwrap();
 
   const {
-    transactionState,
+    lock,
+    transactionState: lockTransactionState,
+    closeTransactionModal: closeLockTransactionModal,
+    onTransactionConfirmed: onLockTransactionConfirmed,
+  } = useLock(chainId, toUnwrapSelectedTokenIds);
+
+  const {
+    transactionState: unwrapTransactionState,
     unwrap,
-    closeTransactionModal,
-    onTransactionConfirmed,
+    closeTransactionModal: closeUnwrapTransactionModal,
+    onTransactionConfirmed: onUnwrapTransactionConfirmed,
   } = useUnwrap(chainId, toUnwrapSelectedTokenIds);
 
   const tokenIdsToDisplay = useMemo(() => {
@@ -44,12 +51,11 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
   const handleLockWithGuardianModalClose = useCallback(
     (reason: "cancel" | "confirm", address?: `0x${string}`) => {
       if (reason === "confirm") {
-        // lock(address);
-        console.log("lock with guardian", address);
+        lock(address);
       }
       setLockWithGuardianModalOpen(false);
     },
-    [],
+    [lock],
   );
   return (
     <>
@@ -107,10 +113,16 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
         guardianAddresses={guardianAddresses}
       />
       <TransactionsModal
-        open={transactionState.transactionModelOpen}
-        onClose={closeTransactionModal}
-        transactions={transactionState.activeTransactionHashList}
-        onTransactionConfirmed={onTransactionConfirmed}
+        open={unwrapTransactionState.transactionModelOpen}
+        onClose={closeUnwrapTransactionModal}
+        transactions={unwrapTransactionState.activeTransactionHashList}
+        onTransactionConfirmed={onUnwrapTransactionConfirmed}
+      />
+      <TransactionsModal
+        open={lockTransactionState.transactionModelOpen}
+        onClose={closeLockTransactionModal}
+        transactions={lockTransactionState.activeTransactionHashList}
+        onTransactionConfirmed={onLockTransactionConfirmed}
       />
       <LockWithGuardianModal
         open={lockWithGuardianModalOpen}

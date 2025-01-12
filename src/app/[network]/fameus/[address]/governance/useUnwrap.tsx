@@ -149,7 +149,7 @@ export function useUnwrap(
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  if (isSuccess0) {
+  if (isSuccess0 && transactionState.activeTransactionHashList[0]?.hash) {
     addNotification({
       message: "Unwrap successful",
       type: "success",
@@ -161,6 +161,13 @@ export function useUnwrap(
     if (address) {
       revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
     }
+    dispatch({
+      type: "COMPLETE_TX",
+      payload: {
+        kind: "unwrapped tokens",
+        hash: transactionState.activeTransactionHashList[0]?.hash,
+      },
+    });
   }
   if (isSuccess0 || isError0) {
     dispatch({
@@ -232,12 +239,6 @@ export function useUnwrap(
   }, []);
 
   const onTransactionConfirmed = useCallback((tx: Transaction<unknown>) => {
-    if (tx.kind === "unwrap" && tx.hash) {
-      dispatch({
-        type: "COMPLETE_TX",
-        payload: { kind: "unwrapped tokens", hash: tx.hash },
-      });
-    }
     dispatch({ type: "REMOVE_ACTIVE_TX", payload: { hash: tx.hash } });
   }, []);
 

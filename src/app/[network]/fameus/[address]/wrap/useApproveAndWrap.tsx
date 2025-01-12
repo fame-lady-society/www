@@ -169,7 +169,11 @@ export function useApproveAndWrap(
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  function noticeSuccess(kind: TransactionKind, tokenIds?: bigint[]) {
+  function noticeSuccess(
+    kind: TransactionKind,
+    hash: WriteContractData,
+    tokenIds?: bigint[],
+  ) {
     addNotification({
       message: `${kind.charAt(0).toUpperCase() + kind.slice(1)} successful`,
       type: "success",
@@ -182,15 +186,27 @@ export function useApproveAndWrap(
       if (address) {
         revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
       }
+      dispatch({
+        type: "COMPLETE_TX",
+        payload: { kind: "wrapped tokens", hash },
+      });
     }
   }
-  if (isSuccess0) {
+  if (isSuccess0 && transactionState.activeTransactionHashList[0]?.hash) {
     const kind = transactionState.activeTransactionHashList[0]?.kind;
-    noticeSuccess(kind, transactionState.activeTransactionHashList[0]?.context);
+    noticeSuccess(
+      kind,
+      transactionState.activeTransactionHashList[0]?.hash,
+      transactionState.activeTransactionHashList[0]?.context,
+    );
   }
-  if (isSuccess1) {
+  if (isSuccess1 && transactionState.activeTransactionHashList[1]?.hash) {
     const kind = transactionState.activeTransactionHashList[1]?.kind;
-    noticeSuccess(kind, transactionState.activeTransactionHashList[1]?.context);
+    noticeSuccess(
+      kind,
+      transactionState.activeTransactionHashList[1]?.hash,
+      transactionState.activeTransactionHashList[1]?.context,
+    );
   }
 
   if (isSuccess0 || isError0) {
@@ -303,12 +319,6 @@ export function useApproveAndWrap(
   }, []);
 
   const onTransactionConfirmed = useCallback((tx: Transaction<unknown>) => {
-    if (tx.kind === "wrap" && tx.hash) {
-      dispatch({
-        type: "COMPLETE_TX",
-        payload: { kind: "wrapped tokens", hash: tx.hash },
-      });
-    }
     dispatch({ type: "REMOVE_ACTIVE_TX", payload: { hash: tx.hash } });
   }, []);
 
