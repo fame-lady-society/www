@@ -62,16 +62,14 @@ export async function GET(
               cid: tokenUri.replace("ipfs://", ""),
             })
             : await (async () => {
-              try {
-                const response = await fetch(tokenUri);
-                const metadata = await response.json();
-                return metadata as IMetadata;
-              } catch (error) {
-                console.error(`Error fetching metadata for token ${tokenId}`, error);
-                return null;
-              }
+              const response = await fetch(tokenUri);
+              const metadata = await response.json();
+              return metadata as IMetadata;
             })();
           return metadata;
+        }).catch((error) => {
+          console.error(`Error fetching metadata for token ${tokenId}`, error);
+          return null;
         }),
     ]);
     const chunks = metadata?.description?.split(defaultDescription) ?? [];
