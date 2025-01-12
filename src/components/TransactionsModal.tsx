@@ -1,4 +1,4 @@
-import { FC, useCallback } from "react";
+import { FC, ReactNode, useCallback } from "react";
 import Dialog from "@mui/material/Dialog";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
