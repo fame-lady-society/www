@@ -30,7 +30,7 @@ export async function GET(
   const tokenId = params.tokenId;
 
   try {
-    const [[owner, ensName, ensAvatar], metadata] = await Promise.all([
+    const [[ensName, ensAvatar], metadata] = await Promise.all([
       viemClient
         .readContract({
           abi: erc721Abi,
@@ -44,10 +44,10 @@ export async function GET(
           });
           const ensAvatar = ensName
             ? await viemClient.getEnsAvatar({
-                name: ensName,
-              })
+              name: ensName,
+            })
             : null;
-          return [owner, ensName, ensAvatar];
+          return [ensName, ensAvatar];
         }),
       viemClient
         .readContract({
@@ -59,22 +59,27 @@ export async function GET(
         .then(async (tokenUri) => {
           const metadata = tokenUri.startsWith("ipfs://")
             ? await fetchJson<IMetadata>({
-                cid: tokenUri.replace("ipfs://", ""),
-              })
+              cid: tokenUri.replace("ipfs://", ""),
+            })
             : await (async () => {
+              try {
                 const response = await fetch(tokenUri);
                 const metadata = await response.json();
                 return metadata as IMetadata;
-              })();
+              } catch (error) {
+                console.error(`Error fetching metadata for token ${tokenId}`, error);
+                return null;
+              }
+            })();
           return metadata;
         }),
     ]);
-    const chunks = metadata.description?.split(defaultDescription);
+    const chunks = metadata?.description?.split(defaultDescription) ?? [];
     let description: string | null = null;
     if (chunks && chunks.length > 1) {
       description = chunks[0].trim();
     }
-    const ogRank = metadata.attributes?.find(
+    const ogRank = metadata?.attributes?.find(
       (attr) => attr.trait_type === "OG Rank",
     );
     const paragraphs = (description ? description : defaultDescription).split(
@@ -165,7 +170,7 @@ export async function GET(
                     textShadow: "2px 2px 6px #000000",
                   }}
                 >
-                  {metadata.name}
+                  {metadata?.name ?? ""}
                 </h1>
               </div>
 
