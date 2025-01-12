@@ -44,10 +44,20 @@ export default async function Home({
       <TabBar activeTab="governance" />
       <h2 className="text-4xl font-bold mb-6">Governance</h2>
       <p className="text-lg text-left mb-6">
-        These are your Governance $FAME Ladies which can be used to vote on proposals of the FAMEus DAO.
+        These are your Governance $FAME Ladies which can be used to vote on
+        proposals of the FAMEus DAO.
       </p>
       <p className="text-lg text-left mb-6">
-        From this page you can lock and unwrap your Governance $FAME Ladies. To delegate your vote, vote, or create a proposal, see <WrappedLink href="https://www.tally.xyz/gov/fameus-dao" target="_blank" rel="noopener noreferrer">tally.xyz/gov/fameus-dao</WrappedLink>.
+        From this page you can lock and unwrap your Governance $FAME Ladies. To
+        delegate your vote, vote, or create a proposal, see{" "}
+        <WrappedLink
+          href="https://www.tally.xyz/gov/fameus-dao"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          tally.xyz/gov/fameus-dao
+        </WrappedLink>
+        .
       </p>
       <h3 className="text-2xl font-bold mb-6 flex items-center ">
         Your Governance $FAME Ladies

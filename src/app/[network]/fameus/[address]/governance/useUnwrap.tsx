@@ -38,17 +38,17 @@ type TransactionAction =
   | { type: "CLOSE_MODAL" }
   | { type: "ADD_ACTIVE_TX"; payload: { kind: TransactionKind } }
   | {
-    type: "SET_ACTIVE_TX_HASH";
-    payload: {
-      kind: TransactionKind;
-      hash: WriteContractData;
-      context?: bigint[];
-    };
-  }
+      type: "SET_ACTIVE_TX_HASH";
+      payload: {
+        kind: TransactionKind;
+        hash: WriteContractData;
+        context?: bigint[];
+      };
+    }
   | {
-    type: "REMOVE_ACTIVE_TX";
-    payload: { hash: WriteContractData | undefined };
-  }
+      type: "REMOVE_ACTIVE_TX";
+      payload: { hash: WriteContractData | undefined };
+    }
   | { type: "COMPLETE_TX"; payload: { kind: string; hash: WriteContractData } };
 
 // -------------------------------
@@ -149,22 +149,19 @@ export function useUnwrap(
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  useEffect(() => {
-    if (isSuccess0) {
-      addNotification({
-        message: "Unwrap successful",
-        type: "success",
-        id: "unwrap-success",
-        autoHideMs: 5000,
-      });
-      removeFromPendingTokenIds(...toWrapSelectedTokenIds);
-      addToCompletedTokenIds(...toWrapSelectedTokenIds);
-      if (address) {
-        revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
-      }
+  if (isSuccess0) {
+    addNotification({
+      message: "Unwrap successful",
+      type: "success",
+      id: "unwrap-success",
+      autoHideMs: 5000,
+    });
+    removeFromPendingTokenIds(...toWrapSelectedTokenIds);
+    addToCompletedTokenIds(...toWrapSelectedTokenIds);
+    if (address) {
+      revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
     }
-  }, [isSuccess0, addNotification, addToCompletedTokenIds, toWrapSelectedTokenIds, removeFromPendingTokenIds, address, chainId]);
-
+  }
   if (isSuccess0 || isError0) {
     dispatch({
       type: "REMOVE_ACTIVE_TX",
@@ -197,6 +194,7 @@ export function useUnwrap(
         },
       });
     } catch (error) {
+      removeFromPendingTokenIds(...toWrapSelectedTokenIds);
       if (error instanceof BaseError) {
         dispatch({ type: "CLOSE_MODAL" });
         addNotification({
@@ -221,6 +219,7 @@ export function useUnwrap(
     writeGovSocietyWithdrawTo,
     chainId,
     resetUnwrapSelectedTokenIds,
+    removeFromPendingTokenIds,
     addNotification,
     transactionState.activeTransactionHashList.length,
   ]);

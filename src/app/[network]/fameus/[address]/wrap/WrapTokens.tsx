@@ -93,6 +93,12 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
         onClose={closeTransactionModal}
         transactions={transactionState.activeTransactionHashList}
         onTransactionConfirmed={onTransactionConfirmed}
+        topContent={
+          <p className="mb-4">
+            Your wallet may flag this transaction as suspicious. Please review
+            the transaction simulation and confirm the transaction.
+          </p>
+        }
       />
     </>
   );

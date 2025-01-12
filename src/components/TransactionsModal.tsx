@@ -40,7 +40,8 @@ export const TransactionsModal: FC<{
   onClose: () => void;
   transactions?: Transaction[];
   onTransactionConfirmed: (tx: Transaction) => void;
-}> = ({ open, onClose, transactions, onTransactionConfirmed }) => {
+  topContent?: ReactNode;
+}> = ({ open, onClose, transactions, onTransactionConfirmed, topContent }) => {
   return (
     <Dialog open={open} onClose={onClose}>
       <Card
@@ -59,6 +60,7 @@ export const TransactionsModal: FC<{
       >
         <CardHeader avatar={<UploadIcon />} title="Submitting Transaction" />
         <CardContent>
+          {topContent}
           {transactions?.map((tx) => (
             <TransactionItem
               key={tx.hash}

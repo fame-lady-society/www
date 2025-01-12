@@ -5,7 +5,6 @@ import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { useRouter, usePathname } from "next/navigation";
 
 function chainIdToChainName(chainId: number) {
-  console.log("chainId in chainIdToChainName", chainId);
   switch (chainId) {
     case 11155111:
       return "sepolia";

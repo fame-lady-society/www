@@ -1,5 +1,5 @@
 "use client";
-import { FC, useMemo } from "react";
+import { FC, useCallback, useMemo, useState } from "react";
 import { useFameusUnwrap } from "./context";
 import { SelectableGrid } from "./SelectableGrid";
 import cn from "classnames";
@@ -8,6 +8,7 @@ import { TransactionsModal } from "@/components/TransactionsModal";
 import { useUnwrap } from "./useUnwrap";
 import { useLockStatus } from "./useLockStatus";
 import { useLock } from "./useLock";
+import { LockWithGuardianModal } from "./LockWithGuardianModal";
 
 type ManageTokensProps = {
   tokenIds: bigint[];
@@ -15,6 +16,8 @@ type ManageTokensProps = {
 };
 
 export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
+  const [lockWithGuardianModalOpen, setLockWithGuardianModalOpen] =
+    useState(false);
   const {
     toUnwrapSelectedTokenIds,
     pendingTokenIds,
@@ -38,7 +41,16 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
   }, [tokenIds, pendingTokenIds, completedTokenIds]);
 
   const { lockStatus, guardianAddresses } = useLockStatus(chainId, tokenIds);
-
+  const handleLockWithGuardianModalClose = useCallback(
+    (reason: "cancel" | "confirm", address?: `0x${string}`) => {
+      if (reason === "confirm") {
+        // lock(address);
+        console.log("lock with guardian", address);
+      }
+      setLockWithGuardianModalOpen(false);
+    },
+    [],
+  );
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -46,7 +58,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
           <button
             className={cn("bg-blue-500 text-white px-4 py-2 rounded-md")}
             disabled={toUnwrapSelectedTokenIds.length === 0}
-            // onClick={lock}
+            onClick={() => setLockWithGuardianModalOpen(true)}
           >
             Lock
           </button>
@@ -99,6 +111,10 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
         onClose={closeTransactionModal}
         transactions={transactionState.activeTransactionHashList}
         onTransactionConfirmed={onTransactionConfirmed}
+      />
+      <LockWithGuardianModal
+        open={lockWithGuardianModalOpen}
+        handleClose={handleLockWithGuardianModalClose}
       />
     </>
   );

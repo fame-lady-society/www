@@ -47,17 +47,17 @@ type TransactionAction =
   | { type: "CLOSE_MODAL" }
   | { type: "ADD_ACTIVE_TX"; payload: { kind: TransactionKind } }
   | {
-    type: "SET_ACTIVE_TX_HASH";
-    payload: {
-      kind: TransactionKind;
-      hash: WriteContractData;
-      context?: bigint[];
-    };
-  }
+      type: "SET_ACTIVE_TX_HASH";
+      payload: {
+        kind: TransactionKind;
+        hash: WriteContractData;
+        context?: bigint[];
+      };
+    }
   | {
-    type: "REMOVE_ACTIVE_TX";
-    payload: { hash: WriteContractData | undefined };
-  }
+      type: "REMOVE_ACTIVE_TX";
+      payload: { hash: WriteContractData | undefined };
+    }
   | { type: "COMPLETE_TX"; payload: { kind: string; hash: WriteContractData } };
 
 // -------------------------------
@@ -166,7 +166,6 @@ export function useApproveAndWrap(
       hash: transactionState.activeTransactionHashList[1]?.hash,
     });
 
-
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
@@ -264,6 +263,7 @@ export function useApproveAndWrap(
         resetWrapSelectedTokenIds();
       }
     } catch (error) {
+      removeFromPendingWrapTokenIds(...toWrapSelectedTokenIds);
       if (error instanceof BaseError) {
         dispatch({ type: "CLOSE_MODAL" });
         addNotification({
@@ -291,6 +291,7 @@ export function useApproveAndWrap(
     addToPendingWrapTokenIds,
     writeGovSocietyDepositFor,
     resetWrapSelectedTokenIds,
+    removeFromPendingWrapTokenIds,
     transactionState.activeTransactionHashList.length,
   ]);
 

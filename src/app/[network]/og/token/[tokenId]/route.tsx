@@ -44,8 +44,8 @@ export async function GET(
           });
           const ensAvatar = ensName
             ? await viemClient.getEnsAvatar({
-              name: ensName,
-            })
+                name: ensName,
+              })
             : null;
           return [ensName, ensAvatar];
         }),
@@ -59,15 +59,16 @@ export async function GET(
         .then(async (tokenUri) => {
           const metadata = tokenUri.startsWith("ipfs://")
             ? await fetchJson<IMetadata>({
-              cid: tokenUri.replace("ipfs://", ""),
-            })
+                cid: tokenUri.replace("ipfs://", ""),
+              })
             : await (async () => {
-              const response = await fetch(tokenUri);
-              const metadata = await response.json();
-              return metadata as IMetadata;
-            })();
+                const response = await fetch(tokenUri);
+                const metadata = await response.json();
+                return metadata as IMetadata;
+              })();
           return metadata;
-        }).catch((error) => {
+        })
+        .catch((error) => {
           console.error(`Error fetching metadata for token ${tokenId}`, error);
           return null;
         }),
