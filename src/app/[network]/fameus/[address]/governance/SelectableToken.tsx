@@ -33,9 +33,6 @@ const ImageForToken: FC<{
   );
 };
 
-
-
-
 export const SelectableToken = ({
   tokenId,
   isLocked,
@@ -80,17 +77,34 @@ export const SelectableToken = ({
       />
       <FlowerSelect isSelected={isSelected} />
       {isLocked ? (
-        <LockIcon className="absolute top-2 right-2 border-2 border-white rounded-full p-1 bg-transparent" onMouseEnter={() => setIsVisible(true)}
+        <LockIcon
+          className="absolute top-2 right-2 border-2 border-white rounded-full p-1 bg-transparent"
+          onMouseEnter={() => setIsVisible(true)}
           onMouseLeave={() => setIsVisible(false)}
-          onClick={() => setIsVisible(!isVisible)} />
+          onClick={() => setIsVisible(!isVisible)}
+        />
       ) : (
-        <UnlockIcon className="absolute top-2 right-2 border-2 border-white rounded-full p-1 bg-transparent" onMouseEnter={() => setIsVisible(true)}
+        <UnlockIcon
+          className="absolute top-2 right-2 border-2 border-white rounded-full p-1 bg-transparent"
+          onMouseEnter={() => setIsVisible(true)}
           onMouseLeave={() => setIsVisible(false)}
-          onClick={() => setIsVisible(!isVisible)} />
+          onClick={() => setIsVisible(!isVisible)}
+        />
       )}
       {isVisible && (
-        <div className={cn("absolute z-10 right-8 top-2 p-2 mt-2 pl-4 text-sm text-white bg-gray-800 rounded-lg shadow-lg", guardianAddress !== null && guardianAddress !== zeroAddress ? "w-128" : "w-64")}>
-          {guardianAddress === null ? "This token is not locked" : (guardianAddress === zeroAddress) ? "This token is locked by you" : `This token is locked by ${guardianAddress}`}
+        <div
+          className={cn(
+            "absolute z-10 right-8 top-2 p-2 mt-2 pl-4 text-sm text-white bg-gray-800 rounded-lg shadow-lg",
+            guardianAddress !== null && guardianAddress !== zeroAddress
+              ? "w-128"
+              : "w-64",
+          )}
+        >
+          {guardianAddress === null
+            ? "This token is not locked"
+            : guardianAddress === zeroAddress
+              ? "This token is locked by you"
+              : `This token is locked by ${guardianAddress}`}
         </div>
       )}
     </div>

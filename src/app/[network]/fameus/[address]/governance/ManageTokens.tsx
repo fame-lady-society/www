@@ -46,7 +46,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
           <button
             className={cn("bg-blue-500 text-white px-4 py-2 rounded-md")}
             disabled={toUnwrapSelectedTokenIds.length === 0}
-          // onClick={lock}
+            // onClick={lock}
           >
             Lock
           </button>

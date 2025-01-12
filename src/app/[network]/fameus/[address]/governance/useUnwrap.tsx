@@ -218,9 +218,10 @@ export function useUnwrap(
     }
   }, [
     address,
+    addToPendingTokenIds,
+    toWrapSelectedTokenIds,
     writeGovSocietyWithdrawTo,
     chainId,
-    toWrapSelectedTokenIds,
     resetUnwrapSelectedTokenIds,
     addNotification,
     transactionState.activeTransactionHashList.length,

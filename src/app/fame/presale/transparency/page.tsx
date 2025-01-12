@@ -41,7 +41,6 @@ export default async function Transparency() {
       Number(formatEther(totalReleased))) *
     100;
 
-
   return (
     <div>
       {data.map((tokenHolder) => {
