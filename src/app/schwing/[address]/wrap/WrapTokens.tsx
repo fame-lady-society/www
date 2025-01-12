@@ -37,8 +37,7 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
             className={cn(" text-white px-4 py-2 rounded-md", {
               "bg-gray-500":
                 tokenIds.length === 0 || toWrapSelectedTokenIds.length === 0,
-              "bg-blue-500":
-                needsApproval || needsWrap,
+              "bg-blue-500": needsApproval || needsWrap,
             })}
             disabled={!needsApproval && !needsWrap}
             onClick={wrap}
@@ -46,17 +45,18 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
             {isApprovedForAll ? "Wrap" : "Approve"}
           </button>
 
-          {toWrapSelectedTokenIds.length < tokenIds.length && tokenIds.length > 0 && (
-            <button
-              className="bg-blue-400 text-white px-4 py-2 rounded-md"
-              onClick={() => {
-                resetWrapSelectedTokenIds();
-                addToWrapSelectedTokenIds(...tokenIds);
-              }}
-            >
-              Select All
-            </button>
-          )}
+          {toWrapSelectedTokenIds.length < tokenIds.length &&
+            tokenIds.length > 0 && (
+              <button
+                className="bg-blue-400 text-white px-4 py-2 rounded-md"
+                onClick={() => {
+                  resetWrapSelectedTokenIds();
+                  addToWrapSelectedTokenIds(...tokenIds);
+                }}
+              >
+                Select All
+              </button>
+            )}
 
           {toWrapSelectedTokenIds.length > 0 && (
             <button

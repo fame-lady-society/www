@@ -22,8 +22,8 @@ type NotificationsContext = {
 
 const NotificationsContext = createContext<NotificationsContext>({
   notifications: [],
-  addNotification: () => { },
-  removeNotification: () => { },
+  addNotification: () => {},
+  removeNotification: () => {},
 });
 
 export const useNotifications = () => useContext(NotificationsContext);

@@ -1,4 +1,5 @@
 import {
+  fameFromNetwork,
   govSocietyFromNetwork,
   societyFromNetwork,
 } from "@/features/fame/contract";
@@ -8,6 +9,7 @@ import { client as baseClient } from "@/viem/base-client";
 import { fameMirrorAbi } from "@/wagmi";
 import { erc721Abi } from "viem";
 import { sepolia, base } from "viem/chains";
+import { getDN404Storage } from "@/service/fame";
 
 async function fetchTokensByOwner({
   client,
@@ -59,16 +61,14 @@ export async function fetchBaseGovNftLadiesData({
 }: {
   owner: `0x${string}`;
 }) {
+  const { burnPool, totalNFTSupply } = await getDN404Storage(
+    baseClient,
+    fameFromNetwork(base.id),
+  );
   return fetchTokensByOwner({
     client: baseClient,
     contractAddress: govSocietyFromNetwork(base.id),
-    totalSupply: BigInt(
-      await baseClient.readContract({
-        abi: fameMirrorAbi,
-        address: govSocietyFromNetwork(base.id),
-        functionName: "totalSupply",
-      }),
-    ),
+    totalSupply: totalNFTSupply + BigInt(burnPool.length),
     owner,
   });
 }
@@ -115,27 +115,17 @@ export async function fetchSepoliaNftLadiesData({
 
 export async function fetchBaseNftLadiesData({
   owner,
-  first = 100,
-  skip = 0,
-  sorted = "asc",
 }: {
   owner: `0x${string}`;
-  first?: number;
-  skip?: number;
-  sorted?: "asc" | "desc";
 }): Promise<bigint[]> {
-  const sdk = getBuiltGraphSDK();
-  const action = sdk.BaseFameNftTokenByOwner.bind(sdk);
-
-  if (!action) {
-    return [];
-  }
-
-  const result = await action({ owner, first, skip, orderDirection: sorted });
-
-  return (
-    result.base_fame_nft_ownerships
-      ?.filter((o) => o?.tokenId !== null && o?.tokenId !== undefined)
-      .map((o) => BigInt(o.tokenId.toString())) ?? []
+  const { burnPool, totalNFTSupply } = await getDN404Storage(
+    baseClient,
+    fameFromNetwork(base.id),
   );
+  return fetchTokensByOwner({
+    client: baseClient,
+    contractAddress: societyFromNetwork(base.id),
+    totalSupply: totalNFTSupply + BigInt(burnPool.length),
+    owner,
+  });
 }

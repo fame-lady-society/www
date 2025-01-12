@@ -1,4 +1,3 @@
-
 import { Metadata } from "next";
 import { RedirectType, redirect } from "next/navigation";
 
@@ -7,7 +6,6 @@ export const metadata: Metadata = {
   description: "FAMEus DAO.",
 };
 
-
 export default function Home() {
-  redirect(`/sepolia/fameus`, RedirectType.replace);
+  redirect(`/base/fameus`, RedirectType.replace);
 }

@@ -1,4 +1,4 @@
-import { type Address } from 'viem';
+import { type Address } from "viem";
 import { client as baseClient } from "@/viem/base-client";
 
 interface DN404Storage {
@@ -13,7 +13,7 @@ interface DN404Storage {
 
 export async function getDN404Storage(
   client: typeof baseClient,
-  contractAddress: Address
+  contractAddress: Address,
 ): Promise<DN404Storage> {
   const baseSlot = computeDN404StorageSlot();
 
@@ -21,12 +21,11 @@ export async function getDN404Storage(
   const slot0Hex = await client.getStorageAt({
     address: contractAddress,
     slot: baseSlot,
-    blockTag: 'latest'
+    blockTag: "latest",
   });
 
-
   if (!slot0Hex) {
-    throw new Error('Failed to fetch storage slots');
+    throw new Error("Failed to fetch storage slots");
   }
 
   // Parse Slot 0
@@ -38,7 +37,12 @@ export async function getDN404Storage(
   const totalNFTSupply = extractUint32(storageSlotBigInt, 128);
   const totalSupply = extractUint96(storageSlotBigInt, 160);
 
-  const burnPool: bigint[] = await readBurnedPool(client, contractAddress, burnedPoolHead, burnedPoolTail);
+  const burnPool: bigint[] = await readBurnedPool(
+    client,
+    contractAddress,
+    burnedPoolHead,
+    burnedPoolTail,
+  );
 
   return {
     numAliases,
@@ -47,38 +51,38 @@ export async function getDN404Storage(
     burnedPoolTail,
     totalNFTSupply,
     totalSupply,
-    burnPool
+    burnPool,
   };
 }
 
 function computeDN404StorageSlot() {
-  return '0xa20d6e21d0e5255308' as const;
+  return "0xa20d6e21d0e5255308" as const;
 }
 
 async function readBurnedPool(
   client: typeof baseClient,
   contractAddress: Address,
   burnedPoolHead: bigint,
-  burnedPoolTail: bigint
+  burnedPoolTail: bigint,
 ): Promise<bigint[]> {
-  const baseSlot = BigInt('0xa20d6e21d0e5255308');
+  const baseSlot = BigInt("0xa20d6e21d0e5255308");
   const mapSlot = baseSlot + BigInt(9); // burnedPool is at baseSlot + 9
 
   // Create array of indices to process
   const indices = Array.from(
     { length: Number(burnedPoolTail - burnedPoolHead) },
-    (_, index) => BigInt(index) + burnedPoolHead
+    (_, index) => BigInt(index) + burnedPoolHead,
   );
 
   // Create array of promises for all storage reads
-  const storagePromises = indices.map(i => {
-    const s = mapSlot * (BigInt(2) ** BigInt(96)) + (i / BigInt(8));
-    const slot = `0x${s.toString(16).padStart(64, '0')}` as `0x${string}`;
+  const storagePromises = indices.map((i) => {
+    const s = mapSlot * BigInt(2) ** BigInt(96) + i / BigInt(8);
+    const slot = `0x${s.toString(16).padStart(64, "0")}` as `0x${string}`;
 
     return client.getStorageAt({
       address: contractAddress,
       slot,
-      blockTag: 'latest',
+      blockTag: "latest",
     });
   });
 
@@ -89,7 +93,7 @@ async function readBurnedPool(
   return indices.map((i, index) => {
     const storageValueHex = storageValues[index];
     if (!storageValueHex) {
-      throw new Error('Failed to fetch storage slot');
+      throw new Error("Failed to fetch storage slot");
     }
 
     const storageValue = BigInt(storageValueHex);
@@ -98,12 +102,10 @@ async function readBurnedPool(
   });
 }
 
-
-
 function extractUint32(value: bigint, shiftBits: number) {
   return (value >> BigInt(shiftBits)) & BigInt(0xffffffff);
 }
 
 function extractUint96(value: bigint, shiftBits: number): bigint {
-  return (value >> BigInt(shiftBits)) & (BigInt(1) << BigInt(96)) - BigInt(1);
+  return (value >> BigInt(shiftBits)) & ((BigInt(1) << BigInt(96)) - BigInt(1));
 }

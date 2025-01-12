@@ -25,10 +25,12 @@ const TransactionItem: FC<{
       <Typography ml={1} mb={1} variant="body2" color="text.secondary">
         {`${transaction.hash ? "Submitting" : "Awaiting"} ${transaction.kind} transaction`}
       </Typography>
-      {transaction.hash && <TransactionProgress
-        transactionHash={transaction.hash}
-        onConfirmed={onConfirmed}
-      />}
+      {transaction.hash && (
+        <TransactionProgress
+          transactionHash={transaction.hash}
+          onConfirmed={onConfirmed}
+        />
+      )}
     </>
   );
 };

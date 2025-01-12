@@ -1,6 +1,13 @@
 "use client";
 
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Snackbar, { SnackbarCloseReason } from "@mui/material/Snackbar";
 import { useNotifications, type Notification } from "./Context";
 

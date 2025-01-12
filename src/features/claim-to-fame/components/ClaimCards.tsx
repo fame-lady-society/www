@@ -95,7 +95,7 @@ export const ClaimCard: FC<{
       isClaimedBatch?.length === tokenIds.length
         ? tokenIds.filter((_, index) => !isClaimedBatch[index])
         : undefined,
-    [isClaimedBatch, tokenIds]
+    [isClaimedBatch, tokenIds],
   );
 
   const {
@@ -181,7 +181,7 @@ export const ClaimCard: FC<{
             unconfirmedClaim.tokenIds,
             unconfirmedClaim.signature,
           ],
-        })}`
+        })}`,
       );
       writeContract({
         abi: claimToFameAbi,

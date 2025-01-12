@@ -34,8 +34,7 @@ export const RedirectWhenConnected: FC<{
       onError(error, variables, context) {
         setTargetChainId(toChain);
       },
-      onSettled(data, error, variables, context) {
-      },
+      onSettled(data, error, variables, context) {},
     },
   });
   const chain = chains.find((c) => c.id === toChain);
@@ -60,7 +59,18 @@ export const RedirectWhenConnected: FC<{
         }
       });
     }
-  }, [targetChainId, chain, isSuccess, chainId, switchChainAsync, router, pathPrefix, address, isPending, pathPostfix]);
+  }, [
+    targetChainId,
+    chain,
+    isSuccess,
+    chainId,
+    switchChainAsync,
+    router,
+    pathPrefix,
+    address,
+    isPending,
+    pathPostfix,
+  ]);
 
   useEffect(() => {
     const possiblePath = `/${chainIdToChainName(chainId)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
@@ -68,7 +78,15 @@ export const RedirectWhenConnected: FC<{
       console.log(`redirecting to ${possiblePath} with chainId ${chainId}`);
       router.replace(possiblePath);
     }
-  }, [isConnected, address, pathname, pathPrefix, router, chainId, pathPostfix]);
+  }, [
+    isConnected,
+    address,
+    pathname,
+    pathPrefix,
+    router,
+    chainId,
+    pathPostfix,
+  ]);
 
   return null;
 };

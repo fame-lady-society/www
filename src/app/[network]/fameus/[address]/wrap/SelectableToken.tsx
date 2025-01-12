@@ -1,4 +1,5 @@
 import { FC, useCallback, useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 import cn from "classnames";
 import NextImage from "next/image";
 import { FlowerSelect } from "@/components/FlowerSelect";
@@ -30,17 +31,18 @@ const ImageForToken: FC<{
   );
 };
 
-
 export const SelectableToken = ({
   tokenId,
   onTokenSelected,
   onTokenUnselected,
   isSelected,
+  isPending,
 }: {
   tokenId: bigint;
   onTokenSelected: (tokenId: bigint) => void;
   onTokenUnselected: (tokenId: bigint) => void;
   isSelected: boolean;
+  isPending: boolean;
 }) => {
   const [hasHovered, setHasHovered] = useState(false);
   const handleClick = useCallback(() => {
@@ -69,6 +71,11 @@ export const SelectableToken = ({
         isSelected={isSelected || hasHovered}
       />
       <FlowerSelect isSelected={isSelected} />
+      {isPending && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <CircularProgress />
+        </div>
+      )}
     </div>
   );
 };

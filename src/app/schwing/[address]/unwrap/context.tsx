@@ -1,10 +1,5 @@
 "use client";
-import {
-  createContext,
-  useState,
-  useCallback,
-  useContext,
-} from "react";
+import { createContext, useState, useCallback, useContext } from "react";
 import { base, sepolia } from "viem/chains";
 
 export type FameusContextType = {
@@ -22,9 +17,9 @@ export const FameusContext = createContext<FameusContextType>({
   network: "mainnet",
   chain: base,
   toUnwrapSelectedTokenIds: [],
-  addToUnwrapSelectedTokenIds: () => { },
-  removeFromUnwrapSelectedTokenIds: () => { },
-  resetUnwrapSelectedTokenIds: () => { },
+  addToUnwrapSelectedTokenIds: () => {},
+  removeFromUnwrapSelectedTokenIds: () => {},
+  resetUnwrapSelectedTokenIds: () => {},
 });
 
 export const FameusProvider = ({
@@ -44,12 +39,14 @@ export const FameusProvider = ({
     setToUnwrapSelectedTokenIds((prev) => [...prev, ...tokenIds]);
   }, []);
 
-
-  const removeFromUnwrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToUnwrapSelectedTokenIds((prev) =>
-      prev.filter((id) => !tokenIds.includes(id)),
-    );
-  }, []);
+  const removeFromUnwrapSelectedTokenIds = useCallback(
+    (...tokenIds: bigint[]) => {
+      setToUnwrapSelectedTokenIds((prev) =>
+        prev.filter((id) => !tokenIds.includes(id)),
+      );
+    },
+    [],
+  );
 
   return (
     <FameusContext.Provider

@@ -27,7 +27,7 @@ const useSpikePositionsAndRotations = (): ComponentPropsWithoutRef<
       const normalizedPosition = position.map((coord) => coord / radius) as [
         number,
         number,
-        number
+        number,
       ];
       const coneHeight = 1.5;
       const yOffset = coneHeight / 2;
@@ -41,7 +41,7 @@ const useSpikePositionsAndRotations = (): ComponentPropsWithoutRef<
       const spikeDirection = new THREE.Vector3(...normalizedPosition);
       const quaternion = new THREE.Quaternion().setFromUnitVectors(
         upVector,
-        spikeDirection
+        spikeDirection,
       );
       const eulerRotation = new THREE.Euler().setFromQuaternion(quaternion);
 

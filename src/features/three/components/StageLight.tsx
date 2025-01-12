@@ -44,14 +44,13 @@ function lookingAt(obj: THREE.Object3D) {
   return direction;
 }
 
-export const StageLight = forwardRef<THREE.PointLight>(function SpotlightRef(
-  _,
-  ref
-) {
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <pointLight ref={ref} position={[10, 10, 10]} />
-    </>
-  );
-});
+export const StageLight = forwardRef<THREE.PointLight>(
+  function SpotlightRef(_, ref) {
+    return (
+      <>
+        <ambientLight intensity={0.5} />
+        <pointLight ref={ref} position={[10, 10, 10]} />
+      </>
+    );
+  },
+);

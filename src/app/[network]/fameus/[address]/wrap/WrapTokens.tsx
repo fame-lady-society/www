@@ -1,6 +1,6 @@
 "use client";
-import { FC, useCallback } from "react";
-import { useFameusWrap } from "../context";
+import { FC, useCallback, useMemo } from "react";
+import { useFameusWrap } from "./context";
 import { SelectableGrid } from "./SelectableGrid";
 import cn from "classnames";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
@@ -13,18 +13,14 @@ type WrapTokensProps = {
 };
 
 export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
-  const router = useRouter();
   const {
     toWrapSelectedTokenIds,
+    pendingWrapTokenIds,
+    completedWrapTokenIds,
     addToWrapSelectedTokenIds,
     removeFromWrapSelectedTokenIds,
     resetWrapSelectedTokenIds,
-    removeFromPendingWrapTokenIds
   } = useFameusWrap();
-
-  const { address: addressParam, network: networkParam } = useParams<{ address: string, network: string }>() ?? {};
-  const address = addressParam as `0x${string}`;
-  const network = networkParam as "base" | "sepolia";
 
   const {
     transactionState,
@@ -34,11 +30,16 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
     isApprovedForAll,
   } = useApproveAndWrap(chainId, toWrapSelectedTokenIds);
 
-  const onTransactionConfirmed = useCallback((tx: Transaction<unknown>) => {
-    removeFromPendingWrapTokenIds(...toWrapSelectedTokenIds);
-    doUseApproveAndWrapOnTransactionConfirmed(tx);
-    router.push(`/${network}/fameus/${address}/wrap/complete`);
-  }, [toWrapSelectedTokenIds, removeFromPendingWrapTokenIds, doUseApproveAndWrapOnTransactionConfirmed, router, network, address]);
+  const onTransactionConfirmed = useCallback(
+    (tx: Transaction<unknown>) => {
+      doUseApproveAndWrapOnTransactionConfirmed(tx);
+    },
+    [doUseApproveAndWrapOnTransactionConfirmed],
+  );
+
+  const tokenIdsToDisplay = useMemo(() => {
+    return tokenIds.filter((id) => !completedWrapTokenIds.includes(id));
+  }, [tokenIds, completedWrapTokenIds]);
 
   return (
     <>
@@ -52,17 +53,18 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
             {isApprovedForAll ? "Wrap" : "Approve"}
           </button>
 
-          {toWrapSelectedTokenIds.length < tokenIds.length && tokenIds.length > 0 && (
-            <button
-              className="bg-blue-400 text-white px-4 py-2 rounded-md"
-              onClick={() => {
-                resetWrapSelectedTokenIds();
-                addToWrapSelectedTokenIds(...tokenIds);
-              }}
-            >
-              Select All
-            </button>
-          )}
+          {toWrapSelectedTokenIds.length < tokenIds.length &&
+            tokenIds.length > 0 && (
+              <button
+                className="bg-blue-400 text-white px-4 py-2 rounded-md"
+                onClick={() => {
+                  resetWrapSelectedTokenIds();
+                  addToWrapSelectedTokenIds(...tokenIds);
+                }}
+              >
+                Select All
+              </button>
+            )}
 
           {toWrapSelectedTokenIds.length > 0 && (
             <button
@@ -80,8 +82,9 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
         )}
       </div>
       <SelectableGrid
-        tokenIds={tokenIds}
+        tokenIds={tokenIdsToDisplay}
         selectedTokenIds={toWrapSelectedTokenIds}
+        pendingTokenIds={pendingWrapTokenIds}
         onTokenSelected={addToWrapSelectedTokenIds}
         onTokenUnselected={removeFromWrapSelectedTokenIds}
       />

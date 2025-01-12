@@ -1,7 +1,4 @@
-
-import {
-  fetchBaseGovSchwingNftsData,
-} from "@/features/fameus/service/graphql";
+import { fetchBaseGovSchwingNftsData } from "@/features/fameus/service/graphql";
 import { isAddress } from "viem";
 import { RedirectWhenConnected } from "../../wrap/RedirectWhenConnected";
 import { UnWrapTokens } from "./UnwrapTokens";
@@ -29,6 +26,5 @@ export default async function Home({
     </FameusProvider>
   );
 }
-
 
 export const revalidate = 0;

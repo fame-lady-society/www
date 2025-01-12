@@ -4,7 +4,9 @@ import cn from "classnames";
 export const FlowerSelect = ({ isSelected }: { isSelected: boolean }) => {
   const selectionRef = useRef<HTMLVideoElement>(null);
   const unselectionRef = useRef<HTMLVideoElement>(null);
-  const [currentPhase, setCurrentPhase] = useState<'selection' | 'selected' | 'unselection' | 'none'>('none');
+  const [currentPhase, setCurrentPhase] = useState<
+    "selection" | "selected" | "unselection" | "none"
+  >("none");
   const [shouldShow, setShouldShow] = useState(false);
   const prevIsSelected = useRef(isSelected);
 
@@ -20,7 +22,7 @@ export const FlowerSelect = ({ isSelected }: { isSelected: boolean }) => {
     // Handle selection
     if (isSelected) {
       setShouldShow(true);
-      setCurrentPhase('selection');
+      setCurrentPhase("selection");
       const video = selectionRef.current;
       if (video) {
         video.currentTime = 0;
@@ -33,24 +35,32 @@ export const FlowerSelect = ({ isSelected }: { isSelected: boolean }) => {
       }
     }
     // Handle unselection
-    else if (!isSelected && prevIsSelected.current && currentPhase !== 'unselection') {
+    else if (
+      !isSelected &&
+      prevIsSelected.current &&
+      currentPhase !== "unselection"
+    ) {
       const selectionVideo = selectionRef.current;
 
       // If selection video is still playing, wait for it to finish before starting unselection
-      if (selectionVideo && !selectionVideo.ended && currentPhase === 'selection') {
+      if (
+        selectionVideo &&
+        !selectionVideo.ended &&
+        currentPhase === "selection"
+      ) {
         const handleSelectionEnd = () => {
-          setCurrentPhase('unselection');
+          setCurrentPhase("unselection");
           const unselectionVideo = unselectionRef.current;
           if (unselectionVideo) {
             unselectionVideo.currentTime = 0;
             unselectionVideo.play();
           }
-          selectionVideo.removeEventListener('ended', handleSelectionEnd);
+          selectionVideo.removeEventListener("ended", handleSelectionEnd);
         };
-        selectionVideo.addEventListener('ended', handleSelectionEnd);
+        selectionVideo.addEventListener("ended", handleSelectionEnd);
       } else {
         // If selection video is done or wasn't playing, start unselection immediately
-        setCurrentPhase('unselection');
+        setCurrentPhase("unselection");
         const video = unselectionRef.current;
         if (video) {
           video.currentTime = 0;
@@ -72,7 +82,7 @@ export const FlowerSelect = ({ isSelected }: { isSelected: boolean }) => {
         height={400}
         className={cn(
           "absolute top-0 left-0 pointer-events-none",
-          currentPhase !== 'selection' && "hidden"
+          currentPhase !== "selection" && "hidden",
         )}
         muted
         playsInline
@@ -84,7 +94,7 @@ export const FlowerSelect = ({ isSelected }: { isSelected: boolean }) => {
         height={400}
         className={cn(
           "absolute top-0 left-0 pointer-events-none",
-          currentPhase !== 'unselection' && "hidden"
+          currentPhase !== "unselection" && "hidden",
         )}
         muted
         playsInline

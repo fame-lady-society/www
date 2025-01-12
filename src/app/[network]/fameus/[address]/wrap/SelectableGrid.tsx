@@ -3,11 +3,13 @@ import { SelectableToken } from "./SelectableToken";
 export const SelectableGrid = ({
   tokenIds,
   selectedTokenIds,
+  pendingTokenIds,
   onTokenSelected,
   onTokenUnselected,
 }: {
   tokenIds: bigint[];
   selectedTokenIds: bigint[];
+  pendingTokenIds: bigint[];
   onTokenSelected: (tokenId: bigint) => void;
   onTokenUnselected: (tokenId: bigint) => void;
 }) => {
@@ -20,6 +22,7 @@ export const SelectableGrid = ({
           onTokenSelected={onTokenSelected}
           onTokenUnselected={onTokenUnselected}
           isSelected={selectedTokenIds.includes(tokenId)}
+          isPending={pendingTokenIds.includes(tokenId)}
         />
       ))}
     </div>

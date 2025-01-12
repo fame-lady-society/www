@@ -9,11 +9,10 @@ export default function Home() {
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-6 text-center">Coming Soon</h1>
+            <p className="text-lg text-left mb-6">Schwing Wrap</p>
             <p className="text-lg text-left mb-6">
-              Schwing Wrap
-            </p>
-            <p className="text-lg text-left mb-6">
-              Connect your wallet to see your $SCHWING Austin Powers NFTs Baby Yeah!.
+              Connect your wallet to see your $SCHWING Austin Powers NFTs Baby
+              Yeah!.
             </p>
           </div>
         </div>

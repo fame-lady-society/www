@@ -2,7 +2,6 @@ import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "../ChainSelector";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 
-
 export default function Home({ params }: { params: { network: string } }) {
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
@@ -28,9 +27,13 @@ export default function Home({ params }: { params: { network: string } }) {
       <AppMain title="FAMEus" isDao headerRight={<ChainSelector />}>
         <div className="w-full pl-4 py-8">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold mb-6 text-center">FAMEus DAO Wrap</h1>
+            <h1 className="text-4xl font-bold mb-6 text-center">
+              FAMEus DAO Wrap
+            </h1>
             <p className="text-lg text-left mb-6">
-              The FAMEus DAO requires you to wrap your $FAME Society NFTs into Governance Society NFTs. These Governance Society NFTs will be used to vote on the future of the FAMEus DAO.
+              The FAMEus DAO requires you to wrap your $FAME Society NFTs into
+              Governance Society NFTs. These Governance Society NFTs will be
+              used to vote on the future of the FAMEus DAO.
             </p>
             <p className="text-lg text-left mb-6">
               Connect your wallet to see your $FAME ladies.
@@ -38,7 +41,11 @@ export default function Home({ params }: { params: { network: string } }) {
           </div>
         </div>
       </AppMain>
-      <RedirectWhenConnected pathPrefix="fameus" pathPostfix="wrap" toChain={toChain} />
+      <RedirectWhenConnected
+        pathPrefix="fameus"
+        pathPostfix="wrap"
+        toChain={toChain}
+      />
     </>
   );
 }

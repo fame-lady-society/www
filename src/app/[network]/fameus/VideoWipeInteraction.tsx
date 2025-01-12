@@ -25,7 +25,8 @@ export const VideoWipeInteraction = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
-  const isAllowedToInteract = allowInteraction && (!mustBeConnected || isConnected);
+  const isAllowedToInteract =
+    allowInteraction && (!mustBeConnected || isConnected);
 
   const handleInteraction = useCallback(async () => {
     if (!videoRef.current || !isAllowedToInteract) return;
@@ -41,9 +42,21 @@ export const VideoWipeInteraction = ({
         }
       }
     } else {
-      router.push((redirectWhenConnectedPath && isConnected && redirectWhenConnectedPath) || redirectPath);
+      router.push(
+        (redirectWhenConnectedPath &&
+          isConnected &&
+          redirectWhenConnectedPath) ||
+          redirectPath,
+      );
     }
-  }, [isPlaying, redirectPath, router, isAllowedToInteract, redirectWhenConnectedPath, isConnected]);
+  }, [
+    isPlaying,
+    redirectPath,
+    router,
+    isAllowedToInteract,
+    redirectWhenConnectedPath,
+    isConnected,
+  ]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isAllowedToInteract) return;
@@ -84,7 +97,14 @@ export const VideoWipeInteraction = ({
         src={videoUrl}
         className="absolute inset-0 w-full h-full object-cover object-center z-50 pointer-events-none"
         style={{ opacity: isPlaying ? 1 : 0 }}
-        onEnded={() => router.push((redirectWhenConnectedPath && isConnected && redirectWhenConnectedPath) || redirectPath)}
+        onEnded={() =>
+          router.push(
+            (redirectWhenConnectedPath &&
+              isConnected &&
+              redirectWhenConnectedPath) ||
+              redirectPath,
+          )
+        }
       />
       {!isPlaying && children}
     </div>

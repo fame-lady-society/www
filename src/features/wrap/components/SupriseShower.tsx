@@ -56,8 +56,8 @@ const SurpriseShower: FC<Props> = ({ count, children }) => {
 
       setAnimatedChildren(
         updatedChildren.filter(
-          (_, index) => curves[index](performance.now() / 1000)[1] > 0
-        )
+          (_, index) => curves[index](performance.now() / 1000)[1] > 0,
+        ),
       );
 
       frameRef.current = requestAnimationFrame(updatePositions);

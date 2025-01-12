@@ -1,4 +1,3 @@
-
 import { isAddress } from "viem";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -26,6 +25,5 @@ export default async function Home({
   revalidatePath(`/${params.network}/fameus/${params.address}/wrap`);
   redirect(`/${params.network}/fameus/${params.address}/wrap`);
 }
-
 
 export const revalidate = 0;

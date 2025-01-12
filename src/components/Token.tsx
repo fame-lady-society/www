@@ -62,16 +62,17 @@ export const Token: FC<{
             <Typography variant="h4" align="center">
               {metadata.name}
             </Typography>
-            {typeof allocation !== "undefined" && isBannedToken(tokenId) && (
+            {(typeof allocation !== "undefined" && isBannedToken(tokenId) && (
               <Typography variant="body1" align="center">
                 This token has been banned from the $FAME allocation because it
                 was owned by the prior team.
               </Typography>
-            ) || typeof allocation === "undefined" && isBannedToken(tokenId) && (
-              <Typography variant="body1" align="center">
-                This token was held by the prior team.
-              </Typography>
-            )}
+            )) ||
+              (typeof allocation === "undefined" && isBannedToken(tokenId) && (
+                <Typography variant="body1" align="center">
+                  This token was held by the prior team.
+                </Typography>
+              ))}
             {typeof allocation !== "undefined" && (
               <Typography variant="body1" align="center">
                 Allocation: {formatEther(allocation).split(".")[0]} $FAME

@@ -1,10 +1,5 @@
 "use client";
-import {
-  createContext,
-  useState,
-  useCallback,
-  useContext,
-} from "react";
+import { createContext, useState, useCallback, useContext } from "react";
 import { base, sepolia } from "viem/chains";
 
 export type FameusContextType = {
@@ -13,12 +8,16 @@ export type FameusContextType = {
   chain: typeof base | typeof sepolia;
   toWrapSelectedTokenIds: bigint[];
   pendingWrapTokenIds: bigint[];
+  completedWrapTokenIds: bigint[];
   addToWrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
   removeFromWrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
   resetWrapSelectedTokenIds: () => void;
   addToPendingWrapTokenIds: (...tokenIds: bigint[]) => void;
   removeFromPendingWrapTokenIds: (...tokenIds: bigint[]) => void;
   resetPendingWrapTokenIds: () => void;
+  addToCompletedWrapTokenIds: (...tokenIds: bigint[]) => void;
+  removeFromCompletedWrapTokenIds: (...tokenIds: bigint[]) => void;
+  resetCompletedWrapTokenIds: () => void;
 };
 
 export const FameusContext = createContext<FameusContextType>({
@@ -27,12 +26,16 @@ export const FameusContext = createContext<FameusContextType>({
   chain: base,
   toWrapSelectedTokenIds: [],
   pendingWrapTokenIds: [],
-  addToWrapSelectedTokenIds: () => { },
-  removeFromWrapSelectedTokenIds: () => { },
-  resetWrapSelectedTokenIds: () => { },
-  addToPendingWrapTokenIds: () => { },
-  removeFromPendingWrapTokenIds: () => { },
-  resetPendingWrapTokenIds: () => { },
+  completedWrapTokenIds: [],
+  addToWrapSelectedTokenIds: () => {},
+  removeFromWrapSelectedTokenIds: () => {},
+  resetWrapSelectedTokenIds: () => {},
+  addToPendingWrapTokenIds: () => {},
+  removeFromPendingWrapTokenIds: () => {},
+  resetPendingWrapTokenIds: () => {},
+  addToCompletedWrapTokenIds: () => {},
+  removeFromCompletedWrapTokenIds: () => {},
+  resetCompletedWrapTokenIds: () => {},
 });
 
 export const FameusProvider = ({
@@ -44,21 +47,34 @@ export const FameusProvider = ({
   address: `0x${string}`;
   network: "base" | "sepolia";
 }) => {
-  const [toWrapSelectedTokenIds, setToWrapSelectedTokenIds] = useState<bigint[]>([]);
+  const [toWrapSelectedTokenIds, setToWrapSelectedTokenIds] = useState<
+    bigint[]
+  >([]);
   const [pendingWrapTokenIds, setPendingWrapTokenIds] = useState<bigint[]>([]);
-
+  const [completedWrapTokenIds, setCompletedWrapTokenIds] = useState<bigint[]>(
+    [],
+  );
   const addToWrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToWrapSelectedTokenIds((prev) => [...tokenIds, ...prev.filter((id) => !tokenIds.includes(id))]);
+    setToWrapSelectedTokenIds((prev) => [
+      ...tokenIds,
+      ...prev.filter((id) => !tokenIds.includes(id)),
+    ]);
   }, []);
 
-  const removeFromWrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToWrapSelectedTokenIds((prev) =>
-      prev.filter((id) => !tokenIds.includes(id)),
-    );
-  }, []);
+  const removeFromWrapSelectedTokenIds = useCallback(
+    (...tokenIds: bigint[]) => {
+      setToWrapSelectedTokenIds((prev) =>
+        prev.filter((id) => !tokenIds.includes(id)),
+      );
+    },
+    [],
+  );
 
   const addToPendingWrapTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setPendingWrapTokenIds((prev) => [...tokenIds, ...prev.filter((id) => !tokenIds.includes(id))]);
+    setPendingWrapTokenIds((prev) => [
+      ...tokenIds,
+      ...prev.filter((id) => !tokenIds.includes(id)),
+    ]);
   }, []);
 
   const removeFromPendingWrapTokenIds = useCallback((...tokenIds: bigint[]) => {
@@ -67,11 +83,28 @@ export const FameusProvider = ({
     );
   }, []);
 
+  const addToCompletedWrapTokenIds = useCallback((...tokenIds: bigint[]) => {
+    setCompletedWrapTokenIds((prev) => [
+      ...tokenIds,
+      ...prev.filter((id) => !tokenIds.includes(id)),
+    ]);
+  }, []);
+
+  const removeFromCompletedWrapTokenIds = useCallback(
+    (...tokenIds: bigint[]) => {
+      setCompletedWrapTokenIds((prev) =>
+        prev.filter((id) => !tokenIds.includes(id)),
+      );
+    },
+    [],
+  );
+
   return (
     <FameusContext.Provider
       value={{
         toWrapSelectedTokenIds,
         pendingWrapTokenIds,
+        completedWrapTokenIds,
         address,
         network,
         chain: network === "base" ? base : sepolia,
@@ -81,6 +114,9 @@ export const FameusProvider = ({
         addToPendingWrapTokenIds,
         removeFromPendingWrapTokenIds,
         resetPendingWrapTokenIds: () => setPendingWrapTokenIds([]),
+        addToCompletedWrapTokenIds,
+        removeFromCompletedWrapTokenIds,
+        resetCompletedWrapTokenIds: () => setCompletedWrapTokenIds([]),
       }}
     >
       {children}

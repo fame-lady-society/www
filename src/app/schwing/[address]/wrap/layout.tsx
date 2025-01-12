@@ -2,7 +2,6 @@ import { AppMain } from "@/layouts/AppMain";
 import { isAddress } from "viem";
 import { InfoTooltip } from "@/components/InfoToolTip";
 
-
 export default async function Home({
   params,
   children,
@@ -20,10 +19,8 @@ export default async function Home({
     );
   }
 
-
   return (
     <>
-
       <AppMain title="Schwing DAO">
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">
@@ -31,7 +28,8 @@ export default async function Home({
               Schwing DAO Wrap
             </h1>
             <p className="text-lg text-left mb-6">
-              The Schwing DAO is the test DAO of the FAMEus DAO.  No value or utility is intended or implied.
+              The Schwing DAO is the test DAO of the FAMEus DAO. No value or
+              utility is intended or implied.
             </p>
             <h3 className="text-2xl font-bold mb-6 flex items-center">
               Liquid $SCHWING Austin Powers NFTs
@@ -44,6 +42,5 @@ export default async function Home({
     </>
   );
 }
-
 
 export const revalidate = 0;

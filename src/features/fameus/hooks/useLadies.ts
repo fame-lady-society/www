@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchBaseNftLadiesData } from "../service/graphql";
 
-export function useLadies({
-  owner,
-  first = 100,
-  skip,
-  sorted,
-}: {
-  owner?: `0x${string}`;
-  first?: number;
-  skip?: number;
-  sorted?: "asc" | "desc";
-}) {
+export function useLadies({ owner }: { owner?: `0x${string}` }) {
   const [data, setData] = useState<BigInt[]>([]);
   const [error, setError] = useState<Error>();
   const [isLoading, setIsLoading] = useState(true);
@@ -19,12 +9,12 @@ export function useLadies({
   useEffect(() => {
     if (owner) {
       setIsLoading(true);
-      fetchBaseNftLadiesData({ owner, first, skip, sorted })
+      fetchBaseNftLadiesData({ owner })
         .then(setData)
         .catch(setError)
         .finally(() => setIsLoading(false));
     }
-  }, [first, owner, skip, sorted]);
+  }, [owner]);
 
   return { data, error, isLoading };
 }

@@ -1,10 +1,5 @@
 "use client";
-import {
-  createContext,
-  useState,
-  useCallback,
-  useContext,
-} from "react";
+import { createContext, useState, useCallback, useContext } from "react";
 
 export type FameusContextType = {
   address: `0x${string}`;
@@ -17,9 +12,9 @@ export type FameusContextType = {
 export const FameusContext = createContext<FameusContextType>({
   address: "0x0",
   toWrapSelectedTokenIds: [],
-  addToWrapSelectedTokenIds: () => { },
-  removeFromWrapSelectedTokenIds: () => { },
-  resetWrapSelectedTokenIds: () => { },
+  addToWrapSelectedTokenIds: () => {},
+  removeFromWrapSelectedTokenIds: () => {},
+  resetWrapSelectedTokenIds: () => {},
 });
 
 export const FameusProvider = ({
@@ -44,7 +39,6 @@ export const FameusProvider = ({
     },
     [],
   );
-
 
   return (
     <FameusContext.Provider

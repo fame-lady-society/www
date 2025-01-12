@@ -49,10 +49,12 @@ export function AppMain({
             {headerLeft}
           </>
         }
-        right={<>
-          {headerRight}
-          <ClaimFame />
-        </>}
+        right={
+          <>
+            {headerRight}
+            <ClaimFame />
+          </>
+        }
       />
       <div className="flex flex-grow min-h-screen-without-header">
         <div className="lg:flex hidden">

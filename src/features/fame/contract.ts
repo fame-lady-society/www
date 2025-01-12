@@ -45,6 +45,6 @@ export function govSocietyFromNetwork(
     case sepolia.id:
       return "0x6c4fBF1970c09ed22001d6A5dc3315Bc32DdF6a1" as const;
     case base.id:
-      return "0xd0fd505f5340081df1302f19edaf157448ad6b88" as const;
+      return "0x12cf4e3B1a07DDAC4046B18714D6bAb9063De852" as const;
   }
 }

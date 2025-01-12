@@ -122,6 +122,12 @@ export function useUnwrap(
   chainId: typeof sepolia.id | typeof base.id,
   toWrapSelectedTokenIds: bigint[],
 ) {
+  const {
+    addToPendingTokenIds,
+    addToCompletedTokenIds,
+    resetUnwrapSelectedTokenIds,
+    removeFromPendingTokenIds,
+  } = useFameusUnwrap();
   const [transactionState, dispatch] = useReducer(
     transactionReducer,
     initialTransactionState,
@@ -139,8 +145,6 @@ export function useUnwrap(
       hash: transactionState.activeTransactionHashList[0]?.hash,
     });
 
-  const { resetUnwrapSelectedTokenIds } = useFameusUnwrap();
-
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
@@ -152,8 +156,16 @@ export function useUnwrap(
         id: "unwrap-success",
         autoHideMs: 5000,
       });
+      removeFromPendingTokenIds(...toWrapSelectedTokenIds);
+      addToCompletedTokenIds(...toWrapSelectedTokenIds);
     }
-  }, [isSuccess0, addNotification]);
+  }, [
+    isSuccess0,
+    addNotification,
+    addToCompletedTokenIds,
+    toWrapSelectedTokenIds,
+    removeFromPendingTokenIds,
+  ]);
 
   if (isSuccess0 || isError0) {
     dispatch({
@@ -170,7 +182,7 @@ export function useUnwrap(
     try {
       dispatch({ type: "OPEN_MODAL" });
       dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "unwrap" } });
-
+      addToPendingTokenIds(...toWrapSelectedTokenIds);
       const withdrawResponse = await writeGovSocietyWithdrawTo({
         address: govSocietyFromNetwork(chainId),
         args: [address, toWrapSelectedTokenIds],

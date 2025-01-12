@@ -12,41 +12,6 @@ export default async function Transparency() {
   const now = new Date();
   const data = await famePresaleTokenHolders();
 
-  // console.log(data);
-  console.log(
-    `fetching presale token data took ${new Date().getTime() - now.getTime()}ms`,
-  );
-
-  const totalReleased = data.reduce(
-    (acc, tokenHolder) => acc + tokenHolder.fameReleased,
-    0n,
-  );
-  const totalStillHeld = data.reduce(
-    (acc, tokenHolder) =>
-      acc + bigMathMin(tokenHolder.fameBalance, tokenHolder.fameReleased),
-    0n,
-  );
-
-  const totalStillHeldAll = data.reduce(
-    (acc, tokenHolder) => acc + tokenHolder.fameBalance,
-    0n,
-  );
-
-  const percentStillHeld =
-    (Number(formatEther(totalStillHeld)) / Number(formatEther(totalReleased))) *
-    100;
-
-  const percentStillHeldAll =
-    (Number(formatEther(totalStillHeldAll)) /
-      Number(formatEther(totalReleased))) *
-    100;
-
-  console.log(`percentStillHeldAll: ${percentStillHeldAll}`);
-  console.log(`percentStillHeld: ${percentStillHeld}`);
-  console.log(`totalReleased: ${formatEther(totalReleased)}`);
-  console.log(`totalStillHeld: ${formatEther(totalStillHeld)}`);
-  console.log(`totalStillHeldAll: ${formatEther(totalStillHeldAll)}`);
-
   return (
     <div>
       {data.map((tokenHolder) => {

@@ -16,13 +16,7 @@ const Content: FC<{
   tokenId: number;
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
-  return (
-    <Token
-      metadata={metadata}
-      tokenId={tokenId}
-      network={network}
-    />
-  );
+  return <Token metadata={metadata} tokenId={tokenId} network={network} />;
 };
 
 export const TokenPage: FC<{

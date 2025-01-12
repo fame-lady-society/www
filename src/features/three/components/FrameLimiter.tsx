@@ -8,9 +8,12 @@ export const FrameLimiter: FC<{ fps: number }> = (props) => {
   useFrame((state) => {
     const timeUntilNextFrame = 1000 / props.fps - clock.getDelta();
 
-    setTimeout(() => {
-      state.invalidate();
-    }, Math.max(0, timeUntilNextFrame));
+    setTimeout(
+      () => {
+        state.invalidate();
+      },
+      Math.max(0, timeUntilNextFrame),
+    );
   });
 
   return <></>;

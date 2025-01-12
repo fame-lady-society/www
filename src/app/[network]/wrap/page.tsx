@@ -21,7 +21,10 @@ export default function Page({ params }: { params: { network: string } }) {
   return (
     <>
       <AppMain title="FAMEus" isWrap></AppMain>
-      <RedirectWhenConnected pathPrefix="wrap" toChain={resolvedNetwork === "mainnet" ? 1 : 11155111} />
+      <RedirectWhenConnected
+        pathPrefix="wrap"
+        toChain={resolvedNetwork === "mainnet" ? 1 : 11155111}
+      />
     </>
   );
 }

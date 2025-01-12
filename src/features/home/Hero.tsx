@@ -43,14 +43,14 @@ const StageContent: FC<{
               0,
               screenWidth,
               -width / 2,
-              width / 2
+              width / 2,
             );
             const ndcY = MathUtils.mapLinear(
               spikeBallY,
               0,
               screenHeight,
               height / 2,
-              -height / 2
+              -height / 2,
             );
 
             container.position.set(ndcX, ndcY, 0);
