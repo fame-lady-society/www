@@ -6,9 +6,10 @@ import { Transaction } from "@/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
 import { useWriteGovSocietyWithdrawTo } from "@/wagmi";
 import { govSocietyFromNetwork } from "@/features/fame/contract";
-import { type base, type sepolia } from "viem/chains";
+import { sepolia, type base } from "viem/chains";
 import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { useFameusUnwrap } from "./context";
+import { revalidate } from "../actions";
 
 // -------------------------------
 // State & Actions
@@ -37,17 +38,17 @@ type TransactionAction =
   | { type: "CLOSE_MODAL" }
   | { type: "ADD_ACTIVE_TX"; payload: { kind: TransactionKind } }
   | {
-      type: "SET_ACTIVE_TX_HASH";
-      payload: {
-        kind: TransactionKind;
-        hash: WriteContractData;
-        context?: bigint[];
-      };
-    }
+    type: "SET_ACTIVE_TX_HASH";
+    payload: {
+      kind: TransactionKind;
+      hash: WriteContractData;
+      context?: bigint[];
+    };
+  }
   | {
-      type: "REMOVE_ACTIVE_TX";
-      payload: { hash: WriteContractData | undefined };
-    }
+    type: "REMOVE_ACTIVE_TX";
+    payload: { hash: WriteContractData | undefined };
+  }
   | { type: "COMPLETE_TX"; payload: { kind: string; hash: WriteContractData } };
 
 // -------------------------------
@@ -158,14 +159,11 @@ export function useUnwrap(
       });
       removeFromPendingTokenIds(...toWrapSelectedTokenIds);
       addToCompletedTokenIds(...toWrapSelectedTokenIds);
+      if (address) {
+        revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
+      }
     }
-  }, [
-    isSuccess0,
-    addNotification,
-    addToCompletedTokenIds,
-    toWrapSelectedTokenIds,
-    removeFromPendingTokenIds,
-  ]);
+  }, [isSuccess0, addNotification, addToCompletedTokenIds, toWrapSelectedTokenIds, removeFromPendingTokenIds, address, chainId]);
 
   if (isSuccess0 || isError0) {
     dispatch({

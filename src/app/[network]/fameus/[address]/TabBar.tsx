@@ -24,29 +24,32 @@ export const TabBar: FC<{
   }, [router]);
 
   return (
-    <div className="flex gap-4 mb-6">
-      <button
-        className={cn(
-          "px-4 py-2 border-2   rounded-m",
-          activeTab === "wrap"
-            ? "bg-blue-500 text-white"
-            : "text-blue-500 border-blue-500",
-        )}
-        onClick={onClickWrap}
-      >
-        Wrap
-      </button>
-      <button
-        className={cn(
-          "px-4 py-2 border-2 border-blue-500 rounded-md",
-          activeTab === "governance"
-            ? "bg-blue-500 text-white"
-            : "text-blue-500",
-        )}
-        onClick={onClickGovernance}
-      >
-        Governance
-      </button>
+    <div className="flex flex-col">
+      <div className="flex gap-4 mb-6">
+        <button
+          className={cn(
+            "px-4 py-2 border-2 rounded-md",
+            activeTab === "wrap"
+              ? "bg-gray-500 text-white"
+              : "text-blue-800 border-blue-800",
+          )}
+          onClick={onClickWrap}
+        >
+          Wrap
+        </button>
+        <button
+          className={cn(
+            "px-4 py-2 border-2 rounded-md",
+            activeTab === "governance"
+              ? "bg-gray-500 text-white"
+              : "text-blue-800 border-blue-800",
+          )}
+          onClick={onClickGovernance}
+        >
+          Governance
+        </button>
+      </div>
+      <hr className="border-gray-200 w-full mb-6" />
     </div>
   );
 };

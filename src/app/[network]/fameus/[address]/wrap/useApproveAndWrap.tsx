@@ -18,6 +18,7 @@ import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { useFameusWrap } from "./context";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { revalidate } from "../actions";
 
 // -------------------------------
 // State & Actions
@@ -46,17 +47,17 @@ type TransactionAction =
   | { type: "CLOSE_MODAL" }
   | { type: "ADD_ACTIVE_TX"; payload: { kind: TransactionKind } }
   | {
-      type: "SET_ACTIVE_TX_HASH";
-      payload: {
-        kind: TransactionKind;
-        hash: WriteContractData;
-        context?: bigint[];
-      };
-    }
+    type: "SET_ACTIVE_TX_HASH";
+    payload: {
+      kind: TransactionKind;
+      hash: WriteContractData;
+      context?: bigint[];
+    };
+  }
   | {
-      type: "REMOVE_ACTIVE_TX";
-      payload: { hash: WriteContractData | undefined };
-    }
+    type: "REMOVE_ACTIVE_TX";
+    payload: { hash: WriteContractData | undefined };
+  }
   | { type: "COMPLETE_TX"; payload: { kind: string; hash: WriteContractData } };
 
 // -------------------------------
@@ -165,7 +166,6 @@ export function useApproveAndWrap(
       hash: transactionState.activeTransactionHashList[1]?.hash,
     });
 
-  const router = useRouter();
 
   // -----------------------------------------
   // Effects for success/failure notifications
@@ -180,6 +180,9 @@ export function useApproveAndWrap(
     if (kind === "wrap" && tokenIds && tokenIds.length > 0) {
       removeFromPendingWrapTokenIds(...tokenIds);
       addToCompletedWrapTokenIds(...tokenIds);
+      if (address) {
+        revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
+      }
     }
   }
   if (isSuccess0) {

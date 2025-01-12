@@ -7,7 +7,7 @@ import { WrapTokens } from "./WrapTokens";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 import { FameusProvider } from "./context";
 import { InfoTooltip } from "@/components/InfoToolTip";
-import { TabBar } from "./TabBar";
+import { TabBar } from "../TabBar";
 
 export default async function Home({
   params,
@@ -39,8 +39,9 @@ export default async function Home({
       address={params.address}
       network={params.network as "sepolia" | "base"}
     >
+      <h1 className="text-4xl font-bold mb-6 text-center">FAMEus DAO</h1>
       <TabBar activeTab="wrap" />
-      <h1 className="text-4xl font-bold mb-6 text-center">FAMEus DAO Wrap</h1>
+      <h2 className="text-4xl font-bold mb-6">Wrap</h2>
       <p className="text-lg text-left mb-6">
         The FAMEus DAO requires you to wrap your $FAME Society NFTs into
         Governance Society NFTs. These Governance Society NFTs will be used to
@@ -61,4 +62,4 @@ export default async function Home({
   );
 }
 
-export const revalidate = 0;
+export const revalidate = 60;
