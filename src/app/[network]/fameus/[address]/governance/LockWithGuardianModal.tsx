@@ -97,6 +97,10 @@ export const LockWithGuardianModal: FC<{
               It is recommended to select a guardian to lock your tokens with,
               but be sure you control the guardian&apos;s address.
             </Typography>
+            <Typography sx={{ mb: 2 }} color="text.secondary">
+              The guardian address will be the only address that can unlock your
+              tokens.
+            </Typography>
             <FormGroup
               sx={{
                 mt: 2,
