@@ -41,12 +41,6 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
     onTransactionConfirmed: onUnwrapTransactionConfirmed,
   } = useUnwrap(chainId, toUnwrapSelectedTokenIds);
 
-  const tokenIdsToDisplay = useMemo(() => {
-    return tokenIds.filter(
-      (id) => !pendingTokenIds.includes(id) && !completedTokenIds.includes(id),
-    );
-  }, [tokenIds, pendingTokenIds, completedTokenIds]);
-
   const { lockStatus, guardianAddresses } = useLockStatus(chainId, tokenIds);
   const handleLockWithGuardianModalClose = useCallback(
     (reason: "cancel" | "confirm", address?: `0x${string}`) => {
@@ -57,6 +51,31 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
     },
     [lock],
   );
+
+  const { tokenIdsToDisplay, lockStatusToDisplay, guardianAddressesToDisplay } =
+    useMemo(() => {
+      const filteredIndexes = tokenIds
+        .map((_, index) => index)
+        .filter(
+          (index) =>
+            !pendingTokenIds.includes(tokenIds[index]) &&
+            !completedTokenIds.includes(tokenIds[index]),
+        );
+
+      return {
+        tokenIdsToDisplay: filteredIndexes.map((i) => tokenIds[i]),
+        lockStatusToDisplay: filteredIndexes.map((i) => lockStatus[i]),
+        guardianAddressesToDisplay: filteredIndexes.map(
+          (i) => guardianAddresses[i],
+        ),
+      };
+    }, [
+      tokenIds,
+      pendingTokenIds,
+      completedTokenIds,
+      lockStatus,
+      guardianAddresses,
+    ]);
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -109,8 +128,8 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
         selectedTokenIds={toUnwrapSelectedTokenIds}
         onTokenSelected={addToUnwrapSelectedTokenIds}
         onTokenUnselected={removeFromUnwrapSelectedTokenIds}
-        lockStatuses={lockStatus}
-        guardianAddresses={guardianAddresses}
+        lockStatuses={lockStatusToDisplay}
+        guardianAddresses={guardianAddressesToDisplay}
       />
       <TransactionsModal
         open={unwrapTransactionState.transactionModelOpen}

@@ -1,5 +1,5 @@
 import { govSocietyFromNetwork } from "@/features/fame/contract";
-import { govSocietyAbi, useReadGovSocietyIsLocked } from "@/wagmi";
+import { govSocietyAbi } from "@/wagmi";
 import { useEffect, useState } from "react";
 import { useClient, useConfig } from "wagmi";
 import { readContracts } from "@wagmi/core";
@@ -54,7 +54,6 @@ export const useLockStatus = (chainId: 11155111 | 8453, tokenIds: bigint[]) => {
     }
     fetchLockStatus();
   }, [chainId, client, config, tokenIds]);
-
   return {
     lockStatus,
     guardianAddresses,

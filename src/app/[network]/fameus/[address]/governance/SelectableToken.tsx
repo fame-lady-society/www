@@ -100,9 +100,10 @@ export const SelectableToken = ({
               : "w-64",
           )}
         >
-          {guardianAddress === null
+          {guardianAddress === null && !isLocked
             ? "This token is not locked"
-            : guardianAddress === zeroAddress
+            : (guardianAddress === zeroAddress || guardianAddress === null) &&
+                isLocked
               ? "This token is locked by you"
               : `This token is locked by ${guardianAddress}`}
         </div>
