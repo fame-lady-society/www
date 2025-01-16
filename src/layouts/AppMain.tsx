@@ -16,12 +16,14 @@ export function AppMain({
   isWrap,
   title,
   disableConnect,
+  disableDesktopMenu,
 }: PropsWithChildren<
   {
     title?: ReactNode;
     headerLeft?: ReactNode;
     headerRight?: ReactNode;
     disableConnect?: boolean;
+    disableDesktopMenu?: boolean;
   } & ComponentPropsWithoutRef<typeof SiteMenu>
 >) {
   const menu = (
@@ -57,9 +59,11 @@ export function AppMain({
         }
       />
       <div className="flex flex-grow min-h-screen-without-header">
-        <div className="lg:flex hidden">
-          <DesktopHomeMenu>{menu}</DesktopHomeMenu>
-        </div>
+        {!disableDesktopMenu && (
+          <div className="lg:flex hidden">
+            <DesktopHomeMenu>{menu}</DesktopHomeMenu>
+          </div>
+        )}
         <div className="flex-grow">{children}</div>
       </div>
     </main>
