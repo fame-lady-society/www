@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     url: "https://www.fameladysociety.com/~/jilly/lingerie-dreams",
   },
   other: {
-    ["twitter:title"]: "Fame Lady Society",
-    ["twitter:description"]: "FAQ",
+    ["twitter:title"]: "Lingerie Dreams",
+    ["twitter:description"]: "A 1/1 limited edition Music NFT",
     ["twitter:image"]:
       "https://www.fameladysociety.com/~/jilly/lingerie-dreams/social.jpeg",
     ["twitter:card"]: "summary_large_image",
