@@ -115,10 +115,20 @@ export const TeaserContent = ({
     <button
       className="relative block w-fit"
       onClick={() => {
-        const audio = new Audio(AUDIO_1);
-        audio.play();
-        audioRef.current = audio;
-        setIsPlaying(true);
+        if (audioRef.current) {
+          if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+          } else {
+            audioRef.current.play();
+            setIsPlaying(true);
+          }
+        } else {
+          const audio = new Audio(AUDIO_1);
+          audio.play();
+          audioRef.current = audio;
+          setIsPlaying(true);
+        }
       }}
     >
       <div className="relative">

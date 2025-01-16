@@ -11,6 +11,7 @@ export const Lasers = ({
   isPlaying: boolean;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,13 +74,23 @@ export const Lasers = ({
         if (beam.y < 0 || beam.y > canvas.height) beam.angle = -beam.angle;
       });
 
-      requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    if (isPlaying) {
+      animate();
+    } else {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Cleanup
     return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
   }, [height, isPlaying, width]);
