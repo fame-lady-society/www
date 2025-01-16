@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     siteName: "Lingerie Dreams",
     title: "Lingerie Dreams",
     description: "A 1/1 limited edition Music NFT",
+    url: "https://www.fameladysociety.com/~/jilly/lingerie-dreams",
   },
   other: {
     ["twitter:title"]: "Fame Lady Society",
