@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     ["twitter:image"]:
       "https://www.fameladysociety.com/~/jilly/lingerie-dreams/social.jpeg",
     ["twitter:card"]: "summary_large_image",
-    ["twitter:site"]: "@JillyRappaport",
-    ["twitter:creator"]: "@JillyRappaport",
+    ["twitter:site"]: "@FAMEorDIE",
+    ["twitter:creator"]: "@FAMEorDIE",
   },
 };
 
