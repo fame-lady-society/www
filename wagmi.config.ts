@@ -89,6 +89,7 @@ export default defineConfig({
         "IBalanceOf.sol/**",
         "FameVesting.sol/**",
         "GovSociety.sol/**",
+        "LingerieDreams.sol/**",
       ],
     }),
     react(),

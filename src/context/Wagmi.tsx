@@ -10,7 +10,13 @@ import {
   cookieStorage,
   createStorage,
 } from "wagmi";
-import { base, mainnet, sepolia, polygon as polygonChain } from "wagmi/chains";
+import {
+  base,
+  mainnet,
+  sepolia,
+  polygon as polygonChain,
+  polygonAmoy,
+} from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
 import { SiweMessage } from "siwe";
@@ -77,6 +83,17 @@ export const polygonOnly = {
         batch: true,
       }),
     ]),
+  },
+} as const;
+
+export const polygonAmoyOnly = {
+  chains: [polygonAmoy],
+  transports: {
+    [polygonAmoy.id]: fallback(
+      JSON.parse(process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON!).map((rpc) =>
+        http(rpc, { batch: true }),
+      ),
+    ),
   },
 } as const;
 

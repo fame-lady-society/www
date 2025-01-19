@@ -8,6 +8,7 @@ import {
   Web3Provider,
   baseSepolia,
   mainnetSepolia,
+  polygonAmoyOnly,
   polygonOnly,
   sepoliaOnly,
 } from "./Wagmi";
@@ -36,10 +37,20 @@ export const DefaultProvider: FC<
     mainnet?: boolean;
     base?: boolean;
     polygon?: boolean;
+    polygonAmoy?: boolean;
     sepolia?: boolean;
     initialState?: string;
   }>
-> = ({ siwe, children, mainnet, base, polygon, sepolia, initialState }) => {
+> = ({
+  siwe,
+  children,
+  mainnet,
+  base,
+  polygon,
+  polygonAmoy,
+  sepolia,
+  initialState,
+}) => {
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
     if (mainnet) {
@@ -57,13 +68,18 @@ export const DefaultProvider: FC<
         chainSet.add(chain);
       }
     }
+    if (polygonAmoy) {
+      for (const chain of polygonAmoyOnly.chains) {
+        chainSet.add(chain);
+      }
+    }
     if (sepolia) {
       for (const chain of sepoliaOnly.chains) {
         chainSet.add(chain);
       }
     }
     return Array.from(chainSet) as [Chain, ...Chain[]];
-  }, [mainnet, base, polygon, sepolia]);
+  }, [mainnet, base, polygon, polygonAmoy, sepolia]);
 
   const transports = useMemo(() => {
     const transportMap: Record<number, Transport> = {};
@@ -88,8 +104,15 @@ export const DefaultProvider: FC<
         transportMap[Number(chainId)] = transport;
       }
     }
+    if (polygonAmoy) {
+      for (const [chainId, transport] of Object.entries(
+        polygonAmoyOnly.transports,
+      )) {
+        transportMap[Number(chainId)] = transport;
+      }
+    }
     return transportMap;
-  }, [mainnet, base, polygon]);
+  }, [mainnet, base, polygon, polygonAmoy]);
 
   return (
     <ThemeProvider theme={flsTheme}>

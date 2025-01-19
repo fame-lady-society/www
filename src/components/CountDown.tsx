@@ -8,14 +8,14 @@ import { useRouter } from "next/router";
 const END_DATE = new Date("2023-04-27T17:20:00.000Z");
 const SIZED_COUNTER = {
   typography: {
-    sm: "h2",
-    lg: "h1",
+    sm: "p",
+    lg: "p",
   },
 };
 const SIZED_TEXT = {
   typography: {
-    sm: "h5",
-    lg: "h4",
+    sm: "p",
+    lg: "p",
   },
 };
 
@@ -26,7 +26,8 @@ const CELL_SIZE = {
 };
 export const CountDown: FC<{
   onEnd?: () => void;
-}> = ({ onEnd }) => {
+  endDate?: Date;
+}> = ({ onEnd, endDate = END_DATE }) => {
   const [start, setStart] = useState(false);
   useEffect(() => {
     setStart(true);
@@ -34,7 +35,7 @@ export const CountDown: FC<{
 
   return start ? (
     <ReactCountDown
-      date={END_DATE}
+      date={endDate}
       renderer={({ days, hours, minutes, seconds, completed }) => {
         if (completed) {
           onEnd?.();
@@ -46,33 +47,35 @@ export const CountDown: FC<{
             alignItems="center"
             spacing={1}
           >
-            <Grid item {...CELL_SIZE}>
-              <Box
-                component="div"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography
-                  sx={SIZED_COUNTER}
-                  component="span"
-                  color="text.primary"
+            {days > 0 && (
+              <Grid item {...CELL_SIZE}>
+                <Box
+                  component="div"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  {days}
-                </Typography>
-                <Typography
-                  sx={SIZED_TEXT}
-                  component="span"
-                  marginLeft={3}
-                  color="text.primary"
-                  noWrap
-                >
-                  Days
-                </Typography>
-              </Box>
-            </Grid>
+                  <Typography
+                    sx={SIZED_COUNTER}
+                    component="span"
+                    color="text.primary"
+                  >
+                    {days}
+                  </Typography>
+                  <Typography
+                    sx={SIZED_TEXT}
+                    component="span"
+                    marginLeft={3}
+                    color="text.primary"
+                    noWrap
+                  >
+                    Days
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
             <Grid item {...CELL_SIZE}>
               <Box
                 component="div"
