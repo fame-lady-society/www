@@ -218,7 +218,7 @@ export const Equalizer: FC<{
       className={`inset-0 pointer-events-none ${
         fullScreen ? "fixed" : "absolute"
       }`}
-      style={{ zIndex: 50, backgroundColor: "transparent" }}
+      style={{ zIndex: -1, backgroundColor: "transparent" }}
       width={width}
       height={height}
     />
@@ -259,6 +259,12 @@ export const TeaserContent = ({
       }}
     >
       <div className="relative">
+        <Equalizer
+          width={typeof window !== "undefined" ? window.innerWidth : width}
+          height={typeof window !== "undefined" ? window.innerHeight : height}
+          videoRef={videoRef}
+          fullScreen
+        />
         <video
           controls={false}
           autoPlay={false}
@@ -300,12 +306,7 @@ export const TeaserContent = ({
           />
           Your browser does not support HTML5 video.
         </video>
-        <Equalizer
-          width={typeof window !== "undefined" ? window.innerWidth : width}
-          height={typeof window !== "undefined" ? window.innerHeight : height}
-          videoRef={videoRef}
-          fullScreen
-        />
+
         <Lasers width={width} height={height} isPlaying={isPlaying} />
       </div>
       <div
