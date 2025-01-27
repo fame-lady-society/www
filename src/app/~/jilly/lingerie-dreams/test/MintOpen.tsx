@@ -6,7 +6,6 @@ import { CountDown } from "@/components/CountDown";
 import { MintAvailable } from "./MintAvailable";
 import { polygonAmoy } from "viem/chains";
 import { Mint } from "./Mint";
-import { WhoopsWrongChain } from "./WhoopsWrongChain";
 
 export const MintOpen: FC<{ chainId: typeof polygonAmoy.id }> = ({
   chainId,
