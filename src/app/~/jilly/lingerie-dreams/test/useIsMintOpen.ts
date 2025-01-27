@@ -6,6 +6,7 @@ import { polygonAmoy } from "viem/chains";
 
 export function useIsMintOpen(chainId: typeof polygonAmoy.id) {
   return useReadLingerieDreamsGetStartTime({
+    chainId,
     address: lingerieDreamsAddressForChain(chainId),
   });
 }

@@ -10,9 +10,11 @@ import { zeroAddress } from "viem";
 
 export function useTotalSupply(chainId: typeof polygonAmoy.id) {
   const { refetch, ...rest } = useReadLingerieDreamsTotalSupply({
+    chainId,
     address: lingerieDreamsAddressForChain(chainId),
   });
   useWatchLingerieDreamsTransferEvent({
+    chainId,
     address: lingerieDreamsAddressForChain(chainId),
     onLogs: (logs) => {
       let wasMinted = false;

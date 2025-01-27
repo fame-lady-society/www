@@ -5087,6 +5087,20 @@ export const lingerieDreamsAbi = [
   {
     type: 'function',
     inputs: [],
+    name: 'mintLimit',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'mintPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'name',
     outputs: [{ name: '', internalType: 'string', type: 'string' }],
     stateMutability: 'pure',
@@ -5341,6 +5355,7 @@ export const lingerieDreamsAbi = [
   { type: 'error', inputs: [], name: 'FailedToSendEther' },
   { type: 'error', inputs: [], name: 'MintAmountExceedsLimit' },
   { type: 'error', inputs: [], name: 'MintAmountExceedsSupply' },
+  { type: 'error', inputs: [], name: 'MintMustBeGreaterThanZero' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotEnoughPayment' },
@@ -12729,6 +12744,24 @@ export const useReadLingerieDreamsIsApprovedForAll =
   /*#__PURE__*/ createUseReadContract({
     abi: lingerieDreamsAbi,
     functionName: 'isApprovedForAll',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link lingerieDreamsAbi}__ and `functionName` set to `"mintLimit"`
+ */
+export const useReadLingerieDreamsMintLimit =
+  /*#__PURE__*/ createUseReadContract({
+    abi: lingerieDreamsAbi,
+    functionName: 'mintLimit',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link lingerieDreamsAbi}__ and `functionName` set to `"mintPrice"`
+ */
+export const useReadLingerieDreamsMintPrice =
+  /*#__PURE__*/ createUseReadContract({
+    abi: lingerieDreamsAbi,
+    functionName: 'mintPrice',
   })
 
 /**

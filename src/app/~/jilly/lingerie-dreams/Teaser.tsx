@@ -12,11 +12,11 @@ import {
 import { Lasers } from "./Lasers";
 
 export const Equalizer: FC<{
-  audioRef: MutableRefObject<HTMLAudioElement | undefined>;
+  videoRef: MutableRefObject<HTMLVideoElement | null>;
   height: number;
   width: number;
   fullScreen?: boolean;
-}> = ({ audioRef, height, width, fullScreen }) => {
+}> = ({ videoRef, height, width, fullScreen }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -56,13 +56,22 @@ export const Equalizer: FC<{
 
     const animate = () => {
       // Setup audio context and nodes if they don't exist but audio element does
-      if (audioRef.current && !audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        sourceNodeRef.current =
-          audioContextRef.current.createMediaElementSource(audioRef.current);
-        sourceNodeRef.current.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
+      if (videoRef.current && !audioContextRef.current) {
+        const connect = () => {
+          if (!videoRef.current || audioContextRef.current) return;
+          audioContextRef.current = new AudioContext();
+          analyserRef.current = audioContextRef.current.createAnalyser();
+          sourceNodeRef.current =
+            audioContextRef.current.createMediaElementSource(videoRef.current);
+          sourceNodeRef.current.connect(analyserRef.current);
+          analyserRef.current.connect(audioContextRef.current.destination);
+        };
+
+        const noticeVideoStarted = () => {
+          videoRef.current?.removeEventListener("play", noticeVideoStarted);
+          connect();
+        };
+        videoRef.current?.addEventListener("play", noticeVideoStarted);
       }
 
       // Clear canvas regardless of audio state
@@ -186,7 +195,7 @@ export const Equalizer: FC<{
       cancelAnimationFrame(animationFrameId);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, [audioRef, height, width]);
+  }, [height, videoRef, width]);
 
   // Cleanup audio context when component unmounts
   useEffect(() => {
@@ -216,9 +225,6 @@ export const Equalizer: FC<{
   );
 };
 
-const IMAGE_1 = "/~/jilly/lingerie-dreams/teaser.webp";
-const AUDIO_1 = "/~/jilly/lingerie-dreams/teaser.m4a";
-
 export const TeaserContent = ({
   width,
   height,
@@ -227,34 +233,77 @@ export const TeaserContent = ({
   height: number;
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
     <button
       className="relative block w-fit"
       onClick={() => {
-        if (audioRef.current) {
+        if (videoRef.current) {
           if (isPlaying) {
-            audioRef.current.pause();
+            videoRef.current.pause();
             setIsPlaying(false);
           } else {
-            audioRef.current.play();
-            setIsPlaying(true);
+            videoRef.current
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+              })
+              .catch((error) => {
+                console.error("Error playing video", error);
+              });
           }
         } else {
-          const audio = new Audio(AUDIO_1);
-          audio.play();
-          audioRef.current = audio;
           setIsPlaying(true);
         }
       }}
     >
       <div className="relative">
-        <NextImage src={IMAGE_1} alt="Teaser" width={width} height={height} />
+        <video
+          controls={false}
+          autoPlay={false}
+          loop
+          poster="/~/jilly/lingerie-dreams/poster.jpg"
+          width={width}
+          height={height}
+          ref={videoRef}
+        >
+          <source
+            src="/~/jilly/lingerie-dreams/final_720.mp4"
+            type="video/mp4"
+            media="(min-width: 600px)"
+          />
+          <source
+            src="/~/jilly/lingerie-dreams/final_720.webm"
+            type="video/webm"
+            media="(min-width: 600px)"
+          />
+          <source
+            src="/~/jilly/lingerie-dreams/final_720.ogv"
+            type="video/ogg"
+            media="(min-width: 600px)"
+          />
+          <source
+            src="/~/jilly/lingerie-dreams/final_360.mp4"
+            type="video/mp4"
+            media="(max-width: 599px)"
+          />
+          <source
+            src="/~/jilly/lingerie-dreams/final_360.webm"
+            type="video/webm"
+            media="(max-width: 599px)"
+          />
+          <source
+            src="/~/jilly/lingerie-dreams/final_360.ogv"
+            type="video/ogg"
+            media="(max-width: 599px)"
+          />
+          Your browser does not support HTML5 video.
+        </video>
         <Equalizer
           width={typeof window !== "undefined" ? window.innerWidth : width}
           height={typeof window !== "undefined" ? window.innerHeight : height}
-          audioRef={audioRef}
+          videoRef={videoRef}
           fullScreen
         />
         <Lasers width={width} height={height} isPlaying={isPlaying} />
@@ -274,7 +323,7 @@ export const TeaserContent = ({
 };
 
 export const Teaser = () => {
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
+  const [dimensions, setDimensions] = useState({ width: 720, height: 720 });
 
   useEffect(() => {
     const updateDimensions = () => {

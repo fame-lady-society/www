@@ -2,20 +2,22 @@ import { useWriteLingerieDreamsPublicMint } from "@/wagmi";
 import { lingerieDreamsAddressForChain } from "./contracts";
 import { polygonAmoy } from "viem/chains";
 import { useCallback } from "react";
+import { useMintPrice } from "./useMintPrice";
 
 export function useMint(chainId: typeof polygonAmoy.id) {
+  const { data: mintPrice } = useMintPrice(chainId);
   const result = useWriteLingerieDreamsPublicMint();
 
   const writeContractAsync = useCallback(
     async (amount: number) => {
-      console.log("amount", BigInt(amount * 30 * 10 ** 18));
+      if (!mintPrice) throw new Error("Mint price not found");
       return result.writeContractAsync({
         address: lingerieDreamsAddressForChain(chainId),
         args: [amount],
-        value: BigInt(amount * 30 * 10 ** 18),
+        value: mintPrice * BigInt(amount),
       });
     },
-    [chainId, result],
+    [chainId, mintPrice, result],
   );
   return { ...result, writeContractAsync };
 }
