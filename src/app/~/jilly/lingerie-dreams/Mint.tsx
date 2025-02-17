@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { polygonAmoy } from "viem/chains";
+import { polygonAmoy, polygon } from "viem/chains";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { useMint } from "./useMint";
 import { useAccount, useReadContract, useSwitchChain } from "wagmi";
@@ -9,7 +9,7 @@ import { lingerieDreamsAddressForChain } from "./contracts";
 import { erc721Abi } from "viem";
 import { useMintLimit } from "./useMintLimit";
 
-export const Mint: FC<{ chainId: typeof polygonAmoy.id }> = ({ chainId }) => {
+export const Mint: FC<{ chainId: typeof polygonAmoy.id | typeof polygon.id }> = ({ chainId }) => {
   const { chainId: currentChainId, address } = useAccount();
   const { chains, switchChain } = useSwitchChain();
   const currentChain = chains.find((chain) => chain.id === chainId);

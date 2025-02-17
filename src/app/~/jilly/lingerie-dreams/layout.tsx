@@ -32,7 +32,7 @@ export default async function Home({
   children: React.ReactNode;
 }) {
   return (
-    <DefaultProvider polygonAmoy>
+    <DefaultProvider polygonAmoy polygon>
       <AppMain title="Lingerie Dreams" disableDesktopMenu>
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">{children}</div>

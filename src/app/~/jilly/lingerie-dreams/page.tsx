@@ -1,5 +1,7 @@
 import { WrappedLink } from "@/components/WrappedLink";
 import { Teaser } from "./Teaser";
+import { MintOpen } from "./MintOpen";
+import { polygon } from "viem/chains";
 
 export default function Page() {
   return (
@@ -35,8 +37,8 @@ export default function Page() {
             FAMEorDIE
           </WrappedLink>
         </h3>
-        <p className="text-lg mt-2">A 1/1 limited edition Music NFT</p>
-        <p className="text-lg mt-2">Coming soon</p>
+        <p className="text-lg mt-2 mb-4">A 1/1 limited edition Music NFT</p>
+        <MintOpen chainId={polygon.id} />
       </div>
     </>
   );

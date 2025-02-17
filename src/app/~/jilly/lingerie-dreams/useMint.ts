@@ -1,10 +1,10 @@
 import { useWriteLingerieDreamsPublicMint } from "@/wagmi";
 import { lingerieDreamsAddressForChain } from "./contracts";
-import { polygonAmoy } from "viem/chains";
+import { polygonAmoy, polygon } from "viem/chains";
 import { useCallback } from "react";
 import { useMintPrice } from "./useMintPrice";
 
-export function useMint(chainId: typeof polygonAmoy.id) {
+export function useMint(chainId: typeof polygonAmoy.id | typeof polygon.id) {
   const { data: mintPrice } = useMintPrice(chainId);
   const result = useWriteLingerieDreamsPublicMint();
 

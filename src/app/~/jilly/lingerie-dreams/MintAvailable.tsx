@@ -1,12 +1,12 @@
 import { FC } from "react";
 import { formatUnits } from "viem";
 import { useTotalSupply } from "./useTotalSupply";
-import { polygonAmoy } from "viem/chains";
+import { polygon, polygonAmoy } from "viem/chains";
 import { useMintPrice } from "./useMintPrice";
 
-export const MintAvailable: FC<{ chainId: typeof polygonAmoy.id }> = ({
-  chainId,
-}) => {
+export const MintAvailable: FC<{
+  chainId: typeof polygonAmoy.id | typeof polygon.id;
+}> = ({ chainId }) => {
   const { data: totalSupply } = useTotalSupply(chainId);
   const { data: mintPrice } = useMintPrice(chainId);
 

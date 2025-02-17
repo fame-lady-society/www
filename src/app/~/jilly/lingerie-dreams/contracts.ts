@@ -1,9 +1,13 @@
-import { polygonAmoy } from "viem/chains";
+import { polygonAmoy, polygon } from "viem/chains";
 
-export function lingerieDreamsAddressForChain(chainId: typeof polygonAmoy.id) {
+export function lingerieDreamsAddressForChain(
+  chainId: typeof polygonAmoy.id | typeof polygon.id,
+) {
   switch (chainId) {
     case polygonAmoy.id:
       return "0x800131bDC1120Ace92bA34c47cB5f01f928aB6E7" as const;
+    case polygon.id:
+      return "0x57255b6218635afb8d74f39e541cb14da80d7037" as const;
     default:
       throw new Error(`Unsupported chainId: ${chainId}`);
   }
