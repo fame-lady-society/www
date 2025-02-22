@@ -8,10 +8,12 @@ import { useAccount, useReadContract, useSwitchChain } from "wagmi";
 import { lingerieDreamsAddressForChain } from "./contracts";
 import { erc721Abi } from "viem";
 import { useMintLimit } from "./useMintLimit";
+import { useNotifications } from "@/features/notifications/Context";
 
 export const Mint: FC<{
   chainId: typeof polygonAmoy.id | typeof polygon.id;
 }> = ({ chainId }) => {
+  const { addNotification } = useNotifications();
   const { chainId: currentChainId, address } = useAccount();
   const { chains, switchChain } = useSwitchChain();
   const currentChain = chains.find((chain) => chain.id === chainId);
@@ -116,7 +118,15 @@ export const Mint: FC<{
         open={transactionModalOpen}
         onClose={() => setTransactionModalOpen(false)}
         transactions={modalTransactions}
-        onTransactionConfirmed={() => setTransactionModalOpen(false)}
+        onTransactionConfirmed={() => {
+          setTransactionModalOpen(false);
+          addNotification({
+            id: "mint-success",
+            message: "You have successfully minted",
+            type: "success",
+            autoHideMs: 5000,
+          });
+        }}
       />
     </div>
   );
