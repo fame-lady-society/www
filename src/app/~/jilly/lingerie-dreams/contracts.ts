@@ -7,7 +7,7 @@ export function lingerieDreamsAddressForChain(
     case polygonAmoy.id:
       return "0x800131bDC1120Ace92bA34c47cB5f01f928aB6E7" as const;
     case polygon.id:
-      return "0x57255b6218635afb8d74f39e541cb14da80d7037" as const;
+      return "0xB86F5836A97DEc296a4bAdE3c79d01d2E7D8Fb48" as const;
     default:
       throw new Error(`Unsupported chainId: ${chainId}`);
   }
