@@ -9,7 +9,9 @@ import { lingerieDreamsAddressForChain } from "./contracts";
 import { erc721Abi } from "viem";
 import { useMintLimit } from "./useMintLimit";
 
-export const Mint: FC<{ chainId: typeof polygonAmoy.id | typeof polygon.id }> = ({ chainId }) => {
+export const Mint: FC<{
+  chainId: typeof polygonAmoy.id | typeof polygon.id;
+}> = ({ chainId }) => {
   const { chainId: currentChainId, address } = useAccount();
   const { chains, switchChain } = useSwitchChain();
   const currentChain = chains.find((chain) => chain.id === chainId);
@@ -114,7 +116,7 @@ export const Mint: FC<{ chainId: typeof polygonAmoy.id | typeof polygon.id }> = 
         open={transactionModalOpen}
         onClose={() => setTransactionModalOpen(false)}
         transactions={modalTransactions}
-        onTransactionConfirmed={() => {}}
+        onTransactionConfirmed={() => setTransactionModalOpen(false)}
       />
     </div>
   );
