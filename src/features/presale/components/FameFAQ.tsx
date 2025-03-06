@@ -3,7 +3,6 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 // @ts-ignore
-import Video from "next-video";
 import { QA } from "./QA";
 import { WrappedLink } from "@/components/WrappedLink";
 
@@ -293,13 +292,11 @@ export const FameFAQ: FC = () => {
               }}
             >
               <div>
-                <Video
+                <video
                   src="/videos/swap.mp4"
                   height={800}
                   width={400}
-                  config={{
-                    path: "",
-                  }}
+                  controls
                 />
               </div>
             </Card>
