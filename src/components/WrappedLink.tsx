@@ -1,5 +1,5 @@
+"use client";
 import { forwardRef } from "react";
-import Button from "@mui/material/Button";
 import NextLink from "next/link";
 import MuiLink, { LinkProps } from "@mui/material/Link";
 

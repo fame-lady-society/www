@@ -1,17 +1,13 @@
-import { WrappedLink } from "@/components/WrappedLink";
-import { Teaser } from "./Teaser";
+import React from "react";
 import { polygon } from "viem/chains";
-import { TokenGated } from "./TokenGated";
-import { lingerieDreamsAddressForChain } from "./contracts";
+import { WrappedLink } from "@/components/WrappedLink";
+import { ConnectCard } from "./ConnectCard";
+import { RedirectWhenConnected } from "./RedirectWhenConnected";
 
 export default function Page() {
   return (
     <>
       <div className="flex flex-col items-center justify-center">
-        <TokenGated
-          contractAddress={lingerieDreamsAddressForChain(polygon.id)}
-        />
-        <Teaser />
         <h3 className="text-2xl font-bold mt-4 text-center">
           By{" "}
           <WrappedLink
@@ -41,8 +37,12 @@ export default function Page() {
             FAMEorDIE
           </WrappedLink>
         </h3>
-        <p className="text-lg mt-2 mb-4">A 1/1 limited edition Music NFT</p>
+        <ConnectCard />
       </div>
+      <RedirectWhenConnected
+        pathPrefix="/~/jilly/lingerie-dreams/gated"
+        toChain={polygon.id}
+      />
     </>
   );
 }
