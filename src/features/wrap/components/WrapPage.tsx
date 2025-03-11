@@ -269,8 +269,8 @@ export const WrapPage: FC<{
             chainId: chain?.id,
             abi: wrapperNftAbi,
             address: wrapperNftAddress!,
-            functionName: "unwrapMany",
-            args,
+            functionName: "setApprovalForAll",
+            args: [wrapperNftAddress!, false],
           });
           setActiveTransactionHashList((txs) => [
             ...txs,
