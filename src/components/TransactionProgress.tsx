@@ -4,7 +4,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import CircularProgress from "@mui/material/CircularProgress";
 import CircleIcon from "@mui/icons-material/Circle";
 import Stack from "@mui/material/Stack";
-import { useTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt } from "wagmi";
 
 // Transactions have three steps:
 // 1. Waiting for the user to sign the transaction
