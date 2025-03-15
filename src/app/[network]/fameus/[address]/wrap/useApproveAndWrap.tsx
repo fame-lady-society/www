@@ -233,7 +233,7 @@ export function useApproveAndWrap(
       let approvalWasAttemptedAndFailed = false;
 
       // Attempt approval if needed
-      if (!isApprovedForAll && toWrapSelectedTokenIds.length !== 0) {
+      if (!isApprovedForAll) {
         dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "approval" } });
         try {
           const approvalResponse = await writeFameMirrorSetApprovalForAll({
