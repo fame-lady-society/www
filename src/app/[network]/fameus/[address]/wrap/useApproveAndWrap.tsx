@@ -261,7 +261,10 @@ export function useApproveAndWrap(
       }
 
       // Wrap
-      if (!approvalWasAttemptedAndFailed) {
+      if (
+        !approvalWasAttemptedAndFailed &&
+        toWrapSelectedTokenIds.length !== 0
+      ) {
         dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "wrap" } });
         addToPendingWrapTokenIds(...toWrapSelectedTokenIds);
         const depositResponse = await writeGovSocietyDepositFor({
