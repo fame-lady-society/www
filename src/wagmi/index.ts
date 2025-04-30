@@ -730,6 +730,512 @@ export const claimToFameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FUNKNLOVE
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const funknloveAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: '_startTime', internalType: 'uint64', type: 'uint64' },
+      { name: '_endTime', internalType: 'uint64', type: 'uint64' },
+      { name: '_baseURI', internalType: 'string', type: 'string' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'FLS_EXODUS_ROAD_DONATION_ADDRESS',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'airdropMint',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'balanceOf',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'ids', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'balanceOfBatch',
+    outputs: [
+      { name: 'balances', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'bronzePrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'emergencyWithdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getEndTime',
+    outputs: [{ name: '', internalType: 'uint64', type: 'uint64' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getStartTime',
+    outputs: [{ name: '', internalType: 'uint64', type: 'uint64' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'goldPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'operator', internalType: 'address', type: 'address' },
+    ],
+    name: 'isApprovedForAll',
+    outputs: [{ name: 'result', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'isMintOpen',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tier', internalType: 'enum FUNKNLOVE.Tier', type: 'uint8' },
+    ],
+    name: 'mintPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'mintRequest',
+        internalType: 'struct FUNKNLOVE.MintRequest',
+        type: 'tuple',
+        components: [
+          { name: 'bronze', internalType: 'uint32', type: 'uint32' },
+          { name: 'silver', internalType: 'uint32', type: 'uint32' },
+          { name: 'gold', internalType: 'uint32', type: 'uint32' },
+        ],
+      },
+    ],
+    name: 'publicMint',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'ids', internalType: 'uint256[]', type: 'uint256[]' },
+      { name: 'amounts', internalType: 'uint256[]', type: 'uint256[]' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'safeBatchTransferFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'isApproved', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setApprovalForAll',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newBaseURI', internalType: 'string', type: 'string' }],
+    name: 'setBaseURI',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newStartTime', internalType: 'uint64', type: 'uint64' }],
+    name: 'setStartTime',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'silverPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: 'result', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'uri',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawFLSExodusRoadDonation',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'isApproved',
+        internalType: 'bool',
+        type: 'bool',
+        indexed: false,
+      },
+    ],
+    name: 'ApprovalForAll',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'ids',
+        internalType: 'uint256[]',
+        type: 'uint256[]',
+        indexed: false,
+      },
+      {
+        name: 'amounts',
+        internalType: 'uint256[]',
+        type: 'uint256[]',
+        indexed: false,
+      },
+    ],
+    name: 'TransferBatch',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: false },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'TransferSingle',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'value', internalType: 'string', type: 'string', indexed: false },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: true },
+    ],
+    name: 'URI',
+  },
+  { type: 'error', inputs: [], name: 'AccountBalanceOverflow' },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'ArrayLengthsMismatch' },
+  { type: 'error', inputs: [], name: 'FailedToSendEther' },
+  { type: 'error', inputs: [], name: 'InsufficientBalance' },
+  { type: 'error', inputs: [], name: 'InvalidTier' },
+  { type: 'error', inputs: [], name: 'MintAmountExceedsLimit' },
+  { type: 'error', inputs: [], name: 'MintAmountExceedsSupply' },
+  { type: 'error', inputs: [], name: 'MintMustBeGreaterThanZero' },
+  { type: 'error', inputs: [], name: 'MintMustNotBeStarted' },
+  { type: 'error', inputs: [], name: 'MintNotEnded' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NotEnoughPayment' },
+  { type: 'error', inputs: [], name: 'NotOwnerNorApproved' },
+  { type: 'error', inputs: [], name: 'PublicMintEnded' },
+  { type: 'error', inputs: [], name: 'PublicMintNotStarted' },
+  {
+    type: 'error',
+    inputs: [],
+    name: 'TransferToNonERC1155ReceiverImplementer',
+  },
+  { type: 'error', inputs: [], name: 'TransferToZeroAddress' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fame
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5024,7 +5530,12 @@ export const iTokemEmitableAbi = [
 export const lingerieDreamsAbi = [
   {
     type: 'constructor',
-    inputs: [{ name: 'startTime', internalType: 'uint64', type: 'uint64' }],
+    inputs: [
+      { name: '_startTime', internalType: 'uint64', type: 'uint64' },
+      { name: '_mintPrice', internalType: 'uint256', type: 'uint256' },
+      { name: '_mintLimit', internalType: 'uint8', type: 'uint8' },
+      { name: '_baseURI', internalType: 'string', type: 'string' },
+    ],
     stateMutability: 'nonpayable',
   },
   {
@@ -5089,14 +5600,14 @@ export const lingerieDreamsAbi = [
     inputs: [],
     name: 'mintLimit',
     outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
-    stateMutability: 'pure',
+    stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
     name: 'mintPrice',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -5186,6 +5697,13 @@ export const lingerieDreamsAbi = [
     type: 'function',
     inputs: [{ name: 'newBaseURI', internalType: 'string', type: 'string' }],
     name: 'setBaseURI',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newMintLimit', internalType: 'uint8', type: 'uint8' }],
+    name: 'setMintLimit',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -5355,7 +5873,9 @@ export const lingerieDreamsAbi = [
   { type: 'error', inputs: [], name: 'FailedToSendEther' },
   { type: 'error', inputs: [], name: 'MintAmountExceedsLimit' },
   { type: 'error', inputs: [], name: 'MintAmountExceedsSupply' },
+  { type: 'error', inputs: [], name: 'MintLimitCantBeZero' },
   { type: 'error', inputs: [], name: 'MintMustBeGreaterThanZero' },
+  { type: 'error', inputs: [], name: 'MintMustNotBeStarted' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotEnoughPayment' },
@@ -7404,6 +7924,578 @@ export const useWatchClaimToFameRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: claimToFameAbi,
     eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__
+ */
+export const useReadFunknlove = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"FLS_EXODUS_ROAD_DONATION_ADDRESS"`
+ */
+export const useReadFunknloveFlsExodusRoadDonationAddress =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'FLS_EXODUS_ROAD_DONATION_ADDRESS',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"balanceOf"`
+ */
+export const useReadFunknloveBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'balanceOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"balanceOfBatch"`
+ */
+export const useReadFunknloveBalanceOfBatch =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'balanceOfBatch',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"bronzePrice"`
+ */
+export const useReadFunknloveBronzePrice = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'bronzePrice',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getEndTime"`
+ */
+export const useReadFunknloveGetEndTime = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'getEndTime',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getStartTime"`
+ */
+export const useReadFunknloveGetStartTime = /*#__PURE__*/ createUseReadContract(
+  { abi: funknloveAbi, functionName: 'getStartTime' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"goldPrice"`
+ */
+export const useReadFunknloveGoldPrice = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'goldPrice',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"hasAllRoles"`
+ */
+export const useReadFunknloveHasAllRoles = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'hasAllRoles',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"hasAnyRole"`
+ */
+export const useReadFunknloveHasAnyRole = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'hasAnyRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"isApprovedForAll"`
+ */
+export const useReadFunknloveIsApprovedForAll =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'isApprovedForAll',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"isMintOpen"`
+ */
+export const useReadFunknloveIsMintOpen = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'isMintOpen',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"mintPrice"`
+ */
+export const useReadFunknloveMintPrice = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'mintPrice',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"name"`
+ */
+export const useReadFunknloveName = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadFunknloveOwner = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadFunknloveOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"rolesOf"`
+ */
+export const useReadFunknloveRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"silverPrice"`
+ */
+export const useReadFunknloveSilverPrice = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'silverPrice',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"supportsInterface"`
+ */
+export const useReadFunknloveSupportsInterface =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'supportsInterface',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"symbol"`
+ */
+export const useReadFunknloveSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"totalSupply"`
+ */
+export const useReadFunknloveTotalSupply = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'totalSupply',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"uri"`
+ */
+export const useReadFunknloveUri = /*#__PURE__*/ createUseReadContract({
+  abi: funknloveAbi,
+  functionName: 'uri',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__
+ */
+export const useWriteFunknlove = /*#__PURE__*/ createUseWriteContract({
+  abi: funknloveAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"airdropMint"`
+ */
+export const useWriteFunknloveAirdropMint =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'airdropMint',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteFunknloveCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteFunknloveCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"emergencyWithdraw"`
+ */
+export const useWriteFunknloveEmergencyWithdraw =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'emergencyWithdraw',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useWriteFunknloveGrantRoles = /*#__PURE__*/ createUseWriteContract(
+  { abi: funknloveAbi, functionName: 'grantRoles' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"publicMint"`
+ */
+export const useWriteFunknlovePublicMint = /*#__PURE__*/ createUseWriteContract(
+  { abi: funknloveAbi, functionName: 'publicMint' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteFunknloveRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useWriteFunknloveRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteFunknloveRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useWriteFunknloveRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"safeBatchTransferFrom"`
+ */
+export const useWriteFunknloveSafeBatchTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'safeBatchTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useWriteFunknloveSafeTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useWriteFunknloveSetApprovalForAll =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setBaseURI"`
+ */
+export const useWriteFunknloveSetBaseUri = /*#__PURE__*/ createUseWriteContract(
+  { abi: funknloveAbi, functionName: 'setBaseURI' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setStartTime"`
+ */
+export const useWriteFunknloveSetStartTime =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'setStartTime',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteFunknloveTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"withdrawFLSExodusRoadDonation"`
+ */
+export const useWriteFunknloveWithdrawFlsExodusRoadDonation =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: funknloveAbi,
+    functionName: 'withdrawFLSExodusRoadDonation',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__
+ */
+export const useSimulateFunknlove = /*#__PURE__*/ createUseSimulateContract({
+  abi: funknloveAbi,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"airdropMint"`
+ */
+export const useSimulateFunknloveAirdropMint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'airdropMint',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateFunknloveCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateFunknloveCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"emergencyWithdraw"`
+ */
+export const useSimulateFunknloveEmergencyWithdraw =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'emergencyWithdraw',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useSimulateFunknloveGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"publicMint"`
+ */
+export const useSimulateFunknlovePublicMint =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'publicMint',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateFunknloveRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useSimulateFunknloveRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateFunknloveRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useSimulateFunknloveRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"safeBatchTransferFrom"`
+ */
+export const useSimulateFunknloveSafeBatchTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'safeBatchTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useSimulateFunknloveSafeTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useSimulateFunknloveSetApprovalForAll =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setBaseURI"`
+ */
+export const useSimulateFunknloveSetBaseUri =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'setBaseURI',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setStartTime"`
+ */
+export const useSimulateFunknloveSetStartTime =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'setStartTime',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateFunknloveTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"withdrawFLSExodusRoadDonation"`
+ */
+export const useSimulateFunknloveWithdrawFlsExodusRoadDonation =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'withdrawFLSExodusRoadDonation',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__
+ */
+export const useWatchFunknloveEvent = /*#__PURE__*/ createUseWatchContractEvent(
+  { abi: funknloveAbi },
+)
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"ApprovalForAll"`
+ */
+export const useWatchFunknloveApprovalForAllEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'ApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchFunknloveOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchFunknloveOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchFunknloveOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"RolesUpdated"`
+ */
+export const useWatchFunknloveRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"TransferBatch"`
+ */
+export const useWatchFunknloveTransferBatchEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'TransferBatch',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"TransferSingle"`
+ */
+export const useWatchFunknloveTransferSingleEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'TransferSingle',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link funknloveAbi}__ and `eventName` set to `"URI"`
+ */
+export const useWatchFunknloveUriEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: funknloveAbi,
+    eventName: 'URI',
   })
 
 /**
@@ -12920,6 +14012,15 @@ export const useWriteLingerieDreamsSetBaseUri =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link lingerieDreamsAbi}__ and `functionName` set to `"setMintLimit"`
+ */
+export const useWriteLingerieDreamsSetMintLimit =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: lingerieDreamsAbi,
+    functionName: 'setMintLimit',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link lingerieDreamsAbi}__ and `functionName` set to `"setStartTime"`
  */
 export const useWriteLingerieDreamsSetStartTime =
@@ -13040,6 +14141,15 @@ export const useSimulateLingerieDreamsSetBaseUri =
   /*#__PURE__*/ createUseSimulateContract({
     abi: lingerieDreamsAbi,
     functionName: 'setBaseURI',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link lingerieDreamsAbi}__ and `functionName` set to `"setMintLimit"`
+ */
+export const useSimulateLingerieDreamsSetMintLimit =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: lingerieDreamsAbi,
+    functionName: 'setMintLimit',
   })
 
 /**

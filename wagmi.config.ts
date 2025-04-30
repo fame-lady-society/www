@@ -90,6 +90,7 @@ export default defineConfig({
         "FameVesting.sol/**",
         "GovSociety.sol/**",
         "LingerieDreams.sol/**",
+        "FUNKNLOVE.sol/**",
       ],
     }),
     react(),
