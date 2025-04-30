@@ -10,7 +10,9 @@ export const MintAvailable: FC<{
   const { data: totalSupply, isLoading: isLoadingTotalSupply } =
     useTotalSupply(chainId);
   const {
-    data: { bronzePrice, silverPrice, goldPrice } = {},
+    bronzePrice,
+    silverPrice,
+    goldPrice,
     isLoading: isLoadingPrices,
   } = useMintPrice(chainId);
 

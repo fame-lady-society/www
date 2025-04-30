@@ -2,17 +2,20 @@
 
 import { FC, useEffect, useMemo, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useIsMintOpen } from "./hooks/useIsMintOpen";
 import { CountDown } from "@/components/CountDown";
 import { MintAvailable } from "./MintRemaining";
 import { polygon, polygonAmoy } from "viem/chains";
 import { Mint } from "./Mint";
+import { useReadFunknloveGetStartTime } from "@/wagmi";
+import { funknloveAddressForChain } from "./contracts";
 
 export const MintOpen: FC<{
   chainId: typeof polygonAmoy.id | typeof polygon.id;
 }> = ({ chainId }) => {
   const { data: startTime, isLoading: isLoadingStartTime } =
-    useIsMintOpen(chainId);
+    useReadFunknloveGetStartTime({
+      address: funknloveAddressForChain(chainId),
+    });
   const [lastChecked, setLastChecked] = useState(new Date().getTime());
   useEffect(() => {
     const interval = setInterval(() => {

@@ -1,8 +1,5 @@
-import { funknloveAbi, useReadLingerieDreamsMintPrice } from "@/wagmi";
-import {
-  funknloveAddressForChain,
-  lingerieDreamsAddressForChain,
-} from "../contracts";
+import { funknloveAbi, useReadFunknloveMintPrice } from "@/wagmi";
+import { funknloveAddressForChain } from "../contracts";
 import { polygonAmoy, polygon } from "viem/chains";
 import { useReadContracts } from "wagmi";
 

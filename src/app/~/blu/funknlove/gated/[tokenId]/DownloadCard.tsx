@@ -10,7 +10,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useSIWE } from "connectkit";
 import { useAccount, useReadContract } from "wagmi";
 import { erc721Abi } from "viem";
-import { lingerieDreamsAddressForChain } from "../../contracts";
+import { funknloveAddressForChain } from "../../contracts";
 import { polygon } from "viem/chains";
 
 const WAV_DOWNLOAD_URL =
@@ -24,7 +24,7 @@ const DownloadCard: FC = () => {
   const { isSignedIn } = useSIWE();
   const { address } = useAccount();
   const { data, isLoading } = useReadContract({
-    address: lingerieDreamsAddressForChain(polygon.id),
+    address: funknloveAddressForChain(polygon.id),
     abi: erc721Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,

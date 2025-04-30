@@ -6,8 +6,7 @@ import { useMintPrice } from "./useMintPrice";
 
 export function useMint(chainId: typeof polygonAmoy.id | typeof polygon.id) {
   const result = useWriteFunknlovePublicMint();
-  const { data: { bronzePrice, silverPrice, goldPrice } = {} } =
-    useMintPrice(chainId);
+  const { bronzePrice, silverPrice, goldPrice } = useMintPrice(chainId);
 
   const writeContractAsync = useCallback(
     async ({
