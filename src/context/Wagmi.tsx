@@ -173,7 +173,7 @@ export const Web3Provider: FC<
         ...defaultConfig,
         ...(chains && chains.length && { chains }),
         ...(transports && { transports }),
-        connectors: [miniAppConnector()],
+        // connectors: [miniAppConnector()],
       }),
     );
   }, [chains, transports]);
