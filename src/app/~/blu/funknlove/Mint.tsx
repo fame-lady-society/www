@@ -7,9 +7,10 @@ import { useMint } from "./hooks/useMint";
 import { useAccount, useReadContract, useSwitchChain } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { funknloveAddressForChain } from "./contracts";
-import { erc721Abi } from "viem";
+import { erc721Abi, formatEther } from "viem";
 import { useNotifications } from "@/features/notifications/Context";
 import { useRouter } from "next/navigation";
+import { useMintPrice } from "./hooks/useMintPrice";
 
 const NAX_UNSIGNED_32BIT = 2 ** 32 - 1;
 
@@ -92,6 +93,7 @@ export const Mint: FC<{
   const [bronzeAmount, setBronzeAmount] = useState(1);
   const [silverAmount, setSilverAmount] = useState(0);
   const [goldAmount, setGoldAmount] = useState(0);
+  const { bronzePrice, silverPrice, goldPrice } = useMintPrice(chainId);
   const { writeContractAsync, isPending } = useMint(chainId);
   const {
     data: balanceOf,
@@ -127,6 +129,22 @@ export const Mint: FC<{
     goldAmount,
     balanceOfRefetch,
     writeContractAsync,
+  ]);
+
+  const mintPrice = useMemo(() => {
+    if (!bronzePrice || !silverPrice || !goldPrice) return 0n;
+    return (
+      bronzePrice * BigInt(bronzeAmount) +
+      silverPrice * BigInt(silverAmount) +
+      goldPrice * BigInt(goldAmount)
+    );
+  }, [
+    bronzePrice,
+    silverPrice,
+    goldPrice,
+    bronzeAmount,
+    silverAmount,
+    goldAmount,
   ]);
 
   const incrementBronze = useCallback(
@@ -211,7 +229,7 @@ export const Mint: FC<{
       {isConnected ? (
         <button
           onClick={isWrongChain ? () => switchChain({ chainId }) : onMint}
-          disabled={isPending}
+          disabled={isPending || mintPrice <= 0n}
           className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400 min-w-[200px]"
         >
           {isWrongChain && currentChain && isConnected
@@ -220,7 +238,9 @@ export const Mint: FC<{
               ? "Connect"
               : isPending
                 ? "Minting..."
-                : "Mint"}
+                : mintPrice > 0n
+                  ? `Mint ${formatEther(mintPrice)} ETH`
+                  : "Mint more!"}
         </button>
       ) : (
         <ConnectKitButton />

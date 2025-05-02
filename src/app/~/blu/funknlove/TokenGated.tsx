@@ -30,7 +30,7 @@ export const TokenGated: FC<{
           <Button
             variant="contained"
             component="a"
-            href="./lingerie-dreams/gated"
+            href="/~/blu/funknlove/gated"
             size="large"
             sx={{
               color: "rgba(255,255,255,0.7)",
