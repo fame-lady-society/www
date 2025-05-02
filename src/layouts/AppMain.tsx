@@ -15,12 +15,14 @@ export function AppMain({
   isHome,
   isWrap,
   title,
+  mobileTitle,
   disableConnect,
   disableDesktopMenu,
   fixedHeader,
 }: PropsWithChildren<
   {
     title?: ReactNode;
+    mobileTitle?: ReactNode;
     headerLeft?: ReactNode;
     headerRight?: ReactNode;
     disableConnect?: boolean;
@@ -49,7 +51,10 @@ export function AppMain({
         menu={menu}
         title={
           <>
-            <h1 className="text-2xl font-bold">{title}</h1>
+            <h1 className="text-2xl font-bold hidden lg:block">{title}</h1>
+            <h1 className="text-2xl font-bold lg:hidden">
+              {mobileTitle || title}
+            </h1>
             {headerLeft}
           </>
         }

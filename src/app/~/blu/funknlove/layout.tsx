@@ -32,7 +32,12 @@ export default async function Home({
 }) {
   return (
     <DefaultProvider mainnet sepolia siwe>
-      <AppMain title="Funk n Love" disableDesktopMenu fixedHeader>
+      <AppMain
+        title="Funk n Love"
+        mobileTitle="FnL"
+        disableDesktopMenu
+        fixedHeader
+      >
         {children}
       </AppMain>
     </DefaultProvider>
