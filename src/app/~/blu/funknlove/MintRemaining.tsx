@@ -6,7 +6,7 @@ import { sepolia, mainnet } from "viem/chains";
 import { useMintPrice } from "./hooks/useMintPrice";
 import { useBalance } from "wagmi";
 import { funknloveAddressForChain } from "./contracts";
-
+import NextImage from "next/image";
 export const MintAvailable: FC<{
   chainId: typeof sepolia.id | typeof mainnet.id;
 }> = ({ chainId }) => {
@@ -47,30 +47,51 @@ export const MintAvailable: FC<{
           )}
           {typeof bronzePrice === "bigint" &&
             typeof bronzeSupply === "bigint" && (
-              <span className="mb-4 flex flex-row justify-between w-full">
-                <p className="">
-                  <span className="font-bold">Minted:</span>{" "}
+              <span className="mb-4 flex flex-row items-start w-full">
+                <NextImage
+                  src="/~/blu/funknlove/bronzefnl.png"
+                  alt="Bronze"
+                  width={48}
+                  height={48}
+                />
+                <p className="ml-4">
+                  <span className="font-bold">Bronze minted:</span>{" "}
                   {bronzeSupply.toString()}
                 </p>
+                <div className="flex-grow" />
                 <p className="">{formatUnits(bronzePrice, 18)} ETH</p>
               </span>
             )}
           {typeof silverPrice === "bigint" &&
             typeof silverSupply === "bigint" && (
-              <span className="mb-4 flex flex-row justify-between w-full">
-                <p className="">
-                  <span className="font-bold">Minted:</span>{" "}
+              <span className="mb-4 flex flex-row items-start w-full">
+                <NextImage
+                  src="/~/blu/funknlove/silverfnl.png"
+                  alt="Silver"
+                  width={48}
+                  height={48}
+                />
+                <p className="ml-4">
+                  <span className="font-bold">Silver minted:</span>{" "}
                   {silverSupply.toString()}
                 </p>
+                <div className="flex-grow" />
                 <p className="">{formatUnits(silverPrice, 18)} ETH</p>
               </span>
             )}
           {typeof goldPrice === "bigint" && typeof goldSupply === "bigint" && (
-            <span className="mb-4 flex flex-row justify-between w-full">
-              <p className="">
-                <span className="font-bold">Minted:</span>{" "}
+            <span className="mb-4 flex flex-row items-start w-full">
+              <NextImage
+                src="/~/blu/funknlove/goldfnl.png"
+                alt="Gold"
+                width={48}
+                height={48}
+              />
+              <p className="ml-4">
+                <span className="font-bold">Gold minted:</span>{" "}
                 {goldSupply.toString()}
               </p>
+              <div className="flex-grow" />
               <p className="">{formatUnits(goldPrice, 18)} ETH</p>
             </span>
           )}

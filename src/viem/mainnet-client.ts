@@ -13,7 +13,7 @@ export const client = createPublicClient({
       retryCount: 5,
       retryDelay: 500,
     }),
-    http(`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`, {
+    http(`https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`, {
       batch: true,
       retryCount: 5,
       retryDelay: 500,
@@ -35,7 +35,7 @@ export const walletClient = createWalletClient({
     http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
       batch: true,
     }),
-    http(`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`, {
+    http(`https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`, {
       batch: true,
     }),
     http(

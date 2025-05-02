@@ -12,7 +12,7 @@ export const client = createPublicClient({
     ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
       http(rpc, { batch: true }),
     ),
-    http(`https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`, {
+    http(`https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`, {
       batch: true,
     }),
     http(
@@ -30,7 +30,7 @@ export const walletClient = createWalletClient({
     ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
       http(rpc, { batch: true }),
     ),
-    http(`https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`, {
+    http(`https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`, {
       batch: true,
     }),
     http(
