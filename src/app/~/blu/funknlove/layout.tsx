@@ -22,6 +22,20 @@ export const metadata: Metadata = {
     ["twitter:image"]:
       "https://www.fameladysociety.com/~/blu/funknlove/cover.png",
     ["twitter:card"]: "summary_large_image",
+    ["c:frame"]: JSON.stringify({
+      version: "next",
+      imageUrl: "https://www.fameladysociety.com/~/blu/funknlove/cover.png",
+      button: {
+        title: "Donate",
+        action: {
+          type: "launch_frame",
+          url: "https://www.fameladysociety.com/~/blu/funknlove",
+          name: "Funk n Love",
+          splashImageUrl: "https://www.fameladysociety.com/images/splash.png",
+          splashBackgroundColor: "#040404",
+        },
+      },
+    }),
   },
 };
 
