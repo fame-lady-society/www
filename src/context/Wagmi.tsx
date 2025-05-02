@@ -31,10 +31,11 @@ import { cookieToInitialState } from "wagmi";
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
   transports: {
-    [mainnet.id]: http(
-      `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-      { batch: true },
-    ),
+    [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
+      batch: true,
+      retryCount: 5,
+      retryDelay: 100,
+    }),
     [sepolia.id]: fallback(
       JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
         http(rpc, { batch: true }),
