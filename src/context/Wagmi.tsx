@@ -17,6 +17,7 @@ import {
   polygon as polygonChain,
   polygonAmoy,
 } from "wagmi/chains";
+import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
 import { SiweMessage } from "siwe";
@@ -166,17 +167,16 @@ export const Web3Provider: FC<
     chains: readonly [Chain, ...Chain[]];
   }>
 > = ({ children, siwe = false, transports, chains }) => {
-  const config = useMemo(
-    () =>
-      createConfig(
-        getDefaultConfig({
-          ...defaultConfig,
-          ...(chains && chains.length && { chains }),
-          ...(transports && { transports }),
-        }),
-      ),
-    [chains, transports],
-  );
+  const config = useMemo(() => {
+    return createConfig(
+      getDefaultConfig({
+        ...defaultConfig,
+        ...(chains && chains.length && { chains }),
+        ...(transports && { transports }),
+        connectors: [miniAppConnector()],
+      }),
+    );
+  }, [chains, transports]);
   // const initialState = cookieToInitialState(config, headers().get("cookie"));
   return (
     <WagmiProvider config={config}>

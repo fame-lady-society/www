@@ -9,18 +9,9 @@
     "name": "Fame Lady Society",
     "iconUrl": "https://www.fameladysociety.com/images/app.png",
     "homeUrl": "https://www.fameladysociety.com",
+    "imageUrl": "https://www.fameladysociety.com/images/Flsociety_morg_mock.png",
     "buttonTitle": "Make me FAMEus",
-    "splashImageUrl": "https://www.fameladysociety.com/images/splash.png",
-    "heroImageUrl": "https://www.fameladysociety.com/images/hero.jpeg",
-    "splashBackgroundColor": "#040404",
-    "primaryCategory": "social",
-    "tags": [
-      "nft",
-      "art",
-      "collectibles",
-      "community",
-      "music"
-    ],
-    "tagline": "The OG NFT Community"
+    "splashImageUrl": "https://www.fameladysociety.com/images/Flsociety_morg_mock.png",
+    "splashBackgroundColor": "#040404"
   }
 }
