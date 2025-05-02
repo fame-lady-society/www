@@ -11,6 +11,16 @@
     "homeUrl": "https://www.fameladysociety.com",
     "buttonTitle": "Make me FAMEus",
     "splashImageUrl": "https://www.fameladysociety.com/images/splash.png",
-    "splashBackgroundColor": "#040404"
+    "heroImageUrl": "https://www.fameladysociety.com/images/hero.jpeg",
+    "splashBackgroundColor": "#040404",
+    "primaryCategory": "social",
+    "tags": [
+      "nft",
+      "art",
+      "collectibles",
+      "community",
+      "music"
+    ],
+    "tagline": "The OG NFT Community"
   }
 }
