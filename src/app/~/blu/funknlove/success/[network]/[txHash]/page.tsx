@@ -62,7 +62,7 @@ export default function Page({
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="max-w-2xl w-full bg-gray-800 rounded-xl shadow-lg p-8 space-y-8 border border-gray-700">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-white">Success!</h1>
+          <h1 className="text-4xl font-bold text-fg">Success!</h1>
           <p className="text-lg text-gray-300">
             Your transaction has been successfully sent to the network.
           </p>

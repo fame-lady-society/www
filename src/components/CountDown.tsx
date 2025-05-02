@@ -56,18 +56,13 @@ export const CountDown: FC<{
                     justifyContent: "center",
                   }}
                 >
-                  <Typography
-                    sx={SIZED_COUNTER}
-                    component="span"
-                    color="text.primary"
-                  >
+                  <Typography sx={SIZED_COUNTER} component="span">
                     {days}
                   </Typography>
                   <Typography
                     sx={SIZED_TEXT}
                     component="span"
                     marginLeft={3}
-                    color="text.primary"
                     noWrap
                   >
                     Days
@@ -84,18 +79,13 @@ export const CountDown: FC<{
                   justifyContent: "center",
                 }}
               >
-                <Typography
-                  sx={SIZED_COUNTER}
-                  component="span"
-                  color="text.primary"
-                >
+                <Typography sx={SIZED_COUNTER} component="span">
                   {hours}
                 </Typography>
                 <Typography
                   sx={SIZED_TEXT}
                   component="span"
                   marginLeft={3}
-                  color="text.primary"
                   noWrap
                 >
                   Hours
@@ -111,18 +101,13 @@ export const CountDown: FC<{
                   justifyContent: "center",
                 }}
               >
-                <Typography
-                  sx={SIZED_COUNTER}
-                  component="span"
-                  color="text.primary"
-                >
+                <Typography sx={SIZED_COUNTER} component="span">
                   {minutes.toString().padStart(2, "0")}
                 </Typography>
                 <Typography
                   sx={SIZED_TEXT}
                   component="span"
                   marginLeft={3}
-                  color="text.primary"
                   noWrap
                 >
                   Minutes
@@ -138,18 +123,13 @@ export const CountDown: FC<{
                   justifyContent: "center",
                 }}
               >
-                <Typography
-                  sx={SIZED_COUNTER}
-                  component="span"
-                  color="text.primary"
-                >
+                <Typography sx={SIZED_COUNTER} component="span">
                   {seconds.toString().padStart(2, "0")}
                 </Typography>
                 <Typography
                   sx={SIZED_TEXT}
                   component="span"
                   marginLeft={3}
-                  color="text.primary"
                   noWrap
                 >
                   Seconds
