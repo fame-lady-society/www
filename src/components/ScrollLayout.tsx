@@ -3,6 +3,7 @@
 import { type FC, useRef, useState, useEffect } from "react";
 import { useScroll } from "@use-gesture/react";
 import { useMediaQuery } from "@mui/material";
+import { useSpring, animated } from "react-spring";
 
 export const ScrollLayout: FC<{
   hero: NonNullable<React.ReactNode>;
@@ -37,35 +38,45 @@ export const ScrollLayout: FC<{
     },
   );
 
-  const altLayout = isScrolled && !isMobile;
+  const containerSpring = useSpring({
+    display: isScrolled && !isMobile ? "flex" : "block",
+    config: { duration: 1050 },
+  });
+
+  const heroSpring = useSpring({
+    width: isScrolled && !isMobile ? "50%" : "100%",
+    transform: "translateX(0)",
+    config: { duration: 666, friction: 10, tension: 100 },
+  });
+
+  const contentSpring = useSpring({
+    width: isScrolled && !isMobile ? "50%" : "100%",
+    transform: isScrolled && !isMobile ? "translateX(0)" : "translateY(100%)",
+    config: { duration: 500, friction: 5, tension: 100 },
+  });
 
   return (
     <div className="h-screen w-full">
-      <div
+      <animated.div
         ref={containerRef}
-        className={`h-full w-full transition-all duration-[1050ms] ease-in-out ${
-          altLayout ? "flex" : "block"
-        }`}
+        style={containerSpring}
+        className="h-full w-full"
       >
-        <div
-          className={`flex items-center justify-center transition-all duration-[1050ms] ease-in-out ${
-            altLayout ? "w-1/2 translate-x-0" : "w-full translate-x-0"
-          }`}
+        <animated.div
+          style={heroSpring}
+          className="flex items-center justify-center"
         >
           {hero}
-        </div>
-        <div
-          className={`flex items-center justify-center transition-all duration-[1050ms] ease-in-out ${
-            altLayout
-              ? "w-1/2 overflow-y-auto translate-x-0"
-              : "w-full translate-y-full"
-          }`}
+        </animated.div>
+        <animated.div
+          style={contentSpring}
+          className="flex items-center justify-center overflow-y-auto"
         >
           <div className="flex flex-col items-center justify-center w-full">
             {content}
           </div>
-        </div>
-      </div>
+        </animated.div>
+      </animated.div>
     </div>
   );
 };

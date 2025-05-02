@@ -73,7 +73,7 @@ export const SocialLinks: FC = () => {
             <button
               key={artist.name}
               onClick={() => handleOpen(artist)}
-              className="text-2xl font-bold text-blue-500 hover:text-blue-700 transition-colors"
+              className="text-2xl font-bold text-blue-500 hover:text-blue-700 transition-colors hover:underline"
             >
               {artist.name}
             </button>
@@ -85,7 +85,7 @@ export const SocialLinks: FC = () => {
       </div>
       <button
         onClick={() => handleOpen(artists[2])}
-        className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+        className="text-sm text-gray-600 hover:text-gray-800 transition-colors hover:underline"
       >
         MASTERING BY: {artists[2].name}
       </button>
