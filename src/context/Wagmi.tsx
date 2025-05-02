@@ -32,7 +32,10 @@ export const mainnetSepolia = {
   chains: [mainnet, sepolia],
   transports: {
     [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
-      batch: true,
+      batch: {
+        batchSize: 10,
+        wait: 500,
+      },
       retryCount: 5,
       retryDelay: 100,
     }),

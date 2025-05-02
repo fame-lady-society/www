@@ -34,43 +34,43 @@ export function useTotalSupply(chainId: typeof sepolia.id | typeof mainnet.id) {
     ],
     allowFailure: false,
   });
-  useWatchFunknloveTransferSingleEvent({
-    chainId,
-    address: funknloveAddressForChain(chainId),
-    batch: true,
-    pollingInterval: 5000,
-    onLogs: (logs) => {
-      let wasMinted = false;
-      for (const log of logs) {
-        if (log.args.from === zeroAddress) {
-          wasMinted = true;
-          break;
-        }
-      }
-      if (wasMinted) {
-        refetch();
-      }
-    },
-  });
+  // useWatchFunknloveTransferSingleEvent({
+  //   chainId,
+  //   address: funknloveAddressForChain(chainId),
+  //   batch: true,
+  //   pollingInterval: 5000,
+  //   onLogs: (logs) => {
+  //     let wasMinted = false;
+  //     for (const log of logs) {
+  //       if (log.args.from === zeroAddress) {
+  //         wasMinted = true;
+  //         break;
+  //       }
+  //     }
+  //     if (wasMinted) {
+  //       refetch();
+  //     }
+  //   },
+  // });
 
-  useWatchFunknloveTransferBatchEvent({
-    chainId,
-    address: funknloveAddressForChain(chainId),
-    batch: true,
-    pollingInterval: 5000,
-    onLogs: (logs) => {
-      let wasMinted = false;
-      for (const log of logs) {
-        if (log.args.from === zeroAddress) {
-          wasMinted = true;
-          break;
-        }
-      }
-      if (wasMinted) {
-        refetch();
-      }
-    },
-  });
+  // useWatchFunknloveTransferBatchEvent({
+  //   chainId,
+  //   address: funknloveAddressForChain(chainId),
+  //   batch: true,
+  //   pollingInterval: 5000,
+  //   onLogs: (logs) => {
+  //     let wasMinted = false;
+  //     for (const log of logs) {
+  //       if (log.args.from === zeroAddress) {
+  //         wasMinted = true;
+  //         break;
+  //       }
+  //     }
+  //     if (wasMinted) {
+  //       refetch();
+  //     }
+  //   },
+  // });
   return {
     ...rest,
     refetch,
