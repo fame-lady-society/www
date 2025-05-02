@@ -12,6 +12,7 @@ import { Layout } from "@/features/home/Layout";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import theme from "@/theme";
 import { FC } from "react";
+import { RedirectDuringMint } from "@/app/RedirectDuringMint";
 
 const Content: FC<{}> = () => {
   const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -65,6 +66,7 @@ const HomePage: NextPage<{}> = () => {
   return (
     <DefaultProvider mainnet base>
       <Content />
+      <RedirectDuringMint />
     </DefaultProvider>
   );
 };

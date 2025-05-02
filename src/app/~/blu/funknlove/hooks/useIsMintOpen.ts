@@ -25,6 +25,7 @@ export function useIsMintOpen(chainId: typeof sepolia.id | typeof mainnet.id) {
           functionName: "getEndTime",
         },
       ],
+      allowFailure: false,
     });
   return {
     ...(typeof isMintOpen !== "undefined" &&
