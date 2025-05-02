@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     ["twitter:image"]:
       "https://www.fameladysociety.com/~/blu/funknlove/cover.png",
     ["twitter:card"]: "summary_large_image",
-    ["c:frame"]: JSON.stringify({
+    ["fc:frame"]: JSON.stringify({
       version: "next",
       imageUrl: "https://www.fameladysociety.com/~/blu/funknlove/cover.png",
       button: {
