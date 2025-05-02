@@ -11,7 +11,7 @@ import { useSIWE } from "connectkit";
 import { useAccount, useReadContract } from "wagmi";
 import { erc721Abi } from "viem";
 import { funknloveAddressForChain } from "../../contracts";
-import { polygon } from "viem/chains";
+import { mainnet } from "viem/chains";
 
 const WAV_DOWNLOAD_URL =
   "https://gateway.irys.xyz/QuFCpGHBlG8bbXcZ1PyLgQNa-ZKJ6k_KgSZfKxQoKTA";
@@ -24,19 +24,17 @@ const DownloadCard: FC = () => {
   const { isSignedIn } = useSIWE();
   const { address } = useAccount();
   const { data, isLoading } = useReadContract({
-    address: funknloveAddressForChain(polygon.id),
+    address: funknloveAddressForChain(mainnet.id),
     abi: erc721Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
   });
 
-  console.log("data", data);
-
   return (
     <Card sx={{ mt: 2, mb: 6 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Download &quot;Lingerie Dreams&quot;
+          Download &quot;Funk N&apos; Love&quot;
         </Typography>
         {isLoading ? (
           <div className="flex justify-center p-4">

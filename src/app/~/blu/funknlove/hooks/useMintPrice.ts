@@ -1,10 +1,10 @@
-import { funknloveAbi, useReadFunknloveMintPrice } from "@/wagmi";
+import { funknloveAbi } from "@/wagmi";
 import { funknloveAddressForChain } from "../contracts";
-import { polygonAmoy, polygon } from "viem/chains";
+import { sepolia, mainnet } from "viem/chains";
 import { useReadContracts } from "wagmi";
 
 export const useMintPrice = (
-  chainId: typeof polygonAmoy.id | typeof polygon.id,
+  chainId: typeof sepolia.id | typeof mainnet.id,
 ) => {
   const { data: [bronzePrice, silverPrice, goldPrice] = [], ...rest } =
     useReadContracts({
@@ -12,19 +12,19 @@ export const useMintPrice = (
         {
           address: funknloveAddressForChain(chainId),
           abi: funknloveAbi,
-          functionName: "bronzePrice",
+          functionName: "getBronzePrice",
           chainId,
         },
         {
           address: funknloveAddressForChain(chainId),
           abi: funknloveAbi,
-          functionName: "silverPrice",
+          functionName: "getSilverPrice",
           chainId,
         },
         {
           address: funknloveAddressForChain(chainId),
           abi: funknloveAbi,
-          functionName: "goldPrice",
+          functionName: "getGoldPrice",
           chainId,
         },
       ],

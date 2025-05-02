@@ -66,16 +66,29 @@ export const SocialLinks: FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      {artists.map((artist) => (
-        <button
-          key={artist.name}
-          onClick={() => handleOpen(artist)}
-          className="text-2xl font-bold text-blue-500 hover:text-blue-700 transition-colors"
-        >
-          {artist.name}
-        </button>
-      ))}
+    <div className="flex flex-col items-center space-y-2">
+      <div className="flex items-center space-x-2">
+        {artists.slice(0, 2).map((artist, index) => (
+          <>
+            <button
+              key={artist.name}
+              onClick={() => handleOpen(artist)}
+              className="text-2xl font-bold text-blue-500 hover:text-blue-700 transition-colors"
+            >
+              {artist.name}
+            </button>
+            {index === 0 && (
+              <span className="text-2xl font-bold text-blue-500">&</span>
+            )}
+          </>
+        ))}
+      </div>
+      <button
+        onClick={() => handleOpen(artists[2])}
+        className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        MASTERING BY: {artists[2].name}
+      </button>
 
       <Modal
         open={!!selectedArtist}

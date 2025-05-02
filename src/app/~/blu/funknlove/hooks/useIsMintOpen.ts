@@ -2,12 +2,10 @@
 
 import { funknloveAbi, useReadFunknloveIsMintOpen } from "@/wagmi";
 import { funknloveAddressForChain } from "../contracts";
-import { polygonAmoy, polygon } from "viem/chains";
+import { sepolia, mainnet } from "viem/chains";
 import { useReadContracts } from "wagmi";
 
-export function useIsMintOpen(
-  chainId: typeof polygonAmoy.id | typeof polygon.id,
-) {
+export function useIsMintOpen(chainId: typeof sepolia.id | typeof mainnet.id) {
   const { data: [isMintOpen, startTime, endTime] = [], ...rest } =
     useReadContracts({
       contracts: [

@@ -1,10 +1,10 @@
 import { useWriteFunknlovePublicMint } from "@/wagmi";
 import { funknloveAddressForChain } from "../contracts";
-import { polygonAmoy, polygon } from "viem/chains";
+import { sepolia, mainnet } from "viem/chains";
 import { useCallback } from "react";
 import { useMintPrice } from "./useMintPrice";
 
-export function useMint(chainId: typeof polygonAmoy.id | typeof polygon.id) {
+export function useMint(chainId: typeof sepolia.id | typeof mainnet.id) {
   const result = useWriteFunknlovePublicMint();
   const { bronzePrice, silverPrice, goldPrice } = useMintPrice(chainId);
 
@@ -21,6 +21,7 @@ export function useMint(chainId: typeof polygonAmoy.id | typeof polygon.id) {
       if (!bronzePrice || !silverPrice || !goldPrice)
         throw new Error("Prices not found");
       return result.writeContractAsync({
+        chainId,
         address: funknloveAddressForChain(chainId),
         args: [
           {

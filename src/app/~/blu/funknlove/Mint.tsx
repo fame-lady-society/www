@@ -1,13 +1,15 @@
 "use client";
 
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { polygonAmoy, polygon } from "viem/chains";
+import { sepolia, mainnet } from "viem/chains";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import { useMint } from "./hooks/useMint";
 import { useAccount, useReadContract, useSwitchChain } from "wagmi";
+import { ConnectKitButton } from "connectkit";
 import { funknloveAddressForChain } from "./contracts";
 import { erc721Abi } from "viem";
 import { useNotifications } from "@/features/notifications/Context";
+import { useRouter } from "next/navigation";
 
 const NAX_UNSIGNED_32BIT = 2 ** 32 - 1;
 
@@ -47,25 +49,23 @@ const TokenAmountInput: FC<TokenAmountInputProps> = ({
         >
           +
         </button>
-      </div>
-      <div className="flex gap-2">
         <button
           onClick={() => onIncrement(1)}
-          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
+          className="ml-4 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
           disabled={amount >= NAX_UNSIGNED_32BIT}
         >
           +1
         </button>
         <button
           onClick={() => onIncrement(3)}
-          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
+          className="ml-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
           disabled={amount >= NAX_UNSIGNED_32BIT}
         >
           +3
         </button>
         <button
           onClick={() => onIncrement(5)}
-          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
+          className="ml-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400"
           disabled={amount >= NAX_UNSIGNED_32BIT}
         >
           +5
@@ -76,10 +76,12 @@ const TokenAmountInput: FC<TokenAmountInputProps> = ({
 };
 
 export const Mint: FC<{
-  chainId: typeof polygonAmoy.id | typeof polygon.id;
+  chainId: typeof sepolia.id | typeof mainnet.id;
 }> = ({ chainId }) => {
+  const router = useRouter();
   const { addNotification } = useNotifications();
-  const { chainId: currentChainId, address } = useAccount();
+  const { chainId: currentChainId, address, isConnected } = useAccount();
+
   const { chains, switchChain } = useSwitchChain();
   const currentChain = chains.find((chain) => chain.id === chainId);
   const isWrongChain = currentChainId !== chainId;
@@ -206,18 +208,23 @@ export const Mint: FC<{
         onDecrement={decrementGold}
         onRefetch={balanceOfRefetch}
       />
-
-      <button
-        onClick={isWrongChain ? () => switchChain({ chainId }) : onMint}
-        disabled={isPending}
-        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400 min-w-[200px]"
-      >
-        {isWrongChain && currentChain
-          ? `Switch to ${currentChain?.name} to mint`
-          : isPending
-            ? "Minting..."
-            : "Mint"}
-      </button>
+      {isConnected ? (
+        <button
+          onClick={isWrongChain ? () => switchChain({ chainId }) : onMint}
+          disabled={isPending}
+          className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400 min-w-[200px]"
+        >
+          {isWrongChain && currentChain && isConnected
+            ? `Switch to ${currentChain?.name} to mint`
+            : !isConnected
+              ? "Connect"
+              : isPending
+                ? "Minting..."
+                : "Mint"}
+        </button>
+      ) : (
+        <ConnectKitButton />
+      )}
       <TransactionsModal
         open={transactionModalOpen}
         onClose={() => setTransactionModalOpen(false)}
@@ -230,6 +237,11 @@ export const Mint: FC<{
             type: "success",
             autoHideMs: 5000,
           });
+          setTimeout(() => {
+            router.push(
+              `/~/blu/funknlove/success/${chainId === mainnet.id ? "mainnet" : "sepolia"}/${activeTransactionHash}`,
+            );
+          }, 5000);
         }}
       />
     </div>

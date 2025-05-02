@@ -785,13 +785,6 @@ export const funknloveAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'bronzePrice',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
     name: 'cancelOwnershipHandover',
     outputs: [],
     stateMutability: 'payable',
@@ -815,6 +808,20 @@ export const funknloveAbi = [
   {
     type: 'function',
     inputs: [],
+    name: 'getBronzePrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getBronzeSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'getEndTime',
     outputs: [{ name: '', internalType: 'uint64', type: 'uint64' }],
     stateMutability: 'view',
@@ -822,15 +829,36 @@ export const funknloveAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'getStartTime',
-    outputs: [{ name: '', internalType: 'uint64', type: 'uint64' }],
+    name: 'getGoldPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
-    name: 'goldPrice',
+    name: 'getGoldSupply',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getSilverPrice',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getSilverSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getStartTime',
+    outputs: [{ name: '', internalType: 'uint64', type: 'uint64' }],
     stateMutability: 'view',
   },
   {
@@ -1017,13 +1045,6 @@ export const funknloveAbi = [
     name: 'setStartTime',
     outputs: [],
     stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'silverPrice',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -7960,12 +7981,22 @@ export const useReadFunknloveBalanceOfBatch =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"bronzePrice"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getBronzePrice"`
  */
-export const useReadFunknloveBronzePrice = /*#__PURE__*/ createUseReadContract({
-  abi: funknloveAbi,
-  functionName: 'bronzePrice',
-})
+export const useReadFunknloveGetBronzePrice =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'getBronzePrice',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getBronzeSupply"`
+ */
+export const useReadFunknloveGetBronzeSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'getBronzeSupply',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getEndTime"`
@@ -7976,19 +8007,45 @@ export const useReadFunknloveGetEndTime = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getGoldPrice"`
+ */
+export const useReadFunknloveGetGoldPrice = /*#__PURE__*/ createUseReadContract(
+  { abi: funknloveAbi, functionName: 'getGoldPrice' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getGoldSupply"`
+ */
+export const useReadFunknloveGetGoldSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'getGoldSupply',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getSilverPrice"`
+ */
+export const useReadFunknloveGetSilverPrice =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'getSilverPrice',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getSilverSupply"`
+ */
+export const useReadFunknloveGetSilverSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'getSilverSupply',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"getStartTime"`
  */
 export const useReadFunknloveGetStartTime = /*#__PURE__*/ createUseReadContract(
   { abi: funknloveAbi, functionName: 'getStartTime' },
 )
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"goldPrice"`
- */
-export const useReadFunknloveGoldPrice = /*#__PURE__*/ createUseReadContract({
-  abi: funknloveAbi,
-  functionName: 'goldPrice',
-})
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"hasAllRoles"`
@@ -8062,14 +8119,6 @@ export const useReadFunknloveOwnershipHandoverExpiresAt =
 export const useReadFunknloveRolesOf = /*#__PURE__*/ createUseReadContract({
   abi: funknloveAbi,
   functionName: 'rolesOf',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"silverPrice"`
- */
-export const useReadFunknloveSilverPrice = /*#__PURE__*/ createUseReadContract({
-  abi: funknloveAbi,
-  functionName: 'silverPrice',
 })
 
 /**

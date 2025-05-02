@@ -17,6 +17,7 @@ export function AppMain({
   title,
   disableConnect,
   disableDesktopMenu,
+  fixedHeader,
 }: PropsWithChildren<
   {
     title?: ReactNode;
@@ -24,6 +25,7 @@ export function AppMain({
     headerRight?: ReactNode;
     disableConnect?: boolean;
     disableDesktopMenu?: boolean;
+    fixedHeader?: boolean;
   } & ComponentPropsWithoutRef<typeof SiteMenu>
 >) {
   const menu = (
@@ -41,7 +43,7 @@ export function AppMain({
     </>
   );
   return (
-    <main className="relative flex w-full flex-col flex-auto">
+    <main className="relative flex w-full h-full flex-col flex-auto">
       <AppBar
         disableConnect={disableConnect}
         menu={menu}
@@ -57,8 +59,11 @@ export function AppMain({
             <ClaimFame />
           </>
         }
+        fixed={fixedHeader}
       />
-      <div className="flex flex-grow min-h-screen-without-header">
+      <div
+        className={`flex flex-grow min-h-screen-without-header ${fixedHeader ? "pt-20 lg:pt-24" : ""}`}
+      >
         {!disableDesktopMenu && (
           <div className="lg:flex hidden">
             <DesktopHomeMenu>{menu}</DesktopHomeMenu>

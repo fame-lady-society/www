@@ -32,10 +32,8 @@ export default async function Home({
 }) {
   return (
     <DefaultProvider mainnet sepolia siwe>
-      <AppMain title="Funk n Love" disableDesktopMenu>
-        <div className="w-full px-4 py-8">
-          <div className="max-w-4xl mx-auto">{children}</div>
-        </div>
+      <AppMain title="Funk n Love" disableDesktopMenu fixedHeader>
+        {children}
       </AppMain>
     </DefaultProvider>
   );

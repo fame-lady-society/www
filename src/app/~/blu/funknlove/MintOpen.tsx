@@ -4,17 +4,18 @@ import { FC, useEffect, useMemo, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import { CountDown } from "@/components/CountDown";
 import { MintAvailable } from "./MintRemaining";
-import { polygon, polygonAmoy } from "viem/chains";
+import { sepolia, mainnet } from "viem/chains";
 import { Mint } from "./Mint";
 import { useReadFunknloveGetStartTime } from "@/wagmi";
 import { funknloveAddressForChain } from "./contracts";
 
 export const MintOpen: FC<{
-  chainId: typeof polygonAmoy.id | typeof polygon.id;
+  chainId: typeof sepolia.id | typeof mainnet.id;
 }> = ({ chainId }) => {
   const { data: startTime, isLoading: isLoadingStartTime } =
     useReadFunknloveGetStartTime({
       address: funknloveAddressForChain(chainId),
+      chainId,
     });
   const [lastChecked, setLastChecked] = useState(new Date().getTime());
   useEffect(() => {
@@ -33,7 +34,7 @@ export const MintOpen: FC<{
   return (
     <>
       {isLoadingStartTime ? (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center">
           <CircularProgress />
         </div>
       ) : (
@@ -42,11 +43,13 @@ export const MintOpen: FC<{
             <>
               <p className="text-lg mb-4">Mint opens in:</p>
               <CountDown endDate={startDateTime} />
+              <div className="h-24" />
             </>
           ) : (
             <>
               <MintAvailable chainId={chainId} />
               <Mint chainId={chainId} />
+              <div className="h-24" />
             </>
           )}
         </>

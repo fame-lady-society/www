@@ -1,14 +1,7 @@
 "use client";
-import NextImage from "next/image";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import {
-  useState,
-  useEffect,
-  useRef,
-  FC,
-  RefObject,
-  MutableRefObject,
-} from "react";
+import { useState, useEffect, useRef, FC, MutableRefObject } from "react";
+import { ScrollLayout } from "@/components/ScrollLayout";
 
 const FUNK_N_LOVE_VIDEO_MP4_URL = "/~/blu/funknlove/funknlove.mp4";
 
@@ -21,11 +14,11 @@ const FUNK_N_LOVE_AUDIO_MP3_URL = "/~/blu/funknlove/funknlove.mp3";
 const FUNK_N_LOVE_AUDIO_M4A_URL = "/~/blu/funknlove/funknlove.m4a";
 
 export const Equalizer: FC<{
-  videoRef: MutableRefObject<HTMLVideoElement | HTMLAudioElement | null>;
+  mediaRef: MutableRefObject<HTMLVideoElement | HTMLAudioElement | null>;
   height: number;
   width: number;
   fullScreen?: boolean;
-}> = ({ videoRef, height, width, fullScreen }) => {
+}> = ({ mediaRef, height, width, fullScreen }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -65,22 +58,22 @@ export const Equalizer: FC<{
 
     const animate = () => {
       // Setup audio context and nodes if they don't exist but audio element does
-      if (videoRef.current && !audioContextRef.current) {
+      if (mediaRef.current && !audioContextRef.current) {
         const connect = () => {
-          if (!videoRef.current || audioContextRef.current) return;
+          if (!mediaRef.current || audioContextRef.current) return;
           audioContextRef.current = new AudioContext();
           analyserRef.current = audioContextRef.current.createAnalyser();
           sourceNodeRef.current =
-            audioContextRef.current.createMediaElementSource(videoRef.current);
+            audioContextRef.current.createMediaElementSource(mediaRef.current);
           sourceNodeRef.current.connect(analyserRef.current);
           analyserRef.current.connect(audioContextRef.current.destination);
         };
 
         const noticeVideoStarted = () => {
-          videoRef.current?.removeEventListener("play", noticeVideoStarted);
+          mediaRef.current?.removeEventListener("play", noticeVideoStarted);
           connect();
         };
-        videoRef.current?.addEventListener("play", noticeVideoStarted);
+        mediaRef.current?.addEventListener("play", noticeVideoStarted);
       }
 
       // Clear canvas regardless of audio state
@@ -204,7 +197,7 @@ export const Equalizer: FC<{
       cancelAnimationFrame(animationFrameId);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, [height, videoRef, width]);
+  }, [height, mediaRef, width]);
 
   // Cleanup audio context when component unmounts
   useEffect(() => {
@@ -227,7 +220,16 @@ export const Equalizer: FC<{
       className={`inset-0 pointer-events-none ${
         fullScreen ? "fixed" : "absolute"
       }`}
-      style={{ zIndex: -1, backgroundColor: "transparent" }}
+      style={{
+        zIndex: -1,
+        backgroundColor: "transparent",
+        transform: fullScreen ? "none !important" : undefined,
+        position: fullScreen ? "fixed" : "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+      }}
       width={width}
       height={height}
     />
@@ -237,15 +239,14 @@ export const Equalizer: FC<{
 export const TeaserContent = ({
   width,
   height,
+  audioRef,
 }: {
   width: number;
   height: number;
+  audioRef: MutableRefObject<HTMLAudioElement | null>;
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(
-    null,
-  ) as MutableRefObject<HTMLAudioElement | null>;
 
   const handlePlay = () => {
     if (videoRef.current && audioRef.current) {
@@ -271,14 +272,8 @@ export const TeaserContent = ({
   };
 
   return (
-    <button className="relative block w-fit" onClick={handlePlay}>
+    <button className="relative block w-fit h-fit mt-8" onClick={handlePlay}>
       <div className="relative">
-        <Equalizer
-          width={typeof window !== "undefined" ? window.innerWidth : width}
-          height={typeof window !== "undefined" ? window.innerHeight : height}
-          videoRef={audioRef}
-          fullScreen
-        />
         <video
           controls={false}
           autoPlay={false}
@@ -313,8 +308,15 @@ export const TeaserContent = ({
   );
 };
 
-export const Teaser = () => {
+export const Teaser = ({
+  children,
+}: {
+  children: NonNullable<React.ReactNode>;
+}) => {
   const [dimensions, setDimensions] = useState({ width: 720, height: 720 });
+  const audioRef = useRef<HTMLAudioElement>(
+    null,
+  ) as MutableRefObject<HTMLAudioElement | null>;
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -329,5 +331,28 @@ export const Teaser = () => {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  return <TeaserContent width={dimensions.width} height={dimensions.height} />;
+  return (
+    <>
+      <Equalizer
+        width={
+          typeof window !== "undefined" ? window.innerWidth : dimensions.width
+        }
+        height={
+          typeof window !== "undefined" ? window.innerHeight : dimensions.height
+        }
+        mediaRef={audioRef}
+        fullScreen
+      />
+      <ScrollLayout
+        hero={
+          <TeaserContent
+            width={dimensions.width}
+            height={dimensions.height}
+            audioRef={audioRef}
+          />
+        }
+        content={children}
+      />
+    </>
+  );
 };
