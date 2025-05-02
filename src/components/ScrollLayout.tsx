@@ -40,19 +40,18 @@ export const ScrollLayout: FC<{
 
   const containerSpring = useSpring({
     display: isScrolled && !isMobile ? "flex" : "block",
-    config: { duration: 1050 },
+    config: { duration: 666, friction: 1000 },
   });
 
   const heroSpring = useSpring({
     width: isScrolled && !isMobile ? "50%" : "100%",
     transform: "translateX(0)",
-    config: { duration: 666, friction: 10, tension: 100 },
+    config: { duration: 666, friction: 10 },
   });
 
   const contentSpring = useSpring({
     width: isScrolled && !isMobile ? "50%" : "100%",
-    transform: isScrolled && !isMobile ? "translateX(0)" : "translateY(100%)",
-    config: { duration: 500, friction: 5, tension: 100 },
+    config: { duration: 666, friction: 5 },
   });
 
   return (
@@ -70,7 +69,7 @@ export const ScrollLayout: FC<{
         </animated.div>
         <animated.div
           style={contentSpring}
-          className="flex items-center justify-center overflow-y-auto"
+          className={`flex justify-center overflow-y-auto ${!isScrolled || isMobile ? "items-start" : "items-center"}`}
         >
           <div className="flex flex-col items-center justify-center w-full">
             {content}

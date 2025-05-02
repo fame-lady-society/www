@@ -13,7 +13,7 @@ export default function Page() {
         <TokenGated contractAddress={funknloveAddressForChain(mainnet.id)} />
         <h3 className="text-2xl font-bold mt-4 mb-2 text-center">By</h3>
         <SocialLinks />
-        <p className="text-lg mt-2 mb-4 text-center" style={{ width: "80%" }}>
+        <p className="text-lg mt-2 mb-4 text-center w-256">
           An open edition music NFT where 100% of the proceeds go to{" "}
           <WrappedLink
             href="https://theexodusroad.com/"
