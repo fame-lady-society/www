@@ -1,4 +1,11 @@
 {
+  {
+    "accountAssociation": {
+      "header": "eyJmaWQiOjY1OTgwOSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDUwMzRiNDUyYjlBNTRDNTJhNkZFZkQ0QzEwZUQ1NzAwRjQyQkY2NGUifQ",
+      "payload": "eyJkb21haW4iOiJ3d3cuZmFtZWxhZHlzb2NpZXR5LmNvbSJ9",
+      "signature": "MHhkNTQ4OTRkMWI1NmVkYjdmNzQ1MjQxZmFiNjQ2YjQ0OTZmMmYxYmU2MmMyMmYzYThlNzNlNjViNWVlMzkxMzUxMjJkY2NkMmVhYjg2NDNkYTkxZTk5N2MwNTU0ZGY3ZWExMzg4NjU2ODE3ZDA4MjNlNTkwZjczZjNjNTNjZGYwZTFi"
+    }
+  },
   "frame": {
     "version": "1",
     "name": "Fame Lady Society",
