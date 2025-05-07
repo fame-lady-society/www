@@ -11,6 +11,8 @@ import {
   useReadFunknloveGetStartTime,
 } from "@/wagmi";
 import { funknloveAddressForChain } from "./contracts";
+import { useBalance } from "wagmi";
+import { formatUnits } from "viem";
 
 export const MintOpen: FC<{
   chainId: typeof sepolia.id | typeof mainnet.id;
@@ -25,6 +27,10 @@ export const MintOpen: FC<{
       address: funknloveAddressForChain(chainId),
       chainId,
     });
+  const { data: balance } = useBalance({
+    address: funknloveAddressForChain(chainId),
+    chainId,
+  });
   const [lastChecked, setLastChecked] = useState(new Date().getTime());
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,6 +82,12 @@ export const MintOpen: FC<{
                 <>
                   <p className="text-lg mb-4">Mint has ended</p>
                   <div className="h-24" />
+                  {typeof balance?.value === "bigint" && (
+                    <p className="mb-4">
+                      <span className=" text-xl font-bold">Total raised:</span>{" "}
+                      {formatUnits(balance.value, 18)} ETH
+                    </p>
+                  )}
                 </>
               );
             }
