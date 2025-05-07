@@ -6,7 +6,10 @@ import { CountDown } from "@/components/CountDown";
 import { MintAvailable } from "./MintRemaining";
 import { sepolia, mainnet } from "viem/chains";
 import { Mint } from "./Mint";
-import { useReadFunknloveGetStartTime } from "@/wagmi";
+import {
+  useReadFunknloveGetEndTime,
+  useReadFunknloveGetStartTime,
+} from "@/wagmi";
 import { funknloveAddressForChain } from "./contracts";
 
 export const MintOpen: FC<{
@@ -14,6 +17,11 @@ export const MintOpen: FC<{
 }> = ({ chainId }) => {
   const { data: startTime, isLoading: isLoadingStartTime } =
     useReadFunknloveGetStartTime({
+      address: funknloveAddressForChain(chainId),
+      chainId,
+    });
+  const { data: endTime, isLoading: isLoadingEndTime } =
+    useReadFunknloveGetEndTime({
       address: funknloveAddressForChain(chainId),
       chainId,
     });
@@ -39,19 +47,39 @@ export const MintOpen: FC<{
         </div>
       ) : (
         <>
-          {notYet && startDateTime ? (
-            <>
-              <p className="text-lg mb-4">Mint opens in:</p>
-              <CountDown endDate={startDateTime} />
-              <div className="h-24" />
-            </>
-          ) : (
-            <>
-              <MintAvailable chainId={chainId} />
-              <Mint chainId={chainId} />
-              <div className="h-24" />
-            </>
-          )}
+          {(() => {
+            const now = lastChecked;
+            const start = startDateTime?.getTime() || 0;
+            const end = endTime ? Number(endTime) * 1000 : 0;
+
+            if (now < start) {
+              return (
+                <>
+                  <p className="text-lg mb-4">Mint opens in:</p>
+                  <CountDown endDate={startDateTime!} />
+                  <div className="h-24" />
+                </>
+              );
+            } else if (now >= start && now <= end) {
+              return (
+                <>
+                  <p className="text-lg mb-4">Mint closes in:</p>
+                  <CountDown endDate={new Date(end)} />
+                  <div className="h-12" />
+                  <MintAvailable chainId={chainId} />
+                  <Mint chainId={chainId} />
+                  <div className="h-24" />
+                </>
+              );
+            } else {
+              return (
+                <>
+                  <p className="text-lg mb-4">Mint has ended</p>
+                  <div className="h-24" />
+                </>
+              );
+            }
+          })()}
         </>
       )}
     </>
