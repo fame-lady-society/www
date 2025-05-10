@@ -8,10 +8,11 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useSIWE } from "connectkit";
-import { useAccount, useReadContract } from "wagmi";
-import { erc721Abi } from "viem";
+import { useAccount, useReadContract, useReadContracts } from "wagmi";
+
 import { funknloveAddressForChain } from "../../contracts";
 import { mainnet } from "viem/chains";
+import { funknloveAbi } from "@/wagmi";
 
 const WAV_DOWNLOAD_URL =
   "https://gateway.irys.xyz/QuFCpGHBlG8bbXcZ1PyLgQNa-ZKJ6k_KgSZfKxQoKTA";
@@ -23,13 +24,34 @@ const M4A_DOWNLOAD_URL =
 const DownloadCard: FC = () => {
   const { isSignedIn } = useSIWE();
   const { address } = useAccount();
-  const { data, isLoading } = useReadContract({
-    address: funknloveAddressForChain(mainnet.id),
-    abi: erc721Abi,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
+  const { data, isLoading } = useReadContracts({
+    contracts: [
+      {
+        address: funknloveAddressForChain(mainnet.id),
+        abi: funknloveAbi,
+        functionName: "balanceOf",
+        args: address ? ([address, 0n] as const) : undefined,
+        chainId: mainnet.id,
+      },
+      {
+        address: funknloveAddressForChain(mainnet.id),
+        abi: funknloveAbi,
+        functionName: "balanceOf",
+        args: address ? ([address, 1n] as const) : undefined,
+        chainId: mainnet.id,
+      },
+      {
+        address: funknloveAddressForChain(mainnet.id),
+        abi: funknloveAbi,
+        functionName: "balanceOf",
+        args: address ? ([address, 2n] as const) : undefined,
+        chainId: mainnet.id,
+      },
+    ],
+    allowFailure: false,
   });
 
+  const ownsOne = data?.some((result) => result > 0n);
   return (
     <Card sx={{ mt: 2, mb: 6 }}>
       <CardContent>
@@ -40,7 +62,7 @@ const DownloadCard: FC = () => {
           <div className="flex justify-center p-4">
             <CircularProgress />
           </div>
-        ) : data && data > 0n && isSignedIn ? (
+        ) : ownsOne && isSignedIn ? (
           <>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Choose your preferred audio format:

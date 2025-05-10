@@ -27,10 +27,7 @@ export const MintOpen: FC<{
       address: funknloveAddressForChain(chainId),
       chainId,
     });
-  const { data: balance } = useBalance({
-    address: funknloveAddressForChain(chainId),
-    chainId,
-  });
+
   const [lastChecked, setLastChecked] = useState(new Date().getTime());
   useEffect(() => {
     const interval = setInterval(() => {
@@ -85,7 +82,7 @@ export const MintOpen: FC<{
                   {typeof balance?.value === "bigint" && (
                     <p className="mb-4">
                       <span className=" text-xl font-bold">Total raised:</span>{" "}
-                      {formatUnits(balance.value, 18)} ETH
+                      1.17177 ETH ETH
                     </p>
                   )}
                 </>

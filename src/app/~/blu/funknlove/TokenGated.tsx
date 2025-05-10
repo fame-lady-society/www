@@ -15,7 +15,7 @@ export const TokenGated: FC<{
     address: contractAddress,
   });
 
-  const isOpen = endTime && endTime > Date.now();
+  const isOpen = endTime && endTime < Date.now();
 
   return isOpen ? (
     <Card sx={{ mt: 2, mb: 6 }}>

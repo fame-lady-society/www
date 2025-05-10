@@ -15,7 +15,7 @@ export const RedirectWhenNotConnected: FC<{
 
   useEffect(() => {
     if (!isConnected || !isSignedIn) {
-      router.replace(toGo);
+      router.push(toGo);
     }
   }, [isConnected, isSignedIn, router, toGo]);
 

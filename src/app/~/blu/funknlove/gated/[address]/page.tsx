@@ -4,7 +4,7 @@ import { RedirectWhenNotConnected } from "./RedirectWhenNotConnected";
 import { mainnet } from "viem/chains";
 import { SocialLinks } from "../../SocialLinks";
 
-export default function Page({ params }: { params: { tokenId: string } }) {
+export default function Page({ params }: { params: { address: string } }) {
   return (
     <div className="flex flex-col items-center justify-center">
       <DownloadCard />
