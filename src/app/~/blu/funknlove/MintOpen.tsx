@@ -13,6 +13,7 @@ import {
 import { funknloveAddressForChain } from "./contracts";
 import { useBalance } from "wagmi";
 import { formatUnits } from "viem";
+import { WrappedLink } from "@/components/WrappedLink";
 
 export const MintOpen: FC<{
   chainId: typeof sepolia.id | typeof mainnet.id;
@@ -79,12 +80,18 @@ export const MintOpen: FC<{
                 <>
                   <p className="text-lg mb-4">Mint has ended</p>
                   <div className="h-24" />
-                  {typeof balance?.value === "bigint" && (
+                  <>
                     <p className="mb-4">
                       <span className=" text-xl font-bold">Total raised:</span>{" "}
                       1.17177 ETH ETH
                     </p>
-                  )}
+                    <WrappedLink
+                      href="https://etherscan.io/tx/0xdd473d3e4c4449aabe47ece0df294782046621eb1b60cc0ad54473f5bdba6460"
+                      target="_blank"
+                    >
+                      View on Etherscan
+                    </WrappedLink>
+                  </>
                 </>
               );
             }
