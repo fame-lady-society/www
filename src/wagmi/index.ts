@@ -730,6 +730,407 @@ export const claimToFameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CreatorArtistMagic
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const creatorArtistMagicAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: '_childRenderer', internalType: 'address', type: 'address' },
+      { name: '_fame', internalType: 'address payable', type: 'address' },
+      { name: '_nextTokenId', internalType: 'uint16', type: 'uint16' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'artPoolEndIndex',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'artPoolNext',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'artPoolStartIndex',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIdToUpdate', internalType: 'uint256', type: 'uint256' },
+      { name: 'newMetadataUrl', internalType: 'string', type: 'string' },
+    ],
+    name: 'banishToArtPool',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIdToUpdate', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenIdFromBurnPool', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'banishToBurnPool',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIdToUpdate', internalType: 'uint256', type: 'uint256' },
+      { name: 'newMetadataUrl', internalType: 'string', type: 'string' },
+    ],
+    name: 'banishToEndOfMintPool',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIdToUpdate', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenIdFromMintPool', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'banishToMintPool',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'childRenderer',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract ITokenURIGenerator',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'start', internalType: 'uint256', type: 'uint256' },
+      { name: 'end', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'emitBatchMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'emitMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fame',
+    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getMaxNFTSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'metadataId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getMetadataById',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getMintPoolEnd',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getMintPoolStart',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getNextMetadataId',
+    outputs: [{ name: '', internalType: 'uint16', type: 'uint16' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getTokenMetadataId',
+    outputs: [{ name: '', internalType: 'uint16', type: 'uint16' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getTotalNFTSupply',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'isTokenInBurnedPool',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'isTokenInEndOfMintPool',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'isTokenInMintPool',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'metadataRegistry',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'nextTokenId',
+    outputs: [{ name: '', internalType: 'uint16', type: 'uint16' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_childRenderer', internalType: 'address', type: 'address' },
+    ],
+    name: 'updateChildRenderer',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'newMetadataUrl', internalType: 'string', type: 'string' },
+    ],
+    name: 'updateMetadata',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'ArtPoolFull' },
+  { type: 'error', inputs: [], name: 'InvalidMetadata' },
+  { type: 'error', inputs: [], name: 'InvalidTokenId' },
+  { type: 'error', inputs: [], name: 'MintPoolFull' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'TokenNotInBurnPool' },
+  { type: 'error', inputs: [], name: 'TokenNotInMintPool' },
+  { type: 'error', inputs: [], name: 'TokenNotOwned' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNKNLOVE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -747,6 +1148,13 @@ export const funknloveAbi = [
     type: 'function',
     inputs: [],
     name: 'FLS_EXODUS_ROAD_DONATION_ADDRESS',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'FLS_VAULT_ADDRESS',
     outputs: [{ name: '', internalType: 'address', type: 'address' }],
     stateMutability: 'view',
   },
@@ -1041,6 +1449,13 @@ export const funknloveAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: 'newEndTime', internalType: 'uint64', type: 'uint64' }],
+    name: 'setEndTime',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [{ name: 'newStartTime', internalType: 'uint64', type: 'uint64' }],
     name: 'setStartTime',
     outputs: [],
@@ -1234,16 +1649,15 @@ export const funknloveAbi = [
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'ArrayLengthsMismatch' },
   { type: 'error', inputs: [], name: 'FailedToSendEther' },
+  { type: 'error', inputs: [], name: 'FreeMintLimitReached' },
   { type: 'error', inputs: [], name: 'InsufficientBalance' },
   { type: 'error', inputs: [], name: 'InvalidTier' },
-  { type: 'error', inputs: [], name: 'MintAmountExceedsLimit' },
-  { type: 'error', inputs: [], name: 'MintAmountExceedsSupply' },
   { type: 'error', inputs: [], name: 'MintMustBeGreaterThanZero' },
+  { type: 'error', inputs: [], name: 'MintMustNotBeEnded' },
   { type: 'error', inputs: [], name: 'MintMustNotBeStarted' },
   { type: 'error', inputs: [], name: 'MintNotEnded' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  { type: 'error', inputs: [], name: 'NotEnoughPayment' },
   { type: 'error', inputs: [], name: 'NotOwnerNorApproved' },
   { type: 'error', inputs: [], name: 'PublicMintEnded' },
   { type: 'error', inputs: [], name: 'PublicMintNotStarted' },
@@ -1254,6 +1668,7 @@ export const funknloveAbi = [
   },
   { type: 'error', inputs: [], name: 'TransferToZeroAddress' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
+  { type: 'error', inputs: [], name: 'WrongPayment' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3971,760 +4386,6 @@ export const fameVestingAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GovSchwing
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const govSchwingAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: 'underlyingToken', internalType: 'address', type: 'address' },
-      { name: 'defaultAdmin', internalType: 'address', type: 'address' },
-      { name: '_renderer', internalType: 'address', type: 'address' },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'CLOCK_MODE',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'DEFAULT_ADMIN_ROLE',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'RENDERER_ROLE',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'TOKEN_URI_GENERATOR_ROLE',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'approve',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'clock',
-    outputs: [{ name: '', internalType: 'uint48', type: 'uint48' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'delegatee', internalType: 'address', type: 'address' }],
-    name: 'delegate',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'delegatee', internalType: 'address', type: 'address' },
-      { name: 'nonce', internalType: 'uint256', type: 'uint256' },
-      { name: 'expiry', internalType: 'uint256', type: 'uint256' },
-      { name: 'v', internalType: 'uint8', type: 'uint8' },
-      { name: 'r', internalType: 'bytes32', type: 'bytes32' },
-      { name: 's', internalType: 'bytes32', type: 'bytes32' },
-    ],
-    name: 'delegateBySig',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
-    name: 'delegates',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'account', internalType: 'address', type: 'address' },
-      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
-    ],
-    name: 'depositFor',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'eip712Domain',
-    outputs: [
-      { name: 'fields', internalType: 'bytes1', type: 'bytes1' },
-      { name: 'name', internalType: 'string', type: 'string' },
-      { name: 'version', internalType: 'string', type: 'string' },
-      { name: 'chainId', internalType: 'uint256', type: 'uint256' },
-      { name: 'verifyingContract', internalType: 'address', type: 'address' },
-      { name: 'salt', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'extensions', internalType: 'uint256[]', type: 'uint256[]' },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'start', internalType: 'uint256', type: 'uint256' },
-      { name: 'end', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'emitBatchMetadataUpdate',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'emitMetadataUpdate',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getApproved',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'timepoint', internalType: 'uint256', type: 'uint256' }],
-    name: 'getPastTotalSupply',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'account', internalType: 'address', type: 'address' },
-      { name: 'timepoint', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'getPastVotes',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'role', internalType: 'bytes32', type: 'bytes32' }],
-    name: 'getRoleAdmin',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
-    name: 'getVotes',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'account', internalType: 'address', type: 'address' },
-    ],
-    name: 'grantRole',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'guardianForTokenId',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'account', internalType: 'address', type: 'address' },
-    ],
-    name: 'hasRole',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'owner', internalType: 'address', type: 'address' },
-      { name: 'operator', internalType: 'address', type: 'address' },
-    ],
-    name: 'isApprovedForAll',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'isLocked',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'lock',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'guardian', internalType: 'address', type: 'address' },
-    ],
-    name: 'lockWithGuardian',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'start', internalType: 'uint256', type: 'uint256' },
-      { name: 'amount', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'lockedTokenCount',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'name',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    name: 'nonces',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '', internalType: 'address', type: 'address' },
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: '', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'onERC721Received',
-    outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ownerOf',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'renderer',
-    outputs: [
-      {
-        name: '',
-        internalType: 'contract ITokenURIGenerator',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'callerConfirmation', internalType: 'address', type: 'address' },
-    ],
-    name: 'renounceRole',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'account', internalType: 'address', type: 'address' },
-    ],
-    name: 'revokeRole',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'data', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'operator', internalType: 'address', type: 'address' },
-      { name: 'approved', internalType: 'bool', type: 'bool' },
-    ],
-    name: 'setApprovalForAll',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '_renderer', internalType: 'address', type: 'address' }],
-    name: 'setRenderer',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
-    name: 'supportsInterface',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'symbol',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'tokenURI',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'totalSupply',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'transferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'underlying',
-    outputs: [{ name: '', internalType: 'contract IERC721', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'unlock',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'account', internalType: 'address', type: 'address' },
-      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
-    ],
-    name: 'withdrawTo',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'approved',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Approval',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'operator',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'approved', internalType: 'bool', type: 'bool', indexed: false },
-    ],
-    name: 'ApprovalForAll',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: '_fromTokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: '_toTokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'BatchMetadataUpdate',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'delegator',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'fromDelegate',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'toDelegate',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'DelegateChanged',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'delegate',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'previousVotes',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'newVotes',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'DelegateVotesChanged',
-  },
-  { type: 'event', anonymous: false, inputs: [], name: 'EIP712DomainChanged' },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: '_tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'MetadataUpdate',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
-      {
-        name: 'previousAdminRole',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'newAdminRole',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-    ],
-    name: 'RoleAdminChanged',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
-      {
-        name: 'account',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'sender',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'RoleGranted',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'role', internalType: 'bytes32', type: 'bytes32', indexed: true },
-      {
-        name: 'account',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'sender',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'RoleRevoked',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address', indexed: true },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Transfer',
-  },
-  { type: 'error', inputs: [], name: 'AccessControlBadConfirmation' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'account', internalType: 'address', type: 'address' },
-      { name: 'neededRole', internalType: 'bytes32', type: 'bytes32' },
-    ],
-    name: 'AccessControlUnauthorizedAccount',
-  },
-  { type: 'error', inputs: [], name: 'BurnAddressCannotBeGuardian' },
-  { type: 'error', inputs: [], name: 'CheckpointUnorderedInsertion' },
-  { type: 'error', inputs: [], name: 'ECDSAInvalidSignature' },
-  {
-    type: 'error',
-    inputs: [{ name: 'length', internalType: 'uint256', type: 'uint256' }],
-    name: 'ECDSAInvalidSignatureLength',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 's', internalType: 'bytes32', type: 'bytes32' }],
-    name: 'ECDSAInvalidSignatureS',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'timepoint', internalType: 'uint256', type: 'uint256' },
-      { name: 'clock', internalType: 'uint48', type: 'uint48' },
-    ],
-    name: 'ERC5805FutureLookup',
-  },
-  { type: 'error', inputs: [], name: 'ERC6372InconsistentClock' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'sender', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'owner', internalType: 'address', type: 'address' },
-    ],
-    name: 'ERC721IncorrectOwner',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'operator', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'ERC721InsufficientApproval',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'approver', internalType: 'address', type: 'address' }],
-    name: 'ERC721InvalidApprover',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'operator', internalType: 'address', type: 'address' }],
-    name: 'ERC721InvalidOperator',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    name: 'ERC721InvalidOwner',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'receiver', internalType: 'address', type: 'address' }],
-    name: 'ERC721InvalidReceiver',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'sender', internalType: 'address', type: 'address' }],
-    name: 'ERC721InvalidSender',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ERC721NonexistentToken',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
-    name: 'ERC721UnsupportedToken',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'account', internalType: 'address', type: 'address' },
-      { name: 'currentNonce', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InvalidAccountNonce',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'renderer', internalType: 'address', type: 'address' }],
-    name: 'InvalidRenderer',
-  },
-  { type: 'error', inputs: [], name: 'InvalidShortString' },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'OnlyGuardianOrOwner',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'bits', internalType: 'uint8', type: 'uint8' },
-      { name: 'value', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'SafeCastOverflowedUintDowncast',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'str', internalType: 'string', type: 'string' }],
-    name: 'StringTooLong',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'TokenIsAlreadyLocked',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'TokenIsLocked',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'TokenIsNotLocked',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'expiry', internalType: 'uint256', type: 'uint256' }],
-    name: 'VotesExpiredSignature',
-  },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GovSociety
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5521,10 +5182,10 @@ export const iBalanceOfAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ITokemEmitable
+// ITokenEmitable
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const iTokemEmitableAbi = [
+export const iTokenEmitableAbi = [
   {
     type: 'function',
     inputs: [
@@ -6210,6 +5871,299 @@ export const namedLadyRendererConfig = {
   address: namedLadyRendererAddress,
   abi: namedLadyRendererAbi,
 } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SimpleOffchainReveal
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const simpleOffchainRevealAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: '_childRenderer', internalType: 'address', type: 'address' },
+      { name: '_tokenEmitable', internalType: 'address', type: 'address' },
+      { name: '_startAtToken', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'RENDERER',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'batches',
+    outputs: [
+      { name: 'salt', internalType: 'uint256', type: 'uint256' },
+      { name: 'startAtToken', internalType: 'uint256', type: 'uint256' },
+      { name: 'length', internalType: 'uint256', type: 'uint256' },
+      { name: 'baseUri', internalType: 'string', type: 'string' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'childRenderer',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract ITokenURIGenerator',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'start', internalType: 'uint256', type: 'uint256' },
+      { name: 'end', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'emitBatchMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'emitMetadataUpdate',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'maxTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'offsetForTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'salt', internalType: 'uint256', type: 'uint256' },
+      { name: 'length', internalType: 'uint256', type: 'uint256' },
+      { name: 'baseUri', internalType: 'string', type: 'string' },
+    ],
+    name: 'pushBatch',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'startAtToken',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'tokenEmitable',
+    outputs: [
+      { name: '', internalType: 'contract ITokenEmitable', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_tokenEmitable', internalType: 'address', type: 'address' },
+    ],
+    name: 'updateTokenEmitable',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoBatchForTokenId' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UnrevealedLadyRenderer
@@ -7948,6 +7902,563 @@ export const useWatchClaimToFameRolesUpdatedEvent =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__
+ */
+export const useReadCreatorArtistMagic = /*#__PURE__*/ createUseReadContract({
+  abi: creatorArtistMagicAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"artPoolEndIndex"`
+ */
+export const useReadCreatorArtistMagicArtPoolEndIndex =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'artPoolEndIndex',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"artPoolNext"`
+ */
+export const useReadCreatorArtistMagicArtPoolNext =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'artPoolNext',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"artPoolStartIndex"`
+ */
+export const useReadCreatorArtistMagicArtPoolStartIndex =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'artPoolStartIndex',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"childRenderer"`
+ */
+export const useReadCreatorArtistMagicChildRenderer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'childRenderer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"fame"`
+ */
+export const useReadCreatorArtistMagicFame =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'fame',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getMaxNFTSupply"`
+ */
+export const useReadCreatorArtistMagicGetMaxNftSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getMaxNFTSupply',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getMetadataById"`
+ */
+export const useReadCreatorArtistMagicGetMetadataById =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getMetadataById',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getMintPoolEnd"`
+ */
+export const useReadCreatorArtistMagicGetMintPoolEnd =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getMintPoolEnd',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getMintPoolStart"`
+ */
+export const useReadCreatorArtistMagicGetMintPoolStart =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getMintPoolStart',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getNextMetadataId"`
+ */
+export const useReadCreatorArtistMagicGetNextMetadataId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getNextMetadataId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getTokenMetadataId"`
+ */
+export const useReadCreatorArtistMagicGetTokenMetadataId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getTokenMetadataId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"getTotalNFTSupply"`
+ */
+export const useReadCreatorArtistMagicGetTotalNftSupply =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'getTotalNFTSupply',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"hasAllRoles"`
+ */
+export const useReadCreatorArtistMagicHasAllRoles =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'hasAllRoles',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"hasAnyRole"`
+ */
+export const useReadCreatorArtistMagicHasAnyRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'hasAnyRole',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"isTokenInBurnedPool"`
+ */
+export const useReadCreatorArtistMagicIsTokenInBurnedPool =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'isTokenInBurnedPool',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"isTokenInEndOfMintPool"`
+ */
+export const useReadCreatorArtistMagicIsTokenInEndOfMintPool =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'isTokenInEndOfMintPool',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"isTokenInMintPool"`
+ */
+export const useReadCreatorArtistMagicIsTokenInMintPool =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'isTokenInMintPool',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"metadataRegistry"`
+ */
+export const useReadCreatorArtistMagicMetadataRegistry =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'metadataRegistry',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"nextTokenId"`
+ */
+export const useReadCreatorArtistMagicNextTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'nextTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadCreatorArtistMagicOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadCreatorArtistMagicOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"rolesOf"`
+ */
+export const useReadCreatorArtistMagicRolesOf =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'rolesOf',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"tokenURI"`
+ */
+export const useReadCreatorArtistMagicTokenUri =
+  /*#__PURE__*/ createUseReadContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'tokenURI',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__
+ */
+export const useWriteCreatorArtistMagic = /*#__PURE__*/ createUseWriteContract({
+  abi: creatorArtistMagicAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToArtPool"`
+ */
+export const useWriteCreatorArtistMagicBanishToArtPool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToArtPool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToBurnPool"`
+ */
+export const useWriteCreatorArtistMagicBanishToBurnPool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToBurnPool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToEndOfMintPool"`
+ */
+export const useWriteCreatorArtistMagicBanishToEndOfMintPool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToEndOfMintPool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToMintPool"`
+ */
+export const useWriteCreatorArtistMagicBanishToMintPool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToMintPool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteCreatorArtistMagicCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteCreatorArtistMagicCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useWriteCreatorArtistMagicEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useWriteCreatorArtistMagicEmitMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useWriteCreatorArtistMagicGrantRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteCreatorArtistMagicRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useWriteCreatorArtistMagicRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteCreatorArtistMagicRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useWriteCreatorArtistMagicRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteCreatorArtistMagicTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"updateChildRenderer"`
+ */
+export const useWriteCreatorArtistMagicUpdateChildRenderer =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'updateChildRenderer',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"updateMetadata"`
+ */
+export const useWriteCreatorArtistMagicUpdateMetadata =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'updateMetadata',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__
+ */
+export const useSimulateCreatorArtistMagic =
+  /*#__PURE__*/ createUseSimulateContract({ abi: creatorArtistMagicAbi })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToArtPool"`
+ */
+export const useSimulateCreatorArtistMagicBanishToArtPool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToArtPool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToBurnPool"`
+ */
+export const useSimulateCreatorArtistMagicBanishToBurnPool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToBurnPool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToEndOfMintPool"`
+ */
+export const useSimulateCreatorArtistMagicBanishToEndOfMintPool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToEndOfMintPool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"banishToMintPool"`
+ */
+export const useSimulateCreatorArtistMagicBanishToMintPool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'banishToMintPool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateCreatorArtistMagicCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateCreatorArtistMagicCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useSimulateCreatorArtistMagicEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useSimulateCreatorArtistMagicEmitMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useSimulateCreatorArtistMagicGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateCreatorArtistMagicRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useSimulateCreatorArtistMagicRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateCreatorArtistMagicRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useSimulateCreatorArtistMagicRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateCreatorArtistMagicTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"updateChildRenderer"`
+ */
+export const useSimulateCreatorArtistMagicUpdateChildRenderer =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'updateChildRenderer',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"updateMetadata"`
+ */
+export const useSimulateCreatorArtistMagicUpdateMetadata =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'updateMetadata',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__
+ */
+export const useWatchCreatorArtistMagicEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: creatorArtistMagicAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchCreatorArtistMagicOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: creatorArtistMagicAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchCreatorArtistMagicOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: creatorArtistMagicAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchCreatorArtistMagicOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: creatorArtistMagicAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"RolesUpdated"`
+ */
+export const useWatchCreatorArtistMagicRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: creatorArtistMagicAbi,
+    eventName: 'RolesUpdated',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__
  */
 export const useReadFunknlove = /*#__PURE__*/ createUseReadContract({
@@ -7961,6 +8472,15 @@ export const useReadFunknloveFlsExodusRoadDonationAddress =
   /*#__PURE__*/ createUseReadContract({
     abi: funknloveAbi,
     functionName: 'FLS_EXODUS_ROAD_DONATION_ADDRESS',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"FLS_VAULT_ADDRESS"`
+ */
+export const useReadFunknloveFlsVaultAddress =
+  /*#__PURE__*/ createUseReadContract({
+    abi: funknloveAbi,
+    functionName: 'FLS_VAULT_ADDRESS',
   })
 
 /**
@@ -8282,6 +8802,13 @@ export const useWriteFunknloveSetBaseUri = /*#__PURE__*/ createUseWriteContract(
 )
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setEndTime"`
+ */
+export const useWriteFunknloveSetEndTime = /*#__PURE__*/ createUseWriteContract(
+  { abi: funknloveAbi, functionName: 'setEndTime' },
+)
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setStartTime"`
  */
 export const useWriteFunknloveSetStartTime =
@@ -8439,6 +8966,15 @@ export const useSimulateFunknloveSetBaseUri =
   /*#__PURE__*/ createUseSimulateContract({
     abi: funknloveAbi,
     functionName: 'setBaseURI',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link funknloveAbi}__ and `functionName` set to `"setEndTime"`
+ */
+export const useSimulateFunknloveSetEndTime =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: funknloveAbi,
+    functionName: 'setEndTime',
   })
 
 /**
@@ -12390,675 +12926,6 @@ export const useWatchFameVestingOwnershipTransferredEvent =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__
- */
-export const useReadGovSchwing = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"CLOCK_MODE"`
- */
-export const useReadGovSchwingClockMode = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'CLOCK_MODE',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"DEFAULT_ADMIN_ROLE"`
- */
-export const useReadGovSchwingDefaultAdminRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'DEFAULT_ADMIN_ROLE',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"RENDERER_ROLE"`
- */
-export const useReadGovSchwingRendererRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'RENDERER_ROLE',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"TOKEN_URI_GENERATOR_ROLE"`
- */
-export const useReadGovSchwingTokenUriGeneratorRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'TOKEN_URI_GENERATOR_ROLE',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"balanceOf"`
- */
-export const useReadGovSchwingBalanceOf = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'balanceOf',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"clock"`
- */
-export const useReadGovSchwingClock = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'clock',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"delegates"`
- */
-export const useReadGovSchwingDelegates = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'delegates',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"eip712Domain"`
- */
-export const useReadGovSchwingEip712Domain =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'eip712Domain',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"getApproved"`
- */
-export const useReadGovSchwingGetApproved = /*#__PURE__*/ createUseReadContract(
-  { abi: govSchwingAbi, functionName: 'getApproved' },
-)
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"getPastTotalSupply"`
- */
-export const useReadGovSchwingGetPastTotalSupply =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'getPastTotalSupply',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"getPastVotes"`
- */
-export const useReadGovSchwingGetPastVotes =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'getPastVotes',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"getRoleAdmin"`
- */
-export const useReadGovSchwingGetRoleAdmin =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'getRoleAdmin',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"getVotes"`
- */
-export const useReadGovSchwingGetVotes = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'getVotes',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"guardianForTokenId"`
- */
-export const useReadGovSchwingGuardianForTokenId =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'guardianForTokenId',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"hasRole"`
- */
-export const useReadGovSchwingHasRole = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'hasRole',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"isApprovedForAll"`
- */
-export const useReadGovSchwingIsApprovedForAll =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'isApprovedForAll',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"isLocked"`
- */
-export const useReadGovSchwingIsLocked = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'isLocked',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"lockedTokenCount"`
- */
-export const useReadGovSchwingLockedTokenCount =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'lockedTokenCount',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"name"`
- */
-export const useReadGovSchwingName = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'name',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"nonces"`
- */
-export const useReadGovSchwingNonces = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'nonces',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"ownerOf"`
- */
-export const useReadGovSchwingOwnerOf = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'ownerOf',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"renderer"`
- */
-export const useReadGovSchwingRenderer = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'renderer',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"supportsInterface"`
- */
-export const useReadGovSchwingSupportsInterface =
-  /*#__PURE__*/ createUseReadContract({
-    abi: govSchwingAbi,
-    functionName: 'supportsInterface',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"symbol"`
- */
-export const useReadGovSchwingSymbol = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'symbol',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"tokenURI"`
- */
-export const useReadGovSchwingTokenUri = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'tokenURI',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"totalSupply"`
- */
-export const useReadGovSchwingTotalSupply = /*#__PURE__*/ createUseReadContract(
-  { abi: govSchwingAbi, functionName: 'totalSupply' },
-)
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"underlying"`
- */
-export const useReadGovSchwingUnderlying = /*#__PURE__*/ createUseReadContract({
-  abi: govSchwingAbi,
-  functionName: 'underlying',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__
- */
-export const useWriteGovSchwing = /*#__PURE__*/ createUseWriteContract({
-  abi: govSchwingAbi,
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"approve"`
- */
-export const useWriteGovSchwingApprove = /*#__PURE__*/ createUseWriteContract({
-  abi: govSchwingAbi,
-  functionName: 'approve',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"delegate"`
- */
-export const useWriteGovSchwingDelegate = /*#__PURE__*/ createUseWriteContract({
-  abi: govSchwingAbi,
-  functionName: 'delegate',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"delegateBySig"`
- */
-export const useWriteGovSchwingDelegateBySig =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'delegateBySig',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"depositFor"`
- */
-export const useWriteGovSchwingDepositFor =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'depositFor',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
- */
-export const useWriteGovSchwingEmitBatchMetadataUpdate =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'emitBatchMetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"emitMetadataUpdate"`
- */
-export const useWriteGovSchwingEmitMetadataUpdate =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'emitMetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"grantRole"`
- */
-export const useWriteGovSchwingGrantRole = /*#__PURE__*/ createUseWriteContract(
-  { abi: govSchwingAbi, functionName: 'grantRole' },
-)
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"lock"`
- */
-export const useWriteGovSchwingLock = /*#__PURE__*/ createUseWriteContract({
-  abi: govSchwingAbi,
-  functionName: 'lock',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"lockWithGuardian"`
- */
-export const useWriteGovSchwingLockWithGuardian =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'lockWithGuardian',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"onERC721Received"`
- */
-export const useWriteGovSchwingOnErc721Received =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'onERC721Received',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"renounceRole"`
- */
-export const useWriteGovSchwingRenounceRole =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'renounceRole',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"revokeRole"`
- */
-export const useWriteGovSchwingRevokeRole =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'revokeRole',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useWriteGovSchwingSafeTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"setApprovalForAll"`
- */
-export const useWriteGovSchwingSetApprovalForAll =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"setRenderer"`
- */
-export const useWriteGovSchwingSetRenderer =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'setRenderer',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useWriteGovSchwingTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"unlock"`
- */
-export const useWriteGovSchwingUnlock = /*#__PURE__*/ createUseWriteContract({
-  abi: govSchwingAbi,
-  functionName: 'unlock',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"withdrawTo"`
- */
-export const useWriteGovSchwingWithdrawTo =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: govSchwingAbi,
-    functionName: 'withdrawTo',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__
- */
-export const useSimulateGovSchwing = /*#__PURE__*/ createUseSimulateContract({
-  abi: govSchwingAbi,
-})
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"approve"`
- */
-export const useSimulateGovSchwingApprove =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'approve',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"delegate"`
- */
-export const useSimulateGovSchwingDelegate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'delegate',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"delegateBySig"`
- */
-export const useSimulateGovSchwingDelegateBySig =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'delegateBySig',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"depositFor"`
- */
-export const useSimulateGovSchwingDepositFor =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'depositFor',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
- */
-export const useSimulateGovSchwingEmitBatchMetadataUpdate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'emitBatchMetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"emitMetadataUpdate"`
- */
-export const useSimulateGovSchwingEmitMetadataUpdate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'emitMetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"grantRole"`
- */
-export const useSimulateGovSchwingGrantRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'grantRole',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"lock"`
- */
-export const useSimulateGovSchwingLock =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'lock',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"lockWithGuardian"`
- */
-export const useSimulateGovSchwingLockWithGuardian =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'lockWithGuardian',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"onERC721Received"`
- */
-export const useSimulateGovSchwingOnErc721Received =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'onERC721Received',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"renounceRole"`
- */
-export const useSimulateGovSchwingRenounceRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'renounceRole',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"revokeRole"`
- */
-export const useSimulateGovSchwingRevokeRole =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'revokeRole',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useSimulateGovSchwingSafeTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"setApprovalForAll"`
- */
-export const useSimulateGovSchwingSetApprovalForAll =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"setRenderer"`
- */
-export const useSimulateGovSchwingSetRenderer =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'setRenderer',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useSimulateGovSchwingTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"unlock"`
- */
-export const useSimulateGovSchwingUnlock =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'unlock',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link govSchwingAbi}__ and `functionName` set to `"withdrawTo"`
- */
-export const useSimulateGovSchwingWithdrawTo =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: govSchwingAbi,
-    functionName: 'withdrawTo',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__
- */
-export const useWatchGovSchwingEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({ abi: govSchwingAbi })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"Approval"`
- */
-export const useWatchGovSchwingApprovalEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'Approval',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"ApprovalForAll"`
- */
-export const useWatchGovSchwingApprovalForAllEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'ApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"BatchMetadataUpdate"`
- */
-export const useWatchGovSchwingBatchMetadataUpdateEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'BatchMetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"DelegateChanged"`
- */
-export const useWatchGovSchwingDelegateChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'DelegateChanged',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"DelegateVotesChanged"`
- */
-export const useWatchGovSchwingDelegateVotesChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'DelegateVotesChanged',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"EIP712DomainChanged"`
- */
-export const useWatchGovSchwingEip712DomainChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'EIP712DomainChanged',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"MetadataUpdate"`
- */
-export const useWatchGovSchwingMetadataUpdateEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'MetadataUpdate',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"RoleAdminChanged"`
- */
-export const useWatchGovSchwingRoleAdminChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'RoleAdminChanged',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"RoleGranted"`
- */
-export const useWatchGovSchwingRoleGrantedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'RoleGranted',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"RoleRevoked"`
- */
-export const useWatchGovSchwingRoleRevokedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'RoleRevoked',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link govSchwingAbi}__ and `eventName` set to `"Transfer"`
- */
-export const useWatchGovSchwingTransferEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: govSchwingAbi,
-    eventName: 'Transfer',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link govSocietyAbi}__
  */
 export const useReadGovSociety = /*#__PURE__*/ createUseReadContract({
@@ -13796,51 +13663,51 @@ export const useReadIBalanceOfBalanceOf = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokemEmitableAbi}__
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokenEmitableAbi}__
  */
-export const useWriteITokemEmitable = /*#__PURE__*/ createUseWriteContract({
-  abi: iTokemEmitableAbi,
+export const useWriteITokenEmitable = /*#__PURE__*/ createUseWriteContract({
+  abi: iTokenEmitableAbi,
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokemEmitableAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokenEmitableAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
  */
-export const useWriteITokemEmitableEmitBatchMetadataUpdate =
+export const useWriteITokenEmitableEmitBatchMetadataUpdate =
   /*#__PURE__*/ createUseWriteContract({
-    abi: iTokemEmitableAbi,
+    abi: iTokenEmitableAbi,
     functionName: 'emitBatchMetadataUpdate',
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokemEmitableAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iTokenEmitableAbi}__ and `functionName` set to `"emitMetadataUpdate"`
  */
-export const useWriteITokemEmitableEmitMetadataUpdate =
+export const useWriteITokenEmitableEmitMetadataUpdate =
   /*#__PURE__*/ createUseWriteContract({
-    abi: iTokemEmitableAbi,
+    abi: iTokenEmitableAbi,
     functionName: 'emitMetadataUpdate',
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokemEmitableAbi}__
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokenEmitableAbi}__
  */
-export const useSimulateITokemEmitable =
-  /*#__PURE__*/ createUseSimulateContract({ abi: iTokemEmitableAbi })
+export const useSimulateITokenEmitable =
+  /*#__PURE__*/ createUseSimulateContract({ abi: iTokenEmitableAbi })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokemEmitableAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokenEmitableAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
  */
-export const useSimulateITokemEmitableEmitBatchMetadataUpdate =
+export const useSimulateITokenEmitableEmitBatchMetadataUpdate =
   /*#__PURE__*/ createUseSimulateContract({
-    abi: iTokemEmitableAbi,
+    abi: iTokenEmitableAbi,
     functionName: 'emitBatchMetadataUpdate',
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokemEmitableAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iTokenEmitableAbi}__ and `functionName` set to `"emitMetadataUpdate"`
  */
-export const useSimulateITokemEmitableEmitMetadataUpdate =
+export const useSimulateITokenEmitableEmitMetadataUpdate =
   /*#__PURE__*/ createUseSimulateContract({
-    abi: iTokemEmitableAbi,
+    abi: iTokenEmitableAbi,
     functionName: 'emitMetadataUpdate',
   })
 
@@ -14860,6 +14727,400 @@ export const useWatchNamedLadyRendererRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: namedLadyRendererAbi,
     address: namedLadyRendererAddress,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__
+ */
+export const useReadSimpleOffchainReveal = /*#__PURE__*/ createUseReadContract({
+  abi: simpleOffchainRevealAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"RENDERER"`
+ */
+export const useReadSimpleOffchainRevealRenderer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'RENDERER',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"batches"`
+ */
+export const useReadSimpleOffchainRevealBatches =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'batches',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"childRenderer"`
+ */
+export const useReadSimpleOffchainRevealChildRenderer =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'childRenderer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"hasAllRoles"`
+ */
+export const useReadSimpleOffchainRevealHasAllRoles =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'hasAllRoles',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"hasAnyRole"`
+ */
+export const useReadSimpleOffchainRevealHasAnyRole =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'hasAnyRole',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"maxTokenId"`
+ */
+export const useReadSimpleOffchainRevealMaxTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'maxTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"offsetForTokenId"`
+ */
+export const useReadSimpleOffchainRevealOffsetForTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'offsetForTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadSimpleOffchainRevealOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadSimpleOffchainRevealOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"rolesOf"`
+ */
+export const useReadSimpleOffchainRevealRolesOf =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'rolesOf',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"startAtToken"`
+ */
+export const useReadSimpleOffchainRevealStartAtToken =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'startAtToken',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"tokenEmitable"`
+ */
+export const useReadSimpleOffchainRevealTokenEmitable =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'tokenEmitable',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"tokenURI"`
+ */
+export const useReadSimpleOffchainRevealTokenUri =
+  /*#__PURE__*/ createUseReadContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'tokenURI',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__
+ */
+export const useWriteSimpleOffchainReveal =
+  /*#__PURE__*/ createUseWriteContract({ abi: simpleOffchainRevealAbi })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteSimpleOffchainRevealCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteSimpleOffchainRevealCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useWriteSimpleOffchainRevealEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useWriteSimpleOffchainRevealEmitMetadataUpdate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useWriteSimpleOffchainRevealGrantRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"pushBatch"`
+ */
+export const useWriteSimpleOffchainRevealPushBatch =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'pushBatch',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteSimpleOffchainRevealRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useWriteSimpleOffchainRevealRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteSimpleOffchainRevealRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useWriteSimpleOffchainRevealRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteSimpleOffchainRevealTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"updateTokenEmitable"`
+ */
+export const useWriteSimpleOffchainRevealUpdateTokenEmitable =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'updateTokenEmitable',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__
+ */
+export const useSimulateSimpleOffchainReveal =
+  /*#__PURE__*/ createUseSimulateContract({ abi: simpleOffchainRevealAbi })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateSimpleOffchainRevealCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateSimpleOffchainRevealCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"emitBatchMetadataUpdate"`
+ */
+export const useSimulateSimpleOffchainRevealEmitBatchMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'emitBatchMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"emitMetadataUpdate"`
+ */
+export const useSimulateSimpleOffchainRevealEmitMetadataUpdate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'emitMetadataUpdate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"grantRoles"`
+ */
+export const useSimulateSimpleOffchainRevealGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"pushBatch"`
+ */
+export const useSimulateSimpleOffchainRevealPushBatch =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'pushBatch',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateSimpleOffchainRevealRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"renounceRoles"`
+ */
+export const useSimulateSimpleOffchainRevealRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateSimpleOffchainRevealRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"revokeRoles"`
+ */
+export const useSimulateSimpleOffchainRevealRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateSimpleOffchainRevealTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `functionName` set to `"updateTokenEmitable"`
+ */
+export const useSimulateSimpleOffchainRevealUpdateTokenEmitable =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: simpleOffchainRevealAbi,
+    functionName: 'updateTokenEmitable',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link simpleOffchainRevealAbi}__
+ */
+export const useWatchSimpleOffchainRevealEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: simpleOffchainRevealAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchSimpleOffchainRevealOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: simpleOffchainRevealAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchSimpleOffchainRevealOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: simpleOffchainRevealAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchSimpleOffchainRevealOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: simpleOffchainRevealAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link simpleOffchainRevealAbi}__ and `eventName` set to `"RolesUpdated"`
+ */
+export const useWatchSimpleOffchainRevealRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: simpleOffchainRevealAbi,
     eventName: 'RolesUpdated',
   })
 

@@ -24,15 +24,15 @@ export const client = createPublicClient({
         },
       },
     }),
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: REVALIDATE_INTERVAL,
-        },
-      },
-    }),
+    // http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2, {
+    //   batch: true,
+    //   retryCount: 10,
+    //   fetchOptions: {
+    //     next: {
+    //       revalidate: REVALIDATE_INTERVAL,
+    //     },
+    //   },
+    // }),
   ]),
   chain: base,
 });

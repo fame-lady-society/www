@@ -91,6 +91,8 @@ export default defineConfig({
         "GovSociety.sol/**",
         "LingerieDreams.sol/**",
         "FUNKNLOVE.sol/**",
+        "CreatorArtistMagic.sol/**",
+        "SimpleOffchainReveal.sol/**",
       ],
     }),
     react(),

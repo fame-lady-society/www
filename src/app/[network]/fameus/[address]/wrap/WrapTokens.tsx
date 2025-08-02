@@ -6,6 +6,10 @@ import cn from "classnames";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { useApproveAndWrap } from "./useApproveAndWrap";
 import { useParams, useRouter } from "next/navigation";
+import { useHasCreatorRole } from "./useHasCreatorRole";
+import { useAccount } from "wagmi";
+import { useSwapMetadata } from "./useSwapMetadata";
+import { base } from "viem/chains";
 
 type WrapTokensProps = {
   tokenIds: bigint[];
@@ -22,6 +26,10 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
     resetWrapSelectedTokenIds,
   } = useFameusWrap();
 
+  const { address } = useAccount();
+
+  const hasCreatorRole = useHasCreatorRole(address);
+
   const {
     transactionState,
     wrap,
@@ -29,6 +37,15 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
     onTransactionConfirmed: doUseApproveAndWrapOnTransactionConfirmed,
     isApprovedForAll,
   } = useApproveAndWrap(chainId, toWrapSelectedTokenIds);
+
+  const {
+    transactionState: swapMetadataTransactionState,
+    closeTransactionModal: closeSwapMetadataTransactionModal,
+    onTransactionConfirmed: doUseSwapMetadataOnTransactionConfirmed,
+    banishToArtPool,
+    banishToBurnPool,
+    banishToMintPool,
+  } = useSwapMetadata(chainId as typeof base.id);
 
   const onTransactionConfirmed = useCallback(
     (tx: Transaction<unknown>) => {
@@ -66,6 +83,16 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
               </button>
             )}
 
+          {hasCreatorRole && (
+            <button
+              className="bg-blue-400 text-white px-4 py-2 rounded-md"
+              disabled={toWrapSelectedTokenIds.length !== 1}
+              onClick={() => {}}
+            >
+              Metadata Swap
+            </button>
+          )}
+
           {toWrapSelectedTokenIds.length > 0 && (
             <button
               className="bg-blue-400 text-white px-4 py-2 rounded-md"
@@ -94,10 +121,24 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
         transactions={transactionState.activeTransactionHashList}
         onTransactionConfirmed={onTransactionConfirmed}
         topContent={
-          <p className="mb-4">
-            Your wallet may flag this transaction as suspicious. Please review
-            the transaction simulation and confirm the transaction.
-          </p>
+          <>
+            {transactionState.activeTransactionHashList.length > 0 &&
+              transactionState.activeTransactionHashList[0].kind ===
+                "approval" && (
+                <p className="mb-4">
+                  This approval is required to grant the DAO the ability to swap
+                  the metadata of the selected token
+                </p>
+              )}
+            {transactionState.activeTransactionHashList.length > 0 &&
+              transactionState.activeTransactionHashList[0].kind.startsWith(
+                "banish",
+              ) && (
+                <p className="mb-4">
+                  This transaction will swap the metadata of the selected token
+                </p>
+              )}
+          </>
         }
       />
     </>

@@ -4,7 +4,15 @@ import { polygonAmoy } from "viem/chains";
 export const client = createPublicClient({
   transport: fallback([
     ...JSON.parse(process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON ?? "[]").map(
-      (rpc) => http(rpc, { batch: true }),
+      (rpc) =>
+        http(rpc, {
+          batch: true,
+          fetchOptions: {
+            next: {
+              revalidate: 60,
+            },
+          },
+        }),
     ),
   ]),
   chain: polygonAmoy,

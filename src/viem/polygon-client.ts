@@ -5,12 +5,27 @@ export const client = createPublicClient({
   transport: fallback([
     http(`https://polygon-mainnet.infura.io/v3/${process.env.INFURA_KEY}`, {
       batch: true,
+      fetchOptions: {
+        next: {
+          revalidate: 60,
+        },
+      },
     }),
     http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_1!, {
       batch: true,
+      fetchOptions: {
+        next: {
+          revalidate: 60,
+        },
+      },
     }),
     http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_2!, {
       batch: true,
+      fetchOptions: {
+        next: {
+          revalidate: 60,
+        },
+      },
     }),
   ]),
   chain: polygon,

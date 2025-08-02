@@ -3,22 +3,24 @@ import { client as baseClient } from "@/viem/base-client";
 import { type NextRequest, NextResponse } from "next/server";
 import { erc721Abi } from "viem";
 import { IMetadata } from "@/utils/metadata";
-import { societyFromNetwork } from "@/features/fame/contract";
+import {
+  creatorArtistMagicAddress,
+  societyFromNetwork,
+} from "@/features/fame/contract";
 import { base } from "viem/chains";
+import { creatorArtistMagicAbi } from "@/wagmi";
 
 async function fetchMetadata({
   client,
-  address,
   tokenId,
 }: {
   client: typeof baseClient;
-  address: `0x${string}`;
   tokenId: bigint;
 }) {
   return client
     .readContract({
-      abi: erc721Abi,
-      address: address,
+      abi: creatorArtistMagicAbi,
+      address: creatorArtistMagicAddress(base.id),
       functionName: "tokenURI",
       args: [BigInt(tokenId)],
     })
@@ -39,11 +41,11 @@ export async function GET(
   });
 
   const tokenImageKey = `token-image-${params.tokenId}`;
+  // let tokenImage: string | null = null;
   let tokenImage = await kv.get<string | null>(tokenImageKey);
   if (!tokenImage) {
     const metadata = await fetchMetadata({
       client: baseClient,
-      address: societyFromNetwork(base.id),
       tokenId: BigInt(params.tokenId),
     });
     tokenImage = metadata.image;

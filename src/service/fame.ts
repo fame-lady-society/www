@@ -1,5 +1,114 @@
-import { type Address } from "viem";
+"use server";
+
+import { encodePacked, keccak256, type Address } from "viem";
 import { client as baseClient } from "@/viem/base-client";
+import {
+  creatorArtistMagicAbi,
+  unrevealedLadyRendererAbi,
+  unrevealedLadyRendererAddress,
+} from "@/wagmi";
+import { base, mint } from "viem/chains";
+import {
+  creatorArtistMagicAddress,
+  fameFromNetwork,
+} from "@/features/fame/contract";
+import { IMetadata } from "@/utils/metadata";
+
+export async function getArtPoolRange() {
+  const [startIndex, endIndex, nextIndex] = await Promise.all([
+    baseClient.readContract({
+      abi: creatorArtistMagicAbi,
+      address: creatorArtistMagicAddress(base.id),
+      functionName: "artPoolStartIndex",
+    }),
+    baseClient.readContract({
+      abi: creatorArtistMagicAbi,
+      address: creatorArtistMagicAddress(base.id),
+      functionName: "artPoolEndIndex",
+    }),
+    baseClient.readContract({
+      abi: creatorArtistMagicAbi,
+      address: creatorArtistMagicAddress(base.id),
+      functionName: "artPoolNext",
+    }),
+  ]);
+  return {
+    startIndex: Number(startIndex),
+    endIndex: Number(endIndex),
+    nextIndex: Number(nextIndex),
+  };
+}
+
+export async function getFamePools() {
+  const { burnPool, nextTokenId } = await getDN404Storage();
+
+  // using creatorArtistMagicAddress(base.id) and creatorArtistMagicAbi, get all token URIs from the burn pool using `tokenURI` function. Use viem's `readContract` function.and allow batching to happen
+  const uris = await Promise.all(
+    burnPool.map((tokenId) =>
+      baseClient
+        .readContract({
+          abi: creatorArtistMagicAbi,
+          address: creatorArtistMagicAddress(base.id),
+          functionName: "tokenURI",
+          args: [tokenId],
+        })
+        .then((uri) => ({
+          uri,
+          tokenId: Number(tokenId),
+        })),
+    ),
+  );
+
+  const mintPoolEnd = await baseClient.readContract({
+    abi: creatorArtistMagicAbi,
+    address: creatorArtistMagicAddress(base.id),
+    functionName: "nextTokenId",
+  });
+
+  // Fetch metadata for mint pool
+  const mintPoolUris = await Promise.all(
+    Array.from(
+      { length: Number(mintPoolEnd) - Number(nextTokenId) },
+      (_, i) => {
+        const tokenId = nextTokenId + BigInt(i);
+        return baseClient
+          .readContract({
+            abi: creatorArtistMagicAbi,
+            address: creatorArtistMagicAddress(base.id),
+            functionName: "tokenURI",
+            args: [tokenId],
+          })
+          .then((uri) => ({
+            uri,
+            tokenId: Number(tokenId),
+          }));
+      },
+    ),
+  );
+
+  return {
+    burnPool: await Promise.all(
+      uris.map(async ({ uri, tokenId }) => {
+        const response = await fetch(uri);
+        const metadata: IMetadata = await response.json();
+        return {
+          tokenId,
+          image: metadata.image,
+        };
+      }),
+    ),
+    mintPool: await Promise.all(
+      mintPoolUris.map(async ({ uri, tokenId }) => {
+        const response = await fetch(uri);
+        const metadata: IMetadata = await response.json();
+        return {
+          tokenId,
+          image: metadata.image, // Assuming metadata has an image field
+        };
+      }),
+    ),
+  };
+}
 
 interface DN404Storage {
   numAliases: bigint;
@@ -11,15 +120,12 @@ interface DN404Storage {
   burnPool: bigint[];
 }
 
-export async function getDN404Storage(
-  client: typeof baseClient,
-  contractAddress: Address,
-): Promise<DN404Storage> {
+export async function getDN404Storage(): Promise<DN404Storage> {
   const baseSlot = computeDN404StorageSlot();
 
   // Read Slot 0
-  const slot0Hex = await client.getStorageAt({
-    address: contractAddress,
+  const slot0Hex = await baseClient.getStorageAt({
+    address: fameFromNetwork(base.id),
     slot: baseSlot,
     blockTag: "latest",
   });
@@ -38,8 +144,8 @@ export async function getDN404Storage(
   const totalSupply = extractUint96(storageSlotBigInt, 160);
 
   const burnPool: bigint[] = await readBurnedPool(
-    client,
-    contractAddress,
+    baseClient,
+    fameFromNetwork(base.id),
     burnedPoolHead,
     burnedPoolTail,
   );
@@ -108,4 +214,11 @@ function extractUint32(value: bigint, shiftBits: number) {
 
 function extractUint96(value: bigint, shiftBits: number): bigint {
   return (value >> BigInt(shiftBits)) & ((BigInt(1) << BigInt(96)) - BigInt(1));
+}
+
+function shuffleArray<T>(array: T[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }

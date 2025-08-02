@@ -20,10 +20,7 @@ function ImageForToken({ tokenId }: { tokenId: bigint }) {
 }
 
 export default async function Home() {
-  const { burnPool } = await getDN404Storage(
-    baseClient,
-    fameFromNetwork(base.id),
-  );
+  const { burnPool } = await getDN404Storage();
 
   return (
     <>

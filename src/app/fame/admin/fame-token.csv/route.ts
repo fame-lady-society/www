@@ -20,10 +20,7 @@ import {
 import { readContract } from "viem/actions";
 
 export async function GET(req: NextRequest) {
-  const { burnPool, totalNFTSupply } = await getDN404Storage(
-    baseClient,
-    fameFromNetwork(base.id),
-  );
+  const { burnPool, totalNFTSupply } = await getDN404Storage();
   const fameSocietyNftAddress = societyFromNetwork(base.id);
 
   // Fetch metadata from rendering contract

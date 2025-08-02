@@ -48,3 +48,12 @@ export function govSocietyFromNetwork(
       return "0x12cf4e3B1a07DDAC4046B18714D6bAb9063De852" as const;
   }
 }
+
+export function creatorArtistMagicAddress(chainId: typeof base.id) {
+  switch (chainId) {
+    case base.id:
+      return "0x8091D00A25ebE87A2A1Ef19e1d33689FCAdC3fA5" as const;
+    default:
+      throw new Error("Invalid chainId");
+  }
+}

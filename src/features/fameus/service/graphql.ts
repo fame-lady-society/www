@@ -61,10 +61,7 @@ export async function fetchBaseGovNftLadiesData({
 }: {
   owner: `0x${string}`;
 }) {
-  const { burnPool, totalNFTSupply } = await getDN404Storage(
-    baseClient,
-    fameFromNetwork(base.id),
-  );
+  const { burnPool, totalNFTSupply } = await getDN404Storage();
   return fetchTokensByOwner({
     client: baseClient,
     contractAddress: govSocietyFromNetwork(base.id),
@@ -118,10 +115,7 @@ export async function fetchBaseNftLadiesData({
 }: {
   owner: `0x${string}`;
 }): Promise<bigint[]> {
-  const { burnPool, totalNFTSupply } = await getDN404Storage(
-    baseClient,
-    fameFromNetwork(base.id),
-  );
+  const { burnPool, totalNFTSupply } = await getDN404Storage();
   return fetchTokensByOwner({
     client: baseClient,
     contractAddress: societyFromNetwork(base.id),
