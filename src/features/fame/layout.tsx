@@ -467,13 +467,11 @@ const Content: FC<{
                 {(handleClick) => (
                   <CopyButton
                     endIcon={
-                      <IconButton aria-label="copy" size="small">
-                        <ContentCopyIcon
-                          sx={{
-                            color: "black",
-                          }}
-                        />
-                      </IconButton>
+                      <ContentCopyIcon
+                        sx={{
+                          color: "black",
+                        }}
+                      />
                     }
                     onClick={handleClick}
                   >
@@ -505,13 +503,11 @@ const Content: FC<{
                 {(handleClick) => (
                   <CopyButton
                     endIcon={
-                      <IconButton aria-label="copy" size="small">
-                        <ContentCopyIcon
-                          sx={{
-                            color: "black",
-                          }}
-                        />
-                      </IconButton>
+                      <ContentCopyIcon
+                        sx={{
+                          color: "black",
+                        }}
+                      />
                     }
                     onClick={handleClick}
                   >

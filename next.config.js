@@ -35,6 +35,9 @@ module.exports = {
       {
         hostname: "onchaingas.vercel.app",
       },
+      {
+        hostname: "www.fameladysociety.com",
+      },
     ],
   },
 };

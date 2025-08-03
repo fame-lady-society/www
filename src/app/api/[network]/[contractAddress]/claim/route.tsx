@@ -22,7 +22,6 @@ import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot
 import {
   OG_AGE_BOOST,
   OG_RANK_BOOST,
-  TOTAL_TOKENS,
 } from "@/features/claim-to-fame/hooks/constants";
 import { sessionFromCookies } from "@/service/session";
 
