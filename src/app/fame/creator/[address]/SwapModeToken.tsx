@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from "react";
 import cn from "classnames";
 
-type SwapMode = "art" | "burn" | "mint";
+export type SwapMode = "art" | "burn" | "mint" | "end" | "update";
 
 const SwapModeCard: FC<{
   mode: SwapMode;
@@ -14,6 +14,8 @@ const SwapModeCard: FC<{
   onHoverIn: () => void;
   onHoverOut: () => void;
   isSelected: boolean;
+  disabled?: boolean;
+  tooltip?: string;
 }> = ({
   mode,
   title,
@@ -25,18 +27,23 @@ const SwapModeCard: FC<{
   onHoverIn,
   onHoverOut,
   isSelected,
+  disabled,
+  tooltip,
 }) => {
   return (
     <div
       onClick={onClick}
       onMouseEnter={onHoverIn}
       onMouseLeave={onHoverOut}
+      title={tooltip}
+      aria-disabled={disabled}
       className={cn(
-        "p-6 border-2 rounded-lg text-left transition-all duration-300 cursor-pointer",
+        "p-6 border-2 rounded-lg text-left transition-all duration-300",
         color,
         hoverColor,
         isSelected && "bg-opacity-10",
         !isSelected && "bg-opacity-0",
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
       )}
     >
       <h4 className="text-lg font-semibold mb-2">{title}</h4>
@@ -60,6 +67,8 @@ export const SwapModeToken = ({
   onSwapModeSelected,
   onSwapModeUnselected,
   isSelected,
+  disabled,
+  tooltip,
 }: {
   mode: SwapMode;
   title: string;
@@ -70,16 +79,19 @@ export const SwapModeToken = ({
   onSwapModeSelected: (mode: SwapMode) => void;
   onSwapModeUnselected: () => void;
   isSelected: boolean;
+  disabled?: boolean;
+  tooltip?: string;
 }) => {
   const [hasHovered, setHasHovered] = useState(false);
 
   const handleClick = useCallback(() => {
+    if (disabled) return;
     if (isSelected) {
       onSwapModeUnselected();
     } else {
       onSwapModeSelected(mode);
     }
-  }, [isSelected, onSwapModeSelected, onSwapModeUnselected, mode]);
+  }, [isSelected, onSwapModeSelected, onSwapModeUnselected, mode, disabled]);
 
   const handleHoverIn = useCallback(() => {
     setHasHovered(true);

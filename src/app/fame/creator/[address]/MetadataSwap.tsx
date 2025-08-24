@@ -5,6 +5,7 @@ import { base } from "viem/chains";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { SwapModeGrid } from "./SwapModeGrid";
 import { TokenPoolGrid } from "./TokenPoolGrid";
+import { SwapMode } from "./SwapModeToken";
 
 interface MetadataSwapProps {
   selectedTokenId: number;
@@ -13,10 +14,14 @@ interface MetadataSwapProps {
   nextMintPoolIndex: number;
   mintPool: Array<{ tokenId: number; uri: string }>;
   artPool: Record<number, string>; // tokenId -> uri
+  roles?: {
+    isCreator?: boolean;
+    isBanisher?: boolean;
+    isArtPoolManager?: boolean;
+    raw?: number;
+  };
   onBack: () => void;
 }
-
-type SwapMode = "art" | "burn" | "mint";
 
 export function MetadataSwap({
   selectedTokenId,
@@ -25,10 +30,13 @@ export function MetadataSwap({
   nextMintPoolIndex,
   mintPool,
   artPool,
+  roles,
   onBack,
 }: MetadataSwapProps) {
   const [swapMode, setSwapMode] = useState<SwapMode | null>(null);
   const [artPoolUrl, setArtPoolUrl] = useState("");
+  const [endOfMintUrl, setEndOfMintUrl] = useState("");
+  const [updateMetadataUrl, setUpdateMetadataUrl] = useState("");
   const [selectedBurnTokenId, setSelectedBurnTokenId] = useState<bigint | null>(
     null,
   );
@@ -41,6 +49,8 @@ export function MetadataSwap({
     banishToArtPool,
     banishToBurnPool,
     banishToMintPool,
+    banishToEndOfMintPool,
+    updateMetadata,
     closeTransactionModal,
     onTransactionConfirmed,
   } = useSwapMetadata(base.id);
@@ -56,6 +66,26 @@ export function MetadataSwap({
             return;
           }
           await banishToArtPool(BigInt(selectedTokenId), artPoolUrl.trim());
+          break;
+        case "end":
+          if (!endOfMintUrl.trim()) {
+            alert("Please enter a metadata URL");
+            return;
+          }
+          await banishToEndOfMintPool(
+            BigInt(selectedTokenId),
+            endOfMintUrl.trim(),
+          );
+          break;
+        case "update":
+          if (!updateMetadataUrl.trim()) {
+            alert("Please enter a metadata URL");
+            return;
+          }
+          await updateMetadata(
+            BigInt(selectedTokenId),
+            updateMetadataUrl.trim(),
+          );
           break;
         case "burn":
           if (!selectedBurnTokenId) {
@@ -132,6 +162,7 @@ export function MetadataSwap({
             selectedSwapMode={swapMode}
             onSwapModeSelected={handleSwapModeSelected}
             onSwapModeUnselected={handleSwapModeUnselected}
+            roles={roles}
           />
         </div>
       ) : (
@@ -167,6 +198,40 @@ export function MetadataSwap({
             </div>
           )}
 
+          {swapMode === "end" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  New Metadata URL (End of Mint):
+                </label>
+                <input
+                  type="url"
+                  value={endOfMintUrl}
+                  onChange={(e) => setEndOfMintUrl(e.target.value)}
+                  placeholder="https://example.com/metadata.json"
+                  className="w-full p-3 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+          )}
+
+          {swapMode === "update" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  New Metadata URL (Update):
+                </label>
+                <input
+                  type="url"
+                  value={updateMetadataUrl}
+                  onChange={(e) => setUpdateMetadataUrl(e.target.value)}
+                  placeholder="https://example.com/metadata.json"
+                  className="w-full p-3 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+          )}
+
           {swapMode === "burn" && (
             <div className="space-y-4">
               <div>
@@ -192,6 +257,8 @@ export function MetadataSwap({
               onClick={handleSubmit}
               disabled={
                 (swapMode === "art" && !artPoolUrl.trim()) ||
+                (swapMode === "end" && !endOfMintUrl.trim()) ||
+                (swapMode === "update" && !updateMetadataUrl.trim()) ||
                 (swapMode === "burn" && !selectedBurnTokenId) ||
                 (swapMode === "mint" && !selectedMintTokenId)
               }

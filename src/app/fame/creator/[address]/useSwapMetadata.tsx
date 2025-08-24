@@ -8,6 +8,8 @@ import {
   useWriteCreatorArtistMagicBanishToArtPool,
   useWriteCreatorArtistMagicBanishToBurnPool,
   useWriteCreatorArtistMagicBanishToMintPool,
+  useWriteCreatorArtistMagicBanishToEndOfMintPool,
+  useWriteCreatorArtistMagicUpdateMetadata,
 } from "@/wagmi";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { sepolia, type base } from "viem/chains";
@@ -23,6 +25,8 @@ type TransactionKind =
   | "banishToArtPool"
   | "banishToMintPool"
   | "banishToBurnPool"
+  | "banishToEndOfMintPool"
+  | "updateMetadata"
   | string;
 
 interface ActiveTransaction {
@@ -151,6 +155,10 @@ export function useSwapMetadata(chainId: typeof base.id) {
     useWriteCreatorArtistMagicBanishToMintPool();
   const { writeContractAsync: writeBanishToBurnPool } =
     useWriteCreatorArtistMagicBanishToBurnPool();
+  const { writeContractAsync: writeBanishToEndOfMintPool } =
+    useWriteCreatorArtistMagicBanishToEndOfMintPool();
+  const { writeContractAsync: writeUpdateMetadata } =
+    useWriteCreatorArtistMagicUpdateMetadata();
 
   // Transaction watchers
   const { isSuccess: isSuccess0, isError: isError0 } =
@@ -388,11 +396,119 @@ export function useSwapMetadata(chainId: typeof base.id) {
     dispatch({ type: "REMOVE_ACTIVE_TX", payload: { hash: tx.hash } });
   }, []);
 
+  // -----------------------------------------
+  // Banish to End of Mint Pool
+  // -----------------------------------------
+  const banishToEndOfMintPool = useCallback(
+    async (tokenIdToUpdate: bigint, newMetadataUrl: string) => {
+      if (!address) return;
+      try {
+        dispatch({ type: "OPEN_MODAL" });
+        dispatch({
+          type: "ADD_ACTIVE_TX",
+          payload: { kind: "banishToEndOfMintPool" },
+        });
+
+        const response = await writeBanishToEndOfMintPool({
+          address: creatorArtistMagicAddress(chainId),
+          args: [tokenIdToUpdate, newMetadataUrl],
+        });
+
+        dispatch({
+          type: "SET_ACTIVE_TX_HASH",
+          payload: {
+            kind: "banishToEndOfMintPool",
+            hash: response,
+            context: { tokenIdToUpdate, newMetadataUrl },
+          },
+        });
+      } catch (error) {
+        if (error instanceof BaseError) {
+          dispatch({ type: "CLOSE_MODAL" });
+          addNotification({
+            message: error.metaMessages?.length
+              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+              : error.message,
+            type: "error",
+            id: "banish-to-end-of-mint-pool-error",
+            autoHideMs: 5000,
+          });
+        }
+      } finally {
+        if (!transactionState.activeTransactionHashList.length) {
+          dispatch({ type: "CLOSE_MODAL" });
+        }
+      }
+    },
+    [
+      address,
+      writeBanishToEndOfMintPool,
+      chainId,
+      addNotification,
+      transactionState.activeTransactionHashList.length,
+    ],
+  );
+
+  // -----------------------------------------
+  // Update metadata (no pool consumption)
+  // -----------------------------------------
+  const updateMetadata = useCallback(
+    async (tokenIdToUpdate: bigint, newMetadataUrl: string) => {
+      if (!address) return;
+      try {
+        dispatch({ type: "OPEN_MODAL" });
+        dispatch({
+          type: "ADD_ACTIVE_TX",
+          payload: { kind: "updateMetadata" },
+        });
+
+        const response = await writeUpdateMetadata({
+          address: creatorArtistMagicAddress(chainId),
+          args: [tokenIdToUpdate, newMetadataUrl],
+        });
+
+        dispatch({
+          type: "SET_ACTIVE_TX_HASH",
+          payload: {
+            kind: "updateMetadata",
+            hash: response,
+            context: { tokenIdToUpdate, newMetadataUrl },
+          },
+        });
+      } catch (error) {
+        if (error instanceof BaseError) {
+          dispatch({ type: "CLOSE_MODAL" });
+          addNotification({
+            message: error.metaMessages?.length
+              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+              : error.message,
+            type: "error",
+            id: "update-metadata-error",
+            autoHideMs: 5000,
+          });
+        }
+      } finally {
+        if (!transactionState.activeTransactionHashList.length) {
+          dispatch({ type: "CLOSE_MODAL" });
+        }
+      }
+    },
+    [
+      address,
+      writeUpdateMetadata,
+      chainId,
+      addNotification,
+      transactionState.activeTransactionHashList.length,
+    ],
+  );
+
   return {
     transactionState,
     banishToArtPool,
     banishToMintPool,
     banishToBurnPool,
+    banishToEndOfMintPool,
+    updateMetadata,
     closeTransactionModal,
     onTransactionConfirmed,
   };

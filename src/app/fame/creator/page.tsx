@@ -13,13 +13,13 @@ const videoWipeUrl = "/videos/wipe-1.mp4";
 export default function CreatorPage() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
-  const hasCreatorRole = useHasCreatorRole(address);
+  const roles = useHasCreatorRole(address);
 
   useEffect(() => {
-    if (isConnected && address && hasCreatorRole) {
+    if (isConnected && address) {
       router.push(`/fame/creator/${address}`);
     }
-  }, [isConnected, address, hasCreatorRole, router]);
+  }, [isConnected, address, router]);
 
   return (
     <>

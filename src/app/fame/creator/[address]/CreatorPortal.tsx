@@ -27,7 +27,7 @@ export function CreatorPortal({
 }: CreatorPortalProps) {
   const { address: connectedAddress } = useAccount();
   const router = useRouter();
-  const hasCreatorRole = useHasCreatorRole(address);
+  const roles = useHasCreatorRole(address);
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | null>(null);
 
   // Redirect if not connected or not the correct address
@@ -36,14 +36,20 @@ export function CreatorPortal({
     return null;
   }
 
-  // Redirect if no creator role
-  if (!hasCreatorRole) {
+  // Redirect if user has no relevant roles
+  const hasAnyRole = !!(
+    roles?.isCreator ||
+    roles?.isBanisher ||
+    roles?.isArtPoolManager
+  );
+
+  if (!hasAnyRole) {
     return (
       <div className="w-full pl-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-center">Access Denied</h1>
           <p className="text-lg text-center mb-6">
-            You don&apos;t have creator permissions for this address.
+            You&apos;re missing permissions for this Creator Portal.
           </p>
           <div className="text-center">
             <button
@@ -81,6 +87,7 @@ export function CreatorPortal({
             nextMintPoolIndex={nextMintPoolIndex}
             mintPool={mintPool}
             artPool={artPool}
+            roles={roles}
             onBack={() => setSelectedTokenId(null)}
           />
         )}
