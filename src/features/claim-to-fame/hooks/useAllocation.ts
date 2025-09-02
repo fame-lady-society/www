@@ -94,17 +94,13 @@ export function useAllocation({
 
   const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
-  const { data: flsTokenIds, isLoading: isGraphqlLoading } = useLadies({
-    owner: address,
-    first: 1000,
-    chainId: 1,
-  });
+  const { data: flsTokenIds, isLoading: isGraphqlLoading } = useLadies();
 
   return useMemo(() => {
     const lowerCaseAddress = address?.toLowerCase();
     const flsTokens = lowerCaseAddress
       ? snapshot
-          .filter((item) => flsTokenIds.includes(BigInt(item.tokenId)))
+          .filter((item) => flsTokenIds?.includes(item.tokenId))
           .filter(({ tokenId }) => flsPoolAllocation.has(Number(tokenId)))
           .map(({ tokenId }) => flsPoolAllocation.get(Number(tokenId))!)
       : [];
