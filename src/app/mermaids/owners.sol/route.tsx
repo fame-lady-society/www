@@ -2,10 +2,12 @@ import { NextResponse, NextRequest } from "next/server";
 import { zeroAddress, checksumAddress, isAddress } from "viem";
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
 import { MERMAIDS_CONTRACT } from "@/features/claim-to-fame/hooks/constants";
+import { client } from "@/viem/mainnet-client";
 
 export async function GET(req: NextRequest) {
   const data = await fetchAllOwnersIterable({
     contractAddress: MERMAIDS_CONTRACT,
+    client,
   });
 
   const ownerAmounts = new Map<`0x${string}`, bigint>();
