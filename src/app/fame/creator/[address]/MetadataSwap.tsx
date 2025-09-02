@@ -257,8 +257,8 @@ export function MetadataSwap({
                     <div className="mt-3">
                       <MetadataIrysUploader
                         template={defaultTemplate}
-                        onComplete={(txid) => {
-                          setEndOfMintUrl(`https://gateway.irys.xyz/${txid}`);
+                        onComplete={(uri) => {
+                          setEndOfMintUrl(uri);
                           setShowUploaderFor(null);
                         }}
                       />
@@ -294,9 +294,7 @@ export function MetadataSwap({
                       <MetadataIrysUploader
                         template={defaultTemplate}
                         onComplete={(txid) => {
-                          setUpdateMetadataUrl(
-                            `https://gateway.irys.xyz/${txid}`,
-                          );
+                          setUpdateMetadataUrl(txid);
                           setShowUploaderFor(null);
                         }}
                       />

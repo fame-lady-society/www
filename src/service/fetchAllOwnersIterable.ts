@@ -1,6 +1,6 @@
-import { client as mainnetClient } from "@/viem/mainnet-client";
-import { client as polygonClient } from "@/viem/polygon-client";
-import { client as sepoliaClient } from "@/viem/sepolia-client";
+import type { client as mainnetClient } from "@/viem/mainnet-client";
+import type { client as polygonClient } from "@/viem/polygon-client";
+import type { client as sepoliaClient } from "@/viem/sepolia-client";
 import { ContractFunctionExecutionError } from "viem";
 
 const ABI = [
@@ -29,9 +29,8 @@ export async function fetchAllOwnersIterable({
   contractAddress: `0x${string}`;
   totalSupply?: bigint;
   zeroIndex?: boolean;
-  client?: typeof mainnetClient | typeof polygonClient | typeof sepoliaClient;
+  client: typeof mainnetClient | typeof polygonClient | typeof sepoliaClient;
 }) {
-  client = client ?? mainnetClient;
   totalSupply =
     totalSupply ??
     (await client.readContract({

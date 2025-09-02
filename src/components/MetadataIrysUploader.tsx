@@ -8,7 +8,7 @@ import { formatEther } from "viem";
 export type MetadataIrysUploaderProps = {
   template: (url: string) => string | Promise<string>;
   filename?: string;
-  onComplete?: (txid: string) => void;
+  onComplete?: (uri: string) => void;
   label?: string;
 };
 
@@ -113,7 +113,7 @@ export const MetadataIrysUploader: React.FC<MetadataIrysUploaderProps> = ({
       setProgress(100);
       setStatus("done");
       setStep("done");
-      if (txid) onComplete?.(txid);
+      if (txid) onComplete?.(`https://gateway.irys.xyz/${txid}`);
     } catch (err: any) {
       appendLog(`Metadata upload failed: ${friendlyErr(err)}`);
       setStatus("error");

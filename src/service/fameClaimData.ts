@@ -11,6 +11,7 @@ import {
 } from "@/graphclient";
 import { fetchAllOwnersIterable } from "./fetchAllOwnersIterable";
 import { fameLadySocietyAddress } from "@/wagmi";
+import { client as mainnetClient } from "@/viem/mainnet-client";
 
 const FAME_LADY_SOCIETY_IPFS_METADATA_CID =
   "bafybeifilzfx3asubemd3sgirkgeaeymu3d3n5qg6ekxakobldmnfkb3zu";
@@ -176,6 +177,7 @@ export async function fetchFameClaimData() {
       contractAddress: fameLadySocietyAddress[1],
       totalSupply: 8888n,
       zeroIndex: true,
+      client: mainnetClient,
     }),
   ]);
   console.log("done fetching metadata, mints, and owners");

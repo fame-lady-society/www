@@ -1,12 +1,17 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
 
 export type IrysUploaderWidgetProps = {
   onComplete?: (txid: string) => void;
+  /**
+   * If provided, the widget will use this in-memory file as the single upload
+   * target and hide the dropzone UI. content should be the file text.
+   */
+  initialFile?: { name: string; content: string } | null;
 };
 
 type UploadStatus =
@@ -53,6 +58,7 @@ const StatusChip: React.FC<{ status?: string }> = ({ status }) => {
 
 export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   onComplete,
+  initialFile = null,
 }) => {
   const [uploader, setUploader] = useState<any | null>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -114,6 +120,30 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
     onDrop,
     multiple: false,
   });
+
+  // If an initialFile is provided, convert to a File and populate the files
+  // list so the user can proceed with Connect/Estimate/Fund/Upload flows.
+  useEffect(() => {
+    if (!initialFile) return;
+    try {
+      const f = new File([initialFile.content], initialFile.name, {
+        type: "application/json",
+      });
+      const uploadFile: UploadFile = {
+        id:
+          (crypto?.randomUUID && crypto.randomUUID()) ||
+          `${Date.now()}-${f.name}`,
+        file: f,
+        progress: 0,
+        status: "pending",
+        txid: null,
+        error: null,
+      };
+      setFiles([uploadFile]);
+    } catch (err) {
+      appendLog(`Failed to prepare initial file: ${String(err)}`);
+    }
+  }, [initialFile]);
 
   const totalBytes = useMemo(
     () => files.reduce((acc, f) => acc + f.file.size, 0),
@@ -282,7 +312,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
             `Uploaded ${fileObj.file.name} tx id: ${txid ?? JSON.stringify(res)}`,
           );
           setProgress((p) => Math.min(100, p + 30));
-          if (txid) onComplete?.(txid);
+          if (txid) onComplete?.(`https://gateway.irys.xyz/${txid}`);
         } catch (err: any) {
           const msg = friendlyErr(err);
           setFiles((prev) =>
@@ -326,7 +356,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
       appendLog(
         `Uploaded ${fileObj.file.name} tx id: ${txid ?? JSON.stringify(res)}`,
       );
-      if (txid) onComplete?.(txid);
+      if (txid) onComplete?.(`https://gateway.irys.xyz/${txid}`);
     } catch (err: any) {
       const msg = friendlyErr(err);
       setFiles((prev) =>

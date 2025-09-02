@@ -12,7 +12,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
 import { useUpdateMetadata } from "../hooks/useUpdateMetadata";
-import { useWriteContract } from "wagmi";
+import IrysUploaderWidget from "@/components/IrysUploaderWidget";
+import { useAccount, useWriteContract } from "wagmi";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { TransactionsModal } from "@/features/wrap/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
@@ -65,21 +66,15 @@ const EditableNameAndDescription: FC<{
         <TextField
           label="Name"
           value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-          }}
+          onChange={(e) => setName(e.target.value)}
         />
         <TextField
           label="Backstory"
           value={description}
-          onChange={(e) => {
-            setDescription(e.target.value);
-          }}
+          onChange={(e) => setDescription(e.target.value)}
           multiline
           rows={4}
-          sx={{
-            my: 2,
-          }}
+          sx={{ my: 2 }}
         />
       </FormGroup>
       <Button variant="contained" color="primary" onClick={doSubmit}>
@@ -121,6 +116,7 @@ export const TokenDetails: FC<{
   tokenId: number;
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
+  const { chain } = useAccount();
   const { refresh, push } = useRouter();
   const { addNotification } = useNotifications();
 
@@ -132,77 +128,108 @@ export const TokenDetails: FC<{
   const { namedLadyRendererAbi, namedLadyRendererAddress } =
     useChainContracts();
   const { writeContractAsync } = useWriteContract();
+
   const initialDescription = useMemo(() => {
     const chunks = metadata.description?.split(defaultDescription);
-    if (chunks && chunks.length > 1) {
-      return chunks[0].trim();
-    }
+    if (chunks && chunks.length > 1) return chunks[0].trim();
     return "";
   }, [metadata.description]);
+
+  const [uploaderOpen, setUploaderOpen] = useState(false);
+  const [uploadInitialFile, setUploadInitialFile] = useState<{
+    name: string;
+    content: string;
+  } | null>(null);
+  const onUploadCompleteRef = useRef<((uri: string | null) => void) | null>(
+    null,
+  );
+
   const onSubmit = useCallback(
-    (name: string, description: string) => {
-      if (name !== metadata.name || initialDescription !== description) {
-        mutateAsync({ tokenId, name, description })
-          .then(({ tokenUri, signature }) =>
-            writeContractAsync({
-              abi: namedLadyRendererAbi,
-              address: namedLadyRendererAddress,
-              functionName: "setTokenUri",
-              args: [BigInt(tokenId), tokenUri, signature],
-            })
-              .then((tx) => {
-                setTransactionHash({
-                  kind: "update metadata",
-                  hash: tx,
-                });
-              })
-              .catch((e) => {
-                addNotification({
-                  id: "set-token-uri",
-                  message: "Failed to submit update transaction",
-                  type: "error",
-                  autoHideMs: 5000,
-                });
-                sentry.captureException(e, {
-                  tags: {
-                    tokenId: tokenId.toString(),
-                  },
-                });
-              }),
-          )
-          .catch((e) => {
-            addNotification({
-              id: "update-metadata",
-              message: "Failed to submit metadata update",
-              type: "error",
-              autoHideMs: 5000,
-            });
-            sentry.captureException(e, {
-              tags: {
-                tokenId: tokenId.toString(),
-              },
-            });
-          });
-      } else {
+    async (name: string, description: string) => {
+      if (name === metadata.name && initialDescription === description) {
         addNotification({
           id: "no-change",
           message: "No changes to submit",
           type: "info",
           autoHideMs: 5000,
         });
+        return;
+      }
+
+      try {
+        const {
+          metadata: signedMetadata,
+          signature,
+          expiration,
+        } = await mutateAsync({ tokenId, name, description });
+
+        // create an in-memory file and open the uploader
+        setUploadInitialFile({
+          name: `metadata-${tokenId}.json`,
+          content: signedMetadata,
+        });
+        setUploaderOpen(true);
+
+        // wait for uploader to return an uri
+        const uri = await new Promise<string>((resolve, reject) => {
+          onUploadCompleteRef.current = (u) => {
+            setUploadInitialFile(null);
+            setUploaderOpen(false);
+            if (!u) return reject(new Error("Upload canceled or failed"));
+            resolve(u);
+          };
+        });
+
+        const chainName = chain?.name?.toLowerCase() ?? "sepolia";
+        const resp = await fetch(`/api/${chainName}/metadata`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tokenId,
+            name,
+            description,
+            uri,
+            signature,
+            expiration,
+          }),
+        });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Server POST failed: ${resp.status} ${text}`);
+        }
+        const data = await resp.json();
+        const finalSignature = data.signature as `0x${string}`;
+
+        const tx = await writeContractAsync({
+          abi: namedLadyRendererAbi,
+          address: namedLadyRendererAddress,
+          functionName: "setTokenUri",
+          args: [BigInt(tokenId), uri, finalSignature],
+        });
+        setTransactionHash({ kind: "update metadata", hash: tx });
+      } catch (err: any) {
+        addNotification({
+          id: "update-metadata",
+          message: String(err?.message ?? err),
+          type: "error",
+          autoHideMs: 7000,
+        });
+        sentry.captureException(err, { tags: { tokenId: String(tokenId) } });
       }
     },
     [
-      addNotification,
+      mutateAsync,
+      tokenId,
+      chain?.name,
       initialDescription,
       metadata.name,
-      mutateAsync,
+      addNotification,
       namedLadyRendererAbi,
       namedLadyRendererAddress,
-      tokenId,
       writeContractAsync,
     ],
   );
+
   const pendingTransactions = useMemo(
     () => (transactionHash ? [transactionHash] : []),
     [transactionHash],
@@ -212,15 +239,13 @@ export const TokenDetails: FC<{
     setShareOpen(true);
     refresh();
   }, [refresh]);
-  const onClosed = useCallback(() => {
-    setTransactionHash(null);
-  }, []);
+  const onClosed = useCallback(() => setTransactionHash(null), []);
   const onBack = useCallback(() => {
-    // get the current URL and remove the last segment
     const segments = location.pathname.split("/");
     segments.pop();
     push(segments.join("/"));
   }, [push]);
+
   return (
     <>
       <Grid2 container spacing={2}>
@@ -232,6 +257,7 @@ export const TokenDetails: FC<{
             <Button onClick={() => setShareOpen(true)}>Share</Button>
           )}
         </Grid2>
+
         <Grid2 xs={12}>
           <EditableNameAndDescription
             isPending={isPending}
@@ -240,6 +266,7 @@ export const TokenDetails: FC<{
             onSubmit={onSubmit}
           />
         </Grid2>
+
         <Grid2 xs={12} lg={6}>
           <Paper
             elevation={3}
@@ -266,37 +293,33 @@ export const TokenDetails: FC<{
                 height={800}
                 alt="Fame Lady Society Token Image"
                 sizes="100vw"
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  maxWidth: "100%",
-                }}
+                style={{ width: "100%", height: "auto", maxWidth: "100%" }}
               />
             </Box>
           </Paper>
         </Grid2>
+
         <Grid2 xs={12} lg={6}>
           <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
             <Typography variant="body1" color="text.secondary">
-              {metadata.description?.split("\n").map((line) => (
-                <>
+              {metadata.description?.split("\n").map((line, idx) => (
+                <React.Fragment key={idx}>
                   {line}
                   <br />
-                </>
+                </React.Fragment>
               ))}
             </Typography>
-            {metadata.attributes?.map(({ trait_type, value }) => {
-              return (
-                <Attribute
-                  key={`${trait_type}:${value}`}
-                  name={trait_type}
-                  value={value}
-                />
-              );
-            })}
+            {metadata.attributes?.map(({ trait_type, value }) => (
+              <Attribute
+                key={`${trait_type}:${value}`}
+                name={trait_type}
+                value={value}
+              />
+            ))}
           </Paper>
         </Grid2>
       </Grid2>
+
       <ServiceModal open={isPending} message="Preparing metadata" />
       <TransactionsModal
         open={!!transactionHash}
@@ -322,13 +345,54 @@ export const TokenDetails: FC<{
               return `💋 My Lady is NOT number ${tokenId}. Get fired up for ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
             case 4:
               return `💋 My Lady is NOT number ${tokenId}. Feel the fame for ${name} and HERstory is all WE need as she flaunts in the @FameLadiesSociety Collection!! 🔥 `;
-            case 5:
             default:
               return `💋 My Lady is NOT number ${tokenId}. Say Hello to ${name} and HERstory as she flaunts in the @FameLadiesSociety Collection!! 🔥`;
           }
         }}
       />
+
+      {uploaderOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 2000,
+          }}
+        >
+          <Paper sx={{ width: "90%", maxWidth: 900, p: 2 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6">Upload metadata</Typography>
+              <Button
+                onClick={() => {
+                  setUploaderOpen(false);
+                  setUploadInitialFile(null);
+                  onUploadCompleteRef.current?.(null);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+            <IrysUploaderWidget
+              onComplete={(result) => {
+                onUploadCompleteRef.current?.(result);
+              }}
+              initialFile={uploadInitialFile}
+            />
+          </Paper>
+        </div>
+      )}
     </>
   );
 };
-7;
+
+export default TokenDetails;

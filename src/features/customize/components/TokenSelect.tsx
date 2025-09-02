@@ -15,7 +15,7 @@ import { useLadies } from "../hooks/useLadies";
 import { Empty } from "./Empty";
 
 export interface TokenProps {
-  tokenId?: bigint;
+  tokenId?: number;
   url?: string;
 }
 
@@ -40,27 +40,16 @@ const NotConnected: FC<{}> = () => {
 export const TokenSelect: FC<{
   prefix?: string;
 }> = ({ prefix = "" }) => {
-  const { address, isConnected } = useAccount();
-  const [couldLoadMore, setCouldLoreMore] = useState(true);
-  const first =
-    typeof window !== "undefined"
-      ? Math.floor(window.innerHeight / 300) * 8
-      : 64;
-  const [skip, setSkip] = useState(0);
+  const { isConnected } = useAccount();
   const [tokens, setTokens] = useState<TokenProps[]>([]);
-  const { data, isLoading } = useLadies({
-    owner: address,
-    sorted: "asc",
-    first,
-    skip,
-  });
+  const { data, isLoading } = useLadies();
   useEffect(() => {
     if (data) {
       const newTokens = data.map((tokenId) => ({
         tokenId,
         url: `${prefix}/${tokenId}`,
       }));
-      setTokens((prevTokens) => [...prevTokens, ...newTokens]);
+      setTokens(newTokens);
     }
   }, [data, prefix]);
   const gridTokens = useMemo(
@@ -91,7 +80,7 @@ export const TokenSelect: FC<{
         return (
           <Grid2 xs={12} sm={6} md={4} lg={3} key={tokenId}>
             <Card>
-              {typeof tokenId === "bigint" && typeof url === "string" ? (
+              {typeof tokenId === "number" && typeof url === "string" ? (
                 <CardActionArea href={url}>{gridTokens[i]}</CardActionArea>
               ) : (
                 gridTokens[i]
@@ -109,21 +98,7 @@ export const TokenSelect: FC<{
           my={2}
         >
           {!isConnected && <NotConnected />}
-          {isLoading && isConnected ? (
-            <CircularProgress />
-          ) : tokens.length > 0 ? (
-            <Button
-              disabled={!couldLoadMore}
-              onClick={() => {
-                setSkip((prev) => prev + first);
-              }}
-              sx={{
-                width: "100%",
-              }}
-            >
-              Load more
-            </Button>
-          ) : null}
+          {isLoading && isConnected ? <CircularProgress /> : null}
         </Box>
       </Grid2>
     </Grid2>
