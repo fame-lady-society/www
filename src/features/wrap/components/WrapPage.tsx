@@ -1,6 +1,5 @@
 "use client";
 import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
 import { MintCard } from "@/features/wrap/components/MintCard";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
@@ -21,10 +20,12 @@ import {
 import { WriteContractData } from "wagmi/query";
 import { useRouter } from "next/navigation";
 import { WrapCard } from "./WrapCard";
+import { DonateCard } from "./DonateCard";
 import { TurboWrap } from "./TurboWrap";
 import { TransactionsModal } from "./TransactionsModal";
 import { Transaction } from "../types";
 import { UnwrapCard } from "./UnwrapCard";
+import { DonationCelebration } from "./DonationCelebration";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { useNotifications } from "@/features/notifications/Context";
 import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
@@ -65,6 +66,13 @@ export const WrapPage: FC<{
   >([]);
   const [completedTransactionHashList, setCompletedTransactionHashList] =
     useState<{ kind: string; hash: WriteContractData }[]>([]);
+  const [pendingDonationTokens, setPendingDonationTokens] = useState<
+    Record<string, string[]>
+  >({});
+  const [donationCelebration, setDonationCelebration] = useState<{
+    tokenIds: string[];
+    txHash?: string;
+  } | null>(null);
   useEffect(() => {
     if (activeTransactionHashList.length > 0) {
       setPendingTransactions(true);
@@ -92,6 +100,14 @@ export const WrapPage: FC<{
       (tx) => tx.kind === "approve collection to be wrapped",
     );
   }, [activeTransactionHashList]);
+  const donationTransactionInProgress = useMemo(() => {
+    return activeTransactionHashList.some((tx) => tx.kind === "donate");
+  }, [activeTransactionHashList]);
+  const approveDonationTransactionInProgress = useMemo(() => {
+    return activeTransactionHashList.some(
+      (tx) => tx.kind === "approve donation vault",
+    );
+  }, [activeTransactionHashList]);
 
   const closeTransactionModal = useCallback(() => {
     setPendingTransactions(false);
@@ -102,6 +118,8 @@ export const WrapPage: FC<{
     targetContractAddress: targetNftAddress,
     wrappedNftContractAbi: wrapperNftAbi,
     wrappedNftContractAddress: wrapperNftAddress,
+    wrappedNftDonationVaultAbi,
+    wrappedNftDonationVaultAddress,
   } = useChainContracts();
 
   const onMint = useCallback(
@@ -143,6 +161,22 @@ export const WrapPage: FC<{
       args: [address, wrapperNftAddress],
     }),
   });
+  const donationApprovalArgs =
+    address && wrappedNftDonationVaultAddress
+      ? ([address, wrappedNftDonationVaultAddress] as const)
+      : undefined;
+  const {
+    data: isDonationApprovedForAll,
+    refetch: refetchDonationIsApprovedForAll,
+  } = useReadContract({
+    abi: targetNftAbi,
+    address: targetNftAddress,
+    functionName: "isApprovedForAll",
+    ...(donationApprovalArgs && { args: donationApprovalArgs }),
+    query: {
+      enabled: Boolean(targetNftAddress && donationApprovalArgs),
+    },
+  });
 
   // This only work on the test bulk minter contract, not fame lady squad
   const { data: ownedTestTokens, refetch: refetchTokens } = useReadContract({
@@ -154,7 +188,7 @@ export const WrapPage: FC<{
   });
 
   // This is only needed for fame lady squad
-  const { data: balanceOf } = useReadContract({
+  const { data: balanceOf, refetch: refetchBalanceOf } = useReadContract({
     chainId: chain?.id,
     abi: targetNftAbi,
     address: targetNftAddress,
@@ -260,6 +294,46 @@ export const WrapPage: FC<{
     },
     [wrapperNftAbi, wrapperNftAddress, writeContractAsync, chain],
   );
+  const onDonate = useCallback(
+    async ({ tokenIds }: { tokenIds: bigint[] }) => {
+      if (
+        writeContractAsync &&
+        wrappedNftDonationVaultAbi &&
+        wrappedNftDonationVaultAddress
+      ) {
+        try {
+          const response = await writeContractAsync({
+            chainId: chain?.id,
+            abi: wrappedNftDonationVaultAbi,
+            address: wrappedNftDonationVaultAddress,
+            functionName: "wrapAndDonate",
+            args: [tokenIds],
+          });
+          const donatedTokenIds = tokenIds.map((tokenId) => tokenId.toString());
+          setPendingDonationTokens((previous) => ({
+            ...previous,
+            [response]: donatedTokenIds,
+          }));
+          setActiveTransactionHashList((txs) => [
+            ...txs,
+            {
+              kind: "donate",
+              hash: response,
+              context: tokenIds,
+            },
+          ]);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    },
+    [
+      chain?.id,
+      wrappedNftDonationVaultAddress,
+      wrappedNftDonationVaultAbi,
+      writeContractAsync,
+    ],
+  );
 
   const onUnwrapMany = useCallback(
     async (args: [`0x${string}`, bigint[]]) => {
@@ -315,6 +389,38 @@ export const WrapPage: FC<{
     wrapperNftAddress,
     writeContractAsync,
   ]);
+  const onApproveDonation = useCallback(async () => {
+    if (
+      writeContractAsync &&
+      wrappedNftDonationVaultAddress &&
+      targetNftAddress
+    ) {
+      try {
+        const response = await writeContractAsync({
+          chainId: chain?.id,
+          abi: targetNftAbi,
+          address: targetNftAddress,
+          functionName: "setApprovalForAll",
+          args: [wrappedNftDonationVaultAddress, true],
+        });
+        setActiveTransactionHashList((txs) => [
+          ...txs,
+          {
+            kind: "approve donation vault",
+            hash: response,
+          },
+        ]);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [
+    chain?.id,
+    targetNftAbi,
+    targetNftAddress,
+    wrappedNftDonationVaultAddress,
+    writeContractAsync,
+  ]);
 
   const onTransactionConfirmed = useCallback(
     (tx: Transaction<unknown>) => {
@@ -349,6 +455,41 @@ export const WrapPage: FC<{
           router.push(`/wrap/success?${params.toString()}`);
           break;
         }
+        case "donate": {
+          const donatedTokenIds =
+            pendingDonationTokens[tx.hash] ??
+            (tx.context as bigint[] | undefined)?.map((tokenId) =>
+              tokenId.toString(),
+            ) ??
+            [];
+          setCompletedTransactionHashList((txs) => [
+            ...txs,
+            {
+              kind: "donated tokens",
+              hash: tx.hash,
+            },
+          ]);
+          refetchTokens();
+          refetchFameLadySquadTokens?.();
+          refetchBalanceOf?.();
+          refetchDonationIsApprovedForAll?.();
+          setPendingDonationTokens((previous) => {
+            const { [tx.hash]: _unused, ...rest } = previous;
+            return rest;
+          });
+          setDonationCelebration({
+            tokenIds: donatedTokenIds,
+            txHash: tx.hash,
+          });
+          setNonce((n) => n + 1);
+          addNotification({
+            id: `donation-success-${tx.hash}`,
+            message: "Donation heading to the community vault. Thank you!",
+            type: "success",
+            autoHideMs: 5000,
+          });
+          break;
+        }
         case "approve collection to be wrapped": {
           setCompletedTransactionHashList((txs) => [
             ...txs,
@@ -358,6 +499,18 @@ export const WrapPage: FC<{
             },
           ]);
           refetchWrappedIsApprovedForAll();
+          break;
+        }
+        case "approve donation vault": {
+          setCompletedTransactionHashList((txs) => [
+            ...txs,
+            {
+              kind: "approved donation",
+              hash: tx.hash,
+            },
+          ]);
+          refetchDonationIsApprovedForAll();
+          break;
         }
         case "mint testnet token": {
           setCompletedTransactionHashList((txs) => [
@@ -385,7 +538,16 @@ export const WrapPage: FC<{
         txs.filter((t) => tx.hash !== t.hash),
       );
     },
-    [refetchWrappedIsApprovedForAll, refetchTokens, router],
+    [
+      addNotification,
+      pendingDonationTokens,
+      refetchBalanceOf,
+      refetchDonationIsApprovedForAll,
+      refetchFameLadySquadTokens,
+      refetchTokens,
+      refetchWrappedIsApprovedForAll,
+      router,
+    ],
   );
 
   return (
@@ -433,6 +595,23 @@ export const WrapPage: FC<{
             />
           </Box>
         </Grid2>
+        {wrappedNftDonationVaultAddress ? (
+          <Grid2 xs={12} sm={12} md={12}>
+            <Box component="div" sx={{ mt: 4 }}>
+              <DonateCard
+                isApprovedForAll={isDonationApprovedForAll}
+                onApprove={onApproveDonation}
+                tokenIds={tokenIds ?? []}
+                onDonate={onDonate}
+                transactionInProgress={
+                  donationTransactionInProgress ||
+                  approveDonationTransactionInProgress
+                }
+                nonce={nonce}
+              />
+            </Box>
+          </Grid2>
+        ) : null}
         <Grid2 xs={12} sm={12} md={12}>
           <Box component="div" sx={{ mt: 4 }}>
             <UnwrapCard
@@ -450,6 +629,12 @@ export const WrapPage: FC<{
         onClose={closeTransactionModal}
         transactions={activeTransactionHashList}
         onTransactionConfirmed={onTransactionConfirmed}
+      />
+      <DonationCelebration
+        open={Boolean(donationCelebration)}
+        onClose={() => setDonationCelebration(null)}
+        tokenIds={donationCelebration?.tokenIds ?? []}
+        txHash={donationCelebration?.txHash}
       />
     </>
   );

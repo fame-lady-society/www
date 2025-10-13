@@ -3,8 +3,10 @@ export type Transaction<T = unknown> = {
     | "mint testnet token"
     | "wrap to"
     | "wrap"
+    | "donate"
     | "unwrap"
     | "approve collection to be wrapped"
+    | "approve donation vault"
     | "set wrap cost"
     | "update metadata";
   hash: `0x${string}`;

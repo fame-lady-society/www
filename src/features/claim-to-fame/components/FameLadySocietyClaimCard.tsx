@@ -10,10 +10,8 @@ import { flsTokenAddress } from "@/viem/mainnet-client";
 export const FameLadySocietyClaimCard: FC<{
   chainId: 8453 | 11155111;
 }> = ({ chainId }) => {
-  const { address } = useAccount();
   const { data: ladies, isLoading: isLadiesLoading } = useLadies();
   const tokenIds = useMemo(() => ladies?.map(Number) ?? [], [ladies]);
-  console.log("tokenIds", tokenIds);
   return (
     <Grid2 xs={12}>
       {isLadiesLoading ? (

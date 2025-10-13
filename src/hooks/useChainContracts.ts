@@ -10,6 +10,8 @@ import {
   fameLadySocietyAddress,
   namedLadyRendererAbi,
   namedLadyRendererAddress,
+  wrappedNftDonationVaultAbi,
+  wrappedNftDonationVaultAddress,
 } from "@/wagmi";
 
 function isSupportChain(chainId: number): chainId is 1 | 11155111 {
@@ -31,6 +33,8 @@ export function useChainContracts(chainId?: number) {
       wrappedNftContractAddress: wrappedNftAddress[1],
       namedLadyRendererAbi,
       namedLadyRendererAddress: namedLadyRendererAddress[1],
+      wrappedNftDonationVaultAbi,
+      wrappedNftDonationVaultAddress: wrappedNftDonationVaultAddress[1],
     };
   }
 
@@ -57,5 +61,10 @@ export function useChainContracts(chainId?: number) {
     wrappedNftContractAddress,
     namedLadyRendererAbi,
     namedLadyRendererAddress: namedLadyRendererAddress[chainId] ?? undefined,
+    wrappedNftDonationVaultAbi,
+    wrappedNftDonationVaultAddress:
+      chainId === 1
+        ? wrappedNftDonationVaultAddress[chainId] ?? undefined
+        : undefined,
   };
 }

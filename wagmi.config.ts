@@ -78,6 +78,12 @@ export default defineConfig({
             [mainnet.id]: "0xC7A29659c34CB2551Aec0dc589e6450aF342bf24",
           },
         },
+        {
+          name: "WrappedNFTDonationVault",
+          address: {
+            [mainnet.id]: "0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b",
+          },
+        },
       ],
     }),
     foundry({
