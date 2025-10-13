@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import Card from "@mui/material/Card";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import CardActionArea from "@mui/material/CardActionArea";
@@ -30,6 +30,34 @@ export const DonateCard: FC<{
   useEffect(() => {
     setSelectedTokenIds([]);
   }, [nonce, tokenIds]);
+
+  const handleDonate = useCallback(() => {
+    if (
+      transactionInProgress ||
+      !isApprovedForAll ||
+      selectedTokenIds.length === 0
+    ) {
+      return;
+    }
+    onDonate({
+      tokenIds: Array.from(selectedTokenIds),
+    });
+  }, [transactionInProgress, isApprovedForAll, selectedTokenIds, onDonate]);
+
+  const handleDonateAll = useCallback(() => {
+    if (
+      transactionInProgress ||
+      !isApprovedForAll ||
+      tokenIds.length === 0
+    ) {
+      return;
+    }
+    const allTokenIds = Array.from(tokenIds);
+    setSelectedTokenIds(allTokenIds);
+    onDonate({
+      tokenIds: allTokenIds,
+    });
+  }, [transactionInProgress, isApprovedForAll, tokenIds, onDonate]);
 
   return (
     <Card>
@@ -122,11 +150,7 @@ export const DonateCard: FC<{
           <Button onClick={onApprove}>Approve</Button>
         )}
         <Button
-          onClick={() =>
-            onDonate({
-              tokenIds: selectedTokenIds.map((tokenId) => BigInt(tokenId)),
-            })
-          }
+          onClick={handleDonate}
           disabled={
             transactionInProgress ||
             !isApprovedForAll ||
@@ -134,6 +158,16 @@ export const DonateCard: FC<{
           }
         >
           Donate
+        </Button>
+        <Button
+          onClick={handleDonateAll}
+          disabled={
+            transactionInProgress ||
+            !isApprovedForAll ||
+            tokenIds.length === 0
+          }
+        >
+          Donate All
         </Button>
       </CardActions>
     </Card>

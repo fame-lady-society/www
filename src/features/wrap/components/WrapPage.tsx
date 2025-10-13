@@ -563,6 +563,23 @@ export const WrapPage: FC<{
             </Box>
           </Grid2>
         ) : null}
+        {wrappedNftDonationVaultAddress ? (
+          <Grid2 xs={12} sm={12} md={12}>
+            <Box component="div" sx={{ mt: 4 }}>
+              <DonateCard
+                isApprovedForAll={isDonationApprovedForAll}
+                onApprove={onApproveDonation}
+                tokenIds={tokenIds ?? []}
+                onDonate={onDonate}
+                transactionInProgress={
+                  donationTransactionInProgress ||
+                  approveDonationTransactionInProgress
+                }
+                nonce={nonce}
+              />
+            </Box>
+          </Grid2>
+        ) : null}
         <Grid2 xs={12} sm={12} md={12}>
           <Box component="div" sx={{ mt: 4 }}>
             <TurboWrap
@@ -595,23 +612,7 @@ export const WrapPage: FC<{
             />
           </Box>
         </Grid2>
-        {wrappedNftDonationVaultAddress ? (
-          <Grid2 xs={12} sm={12} md={12}>
-            <Box component="div" sx={{ mt: 4 }}>
-              <DonateCard
-                isApprovedForAll={isDonationApprovedForAll}
-                onApprove={onApproveDonation}
-                tokenIds={tokenIds ?? []}
-                onDonate={onDonate}
-                transactionInProgress={
-                  donationTransactionInProgress ||
-                  approveDonationTransactionInProgress
-                }
-                nonce={nonce}
-              />
-            </Box>
-          </Grid2>
-        ) : null}
+
         <Grid2 xs={12} sm={12} md={12}>
           <Box component="div" sx={{ mt: 4 }}>
             <UnwrapCard
