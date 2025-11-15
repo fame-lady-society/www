@@ -87,7 +87,7 @@ export const Success: FC<{
             <Card>
               <CardMedia
                 component="img"
-                image={`https://fls-prod-imagestoragef1b24905-1ftqhtk2cy7nl.s3.amazonaws.com/thumb/${tokenId}.png`}
+                image={`https://fame.support/fls/thumb/${tokenId}`}
                 sx={{
                   objectFit: "contain",
                   width: "100%",

@@ -175,7 +175,7 @@ export const WrapCard: FC<{
                     <CardHeader title={`FLS ${Number(tokenId)}`} />
                     <CardMedia
                       component="img"
-                      image={`https://fls-prod-imagestoragef1b24905-1ftqhtk2cy7nl.s3.amazonaws.com/thumb/${tokenId}.png`}
+                      image={`https://fame.support/fls/thumb/${tokenId}`}
                       sx={{
                         objectFit: "contain",
                         width: "100%",

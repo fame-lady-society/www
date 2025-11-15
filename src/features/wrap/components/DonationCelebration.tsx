@@ -76,7 +76,7 @@ export const DonationCelebration: FC<{
                     <Box
                       component="img"
                       alt={`Fame Lady ${tokenId}`}
-                      src={`https://fls-prod-imagestoragef1b24905-1ftqhtk2cy7nl.s3.amazonaws.com/thumb/${tokenId}.png`}
+                      src={`https://fame.support/fls/thumb/${tokenId}`}
                       sx={{
                         width: "100%",
                         borderRadius: 1,
