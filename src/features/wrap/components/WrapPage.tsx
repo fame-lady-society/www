@@ -3,8 +3,6 @@ import Box from "@mui/material/Box";
 import { MintCard } from "@/features/wrap/components/MintCard";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import useLocalStorage from "use-local-storage";
-import { AgreeModal } from "@/features/wrap/components/AgreeModal";
 import {
   bulkMinterAbi,
   bulkMinterAddress,
@@ -37,7 +35,6 @@ export const WrapPage: FC<{
   const router = useRouter();
   const chain = useNetworkChain(network);
   const { address } = useAccount();
-  const [hasAgreed, setHasAgreed] = useLocalStorage("agree-to-risk", false);
   const [nonce, setNonce] = useState<number>(0);
   const { addNotification } = useNotifications();
   const { writeContractAsync } = useWriteContract({
@@ -622,9 +619,6 @@ export const WrapPage: FC<{
           </Box>
         </Grid2>
       </Grid2>
-      {!hasAgreed && (
-        <AgreeModal open={!hasAgreed} onClose={() => setHasAgreed(true)} />
-      )}
       <TransactionsModal
         open={pendingTransactions}
         onClose={closeTransactionModal}

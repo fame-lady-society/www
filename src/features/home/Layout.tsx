@@ -10,25 +10,10 @@ import { Card, Typography } from "@mui/material";
 import { WrappedLink } from "@/components/WrappedLink";
 import { AnimatedBoxPopAndFadeIn } from "./AnimatedBoxPopAndFadeIn";
 import { AnimatedSlideInRight } from "./AnimatedSlideInRight";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { FameLaunchModal } from "./FameLaunchModal";
-import { useSeeFameLaunch } from "./hooks/useSeeFameLaunch";
 
 export const Layout = () => {
-  const [shouldShowFameLaunchModal, seenFameLaunch] = useSeeFameLaunch();
-  const router = useRouter();
-  const onFameLaunchCtaClick = useCallback(() => {
-    seenFameLaunch();
-    router.push("/fame");
-  }, [router, seenFameLaunch]);
   return (
     <>
-      <FameLaunchModal
-        open={shouldShowFameLaunchModal}
-        onCtaClick={onFameLaunchCtaClick}
-        onClose={seenFameLaunch}
-      />
       <Parallax pages={3}>
         <ParallaxLayer offset={0} speed={1}>
           <Container maxWidth="lg" sx={{ mt: 8 }}>
