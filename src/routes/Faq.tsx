@@ -31,8 +31,7 @@ export const FaqPage: FC<{}> = () => {
           </Typography>
         }
       >
-        <Container maxWidth="lg">
-          <Box component="div" sx={{ mt: 4 }} />
+        <Container maxWidth="lg" sx={{ mt: 16 }}>
           <FAQ />
         </Container>
       </Main>
