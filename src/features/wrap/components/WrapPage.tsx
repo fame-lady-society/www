@@ -28,6 +28,11 @@ import { useChainContracts } from "@/hooks/useChainContracts";
 import { useNotifications } from "@/features/notifications/Context";
 import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
 import { useNetworkChain } from "../hooks/useNetworkChain";
+import { WrappedLink } from "@/components/WrappedLink";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import Typography from "@mui/material/Typography";
 
 export const WrapPage: FC<{
   network: "mainnet" | "sepolia";
@@ -340,8 +345,8 @@ export const WrapPage: FC<{
             chainId: chain?.id,
             abi: wrapperNftAbi,
             address: wrapperNftAddress!,
-            functionName: "setApprovalForAll",
-            args: [wrapperNftAddress!, false],
+            functionName: "unwrapMany",
+            args,
           });
           setActiveTransactionHashList((txs) => [
             ...txs,
@@ -559,7 +564,25 @@ export const WrapPage: FC<{
               />
             </Box>
           </Grid2>
-        ) : null}
+        ) : (
+          <Grid2 xs={12} sm={12} md={12}>
+            <Card>
+              <CardHeader title="Sweep and Wrap" />
+              <CardContent>
+                ️
+                <Typography variant="body1" component="div" sx={{ mb: 2 }}>
+                  Fame Lady Squad NFTs can now be swept from Opensea and wrapped
+                  in a single transaction!
+                </Typography>
+                <WrappedLink href="/save-a-lady">
+                  <Typography variant="h6" component="div">
+                    Browse OpenSea listings
+                  </Typography>
+                </WrappedLink>
+              </CardContent>
+            </Card>
+          </Grid2>
+        )}
         {wrappedNftDonationVaultAddress ? (
           <Grid2 xs={12} sm={12} md={12}>
             <Box component="div" sx={{ mt: 4 }}>
@@ -610,14 +633,14 @@ export const WrapPage: FC<{
           </Box>
         </Grid2>
 
-        <Grid2 xs={12} sm={12} md={12}>
+        {/* <Grid2 xs={12} sm={12} md={12}>
           <Box component="div" sx={{ mt: 4 }}>
             <UnwrapCard
               onUnwrapMany={onUnwrapMany}
               transactionInProgress={unwrapTransactionInProgress}
             />
           </Box>
-        </Grid2>
+        </Grid2> */}
       </Grid2>
       <TransactionsModal
         open={pendingTransactions}

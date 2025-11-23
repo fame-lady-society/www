@@ -26,7 +26,7 @@ export default async function Home({
   }
   if (!isAddress(params.address)) {
     return (
-      <AppMain title="FAMEus" isDao>
+      <AppMain title="FAMEus" isWrap>
         <section className="flex flex-col items-start justify-center h-full m-4 border rounded-lg p-6">
           <h1 className="text-4xl font-bold">Invalid address</h1>
         </section>
@@ -35,7 +35,7 @@ export default async function Home({
   }
   return (
     <>
-      <AppMain title="FAMEus DAO">
+      <AppMain title="Wrap Your Lady" isWrap>
         <WrapPage network={network} />
       </AppMain>
     </>
