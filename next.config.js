@@ -40,6 +40,16 @@ module.exports = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/.well-known/farcaster.json",
+        destination:
+          "https://api.farcaster.xyz/miniapps/hosted-manifest/019ab230-0ea0-0214-eece-0c9c332da725",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 // Injected content via Sentry wizard below

@@ -119,7 +119,9 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
             select listings you want to sweep and wrap in a single transaction
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            a 2.5% fee is collected
+            an additional 2.5% fee (in addition to the wrap fee of{" "}
+            {formatUnits(BigInt(wrapCostData ?? 0n), 18)} E) is collected by the
+            Society
           </Typography>
           <Typography variant="body1" component="div" sx={{ mb: 2 }}>
             select listings you want to sweep and wrap
