@@ -18,20 +18,6 @@ export const metadata: Metadata = {
     ["twitter:card"]: "summary_large_image",
     ["twitter:site"]: "@FameLadySociety",
     ["twitter:creator"]: "@0xflick",
-    ["fc:frame"]: JSON.stringify({
-      version: "next",
-      imageUrl: "https://www.fameladysociety.com/images/app.png",
-      button: {
-        title: "Make me FAMEus",
-        action: {
-          type: "launch_frame",
-          url: "https://www.fameladysociety.com/~/blu/funknlove",
-          name: "Funk n Love",
-          splashImageUrl: "https://www.fameladysociety.com/images/splash.png",
-          splashBackgroundColor: "#040404",
-        },
-      },
-    }),
   },
 };
 
