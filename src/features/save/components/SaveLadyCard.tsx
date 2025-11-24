@@ -1,5 +1,5 @@
 "use client";
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import type { Listing } from "opensea-js";
 import { formatUnits } from "viem";
 import Card from "@mui/material/Card";
@@ -15,6 +15,8 @@ import { useSweepAndWrap } from "@/hooks/useSweepAndWrap";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import { useReadFameLadySocietyWrapCost } from "@/wagmi";
 import { useAccount, useBalance } from "wagmi";
+import { client as mainnetClient } from "@/viem/mainnet-client";
+import { getEnsName } from "viem/actions";
 
 export type SaveLadyCardProps = {
   listings: Listing[];
@@ -29,6 +31,7 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
 }) => {
   const [selected, setSelected] = useState<Set<BigInt>>(new Set());
   const [modalOpen, setModalOpen] = useState(false);
+  const [sellerNames, setSellerNames] = useState<string[]>([]);
   const { executeSweep, status, txHash, error } = useSweepAndWrap();
   const { data: wrapCostData } = useReadFameLadySocietyWrapCost();
 
@@ -110,6 +113,43 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
   const { data: balance } = useBalance({
     address,
   });
+
+  // Resolve seller names
+  useEffect(() => {
+    (async () => {
+      // Initialize seller names array with addresses first
+      const initialNames = listings.map(
+        (l) => l.protocol_data.parameters.offerer,
+      );
+      setSellerNames(initialNames);
+
+      // Resolve ENS names in parallel but update state after each resolution
+      const ensPromises = listings.map(async (listing, index) => {
+        const sellerAddress = listing.protocol_data.parameters.offerer;
+
+        try {
+          const name = await getEnsName(mainnetClient, {
+            address: sellerAddress as `0x${string}`,
+          });
+
+          if (name) {
+            setSellerNames((prev) => {
+              const newNames = [...prev];
+              newNames[index] = name;
+              return newNames;
+            });
+          }
+        } catch (error) {
+          // Keep the address if ENS resolution fails
+          console.warn(`Failed to resolve ENS for ${sellerAddress}:`, error);
+        }
+      });
+
+      // Wait for all promises to complete
+      await Promise.allSettled(ensPromises);
+    })();
+  }, [listings]);
+
   return (
     <>
       <Card sx={{ mb: 2 }}>
@@ -190,7 +230,7 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
         </CardContent>
       </Card>
       <Grid2 container spacing={1}>
-        {sortedListings.map((l) => {
+        {sortedListings.map((l, index) => {
           const offerItem = l.protocol_data.parameters.offer[0];
           const tokenId = BigInt(offerItem.identifierOrCriteria);
           const priceEth = formatUnits(
@@ -228,9 +268,15 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
                     <Typography
                       variant="caption"
                       display="block"
-                      sx={{ mt: 0.5 }}
+                      textOverflow="ellipsis"
+                      overflow="hidden"
+                      whiteSpace="nowrap"
+                      sx={{
+                        mt: 0.5,
+                      }}
                     >
-                      Order: {l.order_hash?.slice(0, 10)}…
+                      Seller:{" "}
+                      {sellerNames[index] ?? l.protocol_data.parameters.offerer}
                     </Typography>
                   </CardContent>
                 </CardActionArea>
