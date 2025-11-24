@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
   other: {
     ["twitter:title"]: "Fame Lady Society",
-    ["twitter:description"]: "FAQ",
+    ["twitter:description"]: "Make me FAMEus",
     ["twitter:image"]:
       "https://fameladysociety.com/images/Flsociety_morg_mock.jpeg",
     ["twitter:card"]: "summary_large_image",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         action: {
           type: "launch_miniapp",
           url: "https://www.fameladysociety.com",
-          name: "Funk n Love",
+          name: "FLS Official Site",
           splashImageUrl: "https://www.fameladysociety.com/images/splash.png",
           splashBackgroundColor: "#040404",
         },

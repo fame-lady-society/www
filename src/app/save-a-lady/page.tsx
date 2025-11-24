@@ -2,9 +2,28 @@ import { fetchListings } from "@/lib/openseaListings";
 import { SaveLady } from "./SaveLady";
 import { Listing } from "opensea-js";
 import { AppMain } from "@/layouts/AppMain";
-import { Typography } from "@mui/material";
+import { Metadata } from "next";
 
-export const revalidate = 60; // keep listings reasonably fresh
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  other: {
+    ["fc:miniapp"]: JSON.stringify({
+      version: "1",
+      imageUrl: "https://www.fameladysociety.com/images/app.png",
+      button: {
+        title: "Sweep and Wrap",
+        action: {
+          type: "launch_miniapp",
+          url: "https://www.fameladysociety.com/save-a-lady",
+          name: "Sweep and Wrap",
+          splashImageUrl: "https://www.fameladysociety.com/images/splash.png",
+          splashBackgroundColor: "#040404",
+        },
+      },
+    }),
+  },
+};
 
 export default async function Home() {
   let listings: Listing[] = [];
