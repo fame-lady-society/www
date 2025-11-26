@@ -193,9 +193,10 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
                   }
                 });
                 setModalOpen(true);
-                await executeSweep(selectedListings);
-                // After sweep attempt, trigger a listings refresh
-                await onRefreshRequested?.();
+                const response = await executeSweep(selectedListings);
+                if (response.success) {
+                  setSelected(new Set());
+                }
               }}
             >
               Sweep and Wrap
@@ -289,11 +290,12 @@ export const SaveLadyCard: FC<SaveLadyCardProps> = ({
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         transactions={txHash ? [{ kind: "sweepAndWrap", hash: txHash }] : []}
-        onTransactionConfirmed={async () => {
+        onTransactionConfirmed={async ({ hash }) => {
           setModalOpen(false);
-          setSelected(new Set());
           // After confirmation, refresh again to reflect updated availability
-          await onRefreshRequested?.();
+          if (hash) {
+            await onRefreshRequested?.();
+          }
         }}
         topContent={
           status === "building" ? (
