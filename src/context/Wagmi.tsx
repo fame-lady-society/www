@@ -17,16 +17,12 @@ import {
   polygon as polygonChain,
   polygonAmoy,
 } from "wagmi/chains";
-import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
 import { SiweMessage } from "siwe";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Chain, Transport } from "viem";
 import { SerializedSession } from "@/service/session";
-
-import { headers } from "next/headers";
-import { cookieToInitialState } from "wagmi";
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -124,6 +120,22 @@ export const defaultConfig = {
     storage: cookieStorage,
   }),
 };
+
+export const transports: Record<number, Transport> = {
+  ...mainnetSepolia.transports,
+  ...sepoliaOnly.transports,
+  ...baseSepolia.transports,
+  ...polygonOnly.transports,
+  ...polygonAmoyOnly.transports,
+} as const;
+
+export const chains: readonly [Chain, ...Chain[]] = [
+  base,
+  polygonChain,
+  polygonAmoy,
+  sepolia,
+  mainnet,
+] as const;
 
 const siweConfig = {
   getNonce: async () => {

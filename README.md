@@ -8,6 +8,34 @@ First, create a new local .env.local file
 cp .env.example .env.local
 ```
 
+## HTTPS local development (secure context)
+
+Some browser APIs (wallet integrations, WebCrypto, etc.) require a secure context. Use one of the HTTPS dev scripts below.
+
+### Option A (recommended): trusted HTTPS with mkcert
+
+1. Install `mkcert` for your OS, then:
+
+```bash
+mkcert -install
+mkdir -p certs
+mkcert -key-file certs/localhost-key.pem -cert-file certs/localhost.pem localhost 127.0.0.1 ::1
+```
+
+2. Start the dev server with HTTPS:
+
+```bash
+yarn dev:https
+```
+
+Open `https://localhost:3000`.
+
+### Option B: auto-generated self-signed cert (may show browser warning)
+
+```bash
+yarn dev:https:auto
+```
+
 ### RPC keys
 
 Signup for infura.io and alchemy.com (free accounts). Create an ethereum RPC for each and get API keys.

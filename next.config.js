@@ -6,7 +6,7 @@ module.exports = {
     OG_BASE_URL: process.env.OG_BASE_URL || "https://fls-www.vercel.app",
   },
   webpack: (config) => {
-    // config.externals.push("tls", "net", "fs", "path");
+    config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
   images: {

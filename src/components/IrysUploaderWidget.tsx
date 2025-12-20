@@ -5,6 +5,13 @@ import { useDropzone } from "react-dropzone";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
 
+// extend window with ethereum
+declare global {
+  interface Window {
+    ethereum: any;
+  }
+}
+
 export type IrysUploaderWidgetProps = {
   onComplete?: (txid: string) => void;
   /**
@@ -143,7 +150,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
     } catch (err) {
       appendLog(`Failed to prepare initial file: ${String(err)}`);
     }
-  }, [initialFile]);
+  }, [initialFile, appendLog]);
 
   const totalBytes = useMemo(
     () => files.reduce((acc, f) => acc + f.file.size, 0),
@@ -151,7 +158,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   );
 
   const handleConnect = async (): Promise<any | null> => {
-    if (!window || !window.ethereum)
+    if (typeof window === "undefined" || !window.ethereum)
       return appendLog("window.ethereum not found");
     try {
       setStatus("connecting");
