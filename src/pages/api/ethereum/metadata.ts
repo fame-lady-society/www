@@ -7,7 +7,13 @@ import {
   createSignerAccount,
 } from "@/viem/mainnet-client";
 import { client as basePublicClient } from "@/viem/base-client";
-import { encodePacked, erc721Abi, keccak256, PublicClient } from "viem";
+import {
+  encodePacked,
+  erc721Abi,
+  formatEther,
+  keccak256,
+  PublicClient,
+} from "viem";
 import { readContract, signMessage, getBalance } from "viem/actions";
 import { IMetadata, defaultDescription } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
@@ -197,12 +203,10 @@ export default (async function handler(req, res) {
       const priceRaw = await irysUploader.getPrice(metadataBytes.length);
       const priceBn = BigInt(priceRaw?.toString?.() ?? priceRaw ?? 0);
       const bufferedPrice = (priceBn * 110n) / 100n;
+      const balance = await irysUploader.getBalance();
 
-      const loadedBalance = await irysUploader.getBalance();
-      const loadedBn = BigInt(
-        loadedBalance?.toString?.() ?? loadedBalance ?? 0,
-      );
-
+      let loadedBalance = await irysUploader.getBalance();
+      let loadedBn = BigInt(loadedBalance?.toString?.() ?? loadedBalance ?? 0);
       if (loadedBn < bufferedPrice) {
         const account = privateKeyToAccount(
           process.env.METADATA_PRIVATE_KEY! as `0x${string}`,
@@ -214,10 +218,25 @@ export default (async function handler(req, res) {
         const availableBalance =
           accountBalance > estimatedGas ? accountBalance - estimatedGas : 0n;
 
-        if (availableBalance > 0n) {
-          const need = bufferedPrice - loadedBn;
-          const fundAmount = availableBalance < need ? availableBalance : need;
-          await irysUploader.fund(fundAmount);
+        const cap = bufferedPrice * 20_000n; // limit to 20 * upload estimate
+        const fundAmount = availableBalance < cap ? availableBalance : cap;
+
+        if (fundAmount > 0n) {
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            await irysUploader.fund(fundAmount);
+            const refreshed = await irysUploader.getBalance();
+            const refreshedBn = BigInt(
+              refreshed?.toString?.() ?? refreshed ?? 0,
+            );
+            if (refreshedBn > loadedBn) {
+              loadedBn = refreshedBn;
+              break;
+            }
+          }
+          console.log(
+            "[metadata] funding complete",
+            JSON.stringify({ tokenId, loaded: formatEther(loadedBn) }),
+          );
         }
       }
 
