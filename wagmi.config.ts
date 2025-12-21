@@ -143,15 +143,9 @@ export default defineConfig({
           },
         },
         {
-          name: "SaveLadyProxy",
-          address: {
-            [mainnet.id]: "0x31fA60d6fF9F8aE536E790ebf885435Be9053116",
-          },
-        },
-        {
           name: "SaveLady",
           address: {
-            [mainnet.id]: "0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A",
+            [mainnet.id]: "0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC",
           },
         },
       ],

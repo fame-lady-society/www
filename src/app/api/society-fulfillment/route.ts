@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import type { FulfillmentDataResponse } from "opensea-js";
-import { fameLadySquadAddress, saveLadyProxyAddress } from "@/wagmi";
+import { fameLadySquadAddress, saveLadyAddress } from "@/wagmi";
 import { mainnet } from "viem/chains";
 
 const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY;
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         asset_contract_address: fameLadySquadAddress[mainnet.id],
         token_id: tokenId,
       },
-      recipient: saveLadyProxyAddress[mainnet.id],
+      recipient: saveLadyAddress[mainnet.id],
     };
 
     const res = await fetch(url, {

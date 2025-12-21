@@ -8,7 +8,7 @@ import {
 } from "@wagmi/core";
 import {
   saveLadyAbi,
-  saveLadyProxyAddress,
+  saveLadyAddress,
   useReadFameLadySocietyWrapCost,
 } from "@/wagmi";
 import { mainnet } from "viem/chains";
@@ -48,7 +48,7 @@ export function useSweepAndWrap() {
           setStatus("submitting");
           const txHash = await writeContractAsync({
             abi: saveLadyAbi,
-            address: saveLadyProxyAddress[mainnet.id],
+            address: saveLadyAddress[mainnet.id],
             functionName: "sweepAndWrap",
             args: [
               payload.advancedOrders,

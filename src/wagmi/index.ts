@@ -5877,49 +5877,15 @@ export const namedLadyRendererConfig = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const saveLadyAbi = [
-  {
-    type: 'error',
-    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
-    name: 'AddressEmptyCode',
-  },
+  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'implementation', internalType: 'address', type: 'address' },
-    ],
-    name: 'ERC1967InvalidImplementation',
-  },
-  { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
-  { type: 'error', inputs: [], name: 'FailedCall' },
-  { type: 'error', inputs: [], name: 'InvalidInitialization' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  { type: 'error', inputs: [], name: 'NotInitializing' },
   { type: 'error', inputs: [], name: 'Reentrancy' },
-  { type: 'error', inputs: [], name: 'UUPSUnauthorizedCallContext' },
-  {
-    type: 'error',
-    inputs: [{ name: 'slot', internalType: 'bytes32', type: 'bytes32' }],
-    name: 'UUPSUnsupportedProxiableUUID',
-  },
   { type: 'error', inputs: [], name: 'Unauthorized' },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'version',
-        internalType: 'uint64',
-        type: 'uint64',
-        indexed: false,
-      },
-    ],
-    name: 'Initialized',
-  },
   {
     type: 'event',
     anonymous: false,
@@ -6003,19 +5969,6 @@ export const saveLadyAbi = [
     name: 'SweepAndWrap',
   },
   {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'implementation',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'Upgraded',
-  },
-  {
     type: 'function',
     inputs: [],
     name: 'FAME_LADY_SOCIETY',
@@ -6039,13 +5992,6 @@ export const saveLadyAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'UPGRADE_INTERFACE_VERSION',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
     name: 'cancelOwnershipHandover',
     outputs: [],
     stateMutability: 'payable',
@@ -6058,13 +6004,6 @@ export const saveLadyAbi = [
     name: 'completeOwnershipHandover',
     outputs: [],
     stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'initialize',
-    outputs: [],
-    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -6092,13 +6031,6 @@ export const saveLadyAbi = [
     ],
     name: 'ownershipHandoverExpiresAt',
     outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'proxiableUUID',
-    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
     stateMutability: 'view',
   },
   {
@@ -6260,125 +6192,21 @@ export const saveLadyAbi = [
     outputs: [],
     stateMutability: 'payable',
   },
-  {
-    type: 'function',
-    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
-    name: 'upgradeInit',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'newImplementation', internalType: 'address', type: 'address' },
-      { name: 'data', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'upgradeToAndCall',
-    outputs: [],
-    stateMutability: 'payable',
-  },
 ] as const
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const saveLadyAddress = {
-  1: '0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A',
+  1: '0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC',
 } as const
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const saveLadyConfig = {
   address: saveLadyAddress,
   abi: saveLadyAbi,
-} as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SaveLadyProxy
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const saveLadyProxyAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: '_logic', internalType: 'address', type: 'address' },
-      { name: 'initialOwner', internalType: 'address', type: 'address' },
-      { name: '_data', internalType: 'bytes', type: 'bytes' },
-    ],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
-    name: 'AddressEmptyCode',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'admin', internalType: 'address', type: 'address' }],
-    name: 'ERC1967InvalidAdmin',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'implementation', internalType: 'address', type: 'address' },
-    ],
-    name: 'ERC1967InvalidImplementation',
-  },
-  { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
-  { type: 'error', inputs: [], name: 'FailedCall' },
-  { type: 'error', inputs: [], name: 'ProxyDeniedAdminAccess' },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'previousAdmin',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        name: 'newAdmin',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'AdminChanged',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'implementation',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'Upgraded',
-  },
-  { type: 'fallback', stateMutability: 'payable' },
-] as const
-
-/**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const saveLadyProxyAddress = {
-  1: '0x31fA60d6fF9F8aE536E790ebf885435Be9053116',
-} as const
-
-/**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const saveLadyProxyConfig = {
-  address: saveLadyProxyAddress,
-  abi: saveLadyProxyAbi,
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15335,7 +15163,7 @@ export const useWatchNamedLadyRendererRolesUpdatedEvent =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLady = /*#__PURE__*/ createUseReadContract({
   abi: saveLadyAbi,
@@ -15345,7 +15173,7 @@ export const useReadSaveLady = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"FAME_LADY_SOCIETY"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyFameLadySociety =
   /*#__PURE__*/ createUseReadContract({
@@ -15357,7 +15185,7 @@ export const useReadSaveLadyFameLadySociety =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"FAME_LADY_SQUAD"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyFameLadySquad = /*#__PURE__*/ createUseReadContract(
   {
@@ -15370,7 +15198,7 @@ export const useReadSaveLadyFameLadySquad = /*#__PURE__*/ createUseReadContract(
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"FEE_BPS"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyFeeBps = /*#__PURE__*/ createUseReadContract({
   abi: saveLadyAbi,
@@ -15379,21 +15207,9 @@ export const useReadSaveLadyFeeBps = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useReadSaveLadyUpgradeInterfaceVersion =
-  /*#__PURE__*/ createUseReadContract({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    functionName: 'UPGRADE_INTERFACE_VERSION',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"onERC721Received"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyOnErc721Received =
   /*#__PURE__*/ createUseReadContract({
@@ -15405,7 +15221,7 @@ export const useReadSaveLadyOnErc721Received =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"owner"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyOwner = /*#__PURE__*/ createUseReadContract({
   abi: saveLadyAbi,
@@ -15416,7 +15232,7 @@ export const useReadSaveLadyOwner = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadyOwnershipHandoverExpiresAt =
   /*#__PURE__*/ createUseReadContract({
@@ -15426,18 +15242,9 @@ export const useReadSaveLadyOwnershipHandoverExpiresAt =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"proxiableUUID"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useReadSaveLadyProxiableUuid = /*#__PURE__*/ createUseReadContract(
-  { abi: saveLadyAbi, address: saveLadyAddress, functionName: 'proxiableUUID' },
-)
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"seaport"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadySeaport = /*#__PURE__*/ createUseReadContract({
   abi: saveLadyAbi,
@@ -15448,7 +15255,7 @@ export const useReadSaveLadySeaport = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"squadApprovalSet"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useReadSaveLadySquadApprovalSet =
   /*#__PURE__*/ createUseReadContract({
@@ -15460,7 +15267,7 @@ export const useReadSaveLadySquadApprovalSet =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLady = /*#__PURE__*/ createUseWriteContract({
   abi: saveLadyAbi,
@@ -15470,7 +15277,7 @@ export const useWriteSaveLady = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyCancelOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15482,7 +15289,7 @@ export const useWriteSaveLadyCancelOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyCompleteOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15492,20 +15299,9 @@ export const useWriteSaveLadyCompleteOwnershipHandover =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"initialize"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useWriteSaveLadyInitialize = /*#__PURE__*/ createUseWriteContract({
-  abi: saveLadyAbi,
-  address: saveLadyAddress,
-  functionName: 'initialize',
-})
-
-/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyRenounceOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -15517,7 +15313,7 @@ export const useWriteSaveLadyRenounceOwnership =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyRequestOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15529,7 +15325,7 @@ export const useWriteSaveLadyRequestOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"rescueETH"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyRescueEth = /*#__PURE__*/ createUseWriteContract({
   abi: saveLadyAbi,
@@ -15540,7 +15336,7 @@ export const useWriteSaveLadyRescueEth = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"setSquadApprovalSet"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadySetSquadApprovalSet =
   /*#__PURE__*/ createUseWriteContract({
@@ -15552,7 +15348,7 @@ export const useWriteSaveLadySetSquadApprovalSet =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"sweepAndWrap"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadySweepAndWrap =
   /*#__PURE__*/ createUseWriteContract({
@@ -15564,7 +15360,7 @@ export const useWriteSaveLadySweepAndWrap =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWriteSaveLadyTransferOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -15574,30 +15370,9 @@ export const useWriteSaveLadyTransferOwnership =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"upgradeInit"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useWriteSaveLadyUpgradeInit = /*#__PURE__*/ createUseWriteContract(
-  { abi: saveLadyAbi, address: saveLadyAddress, functionName: 'upgradeInit' },
-)
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"upgradeToAndCall"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useWriteSaveLadyUpgradeToAndCall =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    functionName: 'upgradeToAndCall',
-  })
-
-/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLady = /*#__PURE__*/ createUseSimulateContract({
   abi: saveLadyAbi,
@@ -15607,7 +15382,7 @@ export const useSimulateSaveLady = /*#__PURE__*/ createUseSimulateContract({
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyCancelOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15619,7 +15394,7 @@ export const useSimulateSaveLadyCancelOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyCompleteOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15629,21 +15404,9 @@ export const useSimulateSaveLadyCompleteOwnershipHandover =
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"initialize"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useSimulateSaveLadyInitialize =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    functionName: 'initialize',
-  })
-
-/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyRenounceOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15655,7 +15418,7 @@ export const useSimulateSaveLadyRenounceOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyRequestOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15667,7 +15430,7 @@ export const useSimulateSaveLadyRequestOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"rescueETH"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyRescueEth =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15679,7 +15442,7 @@ export const useSimulateSaveLadyRescueEth =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"setSquadApprovalSet"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadySetSquadApprovalSet =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15691,7 +15454,7 @@ export const useSimulateSaveLadySetSquadApprovalSet =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"sweepAndWrap"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadySweepAndWrap =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15703,7 +15466,7 @@ export const useSimulateSaveLadySweepAndWrap =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useSimulateSaveLadyTransferOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15713,33 +15476,9 @@ export const useSimulateSaveLadyTransferOwnership =
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"upgradeInit"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useSimulateSaveLadyUpgradeInit =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    functionName: 'upgradeInit',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link saveLadyAbi}__ and `functionName` set to `"upgradeToAndCall"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useSimulateSaveLadyUpgradeToAndCall =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    functionName: 'upgradeToAndCall',
-  })
-
-/**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWatchSaveLadyEvent = /*#__PURE__*/ createUseWatchContractEvent({
   abi: saveLadyAbi,
@@ -15747,21 +15486,9 @@ export const useWatchSaveLadyEvent = /*#__PURE__*/ createUseWatchContractEvent({
 })
 
 /**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"Initialized"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useWatchSaveLadyInitializedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    eventName: 'Initialized',
-  })
-
-/**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWatchSaveLadyOwnershipHandoverCanceledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -15773,7 +15500,7 @@ export const useWatchSaveLadyOwnershipHandoverCanceledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWatchSaveLadyOwnershipHandoverRequestedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -15785,7 +15512,7 @@ export const useWatchSaveLadyOwnershipHandoverRequestedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"OwnershipTransferred"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWatchSaveLadyOwnershipTransferredEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -15797,60 +15524,13 @@ export const useWatchSaveLadyOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"SweepAndWrap"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x90a255715Eb31C13b42325eB9c997E2bAdbcC3BC)
  */
 export const useWatchSaveLadySweepAndWrapEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: saveLadyAbi,
     address: saveLadyAddress,
     eventName: 'SweepAndWrap',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyAbi}__ and `eventName` set to `"Upgraded"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0xDA512B4a464AD9Ffe18FF2ddaDcF689615f79A4A)
- */
-export const useWatchSaveLadyUpgradedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: saveLadyAbi,
-    address: saveLadyAddress,
-    eventName: 'Upgraded',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyProxyAbi}__
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const useWatchSaveLadyProxyEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: saveLadyProxyAbi,
-    address: saveLadyProxyAddress,
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyProxyAbi}__ and `eventName` set to `"AdminChanged"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const useWatchSaveLadyProxyAdminChangedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: saveLadyProxyAbi,
-    address: saveLadyProxyAddress,
-    eventName: 'AdminChanged',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link saveLadyProxyAbi}__ and `eventName` set to `"Upgraded"`
- *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x31fA60d6fF9F8aE536E790ebf885435Be9053116)
- */
-export const useWatchSaveLadyProxyUpgradedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: saveLadyProxyAbi,
-    address: saveLadyProxyAddress,
-    eventName: 'Upgraded',
   })
 
 /**
