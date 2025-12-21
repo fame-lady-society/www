@@ -5,13 +5,13 @@ module.exports = {
   env: {
     LOG_LEVEL: "debug",
     NEXT_PUBLIC_BASE_URL:
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      process.env.VERCEL_URL ||
-      "https://www.fameladysociety.com",
+      process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+        ? [`https://${process.env.VERCEL_URL}`]
+        : "https://www.fameladysociety.com",
     OG_BASE_URL:
-      process.env.OG_BASE_URL ||
-      process.env.VERCEL_URL ||
-      "https://fls-www.vercel.app",
+      process.env.OG_BASE_URL || process.env.VERCEL_URL
+        ? [`https://${process.env.VERCEL_URL}`]
+        : "https://www.fameladysociety.com",
   },
   webpack: (config) => {
     config.externals.push("pino-pretty", "lokijs", "encoding");
