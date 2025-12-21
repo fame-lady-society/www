@@ -141,9 +141,8 @@ export function useLock(
   } = useFameusUnwrap();
 
   // Contract calls
-  const { writeContractAsync: writeGovSocietyLockMany } =
-    useWriteGovSocietyLockMany();
-  const { writeContractAsync: writeGovSocietyLockWithGuardianMany } =
+  const { mutateAsync: writeGovSocietyLockMany } = useWriteGovSocietyLockMany();
+  const { mutateAsync: writeGovSocietyLockWithGuardianMany } =
     useWriteGovSocietyLockWithGuardianMany();
 
   // Transaction watchers

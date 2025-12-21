@@ -29,7 +29,7 @@ export function useSweepAndWrap() {
   const { data: wrapCostData } = useReadFameLadySocietyWrapCost();
   const { address: receiver } = useAccount();
 
-  const { writeContractAsync } = useWriteContract();
+  const { mutateAsync: writeContractAsync } = useWriteContract();
 
   const executeSweep = useCallback(
     async (selectedListings: Listing[]) => {

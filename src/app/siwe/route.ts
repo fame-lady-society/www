@@ -81,7 +81,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (siweMessage.nonce !== session.nonce) {
-    const response = new NextResponse("Invalid nonce.", { status: 422 });
+    const response = new NextResponse(
+      `Invalid nonce. Expected ${session.nonce}, got ${siweMessage.nonce}`,
+      { status: 422 },
+    );
     clearSession(response);
     return response;
   }

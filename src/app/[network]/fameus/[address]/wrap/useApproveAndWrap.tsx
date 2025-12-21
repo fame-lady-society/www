@@ -151,9 +151,9 @@ export function useApproveAndWrap(
     address: societyFromNetwork(chainId),
     args: address ? [address, govSocietyFromNetwork(chainId)] : undefined,
   });
-  const { writeContractAsync: writeFameMirrorSetApprovalForAll } =
+  const { mutateAsync: writeFameMirrorSetApprovalForAll } =
     useWriteFameMirrorSetApprovalForAll();
-  const { writeContractAsync: writeGovSocietyDepositFor } =
+  const { mutateAsync: writeGovSocietyDepositFor } =
     useWriteGovSocietyDepositFor();
 
   // Transaction watchers

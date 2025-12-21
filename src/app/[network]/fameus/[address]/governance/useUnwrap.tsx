@@ -138,7 +138,7 @@ export function useUnwrap(
   const { addNotification } = useNotifications();
 
   // Contract calls
-  const { writeContractAsync: writeGovSocietyWithdrawTo } =
+  const { mutateAsync: writeGovSocietyWithdrawTo } =
     useWriteGovSocietyWithdrawTo();
 
   // Transaction watchers
