@@ -17,13 +17,19 @@ import {
   createSignerAccount as sepoliaCreateSignerAccount,
 } from "@/viem/sepolia-client";
 import { claimToFameAbi } from "@/wagmi";
-import { encodePacked, erc721Abi, formatUnits, keccak256 } from "viem";
+import {
+  encodePacked,
+  erc721Abi,
+  formatUnits,
+  isAddress,
+  keccak256,
+} from "viem";
 import { getFlsPoolAllocation } from "@/features/claim-to-fame/hooks/useSnapshot";
 import {
   OG_AGE_BOOST,
   OG_RANK_BOOST,
 } from "@/features/claim-to-fame/hooks/constants";
-import { sessionFromCookies } from "@/service/session";
+import { getSession } from "@/app/siwe/session-utils";
 
 interface Params {
   network: string;
@@ -259,7 +265,7 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
   const contractAddress = params.contractAddress;
   // TODO verify contract address
 
-  const session = await sessionFromCookies(req.cookies);
+  const session = getSession(req);
 
   try {
     let data: Input;
@@ -269,7 +275,11 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
       return NextResponse.json({ error: "invalid input" }, { status: 400 });
     }
 
-    if (data.address !== session.address) {
+    if (
+      session?.address &&
+      isAddress(session?.address) &&
+      data.address !== session?.address
+    ) {
       return NextResponse.json({ error: "unauthorized" }, { status: 403 });
     }
 

@@ -7,24 +7,29 @@ import { client as sepoliaClient } from "@/viem/sepolia-client";
 
 import { base, mainnet, sepolia } from "viem/chains";
 import { z } from "zod";
-import {
-  SerializedSession,
-  clearSession,
-  persistSession,
-  sessionFromCookies,
-} from "@/service/session";
+
+import { signNonce, verifyNonce } from "./nonce-utils";
+import { randomBytes } from "crypto";
+import { clearSession, getSession, setSession } from "./session-utils";
 
 export async function GET(request: NextRequest) {
-  const session = await sessionFromCookies(request.cookies);
-  return NextResponse.json<SerializedSession>(session);
+  const session = getSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return NextResponse.json({
+    address: session.address,
+    chainId: session.chainId,
+  });
 }
 
-export async function PUT(request: NextRequest) {
-  const session = await sessionFromCookies(request.cookies);
-  if (!session.nonce) session.nonce = generateNonce();
-  const response = new NextResponse(session.nonce);
-  await persistSession(session, response);
-  return response;
+export async function PUT() {
+  const nonce = randomBytes(32).toString("hex");
+  const timestamp = Date.now();
+  const signedNonce = signNonce(nonce, timestamp);
+  return NextResponse.json({
+    nonce: signedNonce,
+  });
 }
 
 const VerifyMessageInput = z.object({
@@ -51,7 +56,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json("Invalid request body", { status: 422 });
 
   const { message, signature } = parseResult.data;
-  const session = await sessionFromCookies(request.cookies);
 
   let siweMessage: SiweMessage;
   try {
@@ -80,11 +84,8 @@ export async function POST(request: NextRequest) {
     return response;
   }
 
-  if (siweMessage.nonce !== session.nonce) {
-    const response = new NextResponse(
-      `Invalid nonce. Expected ${session.nonce}, got ${siweMessage.nonce}`,
-      { status: 422 },
-    );
+  if (!verifyNonce(siweMessage.nonce)) {
+    const response = new NextResponse("Invalid nonce", { status: 400 });
     clearSession(response);
     return response;
   }
@@ -122,18 +123,17 @@ export async function POST(request: NextRequest) {
       clearSession(response);
       return response;
     }
-
-    session.address = siweMessage.address as Address;
-    session.chainId = siweMessage.chainId;
+    const response = NextResponse.json({
+      address: siweMessage.address,
+      chainId: siweMessage.chainId,
+    });
+    setSession(response, siweMessage.address, siweMessage.chainId);
+    return response;
   } catch (error) {
     const response = new NextResponse(String(error), { status: 400 });
     clearSession(response);
     return response;
   }
-
-  const response = new NextResponse();
-  await persistSession(session, response);
-  return response;
 }
 
 export async function DELETE(request: NextRequest) {

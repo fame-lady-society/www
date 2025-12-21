@@ -29,7 +29,6 @@ import {
   getDefaultConnectors,
 } from "connectkit";
 import { Chain, Transport } from "viem";
-import { SerializedSession } from "@/service/session";
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -103,6 +102,7 @@ export const polygonAmoyOnly = {
 } as const;
 
 const SIWE_API_PATH = "/siwe";
+const SIWE_NONCE_API_PATH = "/siwe/nonce";
 
 export const defaultConfig = {
   ...mainnetSepolia,
@@ -145,7 +145,7 @@ const siweConfig = {
   getNonce: async () => {
     const res = await fetch(SIWE_API_PATH, { method: "PUT" });
     if (!res.ok) throw new Error("Failed to fetch SIWE nonce");
-    return res.text();
+    return res.json().then((data) => data.nonce);
   },
   createMessage: ({ nonce, address, chainId }) => {
     return new SiweMessage({
@@ -169,7 +169,7 @@ const siweConfig = {
   getSession: async () => {
     const res = await fetch(SIWE_API_PATH);
     if (!res.ok) throw new Error("Failed to fetch SIWE session");
-    const { address, chainId } = (await res.json()) as SerializedSession;
+    const { address, chainId } = await res.json();
     return address && chainId ? { address, chainId } : null;
   },
   signOut: async () => {
