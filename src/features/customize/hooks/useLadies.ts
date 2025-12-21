@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "");
 
 export function useLadies() {
   const { address, chainId } = useAccount();
@@ -9,7 +10,9 @@ export function useLadies() {
     queryFn: async () => {
       if (!address) return [];
 
-      const ownedTokens = await fetch(`${baseUrl}/api/ethereum/owned`)
+      const ownedTokens = await fetch(
+        `${baseUrl ? `${baseUrl}` : ""}/api/ethereum/owned`,
+      )
         .then((res) => res.json() as Promise<number[]>)
         .catch(() => []);
 

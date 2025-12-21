@@ -1,11 +1,44 @@
+"use client";
 import React, { FC } from "react";
 import { WrappedLink } from "@/components/WrappedLink";
 import { MagicEdenIcon } from "@/components/icons/magiceden";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Grid2 from "@mui/material/Unstable_Grid2";
+import { useAccount } from "@/hooks/useAccount";
+import { ConnectKitButton, useSIWE } from "connectkit";
+
+const NotConnected: FC<{}> = () => {
+  return (
+    <ConnectKitButton.Custom>
+      {({ show }) => {
+        return (
+          <button
+            className="rounded-lg border border-gray-200 p-4 text-center mx-auto block"
+            onClick={show}
+          >
+            Connect your wallet to see your Fame Ladies
+          </button>
+        );
+      }}
+    </ConnectKitButton.Custom>
+  );
+};
+
+const NotSignedIn: FC<{}> = () => {
+  const { signIn } = useAccount();
+  return (
+    <button
+      className="rounded-lg border border-gray-200 p-4 text-center mx-auto block"
+      onClick={() => signIn()}
+    >
+      Sign in with Ethereum
+    </button>
+  );
+};
 
 export const Empty: FC<{}> = ({}) => {
+  const { isSignedIn, isConnected } = useAccount();
   return (
     <Grid2 xs={12} sx={{ mt: 16 }}>
       <Box
@@ -17,6 +50,8 @@ export const Empty: FC<{}> = ({}) => {
         my={2}
         gap={2}
       >
+        {!isConnected && <NotConnected />}
+        {!isSignedIn && <NotSignedIn />}
         <WrappedLink href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574">
           <Box
             component="div"
@@ -28,7 +63,8 @@ export const Empty: FC<{}> = ({}) => {
           >
             <MagicEdenIcon />
             <Typography component="span" color="white">
-              Go get a Fame Lady on Magic Eden
+              Go get a Fame Lady using the{" "}
+              <WrappedLink href="/save-a-lady">save a lady</WrappedLink> tool
             </Typography>
           </Box>
         </WrappedLink>

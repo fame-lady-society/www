@@ -3,8 +3,25 @@
 import { useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 import type { sdk } from "@farcaster/miniapp-sdk";
+import { SIWESession, useSIWE } from "connectkit";
+import { StatusState } from "connectkit/build/siwe/SIWEContext";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+type HookProps = {
+  isSignedIn: boolean;
+  data?: SIWESession;
+  status: StatusState;
+  error?: Error | any;
+  isRejected: boolean;
+  isError: boolean;
+  isLoading: boolean;
+  isSuccess: boolean;
+  isReady: boolean;
+  reset: () => void;
+  signIn: () => Promise<boolean>;
+  signOut: () => Promise<boolean>;
+};
 
 export function useAccount() {
   const {
@@ -14,6 +31,7 @@ export function useAccount() {
     chain,
   } = useConnection();
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const { isSignedIn, signIn } = useSIWE() as HookProps;
   const [miniAppContext, setMiniAppContext] = useState<Awaited<
     Awaited<(typeof sdk)["context"]>
   > | null>(null);
@@ -50,5 +68,7 @@ export function useAccount() {
     chainId: chain?.id,
     isMiniApp,
     miniAppContext,
+    isSignedIn,
+    signIn,
   };
 }
