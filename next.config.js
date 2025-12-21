@@ -6,11 +6,11 @@ module.exports = {
     LOG_LEVEL: "debug",
     NEXT_PUBLIC_BASE_URL:
       process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
-        ? [`https://${process.env.VERCEL_URL}`]
+        ? `https://${process.env.VERCEL_URL}`
         : "https://www.fameladysociety.com",
     OG_BASE_URL:
       process.env.OG_BASE_URL || process.env.VERCEL_URL
-        ? [`https://${process.env.VERCEL_URL}`]
+        ? `https://${process.env.VERCEL_URL}`
         : "https://www.fameladysociety.com",
   },
   webpack: (config) => {
