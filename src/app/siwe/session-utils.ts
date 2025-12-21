@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "node:crypto";
 
-const SESSION_SECRET = process.env.SIWE_SESSION_SECRET || "change-me-in-production";
+const SESSION_SECRET =
+  process.env.SIWE_SESSION_SECRET || "change-me-in-production";
 const COOKIE_NAME = "siwe-session";
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
@@ -72,7 +73,8 @@ export function setSession(
   response.cookies.set(COOKIE_NAME, signedSession, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    domain: process.env.NEXT_PUBLIC_BASE_URL,
+    sameSite: "strict",
     maxAge: SESSION_MAX_AGE,
     path: "/",
   });
@@ -81,4 +83,3 @@ export function setSession(
 export function clearSession(response: NextResponse): void {
   response.cookies.delete(COOKIE_NAME);
 }
-
