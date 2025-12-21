@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Fame Lady Society",
       images: [
         {
-          url: "https://fameladysociety.com/images/fls-wrap.gif",
+          url: "https://www.fameladysociety.com/images/fls-wrap.gif",
           width: 800,
           height: 600,
           alt: "Fame Lady Society",
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ["twitter:title"]: "Fame Lady Society",
       ["twitter:description"]: "FAQ",
       ["twitter:image"]:
-        "https://fameladysociety.com/images/Flsociety_morg_mock.jpeg",
+        "https://www.fameladysociety.com/images/Flsociety_morg_mock.jpeg",
       ["twitter:card"]: "summary_large_image",
       ["twitter:creator"]: "@FameLadySociety",
     },

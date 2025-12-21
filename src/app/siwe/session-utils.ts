@@ -73,7 +73,11 @@ export function setSession(
   response.cookies.set(COOKIE_NAME, signedSession, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
+    domain:
+      process.env.NODE_ENV === "production"
+        ? "fameladysociety.com"
+        : new URL(process.env.NEXT_PUBLIC_BASE_URL!).hostname,
     maxAge: SESSION_MAX_AGE,
     path: "/",
   });

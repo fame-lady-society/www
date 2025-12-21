@@ -21,14 +21,14 @@ const RevealPage: NextPage<{}> = () => {
         <meta property="og:description" content={description} />
         <meta
           property="og:image"
-          content="https://fameladysociety.com/images/fls-wrap.gif"
+          content="https://www.fameladysociety.com/images/fls-wrap.gif"
         />
         <meta property="twitter:title" content={title} />
         <meta property="twitter:description" content={description} />
         <meta content="verification" name="LR1011" />
         <meta
           property="twitter:image"
-          content="https://fameladysociety.com/images/Flsociety_morg_mock.jpeg"
+          content="https://www.fameladysociety.com/images/Flsociety_morg_mock.jpeg"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:creator" content="@FameLadySociety" />

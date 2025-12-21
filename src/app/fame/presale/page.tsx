@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ["twitter:creator"]: "@0xflick",
       ["twitter:title"]: "$FAME",
       ["twitter:description"]: "The FAMEus Presale",
-      ["twitter:image"]: "https://fameladysociety.com/images/fame/eyes.png",
+      ["twitter:image"]: "https://www.fameladysociety.com/images/fame/eyes.png",
     },
   };
 }
