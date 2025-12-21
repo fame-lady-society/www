@@ -27,6 +27,8 @@
     "@gemini-wallet/core": "^0.3.2",
     "@graphql-mesh/transform-prefix": "^0.97.4",
     "@headlessui/react": "^2.1.8",
+    "@irys/upload": "^0.0.15",
+    "@irys/upload-ethereum": "^0.0.16",
     "@irys/web-upload": "^0.0.15",
     "@irys/web-upload-ethereum": "^0.0.16",
     "@irys/web-upload-ethereum-viem-v2": "^0.0.17",

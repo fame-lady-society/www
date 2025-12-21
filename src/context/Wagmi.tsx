@@ -61,9 +61,6 @@ export const baseSepolia = {
       http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1!, {
         batch: true,
       }),
-      http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2!, {
-        batch: true,
-      }),
     ]),
     [sepolia.id]: fallback(
       JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>

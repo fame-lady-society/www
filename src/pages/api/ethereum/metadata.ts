@@ -6,20 +6,42 @@ import {
   walletClient,
   createSignerAccount,
 } from "@/viem/mainnet-client";
-import { createWalletClient, encodePacked, erc721Abi, keccak256 } from "viem";
-import { readContract, signMessage } from "viem/actions";
+import { client as basePublicClient } from "@/viem/base-client";
+import { encodePacked, erc721Abi, keccak256, PublicClient } from "viem";
+import { readContract, signMessage, getBalance } from "viem/actions";
 import { IMetadata, defaultDescription } from "@/utils/metadata";
-import { fetchJson, upload } from "@/ipfs/client";
+import { fetchJson } from "@/ipfs/client";
 import { siweServer } from "@/utils/siweServer";
 import { NextApiHandler } from "next";
-import { mainnet } from "viem/chains";
-import { namedLadyRendererAbi } from "@/wagmi";
+import { mainnet, base } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
+import {
+  namedLadyRendererAbi,
+  fameLadySocietyAbi,
+  fameLadySocietyAddress,
+} from "@/wagmi";
+import { buildNodeIrysUploader } from "@/service/irys_backend_client_node";
 
 type IUpdateMetadata = {
   name: string;
   description: string;
   tokenId: number;
 };
+async function getBackendIrysUploader() {
+  const privateKey = process.env.METADATA_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("METADATA_PRIVATE_KEY not configured");
+  }
+
+  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  if (!rpcUrl) {
+    throw new Error("NEXT_PUBLIC_BASE_RPC_URL_1 not configured");
+  }
+
+  return buildNodeIrysUploader({
+    privateKey: privateKey as `0x${string}`,
+  });
+}
 
 export default (async function handler(req, res) {
   const { address, chainId } = await siweServer.getSession(req, res);
@@ -60,11 +82,11 @@ export default (async function handler(req, res) {
         return res.status(400).json({ error: "Description too long" });
       }
 
-      // check ownership and fetch metadata + nonce
+      // check ownership using fameLadySocietyAddress and fetch metadata
       const [ownerOfToken, tokenUri] = await Promise.all([
         readContract(viemClient, {
-          abi: erc721Abi,
-          address: flsTokenAddress,
+          abi: fameLadySocietyAbi,
+          address: fameLadySocietyAddress[mainnet.id],
           functionName: "ownerOf",
           args: [BigInt(tokenId as string)],
         }),
@@ -75,7 +97,7 @@ export default (async function handler(req, res) {
           args: [BigInt(tokenId as string)],
         }),
       ]);
-      if (ownerOfToken !== address) {
+      if (ownerOfToken.toLowerCase() !== address.toLowerCase()) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
@@ -119,7 +141,7 @@ export default (async function handler(req, res) {
     if (req.method === "POST") {
       const body = req.body as
         | (IUpdateMetadata & {
-            uri: string;
+            metadata: string;
             signature: string;
             expiration: string;
           })
@@ -129,11 +151,11 @@ export default (async function handler(req, res) {
         name,
         description,
         tokenId,
-        uri,
+        metadata: metadataContent,
         signature: clientSig,
         expiration,
       } = body;
-      if (!tokenId || !uri || !clientSig || !expiration) {
+      if (!tokenId || !metadataContent || !clientSig || !expiration) {
         return res.status(400).json({ error: "Missing fields" });
       }
       if (!name && !description) {
@@ -152,43 +174,91 @@ export default (async function handler(req, res) {
         return res.status(400).json({ error: "Signature expired" });
       }
 
-      // check owner, tokenUri and current nonce
-      const [ownerOfToken, nonce] = await Promise.all([
-        readContract(viemClient, {
-          abi: erc721Abi,
-          address: flsTokenAddress,
-          functionName: "ownerOf",
-          args: [BigInt(tokenId)],
-        }),
-        readContract(viemClient, {
-          abi: namedLadyRendererAbi,
-          address: namedLadyRendererAddress,
-          functionName: "currentNonce",
-          args: [address as `0x${string}`],
-        }),
-      ]);
-      if (ownerOfToken !== address) {
+      // check ownership using fameLadySocietyAddress
+      const ownerOfToken = await readContract(viemClient, {
+        abi: fameLadySocietyAbi,
+        address: fameLadySocietyAddress[mainnet.id],
+        functionName: "ownerOf",
+        args: [BigInt(tokenId)],
+      });
+      if (ownerOfToken.toLowerCase() !== address.toLowerCase()) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
-      // fetch original and provided metadata
-      const originalResponse = await fetch(uri, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const original = await originalResponse.json();
-
       // verify signature matches the provided content + expiration
-      const regeneratedSig = await signContent(
-        JSON.stringify(original),
-        expiration,
-      );
+      const regeneratedSig = await signContent(metadataContent, expiration);
       if (regeneratedSig !== clientSig) {
         return res.status(400).json({ error: "Invalid signature" });
       }
 
-      // final: sign the tokenURI update (uint256, string, uint256) as before
+      // Upload metadata to Irys using backend wallet on Base
+      const irysUploader = await getBackendIrysUploader();
+      const metadataBytes = new TextEncoder().encode(metadataContent);
+      const priceRaw = await irysUploader.getPrice(metadataBytes.length);
+      const priceBn = BigInt(priceRaw?.toString?.() ?? priceRaw ?? 0);
+      const bufferedPrice = (priceBn * 110n) / 100n;
+
+      const loadedBalance = await irysUploader.getBalance();
+      const loadedBn = BigInt(
+        loadedBalance?.toString?.() ?? loadedBalance ?? 0,
+      );
+
+      if (loadedBn < bufferedPrice) {
+        const account = privateKeyToAccount(
+          process.env.METADATA_PRIVATE_KEY! as `0x${string}`,
+        );
+        const accountBalance = await getBalance(basePublicClient, {
+          address: account.address,
+        });
+        const estimatedGas = 21000n * 20n;
+        const availableBalance =
+          accountBalance > estimatedGas ? accountBalance - estimatedGas : 0n;
+
+        if (availableBalance > 0n) {
+          const need = bufferedPrice - loadedBn;
+          const fundAmount = availableBalance < need ? availableBalance : need;
+          await irysUploader.fund(fundAmount);
+        }
+      }
+
+      const uploadResult = await irysUploader.upload(metadataContent, {
+        tags: [
+          {
+            name: "Content-Type",
+            value: "application/json",
+          },
+          {
+            name: "Content-Length",
+            value: metadataContent.length.toString(),
+          },
+          {
+            // download filename
+            name: "Content-Disposition",
+            value: `attachment; filename="fls-metadata-${tokenId}.json"`,
+          },
+          {
+            // content hash
+            name: "Content-Hash",
+            value: keccak256(new TextEncoder().encode(metadataContent)).split(
+              "0x",
+            )[1],
+          },
+        ],
+      });
+      const txid = uploadResult?.id;
+      if (!txid) {
+        throw new Error("Upload failed: no transaction ID returned");
+      }
+      const uri = `https://gateway.irys.xyz/${txid}`;
+
+      // Get current nonce and sign the tokenURI update
+      const nonce = await readContract(viemClient, {
+        abi: namedLadyRendererAbi,
+        address: namedLadyRendererAddress,
+        functionName: "currentNonce",
+        args: [address as `0x${string}`],
+      });
+
       const tokenUriRequest = encodePacked(
         ["uint256", "string", "uint256"],
         [BigInt(tokenId), uri, nonce],
@@ -198,7 +268,8 @@ export default (async function handler(req, res) {
         account: createSignerAccount(),
         message: { raw: hash },
       });
-      return res.status(200).json({ signature: finalSignature });
+
+      return res.status(200).json({ uri, signature: finalSignature });
     }
 
     return res.status(405).json({ error: "Method Not Allowed" });

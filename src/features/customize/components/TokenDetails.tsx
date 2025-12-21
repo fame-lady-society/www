@@ -12,7 +12,6 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
 import { useUpdateMetadata } from "../hooks/useUpdateMetadata";
-import IrysUploaderWidget from "@/components/IrysUploaderWidget";
 import { useAccount, useWriteContract } from "wagmi";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { TransactionsModal } from "@/features/wrap/components/TransactionsModal";
@@ -135,15 +134,6 @@ export const TokenDetails: FC<{
     return "";
   }, [metadata.description]);
 
-  const [uploaderOpen, setUploaderOpen] = useState(false);
-  const [uploadInitialFile, setUploadInitialFile] = useState<{
-    name: string;
-    content: string;
-  } | null>(null);
-  const onUploadCompleteRef = useRef<((uri: string | null) => void) | null>(
-    null,
-  );
-
   const onSubmit = useCallback(
     async (name: string, description: string) => {
       if (name === metadata.name && initialDescription === description) {
@@ -157,48 +147,11 @@ export const TokenDetails: FC<{
       }
 
       try {
-        const {
-          metadata: signedMetadata,
-          signature,
-          expiration,
-        } = await mutateAsync({ tokenId, name, description });
-
-        // create an in-memory file and open the uploader
-        setUploadInitialFile({
-          name: `metadata-${tokenId}.json`,
-          content: signedMetadata,
+        const { uri, signature: finalSignature } = await mutateAsync({
+          tokenId,
+          name,
+          description,
         });
-        setUploaderOpen(true);
-
-        // wait for uploader to return an uri
-        const uri = await new Promise<string>((resolve, reject) => {
-          onUploadCompleteRef.current = (u) => {
-            setUploadInitialFile(null);
-            setUploaderOpen(false);
-            if (!u) return reject(new Error("Upload canceled or failed"));
-            resolve(u);
-          };
-        });
-
-        const chainName = chain?.name?.toLowerCase() ?? "sepolia";
-        const resp = await fetch(`/api/${chainName}/metadata`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tokenId,
-            name,
-            description,
-            uri,
-            signature,
-            expiration,
-          }),
-        });
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error(`Server POST failed: ${resp.status} ${text}`);
-        }
-        const data = await resp.json();
-        const finalSignature = data.signature as `0x${string}`;
 
         const tx = await writeContractAsync({
           abi: namedLadyRendererAbi,
@@ -220,7 +173,6 @@ export const TokenDetails: FC<{
     [
       mutateAsync,
       tokenId,
-      chain?.name,
       initialDescription,
       metadata.name,
       addNotification,
@@ -350,47 +302,6 @@ export const TokenDetails: FC<{
           }
         }}
       />
-
-      {uploaderOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 2000,
-          }}
-        >
-          <Paper sx={{ width: "90%", maxWidth: 900, p: 2 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h6">Upload metadata</Typography>
-              <Button
-                onClick={() => {
-                  setUploaderOpen(false);
-                  setUploadInitialFile(null);
-                  onUploadCompleteRef.current?.(null);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-            <IrysUploaderWidget
-              onComplete={(result) => {
-                onUploadCompleteRef.current?.(result);
-              }}
-              initialFile={uploadInitialFile}
-            />
-          </Paper>
-        </div>
-      )}
     </>
   );
 };

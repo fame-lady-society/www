@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
+import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
 import IrysUploaderWidget from "@/components/IrysUploaderWidget";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
@@ -32,6 +33,10 @@ export const MetadataIrysUploader: React.FC<MetadataIrysUploaderProps> = ({
   onComplete,
   label = "Metadata Upload",
 }) => {
+  const { isConnected, chain } = useAccount();
+  const chainId = useChainId();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
   const [step, setStep] = useState<"image" | "metadata" | "done">("image");
   const [imageTx, setImageTx] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -76,14 +81,21 @@ export const MetadataIrysUploader: React.FC<MetadataIrysUploaderProps> = ({
 
   const handleUploadMetadata = useCallback(async () => {
     if (!metaFile) return appendLog("No metadata file prepared");
-    if (!window || !window.ethereum)
-      return appendLog("window.ethereum not found");
+    if (!isConnected) return appendLog("Please connect your wallet first");
+    if (!walletClient) return appendLog("Wallet client not available");
+    if (!publicClient) return appendLog("Public client not available");
+    if (!chain || (chainId !== 1 && chainId !== 8453)) {
+      return appendLog(
+        `Unsupported chain: ${chain?.name ?? "unknown"} (${chainId}). Please switch to Ethereum mainnet or Base`,
+      );
+    }
 
     setStatus("connecting");
     setProgress(5);
     try {
-      const uc = await getIrysUploader();
-      appendLog("Uploader ready for metadata upload");
+      appendLog(`Connecting to Irys on ${chain.name} (chain ID: ${chainId})`);
+      const uc = await getIrysUploader(walletClient, publicClient);
+      appendLog(`Uploader ready for metadata upload on ${chain.name}`);
       setStatus("estimating");
       setProgress(20);
 
@@ -119,7 +131,17 @@ export const MetadataIrysUploader: React.FC<MetadataIrysUploaderProps> = ({
       setStatus("error");
       setProgress(0);
     }
-  }, [metaFile, appendLog, computeBufferedPrice, onComplete]);
+  }, [
+    metaFile,
+    isConnected,
+    walletClient,
+    publicClient,
+    chain,
+    chainId,
+    appendLog,
+    computeBufferedPrice,
+    onComplete,
+  ]);
 
   return (
     <div className="p-3 border rounded bg-white/50">

@@ -20,15 +20,6 @@ export const client = createPublicClient({
         },
       },
     }),
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
   ]),
   chain: base,
   batch: {
@@ -39,15 +30,6 @@ export const client = createPublicClient({
 export const walletClient = createWalletClient({
   transport: fallback([
     http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2, {
       batch: true,
       retryCount: 10,
       fetchOptions: {

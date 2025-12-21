@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { useDropzone } from "react-dropzone";
+import {
+  useAccount,
+  useWalletClient,
+  usePublicClient,
+  useChainId,
+} from "wagmi";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
-
-// extend window with ethereum
-declare global {
-  interface Window {
-    ethereum: any;
-  }
-}
 
 export type IrysUploaderWidgetProps = {
   onComplete?: (txid: string) => void;
@@ -67,6 +72,10 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   onComplete,
   initialFile = null,
 }) => {
+  const { address, isConnected, chain } = useAccount();
+  const chainId = useChainId();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
   const [uploader, setUploader] = useState<any | null>(null);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [priceEth, setPriceEth] = useState<string | null>(null);
@@ -74,6 +83,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   const [log, setLog] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const connectedChainIdRef = useRef<number | null>(null);
 
   const MAX_LOG_LINES = 150;
   const truncateLine = (s: string, max = 1000) =>
@@ -128,6 +138,24 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
     multiple: false,
   });
 
+  // Reset uploader when chain changes (balances are chain-specific)
+  useEffect(() => {
+    if (uploader && connectedChainIdRef.current !== null) {
+      if (chainId !== connectedChainIdRef.current) {
+        const prevChainId = connectedChainIdRef.current;
+        setUploader(null);
+        setStatus(null);
+        setProgress(0);
+        setPriceEth(null);
+        setLoadedBalanceEth(null);
+        connectedChainIdRef.current = null;
+        appendLog(
+          `Chain changed from ${prevChainId} to ${chainId} - please reconnect Irys`,
+        );
+      }
+    }
+  }, [chainId, uploader, appendLog]);
+
   // If an initialFile is provided, convert to a File and populate the files
   // list so the user can proceed with Connect/Estimate/Fund/Upload flows.
   useEffect(() => {
@@ -158,14 +186,28 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   );
 
   const handleConnect = async (): Promise<any | null> => {
-    if (typeof window === "undefined" || !window.ethereum)
-      return appendLog("window.ethereum not found");
+    if (!isConnected || !address) {
+      return appendLog("Please connect your wallet first");
+    }
+    if (!walletClient) {
+      return appendLog("Wallet client not available");
+    }
+    if (!publicClient) {
+      return appendLog("Public client not available");
+    }
+    if (!chain || (chainId !== 1 && chainId !== 8453)) {
+      return appendLog(
+        `Unsupported chain: ${chain?.name ?? "unknown"} (${chainId}). Please switch to Ethereum mainnet or Base`,
+      );
+    }
     try {
       setStatus("connecting");
       setProgress(10);
-      const uc = await getIrysUploader();
+      appendLog(`Connecting to Irys on ${chain.name} (chain ID: ${chainId})`);
+      const uc = await getIrysUploader(walletClient, publicClient);
       setUploader(uc);
-      appendLog("Uploader ready");
+      connectedChainIdRef.current = chainId;
+      appendLog(`Uploader ready on ${chain.name}`);
       setStatus("connected");
       setProgress(20);
       return uc;
@@ -381,10 +423,20 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
     <div className="max-w-3xl mx-auto p-4 bg-white/40 rounded">
       <div className="mb-4 flex gap-2">
         <button
-          className="px-3 py-1 bg-blue-600 text-white rounded"
+          className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleConnect}
+          disabled={
+            !isConnected ||
+            !walletClient ||
+            !publicClient ||
+            (chainId !== 1 && chainId !== 8453)
+          }
         >
-          Connect Wallet
+          {isConnected
+            ? chainId === 1 || chainId === 8453
+              ? "Connect Irys"
+              : "Switch to Ethereum/Base"
+            : "Connect Wallet First"}
         </button>
         <button
           className="px-3 py-1 bg-gray-700 text-white rounded"
@@ -489,6 +541,11 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
 
       <div className="mb-4">
         <h3 className="font-medium">Estimate</h3>
+        {chain && (
+          <p className="text-sm text-gray-600 mb-1">
+            Chain: {chain.name} (ID: {chainId})
+          </p>
+        )}
         <p>Total bytes: {totalBytes}</p>
         <p>Price: {priceEth ?? "-"} ETH</p>
         <p>Loaded balance: {loadedBalanceEth ?? "-"} ETH</p>

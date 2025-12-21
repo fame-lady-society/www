@@ -1,34 +1,42 @@
 "use client";
 
 import { WebUploader } from "@irys/web-upload";
-import { WebBaseEth } from "@irys/web-upload-ethereum";
+import { WebBaseEth, WebEthereum } from "@irys/web-upload-ethereum";
 import { ViemV2Adapter } from "@irys/web-upload-ethereum-viem-v2";
-import { createPublicClient, createWalletClient, custom } from "viem";
-import { base, sepolia } from "viem/chains";
+import type { PublicClient, WalletClient, Chain } from "viem";
+import { sepolia } from "viem/chains";
+import { createPublicClient, http } from "viem";
 
-export const getIrysUploader = async () => {
-  const [account] = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
+export const getIrysUploader = async (
+  walletClient: WalletClient,
+  publicClient: PublicClient,
+) => {
+  if (!walletClient.account) {
+    throw new Error("Wallet client must have an account");
+  }
 
-  const provider = createWalletClient({
-    account,
-    chain: base,
-    transport: custom(window.ethereum),
-  });
+  if (!walletClient.chain) {
+    throw new Error("Wallet client must have a chain");
+  }
 
-  const publicClient = createPublicClient({
-    chain: base,
-    transport: custom(window.ethereum),
-  });
+  const chain = walletClient.chain;
+  const chainId = chain.id;
+
+  if (chainId !== 1 && chainId !== 8453) {
+    throw new Error(
+      `Unsupported chain: ${chain.name} (${chainId}). Irys supports Ethereum mainnet (1) and Base (8453)`,
+    );
+  }
 
   const sepoliaPublicClient = createPublicClient({
     chain: sepolia,
-    transport: custom(window.ethereum),
+    transport: http(),
   });
 
-  const irysUploader = await WebUploader(WebBaseEth).withAdapter(
-    ViemV2Adapter(provider, {
+  const WebEthClass = chainId === 1 ? WebEthereum : WebBaseEth;
+
+  const irysUploader = await WebUploader(WebEthClass).withAdapter(
+    ViemV2Adapter(walletClient, {
       publicClient: publicClient as unknown as typeof sepoliaPublicClient,
     }),
   );
