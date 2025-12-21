@@ -9,6 +9,7 @@ import {
   http,
   cookieStorage,
   createStorage,
+  CreateConnectorFn,
 } from "wagmi";
 import {
   base,
@@ -20,9 +21,16 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
 import { SiweMessage } from "siwe";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import {
+  ConnectKitProvider,
+  getDefaultConfig,
+  getDefaultConnectors,
+} from "connectkit";
 import { Chain, Transport } from "viem";
 import { SerializedSession } from "@/service/session";
+import { Connector, createConnector } from "@wagmi/core";
+import { sdk } from "@farcaster/miniapp-sdk";
+import { EventEmitter } from "events";
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -181,12 +189,23 @@ export const Web3Provider: FC<
   }>
 > = ({ children, siwe = false, transports, chains }) => {
   const config = useMemo(() => {
+    const connectors = [
+      ...getDefaultConnectors({
+        app: {
+          name: defaultConfig.appName,
+          icon: defaultConfig.appIcon,
+          description: defaultConfig.appDescription,
+          url: defaultConfig.appUrl,
+        },
+        walletConnectProjectId: defaultConfig.walletConnectProjectId,
+      }),
+    ];
     return createConfig(
       getDefaultConfig({
         ...defaultConfig,
         ...(chains && chains.length && { chains }),
         ...(transports && { transports }),
-        // connectors: [miniAppConnector()],
+        connectors,
       }),
     );
   }, [chains, transports]);

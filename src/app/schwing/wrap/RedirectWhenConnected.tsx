@@ -1,7 +1,8 @@
 "use client";
 
 import { FC, useEffect } from "react";
-import { useAccount, useChainId } from "wagmi";
+import { useChainId } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
 
 export const RedirectWhenConnected: FC<{

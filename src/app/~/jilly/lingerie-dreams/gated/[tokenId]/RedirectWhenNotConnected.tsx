@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useSIWE } from "connectkit";
 

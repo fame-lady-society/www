@@ -1,5 +1,6 @@
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { useChainContracts } from "./useChainContracts";
+import { useAccount } from "@/hooks/useAccount";
 
 const roleToBytes32 = (role: string): `0x${string}` => {
   switch (role) {

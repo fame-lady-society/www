@@ -1,5 +1,6 @@
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 import { useChainContracts } from "./useChainContracts";
+import { useAccount } from "@/hooks/useAccount";
 
 export function useHasRoleOrOwner(roleName: "TREASURER_ROLE") {
   const { address } = useAccount();

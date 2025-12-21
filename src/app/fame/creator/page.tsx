@@ -2,7 +2,7 @@
 import { AppMain } from "@/layouts/AppMain";
 import { VideoWipeInteraction } from "./VideoWipeInteraction";
 import { ChainSelector } from "./ChainSelector";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useHasCreatorRole } from "./[address]/useHasCreatorRole";

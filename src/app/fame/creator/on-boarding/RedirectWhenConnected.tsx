@@ -1,7 +1,8 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useChainId, useSwitchChain } from "wagmi";
 import { useRouter, usePathname } from "next/navigation";
 
 function chainIdToChainName(chainId: number) {

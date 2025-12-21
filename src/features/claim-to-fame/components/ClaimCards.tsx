@@ -9,17 +9,13 @@ import Button from "@mui/material/Button";
 import { claimToFameAbi, fameAbi } from "@/wagmi";
 import { claimToFameFromNetwork } from "../contracts";
 import { fameFromNetwork } from "@/features/fame/contract";
+import { useAccount } from "@/hooks/useAccount";
 import {
   ContractFunctionExecutionError,
   parseUnits,
   encodeFunctionData,
 } from "viem";
-import {
-  useReadContracts,
-  useWriteContract,
-  useAccount,
-  useSimulateContract,
-} from "wagmi";
+import { useReadContracts, useWriteContract, useSimulateContract } from "wagmi";
 import { base, sepolia } from "viem/chains";
 import { useClaim } from "../hooks/useClaim";
 import { formatFame } from "@/utils/fame";

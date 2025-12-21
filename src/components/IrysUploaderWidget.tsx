@@ -8,12 +8,8 @@ import React, {
   useRef,
 } from "react";
 import { useDropzone } from "react-dropzone";
-import {
-  useAccount,
-  useWalletClient,
-  usePublicClient,
-  useChainId,
-} from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useWalletClient, usePublicClient, useChainId } from "wagmi";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
 

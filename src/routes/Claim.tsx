@@ -11,7 +11,7 @@ import CardActionArea from "@mui/material/CardActionArea";
 
 import { Main } from "@/layouts/Main";
 import { isAddress } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { FameLadySocietyClaimCard } from "@/features/claim-to-fame/components/FameLadySocietyClaimCard";
 import { base, sepolia } from "viem/chains";
 import { FameBalanceCard } from "@/features/claim-to-fame/components/FameBalanceCard";

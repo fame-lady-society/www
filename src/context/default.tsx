@@ -14,7 +14,8 @@ import {
 } from "./Wagmi";
 import { NotificationsProvider } from "@/features/notifications/Context";
 import { Notifications } from "@/features/notifications/Notifications";
-import { useAccount, useEnsName } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useEnsName } from "wagmi";
 import { Chain, Transport } from "viem";
 
 const Config: FC<PropsWithChildren> = ({ children }) => {

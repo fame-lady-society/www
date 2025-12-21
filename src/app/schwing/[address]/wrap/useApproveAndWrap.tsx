@@ -9,12 +9,9 @@ import {
   useWriteFameMirrorSetApprovalForAll,
   useWriteGovSocietyDepositFor,
 } from "@/wagmi";
-import {
-  societyFromNetwork,
-  govSocietyFromNetwork,
-} from "@/features/fame/contract";
 import { type base, type sepolia } from "viem/chains";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useFameusWrap } from "../context";
 
 // -------------------------------

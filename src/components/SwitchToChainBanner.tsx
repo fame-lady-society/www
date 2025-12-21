@@ -2,7 +2,8 @@ import React, { FC } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export const SwitchToChainBanner: FC<{ chainId: 11155111 | 1 }> = ({
   chainId,

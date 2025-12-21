@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
-import getConfig from "next/config";
-
-const { publicRuntimeConfig } = getConfig();
-const baseUrl = publicRuntimeConfig.baseUrl;
+import { useAccount } from "@/hooks/useAccount";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export function useLadies() {
   const { address, chainId } = useAccount();

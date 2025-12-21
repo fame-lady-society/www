@@ -1,5 +1,5 @@
 "use client";
-import { useReducer, useCallback, useEffect } from "react";
+import { useReducer, useCallback } from "react";
 import { BaseError } from "viem";
 import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/components/TransactionsModal";
@@ -7,7 +7,8 @@ import { useNotifications } from "@/features/notifications/Context";
 import { useWriteGovSocietyWithdrawTo } from "@/wagmi";
 import { govSocietyFromNetwork } from "@/features/fame/contract";
 import { sepolia, type base } from "viem/chains";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useFameusUnwrap } from "./context";
 import { revalidate } from "../actions";
 

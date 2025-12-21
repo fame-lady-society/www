@@ -9,7 +9,7 @@ import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SelectPage } from "@/features/customize/SelectPage";
 import { FC } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
 import { useRouter } from "next/navigation";
 

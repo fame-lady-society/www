@@ -9,7 +9,8 @@ import NextImage from "next/image";
 import XIcon from "@mui/icons-material/X";
 import { formatUnits } from "viem";
 import { useAllocation } from "../hooks/useAllocation";
-import { useAccount, useChainId, useEnsAddress } from "wagmi";
+import { useConnection } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { formatFame } from "@/utils/fame";
 import { usePresaleAmount } from "../hooks/usePresale";
 import { base, sepolia } from "viem/chains";
@@ -60,7 +61,7 @@ export const SlimChecker: FC<
   ...cardProps
 }) => {
   const { address: currentAddress } = useAccount();
-  const connectedChainId = useChainId();
+  const { chainId: connectedChainId } = useConnection();
   const chainId = defaultChainId || connectedChainId;
   const address = defaultAddress || currentAddress;
 

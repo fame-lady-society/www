@@ -11,7 +11,8 @@ import {
 } from "@/wagmi";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { sepolia, type base } from "viem/chains";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useWaitForTransactionReceipt } from "wagmi";
 import { useFameusWrap } from "./context";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";

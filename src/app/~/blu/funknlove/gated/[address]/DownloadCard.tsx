@@ -8,11 +8,12 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useSIWE } from "connectkit";
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 import { funknloveAddressForChain } from "../../contracts";
 import { mainnet } from "viem/chains";
 import { funknloveAbi } from "@/wagmi";
+import { useReadContracts } from "wagmi";
 
 const WAV_DOWNLOAD_URL =
   "https://gateway.irys.xyz/QuFCpGHBlG8bbXcZ1PyLgQNa-ZKJ6k_KgSZfKxQoKTA";

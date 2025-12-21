@@ -4,7 +4,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import { useLadies } from "@/features/customize/hooks/useLadies";
 import Skeleton from "@mui/material/Skeleton";
 import { ClaimCard } from "./ClaimCards";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { flsTokenAddress } from "@/viem/mainnet-client";
 
 export const FameLadySocietyClaimCard: FC<{

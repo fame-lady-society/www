@@ -5,7 +5,8 @@ import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
 import { useWriteGovSocietyWithdrawTo } from "@/wagmi";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useFameusUnwrap } from "./context";
 
 // -------------------------------

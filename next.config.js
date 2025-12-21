@@ -1,13 +1,17 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  publicRuntimeConfig: {
-    baseUrl:
-      process.env.NEXT_PUBLIC_BASE_URL || "https://www.fameladysociety.com",
-  },
+
   env: {
     LOG_LEVEL: "debug",
-    OG_BASE_URL: process.env.OG_BASE_URL || "https://fls-www.vercel.app",
+    NEXT_PUBLIC_BASE_URL:
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.VERCEL_URL ||
+      "https://www.fameladysociety.com",
+    OG_BASE_URL:
+      process.env.OG_BASE_URL ||
+      process.env.VERCEL_URL ||
+      "https://fls-www.vercel.app",
   },
   webpack: (config) => {
     config.externals.push("pino-pretty", "lokijs", "encoding");

@@ -14,7 +14,8 @@ import Box from "@mui/material/Box";
 import { useSweepAndWrap } from "@/hooks/useSweepAndWrap";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import { useReadFameLadySocietyWrapCost } from "@/wagmi";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useBalance } from "wagmi";
 import { client as mainnetClient } from "@/viem/mainnet-client";
 import { getEnsName } from "viem/actions";
 

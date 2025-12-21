@@ -7,7 +7,7 @@ import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { useApproveAndWrap } from "./useApproveAndWrap";
 import { useParams, useRouter } from "next/navigation";
 import { useHasCreatorRole } from "./useHasCreatorRole";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useSwapMetadata } from "./useSwapMetadata";
 import { base } from "viem/chains";
 

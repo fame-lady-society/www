@@ -4,7 +4,8 @@ import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { polygonAmoy, polygon } from "viem/chains";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { useMint } from "./useMint";
-import { useAccount, useReadContract, useSwitchChain } from "wagmi";
+import { useReadContract, useSwitchChain, useChains } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { lingerieDreamsAddressForChain } from "./contracts";
 import { erc721Abi } from "viem";
 import { useMintLimit } from "./useMintLimit";
@@ -15,7 +16,8 @@ export const Mint: FC<{
 }> = ({ chainId }) => {
   const { addNotification } = useNotifications();
   const { chainId: currentChainId, address } = useAccount();
-  const { chains, switchChain } = useSwitchChain();
+  const chains = useChains();
+  const { mutateAsync: switchChain } = useSwitchChain();
   const currentChain = chains.find((chain) => chain.id === chainId);
   const isWrongChain = currentChainId !== chainId;
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);

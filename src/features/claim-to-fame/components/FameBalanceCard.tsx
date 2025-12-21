@@ -3,11 +3,12 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Skeleton from "@mui/material/Skeleton";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { formatFame } from "@/utils/fame";
 import { fameFromNetwork } from "@/features/fame/contract";
 import { base, sepolia } from "viem/chains";
 import { fameAbi } from "@/wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export const FameBalanceCard: FC<{
   chainId: typeof sepolia.id | typeof base.id;

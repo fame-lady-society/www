@@ -19,7 +19,8 @@ import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import {
   fameLadySocietyAbi,
   fameLadySocietyAddress,

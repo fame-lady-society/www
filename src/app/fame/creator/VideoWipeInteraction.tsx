@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export const VideoWipeInteraction = ({
   children,

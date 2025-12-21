@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useWriteContract } from "wagmi";
 import {
   WaitForTransactionReceiptErrorType,
   type WriteContractErrorType,

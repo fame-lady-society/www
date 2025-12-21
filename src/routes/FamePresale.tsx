@@ -9,7 +9,8 @@ import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { FC, PropsWithChildren, ReactNode, useEffect } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { PresaleCard } from "@/features/presale/components/PresaleCard";
-import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { useChainId, useSwitchChain } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { base, sepolia } from "viem/chains";
 import { InfoCard } from "@/features/presale/components/InfoCard";
 
@@ -19,7 +20,7 @@ const Content: FC<PropsWithChildren<{ network?: "base" | "sepolia" }>> = ({
 }) => {
   const { isConnected } = useAccount();
   const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  const { mutate: switchChain } = useSwitchChain();
   const correctChain =
     isConnected &&
     ((network === "base" && chainId === base.id) ||

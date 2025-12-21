@@ -1,4 +1,5 @@
-import { useAccount, useChainId } from "wagmi";
+import { useChainId } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import {
   useReadFameVestingComputeVestingScheduleIdForAddressAndIndex,
   useReadFameVestingComputeReleasableAmount,

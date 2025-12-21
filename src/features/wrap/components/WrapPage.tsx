@@ -9,12 +9,8 @@ import {
   fameLadySquadAddress,
   fameLadySquadAbi,
 } from "@/wagmi";
-import {
-  useAccount,
-  useReadContract,
-  useReadContracts,
-  useWriteContract,
-} from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
 import { WriteContractData } from "wagmi/query";
 import { useRouter } from "next/navigation";
 import { WrapCard } from "./WrapCard";

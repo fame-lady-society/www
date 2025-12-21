@@ -1,7 +1,8 @@
 "use client";
 import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "../ChainSelector";
-import { useAccount, useChainId } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useChainId } from "wagmi";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { base } from "viem/chains";

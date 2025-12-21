@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useHasCreatorRole } from "./useHasCreatorRole";
 import { TokenSelection } from "./TokenSelection";

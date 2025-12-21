@@ -10,12 +10,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import DeniedIcon from "@mui/icons-material/NotInterested";
 import { useChainContracts } from "@/hooks/useChainContracts";
-import {
-  useAccount,
-  useReadContract,
-  useReadContracts,
-  useWriteContract,
-} from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
 import { TransactionsModal } from "@/features/wrap/components/TransactionsModal";
 import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/features/wrap/types";

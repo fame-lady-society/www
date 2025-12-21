@@ -1,7 +1,8 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain, useChains, useChainId } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
 
 function chainIdToChainName(chainId: number) {
@@ -24,8 +25,13 @@ export const RedirectWhenConnected: FC<{
     toChain,
   );
   const { isConnected, address } = useAccount();
+  const chains = useChains();
   const chainId = useChainId();
-  const { chains, switchChainAsync, isSuccess, isPending } = useSwitchChain({
+  const {
+    mutateAsync: switchChainAsync,
+    isSuccess,
+    isPending,
+  } = useSwitchChain({
     mutation: {
       onMutate(variables) {
         setTargetChainId(variables.chainId);

@@ -23,7 +23,8 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IconButton from "@mui/material/IconButton";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { styled } from "@mui/material/styles";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
+import { useReadContract } from "wagmi";
 import {
   fameLadySocietyAbi,
   fameLadySocietyAddress,

@@ -1,6 +1,6 @@
 "use client";
 import { FC } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import NextLink from "next/link";
 import { base, mainnet, sepolia } from "viem/chains";
 

@@ -3,7 +3,7 @@
 import { ConnectKitButton, useSIWE } from "connectkit";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export function ConnectCard() {
   const { isSignedIn, signIn } = useSIWE();

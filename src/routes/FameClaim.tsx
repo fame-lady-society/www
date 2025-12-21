@@ -16,7 +16,7 @@ import {
   OG_RANK_BOOST,
 } from "@/features/claim-to-fame/hooks/constants";
 import { isAddress } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { FameLadySocietyClaimCard } from "@/features/claim-to-fame/components/FameLadySocietyClaimCard";
 import { base, sepolia } from "viem/chains";
 import { FameBalanceCard } from "@/features/claim-to-fame/components/FameBalanceCard";

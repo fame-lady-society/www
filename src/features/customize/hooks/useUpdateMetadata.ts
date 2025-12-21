@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export function useUpdateMetadata() {
   const { chain } = useAccount();

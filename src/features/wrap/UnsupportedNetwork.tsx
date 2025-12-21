@@ -3,7 +3,8 @@ import Container from "@mui/material/Container";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { useSwitchChain, useAccount } from "wagmi";
+import { useSwitchChain } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 
 export const UnsupportedNetwork: FC = () => {
   const { chain } = useAccount();

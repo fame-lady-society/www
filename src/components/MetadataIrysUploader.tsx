@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
-import { useAccount, useWalletClient, usePublicClient, useChainId } from "wagmi";
+import { useWalletClient, usePublicClient, useChainId } from "wagmi";
 import IrysUploaderWidget from "@/components/IrysUploaderWidget";
 import { getIrysUploader } from "@/service/irys_client";
+import { useAccount } from "@/hooks/useAccount";
 import { formatEther } from "viem";
 
 export type MetadataIrysUploaderProps = {

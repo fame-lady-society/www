@@ -11,7 +11,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DevTipModal, TipCloseReason } from "./DevTipModal";
-import { useAccount, useEnsAddress } from "wagmi";
+import { useEnsAddress } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import { isAddress } from "viem";
 

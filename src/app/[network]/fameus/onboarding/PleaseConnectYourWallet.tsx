@@ -1,7 +1,7 @@
 "use client";
 
-import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
+import { useAccount } from "@/hooks/useAccount";
 
 export function PleaseConnectYourWallet() {
   const { isConnected } = useAccount();
