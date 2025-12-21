@@ -11,6 +11,8 @@ import {
   createStorage,
   CreateConnectorFn,
 } from "wagmi";
+import { farcasterMiniApp as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
+
 import {
   base,
   mainnet,
@@ -28,9 +30,6 @@ import {
 } from "connectkit";
 import { Chain, Transport } from "viem";
 import { SerializedSession } from "@/service/session";
-import { Connector, createConnector } from "@wagmi/core";
-import { sdk } from "@farcaster/miniapp-sdk";
-import { EventEmitter } from "events";
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -190,6 +189,7 @@ export const Web3Provider: FC<
 > = ({ children, siwe = false, transports, chains }) => {
   const config = useMemo(() => {
     const connectors = [
+      miniAppConnector(),
       ...getDefaultConnectors({
         app: {
           name: defaultConfig.appName,
