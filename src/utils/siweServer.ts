@@ -1,4 +1,5 @@
-import { chains, transports } from "@/context/Wagmi";
+import { COOKIE_NAME, SESSION_SECRET } from "@/app/siwe/session-utils";
+import { chains, transports } from "@/context/wagmiConfig";
 import { configureServerSideSIWE } from "connectkit-next-siwe";
 
 export const siweServer = configureServerSideSIWE({
@@ -7,8 +8,8 @@ export const siweServer = configureServerSideSIWE({
     transports: transports,
   },
   session: {
-    cookieName: "siwe",
-    password: process.env.SESSION_SECRET,
+    cookieName: COOKIE_NAME,
+    password: SESSION_SECRET,
     cookieOptions: {
       secure: process.env.NODE_ENV === "production",
     },

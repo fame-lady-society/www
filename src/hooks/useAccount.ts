@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useConnection } from "wagmi";
-import type { sdk } from "@farcaster/miniapp-sdk";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { SIWESession, useSIWE } from "connectkit";
 import { StatusState } from "connectkit/build/siwe/SIWEContext";
 
@@ -41,15 +41,13 @@ export function useAccount() {
     const loadMiniApp = async () => {
       if (typeof window === "undefined") return;
 
-      import("@farcaster/miniapp-sdk").then(({ sdk }) => {
+      if (cancelled) return;
+      sdk.actions.ready().then(() => {
         if (cancelled) return;
-        sdk.actions.ready().then(() => {
+        setIsMiniApp(true);
+        sdk.context.then((context) => {
           if (cancelled) return;
-          setIsMiniApp(true);
-          sdk.context.then((context) => {
-            if (cancelled) return;
-            setMiniAppContext(context);
-          });
+          setMiniAppContext(context);
         });
       });
     };

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "node:crypto";
 
-const SESSION_SECRET =
-  process.env.SIWE_SESSION_SECRET || "change-me-in-production";
-const COOKIE_NAME = "siwe-session";
+export const SESSION_SECRET = process.env.SESSION_SECRET!;
+export const COOKIE_NAME = "siwe";
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
 export type SessionData = {
