@@ -73,7 +73,6 @@ export function setSession(
   response.cookies.set(COOKIE_NAME, signedSession, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    domain: new URL(process.env.NEXT_PUBLIC_BASE_URL!).hostname,
     sameSite: "strict",
     maxAge: SESSION_MAX_AGE,
     path: "/",
