@@ -6,7 +6,7 @@ export const COOKIE_NAME = "siwe";
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
 export type SessionData = {
-  address: string;
+  address: `0x${string}`;
   chainId: number;
   expiresAt: number;
 };
@@ -62,7 +62,7 @@ export function getSession(request: NextRequest): SessionData | null {
 
 export function setSession(
   response: NextResponse,
-  address: string,
+  address: `0x${string}`,
   chainId: number,
 ): void {
   const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
@@ -72,7 +72,7 @@ export function setSession(
   response.cookies.set(COOKIE_NAME, signedSession, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     domain:
       process.env.NODE_ENV === "production"
         ? "fameladysociety.com"

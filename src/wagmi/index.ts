@@ -7440,6 +7440,639 @@ export const wrappedNftDonationVaultConfig = {
 } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ZoraFactoryImpl
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const zoraFactoryImplAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'coinV4Impl_', internalType: 'address', type: 'address' },
+      { name: 'creatorCoinImpl_', internalType: 'address', type: 'address' },
+      { name: 'hook_', internalType: 'address', type: 'address' },
+      { name: 'zoraHookRegistry_', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
+    name: 'AddressEmptyCode',
+  },
+  { type: 'error', inputs: [], name: 'ArrayLengthMismatch' },
+  { type: 'error', inputs: [], name: 'ConfigTickLowerMustBeLessThanTickUpper' },
+  { type: 'error', inputs: [], name: 'Deprecated' },
+  { type: 'error', inputs: [], name: 'ERC1167FailedCreateClone' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'implementation', internalType: 'address', type: 'address' },
+    ],
+    name: 'ERC1967InvalidImplementation',
+  },
+  { type: 'error', inputs: [], name: 'ERC1967NonPayable' },
+  { type: 'error', inputs: [], name: 'EthTransferInvalid' },
+  { type: 'error', inputs: [], name: 'FailedInnerCall' },
+  { type: 'error', inputs: [], name: 'InvalidConfig' },
+  { type: 'error', inputs: [], name: 'InvalidHook' },
+  { type: 'error', inputs: [], name: 'InvalidInitialization' },
+  { type: 'error', inputs: [], name: 'InvalidPoolVersion' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'tickLower', internalType: 'int24', type: 'int24' },
+      { name: 'tickUpper', internalType: 'int24', type: 'int24' },
+    ],
+    name: 'InvalidTickRangeMisordered',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'value', internalType: 'uint256', type: 'uint256' },
+      { name: 'limit', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'MaxShareToBeSoldExceeded',
+  },
+  { type: 'error', inputs: [], name: 'NotInitializing' },
+  { type: 'error', inputs: [], name: 'NumDiscoveryPositionsOutOfRange' },
+  {
+    type: 'error',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'OwnableInvalidOwner',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
+    name: 'OwnableUnauthorizedAccount',
+  },
+  { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
+  { type: 'error', inputs: [], name: 'UUPSUnauthorizedCallContext' },
+  {
+    type: 'error',
+    inputs: [{ name: 'slot', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'UUPSUnsupportedProxiableUUID',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'currentName', internalType: 'string', type: 'string' },
+      { name: 'newName', internalType: 'string', type: 'string' },
+    ],
+    name: 'UpgradeToMismatchedContractName',
+  },
+  { type: 'error', inputs: [], name: 'ZeroDiscoveryPositions' },
+  { type: 'error', inputs: [], name: 'ZeroDiscoverySupplyShare' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'caller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'payoutRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'platformReferrer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'currency',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      { name: 'uri', internalType: 'string', type: 'string', indexed: false },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+      {
+        name: 'symbol',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
+        name: 'coin',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'pool',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'version',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+    ],
+    name: 'CoinCreated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'caller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'payoutRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'platformReferrer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'currency',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      { name: 'uri', internalType: 'string', type: 'string', indexed: false },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+      {
+        name: 'symbol',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
+        name: 'coin',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'poolKey',
+        internalType: 'struct PoolKey',
+        type: 'tuple',
+        components: [
+          { name: 'currency0', internalType: 'Currency', type: 'address' },
+          { name: 'currency1', internalType: 'Currency', type: 'address' },
+          { name: 'fee', internalType: 'uint24', type: 'uint24' },
+          { name: 'tickSpacing', internalType: 'int24', type: 'int24' },
+          { name: 'hooks', internalType: 'contract IHooks', type: 'address' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'poolKeyHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'version',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+    ],
+    name: 'CoinCreatedV4',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'caller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'payoutRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'platformReferrer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'currency',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      { name: 'uri', internalType: 'string', type: 'string', indexed: false },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+      {
+        name: 'symbol',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
+        name: 'coin',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'poolKey',
+        internalType: 'struct PoolKey',
+        type: 'tuple',
+        components: [
+          { name: 'currency0', internalType: 'Currency', type: 'address' },
+          { name: 'currency1', internalType: 'Currency', type: 'address' },
+          { name: 'fee', internalType: 'uint24', type: 'uint24' },
+          { name: 'tickSpacing', internalType: 'int24', type: 'int24' },
+          { name: 'hooks', internalType: 'contract IHooks', type: 'address' },
+        ],
+        indexed: false,
+      },
+      {
+        name: 'poolKeyHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'version',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+    ],
+    name: 'CreatorCoinCreated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'version',
+        internalType: 'uint64',
+        type: 'uint64',
+        indexed: false,
+      },
+    ],
+    name: 'Initialized',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferStarted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'implementation',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'Upgraded',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'acceptOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'msgSender', internalType: 'address', type: 'address' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'coinSalt', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'coinAddress',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'coinV4Impl',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'contentCoinHook',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'contractName',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'contractVersion',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'creatorCoinHook',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'creatorCoinImpl',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'currency', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'int24', type: 'int24' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'deploy',
+    outputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'postDeployHook', internalType: 'address', type: 'address' },
+      { name: 'postDeployHookData', internalType: 'bytes', type: 'bytes' },
+      { name: 'coinSalt', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'deploy',
+    outputs: [
+      { name: 'coin', internalType: 'address', type: 'address' },
+      { name: 'postDeployHookDataOut', internalType: 'bytes', type: 'bytes' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'deploy',
+    outputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'coinSalt', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'deployCreatorCoin',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'postDeployHook', internalType: 'address', type: 'address' },
+      { name: 'postDeployHookData', internalType: 'bytes', type: 'bytes' },
+      { name: 'coinSalt', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'deployCreatorCoin',
+    outputs: [
+      { name: 'coin', internalType: 'address', type: 'address' },
+      { name: 'postDeployHookDataOut', internalType: 'bytes', type: 'bytes' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'payoutRecipient', internalType: 'address', type: 'address' },
+      { name: 'owners', internalType: 'address[]', type: 'address[]' },
+      { name: 'uri', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'symbol', internalType: 'string', type: 'string' },
+      { name: 'poolConfig', internalType: 'bytes', type: 'bytes' },
+      { name: 'platformReferrer', internalType: 'address', type: 'address' },
+      { name: 'deployHook', internalType: 'address', type: 'address' },
+      { name: 'hookData', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'deployWithHook',
+    outputs: [
+      { name: 'coin', internalType: 'address', type: 'address' },
+      { name: 'hookDataOut', internalType: 'bytes', type: 'bytes' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'coin', internalType: 'address', type: 'address' }],
+    name: 'getVersionForDeployedCoin',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'hook',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'implementation',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'initialOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'initialize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'pendingOwner',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'proxiableUUID',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newImplementation', internalType: 'address', type: 'address' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'upgradeToAndCall',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'zoraHookRegistry',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const zoraFactoryImplAddress = {
+  8453: '0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const zoraFactoryImplConfig = {
+  address: zoraFactoryImplAddress,
+  abi: zoraFactoryImplAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // React
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -17309,4 +17942,500 @@ export const useWatchWrappedNftDonationVaultWrappedAndDonatedEvent =
     abi: wrappedNftDonationVaultAbi,
     address: wrappedNftDonationVaultAddress,
     eventName: 'WrappedAndDonated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImpl = /*#__PURE__*/ createUseReadContract({
+  abi: zoraFactoryImplAbi,
+  address: zoraFactoryImplAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"UPGRADE_INTERFACE_VERSION"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplUpgradeInterfaceVersion =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'UPGRADE_INTERFACE_VERSION',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"coinAddress"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplCoinAddress =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'coinAddress',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"coinV4Impl"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplCoinV4Impl =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'coinV4Impl',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"contentCoinHook"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplContentCoinHook =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'contentCoinHook',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"contractName"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplContractName =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'contractName',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"contractVersion"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplContractVersion =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'contractVersion',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"creatorCoinHook"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplCreatorCoinHook =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'creatorCoinHook',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"creatorCoinImpl"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplCreatorCoinImpl =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'creatorCoinImpl',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"getVersionForDeployedCoin"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplGetVersionForDeployedCoin =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'getVersionForDeployedCoin',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"hook"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplHook = /*#__PURE__*/ createUseReadContract({
+  abi: zoraFactoryImplAbi,
+  address: zoraFactoryImplAddress,
+  functionName: 'hook',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"implementation"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplImplementation =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'implementation',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplOwner = /*#__PURE__*/ createUseReadContract({
+  abi: zoraFactoryImplAbi,
+  address: zoraFactoryImplAddress,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"pendingOwner"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplPendingOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'pendingOwner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"proxiableUUID"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplProxiableUuid =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'proxiableUUID',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"zoraHookRegistry"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useReadZoraFactoryImplZoraHookRegistry =
+  /*#__PURE__*/ createUseReadContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'zoraHookRegistry',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImpl = /*#__PURE__*/ createUseWriteContract({
+  abi: zoraFactoryImplAbi,
+  address: zoraFactoryImplAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"acceptOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplAcceptOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'acceptOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deploy"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplDeploy =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deploy',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deployCreatorCoin"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplDeployCreatorCoin =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deployCreatorCoin',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deployWithHook"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplDeployWithHook =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deployWithHook',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplInitialize =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'initialize',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWriteZoraFactoryImplUpgradeToAndCall =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'upgradeToAndCall',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImpl =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"acceptOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplAcceptOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'acceptOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deploy"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplDeploy =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deploy',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deployCreatorCoin"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplDeployCreatorCoin =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deployCreatorCoin',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"deployWithHook"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplDeployWithHook =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'deployWithHook',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"initialize"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplInitialize =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'initialize',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `functionName` set to `"upgradeToAndCall"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useSimulateZoraFactoryImplUpgradeToAndCall =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    functionName: 'upgradeToAndCall',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"CoinCreated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplCoinCreatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'CoinCreated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"CoinCreatedV4"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplCoinCreatedV4Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'CoinCreatedV4',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"CreatorCoinCreated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplCreatorCoinCreatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'CreatorCoinCreated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"Initialized"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplInitializedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'Initialized',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"OwnershipTransferStarted"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplOwnershipTransferStartedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'OwnershipTransferStarted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link zoraFactoryImplAbi}__ and `eventName` set to `"Upgraded"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2)
+ */
+export const useWatchZoraFactoryImplUpgradedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: zoraFactoryImplAbi,
+    address: zoraFactoryImplAddress,
+    eventName: 'Upgraded',
   })

@@ -16,7 +16,7 @@ const Details: NextPage<{
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
   return (
-    <DefaultProvider mainnet>
+    <DefaultProvider mainnet base siwe>
       <Main
         menu={
           <>

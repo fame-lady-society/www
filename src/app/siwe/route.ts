@@ -127,7 +127,11 @@ export async function POST(request: NextRequest) {
       address: siweMessage.address,
       chainId: siweMessage.chainId,
     });
-    setSession(response, siweMessage.address, siweMessage.chainId);
+    setSession(
+      response,
+      siweMessage.address as `0x${string}`,
+      siweMessage.chainId,
+    );
     return response;
   } catch (error) {
     const response = new NextResponse(String(error), { status: 400 });

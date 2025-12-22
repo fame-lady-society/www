@@ -4,14 +4,19 @@ import { NextApiHandler } from "next";
 import { mainnet } from "viem/chains";
 
 export default (async function handler(req, res) {
-  const { address, chainId } = await siweServer.getSession(req, res);
-  if (!address) {
-    return res.status(401).json([]);
-  }
-  if (chainId !== mainnet.id) {
+  // const { address, chainId } = await siweServer.getSession(req, res);
+  const { address: stringAddress } = req.query;
+  if (!stringAddress) {
     return res.status(401).json([]);
   }
 
+  const address = Array.isArray(stringAddress)
+    ? stringAddress[0]
+    : stringAddress;
+
+  if (!address) {
+    return res.status(401).json([]);
+  }
   try {
     if (req.method === "GET") {
       const hodlers: { owners: Record<`0x${string}`, number[]> } = await fetch(

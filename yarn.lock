@@ -4165,6 +4165,11 @@
     "@react-aria/interactions" "^3.21.3"
     "@tanstack/react-virtual" "^3.8.1"
 
+"@hey-api/client-fetch@^0.8.3":
+  version "0.8.4"
+  resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.8.4.tgz#2dc2d368b4dd2137789f46adcae68ccd04ea2adb"
+  integrity sha512-SWtUjVEFIUdiJGR2NiuF0njsSrSdTe7WHWkp3BLH3DEl2bRhiflOnBo29NSDdrY90hjtTQiTQkBxUgGOF29Xzg==
+
 "@httptoolkit/websocket-stream@^6.0.1":
   version "6.0.1"
   resolved "https://registry.npmjs.org/@httptoolkit/websocket-stream/-/websocket-stream-6.0.1.tgz"
@@ -8998,6 +9003,19 @@
   integrity sha512-mCfR3gylCzPC+iqdxEA6z5SxJeOgzgbwmyxanKriIne5qZLswDe/M43aD3p5MNzwzXRhbZg/OX+MpES6Zk1a6A==
   dependencies:
     rimraf "^3.0.2"
+
+"@zoralabs/coins-sdk@^0.3.3":
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@zoralabs/coins-sdk/-/coins-sdk-0.3.3.tgz#7877dcbc4383c2b91d85c87c8022ded6fc25ff01"
+  integrity sha512-C6rHMgZnK5dfUs4/i6OCJhBzF6Uj4KsuYpfoIyFSvgj2iZbZ7SIICGhS0lKbLdxvb8xbSwv2Fn7Xnqylf/BuEg==
+  dependencies:
+    "@hey-api/client-fetch" "^0.8.3"
+    "@zoralabs/protocol-deployments" "^0.6.4"
+
+"@zoralabs/protocol-deployments@^0.6.4":
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/@zoralabs/protocol-deployments/-/protocol-deployments-0.6.4.tgz#fd1afa3def0dc9c068cd7f0fa530e2d822f5e88b"
+  integrity sha512-ecgdCAF1zskmsztG+tP+qJ9GvTdm8unGg/D/mJ3eQEHTqkS7UmH8hJ7zOX8GbUyTUW4xWl/2p8CtxGxc8FHAOw==
 
 abbrev@1:
   version "1.1.1"

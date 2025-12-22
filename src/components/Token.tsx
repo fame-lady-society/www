@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useState } from "react";
+import React, { FC, Fragment, useMemo, useState } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Image from "next/image";
 import Typography from "@mui/material/Typography";
@@ -39,7 +39,9 @@ export const Token: FC<{
   allocation?: bigint;
 }> = ({ allocation, metadata, tokenId, network }) => {
   const [shareOpen, setShareOpen] = useState(false);
-
+  const symbol = useMemo(() => {
+    return metadata.name.replace(/\s+/g, "").toUpperCase();
+  }, [metadata.name]);
   return (
     <>
       <Grid2 container spacing={2}>
@@ -125,6 +127,8 @@ export const Token: FC<{
       <SocialShareDialog
         name={metadata.name!}
         tokenId={BigInt(tokenId)}
+        description={metadata.description!}
+        symbol={symbol!}
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         network={network}

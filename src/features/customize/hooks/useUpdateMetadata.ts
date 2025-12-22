@@ -1,9 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
 
-export function useUpdateMetadata() {
-  const { chain } = useAccount();
-
+export function useUpdateMetadata(network: "mainnet" | "sepolia" = "mainnet") {
   return useMutation({
     mutationFn: async ({
       tokenId,
@@ -14,8 +12,6 @@ export function useUpdateMetadata() {
       name: string;
       description: string;
     }) => {
-      const chainName = chain?.name?.toLowerCase() ?? "ethereum";
-
       // Step 1: GET metadata and signature
       const q = new URLSearchParams();
       q.set("tokenId", String(tokenId));
@@ -23,7 +19,7 @@ export function useUpdateMetadata() {
       if (description) q.set("description", description);
 
       const getResponse = await fetch(
-        `/api/${chainName}/metadata?${q.toString()}`,
+        `/api/${network}/metadata?${q.toString()}`,
         {
           method: "GET",
         },
@@ -40,7 +36,7 @@ export function useUpdateMetadata() {
       };
 
       // Step 2: POST to upload metadata to Irys and get final signature
-      const postResponse = await fetch(`/api/${chainName}/metadata`, {
+      const postResponse = await fetch(`/api/${network}/metadata`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

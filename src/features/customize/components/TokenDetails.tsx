@@ -124,10 +124,13 @@ export const TokenDetails: FC<{
   const [transactionHash, setTransactionHash] = useState<Transaction | null>(
     null,
   );
-  const { mutateAsync, isPending } = useUpdateMetadata();
+  const { mutateAsync, isPending } = useUpdateMetadata(network ?? "mainnet");
   const { namedLadyRendererAbi, namedLadyRendererAddress } =
     useChainContracts();
   const { writeContractAsync } = useWriteContract();
+  const symbol = useMemo(() => {
+    return metadata.name.replace(/\s+/g, "").toUpperCase();
+  }, [metadata.name]);
 
   const initialDescription = useMemo(() => {
     const chunks = metadata.description?.split(defaultDescription);
@@ -283,6 +286,8 @@ export const TokenDetails: FC<{
       <SocialShareDialog
         name={metadata.name!}
         tokenId={BigInt(tokenId)}
+        description={metadata.description!}
+        symbol={symbol!}
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         network={network}

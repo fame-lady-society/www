@@ -8,7 +8,8 @@ export type Transaction<T = unknown> = {
     | "approve collection to be wrapped"
     | "approve donation vault"
     | "set wrap cost"
-    | "update metadata";
+    | "update metadata"
+    | "launch zora coin";
   hash: `0x${string}`;
   context?: T;
 };

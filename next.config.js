@@ -4,7 +4,8 @@ module.exports = {
 
   env: {
     LOG_LEVEL: "debug",
-    NEXT_PUBLIC_BASE_URL: "https://www.fameladysociety.com",
+    NEXT_PUBLIC_BASE_URL:
+      process.env.NEXT_PUBLIC_BASE_URL || "https://www.fameladysociety.com",
     OG_BASE_URL:
       process.env.OG_BASE_URL ||
       (process.env.VERCEL_URL

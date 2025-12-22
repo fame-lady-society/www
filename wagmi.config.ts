@@ -70,13 +70,19 @@ export default defineConfig({
     //   },
     // }),
     etherscan({
-      apiKey: process.env.BASESCAN_API_KEY!,
+      apiKey: process.env.ETHERSCAN_API_KEY!,
       chainId: base.id,
       contracts: [
         {
           name: "UnrevealedLadyRenderer",
           address: {
             [base.id]: "0xa50c9a918c110ca159fb187f4a55896a4d063878",
+          },
+        },
+        {
+          name: "ZoraFactoryImpl",
+          address: {
+            [base.id]: "0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2",
           },
         },
       ],
@@ -142,6 +148,7 @@ export default defineConfig({
             [mainnet.id]: "0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b",
           },
         },
+
         {
           name: "SaveLady",
           address: {
