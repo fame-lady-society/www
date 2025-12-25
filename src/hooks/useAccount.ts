@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { SIWESession, useSIWE } from "connectkit";
@@ -31,10 +31,16 @@ export function useAccount() {
     chain,
   } = useConnection();
   const [isMiniApp, setIsMiniApp] = useState(false);
-  const { isSignedIn, signIn } = useSIWE() as HookProps;
+  const { isSignedIn, signIn: signInSIWE } = useSIWE() as HookProps;
   const [miniAppContext, setMiniAppContext] = useState<Awaited<
     Awaited<(typeof sdk)["context"]>
   > | null>(null);
+
+  const signIn = useCallback(async () => {
+    if (isSignedIn) return true;
+    const success = await signInSIWE();
+    return success;
+  }, [isSignedIn, signInSIWE]);
 
   useEffect(() => {
     let cancelled = false;

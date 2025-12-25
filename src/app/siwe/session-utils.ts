@@ -69,17 +69,21 @@ export function setSession(
   const sessionData: SessionData = { address, chainId, expiresAt };
   const signedSession = signSession(sessionData);
 
-  response.cookies.set(COOKIE_NAME, signedSession, {
+  const cookieOptions: Parameters<typeof response.cookies.set>[2] = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    domain:
-      process.env.NODE_ENV === "production"
-        ? "fameladysociety.com"
-        : new URL(process.env.NEXT_PUBLIC_BASE_URL!).hostname,
     maxAge: SESSION_MAX_AGE,
     path: "/",
-  });
+  };
+
+  if (process.env.NODE_ENV === "production") {
+    cookieOptions.domain = new URL(
+      process.env.NEXT_PUBLIC_BASE_URL!.replace("www.", ""),
+    ).hostname;
+  }
+
+  response.cookies.set(COOKIE_NAME, signedSession, cookieOptions);
 }
 
 export function clearSession(response: NextResponse): void {
