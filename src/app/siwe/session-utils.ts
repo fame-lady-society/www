@@ -87,5 +87,19 @@ export function setSession(
 }
 
 export function clearSession(response: NextResponse): void {
-  response.cookies.delete(COOKIE_NAME);
+  const opts: Parameters<typeof response.cookies.set>[2] = {
+    httpOnly: true,
+    secure: true, // must be true for SameSite=None
+    sameSite: "none", // must be present or Safari/Chrome may block
+    path: "/",
+    expires: new Date(0), // or maxAge: 0
+  };
+
+  if (process.env.NODE_ENV === "production") {
+    opts.domain = new URL(
+      process.env.NEXT_PUBLIC_BASE_URL!.replace("www.", ""),
+    ).hostname;
+  }
+
+  response.cookies.set(COOKIE_NAME, "", opts);
 }
