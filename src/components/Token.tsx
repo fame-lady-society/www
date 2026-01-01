@@ -127,7 +127,6 @@ export const Token: FC<{
       <SocialShareDialog
         name={metadata.name!}
         tokenId={BigInt(tokenId)}
-        description={metadata.description!}
         symbol={symbol!}
         open={shareOpen}
         onClose={() => setShareOpen(false)}

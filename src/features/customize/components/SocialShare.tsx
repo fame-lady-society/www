@@ -26,29 +26,18 @@ import { useAccount } from "@/hooks/useAccount";
 export const SocialShareDialog: FC<{
   name: string;
   tokenId: bigint;
-  description: string;
   symbol: string;
   open: boolean;
   network?: "mainnet" | "sepolia";
   textProvider: (tokenId: bigint, name: string) => string;
   onClose: () => void;
-}> = ({
-  name,
-  tokenId,
-  description,
-  symbol,
-  open,
-  onClose,
-  network,
-  textProvider,
-}) => {
+}> = ({ name, tokenId, symbol, open, onClose, network, textProvider }) => {
   return (
     <>
       <Dialog open={open} onClose={onClose}>
         <SocialShare
           name={name}
           tokenId={tokenId}
-          description={description}
           symbol={symbol}
           onClose={onClose}
           network={network}
@@ -62,7 +51,6 @@ export const SocialShareDialog: FC<{
 export const SocialShare: FC<{
   tokenId: bigint;
   name: string;
-  description: string;
   symbol: string;
   network?: "mainnet" | "sepolia";
   textProvider: (tokenId: bigint, name: string) => string;
@@ -70,7 +58,6 @@ export const SocialShare: FC<{
 }> = ({
   tokenId,
   name,
-  description,
   symbol,
   network: propsNetwork,
   textProvider,
@@ -116,7 +103,6 @@ export const SocialShare: FC<{
         tokenId,
         name,
         symbol,
-        description,
       });
       if (transactions.length === 0) {
         addNotification({
@@ -137,17 +123,7 @@ export const SocialShare: FC<{
         autoHideMs: 8000,
       });
     }
-  }, [
-    addNotification,
-    isSignedIn,
-    mutateAsync,
-    network,
-    signIn,
-    tokenId,
-    name,
-    symbol,
-    description,
-  ]);
+  }, [addNotification, isSignedIn, mutateAsync, signIn, tokenId, name, symbol]);
 
   const onTransactionConfirmed = useCallback(
     (tx: Transaction) => {

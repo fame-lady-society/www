@@ -71,35 +71,21 @@ export function setSession(
 
   const cookieOptions: Parameters<typeof response.cookies.set>[2] = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: true,
+    sameSite: "lax",
     maxAge: SESSION_MAX_AGE,
     path: "/",
   };
-
-  if (process.env.NODE_ENV === "production") {
-    cookieOptions.domain = new URL(
-      process.env.NEXT_PUBLIC_BASE_URL!.replace("www.", ""),
-    ).hostname;
-  }
 
   response.cookies.set(COOKIE_NAME, signedSession, cookieOptions);
 }
 
 export function clearSession(response: NextResponse): void {
-  const opts: Parameters<typeof response.cookies.set>[2] = {
+  response.cookies.set(COOKIE_NAME, "", {
     httpOnly: true,
-    secure: true, // must be true for SameSite=None
-    sameSite: "none", // must be present or Safari/Chrome may block
+    secure: true,
+    sameSite: "lax",
     path: "/",
-    expires: new Date(0), // or maxAge: 0
-  };
-
-  if (process.env.NODE_ENV === "production") {
-    opts.domain = new URL(
-      process.env.NEXT_PUBLIC_BASE_URL!.replace("www.", ""),
-    ).hostname;
-  }
-
-  response.cookies.set(COOKIE_NAME, "", opts);
+    expires: new Date(0),
+  });
 }
