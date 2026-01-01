@@ -6,15 +6,31 @@ export type AuthSession = {
 };
 
 const isBrowser = typeof window !== "undefined";
+type AuthSessionListener = (session: AuthSession | null) => void;
+
+const listeners = new Set<AuthSessionListener>();
+
+function notify(session: AuthSession | null): void {
+  listeners.forEach((listener) => {
+    try {
+      listener(session);
+    } catch (error) {
+      // ignore listener errors to avoid breaking notification chain
+      console.error(error);
+    }
+  });
+}
 
 export function setAuthSession(session: AuthSession): void {
   if (!isBrowser) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  notify(session);
 }
 
 export function clearAuthSession(): void {
   if (!isBrowser) return;
   localStorage.removeItem(STORAGE_KEY);
+  notify(null);
 }
 
 export function getAuthSession(): AuthSession | null {
@@ -36,6 +52,27 @@ export function getAuthSession(): AuthSession | null {
     clearAuthSession();
     return null;
   }
+}
+
+export function subscribeAuthSession(
+  listener: AuthSessionListener,
+): () => void {
+  listeners.add(listener);
+  if (isBrowser) {
+    const storageListener = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        listener(getAuthSession());
+      }
+    };
+    window.addEventListener("storage", storageListener);
+    return () => {
+      listeners.delete(listener);
+      window.removeEventListener("storage", storageListener);
+    };
+  }
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function withAuthHeaders(
