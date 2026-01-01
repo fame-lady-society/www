@@ -26,6 +26,11 @@ import {
   polygonOnly,
   sepoliaOnly,
 } from "./wagmiConfig";
+import {
+  clearAuthSession,
+  setAuthSession,
+  withAuthHeaders,
+} from "@/utils/authToken";
 export {
   mainnetSepolia,
   sepoliaOnly,
@@ -35,7 +40,6 @@ export {
 } from "./wagmiConfig";
 
 const SIWE_API_PATH = "/siwe";
-const SIWE_NONCE_API_PATH = "/siwe/nonce";
 
 export const defaultConfig = {
   ...mainnetSepolia,
@@ -83,16 +87,32 @@ const siweConfig = {
       body: JSON.stringify({ message, signature }),
       headers: { "Content-Type": "application/json" },
     });
-    return res.ok;
+    if (!res.ok) return false;
+    const body = (await res.json()) as {
+      address: string;
+      chainId: number;
+      token?: string;
+      expiresAt?: number;
+    };
+    if (body.token && body.expiresAt) {
+      setAuthSession({ token: body.token, expiresAt: body.expiresAt });
+    }
+    return true;
   },
   getSession: async () => {
-    const res = await fetch(SIWE_API_PATH);
+    const res = await fetch(SIWE_API_PATH, {
+      headers: withAuthHeaders(),
+    });
     if (!res.ok) throw new Error("Failed to fetch SIWE session");
-    const { address, chainId } = await res.json();
+    const { address, chainId, token, expiresAt } = await res.json();
+    if (token && expiresAt) {
+      setAuthSession({ token, expiresAt });
+    }
     return address && chainId ? { address, chainId } : null;
   },
   signOut: async () => {
     const res = await fetch(SIWE_API_PATH, { method: "DELETE" });
+    clearAuthSession();
     return res.ok;
   },
 } satisfies SIWEConfig;

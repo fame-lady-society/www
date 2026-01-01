@@ -23,7 +23,10 @@ export async function GET(req: NextRequest) {
   return new Response(
     JSON.stringify({
       owners: Object.fromEntries(
-        [...reversedOwners.entries()].map(([key, value]) => [key, value]),
+        [...reversedOwners.entries()].map(([key, value]) => [
+          key.toLowerCase(),
+          value,
+        ]),
       ),
     }),
     {

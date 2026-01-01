@@ -10,7 +10,13 @@ import { z } from "zod";
 
 import { signNonce, verifyNonce } from "./nonce-utils";
 import { randomBytes } from "crypto";
-import { clearSession, getSession, setSession } from "./session-utils";
+import {
+  SESSION_MAX_AGE,
+  clearSession,
+  createSignedSession,
+  getSession,
+  setSession,
+} from "./session-utils";
 
 export async function GET(request: NextRequest) {
   const session = getSession(request);
@@ -20,6 +26,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     address: session.address,
     chainId: session.chainId,
+    expiresAt: session.expiresAt,
   });
 }
 
@@ -123,14 +130,23 @@ export async function POST(request: NextRequest) {
       clearSession(response);
       return response;
     }
+    const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
+    const { token } = createSignedSession(
+      siweMessage.address as `0x${string}`,
+      siweMessage.chainId,
+      expiresAt,
+    );
     const response = NextResponse.json({
       address: siweMessage.address,
       chainId: siweMessage.chainId,
+      token,
+      expiresAt,
     });
     setSession(
       response,
       siweMessage.address as `0x${string}`,
       siweMessage.chainId,
+      expiresAt,
     );
     return response;
   } catch (error) {

@@ -3,7 +3,8 @@ import { createHmac } from "node:crypto";
 
 export const SESSION_SECRET = process.env.SESSION_SECRET!;
 export const COOKIE_NAME = "siwe";
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+export const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+const BEARER_PREFIX = "bearer ";
 
 export type SessionData = {
   address: `0x${string}`;
@@ -52,22 +53,56 @@ function verifySession(signedSession: string): SessionData | null {
   }
 }
 
-export function getSession(request: NextRequest): SessionData | null {
-  const cookie = request.cookies.get(COOKIE_NAME);
-  if (!cookie?.value) {
+export function createSignedSession(
+  address: `0x${string}`,
+  chainId: number,
+  expiresAt: number = Date.now() + SESSION_MAX_AGE * 1000,
+): { token: string; session: SessionData } {
+  const session: SessionData = { address, chainId, expiresAt };
+  return { token: signSession(session), session };
+}
+
+function extractBearerToken(request: NextRequest): string | null {
+  const header = request.headers.get("authorization");
+  if (!header) {
     return null;
   }
-  return verifySession(cookie.value);
+  const lower = header.toLowerCase();
+  if (!lower.startsWith(BEARER_PREFIX)) {
+    return null;
+  }
+  const token = header.slice(BEARER_PREFIX.length);
+  return token ? token.trim() : null;
+}
+
+export function getSession(request: NextRequest): SessionData | null {
+  const bearerToken = extractBearerToken(request);
+  if (bearerToken) {
+    const bearerSession = verifySession(bearerToken);
+    if (bearerSession) {
+      return bearerSession;
+    }
+  }
+
+  const cookie = request.cookies.get(COOKIE_NAME);
+  if (cookie?.value) {
+    return verifySession(cookie.value);
+  }
+
+  return null;
 }
 
 export function setSession(
   response: NextResponse,
   address: `0x${string}`,
   chainId: number,
-): void {
-  const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
-  const sessionData: SessionData = { address, chainId, expiresAt };
-  const signedSession = signSession(sessionData);
+  expiresAt?: number,
+): string {
+  const { token } = createSignedSession(
+    address,
+    chainId,
+    expiresAt ?? Date.now() + SESSION_MAX_AGE * 1000,
+  );
 
   const cookieOptions: Parameters<typeof response.cookies.set>[2] = {
     httpOnly: true,
@@ -77,7 +112,8 @@ export function setSession(
     path: "/",
   };
 
-  response.cookies.set(COOKIE_NAME, signedSession, cookieOptions);
+  response.cookies.set(COOKIE_NAME, token, cookieOptions);
+  return token;
 }
 
 export function clearSession(response: NextResponse): void {
