@@ -35,7 +35,7 @@ export const WrapCost: FC<{}> = ({}) => {
     functionName: "wrapCost",
   });
   const { hasRole: hasTreasurerRole, isLoading } = useHasRole("TREASURER_ROLE");
-  const { writeContractAsync } = useWriteContract();
+  const { mutateAsync: writeContractAsync } = useWriteContract();
   const isValidCostInput = !Number.isNaN(Number(sendToInput));
   const onSubmit = useCallback(() => {
     writeContractAsync({

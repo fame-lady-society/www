@@ -12,7 +12,7 @@ import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
 import { mainnet } from "viem/chains";
-import { useChainId } from "wagmi";
+import { useChainId, useSwitchChain } from "wagmi";
 import Skeleton from "@mui/material/Skeleton";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import CircularProgress from "@mui/material/CircularProgress";

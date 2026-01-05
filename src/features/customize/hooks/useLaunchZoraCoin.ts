@@ -1,9 +1,15 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { useWalletClient, useWriteContract } from "wagmi";
+import {
+  useChainId,
+  useSwitchChain,
+  useWalletClient,
+  useWriteContract,
+} from "wagmi";
 import {
   Address,
+  decodeFunctionData,
   encodeAbiParameters,
   encodeFunctionData,
   Hex,
@@ -23,11 +29,15 @@ import { client } from "@/viem/mainnet-client";
 import { IMetadata } from "@/utils/metadata";
 import { fetchJson } from "@/ipfs/client";
 import { createMetadataBuilder } from "@zoralabs/coins-sdk";
-import { encodeDopplerMultiCurveUniV4 } from "@/service/zora/utils";
+import {
+  decodeDopplerMultiCurveUniV4,
+  encodeDopplerMultiCurveUniV4,
+} from "@/service/zora/utils";
 import {
   baseCommunityMultiSigAddress,
   fameFromNetwork,
 } from "@/features/fame/contract";
+import { useCallback } from "react";
 
 type LaunchParams = {
   tokenId: bigint | number;
@@ -35,10 +45,79 @@ type LaunchParams = {
   name: string;
 };
 
+// const data = decodeFunctionData({
+//   abi: zoraFactoryImplAbi,
+//   data: "0x0d36fc7700000000000000000000000032e19c7b2feaca351af6377aff3984662222d533000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000026000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000000200000000000000000000000080fbf16755ca98df2a32508f69ced59d19c775cb00000000000000000000000032e19c7b2feaca351af6377aff3984662222d5330000000000000000000000000000000000000000000000000000000000000042697066733a2f2f626166796265696833666f6563727270627175627175356762367a61653269667737787173756c726e6672667574617971623263376a6378713679000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002e5768657265207468652070757273756974206973206d6f726520616c697665207468616e20746865207072697a650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008557267655761726400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003400000000000000000000000000000000000000000000000000000000000000004000000000000000000000000bcfa4b47926dc6319461b28e49190030d5d52e3600000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffebe84ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff379cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6e4cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff955c0000000000000000000000000000000000000000000000000000000000000004ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffef3400000000000000000000000000000000000000000000000000000000000025e400000000000000000000000000000000000000000000000000000000000025e400000000000000000000000000000000000000000000000000000000000025e40000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000214e8348c4f000000000000000000000000000000000000000000000000000003782dace9d9000000000000000000000000000000000000000000000000000002c68af0bb140000000000000000000000000000000000000000000000000000010a741a4627800000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000000",
+// });
+
+// const dopplerData = decodeDopplerMultiCurveUniV4(
+//   "0x0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000bcfa4b47926dc6319461b28e49190030d5d52e3600000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffebe84ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff379cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6e4cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff955c0000000000000000000000000000000000000000000000000000000000000004ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffef3400000000000000000000000000000000000000000000000000000000000025e400000000000000000000000000000000000000000000000000000000000025e400000000000000000000000000000000000000000000000000000000000025e40000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000214e8348c4f000000000000000000000000000000000000000000000000000003782dace9d9000000000000000000000000000000000000000000000000000002c68af0bb140000000000000000000000000000000000000000000000000000010a741a46278000",
+// );
+
 export function useLaunchZoraCoin() {
+  // console.log("useLaunchZoraCoin", data);
+  // console.log("dopplerData", dopplerData);
+  const chainId = useChainId();
   const { address, isSignedIn, signIn } = useAccount();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
 
   const { mutateAsync: deploy } = useWriteContract();
+
+  const deployCoin = useCallback(
+    async ({ tokenId, symbol, name }: LaunchParams) => {
+      if (!address) {
+        throw new Error("Connect a wallet to launch a coin.");
+      }
+      const tickLower = [-82300, -51300, -37300, -27300];
+      const tickUpper = [-4300, 9700, 9700, 9700];
+      const numDiscoveryPositions = [11, 11, 11, 11];
+      const maxDiscoverySupplyShare = [
+        150000000000000000n,
+        250000000000000000n,
+        200000000000000000n,
+        75000000000000000n,
+      ];
+      const hash = await deploy({
+        address: "0x777777751622c0d3258f214F9DF38E35BF45baF3",
+        abi: zoraFactoryImplAbi,
+        functionName: "deployWithHook",
+        args: [
+          address,
+          [address],
+          `https://www.fameladysociety.com/api/coin-it/metadata/${tokenId}`,
+          name,
+          symbol,
+          encodeDopplerMultiCurveUniV4(
+            // fame is not compatible with zora, using $BASEDFLICK instead until there is an FLS zora coin
+            // fameFromNetwork(base.id),
+            "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926", // $BASEDFLICK
+            tickLower,
+            tickUpper,
+            numDiscoveryPositions,
+            maxDiscoverySupplyShare,
+          ),
+          // platformReferrer,
+          baseCommunityMultiSigAddress,
+          // postDeployHook,
+          zeroAddress,
+          // postDeployHookData,
+          "0x",
+          // coinSalt  (bytes32),
+          // "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
+        chainId: base.id,
+        account: address,
+      });
+
+      return [
+        {
+          kind: "launch zora coin",
+          hash,
+        } as Transaction,
+      ];
+    },
+    [deploy, address],
+  );
 
   return useMutation({
     mutationFn: async ({
@@ -46,10 +125,6 @@ export function useLaunchZoraCoin() {
       symbol,
       name,
     }: LaunchParams): Promise<Transaction[]> => {
-      if (!address) {
-        throw new Error("Connect a wallet to launch a coin.");
-      }
-
       if (!isSignedIn) {
         const signedIn = await signIn();
         if (!signedIn) {
@@ -57,54 +132,14 @@ export function useLaunchZoraCoin() {
         }
       }
 
-      const tickLower = [-328_000, -200_000];
-      const tickUpper = [-300_000, -100_000];
-      const numDiscoveryPositions = [2, 2];
-      const maxDiscoverySupplyShare = [0.1e18, 0.1e18].map((val) =>
-        BigInt(val.toString()),
-      );
+      let promise =
+        chainId === base.id
+          ? deployCoin({ tokenId, symbol, name })
+          : switchChainAsync({ chainId: base.id }).then(() =>
+              deployCoin({ tokenId, symbol, name }),
+            );
 
-      try {
-        const hash = await deploy({
-          address: "0x777777751622c0d3258f214F9DF38E35BF45baF3",
-          abi: zoraFactoryImplAbi,
-          functionName: "deploy",
-          args: [
-            address,
-            [address],
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/coin-it/metadata/${tokenId}`,
-            name,
-            symbol,
-            encodeDopplerMultiCurveUniV4(
-              fameFromNetwork(base.id),
-              tickLower,
-              tickUpper,
-              numDiscoveryPositions,
-              maxDiscoverySupplyShare,
-            ),
-            // platformReferrer,
-            baseCommunityMultiSigAddress,
-            // postDeployHook,
-            zeroAddress,
-            // postDeployHookData,
-            "0x",
-            // coinSalt  (bytes32),
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-          ],
-          chainId: base.id,
-          account: address,
-        });
-
-        return [
-          {
-            kind: "launch zora coin",
-            hash,
-          },
-        ];
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
+      return await promise;
     },
   });
 }

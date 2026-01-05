@@ -14,7 +14,7 @@ export function useLadies() {
         headers: withAuthHeaders(undefined, authSession),
       })
         .then((res) => res.json() as Promise<number[]>)
-        .catch(() => []);
+        .catch(() => [] as number[]);
 
       return ownedTokens;
     },

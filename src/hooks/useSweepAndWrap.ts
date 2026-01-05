@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
-import { useWriteContract } from "wagmi";
+import { useChainId, useSwitchChain, useWriteContract } from "wagmi";
 import {
   WaitForTransactionReceiptErrorType,
   type WriteContractErrorType,
@@ -27,11 +27,12 @@ export function useSweepAndWrap() {
   const [error, setError] = useState<string | undefined>(undefined);
 
   const { data: wrapCostData } = useReadFameLadySocietyWrapCost();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
   const { address: receiver } = useAccount();
-
   const { mutateAsync: writeContractAsync } = useWriteContract();
+  const chainId = useChainId();
 
-  const executeSweep = useCallback(
+  const submitSweep = useCallback(
     async (selectedListings: Listing[]) => {
       if (!receiver) {
         throw new Error("No connected wallet");
@@ -106,6 +107,18 @@ export function useSweepAndWrap() {
       }
     },
     [receiver, wrapCostData, writeContractAsync],
+  );
+  const executeSweep = useCallback(
+    async (selectedListings: Listing[]) => {
+      if (chainId === mainnet.id) {
+        return await submitSweep(selectedListings);
+      } else {
+        return await switchChainAsync({ chainId: mainnet.id }).then(() =>
+          submitSweep(selectedListings),
+        );
+      }
+    },
+    [submitSweep, switchChainAsync, chainId],
   );
 
   return {

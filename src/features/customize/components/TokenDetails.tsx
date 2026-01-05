@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
 import { useUpdateMetadata } from "../hooks/useUpdateMetadata";
 import { useAccount } from "@/hooks/useAccount";
-import { useWriteContract } from "wagmi";
+import { useChainId, useSwitchChain, useWriteContract } from "wagmi";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { TransactionsModal } from "@/features/wrap/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
@@ -23,6 +23,7 @@ import IconButton from "@mui/material/IconButton";
 import BackIcon from "@mui/icons-material/ArrowBack";
 import { ServiceModal } from "./ServiceModal";
 import { SocialShareDialog } from "./SocialShare";
+import { mainnet } from "viem/chains";
 
 const EditableNameAndDescription: FC<{
   initialName: string;
@@ -127,10 +128,13 @@ export const TokenDetails: FC<{
   const { mutateAsync, isPending } = useUpdateMetadata(network ?? "mainnet");
   const { namedLadyRendererAbi, namedLadyRendererAddress } =
     useChainContracts();
-  const { writeContractAsync } = useWriteContract();
+  const { mutateAsync: writeContractAsync } = useWriteContract();
   const symbol = useMemo(() => {
     return metadata.name.replace(/\s+/g, "").toUpperCase();
   }, [metadata.name]);
+
+  const chainId = useChainId();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
 
   const initialDescription = useMemo(() => {
     const chunks = metadata.description?.split(defaultDescription);
@@ -138,7 +142,7 @@ export const TokenDetails: FC<{
     return "";
   }, [metadata.description]);
 
-  const onSubmit = useCallback(
+  const doSubmit = useCallback(
     async (name: string, description: string) => {
       if (name === metadata.name && initialDescription === description) {
         addNotification({
@@ -184,6 +188,19 @@ export const TokenDetails: FC<{
       namedLadyRendererAddress,
       writeContractAsync,
     ],
+  );
+
+  const onSubmit = useCallback(
+    async (name: string, description: string) => {
+      if (chainId === mainnet.id) {
+        return await doSubmit(name, description);
+      } else {
+        return await switchChainAsync({ chainId: mainnet.id }).then(() =>
+          doSubmit(name, description),
+        );
+      }
+    },
+    [doSubmit, switchChainAsync, chainId],
   );
 
   const pendingTransactions = useMemo(

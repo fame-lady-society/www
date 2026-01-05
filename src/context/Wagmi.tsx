@@ -115,6 +115,7 @@ const siweConfig = {
     clearAuthSession();
     return res.ok;
   },
+  signOutOnNetworkChange: false,
 } satisfies SIWEConfig;
 
 const queryClient = new QueryClient();
