@@ -159,7 +159,6 @@ export const Web3Provider: FC<
           sessionRefetchInterval={300000} // in milliseconds, defaults to 5 minutes
           signOutOnDisconnect={true} // defaults true
           signOutOnAccountChange={true} // defaults true
-          signOutOnNetworkChange={true} // defaults true
           {...siweConfig}
         >
           <ConnectKitProvider>{children}</ConnectKitProvider>
