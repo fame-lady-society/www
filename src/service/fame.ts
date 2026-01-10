@@ -86,25 +86,57 @@ export async function getFamePools() {
     ),
   );
 
+  const fetchWithTimeout = async (
+    url: string,
+    timeoutMs = 10000,
+  ): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  };
+
   return {
     burnPool: await Promise.all(
       uris.map(async ({ uri, tokenId }) => {
-        const response = await fetch(uri);
-        const metadata: IMetadata = await response.json();
-        return {
-          tokenId,
-          image: metadata.image,
-        };
+        try {
+          const response = await fetchWithTimeout(uri);
+          const metadata: IMetadata = await response.json();
+          return {
+            tokenId,
+            image: metadata.image,
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
+          return {
+            tokenId,
+            image: "",
+          };
+        }
       }),
     ),
     mintPool: await Promise.all(
       mintPoolUris.map(async ({ uri, tokenId }) => {
-        const response = await fetch(uri);
-        const metadata: IMetadata = await response.json();
-        return {
-          tokenId,
-          image: metadata.image, // Assuming metadata has an image field
-        };
+        try {
+          const response = await fetchWithTimeout(uri);
+          const metadata: IMetadata = await response.json();
+          return {
+            tokenId,
+            image: metadata.image,
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
+          return {
+            tokenId,
+            image: "",
+          };
+        }
       }),
     ),
   };

@@ -5,11 +5,12 @@ import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { TwitterIcon } from "@/components/icons/twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import Image from "next/image";
 import { OpenSeaIcon } from "@/components/icons/opensea";
 import Divider from "@mui/material/Divider";
 import { WrappedLink } from "@/components/WrappedLink";
-import { MagicEdenIcon } from "@/components/icons/magiceden";
 
 export const LinksMenuItems: FC<{}> = ({}) => {
   return (
@@ -103,17 +104,17 @@ export const LinksMenuItems: FC<{}> = ({}) => {
       </MenuItem>
       <MenuItem
         component={WrappedLink}
-        href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
+        href="https://opensea.io/collection/fameladysociety"
         target="_blank"
         rel="noopener noreferrer"
       >
         <ListItemIcon>
-          <MagicEdenIcon />
+          <OpenSeaIcon />
         </ListItemIcon>
         <ListItemText
           primary={
             <Typography textAlign="right" color="white">
-              Magic Eden Collection
+              OpenSea Collection
             </Typography>
           }
         />
@@ -166,6 +167,40 @@ export const LinksMenuItems: FC<{}> = ({}) => {
           primary={
             <Typography textAlign="right" color="white">
               Join Telegram Group
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="https://www.tally.xyz/gov/fameus-dao"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ListItemIcon>
+          <AccountBalanceIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              FAMEus DAO
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="https://github.com/fame-lady-society"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ListItemIcon>
+          <GitHubIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              GitHub
             </Typography>
           }
         />

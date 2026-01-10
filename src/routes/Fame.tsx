@@ -14,7 +14,7 @@ import { useSpring, animated } from "react-spring";
 import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
 import { TwitterIcon } from "@/components/icons/twitter";
 import { WrappedLink } from "@/components/WrappedLink";
-import { MagicEdenIcon } from "@/components/icons/magiceden";
+import { OpenSeaIcon } from "@/components/icons/opensea";
 import { SlimChecker } from "@/features/claim-to-fame/components/SlimChecker";
 import MenuList from "@mui/material/MenuList";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
@@ -571,7 +571,7 @@ const Content: FC = () => {
       >
         <AnimatedBoxFallUp component="div">
           <WrappedLink
-            href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574"
+            href="https://opensea.io/collection/fameladysociety"
             underline="none"
             target="_blank"
             rel="noreferrer"
@@ -580,8 +580,8 @@ const Content: FC = () => {
             justifyContent="center"
             alignItems="center"
           >
-            <MagicEdenIcon sx={{ marginRight: 1 }} />
-            <Typography variant="body1">Magic Eden</Typography>
+            <OpenSeaIcon sx={{ marginRight: 1 }} />
+            <Typography variant="body1">OpenSea</Typography>
           </WrappedLink>
         </AnimatedBoxFallUp>
       </Grid2>

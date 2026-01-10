@@ -5,6 +5,7 @@ import QAIcon from "@mui/icons-material/QuestionAnswer";
 import EditIcon from "@mui/icons-material/Edit";
 import ReloadIcon from "@mui/icons-material/Replay";
 import BankIcon from "@mui/icons-material/AccountBalance";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 
 import NextLink from "next/link";
 import { MenuItem } from "./MenuItem";
@@ -18,6 +19,7 @@ export const SiteMenu: FC<{
   isHome?: boolean;
   isWrap?: boolean;
   isDao?: boolean;
+  isLore?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
@@ -25,10 +27,17 @@ export const SiteMenu: FC<{
   isFaq = false,
   isWrap = false,
   isDao = false,
+  isLore = false,
 }) => {
   return (
     <>
       <MenuItem href="/" disabled={isHome} icon={<InputIcon />} text="home" />
+      <MenuItem
+        href="/lore"
+        disabled={isLore}
+        icon={<AutoStoriesIcon />}
+        text="Lore"
+      />
       <NetworkMenuItem
         path="/wrap"
         defaultChainId={mainnet.id}

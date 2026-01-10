@@ -2,7 +2,7 @@ import { FC } from "react";
 import Image from "next/image";
 import { TwitterIcon } from "@/components/icons/twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import { MagicEdenIcon } from "@/components/icons/magiceden";
+import { OpenSeaIcon } from "@/components/icons/opensea";
 import NextLink from "next/link";
 
 export const LinksMenuItems: FC<{}> = ({}) => {
@@ -36,9 +36,9 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         />
         <MenuItemText>Our Marketplace</MenuItemText>
       </MenuItem>
-      <MenuItem href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574">
-        <MagicEdenIcon className="w-5 h-5" />
-        <MenuItemText>Magic Eden Collection</MenuItemText>
+      <MenuItem href="https://opensea.io/collection/fameladysociety">
+        <OpenSeaIcon className="w-5 h-5" />
+        <MenuItemText>OpenSea Collection</MenuItemText>
       </MenuItem>
       <MenuItem href="https://discord.gg/jkAdAPXEpw">
         <Image

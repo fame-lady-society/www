@@ -1,7 +1,7 @@
 "use client";
 import React, { FC } from "react";
 import { WrappedLink } from "@/components/WrappedLink";
-import { MagicEdenIcon } from "@/components/icons/magiceden";
+import { OpenSeaIcon } from "@/components/icons/opensea";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Grid2 from "@mui/material/Unstable_Grid2";
@@ -52,7 +52,7 @@ export const Empty: FC<{}> = ({}) => {
       >
         {!isConnected && <NotConnected />}
         {!isSignedIn && <NotSignedIn />}
-        <WrappedLink href="https://magiceden.io/collections/ethereum/0x6cf4328f1ea83b5d592474f9fcdc714faafd1574">
+        <WrappedLink href="https://opensea.io/collection/fameladysociety">
           <Box
             component="div"
             display="flex"
@@ -61,7 +61,7 @@ export const Empty: FC<{}> = ({}) => {
             justifyContent="center"
             gap={2}
           >
-            <MagicEdenIcon />
+            <OpenSeaIcon />
             <Typography component="span" color="white">
               Go get a Fame Lady using the{" "}
               <WrappedLink href="/save-a-lady">save a lady</WrappedLink> tool

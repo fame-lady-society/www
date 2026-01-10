@@ -228,7 +228,7 @@ export const FameFAQ: FC = () => {
               The DAO will be controlled by a real governor contract that will
               be accessible via{" "}
               <WrappedLink
-                href="https://www.tally.xyz/"
+                href="https://www.tally.xyz/gov/fameus-dao"
                 target="_blank"
                 rel="noopener noreferrer"
               >

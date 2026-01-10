@@ -1,6 +1,7 @@
 import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "./ChainSelector";
 import { VideoWipeInteraction } from "./VideoWipeInteraction";
+import { WrappedLink } from "@/components/WrappedLink";
 
 const videoWipeUrl = "/videos/wipe-1.mp4";
 
@@ -39,6 +40,16 @@ export default function Home({ params }: { params: { network: string } }) {
               <p className="text-lg text-left mb-6">
                 The FAMEus DAO is a community-driven organization that empowers
                 $FAME Society NFT holders to shape the future of the FAMEus DAO.
+              </p>
+              <p className="text-lg text-left mb-6">
+                <WrappedLink
+                  href="https://www.tally.xyz/gov/fameus-dao"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:no-underline"
+                >
+                  View governance on Tally →
+                </WrappedLink>
               </p>
               <p className="text-lg text-left mb-6">
                 Touch anywhere to continue.
