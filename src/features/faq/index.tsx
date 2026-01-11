@@ -289,15 +289,14 @@ export const FAQ: FC = () => {
                 <Typography color="text.secondary" lineHeight={1.8} mb={2}>
                   Instead, the community rallied together. The smart contract
                   was transferred to an elected community steward on August 11,
-                  2021. This marked a pivotal moment in NFT history—proving that
-                  a community could reclaim and rebuild a project from
-                  fraudulent founders.
+                  2021. Unfortunately, the steward was at first unable, and later unwilling, 
+                  to establish a multi-signature wallet on behalf of the entire community.
                 </Typography>
                 <Typography color="text.secondary" lineHeight={1.8}>
-                  The Fame Lady Society was officially established in December
-                  2022 with a new, community-controlled smart contract,
-                  fulfilling the original promise of female empowerment—done
-                  right this time.
+                  The Fame Lady Society was officially established on April 20th,
+                  2023 with a new, community-controlled smart contract, and a multi-signature wallet on behalf of the entire community.
+                  fulfilling the original promise of decentralize ownership done
+                  right this time by the community itself.
                 </Typography>
               </>
             }
