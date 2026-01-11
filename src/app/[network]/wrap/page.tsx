@@ -41,7 +41,7 @@ export default function Page({ params }: { params: { network: string } }) {
     }
   }
   return (
-    <AppMain title="Wrap Your Lady" isWrap>
+    <AppMain title="Wrap Your Lady" mobileTitle="Wrap" isWrap>
       <WrapPage network={resolvedNetwork} />
     </AppMain>
   );

@@ -35,7 +35,7 @@ export default async function CreatorAddressPage({
     }
   }
   return (
-    <AppMain title="FAME Creator Portal" isDao headerRight={<ChainSelector />}>
+    <AppMain title="FAME Creator Portal" mobileTitle="Create" isDao headerRight={<ChainSelector />}>
       <CreatorPortal
         address={params.address}
         tokenIds={tokenIds}

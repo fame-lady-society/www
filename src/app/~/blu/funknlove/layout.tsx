@@ -48,7 +48,7 @@ export default async function Home({
     <DefaultProvider mainnet sepolia siwe>
       <AppMain
         title="Funk n Love"
-        mobileTitle="FnL"
+        mobileTitle="FNL"
         disableDesktopMenu
         fixedHeader
       >

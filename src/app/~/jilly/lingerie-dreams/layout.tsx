@@ -33,7 +33,7 @@ export default async function Home({
 }) {
   return (
     <DefaultProvider polygon siwe>
-      <AppMain title="Lingerie Dreams" disableDesktopMenu>
+      <AppMain title="Lingerie Dreams" mobileTitle="LD" disableDesktopMenu>
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">{children}</div>
         </div>

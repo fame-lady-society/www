@@ -22,7 +22,7 @@ export default function OnBoardingPage() {
   const isOnCorrectNetwork = chainId === base.id;
 
   return (
-    <AppMain title="Connect Wallet" isDao headerRight={<ChainSelector />}>
+    <AppMain title="Connect Wallet" mobileTitle="" isDao headerRight={<ChainSelector />}>
       <div className="w-full pl-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-center">

@@ -25,6 +25,7 @@ export default function CreatorPage() {
     <>
       <AppMain
         title="FAME Creator Portal"
+        mobileTitle="Create"
         isDao
         headerRight={<ChainSelector />}
       >

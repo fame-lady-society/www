@@ -35,7 +35,7 @@ export default async function Home() {
     console.error("Failed SSR listings", e);
   }
   return (
-    <AppMain title="save a lady">
+    <AppMain title="save a lady" mobileTitle="">
       <SaveLady initialListings={listings} />
     </AppMain>
   );
