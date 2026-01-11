@@ -78,9 +78,24 @@ const EditableNameAndDescription: FC<{
           sx={{ my: 2 }}
         />
       </FormGroup>
-      <Button variant="contained" color="primary" onClick={doSubmit}>
+      <Button
+        variant="contained"
+        onClick={doSubmit}
+        sx={{
+          backgroundColor: "#ff6b9d !important",
+          color: "#fff !important",
+          fontWeight: 600,
+          "&:hover": {
+            backgroundColor: "#ff8cb5 !important",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "rgba(255,255,255,0.12) !important",
+            color: "rgba(255,255,255,0.3) !important",
+          },
+        }}
+      >
         {isPending || isLoading ? (
-          <CircularProgress size={24} />
+          <CircularProgress size={24} sx={{ color: "inherit" }} />
         ) : (
           <Box component="span" width={24} />
         )}

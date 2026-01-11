@@ -5,6 +5,8 @@ import { DefaultProvider } from "@/context/default";
 import { NextPage } from "next";
 import MenuList from "@mui/material/MenuList";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { useReadContract } from "wagmi";
@@ -15,12 +17,16 @@ import { useChainContracts } from "@/hooks/useChainContracts";
 import { formatEther } from "viem";
 import { useRouter } from "next/navigation";
 import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 export const Content: FC<{
   network: "mainnet" | "sepolia";
 }> = ({ network }) => {
   const { replace } = useRouter();
   const { chain } = useAccount();
+  const theme = useTheme();
+  const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { wrappedNftContractAbi, wrappedNftContractAddress } =
     useChainContracts();
@@ -37,55 +43,49 @@ export const Content: FC<{
   return (
     <Main
       menu={
-        <>
-          <MenuList dense disablePadding>
-            <LinksMenuItems />
-            <SiteMenu isWrap />
-          </MenuList>
-        </>
+        <MenuList dense disablePadding>
+          <LinksMenuItems />
+          <SiteMenu isWrap />
+        </MenuList>
       }
       title={
-        <Typography
-          variant="h5"
-          component="h1"
-          marginLeft={2}
-          sx={{
-            display: {
-              xs: "none",
-              md: "block",
-            },
-          }}
-        >
-          it&apos;s a wrap
-        </Typography>
+        isTinyScreen ? null : (
+          <Typography
+            variant="h5"
+            component="h1"
+            marginLeft={2}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Box
+              component="span"
+              sx={{
+                background: "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Wrap
+            </Box>
+          </Typography>
+        )
       }
       right={
-        <Typography
-          variant="h6"
-          component="h1"
-          marginLeft={2}
-          sx={{
-            fontSize: {
-              xs: "0.75rem",
-              sm: "1rem",
-              md: "1.25rem",
-              lg: "1.5rem",
-            },
-            display: "flex",
-            flexWrap: "wrap",
-          }}
-        >
-          {wrapCost ? (
-            <>
-              <span style={{ whiteSpace: "nowrap", marginRight: "0.5rem" }}>
-                wrap fee:
-              </span>
-              <span style={{ whiteSpace: "nowrap" }}>
-                {formatEther(wrapCost)} ETH
-              </span>
-            </>
-          ) : null}
-        </Typography>
+        wrapCost ? (
+          <Chip
+            label={`Fee: ${formatEther(wrapCost)} ETH`}
+            size="small"
+            sx={{
+              background: "rgba(107, 91, 255, 0.15)",
+              color: "#6b5bff",
+              fontWeight: 600,
+              fontSize: { xs: "0.7rem", sm: "0.8rem" },
+            }}
+          />
+        ) : null
       }
     >
       <WrapPage network={network} />
@@ -106,4 +106,5 @@ const Wrap: NextPage<{
     </DefaultProvider>
   );
 };
+
 export default Wrap;

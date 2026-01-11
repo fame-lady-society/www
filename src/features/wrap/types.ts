@@ -7,6 +7,8 @@ export type Transaction<T = unknown> = {
     | "unwrap"
     | "approve collection to be wrapped"
     | "approve donation vault"
+    | "revoke wrap approval"
+    | "revoke donation vault"
     | "set wrap cost"
     | "update metadata"
     | "launch zora coin";

@@ -34,26 +34,6 @@ const Content: FC<{}> = () => {
               {roomForTitle ? "Fame Lady Society" : "FLS"}
             </Typography>
           )}
-          <Button
-            component={WrappedLink}
-            href="/fame"
-            variant="outlined"
-            sx={{ ml: 2 }}
-          >
-            <Typography variant="h5" component="h1">
-              FAME
-            </Typography>
-          </Button>
-          <Button
-            component={WrappedLink}
-            href="/wrap"
-            variant="outlined"
-            sx={{ ml: 2 }}
-          >
-            <Typography variant="h5" component="h1">
-              WRAP
-            </Typography>
-          </Button>
         </>
       }
     >

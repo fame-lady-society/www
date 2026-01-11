@@ -1,10 +1,8 @@
 import { FC, useCallback, useState, FormEventHandler } from "react";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import FormGroup from "@mui/material/FormGroup";
 import TextField from "@mui/material/TextField";
-import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import { useNotifications } from "@/features/notifications/Context";
 
@@ -13,15 +11,15 @@ export const MintCard: FC<{
   transactionInProgress?: boolean;
 }> = ({ onMint, transactionInProgress }) => {
   const { addNotification } = useNotifications();
-  // const { address: selectedAddress, chain: currentChain } = useAccount();
   const [count, setCount] = useState("");
 
   const countError =
     count.length && (count === "0" || !Number.isInteger(Number(count)));
 
-  const onUpdateTokenId = useCallback((e: any) => {
+  const onUpdateTokenId = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setCount(e.target.value);
   }, []);
+
   const onSubmit: FormEventHandler = useCallback(
     (e) => {
       e.preventDefault();
@@ -29,6 +27,7 @@ export const MintCard: FC<{
     },
     [count, onMint],
   );
+
   const onClick = useCallback(() => {
     const bcount = BigInt(count);
     if (bcount > 25n) {
@@ -41,40 +40,65 @@ export const MintCard: FC<{
     }
     onMint(bcount);
   }, [addNotification, count, onMint]);
+
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h5" component="div">
-          Mint testnet FLS
+    <Box component="div">
+      <Box
+        component="div"
+        sx={{
+          mb: 3,
+          p: 2,
+          borderRadius: 2,
+          background: "rgba(255, 193, 7, 0.1)",
+          border: "1px solid rgba(255, 193, 7, 0.2)",
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          For testing purposes, you can mint as many testnet NFTs as you need.
+          Maximum 25 per transaction.
         </Typography>
-        <Typography sx={{ mb: 1.5 }} color="text.secondary">
-          For testing purposes, as many tokens as you like can be minted
-        </Typography>
-        <FormGroup onSubmit={onSubmit}>
-          <TextField
-            value={count}
-            onChange={onUpdateTokenId}
-            margin="normal"
-            fullWidth
-            helperText="Mint count"
-            error={!!countError}
-          />
-        </FormGroup>
-        {!!countError && (
-          <Typography sx={{ mb: 1.5 }} color="text.error">
-            Invalid count
-          </Typography>
-        )}
-      </CardContent>
-      <CardActions>
-        <Button
-          size="small"
-          onClick={onClick}
-          disabled={!(Number(count) > 0) || transactionInProgress}
-        >
-          Mint
-        </Button>
-      </CardActions>
-    </Card>
+      </Box>
+
+      <FormGroup onSubmit={onSubmit}>
+        <TextField
+          value={count}
+          onChange={onUpdateTokenId}
+          fullWidth
+          label="Number of NFTs to mint"
+          placeholder="Enter amount (max 25)"
+          error={!!countError}
+          helperText={countError ? "Please enter a valid number" : ""}
+          sx={{
+            mb: 3,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
+        />
+      </FormGroup>
+
+      <Button
+        size="large"
+        onClick={onClick}
+        disabled={!(Number(count) > 0) || transactionInProgress}
+        variant="contained"
+        sx={{
+          borderRadius: 2,
+          px: 4,
+          fontWeight: 600,
+          backgroundColor: "#ffc107 !important",
+          color: "#000 !important",
+          "&:hover": {
+            backgroundColor: "#ffca28 !important",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "rgba(255,255,255,0.12) !important",
+            color: "rgba(255,255,255,0.3) !important",
+          },
+        }}
+      >
+        Mint {count || "0"} Testnet NFT{Number(count) !== 1 ? "s" : ""}
+      </Button>
+    </Box>
   );
 };

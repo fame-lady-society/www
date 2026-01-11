@@ -25,7 +25,18 @@ export const UnsupportedNetwork: FC = () => {
             You are currently on the {chain?.name} network. Please switch to a
             supported network to use this feature.
           </Typography>
-          <Button variant="contained" color="primary" onClick={onClick}>
+          <Button
+            variant="contained"
+            onClick={onClick}
+            sx={{
+              backgroundColor: "#ff6b9d !important",
+              color: "#fff !important",
+              fontWeight: 600,
+              "&:hover": {
+                backgroundColor: "#ff8cb5 !important",
+              },
+            }}
+          >
             Switch to Mainnet
           </Button>
         </Grid2>

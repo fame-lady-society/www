@@ -1,9 +1,11 @@
 import { RedirectType, redirect } from "next/navigation";
-import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 import { AppMain } from "@/layouts/AppMain";
+import { WrapPage } from "@/features/wrap/components/WrapPage";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
+  title: "Wrap Your Fame Lady | Fame Lady Society",
+  description: "Exchange your original Fame Lady Squad NFT for a Fame Lady Society NFT—same artwork, modern contract, community-controlled.",
   other: {
     ["fc:miniapp"]: JSON.stringify({
       version: "1",
@@ -39,12 +41,8 @@ export default function Page({ params }: { params: { network: string } }) {
     }
   }
   return (
-    <>
-      <AppMain title="FAMEus" isWrap></AppMain>
-      <RedirectWhenConnected
-        pathPrefix="wrap"
-        toChain={resolvedNetwork === "mainnet" ? 1 : 11155111}
-      />
-    </>
+    <AppMain title="Wrap Your Lady" isWrap>
+      <WrapPage network={resolvedNetwork} />
+    </AppMain>
   );
 }

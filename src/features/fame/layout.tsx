@@ -611,7 +611,7 @@ const Content: FC<{
             <Grid2 xs={6} md={3} p={4}>
               <Card>
                 <CardActionArea
-                  href="https://magiceden.io/collections/base/0xbb5ed04dd7b207592429eb8d599d103ccad646c4"
+                  href="https://opensea.io/collection/fameladysociety"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
@@ -630,7 +630,7 @@ const Content: FC<{
                         width: "100%",
                       }}
                     >
-                      magic eden
+                      opensea
                     </Typography>
                   </CardContent>
                 </CardActionArea>
