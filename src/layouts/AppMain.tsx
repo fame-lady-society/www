@@ -53,7 +53,7 @@ export function AppMain({
           <>
             <h1 className="text-2xl font-bold hidden lg:block">{title}</h1>
             <h1 className="text-2xl font-bold lg:hidden">
-              {mobileTitle || title}
+              {typeof mobileTitle !== 'undefined' ? mobileTitle : title}
             </h1>
             {headerLeft}
           </>
