@@ -94,7 +94,7 @@ export function useAllocation({
 
   const { flsPoolAllocation, snapshot } = useSnapshot(rankBoost, ageBoost);
 
-  const { data: flsTokenIds, isLoading: isGraphqlLoading } = useLadies();
+  const { data: flsTokenIds, isLoading: isGraphqlLoading } = useLadies({ chainId: mainnet.id });
 
   return useMemo(() => {
     const lowerCaseAddress = address?.toLowerCase();

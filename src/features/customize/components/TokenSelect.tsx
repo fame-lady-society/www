@@ -1,5 +1,5 @@
 "use client";
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useMemo } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
@@ -10,7 +10,6 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { thumbnailImageUrl } from "@/utils/metadata";
 import { useAccount } from "@/hooks/useAccount";
-import { useLadies } from "../hooks/useLadies";
 import { Empty } from "./Empty";
 
 export interface TokenProps {
@@ -37,20 +36,10 @@ const NotConnected: FC<{}> = () => {
 };
 
 export const TokenSelect: FC<{
-  prefix?: string;
-}> = ({ prefix = "" }) => {
+  isLoading: boolean;
+  tokens: TokenProps[];
+}> = ({ isLoading, tokens }) => {
   const { isConnected } = useAccount();
-  const [tokens, setTokens] = useState<TokenProps[]>([]);
-  const { data, isLoading } = useLadies();
-  useEffect(() => {
-    if (data) {
-      const newTokens = data.map((tokenId) => ({
-        tokenId,
-        url: `${prefix}/${tokenId}`,
-      }));
-      setTokens(newTokens);
-    }
-  }, [data, prefix]);
   const gridTokens = useMemo(
     () =>
       tokens.map(({ tokenId }) => {

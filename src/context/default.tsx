@@ -6,7 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import flsTheme from "@/theme";
 import {
   Web3Provider,
-  baseSepolia,
+  baseSepolia as baseSepoliaOnly,
   mainnetSepolia,
   polygonAmoyOnly,
   polygonOnly,
@@ -17,6 +17,7 @@ import { Notifications } from "@/features/notifications/Notifications";
 import { useAccount } from "@/hooks/useAccount";
 import { useEnsName } from "wagmi";
 import { Chain, Transport } from "viem";
+import { baseSepoliaChainOnly } from "./wagmiConfig";
 
 const Config: FC<PropsWithChildren> = ({ children }) => {
   const { address, chain } = useAccount();
@@ -40,7 +41,7 @@ export const DefaultProvider: FC<
     polygon?: boolean;
     polygonAmoy?: boolean;
     sepolia?: boolean;
-    initialState?: string;
+    baseSepolia?: boolean;
   }>
 > = ({
   siwe,
@@ -50,7 +51,7 @@ export const DefaultProvider: FC<
   polygon,
   polygonAmoy,
   sepolia,
-  initialState,
+  baseSepolia,
 }) => {
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
@@ -60,7 +61,7 @@ export const DefaultProvider: FC<
       }
     }
     if (base) {
-      for (const chain of baseSepolia.chains) {
+      for (const chain of baseSepoliaOnly.chains) {
         chainSet.add(chain);
       }
     }
@@ -79,6 +80,11 @@ export const DefaultProvider: FC<
         chainSet.add(chain);
       }
     }
+    if (baseSepolia) {  
+      for (const chain of baseSepoliaChainOnly.chains) {
+        chainSet.add(chain);
+      }
+    }
     return Array.from(chainSet) as [Chain, ...Chain[]];
   }, [mainnet, base, polygon, polygonAmoy, sepolia]);
 
@@ -93,7 +99,7 @@ export const DefaultProvider: FC<
     }
     if (base) {
       for (const [chainId, transport] of Object.entries(
-        baseSepolia.transports,
+        baseSepoliaOnly.transports,
       )) {
         transportMap[Number(chainId)] = transport;
       }
@@ -108,6 +114,13 @@ export const DefaultProvider: FC<
     if (polygonAmoy) {
       for (const [chainId, transport] of Object.entries(
         polygonAmoyOnly.transports,
+      )) {
+        transportMap[Number(chainId)] = transport;
+      }
+    }
+    if (baseSepolia) {
+      for (const [chainId, transport] of Object.entries(
+        baseSepoliaChainOnly.transports,
       )) {
         transportMap[Number(chainId)] = transport;
       }

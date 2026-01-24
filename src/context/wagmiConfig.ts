@@ -5,6 +5,7 @@ import {
   polygon as polygonChain,
   polygonAmoy,
   sepolia,
+  baseSepolia,
 } from "wagmi/chains";
 import { Chain, Transport } from "viem";
 
@@ -38,7 +39,7 @@ export const sepoliaOnly = {
   },
 } as const;
 
-export const baseSepolia = {
+export const baseSepoliaOnly = {
   chains: [base, sepolia],
   transports: {
     [base.id]: fallback([
@@ -48,6 +49,17 @@ export const baseSepolia = {
     ]),
     [sepolia.id]: fallback(
       JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+        http(rpc, { batch: true }),
+      ),
+    ),
+  },
+} as const;
+
+export const baseSepoliaChainOnly = {
+  chains: [baseSepolia],
+  transports: {
+    [baseSepolia.id]: fallback(
+      JSON.parse(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON!).map((rpc) =>
         http(rpc, { batch: true }),
       ),
     ),
@@ -82,7 +94,8 @@ export const polygonAmoyOnly = {
 export const transports: Record<number, Transport> = {
   ...mainnetSepolia.transports,
   ...sepoliaOnly.transports,
-  ...baseSepolia.transports,
+  ...baseSepoliaOnly.transports,
+  ...baseSepoliaChainOnly.transports,
   ...polygonOnly.transports,
   ...polygonAmoyOnly.transports,
 } as const;
@@ -93,5 +106,6 @@ export const chains: readonly [Chain, ...Chain[]] = [
   polygonAmoy,
   sepolia,
   mainnet,
+  baseSepolia,
 ] as const;
 

@@ -8,14 +8,16 @@ import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SelectPage } from "@/features/customize/SelectPage";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { useAccount } from "@/hooks/useAccount";
 import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
 import { useRouter } from "next/navigation";
+import { useLadies } from "@/features/customize/hooks/useLadies";
+import {  mainnet, sepolia } from "viem/chains";
 
-const Content: FC<{ prefix?: string; network: "mainnet" | "sepolia" }> = ({
-  network,
+const Content: FC<{  network: "mainnet" | "sepolia", prefix?: string }> = ({
   prefix = "",
+  network,
 }) => {
   const { replace } = useRouter();
   const { chain } = useAccount();
@@ -27,23 +29,19 @@ const Content: FC<{ prefix?: string; network: "mainnet" | "sepolia" }> = ({
   if (chain && ![1, 11155111].includes(chain?.id)) {
     return <UnsupportedNetwork />;
   }
+  const { isLoading, data } = useLadies({ chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id  });
+  const tokens = useMemo(() => data?.map((tokenId) => ({ tokenId, url: `${prefix}/${tokenId}` })) ?? [], [data, prefix]);
   return (
     <Container maxWidth="lg" sx={{ py: 2, mt: 8 }}>
-      <SelectPage prefix={prefix} />
+      <SelectPage isLoading={isLoading} tokens={tokens ?? []} />
     </Container>
   );
 };
-
-const Customize: NextPage<{
-  network: "mainnet" | "sepolia";
-  prefix?: string;
-}> = ({ prefix = "", network }) => {
   return (
     <DefaultProvider
       siwe
       mainnet={network === "mainnet"}
       sepolia={network === "sepolia"}
-      base
     >
       <Main
         menu={

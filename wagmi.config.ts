@@ -7,7 +7,7 @@ import {
   fetch as fetchPlugin,
   hardhat,
 } from "@wagmi/cli/plugins";
-import { sepolia, mainnet, base } from "wagmi/chains";
+import { sepolia, mainnet, base, baseSepolia } from "wagmi/chains";
 import { toHex } from "viem";
 
 config({
@@ -72,7 +72,7 @@ export default defineConfig({
     //start
     etherscan({
       apiKey: process.env.ETHERSCAN_API_KEY!,
-      chainId: base.id,
+      chainId: sepolia.id,
       contracts: [
         {
           name: "UnrevealedLadyRenderer",
@@ -86,16 +86,11 @@ export default defineConfig({
             [base.id]: "0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2",
           },
         },
-      ],
-    }),
-    etherscan({
-      apiKey: process.env.ETHERSCAN_API_KEY!,
-      chainId: sepolia.id,
-      contracts: [
         {
           name: "BulkMinter",
           address: {
             [sepolia.id]: "0x71E57b37b4BeA589673D0aFE1992A6457ca754b3",
+            [baseSepolia.id]: "0x4E6bB6d251db23dc0855D53B09da0d4E7049B354",
           },
         },
         {
@@ -122,14 +117,9 @@ export default defineConfig({
           name: "FLSNaming",
           address: {
             [sepolia.id]: "0x53228F219A32C7da304e3D24F2D921bBEA52b6f1",
+            [baseSepolia.id]: "0xB86F5836A97DEc296a4bAdE3c79d01d2E7D8Fb48",
           },
         },
-      ],
-    }),
-    etherscan({
-      apiKey: process.env.ETHERSCAN_API_KEY!,
-      chainId: mainnet.id,
-      contracts: [
         {
           name: "FameLadySociety",
           address: {
