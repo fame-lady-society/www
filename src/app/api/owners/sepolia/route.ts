@@ -1,11 +1,11 @@
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
-import { fameLadySocietyAddress } from "@/wagmi";
+import { wrappedNftAddress } from "@/wagmi";
 import { NextRequest } from "next/server";
 import { client as viemClient } from "@/viem/sepolia-client";
 
 export async function GET(req: NextRequest) {
   const owners = await fetchAllOwnersIterable({
-    contractAddress: fameLadySocietyAddress[11155111],
+    contractAddress: wrappedNftAddress[11155111],
     totalSupply: 8888n,
     zeroIndex: true,
     client: viemClient,
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   return new Response(
     JSON.stringify({
       owners: Object.fromEntries(
-        [...reversedOwners.entries()].map(([key, value]) => [key, value]),
+        [...reversedOwners.entries()].map(([key, value]) => [key.toLowerCase(), value]),
       ),
     }),
     {

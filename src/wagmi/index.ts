@@ -1131,6 +1131,813 @@ export const creatorArtistMagicAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FLSNaming
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const flsNamingAbi = [
+  {
+    type: 'constructor',
+    inputs: [{ name: '_gateNft', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'AddressAlreadyLinked' },
+  { type: 'error', inputs: [], name: 'AddressNotVerified' },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'CannotRemovePrimary' },
+  { type: 'error', inputs: [], name: 'CommitmentAlreadyUsed' },
+  { type: 'error', inputs: [], name: 'CommitmentExpired' },
+  { type: 'error', inputs: [], name: 'CommitmentNotFound' },
+  { type: 'error', inputs: [], name: 'CommitmentTooNew' },
+  { type: 'error', inputs: [], name: 'EmptyName' },
+  { type: 'error', inputs: [], name: 'GateTokenAlreadyUsed' },
+  { type: 'error', inputs: [], name: 'IdentityNotFound' },
+  { type: 'error', inputs: [], name: 'InvalidAddress' },
+  { type: 'error', inputs: [], name: 'InvalidPrimaryTokenId' },
+  { type: 'error', inputs: [], name: 'NameAlreadyClaimed' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NotNFTHolder' },
+  { type: 'error', inputs: [], name: 'NotPrimaryAddress' },
+  { type: 'error', inputs: [], name: 'PrimaryMustOwnTokenId' },
+  { type: 'error', inputs: [], name: 'TransferDisabled' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'spender',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: true },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'approved', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'ApprovalForAll',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'oldPrimary',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'IdentitySynced',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'key', internalType: 'bytes32', type: 'bytes32', indexed: true },
+    ],
+    name: 'MetadataDeleted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'key', internalType: 'bytes32', type: 'bytes32', indexed: true },
+    ],
+    name: 'MetadataUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'primary',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+      {
+        name: 'primaryTokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'NameClaimed',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'committer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'commitment',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+    ],
+    name: 'NameCommitted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'oldPrimary',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newPrimary',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'PrimaryAddressChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'oldPrimaryTokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'newPrimaryTokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'PrimaryTokenIdChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      { name: 'id', internalType: 'uint256', type: 'uint256', indexed: true },
+    ],
+    name: 'Transfer',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'addr', internalType: 'address', type: 'address', indexed: true },
+    ],
+    name: 'VerifiedAddressAdded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'addr', internalType: 'address', type: 'address', indexed: true },
+    ],
+    name: 'VerifiedAddressRemoved',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'MAX_COMMIT_AGE',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'MIN_COMMIT_AGE',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'addr', internalType: 'address', type: 'address' }],
+    name: 'addVerifiedAddress',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'address', type: 'address' }],
+    name: 'addressToTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'spender', internalType: 'address', type: 'address' },
+      { name: 'id', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'baseTokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_name', internalType: 'string', type: 'string' },
+      { name: '_salt', internalType: 'bytes32', type: 'bytes32' },
+      { name: '_primaryTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'claimName',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'commitment', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'commitName',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'commitments',
+    outputs: [
+      { name: 'timestamp', internalType: 'uint256', type: 'uint256' },
+      { name: 'used', internalType: 'bool', type: 'bool' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'key', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'deleteMetadata',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'gateNft',
+    outputs: [{ name: '', internalType: 'contract IERC721', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'gateTokenIdToIdentityTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'getApproved',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'commitment', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'getCommitment',
+    outputs: [
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bool', type: 'bool' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getIdentity',
+    outputs: [
+      { name: '', internalType: 'string', type: 'string' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'key', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'getMetadata',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getMetadataKeys',
+    outputs: [{ name: '', internalType: 'bytes32[]', type: 'bytes32[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getVerifiedAddresses',
+    outputs: [{ name: '', internalType: 'address[]', type: 'address[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'addr', internalType: 'address', type: 'address' }],
+    name: 'hasGateNFT',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'identities',
+    outputs: [
+      { name: 'name', internalType: 'string', type: 'string' },
+      { name: 'primaryAddress', internalType: 'address', type: 'address' },
+      { name: 'primaryTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+    ],
+    name: 'isApprovedForAll',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'addr', internalType: 'address', type: 'address' },
+    ],
+    name: 'isVerified',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_name', internalType: 'string', type: 'string' },
+      { name: '_salt', internalType: 'bytes32', type: 'bytes32' },
+      { name: '_owner', internalType: 'address', type: 'address' },
+    ],
+    name: 'makeCommitment',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'nameHashToTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'nextTokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'uint256', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'addr', internalType: 'address', type: 'address' }],
+    name: 'removeVerifiedAddress',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_name', internalType: 'string', type: 'string' }],
+    name: 'resolveName',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'gateTokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'resolvePrimaryByGateTokenId',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_name', internalType: 'string', type: 'string' }],
+    name: 'resolvePrimaryByName',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'roleMetadataAdmin',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'approved', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setApprovalForAll',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'uri', internalType: 'string', type: 'string' }],
+    name: 'setBaseTokenURI',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'key', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'value', internalType: 'string', type: 'string' },
+    ],
+    name: 'setMetadata',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newPrimary', internalType: 'address', type: 'address' }],
+    name: 'setPrimaryAddress',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newPrimaryTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'setPrimaryTokenId',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'target', internalType: 'address', type: 'address' }],
+    name: 'sync',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transferFrom',
+    outputs: [],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+] as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const flsNamingAddress = {
+  11155111: '0x53228F219A32C7da304e3D24F2D921bBEA52b6f1',
+} as const
+
+/**
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const flsNamingConfig = {
+  address: flsNamingAddress,
+  abi: flsNamingAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNKNLOVE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -9519,6 +10326,1134 @@ export const useWatchCreatorArtistMagicRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: creatorArtistMagicAbi,
     eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNaming = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"MAX_COMMIT_AGE"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingMaxCommitAge = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'MAX_COMMIT_AGE',
+  },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"MIN_COMMIT_AGE"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingMinCommitAge = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'MIN_COMMIT_AGE',
+  },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addressToTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingAddressToTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'addressToTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"balanceOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'balanceOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"baseTokenURI"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingBaseTokenUri = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'baseTokenURI',
+  },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitments"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingCommitments = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'commitments',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"gateNft"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGateNft = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'gateNft',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"gateTokenIdToIdentityTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGateTokenIdToIdentityTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'gateTokenIdToIdentityTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getApproved"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetApproved = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'getApproved',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getCommitment"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetCommitment =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'getCommitment',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getIdentity"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetIdentity = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'getIdentity',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getMetadata"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetMetadata = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'getMetadata',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getMetadataKeys"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetMetadataKeys =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'getMetadataKeys',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getVerifiedAddresses"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingGetVerifiedAddresses =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'getVerifiedAddresses',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasAllRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingHasAllRoles = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'hasAllRoles',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasAnyRole"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingHasAnyRole = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'hasAnyRole',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasGateNFT"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingHasGateNft = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'hasGateNFT',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"identities"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingIdentities = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'identities',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"isApprovedForAll"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingIsApprovedForAll =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'isApprovedForAll',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"isVerified"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingIsVerified = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'isVerified',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"makeCommitment"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingMakeCommitment =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'makeCommitment',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"name"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingName = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"nameHashToTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingNameHashToTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'nameHashToTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"nextTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingNextTokenId = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'nextTokenId',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingOwner = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"ownerOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingOwnerOf = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'ownerOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolveName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingResolveName = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'resolveName',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolvePrimaryByGateTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingResolvePrimaryByGateTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'resolvePrimaryByGateTokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolvePrimaryByName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingResolvePrimaryByName =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'resolvePrimaryByName',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"roleMetadataAdmin"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingRoleMetadataAdmin =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'roleMetadataAdmin',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"rolesOf"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingRolesOf = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'rolesOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"safeTransferFrom"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingSafeTransferFrom =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"supportsInterface"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingSupportsInterface =
+  /*#__PURE__*/ createUseReadContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'supportsInterface',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"symbol"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"tokenURI"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingTokenUri = /*#__PURE__*/ createUseReadContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'tokenURI',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferFrom"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useReadFlsNamingTransferFrom = /*#__PURE__*/ createUseReadContract(
+  {
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'transferFrom',
+  },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNaming = /*#__PURE__*/ createUseWriteContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addVerifiedAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingAddVerifiedAddress =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'addVerifiedAddress',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"approve"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingApprove = /*#__PURE__*/ createUseWriteContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"claimName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingClaimName = /*#__PURE__*/ createUseWriteContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'claimName',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingCommitName = /*#__PURE__*/ createUseWriteContract(
+  { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'commitName' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"deleteMetadata"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingDeleteMetadata =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'deleteMetadata',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingGrantRoles = /*#__PURE__*/ createUseWriteContract(
+  { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'grantRoles' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"removeVerifiedAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingRemoveVerifiedAddress =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'removeVerifiedAddress',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingRenounceRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingRevokeRoles =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setApprovalForAll"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSetApprovalForAll =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setBaseTokenURI"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSetBaseTokenUri =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setBaseTokenURI',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadata"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSetMetadata =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setMetadata',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSetPrimaryAddress =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setPrimaryAddress',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSetPrimaryTokenId =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setPrimaryTokenId',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"sync"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingSync = /*#__PURE__*/ createUseWriteContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+  functionName: 'sync',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWriteFlsNamingTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNaming = /*#__PURE__*/ createUseSimulateContract({
+  abi: flsNamingAbi,
+  address: flsNamingAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addVerifiedAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingAddVerifiedAddress =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'addVerifiedAddress',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"approve"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingApprove =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'approve',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"claimName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingClaimName =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'claimName',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitName"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingCommitName =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'commitName',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"deleteMetadata"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingDeleteMetadata =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'deleteMetadata',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"grantRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingGrantRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'grantRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"removeVerifiedAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingRemoveVerifiedAddress =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'removeVerifiedAddress',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingRenounceRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'renounceRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"revokeRoles"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingRevokeRoles =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'revokeRoles',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setApprovalForAll"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSetApprovalForAll =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setBaseTokenURI"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSetBaseTokenUri =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setBaseTokenURI',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadata"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSetMetadata =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setMetadata',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryAddress"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSetPrimaryAddress =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setPrimaryAddress',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryTokenId"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSetPrimaryTokenId =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setPrimaryTokenId',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"sync"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingSync = /*#__PURE__*/ createUseSimulateContract(
+  { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'sync' },
+)
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useSimulateFlsNamingTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingEvent = /*#__PURE__*/ createUseWatchContractEvent(
+  { abi: flsNamingAbi, address: flsNamingAddress },
+)
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"Approval"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'Approval',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"ApprovalForAll"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingApprovalForAllEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'ApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"IdentitySynced"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingIdentitySyncedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'IdentitySynced',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"MetadataDeleted"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingMetadataDeletedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'MetadataDeleted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"MetadataUpdated"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingMetadataUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'MetadataUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"NameClaimed"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingNameClaimedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'NameClaimed',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"NameCommitted"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingNameCommittedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'NameCommitted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"PrimaryAddressChanged"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingPrimaryAddressChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'PrimaryAddressChanged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"PrimaryTokenIdChanged"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingPrimaryTokenIdChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'PrimaryTokenIdChanged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"RolesUpdated"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingRolesUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'RolesUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"Transfer"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"VerifiedAddressAdded"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingVerifiedAddressAddedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'VerifiedAddressAdded',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"VerifiedAddressRemoved"`
+ *
+ * [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x53228F219A32C7da304e3D24F2D921bBEA52b6f1)
+ */
+export const useWatchFlsNamingVerifiedAddressRemovedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    eventName: 'VerifiedAddressRemoved',
   })
 
 /**

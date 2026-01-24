@@ -5,9 +5,9 @@ import {
   react,
   foundry,
   fetch as fetchPlugin,
+  hardhat,
 } from "@wagmi/cli/plugins";
 import { sepolia, mainnet, base } from "wagmi/chains";
-// import { client as mainnetClient } from "./src/viem/mainnet-client.js";
 import { toHex } from "viem";
 
 config({
@@ -69,6 +69,7 @@ export default defineConfig({
     //     return JSON.parse(data.result);
     //   },
     // }),
+    //start
     etherscan({
       apiKey: process.env.ETHERSCAN_API_KEY!,
       chainId: base.id,
@@ -115,6 +116,12 @@ export default defineConfig({
           address: {
             [sepolia.id]: "0x233A9630e1fC80688E5cc2bb988836e0D5034328",
             // [base.id]: "0xf09326082a0B360567c72b6FEd67c22Fe2f76B60",
+          },
+        },
+        {
+          name: "FLSNaming",
+          address: {
+            [sepolia.id]: "0x53228F219A32C7da304e3D24F2D921bBEA52b6f1",
           },
         },
       ],
@@ -173,5 +180,11 @@ export default defineConfig({
       ],
     }),
     react(),
+    // hardhat({
+    //   project: "../fls-contracts",      
+    //   include: [
+    //     "FLSNaming.sol/**",
+    //   ],
+    // }),
   ],
 });
