@@ -67,7 +67,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
     try {
       const endpoint = network === "sepolia" ? "/api/sepolia/owned" : "/api/ethereum/owned";
       const response = await fetch(endpoint, {
-        headers: withAuthHeaders(undefined, authSession),
+        headers: withAuthHeaders(undefined, authSession?.token ? authSession : null),
       });
       
       if (!response.ok) {

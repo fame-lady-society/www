@@ -25,7 +25,7 @@ export function useOwnedGateNftTokens(network: NetworkType) {
     queryFn: async () => {
       if (!address) return [];
       const ownedTokens = await fetch(getOwnedApiRoute(network), {
-        headers: withAuthHeaders(undefined, authSession),
+        headers: withAuthHeaders(undefined, authSession.token ? authSession : null),
       })
         .then((res) => res.json() as Promise<number[]>)
         .catch(() => [] as number[]);

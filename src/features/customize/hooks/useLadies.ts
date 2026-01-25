@@ -25,7 +25,7 @@ export function useLadies({chainId}: { chainId: typeof mainnet.id | typeof sepol
     queryFn: async () => {
       if (!address) return [];
       const ownedTokens = await fetch(`/api/${chainIdToChainName(chainId)}/owned`, {
-        headers: withAuthHeaders(undefined, authSession),
+        headers: withAuthHeaders(undefined, authSession?.token ? authSession : null),
       })
         .then((res) => res.json() as Promise<number[]>)
         .catch(() => [] as number[]);

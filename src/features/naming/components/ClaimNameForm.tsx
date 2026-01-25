@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, useState } from "react";
+import { type FC, useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -15,9 +15,12 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
+import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { useClaimName } from "../hooks/useClaimName";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useChainId, useSwitchChain } from "wagmi";
 
 function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   switch (network) {
@@ -30,16 +33,48 @@ function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   }
 }
 
+function getExpectedChainId(network: NetworkType): number {
+  switch (network) {
+    case "sepolia":
+      return sepolia.id;
+    case "mainnet":
+      return mainnet.id;
+    case "base-sepolia":
+      return baseSepolia.id;
+  }
+}
+
+function getNetworkDisplayName(network: NetworkType): string {
+  switch (network) {
+    case "sepolia":
+      return "Sepolia";
+    case "mainnet":
+      return "Ethereum Mainnet";
+    case "base-sepolia":
+      return "Base Sepolia";
+  }
+}
+
 export interface ClaimNameFormProps {
   network: NetworkType;
 }
 
 export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
-  const { isConnected } = useAccount();
+  const expectedChainId = getExpectedChainId(network);
+  const chainId = useChainId();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
+  const { isConnected, signIn } = useAccount();
+  const { token } = useAuthSession();
   const [desiredName, setDesiredName] = useState("");
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | "">("");
+  const [isSettingUp, setIsSettingUp] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [pendingSignIn, setPendingSignIn] = useState(false);
 
-  const { data: availableTokens, isLoading: isLoadingTokens } =
+  const isWrongChain = chainId !== expectedChainId;
+  const needsSetup = !isConnected || !token || isWrongChain;
+
+  const { data: availableTokens, isLoading: isLoadingTokens, refetch: refetchTokens } =
     useOwnedGateNftTokens(network);
 
   const {
@@ -49,13 +84,51 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     secondsRemaining,
     minCommitAge,
     canClaim,
-    isCommitPending,
-    isClaimPending,
     startCommit,
     submitClaim,
     reset,
   } = useClaimName(network);
 
+  // Effect to sign in after chain switch completes
+  useEffect(() => {
+    if (pendingSignIn && !isWrongChain && isConnected) {
+      setPendingSignIn(false);
+      signIn()
+        .then(() => {
+          refetchTokens();
+        })
+        .catch((err) => {
+          setSetupError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+        })
+        .finally(() => {
+          setIsSettingUp(false);
+        });
+    }
+  }, [pendingSignIn, isWrongChain, isConnected, signIn, refetchTokens]);
+
+  // Handle the setup flow: switch chain if needed, then sign in
+  const handleSetup = async () => {
+    setIsSettingUp(true);
+    setSetupError(null);
+
+    try {
+      // If connected but on wrong chain, switch first then sign in via effect
+      if (isConnected && isWrongChain) {
+        await switchChainAsync({ chainId: expectedChainId });
+        // Set flag to trigger sign in after chain updates (effect will clear isSettingUp)
+        setPendingSignIn(true);
+        return;
+      }
+
+      // Already on correct chain (or not connected), sign in directly
+      await signIn();
+      refetchTokens();
+      setIsSettingUp(false);
+    } catch (err) {
+      setSetupError(err instanceof Error ? err.message : "Setup failed. Please try again.");
+      setIsSettingUp(false);
+    }
+  };
 
   const handleStartClaim = () => {
     if (!desiredName.trim() || selectedTokenId === "") return;
@@ -66,13 +139,47 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     submitClaim();
   };
 
-  if (!isConnected) {
+  // Show setup screen if not ready
+  if (needsSetup) {
+    let title = "Get Started";
+    let description = "Connect your wallet and sign in to claim a name.";
+
+    if (!isConnected) {
+      title = "Connect Your Wallet";
+      description = "Connect your wallet to claim a name.";
+    } else if (isWrongChain && !token) {
+      title = "Switch Network & Sign In";
+      description = `Switch to ${getNetworkDisplayName(network)} and sign in to continue.`;
+    } else if (isWrongChain) {
+      title = "Switch Network";
+      description = `Please switch to ${getNetworkDisplayName(network)} to continue.`;
+    } else if (!token) {
+      title = "Sign In Required";
+      description = "Sign in to verify your wallet ownership and load your NFTs.";
+    }
+
     return (
       <Card>
-        <CardContent>
-          <Alert severity="warning">
-            Please connect your wallet to claim a name.
-          </Alert>
+        <CardContent sx={{ textAlign: "center", py: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            {title}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {description}
+          </Typography>
+          {setupError && (
+            <Alert severity="error" sx={{ mb: 2, textAlign: "left" }}>
+              {setupError}
+            </Alert>
+          )}
+          <Button
+            variant="contained"
+            onClick={handleSetup}
+            disabled={isSettingUp}
+            startIcon={isSettingUp ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {isSettingUp ? "Please wait..." : title}
+          </Button>
         </CardContent>
       </Card>
     );

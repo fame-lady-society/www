@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SiweMessage, generateNonce } from "siwe";
-import { Address } from "viem";
+import { SiweMessage } from "siwe";
 import { client as baseClient } from "@/viem/base-client";
 import { client as mainnetClient } from "@/viem/mainnet-client";
 import { client as sepoliaClient } from "@/viem/sepolia-client";
+import { client as baseSepoliaClient } from "@/viem/base-sepolia-client";
 
-import { base, mainnet, sepolia } from "viem/chains";
+import { base, baseSepolia, mainnet, sepolia } from "viem/chains";
 import { z } from "zod";
 
 import { signNonce, verifyNonce } from "./nonce-utils";
@@ -52,6 +52,8 @@ function getPublicClientForChain(chainId: number) {
       return mainnetClient;
     case sepolia.id:
       return sepoliaClient;
+    case baseSepolia.id:
+      return baseSepoliaClient;
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`);
   }

@@ -11,15 +11,18 @@ import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { useWriteFlsNamingSetMetadata } from "@/wagmi";
 import { METADATA_KEYS } from "../hooks/useIdentity";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
+import { useAccount } from "@/hooks/useAccount";
 
-function getChainId(network: NetworkType): number {
+function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 
@@ -36,6 +39,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
   currentDescription,
   currentWebsite,
 }) => {
+  const { address } = useAccount();
   const chainId = getChainId(network);
   const [description, setDescription] = useState(currentDescription);
   const [website, setWebsite] = useState(currentWebsite);
@@ -69,7 +73,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
     setPendingField("description");
     writeContract({
       chainId,
-      args: [tokenId, METADATA_KEYS.description, description],
+      args: [METADATA_KEYS.description, description],
     });
   };
 
@@ -77,7 +81,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
     setPendingField("website");
     writeContract({
       chainId,
-      args: [tokenId, METADATA_KEYS.website, website],
+      args: [METADATA_KEYS.website, website],
     });
   };
 

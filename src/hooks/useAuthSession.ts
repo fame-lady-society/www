@@ -6,7 +6,9 @@ import {
   subscribeAuthSession,
 } from "@/utils/authToken";
 
-export function useAuthSession(): AuthSession | null {
+const EMPTY = { token: undefined, expiresAt: undefined } as const;
+
+export function useAuthSession() {
   const [session, setSession] = useState<AuthSession | null>(() =>
     getAuthSession(),
   );
@@ -17,6 +19,6 @@ export function useAuthSession(): AuthSession | null {
     return unsubscribe;
   }, []);
 
-  return session;
+  return session ?? EMPTY;
 }
 

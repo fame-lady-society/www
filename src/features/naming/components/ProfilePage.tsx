@@ -33,7 +33,6 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
   const { identity, isLoading, notFound } = useIdentity(network, identifier);
   const permissions = useIdentityPermissions(identity);
   const { isConnected } = useAccount();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -53,7 +52,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
 
   if (notFound || !identity) {
     return (
-      <Box sx={{ textAlign: "center", py: 8 }}>
+      <Box component="div" sx={{ textAlign: "center", py: 8 }}>
         <Typography variant="h5" gutterBottom>
           Identity not found
         </Typography>
