@@ -16,6 +16,7 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
+import { normalize } from  "viem/ens";
 import { useClaimName } from "../hooks/useClaimName";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
@@ -193,7 +194,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
             Congratulations!
           </Typography>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            You claimed the name "{name}"
+            You claimed the name &ldquo;{name}&rdquo;
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
             Your identity has been created and your soulbound NFT has been minted.
@@ -201,7 +202,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
           <Box component="div" sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
             <Button
               component={Link}
-              href={`/${network}/naming/${encodeURIComponent(name)}`}
+              href={`/${network}/~/@${normalize(encodeURIComponent(name))}`}
               variant="contained"
             >
               View Your Profile
@@ -228,7 +229,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Claiming a name uses a two-step commit-reveal process to prevent
-            front-running. First, you'll commit to your name, wait{" "}
+            front-running. First, you&apos;ll commit to your name, wait{" "}
             {minCommitAge} seconds, then reveal and claim it.
           </Typography>
 
@@ -244,7 +245,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
               <TextField
                 label="Desired Name"
                 value={desiredName}
-                onChange={(e) => setDesiredName(e.target.value)}
+                onChange={(e) => setDesiredName(normalize(e.target.value))}
                 fullWidth
                 placeholder="Enter your desired name"
                 helperText="Choose a unique name for your Fame Lady identity"
@@ -259,7 +260,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                 </Box>
               ) : availableTokens?.length === 0 ? (
                 <Alert severity="warning">
-                  You don't own any gate NFTs. You need to own a Fame Lady
+                  You don&apos;t own any gate NFTs. You need to own a Fame Lady
                   Society NFT to claim a name.
                 </Alert>
               ) : (

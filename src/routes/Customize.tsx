@@ -26,23 +26,25 @@ const Content: FC<{  network: "mainnet" | "sepolia", prefix?: string }> = ({
     replace(`/${name}/customize`);
   }
 
+  const { isLoading, data } = useLadies({ chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id  });
+  const tokens = useMemo(() => data?.map((tokenId) => ({ tokenId, url: `${prefix}/${tokenId}` })) ?? [], [data, prefix]);
+
   if (chain && ![1, 11155111].includes(chain?.id)) {
     return <UnsupportedNetwork />;
   }
-  const { isLoading, data } = useLadies({ chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id  });
-  const tokens = useMemo(() => data?.map((tokenId) => ({ tokenId, url: `${prefix}/${tokenId}` })) ?? [], [data, prefix]);
   return (
     <Container maxWidth="lg" sx={{ py: 2, mt: 8 }}>
       <SelectPage isLoading={isLoading} tokens={tokens ?? []} />
     </Container>
   );
 };
+
+const Customize: NextPage<{
+  network: "mainnet" | "sepolia";
+  prefix?: string;
+}> = ({ network, prefix }) => {
   return (
-    <DefaultProvider
-      siwe
-      mainnet={network === "mainnet"}
-      sepolia={network === "sepolia"}
-    >
+    <DefaultProvider siwe>
       <Main
         menu={
           <>

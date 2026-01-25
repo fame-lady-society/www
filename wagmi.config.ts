@@ -4,72 +4,19 @@ import {
   etherscan,
   react,
   foundry,
-  fetch as fetchPlugin,
-  hardhat,
 } from "@wagmi/cli/plugins";
 import { sepolia, mainnet, base, baseSepolia } from "wagmi/chains";
-import { toHex } from "viem";
 
 config({
   path: ".env.local",
 });
 
-async function readMainnetImplementationAddress(
-  contractAddress: `0x${string}`,
-) {
-  const { client: mainnetClient } = await import(
-    "./src/viem/mainnet-client.js"
-  );
-  const storageSlot =
-    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"; // EIP-1967 implementation slot
-
-  const addressStorage = await mainnetClient.getStorageAt({
-    address: contractAddress,
-    slot: storageSlot,
-  });
-
-  console.log(
-    `Implementation address for ${contractAddress} is ${addressStorage!}`,
-  );
-  return `0x${addressStorage!.slice(-40)}`;
-}
+type SupportedChainId = typeof sepolia.id | typeof baseSepolia.id | typeof mainnet.id | typeof base.id;
 
 export default defineConfig({
   out: "src/wagmi/index.ts",
   contracts: [],
   plugins: [
-    // fetchPlugin({
-    //   contracts: [
-    //     {
-    //       name: "SaveLady",
-    //       address: {
-    //         [mainnet.id]: "0x31fA60d6fF9F8aE536E790ebf885435Be9053116",
-    //       },
-    //     },
-    //   ],
-    //   request: async (contract) => {
-    //     const implementationAddress = await readMainnetImplementationAddress(
-    //       "0x31fA60d6fF9F8aE536E790ebf885435Be9053116",
-    //     );
-    //     console.log(
-    //       `Implementation address for SaveLady is ${implementationAddress}`,
-    //     );
-    //     // Fetch ABI from Etherscan
-    //     const response = await fetch(
-    //       `https://api.etherscan.io/v2/api?apikey=${process.env.ETHERSCAN_API_KEY}&chainid=1&module=contract&action=getabi&address=${implementationAddress}`,
-    //     );
-    //     const data = await response.json();
-    //     if (data.status !== "1") {
-    //       throw new Error(
-    //         `Failed to fetch ABI from Etherscan: ${
-    //           data.result || "Unknown error"
-    //         }`,
-    //       );
-    //     }
-    //     return JSON.parse(data.result);
-    //   },
-    // }),
-    //start
     etherscan({
       apiKey: process.env.ETHERSCAN_API_KEY!,
       chainId: sepolia.id,
@@ -78,13 +25,13 @@ export default defineConfig({
           name: "UnrevealedLadyRenderer",
           address: {
             [base.id]: "0xa50c9a918c110ca159fb187f4a55896a4d063878",
-          },
+          } as Partial<Record<SupportedChainId, `0x${string}`>> as any,
         },
         {
           name: "ZoraFactoryImpl",
           address: {
             [base.id]: "0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2",
-          },
+          } as Partial<Record<SupportedChainId, `0x${string}`>> as any,
         },
         {
           name: "BulkMinter",
@@ -117,7 +64,7 @@ export default defineConfig({
           name: "FLSNaming",
           address: {
             [sepolia.id]: "0x53228F219A32C7da304e3D24F2D921bBEA52b6f1",
-            [baseSepolia.id]: "0xB86F5836A97DEc296a4bAdE3c79d01d2E7D8Fb48",
+            [baseSepolia.id]: "0x6001A9D7AB0bd23e8FbC1930660B961d91057bAa",
           },
         },
         {
@@ -170,11 +117,5 @@ export default defineConfig({
       ],
     }),
     react(),
-    // hardhat({
-    //   project: "../fls-contracts",      
-    //   include: [
-    //     "FLSNaming.sol/**",
-    //   ],
-    // }),
   ],
 });

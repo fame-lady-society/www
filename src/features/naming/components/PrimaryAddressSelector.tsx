@@ -16,14 +16,16 @@ import { useWriteFlsNamingSetPrimaryAddress } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 
-function getChainId(network: NetworkType): number {
+function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 
@@ -33,7 +35,6 @@ function truncateAddress(address: string): string {
 
 export interface PrimaryAddressSelectorProps {
   network: NetworkType;
-  tokenId: bigint;
   currentPrimary: `0x${string}`;
   primaryTokenId: bigint;
   verifiedAddresses?: readonly `0x${string}`[];
@@ -42,7 +43,6 @@ export interface PrimaryAddressSelectorProps {
 
 export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
   network,
-  tokenId,
   currentPrimary,
   primaryTokenId,
   verifiedAddresses,
@@ -112,7 +112,7 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
     }
 
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {error && (
           <Alert severity="error" onClose={() => reset()}>
             {error.message}
@@ -127,7 +127,7 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
           cooperation from the new primary.
         </Alert>
 
-        <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
+        <Box component="div" sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
           <FormControl sx={{ minWidth: 300 }}>
             <InputLabel>Select New Primary Address</InputLabel>
             <Select
@@ -160,7 +160,7 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
 
   // For verified user requesting to become primary
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {error && (
         <Alert severity="error" onClose={() => reset()}>
           {error.message}

@@ -15,29 +15,27 @@ import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { useWriteFlsNamingSetPrimaryTokenId } from "@/wagmi";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 
-function getChainId(network: NetworkType): number {
+function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 
 export interface PrimaryNftSelectorProps {
   network: NetworkType;
-  tokenId: bigint;
   currentPrimaryTokenId: bigint;
-  verifiedAddresses: readonly `0x${string}`[];
 }
 
 export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
   network,
-  tokenId,
   currentPrimaryTokenId,
-  verifiedAddresses,
 }) => {
   const chainId = getChainId(network);
   const [selectedTokenId, setSelectedTokenId] = useState<string>(
@@ -93,7 +91,7 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
   }, [ownedTokens, currentPrimaryTokenId]);
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {error && (
         <Alert severity="error" onClose={() => reset()}>
           {error.message}
@@ -104,12 +102,12 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
 
       <Typography variant="body2" color="text.secondary">
         Select a gate NFT owned by any of your verified addresses to bind to
-        this identity. The bound NFT determines your identity's validity.
+        this identity. The bound NFT determines your identity&apos;s validity.
       </Typography>
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
+      <Box component="div" sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
         {isLoadingTokens ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CircularProgress size={20} />
             <Typography variant="body2">Loading available tokens...</Typography>
           </Box>

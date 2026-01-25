@@ -8417,12 +8417,12 @@
     satori "0.10.9"
     yoga-wasm-web "0.3.3"
 
-"@wagmi/cli@^2.8.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@wagmi/cli/-/cli-2.8.0.tgz#df3cc9d1d17deb02b11ee3ac318ed106f03c5c16"
-  integrity sha512-2VhDj8u8vwLZwMZ8CX4pTuO0Qm28Z9uH9qOEWgF/xXUCeVV+4e4YsknEyGcoxYwEmTkdlCmuCvMj4up2XK6vxQ==
+"@wagmi/cli@^2.9.0":
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/@wagmi/cli/-/cli-2.9.0.tgz#cad0ba6bd48524d1ef106da04c7965748ec24c1f"
+  integrity sha512-6gBF+IMFsaHpXEdjN+OZAy4Rctv+CNyNHmW4Edl1PSeNBlfdCQj01eAy13FLdv+bfyal/hoE7Ox+SKN16FnU1w==
   dependencies:
-    abitype "^1.0.4"
+    abitype "^1.1.1"
     bundle-require "^5.1.0"
     cac "^6.7.14"
     change-case "^5.4.4"
@@ -9042,12 +9042,12 @@ abitype@1.0.0:
   resolved "https://registry.npmjs.org/abitype/-/abitype-1.0.0.tgz"
   integrity sha512-NMeMah//6bJ56H5XRj8QCV4AwuW6hB6zqz2LnhhLdcWVQOsXki6/Pn3APeqxCma62nXIcmZWdu1DlHWS74umVQ==
 
-abitype@1.0.6, abitype@^1.0.4:
+abitype@1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.0.6.tgz#76410903e1d88e34f1362746e2d407513c38565b"
   integrity sha512-MMSqYh4+C/aVqI2RQaWqbvI4Kxo5cQV40WQ4QFtDnNzCkqChm8MuENhElmynZlO0qUy/ObkEUaXtKqYnx1Kp3A==
 
-abitype@1.2.3, abitype@^1.0.9, abitype@^1.2.3:
+abitype@1.2.3, abitype@^1.0.9, abitype@^1.1.1, abitype@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.2.3.tgz#bec3e09dea97d99ef6c719140bee663a329ad1f4"
   integrity sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==

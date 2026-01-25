@@ -6,18 +6,13 @@ import { ThemeProvider } from "@mui/material/styles";
 import flsTheme from "@/theme";
 import {
   Web3Provider,
-  baseSepolia as baseSepoliaOnly,
-  mainnetSepolia,
-  polygonAmoyOnly,
-  polygonOnly,
-  sepoliaOnly,
 } from "./Wagmi";
 import { NotificationsProvider } from "@/features/notifications/Context";
 import { Notifications } from "@/features/notifications/Notifications";
 import { useAccount } from "@/hooks/useAccount";
 import { useEnsName } from "wagmi";
 import { Chain, Transport } from "viem";
-import { baseSepoliaChainOnly } from "./wagmiConfig";
+import { baseSepoliaChainOnly, baseSepoliaOnly, mainnetSepolia, polygonAmoyOnly, polygonOnly, sepoliaOnly } from "./wagmiConfig";
 
 const Config: FC<PropsWithChildren> = ({ children }) => {
   const { address, chain } = useAccount();
@@ -86,7 +81,7 @@ export const DefaultProvider: FC<
       }
     }
     return Array.from(chainSet) as [Chain, ...Chain[]];
-  }, [mainnet, base, polygon, polygonAmoy, sepolia]);
+  }, [mainnet, base, polygon, polygonAmoy, sepolia, baseSepolia]);
 
   const transports = useMemo(() => {
     const transportMap: Record<number, Transport> = {};
@@ -126,7 +121,7 @@ export const DefaultProvider: FC<
       }
     }
     return transportMap;
-  }, [mainnet, base, polygon, polygonAmoy]);
+  }, [mainnet, base, polygon, polygonAmoy, baseSepolia]);
 
   return (
     <ThemeProvider theme={flsTheme}>

@@ -19,30 +19,18 @@ import {
 } from "connectkit";
 import { Chain, Transport } from "viem";
 import {
-  baseSepolia,
   chains as defaultChains,
-  mainnetSepolia,
-  polygonAmoyOnly,
-  polygonOnly,
-  sepoliaOnly,
 } from "./wagmiConfig";
 import {
   clearAuthSession,
   setAuthSession,
   withAuthHeaders,
 } from "@/utils/authToken";
-export {
-  mainnetSepolia,
-  sepoliaOnly,
-  baseSepolia,
-  polygonOnly,
-  polygonAmoyOnly,
-} from "./wagmiConfig";
 
 const SIWE_API_PATH = "/siwe";
 
 export const defaultConfig = {
-  ...mainnetSepolia,
+  // ...mainnetSepolia,
   // Required API Keys
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   multiInjectedProviderDiscovery: true,

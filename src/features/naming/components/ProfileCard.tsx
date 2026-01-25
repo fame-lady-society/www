@@ -10,6 +10,7 @@ import Box from "@mui/material/Box";
 import Link from "next/link";
 import type { Identity } from "../hooks/useAllIdentities";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
+import { normalize } from "viem/ens";
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -38,11 +39,12 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
     >
       <CardActionArea
         component={Link}
-        href={`/${network}/naming/${encodeURIComponent(name)}`}
+        href={`/${network}/~/@${normalize(encodeURIComponent(name))}`}
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         <CardContent sx={{ flexGrow: 1 }}>
           <Box
+            component="div"
             sx={{
               display: "flex",
               justifyContent: "space-between",
@@ -71,7 +73,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
             />
           </Box>
 
-          <Box sx={{ mt: 2 }}>
+          <Box component="div" sx={{ mt: 2 }}>
             <Typography
               variant="body2"
               color="text.secondary"

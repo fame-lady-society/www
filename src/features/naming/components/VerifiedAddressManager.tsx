@@ -20,27 +20,27 @@ import {
 } from "@/wagmi";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 
-function getChainId(network: NetworkType): number {
+function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 
 export interface VerifiedAddressManagerProps {
   network: NetworkType;
-  tokenId: bigint;
   verifiedAddresses: readonly `0x${string}`[];
   primaryAddress: `0x${string}`;
 }
 
 export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
   network,
-  tokenId,
   verifiedAddresses,
   primaryAddress,
 }) => {
@@ -137,7 +137,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
   const error = addError || removeError;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {error && (
         <Alert
           severity="error"
@@ -153,7 +153,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
       {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
       {/* Current addresses */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {verifiedAddresses.map((addr) => {
           const isPrimary = addr.toLowerCase() === primaryAddress.toLowerCase();
           const isBeingRemoved =
@@ -163,6 +163,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
           return (
             <Box
               key={addr}
+              component="div"
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -172,7 +173,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
                 borderRadius: 1,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography
                   variant="body2"
                   sx={{
@@ -208,7 +209,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
       </Box>
 
       {/* Add new address */}
-      <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+      <Box component="div" sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
         <TextField
           label="Add Verified Address"
           value={newAddress}

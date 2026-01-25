@@ -90,7 +90,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
   const hasWebsiteChanged = website !== currentWebsite;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {error && (
         <Alert severity="error" onClose={() => reset()}>
           {error.message}
@@ -101,7 +101,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
         <Alert severity="success">{successMessage}</Alert>
       )}
 
-      <Box>
+      <Box component="div">
         <TextField
           label="Description"
           value={description}
@@ -112,7 +112,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
           placeholder="Tell the community about yourself..."
           disabled={isWorking}
         />
-        <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+        <Box component="div" sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
           <Button
             variant="contained"
             size="small"
@@ -131,7 +131,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
         </Box>
       </Box>
 
-      <Box>
+      <Box component="div">
         <TextField
           label="Website"
           value={website}
@@ -140,7 +140,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
           placeholder="https://your-website.com"
           disabled={isWorking}
         />
-        <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+        <Box component="div" sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
           <Button
             variant="contained"
             size="small"

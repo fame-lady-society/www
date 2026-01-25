@@ -32,7 +32,12 @@ export default function ProfileDetailPage({
     }
   }
 
-  const decodedIdentifier = decodeURIComponent(identifier);
+  let decodedIdentifier = decodeURIComponent(identifier);
+  // if `deodedIndentifier` does not start with a `@`, redirect to the correct format
+  if (!decodedIdentifier.startsWith("@")) {
+    redirect(`/${network}/~/${encodeURIComponent(`@${decodedIdentifier}`)}`, RedirectType.replace);
+  }
+  decodedIdentifier = decodedIdentifier.slice(1);
 
   return (
     <AppMain

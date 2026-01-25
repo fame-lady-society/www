@@ -17,14 +17,16 @@ export interface Identity {
   primaryTokenId: bigint;
 }
 
-function getChainId(network: NetworkType): number {
+function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 

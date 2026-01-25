@@ -57,7 +57,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
           Identity not found
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          The identity "{identifier}" does not exist.
+          The identity &ldquo;{identifier}&rdquo; does not exist.
         </Typography>
         <Button component={Link} href={`/${network}/naming`} variant="outlined">
           Back to all identities
@@ -67,11 +67,12 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto" }}>
+    <Box component="div" sx={{ maxWidth: 800, mx: "auto" }}>
       {/* Header Card */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Box
+            component="div"
             sx={{
               display: "flex",
               justifyContent: "space-between",
@@ -79,11 +80,11 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
               mb: 2,
             }}
           >
-            <Box>
+            <Box component="div">
               <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
                 {identity.name}
               </Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <Box component="div" sx={{ display: "flex", gap: 1, mt: 1 }}>
                 <Chip
                   label={`Token #${identity.tokenId.toString()}`}
                   size="small"
@@ -104,13 +105,14 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
           <Divider sx={{ my: 2 }} />
 
           {/* Basic Info */}
-          <Box sx={{ display: "grid", gap: 2 }}>
-            <Box>
+          <Box component="div" sx={{ display: "grid", gap: 2 }}>
+            <Box component="div">
               <Typography variant="caption" color="text.secondary">
                 Primary Address
               </Typography>
               <Typography
                 variant="body1"
+                component="span"
                 sx={{
                   fontFamily: "monospace",
                   backgroundColor: "rgba(0,0,0,0.05)",
@@ -123,7 +125,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
               </Typography>
             </Box>
 
-            <Box>
+            <Box component="div">
               <Typography variant="caption" color="text.secondary">
                 Bound Gate NFT
               </Typography>
@@ -133,7 +135,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
             </Box>
 
             {identity.description && (
-              <Box>
+              <Box component="div">
                 <Typography variant="caption" color="text.secondary">
                   Description
                 </Typography>
@@ -142,7 +144,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
             )}
 
             {identity.website && (
-              <Box>
+              <Box component="div">
                 <Typography variant="caption" color="text.secondary">
                   Website
                 </Typography>
@@ -172,9 +174,10 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
           <Typography variant="h6" gutterBottom>
             Verified Addresses
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {identity.verifiedAddresses.map((addr) => (
               <Box
+                component="div"
                 key={addr}
                 sx={{
                   display: "flex",
@@ -210,7 +213,6 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
             </Alert>
             <PrimaryAddressSelector
               network={network}
-              tokenId={identity.tokenId}
               currentPrimary={identity.primaryAddress}
               primaryTokenId={identity.primaryTokenId}
             />
@@ -220,7 +222,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
 
       {/* Primary user management panel */}
       {permissions.canManage && (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {/* Metadata Editor */}
           <Card>
             <CardContent>
@@ -244,7 +246,6 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
               </Typography>
               <VerifiedAddressManager
                 network={network}
-                tokenId={identity.tokenId}
                 verifiedAddresses={identity.verifiedAddresses}
                 primaryAddress={identity.primaryAddress}
               />
@@ -259,9 +260,7 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
               </Typography>
               <PrimaryNftSelector
                 network={network}
-                tokenId={identity.tokenId}
                 currentPrimaryTokenId={identity.primaryTokenId}
-                verifiedAddresses={identity.verifiedAddresses}
               />
             </CardContent>
           </Card>
@@ -278,7 +277,6 @@ export const ProfilePage: FC<ProfilePageProps> = ({ network, identifier }) => {
               </Typography>
               <PrimaryAddressSelector
                 network={network}
-                tokenId={identity.tokenId}
                 currentPrimary={identity.primaryAddress}
                 primaryTokenId={identity.primaryTokenId}
                 verifiedAddresses={identity.verifiedAddresses}
