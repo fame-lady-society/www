@@ -8,7 +8,7 @@ export interface IdentityPermissions {
   isPrimary: boolean;
   isVerified: boolean;
   canManage: boolean;
-  canRequestPrimary: boolean;
+  isVerifiedNotPrimary: boolean;
 }
 
 export function useIdentityPermissions(
@@ -22,7 +22,7 @@ export function useIdentityPermissions(
         isPrimary: false,
         isVerified: false,
         canManage: false,
-        canRequestPrimary: false,
+        isVerifiedNotPrimary: false,
       };
     }
 
@@ -39,7 +39,7 @@ export function useIdentityPermissions(
       // Primary can do everything
       canManage: isPrimary,
       // Verified (but not primary) can request to become primary
-      canRequestPrimary: isVerified && !isPrimary,
+      isVerifiedNotPrimary: isVerified && !isPrimary,
     };
   }, [identity, address]);
 }

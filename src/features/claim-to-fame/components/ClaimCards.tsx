@@ -8,7 +8,6 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import { claimToFameAbi, fameAbi } from "@/wagmi";
 import { claimToFameFromNetwork } from "../contracts";
-import { fameFromNetwork } from "@/features/fame/contract";
 import { useAccount } from "@/hooks/useAccount";
 import {
   ContractFunctionExecutionError,

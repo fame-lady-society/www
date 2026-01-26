@@ -11,6 +11,7 @@ import Link from "next/link";
 import type { Identity } from "../hooks/useAllIdentities";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { normalize } from "viem/ens";
+import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -39,7 +40,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
     >
       <CardActionArea
         component={Link}
-        href={`/${network}/~/@${normalize(encodeURIComponent(name))}`}
+        href={`/${network}/~/${encodeIdentifier(name)}`}
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         <CardContent sx={{ flexGrow: 1 }}>

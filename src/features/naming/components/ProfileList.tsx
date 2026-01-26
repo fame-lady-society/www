@@ -24,6 +24,7 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
   if (isLoading) {
     return (
       <Box
+        component="div"
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -37,9 +38,10 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box component="div" sx={{ width: "100%" }}>
       {/* Header */}
       <Box
+        component="div"
         sx={{
           display: "flex",
           justifyContent: "space-between",
@@ -49,7 +51,7 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
           gap: 2,
         }}
       >
-        <Box>
+        <Box component="div">
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             Fame Lady Names
           </Typography>
@@ -92,6 +94,7 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
       {/* Empty state */}
       {identities.length === 0 && (
         <Box
+          component="div"
           sx={{
             textAlign: "center",
             py: 8,

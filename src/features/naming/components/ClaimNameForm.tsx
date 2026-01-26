@@ -21,7 +21,9 @@ import { useClaimName } from "../hooks/useClaimName";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useChainId, useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteBulkMinterMint } from "@/wagmi";
+import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
 
 function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   switch (network) {
@@ -34,14 +36,16 @@ function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   }
 }
 
-function getExpectedChainId(network: NetworkType): number {
+function getExpectedChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
+    // case "mainnet":
+    //   return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
+    default:
+      throw new Error(`Unsupported network: ${network}`);
   }
 }
 
@@ -71,12 +75,29 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [pendingSignIn, setPendingSignIn] = useState(false);
+  const [mintError, setMintError] = useState<string | null>(null);
 
   const isWrongChain = chainId !== expectedChainId;
   const needsSetup = !isConnected || !token || isWrongChain;
+  const isBulkMinterNetwork = network === "base-sepolia";
 
   const { data: availableTokens, isLoading: isLoadingTokens, refetch: refetchTokens } =
     useOwnedGateNftTokens(network);
+
+  const {
+    writeContract: writeBulkMinterMint,
+    data: bulkMinterMintHash,
+    isPending: isBulkMinterMintPending,
+    error: bulkMinterMintError,
+    reset: resetBulkMinterMint,
+  } = useWriteBulkMinterMint();
+
+  const {
+    isLoading: isBulkMinterMintConfirming,
+    isSuccess: isBulkMinterMintConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash: bulkMinterMintHash,
+  });
 
   const {
     step,
@@ -89,6 +110,26 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     submitClaim,
     reset,
   } = useClaimName(network);
+
+  const isBulkMinterMinting = isBulkMinterMintPending || isBulkMinterMintConfirming;
+
+  useEffect(() => {
+    if (bulkMinterMintError) {
+      setMintError(
+        bulkMinterMintError instanceof Error
+          ? bulkMinterMintError.message
+          : "Mint failed. Please try again."
+      );
+      resetBulkMinterMint();
+    }
+  }, [bulkMinterMintError, resetBulkMinterMint]);
+
+  useEffect(() => {
+    if (isBulkMinterMintConfirmed) {
+      setMintError(null);
+      refetchTokens();
+    }
+  }, [isBulkMinterMintConfirmed, refetchTokens]);
 
   // Effect to sign in after chain switch completes
   useEffect(() => {
@@ -138,6 +179,14 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
 
   const handleSubmitClaim = () => {
     submitClaim();
+  };
+
+  const handleMintGateNft = () => {
+    setMintError(null);
+    writeBulkMinterMint({
+      chainId: expectedChainId,
+      args: [1n],
+    });
   };
 
   // Show setup screen if not ready
@@ -202,7 +251,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
           <Box component="div" sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
             <Button
               component={Link}
-              href={`/${network}/~/@${normalize(encodeURIComponent(name))}`}
+              href={`/${network}/~/${encodeIdentifier(name)}`}
               variant="contained"
             >
               View Your Profile
@@ -330,6 +379,30 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                       </Grid2>
                     ))}
                   </Grid2>
+                </Box>
+              )}
+
+              {isBulkMinterNetwork && (
+                <Box component="div">
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Need more gate NFTs? Mint a test BulkMinter NFT on Base Sepolia.
+                  </Typography>
+                  {mintError && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      {mintError}
+                    </Alert>
+                  )}
+                  <Button
+                    variant="outlined"
+                    onClick={handleMintGateNft}
+                    disabled={isBulkMinterMinting}
+                  >
+                    {isBulkMinterMintPending
+                      ? "Confirm in wallet"
+                      : isBulkMinterMintConfirming
+                        ? "Minting..."
+                        : "Mint Gate NFT"}
+                  </Button>
                 </Box>
               )}
 

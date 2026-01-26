@@ -63,8 +63,8 @@ export default defineConfig({
         {
           name: "FLSNaming",
           address: {
-            [sepolia.id]: "0x53228F219A32C7da304e3D24F2D921bBEA52b6f1",
-            [baseSepolia.id]: "0x6001A9D7AB0bd23e8FbC1930660B961d91057bAa",
+            [sepolia.id]: "0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591",
+            [baseSepolia.id]: "0xca420609df3E29aEA9da5d37a44743CF4EFD73A0",
           },
         },
         {

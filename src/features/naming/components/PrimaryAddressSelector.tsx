@@ -86,15 +86,6 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
     });
   };
 
-  const handleRequestPrimary = () => {
-    if (!connectedAddress) return;
-
-    writeContract({
-      chainId,
-      args: [connectedAddress],
-    });
-  };
-
   const isWorking = isPending || isConfirming;
 
   // For primary transfer: show dropdown of verified addresses (excluding current primary)
@@ -157,33 +148,7 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
       </Box>
     );
   }
-
-  // For verified user requesting to become primary
   return (
-    <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {error && (
-        <Alert severity="error" onClose={() => reset()}>
-          {error.message}
-        </Alert>
-      )}
-
-      {successMessage && <Alert severity="success">{successMessage}</Alert>}
-
-      <Typography variant="body2" color="text.secondary">
-        As a verified address, you can request to become the primary address.
-        Note: The bound gate NFT (Token #{primaryTokenId.toString()}) must be
-        owned by either you or the current primary for this to succeed.
-      </Typography>
-
-      <Button
-        variant="contained"
-        onClick={handleRequestPrimary}
-        disabled={isWorking}
-        startIcon={isWorking ? <CircularProgress size={16} /> : null}
-        sx={{ alignSelf: "flex-start" }}
-      >
-        {isWorking ? "Requesting..." : "Become Primary Address"}
-      </Button>
-    </Box>
+    null
   );
 };

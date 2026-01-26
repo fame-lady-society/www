@@ -1,6 +1,6 @@
+import type { ReactNode } from "react";
 import { RedirectType, redirect } from "next/navigation";
 import { AppMain } from "@/layouts/AppMain";
-import { PublicProfileView } from "@/features/naming/components/PublicProfileView";
 import Container from "@mui/material/Container";
 import Link from "next/link";
 import Button from "@mui/material/Button";
@@ -12,9 +12,11 @@ import {
 } from "@/features/naming/utils/networkUtils";
 import { normalize } from "viem/ens";
 
-export default function PublicProfilePage({
+export default function EditProfileLayout({
+  children,
   params,
 }: {
+  children: ReactNode;
   params: { network: string; identifier: string };
 }) {
   const { network, identifier } = params;
@@ -28,22 +30,22 @@ export default function PublicProfilePage({
 
   return (
     <AppMain
-      title="Profile"
-      mobileTitle="Profile"
+      title="Edit Profile"
+      mobileTitle="Edit Profile"
       headerLeft={
         <Button
           component={Link}
-          href={`/${network}/naming`}
+          href={`/${network}/~/${encodeIdentifier(name)}`}
           startIcon={<ArrowBackIcon />}
           size="small"
           sx={{ ml: 2 }}
         >
-          All Names
+          Back to Profile
         </Button>
       }
     >
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <PublicProfileView network={resolvedNetwork} identifier={name} />
+        {children}
       </Container>
     </AppMain>
   );
