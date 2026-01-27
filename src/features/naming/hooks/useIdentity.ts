@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { keccak256, toHex } from "viem";
@@ -13,6 +13,13 @@ import {
   useReadFlsNamingGetMetadata,
 } from "@/wagmi";
 import type { NetworkType } from "./useOwnedGateNftTokens";
+import {
+  SOCIAL_PROVIDERS,
+  getSocialAttestationKey,
+  getSocialAttestationStatus,
+  safeHexToString,
+  type SocialAttestationStatus,
+} from "@/features/naming/attestations";
 
 export interface FullIdentity {
   tokenId: bigint;
@@ -22,6 +29,7 @@ export interface FullIdentity {
   verifiedAddresses: readonly `0x${string}`[];
   description: string;
   website: string;
+  socialAttestations: SocialAttestationStatus[];
 }
 
 // Standard metadata keys
@@ -29,6 +37,10 @@ export const METADATA_KEYS = {
   description: keccak256(toHex("description")),
   website: keccak256(toHex("website")),
 } as const;
+
+function isAddressValue(value: string): value is `0x${string}` {
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
+}
 
 function getChainId(network: NetworkType) {
   switch (network) {
@@ -109,6 +121,13 @@ export function useIdentity(
         args: [tokenId, METADATA_KEYS.website] as const,
         chainId,
       },
+      ...SOCIAL_PROVIDERS.map((provider) => ({
+        address: contractAddress,
+        abi: flsNamingAbi,
+        functionName: "getMetadata" as const,
+        args: [tokenId, getSocialAttestationKey(provider)] as const,
+        chainId,
+      })),
     ];
   }, [contractAddress, tokenId, chainId]);
 
@@ -120,6 +139,77 @@ export function useIdentity(
       },
     });
 
+  const [socialAttestations, setSocialAttestations] = useState<
+    SocialAttestationStatus[]
+  >([]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!identityData || !contractAddress || !metadataResults) {
+      setSocialAttestations([]);
+      return () => {
+        active = false;
+      };
+    }
+
+    const [name] = identityData;
+    const attestorEnv = process.env.NEXT_PUBLIC_SOCIAL_ATTESTOR_ADDRESS;
+    const attestorAddress =
+      typeof attestorEnv === "string" && isAddressValue(attestorEnv)
+        ? attestorEnv
+        : null;
+    const expectedAudience =
+      typeof process.env.NEXT_PUBLIC_SOCIAL_ATTESTATION_AUD === "string"
+        ? process.env.NEXT_PUBLIC_SOCIAL_ATTESTATION_AUD
+        : undefined;
+
+    if (!attestorAddress) {
+      setSocialAttestations([]);
+      return () => {
+        active = false;
+      };
+    }
+
+    const namehash = keccak256(toHex(name));
+    const offset = 2;
+
+    const run = async () => {
+      const entries: SocialAttestationStatus[] = [];
+      for (let index = 0; index < SOCIAL_PROVIDERS.length; index += 1) {
+        const provider = SOCIAL_PROVIDERS[index];
+        const result = metadataResults[offset + index];
+        if (!result || result.status !== "success") continue;
+
+        const status = await getSocialAttestationStatus(provider, result.result, {
+          chainId,
+          verifyingContract: contractAddress,
+          attestorAddress,
+          namehash,
+          expectedAudience,
+        });
+
+        if (status) {
+          entries.push(status);
+        }
+      }
+
+      if (active) {
+        setSocialAttestations(entries);
+      }
+    };
+
+    run().catch(() => {
+      if (active) {
+        setSocialAttestations([]);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [identityData, contractAddress, metadataResults, chainId]);
+
   const identity = useMemo<FullIdentity | null>(() => {
     if (!identityData || !tokenId) return null;
 
@@ -130,14 +220,17 @@ export function useIdentity(
       return null;
     }
 
-    const description =
+    const descriptionResult =
       metadataResults?.[0]?.status === "success"
-        ? (metadataResults[0].result as string)
-        : "";
-    const website =
+        ? metadataResults[0].result
+        : undefined;
+    const websiteResult =
       metadataResults?.[1]?.status === "success"
-        ? (metadataResults[1].result as string)
-        : "";
+        ? metadataResults[1].result
+        : undefined;
+
+    const description = safeHexToString(descriptionResult) ?? "";
+    const website = safeHexToString(websiteResult) ?? "";
 
     return {
       tokenId,
@@ -147,8 +240,9 @@ export function useIdentity(
       verifiedAddresses: verifiedAddresses ?? [],
       description,
       website,
+      socialAttestations,
     };
-  }, [identityData, tokenId, verifiedAddresses, metadataResults]);
+  }, [identityData, tokenId, verifiedAddresses, metadataResults, socialAttestations]);
 
   return {
     identity,

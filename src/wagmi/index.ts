@@ -1139,8 +1139,8 @@ export const creatorArtistMagicAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const flsNamingAbi = [
   {
@@ -1161,6 +1161,7 @@ export const flsNamingAbi = [
   { type: 'error', inputs: [], name: 'GateTokenAlreadyUsed' },
   { type: 'error', inputs: [], name: 'IdentityNotFound' },
   { type: 'error', inputs: [], name: 'InvalidAddress' },
+  { type: 'error', inputs: [], name: 'InvalidMetadataBatch' },
   { type: 'error', inputs: [], name: 'InvalidPrimaryTokenId' },
   { type: 'error', inputs: [], name: 'InvalidSignature' },
   { type: 'error', inputs: [], name: 'NameAlreadyClaimed' },
@@ -1633,7 +1634,7 @@ export const flsNamingAbi = [
       { name: 'key', internalType: 'bytes32', type: 'bytes32' },
     ],
     name: 'getMetadata',
-    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    outputs: [{ name: '', internalType: 'bytes', type: 'bytes' }],
     stateMutability: 'view',
   },
   {
@@ -1897,9 +1898,19 @@ export const flsNamingAbi = [
     type: 'function',
     inputs: [
       { name: 'key', internalType: 'bytes32', type: 'bytes32' },
-      { name: 'value', internalType: 'string', type: 'string' },
+      { name: 'value', internalType: 'bytes', type: 'bytes' },
     ],
     name: 'setMetadata',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'keys', internalType: 'bytes32[]', type: 'bytes32[]' },
+      { name: 'values', internalType: 'bytes[]', type: 'bytes[]' },
+    ],
+    name: 'setMetadataBatch',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -1968,17 +1979,17 @@ export const flsNamingAbi = [
 ] as const
 
 /**
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const flsNamingAddress = {
-  84532: '0xca420609df3E29aEA9da5d37a44743CF4EFD73A0',
-  11155111: '0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591',
+  84532: '0x2B72809b87961D73edeb58F2059aB8971A5D5851',
+  11155111: '0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA',
 } as const
 
 /**
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const flsNamingConfig = {
   address: flsNamingAddress,
@@ -10412,8 +10423,8 @@ export const useWatchCreatorArtistMagicRolesUpdatedEvent =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNaming = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10423,8 +10434,8 @@ export const useReadFlsNaming = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"DOMAIN_SEPARATOR"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingDomainSeparator =
   /*#__PURE__*/ createUseReadContract({
@@ -10436,8 +10447,8 @@ export const useReadFlsNamingDomainSeparator =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"MAX_COMMIT_AGE"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingMaxCommitAge = /*#__PURE__*/ createUseReadContract(
   {
@@ -10450,8 +10461,8 @@ export const useReadFlsNamingMaxCommitAge = /*#__PURE__*/ createUseReadContract(
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"MIN_COMMIT_AGE"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingMinCommitAge = /*#__PURE__*/ createUseReadContract(
   {
@@ -10464,8 +10475,8 @@ export const useReadFlsNamingMinCommitAge = /*#__PURE__*/ createUseReadContract(
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addressToTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingAddressToTokenId =
   /*#__PURE__*/ createUseReadContract({
@@ -10477,8 +10488,8 @@ export const useReadFlsNamingAddressToTokenId =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"balanceOf"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingBalanceOf = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10489,8 +10500,8 @@ export const useReadFlsNamingBalanceOf = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"baseTokenURI"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingBaseTokenUri = /*#__PURE__*/ createUseReadContract(
   {
@@ -10503,8 +10514,8 @@ export const useReadFlsNamingBaseTokenUri = /*#__PURE__*/ createUseReadContract(
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"buildAddVerifiedAddressDigest"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingBuildAddVerifiedAddressDigest =
   /*#__PURE__*/ createUseReadContract({
@@ -10516,8 +10527,8 @@ export const useReadFlsNamingBuildAddVerifiedAddressDigest =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"checkNameNotClaimed"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingCheckNameNotClaimed =
   /*#__PURE__*/ createUseReadContract({
@@ -10529,8 +10540,8 @@ export const useReadFlsNamingCheckNameNotClaimed =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitments"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingCommitments = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10541,8 +10552,8 @@ export const useReadFlsNamingCommitments = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"gateNft"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGateNft = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10553,8 +10564,8 @@ export const useReadFlsNamingGateNft = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"gateTokenIdToIdentityTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGateTokenIdToIdentityTokenId =
   /*#__PURE__*/ createUseReadContract({
@@ -10566,8 +10577,8 @@ export const useReadFlsNamingGateTokenIdToIdentityTokenId =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getApproved"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetApproved = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10578,8 +10589,8 @@ export const useReadFlsNamingGetApproved = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getCommitment"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetCommitment =
   /*#__PURE__*/ createUseReadContract({
@@ -10591,8 +10602,8 @@ export const useReadFlsNamingGetCommitment =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getIdentity"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetIdentity = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10603,8 +10614,8 @@ export const useReadFlsNamingGetIdentity = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getMetadata"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetMetadata = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10615,8 +10626,8 @@ export const useReadFlsNamingGetMetadata = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getMetadataKeys"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetMetadataKeys =
   /*#__PURE__*/ createUseReadContract({
@@ -10628,8 +10639,8 @@ export const useReadFlsNamingGetMetadataKeys =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"getVerifiedAddresses"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingGetVerifiedAddresses =
   /*#__PURE__*/ createUseReadContract({
@@ -10641,8 +10652,8 @@ export const useReadFlsNamingGetVerifiedAddresses =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasAllRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingHasAllRoles = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10653,8 +10664,8 @@ export const useReadFlsNamingHasAllRoles = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasAnyRole"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingHasAnyRole = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10665,8 +10676,8 @@ export const useReadFlsNamingHasAnyRole = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"hasGateNFT"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingHasGateNft = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10677,8 +10688,8 @@ export const useReadFlsNamingHasGateNft = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"identities"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingIdentities = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10689,8 +10700,8 @@ export const useReadFlsNamingIdentities = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"isApprovedForAll"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingIsApprovedForAll =
   /*#__PURE__*/ createUseReadContract({
@@ -10702,8 +10713,8 @@ export const useReadFlsNamingIsApprovedForAll =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"isVerified"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingIsVerified = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10714,8 +10725,8 @@ export const useReadFlsNamingIsVerified = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"makeCommitment"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingMakeCommitment =
   /*#__PURE__*/ createUseReadContract({
@@ -10727,8 +10738,8 @@ export const useReadFlsNamingMakeCommitment =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"name"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingName = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10739,8 +10750,8 @@ export const useReadFlsNamingName = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"nameHashToTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingNameHashToTokenId =
   /*#__PURE__*/ createUseReadContract({
@@ -10752,8 +10763,8 @@ export const useReadFlsNamingNameHashToTokenId =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"nextTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingNextTokenId = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10764,8 +10775,8 @@ export const useReadFlsNamingNextTokenId = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"nonces"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingNonces = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10776,8 +10787,8 @@ export const useReadFlsNamingNonces = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"owner"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingOwner = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10788,8 +10799,8 @@ export const useReadFlsNamingOwner = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"ownerOf"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingOwnerOf = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10800,8 +10811,8 @@ export const useReadFlsNamingOwnerOf = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingOwnershipHandoverExpiresAt =
   /*#__PURE__*/ createUseReadContract({
@@ -10813,8 +10824,8 @@ export const useReadFlsNamingOwnershipHandoverExpiresAt =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolveName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingResolveName = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10825,8 +10836,8 @@ export const useReadFlsNamingResolveName = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolvePrimaryByGateTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingResolvePrimaryByGateTokenId =
   /*#__PURE__*/ createUseReadContract({
@@ -10838,8 +10849,8 @@ export const useReadFlsNamingResolvePrimaryByGateTokenId =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"resolvePrimaryByName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingResolvePrimaryByName =
   /*#__PURE__*/ createUseReadContract({
@@ -10851,8 +10862,8 @@ export const useReadFlsNamingResolvePrimaryByName =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"roleMetadataAdmin"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingRoleMetadataAdmin =
   /*#__PURE__*/ createUseReadContract({
@@ -10864,8 +10875,8 @@ export const useReadFlsNamingRoleMetadataAdmin =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"rolesOf"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingRolesOf = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10876,8 +10887,8 @@ export const useReadFlsNamingRolesOf = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"safeTransferFrom"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingSafeTransferFrom =
   /*#__PURE__*/ createUseReadContract({
@@ -10889,8 +10900,8 @@ export const useReadFlsNamingSafeTransferFrom =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"supportsInterface"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingSupportsInterface =
   /*#__PURE__*/ createUseReadContract({
@@ -10902,8 +10913,8 @@ export const useReadFlsNamingSupportsInterface =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"symbol"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingSymbol = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10914,8 +10925,8 @@ export const useReadFlsNamingSymbol = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"tokenURI"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingTokenUri = /*#__PURE__*/ createUseReadContract({
   abi: flsNamingAbi,
@@ -10926,8 +10937,8 @@ export const useReadFlsNamingTokenUri = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferFrom"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useReadFlsNamingTransferFrom = /*#__PURE__*/ createUseReadContract(
   {
@@ -10940,8 +10951,8 @@ export const useReadFlsNamingTransferFrom = /*#__PURE__*/ createUseReadContract(
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNaming = /*#__PURE__*/ createUseWriteContract({
   abi: flsNamingAbi,
@@ -10951,8 +10962,8 @@ export const useWriteFlsNaming = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addVerifiedAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingAddVerifiedAddress =
   /*#__PURE__*/ createUseWriteContract({
@@ -10964,8 +10975,8 @@ export const useWriteFlsNamingAddVerifiedAddress =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"approve"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingApprove = /*#__PURE__*/ createUseWriteContract({
   abi: flsNamingAbi,
@@ -10976,8 +10987,8 @@ export const useWriteFlsNamingApprove = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingCancelOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -10989,8 +11000,8 @@ export const useWriteFlsNamingCancelOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"claimName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingClaimName = /*#__PURE__*/ createUseWriteContract({
   abi: flsNamingAbi,
@@ -11001,8 +11012,8 @@ export const useWriteFlsNamingClaimName = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingCommitName = /*#__PURE__*/ createUseWriteContract(
   { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'commitName' },
@@ -11011,8 +11022,8 @@ export const useWriteFlsNamingCommitName = /*#__PURE__*/ createUseWriteContract(
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingCompleteOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -11024,8 +11035,8 @@ export const useWriteFlsNamingCompleteOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"deleteMetadata"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingDeleteMetadata =
   /*#__PURE__*/ createUseWriteContract({
@@ -11037,8 +11048,8 @@ export const useWriteFlsNamingDeleteMetadata =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"grantRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingGrantRoles = /*#__PURE__*/ createUseWriteContract(
   { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'grantRoles' },
@@ -11047,8 +11058,8 @@ export const useWriteFlsNamingGrantRoles = /*#__PURE__*/ createUseWriteContract(
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"removeVerifiedAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingRemoveVerifiedAddress =
   /*#__PURE__*/ createUseWriteContract({
@@ -11060,8 +11071,8 @@ export const useWriteFlsNamingRemoveVerifiedAddress =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingRenounceOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -11073,8 +11084,8 @@ export const useWriteFlsNamingRenounceOwnership =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingRenounceRoles =
   /*#__PURE__*/ createUseWriteContract({
@@ -11086,8 +11097,8 @@ export const useWriteFlsNamingRenounceRoles =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingRequestOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -11099,8 +11110,8 @@ export const useWriteFlsNamingRequestOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"revokeRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingRevokeRoles =
   /*#__PURE__*/ createUseWriteContract({
@@ -11112,8 +11123,8 @@ export const useWriteFlsNamingRevokeRoles =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setApprovalForAll"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSetApprovalForAll =
   /*#__PURE__*/ createUseWriteContract({
@@ -11125,8 +11136,8 @@ export const useWriteFlsNamingSetApprovalForAll =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setBaseTokenURI"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSetBaseTokenUri =
   /*#__PURE__*/ createUseWriteContract({
@@ -11138,8 +11149,8 @@ export const useWriteFlsNamingSetBaseTokenUri =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadata"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSetMetadata =
   /*#__PURE__*/ createUseWriteContract({
@@ -11149,10 +11160,23 @@ export const useWriteFlsNamingSetMetadata =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadataBatch"`
+ *
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
+ */
+export const useWriteFlsNamingSetMetadataBatch =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setMetadataBatch',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSetPrimaryAddress =
   /*#__PURE__*/ createUseWriteContract({
@@ -11164,8 +11188,8 @@ export const useWriteFlsNamingSetPrimaryAddress =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSetPrimaryTokenId =
   /*#__PURE__*/ createUseWriteContract({
@@ -11177,8 +11201,8 @@ export const useWriteFlsNamingSetPrimaryTokenId =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"sync"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingSync = /*#__PURE__*/ createUseWriteContract({
   abi: flsNamingAbi,
@@ -11189,8 +11213,8 @@ export const useWriteFlsNamingSync = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWriteFlsNamingTransferOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -11202,8 +11226,8 @@ export const useWriteFlsNamingTransferOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNaming = /*#__PURE__*/ createUseSimulateContract({
   abi: flsNamingAbi,
@@ -11213,8 +11237,8 @@ export const useSimulateFlsNaming = /*#__PURE__*/ createUseSimulateContract({
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"addVerifiedAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingAddVerifiedAddress =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11226,8 +11250,8 @@ export const useSimulateFlsNamingAddVerifiedAddress =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"approve"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingApprove =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11239,8 +11263,8 @@ export const useSimulateFlsNamingApprove =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingCancelOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11252,8 +11276,8 @@ export const useSimulateFlsNamingCancelOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"claimName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingClaimName =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11265,8 +11289,8 @@ export const useSimulateFlsNamingClaimName =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"commitName"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingCommitName =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11278,8 +11302,8 @@ export const useSimulateFlsNamingCommitName =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingCompleteOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11291,8 +11315,8 @@ export const useSimulateFlsNamingCompleteOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"deleteMetadata"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingDeleteMetadata =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11304,8 +11328,8 @@ export const useSimulateFlsNamingDeleteMetadata =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"grantRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingGrantRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11317,8 +11341,8 @@ export const useSimulateFlsNamingGrantRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"removeVerifiedAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingRemoveVerifiedAddress =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11330,8 +11354,8 @@ export const useSimulateFlsNamingRemoveVerifiedAddress =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingRenounceOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11343,8 +11367,8 @@ export const useSimulateFlsNamingRenounceOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"renounceRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingRenounceRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11356,8 +11380,8 @@ export const useSimulateFlsNamingRenounceRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingRequestOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11369,8 +11393,8 @@ export const useSimulateFlsNamingRequestOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"revokeRoles"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingRevokeRoles =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11382,8 +11406,8 @@ export const useSimulateFlsNamingRevokeRoles =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setApprovalForAll"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSetApprovalForAll =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11395,8 +11419,8 @@ export const useSimulateFlsNamingSetApprovalForAll =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setBaseTokenURI"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSetBaseTokenUri =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11408,8 +11432,8 @@ export const useSimulateFlsNamingSetBaseTokenUri =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadata"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSetMetadata =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11419,10 +11443,23 @@ export const useSimulateFlsNamingSetMetadata =
   })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setMetadataBatch"`
+ *
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
+ */
+export const useSimulateFlsNamingSetMetadataBatch =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress,
+    functionName: 'setMetadataBatch',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryAddress"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSetPrimaryAddress =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11434,8 +11471,8 @@ export const useSimulateFlsNamingSetPrimaryAddress =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"setPrimaryTokenId"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSetPrimaryTokenId =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11447,8 +11484,8 @@ export const useSimulateFlsNamingSetPrimaryTokenId =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"sync"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingSync = /*#__PURE__*/ createUseSimulateContract(
   { abi: flsNamingAbi, address: flsNamingAddress, functionName: 'sync' },
@@ -11457,8 +11494,8 @@ export const useSimulateFlsNamingSync = /*#__PURE__*/ createUseSimulateContract(
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link flsNamingAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useSimulateFlsNamingTransferOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -11470,8 +11507,8 @@ export const useSimulateFlsNamingTransferOwnership =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingEvent = /*#__PURE__*/ createUseWatchContractEvent(
   { abi: flsNamingAbi, address: flsNamingAddress },
@@ -11480,8 +11517,8 @@ export const useWatchFlsNamingEvent = /*#__PURE__*/ createUseWatchContractEvent(
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"Approval"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingApprovalEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11493,8 +11530,8 @@ export const useWatchFlsNamingApprovalEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"ApprovalForAll"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingApprovalForAllEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11506,8 +11543,8 @@ export const useWatchFlsNamingApprovalForAllEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"IdentitySynced"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingIdentitySyncedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11519,8 +11556,8 @@ export const useWatchFlsNamingIdentitySyncedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"MetadataDeleted"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingMetadataDeletedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11532,8 +11569,8 @@ export const useWatchFlsNamingMetadataDeletedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"MetadataUpdated"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingMetadataUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11545,8 +11582,8 @@ export const useWatchFlsNamingMetadataUpdatedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"NameClaimed"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingNameClaimedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11558,8 +11595,8 @@ export const useWatchFlsNamingNameClaimedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"NameCommitted"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingNameCommittedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11571,8 +11608,8 @@ export const useWatchFlsNamingNameCommittedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingOwnershipHandoverCanceledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11584,8 +11621,8 @@ export const useWatchFlsNamingOwnershipHandoverCanceledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingOwnershipHandoverRequestedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11597,8 +11634,8 @@ export const useWatchFlsNamingOwnershipHandoverRequestedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"OwnershipTransferred"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingOwnershipTransferredEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11610,8 +11647,8 @@ export const useWatchFlsNamingOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"PrimaryAddressChanged"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingPrimaryAddressChangedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11623,8 +11660,8 @@ export const useWatchFlsNamingPrimaryAddressChangedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"PrimaryTokenIdChanged"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingPrimaryTokenIdChangedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11636,8 +11673,8 @@ export const useWatchFlsNamingPrimaryTokenIdChangedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"RolesUpdated"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11649,8 +11686,8 @@ export const useWatchFlsNamingRolesUpdatedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"Transfer"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingTransferEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11662,8 +11699,8 @@ export const useWatchFlsNamingTransferEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"VerifiedAddressAdded"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingVerifiedAddressAddedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -11675,8 +11712,8 @@ export const useWatchFlsNamingVerifiedAddressAddedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link flsNamingAbi}__ and `eventName` set to `"VerifiedAddressRemoved"`
  *
- * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0xca420609df3E29aEA9da5d37a44743CF4EFD73A0)
- * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0x4adA3b379be7E48222F0C3aE1A9D49B8Fd51E591)
+ * - [__View Contract on Base Sepolia Basescan__](https://sepolia.basescan.org/address/0x2B72809b87961D73edeb58F2059aB8971A5D5851)
+ * - [__View Contract on Sepolia Etherscan__](https://sepolia.etherscan.io/address/0xe7f39CB8260Df579E3646846dDb2ee3fF6f7BBeA)
  */
 export const useWatchFlsNamingVerifiedAddressRemovedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({

@@ -16,8 +16,10 @@ import { VerifiedAddressManager } from "./VerifiedAddressManager";
 import { MetadataEditor } from "./MetadataEditor";
 import { PrimaryNftSelector } from "./PrimaryNftSelector";
 import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
+import { SocialAttestationsEditor } from "./SocialAttestationsEditor";
 import { encodeIdentifier } from "../utils/networkUtils";
 import { useAddressVerificationSession } from "../hooks/useAddressVerificationSession";
+import { SocialCheckmark } from "./SocialCheckmark";
 
 export interface EditProfileViewProps {
   network: NetworkType;
@@ -38,6 +40,12 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
     isSessionForCurrentIdentity &&
     session.currentStep !== "complete";
 
+  const verifiedSocial = identity.socialAttestations.filter(
+    (attestation) => attestation.verified,
+  );
+  const socialHandleLabel = (provider: string) =>
+    provider === "x" ? "X" : "Discord";
+
   return (
     <Box component="div" sx={{ maxWidth: 800, mx: "auto" }}>
       {/* Header Card */}
@@ -53,9 +61,12 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
             }}
           >
             <Box component="div">
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-                {identity.name}
-              </Typography>
+              <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+                  {identity.name}
+                </Typography>
+                {verifiedSocial.length > 0 && <SocialCheckmark />}
+              </Box>
               <Box component="div" sx={{ display: "flex", gap: 1, mt: 1 }}>
                 <Chip
                   label={`FLS Identity Token #${identity.tokenId.toString()}`}
@@ -63,6 +74,33 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
                   variant="outlined"
                 />
               </Box>
+              {verifiedSocial.length > 0 && (
+                <Box
+                  component="div"
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    mt: 1,
+                  }}
+                >
+                  {verifiedSocial.map((attestation) => (
+                    <Box
+                      component="div"
+                      key={attestation.provider}
+                      sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {socialHandleLabel(attestation.provider)}:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {attestation.handle}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Box>
 
             <Chip label="Editing" color="warning" />
@@ -93,7 +131,7 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
 
             <Box component="div">
               <Typography variant="caption" color="text.secondary">
-                Bound Gate NFT
+                My Fame Lady
               </Typography>
               <Typography variant="body1">
                 Token #{identity.primaryTokenId.toString()}
@@ -140,6 +178,16 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
               currentDescription={identity.description}
               currentWebsite={identity.website}
             />
+          </CardContent>
+        </Card>
+
+        {/* Social Attestations */}
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Social Accounts
+            </Typography>
+            <SocialAttestationsEditor network={network} identity={identity} />
           </CardContent>
         </Card>
 

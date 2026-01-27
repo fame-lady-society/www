@@ -5,17 +5,12 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
 import Typography from "@mui/material/Typography";
-import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import Link from "next/link";
 import type { Identity } from "../hooks/useAllIdentities";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
-import { normalize } from "viem/ens";
-import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
-
-function truncateAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+import { encodeIdentifier } from "../utils/networkUtils";
+import { SocialCheckmark } from "./SocialCheckmark";
 
 export interface ProfileCardProps {
   identity: Identity;
@@ -23,7 +18,10 @@ export interface ProfileCardProps {
 }
 
 export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
-  const { tokenId, name, primaryAddress, primaryTokenId } = identity;
+  const { name, socialHandles } = identity;
+  const discordHandle = socialHandles.discord;
+  const xHandle = socialHandles.x;
+  const hasHandles = !!discordHandle || !!xHandle;
 
   return (
     <Card
@@ -44,15 +42,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         <CardContent sx={{ flexGrow: 1 }}>
-          <Box
-            component="div"
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              mb: 1,
-            }}
-          >
+          <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography
               variant="h6"
               component="h3"
@@ -61,51 +51,27 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                maxWidth: "70%",
               }}
             >
               {name}
             </Typography>
-            <Chip
-              label={`#${tokenId.toString()}`}
-              size="small"
-              variant="outlined"
-              sx={{ fontSize: "0.75rem" }}
-            />
+            {hasHandles && <SocialCheckmark />}
           </Box>
 
-          <Box component="div" sx={{ mt: 2 }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-            >
-              <span style={{ opacity: 0.7 }}>Primary:</span>
-              <code
-                style={{
-                  fontSize: "0.8rem",
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                }}
-              >
-                {truncateAddress(primaryAddress)}
-              </code>
-            </Typography>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.5 }}
-            >
-              <span style={{ opacity: 0.7 }}>Bound NFT:</span>
-              <Chip
-                label={`#${primaryTokenId.toString()}`}
-                size="small"
-                sx={{ fontSize: "0.7rem", height: "20px" }}
-              />
-            </Typography>
-          </Box>
+          {hasHandles && (
+            <Box component="div" sx={{ mt: 1.5, display: "grid", gap: 0.5 }}>
+              {discordHandle && (
+                <Typography variant="body2" color="text.secondary">
+                  Discord: <strong>{discordHandle}</strong>
+                </Typography>
+              )}
+              {xHandle && (
+                <Typography variant="body2" color="text.secondary">
+                  X: <strong>{xHandle}</strong>
+                </Typography>
+              )}
+            </Box>
+          )}
         </CardContent>
       </CardActionArea>
     </Card>

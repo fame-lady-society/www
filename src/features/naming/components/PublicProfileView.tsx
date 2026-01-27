@@ -18,6 +18,7 @@ import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { encodeIdentifier } from "../utils/networkUtils";
 import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
+import { SocialCheckmark } from "./SocialCheckmark";
 
 export interface PublicProfileViewProps {
   network: NetworkType;
@@ -66,6 +67,13 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
 
   const editUrl = `/${network}/~/edit/${encodeIdentifier(identity.name)}`;
 
+  const verifiedSocial = identity.socialAttestations.filter(
+    (attestation) => attestation.verified,
+  );
+
+  const socialHandleLabel = (provider: string) =>
+    provider === "x" ? "X" : "Discord";
+
   return (
     <Box component="div" sx={{ maxWidth: 800, mx: "auto" }}>
       {/* Header Card */}
@@ -81,9 +89,12 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
             }}
           >
             <Box component="div">
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-                {identity.name}
-              </Typography>
+              <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+                  {identity.name}
+                </Typography>
+                {verifiedSocial.length > 0 && <SocialCheckmark />}
+              </Box>
             </Box>
 
             <Box component="div" sx={{ display: "flex", gap: 1, alignItems: "center" }}>
@@ -113,26 +124,7 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
           <Box component="div" sx={{ display: "grid", gap: 2 }}>
             <Box component="div">
               <Typography variant="caption" color="text.secondary">
-                Primary Address
-              </Typography>
-              <Typography
-                variant="body1"
-                component="div"
-                sx={{
-                  fontFamily: "monospace",
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                  p: 1,
-                  borderRadius: 1,
-                  wordBreak: "break-all",
-                }}
-              >
-                {identity.primaryAddress}
-              </Typography>
-            </Box>
-
-            <Box component="div">
-              <Typography variant="caption" color="text.secondary">
-                Bound Gate NFT
+                My Fame Lady
               </Typography>
               <Typography variant="body1">
                 Token #{identity.primaryTokenId.toString()}
@@ -163,7 +155,13 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{ color: "primary.main", textDecoration: "none" }}
+                  sx={{
+                    color: "primary.main",
+                    textDecoration: "none",
+                    display: "block",
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                  }}
                 >
                   {identity.website}
                 </Typography>
@@ -174,6 +172,37 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
       </Card>
 
       {/* Verified Addresses Card */}
+      {identity.socialAttestations.length > 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Social Accounts
+            </Typography>
+            <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {identity.socialAttestations.map((attestation) => (
+                <Box
+                  component="div"
+                  key={attestation.provider}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1,
+                    backgroundColor: "rgba(0,0,0,0.02)",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="body2">
+                    {attestation.provider === "x" ? "X" : "Discord"}:{" "}
+                    <strong>{attestation.handle}</strong>
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>

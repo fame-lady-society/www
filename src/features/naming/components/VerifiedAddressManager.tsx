@@ -156,7 +156,6 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
                       color="primary"
                       sx={{ ml: 0.5 }}
                     />
-                    <Chip label="Primary" size="small" color="primary" />
                   </>
                 )}
               </Box>

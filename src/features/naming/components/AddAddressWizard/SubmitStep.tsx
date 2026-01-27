@@ -151,24 +151,10 @@ export const SubmitStep: FC<WizardStepProps> = ({
     }
   }, [isConfirmed, wizardBaseUrl, router, setStep]);
 
-  if (!session || !isSessionForCurrentIdentity || !session.signature) {
-    return (
-      <Box
-        component="div"
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "200px",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+
 
   const isPrimaryWalletConnected =
-    connectedAddress?.toLowerCase() === session.primaryAddress.toLowerCase();
+    connectedAddress?.toLowerCase() === session?.primaryAddress.toLowerCase();
   const isWrongChain =
     connectedChainId !== undefined && connectedChainId !== chainId;
 
@@ -176,7 +162,7 @@ export const SubmitStep: FC<WizardStepProps> = ({
     setSubmitError(null);
     resetWrite();
 
-    if (!session.signature) {
+    if (!session?.signature) {
       setSubmitError("No signature found. Please go back and sign again.");
       return;
     }
@@ -189,7 +175,7 @@ export const SubmitStep: FC<WizardStepProps> = ({
 
     addVerifiedAddress({
       chainId: chainId,
-      args: [session.targetAddress, session.signature],
+      args: [session?.targetAddress, session?.signature],
     });
   };
 
@@ -208,14 +194,6 @@ export const SubmitStep: FC<WizardStepProps> = ({
     }
   }, [pendingSubmit, isWrongChain, connectedChainId, chainId, addVerifiedAddress, session]);
 
-  const handleCopySignature = async () => {
-    if (session.signature) {
-      await navigator.clipboard.writeText(session.signature);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   const handleCancel = () => {
     clearSession();
     router.push(editUrl);
@@ -228,6 +206,21 @@ export const SubmitStep: FC<WizardStepProps> = ({
   const error = submitError || writeError?.message || receiptError?.message;
   const isWorking = isSubmitting || isConfirming || isSwitchingChain || pendingSubmit;
 
+  if (!session || !isSessionForCurrentIdentity || !session.signature) {
+    return (
+      <Box
+        component="div"
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "200px",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
   return (
     <WizardLayout
       currentStep="submit"

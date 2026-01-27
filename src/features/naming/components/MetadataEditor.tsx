@@ -8,6 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { useWaitForTransactionReceipt } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
+import { toHex } from "viem";
 import { useWriteFlsNamingSetMetadata } from "@/wagmi";
 import { METADATA_KEYS } from "../hooks/useIdentity";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
@@ -73,7 +74,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
     setPendingField("description");
     writeContract({
       chainId,
-      args: [METADATA_KEYS.description, description],
+      args: [METADATA_KEYS.description, toHex(description)],
     });
   };
 
@@ -81,7 +82,7 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
     setPendingField("website");
     writeContract({
       chainId,
-      args: [METADATA_KEYS.website, website],
+      args: [METADATA_KEYS.website, toHex(website)],
     });
   };
 
