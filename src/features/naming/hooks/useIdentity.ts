@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useReadContracts } from "wagmi";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEnsName, useReadContracts } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { keccak256, toHex } from "viem";
 import {
@@ -10,7 +10,6 @@ import {
   useReadFlsNamingResolveName,
   useReadFlsNamingGetIdentity,
   useReadFlsNamingGetVerifiedAddresses,
-  useReadFlsNamingGetMetadata,
 } from "@/wagmi";
 import type { NetworkType } from "./useOwnedGateNftTokens";
 import {
@@ -72,36 +71,45 @@ export function useIdentity(
       : undefined;
 
   // Resolve name to tokenId if needed
-  const { data: resolvedTokenId, isLoading: isResolvingName } =
-    useReadFlsNamingResolveName({
-      chainId,
-      args: nameToResolve ? [nameToResolve] : undefined,
-      query: {
-        enabled: !!nameToResolve,
-      },
-    });
+  const {
+    data: resolvedTokenId,
+    isLoading: isResolvingName,
+    refetch: refetchResolvedTokenId,
+  } = useReadFlsNamingResolveName({
+    chainId,
+    args: nameToResolve ? [nameToResolve] : undefined,
+    query: {
+      enabled: !!nameToResolve,
+    },
+  });
 
   const tokenId = directTokenId ?? resolvedTokenId;
 
   // Fetch identity data
-  const { data: identityData, isLoading: isLoadingIdentity } =
-    useReadFlsNamingGetIdentity({
-      chainId,
-      args: tokenId ? [tokenId] : undefined,
-      query: {
-        enabled: !!tokenId && tokenId !== 0n,
-      },
-    });
+  const {
+    data: identityData,
+    isLoading: isLoadingIdentity,
+    refetch: refetchIdentityData,
+  } = useReadFlsNamingGetIdentity({
+    chainId,
+    args: tokenId ? [tokenId] : undefined,
+    query: {
+      enabled: !!tokenId && tokenId !== 0n,
+    },
+  });
 
   // Fetch verified addresses
-  const { data: verifiedAddresses, isLoading: isLoadingVerified } =
-    useReadFlsNamingGetVerifiedAddresses({
-      chainId,
-      args: tokenId ? [tokenId] : undefined,
-      query: {
-        enabled: !!tokenId && tokenId !== 0n,
-      },
-    });
+  const {
+    data: verifiedAddresses,
+    isLoading: isLoadingVerified,
+    refetch: refetchVerifiedAddresses,
+  } = useReadFlsNamingGetVerifiedAddresses({
+    chainId,
+    args: tokenId ? [tokenId] : undefined,
+    query: {
+      enabled: !!tokenId && tokenId !== 0n,
+    },
+  });
 
   // Fetch metadata (description and website)
   const metadataContracts = useMemo(() => {
@@ -131,13 +139,16 @@ export function useIdentity(
     ];
   }, [contractAddress, tokenId, chainId]);
 
-  const { data: metadataResults, isLoading: isLoadingMetadata } =
-    useReadContracts({
-      contracts: metadataContracts,
-      query: {
-        enabled: metadataContracts.length > 0,
-      },
-    });
+  const {
+    data: metadataResults,
+    isLoading: isLoadingMetadata,
+    refetch: refetchMetadataResults,
+  } = useReadContracts({
+    contracts: metadataContracts,
+    query: {
+      enabled: metadataContracts.length > 0,
+    },
+  });
 
   const [socialAttestations, setSocialAttestations] = useState<
     SocialAttestationStatus[]
@@ -210,6 +221,7 @@ export function useIdentity(
     };
   }, [identityData, contractAddress, metadataResults, chainId]);
 
+
   const identity = useMemo<FullIdentity | null>(() => {
     if (!identityData || !tokenId) return null;
 
@@ -244,6 +256,33 @@ export function useIdentity(
     };
   }, [identityData, tokenId, verifiedAddresses, metadataResults, socialAttestations]);
 
+  const refetchIdentity = useCallback(async () => {
+    const actions: Promise<unknown>[] = [];
+
+    if (nameToResolve) {
+      actions.push(refetchResolvedTokenId());
+    }
+
+    if (tokenId && tokenId !== 0n) {
+      actions.push(refetchIdentityData());
+      actions.push(refetchVerifiedAddresses());
+    }
+
+    if (metadataContracts.length > 0) {
+      actions.push(refetchMetadataResults());
+    }
+
+    await Promise.all(actions);
+  }, [
+    nameToResolve,
+    tokenId,
+    metadataContracts.length,
+    refetchResolvedTokenId,
+    refetchIdentityData,
+    refetchVerifiedAddresses,
+    refetchMetadataResults,
+  ]);
+
   return {
     identity,
     isLoading:
@@ -252,5 +291,6 @@ export function useIdentity(
       isLoadingVerified ||
       isLoadingMetadata,
     notFound: !isResolvingName && !isLoadingIdentity && !identity && !!identifier,
+    refetchIdentity,
   };
 }

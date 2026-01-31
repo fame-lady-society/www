@@ -20,6 +20,7 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { cookies } from "next/headers";
 
 function isSocialProvider(value: string): value is SocialProviderId {
   return SOCIAL_PROVIDERS.includes(value as SocialProviderId);
@@ -113,9 +114,17 @@ export async function GET(
     return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
   }
 
-  const stateRecord = await decryptState(state);
+  const stateSessionCookieValue = cookies().get(`state-${provider}`)?.value;
+  if (!stateSessionCookieValue) {
+    return NextResponse.json({ error: "Missing state" }, { status: 400 });
+  }
+
+  const stateRecord = await decryptState(stateSessionCookieValue);
   if (!stateRecord) {
     return NextResponse.json({ error: "Invalid or expired state" }, { status: 400 });
+  }
+  if (stateRecord.state !== state) {
+    return NextResponse.json({ error: "State mismatch" }, { status: 400 });
   }
   if (stateRecord.provider !== provider) {
     return NextResponse.json({ error: "Provider mismatch" }, { status: 400 });
@@ -202,19 +211,18 @@ export async function GET(
     );
     redirectUrl.searchParams.set("provider", provider);
 
-    return NextResponse.redirect(redirectUrl.toString());
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown OAuth error";
-    console.error("[attestations][oauth][callback]", {
-      provider,
-      message,
+    return NextResponse.redirect(redirectUrl.toString(), {
+      headers: {
+        "Set-Cookie": `state-${provider}=; Path=/; HttpOnly;${process.env.NODE_ENV === "production" ? " Secure;" : ""} SameSite=Lax; Max-Age=0`,
+      },
     });
+  } catch (error) {
+    console.error("[attestations][oauth][callback]", provider, error);
 
     return NextResponse.json(
       {
         error: "OAuth callback failed",
-        message,
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     );

@@ -12,9 +12,10 @@ export type OAuthStatePayload = {
   chainId: number;
   codeVerifier: string;
   returnTo: string;
+  state?: string;
 };
 
-const STATE_TTL_SECONDS = 10 * 60;
+export const STATE_TTL_SECONDS = 10 * 60;
 
 function deriveSecretKey() {
   const digest = createHash("sha256").update(SESSION_SECRET).digest();
@@ -42,11 +43,11 @@ export async function encryptState(payload: OAuthStatePayload): Promise<string> 
     .encrypt(key);
 }
 
-export async function decryptState(state: string): Promise<OAuthStatePayload | null> {
+export async function decryptState(stateToken: string): Promise<OAuthStatePayload | null> {
   const key = deriveSecretKey();
 
   try {
-    const { payload } = await jwtDecrypt(state, key);
+    const { payload } = await jwtDecrypt(stateToken, key);
     const provider = payload.provider;
     const name = payload.name;
     const namehash = payload.namehash;
@@ -54,7 +55,8 @@ export async function decryptState(state: string): Promise<OAuthStatePayload | n
     const chainId = payload.chainId;
     const codeVerifier = payload.codeVerifier;
     const returnTo = payload.returnTo;
-
+    const state = payload.state;
+    
     if (
       typeof provider !== "string" ||
       !isSocialProvider(provider) ||
@@ -65,7 +67,8 @@ export async function decryptState(state: string): Promise<OAuthStatePayload | n
       !isAddressValue(address) ||
       typeof chainId !== "number" ||
       typeof codeVerifier !== "string" ||
-      typeof returnTo !== "string"
+      typeof returnTo !== "string" ||
+      typeof state !== "string"
     ) {
       return null;
     }
@@ -78,6 +81,7 @@ export async function decryptState(state: string): Promise<OAuthStatePayload | n
       chainId,
       codeVerifier,
       returnTo,
+      state,
     };
   } catch {
     return null;

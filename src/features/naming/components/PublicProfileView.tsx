@@ -1,17 +1,20 @@
 "use client";
 
-import { type FC } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
+import Tooltip from "@mui/material/Tooltip";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Link from "next/link";
 import EditIcon from "@mui/icons-material/Edit";
+import { useEnsName } from "wagmi";
+import type { Address } from "viem";
 import { useIdentity } from "../hooks/useIdentity";
 import { useIdentityPermissions } from "../hooks/useIdentityPermissions";
 import { useAccount } from "@/hooks/useAccount";
@@ -19,11 +22,84 @@ import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { encodeIdentifier } from "../utils/networkUtils";
 import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
 import { SocialCheckmark } from "./SocialCheckmark";
+import { mainnet } from "viem/chains";
 
 export interface PublicProfileViewProps {
   network: NetworkType;
   identifier: string;
 }
+
+interface VerifiedAddressRowProps {
+  address: Address;
+  isPrimary: boolean;
+}
+
+const VerifiedAddressRow: FC<VerifiedAddressRowProps> = ({ address, isPrimary }) => {
+  const { data: ensName } = useEnsName({ address, chainId: mainnet.id });
+  const [copied, setCopied] = useState(false);
+  const resetTimeout = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeout.current !== null) {
+        window.clearTimeout(resetTimeout.current);
+      }
+    };
+  }, []);
+
+  const handleCopy = async () => {
+    if (typeof navigator === "undefined") return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      if (resetTimeout.current !== null) {
+        window.clearTimeout(resetTimeout.current);
+      }
+      resetTimeout.current = window.setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      // Intentionally ignore clipboard errors.
+    }
+  };
+
+  return (
+    <Tooltip title={copied ? "Copied!" : "Click to copy address"}>
+      <Box
+        component="div"
+        onClick={handleCopy}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 1,
+          backgroundColor: "rgba(0,0,0,0.02)",
+          borderRadius: 1,
+          cursor: "copy",
+        }}
+      >
+        <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+          <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
+            {ensName ?? address}
+          </Typography>
+          {ensName && (
+            <Typography
+              variant="caption"
+              sx={{
+                fontFamily: "monospace",
+                fontSize: "0.75rem",
+                color: "text.secondary",
+              }}
+            >
+              {address}
+            </Typography>
+          )}
+        </Box>
+        {isPrimary && <Chip label="Primary" size="small" color="primary" />}
+      </Box>
+    </Tooltip>
+  );
+};
 
 export const PublicProfileView: FC<PublicProfileViewProps> = ({
   network,
@@ -71,8 +147,6 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
     (attestation) => attestation.verified,
   );
 
-  const socialHandleLabel = (provider: string) =>
-    provider === "x" ? "X" : "Discord";
 
   return (
     <Box component="div" sx={{ maxWidth: 800, mx: "auto" }}>
@@ -209,29 +283,12 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
             Verified Addresses
           </Typography>
           <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {identity.verifiedAddresses.map((addr) => (
-              <Box
-                component="div"
-                key={addr}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  p: 1,
-                  backgroundColor: "rgba(0,0,0,0.02)",
-                  borderRadius: 1,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}
-                >
-                  {addr}
-                </Typography>
-                {addr.toLowerCase() === identity.primaryAddress.toLowerCase() && (
-                  <Chip label="Primary" size="small" color="primary" />
-                )}
-              </Box>
+            {identity.verifiedAddresses.map((address) => (
+              <VerifiedAddressRow
+                key={address}
+                address={address}
+                isPrimary={address.toLowerCase() === identity.primaryAddress.toLowerCase()}
+              />
             ))}
           </Box>
         </CardContent>

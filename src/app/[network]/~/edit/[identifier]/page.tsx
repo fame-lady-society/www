@@ -29,7 +29,7 @@ export default function EditProfilePage({
   const name = parseIdentifier(identifier);
   const { address: connectedAddress, isConnected } = useAccount();
 
-  const { identity, isLoading, notFound } = useIdentity(
+  const { identity, isLoading, notFound, refetchIdentity } = useIdentity(
     resolvedNetwork ?? "base-sepolia",
     name
   );
@@ -125,6 +125,7 @@ export default function EditProfilePage({
       <EditProfileView
         network={resolvedNetwork}
         identity={identity}
+        onRefetchIdentity={refetchIdentity}
       />
     </Box>
   );

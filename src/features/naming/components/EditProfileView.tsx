@@ -24,11 +24,13 @@ import { SocialCheckmark } from "./SocialCheckmark";
 export interface EditProfileViewProps {
   network: NetworkType;
   identity: FullIdentity;
+  onRefetchIdentity?: () => Promise<void> | void;
 }
 
 export const EditProfileView: FC<EditProfileViewProps> = ({
   network,
   identity,
+  onRefetchIdentity,
 }) => {
   const { session, isSessionForCurrentIdentity } = useAddressVerificationSession(
     network,
@@ -187,7 +189,11 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
             <Typography variant="h6" gutterBottom>
               Social Accounts
             </Typography>
-            <SocialAttestationsEditor network={network} identity={identity} />
+            <SocialAttestationsEditor
+              network={network}
+              identity={identity}
+              onRefetchIdentity={onRefetchIdentity}
+            />
           </CardContent>
         </Card>
 

@@ -102,6 +102,7 @@
     "satori": "^0.10.13",
     "siwe": "^3.0.0",
     "three": "^0.141.0",
+    "twitter-api-v2": "^1.29.0",
     "use-local-storage": "^2.3.6",
     "uuid": "^8.3.2",
     "viem": "^2.43.2",

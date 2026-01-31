@@ -30,6 +30,12 @@ type PendingAttestationPayload = {
   name: string;
 };
 
+type RefreshingState = {
+  provider: SocialProviderId;
+  previousStatusKey: string;
+  startedAt: number;
+};
+
 function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
@@ -69,14 +75,21 @@ function formatProvider(provider: SocialProviderId): string {
   return provider === "x" ? "X" : "Discord";
 }
 
+function getStatusKey(status: SocialAttestationStatus | null): string {
+  if (!status) return "none";
+  return `${status.provider}:${status.handle}:${status.verified ? "1" : "0"}`;
+}
+
 export interface SocialAttestationsEditorProps {
   network: NetworkType;
   identity: FullIdentity;
+  onRefetchIdentity?: () => Promise<void> | void;
 }
 
 export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
   network,
   identity,
+  onRefetchIdentity,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -84,6 +97,7 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
   const [pending, setPending] = useState<PendingAttestationPayload | null>(null);
   const [pendingStatus, setPendingStatus] = useState<SocialAttestationStatus | null>(null);
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<RefreshingState | null>(null);
   const [activeProvider, setActiveProvider] = useState<SocialProviderId | null>(
     null,
   );
@@ -174,6 +188,12 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
     }));
   }, [identity.socialAttestations]);
 
+  const statusByProvider = useMemo(() => {
+    return new Map(
+      currentAttestations.map(({ provider, status }) => [provider, status] as const),
+    );
+  }, [currentAttestations]);
+
   const handleStartLink = useCallback(
     async (provider: SocialProviderId) => {
       setActiveProvider(provider);
@@ -237,12 +257,37 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
 
   useEffect(() => {
     if (isSuccess && activeProvider) {
+      const previousStatusKey = getStatusKey(statusByProvider.get(activeProvider) ?? null);
+      setRefreshing({
+        provider: activeProvider,
+        previousStatusKey,
+        startedAt: Date.now(),
+      });
       setPending(null);
       setPendingStatus(null);
       setActiveProvider(null);
       reset();
+      void onRefetchIdentity?.();
     }
-  }, [isSuccess, activeProvider, reset]);
+  }, [isSuccess, activeProvider, reset, statusByProvider, onRefetchIdentity]);
+
+  useEffect(() => {
+    if (!refreshing) return;
+    const currentStatusKey = getStatusKey(
+      statusByProvider.get(refreshing.provider) ?? null,
+    );
+    if (currentStatusKey !== refreshing.previousStatusKey) {
+      setRefreshing(null);
+    }
+  }, [refreshing, statusByProvider]);
+
+  useEffect(() => {
+    if (!refreshing) return;
+    const timeout = window.setTimeout(() => {
+      setRefreshing(null);
+    }, 30000);
+    return () => window.clearTimeout(timeout);
+  }, [refreshing]);
 
   const isWorking = isPending || isConfirming;
 
@@ -270,6 +315,7 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
       {currentAttestations.map(({ provider, status }) => {
         const pendingForProvider = pending?.provider === provider ? pending : null;
         const isActive = activeProvider === provider;
+        const isRefreshing = refreshing?.provider === provider;
         const isSupportedNetwork = !!chainId;
         return (
           <Box
@@ -310,26 +356,48 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
               </Typography>
             )}
 
+            {isRefreshing && (
+              <Typography variant="body2" color="text.secondary">
+                Refreshing attestation...
+              </Typography>
+            )}
+
             <Box component="div" sx={{ display: "flex", gap: 1 }}>
               {pendingForProvider ? (
                 <Button
                   variant="contained"
                   size="small"
                   onClick={handleWriteAttestation}
-                  disabled={isWorking || !isSupportedNetwork}
-                  startIcon={isWorking && isActive ? <CircularProgress size={16} /> : null}
+                  disabled={isWorking || isRefreshing || !isSupportedNetwork}
+                  startIcon={
+                    (isWorking && isActive) || isRefreshing ? (
+                      <CircularProgress size={16} />
+                    ) : null
+                  }
                 >
-                  {isWorking && isActive ? "Saving..." : "Save Attestation"}
+                  {isWorking && isActive
+                    ? "Saving..."
+                    : isRefreshing
+                      ? "Refreshing..."
+                      : "Save Attestation"}
                 </Button>
               ) : (
                 <Button
                   variant="outlined"
                   size="small"
                   onClick={() => handleStartLink(provider)}
-                  disabled={(isWorking && isActive) || !isSupportedNetwork}
-                  startIcon={isWorking && isActive ? <CircularProgress size={16} /> : null}
+                  disabled={(isWorking && isActive) || isRefreshing || !isSupportedNetwork}
+                  startIcon={
+                    (isWorking && isActive) || isRefreshing ? (
+                      <CircularProgress size={16} />
+                    ) : null
+                  }
                 >
-                  {isWorking && isActive ? "Starting..." : "Link Account"}
+                  {isWorking && isActive
+                    ? "Starting..."
+                    : isRefreshing
+                      ? "Refreshing..."
+                      : "Link Account"}
                 </Button>
               )}
 
@@ -339,7 +407,7 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
                   size="small"
                   color="warning"
                   onClick={() => handleClearAttestation(provider)}
-                  disabled={isWorking && isActive}
+                  disabled={(isWorking && isActive) || isRefreshing}
                 >
                   Clear
                 </Button>

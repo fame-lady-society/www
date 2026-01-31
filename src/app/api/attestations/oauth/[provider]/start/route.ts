@@ -5,12 +5,10 @@ import {
   type SocialProviderId,
 } from "@/features/naming/attestations";
 import {
-  buildAuthorizeUrl,
-  generateCodeChallenge,
-  generateCodeVerifier,
+  createOAuthAuthLink,
   generateStateToken,
 } from "@/service/attestation/oauth";
-import { encryptState } from "@/service/attestation/stateStore";
+import { STATE_TTL_SECONDS, encryptState } from "@/service/attestation/stateStore";
 import { keccak256, toHex } from "viem";
 
 function isSocialProvider(value: string): value is SocialProviderId {
@@ -52,9 +50,6 @@ export async function GET(
   }
 
   const returnTo = normalizeReturnTo(request, searchParams.get("returnTo"));
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = generateCodeChallenge(codeVerifier);
-  const state = generateStateToken();
   const namehash = keccak256(toHex(name));
 
   const redirectUri = new URL(
@@ -62,22 +57,30 @@ export async function GET(
     request.url,
   ).toString();
 
+  const authLink = await createOAuthAuthLink({
+    provider,
+    redirectUri,
+    state: provider === "x" ? undefined : generateStateToken(),
+  });
+
   const encodedState = await encryptState({
     provider,
     name,
     namehash,
     address: session.address,
     chainId: session.chainId,
-    codeVerifier,
+    codeVerifier: authLink.codeVerifier,
     returnTo,
+    state: authLink.state,
   });
 
-  const url = buildAuthorizeUrl({
-    provider,
-    redirectUri,
-    state: encodedState,
-    codeChallenge,
-  });
+  const url = new URL(authLink.url);
 
-  return NextResponse.json({ url, state: encodedState });
+
+
+  return NextResponse.json({ url: url.toString(), state: encodedState }, {
+    headers: {
+      "Set-Cookie": `state-${provider}=${encodedState}; Path=/; HttpOnly;${process.env.NODE_ENV === 'production' ? ' Secure;' : ''} SameSite=Lax; Max-Age=${STATE_TTL_SECONDS}`,
+    }
+  });
 }

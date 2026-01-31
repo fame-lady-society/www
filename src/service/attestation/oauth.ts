@@ -1,5 +1,6 @@
 import { randomBytes, createHash } from "node:crypto";
 import { type SocialProviderId } from "@/features/naming/attestations";
+import { TwitterApi } from "twitter-api-v2";
 
 type OAuthTokenResponse = {
   accessToken: string;
@@ -26,7 +27,7 @@ const PROVIDER_CONFIGS: Record<SocialProviderId, Omit<ProviderConfig, "clientId"
     authorizeUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
     userUrl: "https://api.twitter.com/2/users/me?user.fields=username",
-    scope: ["users.read"],
+    scope: ["users.read", "tweet.read"],
   },
   discord: {
     id: "discord",
@@ -64,7 +65,7 @@ export function generateStateToken(): string {
   return randomBytes(16).toString("base64url");
 }
 
-export function buildAuthorizeUrl({
+function buildAuthorizeUrl({
   provider,
   redirectUri,
   state,
@@ -88,17 +89,15 @@ export function buildAuthorizeUrl({
 }
 
 async function fetchToken({
-  provider,
   code,
   codeVerifier,
   redirectUri,
 }: {
-  provider: SocialProviderId;
   code: string;
   codeVerifier: string;
   redirectUri: string;
 }): Promise<OAuthTokenResponse> {
-  const config = getProviderConfig(provider);
+  const config = getProviderConfig("discord");
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
@@ -111,14 +110,7 @@ async function fetchToken({
     "Content-Type": "application/x-www-form-urlencoded",
   };
 
-  if (provider === "x") {
-    const auth = Buffer.from(
-      `${config.clientId}:${config.clientSecret}`,
-    ).toString("base64");
-    headers.Authorization = `Basic ${auth}`;
-  } else {
-    body.set("client_secret", config.clientSecret);
-  }
+  body.set("client_secret", config.clientSecret);
 
   const response = await fetch(config.tokenUrl, {
     method: "POST",
@@ -139,11 +131,8 @@ async function fetchToken({
   return { accessToken: json.access_token };
 }
 
-async function fetchProfile(
-  provider: SocialProviderId,
-  accessToken: string,
-): Promise<ProviderProfile> {
-  const config = getProviderConfig(provider);
+async function fetchDiscordProfile(accessToken: string): Promise<ProviderProfile> {
+  const config = getProviderConfig("discord");
   const response = await fetch(config.userUrl, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -155,27 +144,48 @@ async function fetchProfile(
     throw new Error(`Profile fetch failed: ${text}`);
   }
 
-  const json = (await response.json()) as
-    | { data?: { id?: string; username?: string } }
-    | { id?: string; username?: string };
-
-  if (provider === "x" && "data" in json) {
-    const subject = json.data?.id;
-    const handle = json.data?.username;
-    if (!subject || !handle) {
-      throw new Error("X profile missing id or username");
-    }
-    return { subject, handle };
-  } else if (provider === "discord" && "id" in json) {
-    const subject = json.id;
-    const handle = json.username;
-    if (!subject || !handle) {
-      throw new Error("Discord profile missing id or username");
-    }
-    return { subject, handle };
+  const json = (await response.json()) as { id?: string; username?: string };
+  const subject = json.id;
+  const handle = json.username;
+  if (!subject || !handle) {
+    throw new Error("Discord profile missing id or username");
   }
+  return { subject, handle };
+}
 
-  throw new Error("Invalid profile response");
+async function fetchXProfile({
+  code,
+  codeVerifier,
+  redirectUri,
+}: {
+  code: string;
+  codeVerifier: string;
+  redirectUri: string;
+}): Promise<ProviderProfile> {
+  const config = getProviderConfig("x");
+  const client = new TwitterApi({
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+  });
+
+  console.log("About to login with OAuth2");
+
+  const { client: userClient } = await client.loginWithOAuth2({
+    code,
+    codeVerifier,
+    redirectUri,
+  });
+
+  console.log("Logged in with OAuth2, about to fetch user");
+
+  const me = await userClient.v2.me();
+  console.log("Fetched user", me);
+  const subject = me.data?.id;
+  const handle = me.data?.username;
+  if (!subject || !handle) {
+    throw new Error("X profile missing id or username");
+  }
+  return { subject, handle };
 }
 
 export async function exchangeOAuthCode({
@@ -189,6 +199,44 @@ export async function exchangeOAuthCode({
   codeVerifier: string;
   redirectUri: string;
 }): Promise<ProviderProfile> {
-  const token = await fetchToken({ provider, code, codeVerifier, redirectUri });
-  return fetchProfile(provider, token.accessToken);
+  if (provider === "x") {
+    return fetchXProfile({ code, codeVerifier, redirectUri });
+  }
+
+  const token = await fetchToken({ code, codeVerifier, redirectUri });
+  return fetchDiscordProfile(token.accessToken);
+}
+
+export async function createOAuthAuthLink({
+  provider,
+  redirectUri,
+  state,
+}: {
+  provider: SocialProviderId;
+  redirectUri: string;
+  state?: string;
+}): Promise<{ url: string; codeVerifier: string; state: string }> {
+  const config = getProviderConfig(provider);
+
+  if (provider === "x") {
+    const client = new TwitterApi({
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+    });
+    const link = client.generateOAuth2AuthLink(redirectUri, {
+      scope: config.scope,
+    });
+    return { url: link.url, codeVerifier: link.codeVerifier, state: link.state };
+  }
+
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = generateCodeChallenge(codeVerifier);
+  const requestState = state ?? generateStateToken();
+  const url = buildAuthorizeUrl({
+    provider,
+    redirectUri,
+    state: requestState,
+    codeChallenge,
+  });
+  return { url, codeVerifier, state: requestState };
 }
