@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import {
   flsNamingAbi,
@@ -42,7 +42,10 @@ export function useAllIdentities(network: NetworkType) {
   const contractAddress = flsNamingAddress[chainId as keyof typeof flsNamingAddress];
 
   const { data: nextTokenId, isLoading: isLoadingNextTokenId } =
-    useReadFlsNamingNextTokenId({
+    useReadContract({
+      address: contractAddress,
+      abi: flsNamingAbi,
+      functionName: "nextTokenId" as const,
       chainId,
     });
 

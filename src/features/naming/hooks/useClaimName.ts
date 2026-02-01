@@ -5,10 +5,6 @@ import { sepolia, baseSepolia, mainnet } from "viem/chains";
 import { keccak256, encodePacked, ContractFunctionRevertedError, ContractFunctionExecutionError, AbiEncodingLengthMismatchError } from "viem";
 import { useWaitForTransactionReceipt } from "wagmi";
 import {
-  flsNamingAddress,
-  useReadFlsNamingMinCommitAge,
-  useReadFlsNamingMaxCommitAge,
-  useReadFlsNamingAddressToTokenId,
   useWriteFlsNamingCommitName,
   useWriteFlsNamingClaimName,
   useSimulateFlsNamingClaimName,
