@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { baseSepolia, mainnet, sepolia } from "viem/chains";
 import { isHex, keccak256, toHex } from "viem";
 import {
@@ -19,7 +19,7 @@ import {
   type SocialProviderId,
   type SocialAttestationStatus,
 } from "@/features/naming/attestations";
-import { flsNamingAddress, useWriteFlsNamingSetMetadataBatch } from "@/wagmi";
+import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import type { FullIdentity } from "../hooks/useIdentity";
 
@@ -104,8 +104,8 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
     null,
   );
 
-  const { writeContract, data: txHash, isPending, error, reset } =
-    useWriteFlsNamingSetMetadataBatch();
+  const { mutate: writeContract, data: txHash, isPending, error, reset } =
+    useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
   });
@@ -231,6 +231,9 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
     setActiveProvider(pending.provider);
 
     writeContract({
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+      abi: flsNamingAbi,
+      functionName: "setMetadataBatch" as const,
       chainId,
       args: [
         [attestationKey, subtagKey],
@@ -247,6 +250,9 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
       }
       setActiveProvider(provider);
       writeContract({
+        address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+        abi: flsNamingAbi,
+        functionName: "setMetadataBatch" as const,
         chainId,
         args: [
           [getSocialAttestationKey(provider), getSocialSubtagKey(provider)],

@@ -13,10 +13,10 @@ import Tooltip from "@mui/material/Tooltip";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useWaitForTransactionReceipt, useSwitchChain, useDisconnect } from "wagmi";
+import { useWaitForTransactionReceipt, useSwitchChain, useDisconnect, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useAccount } from "@/hooks/useAccount";
-import { useWriteFlsNamingAddVerifiedAddress } from "@/wagmi";
+import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import { useAddressVerificationSession } from "../../hooks/useAddressVerificationSession";
 import {
   useSessionValidation,
@@ -109,7 +109,7 @@ export const SubmitStep: FC<WizardStepProps> = ({
     isPending: isSubmitting,
     error: writeError,
     reset: resetWrite,
-  } = useWriteFlsNamingAddVerifiedAddress();
+  } = useWriteContract();
 
   const {
     isLoading: isConfirming,
@@ -176,6 +176,9 @@ export const SubmitStep: FC<WizardStepProps> = ({
     addVerifiedAddress({
       chainId: chainId,
       args: [session?.targetAddress, session?.signature],
+      abi: flsNamingAbi,
+      functionName: "addVerifiedAddress" as const,
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
     });
   };
 
@@ -190,6 +193,9 @@ export const SubmitStep: FC<WizardStepProps> = ({
       addVerifiedAddress({
         chainId: chainId,
         args: [session.targetAddress, session.signature],
+        abi: flsNamingAbi,
+        functionName: "addVerifiedAddress" as const,
+        address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
       });
     }
   }, [pendingSubmit, isWrongChain, connectedChainId, chainId, addVerifiedAddress, session]);

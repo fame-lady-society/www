@@ -13,8 +13,8 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AddIcon from "@mui/icons-material/Add";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Link from "next/link";
-import { useWaitForTransactionReceipt } from "wagmi";
-import { useWriteFlsNamingRemoveVerifiedAddress } from "@/wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAddressVerificationSession } from "../hooks/useAddressVerificationSession";
 import { getChainId, encodeIdentifier } from "../utils/networkUtils";
@@ -45,12 +45,12 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
     session.currentStep !== "complete";
 
   const {
-    writeContract: removeAddress,
+    mutate: removeAddress,
     data: removeTxHash,
     isPending: isRemovePending,
     error: removeError,
     reset: resetRemove,
-  } = useWriteFlsNamingRemoveVerifiedAddress();
+  } = useWriteContract();
 
   const { isLoading: isRemoveConfirming, isSuccess: isRemoveSuccess } =
     useWaitForTransactionReceipt({ hash: removeTxHash });
@@ -69,6 +69,9 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
     removeAddress({
       chainId: chainId,
       args: [address],
+      abi: flsNamingAbi,
+      functionName: "removeVerifiedAddress" as const,
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
     });
   };
 

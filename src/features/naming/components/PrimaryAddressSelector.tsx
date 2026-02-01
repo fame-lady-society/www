@@ -10,9 +10,9 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
-import { useWriteFlsNamingSetPrimaryAddress } from "@/wagmi";
+import { flsNamingAddress, flsNamingAbi } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 
@@ -54,12 +54,12 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
-    writeContract,
+    mutate: writeContract,
     data: txHash,
     isPending,
     error,
     reset,
-  } = useWriteFlsNamingSetPrimaryAddress();
+  } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -83,6 +83,9 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
     writeContract({
       chainId,
       args: [selectedAddress as `0x${string}`],
+      abi: flsNamingAbi,
+      functionName: "setPrimaryAddress" as const,
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
     });
   };
 

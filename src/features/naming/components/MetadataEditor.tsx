@@ -6,10 +6,10 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import { useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { toHex } from "viem";
-import { useWriteFlsNamingSetMetadata } from "@/wagmi";
+import { flsNamingAddress, flsNamingAbi } from "@/wagmi";
 import { METADATA_KEYS } from "../hooks/useIdentity";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
@@ -48,12 +48,14 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
-    writeContract,
+    mutate: writeContract,
     data: txHash,
     isPending,
     error,
     reset,
-  } = useWriteFlsNamingSetMetadata();
+  } = useWriteContract({
+  
+  });
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -73,6 +75,9 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
   const handleSaveDescription = () => {
     setPendingField("description");
     writeContract({
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+      abi: flsNamingAbi,
+      functionName: "setMetadata" as const,
       chainId,
       args: [METADATA_KEYS.description, toHex(description)],
     });
@@ -81,6 +86,9 @@ export const MetadataEditor: FC<MetadataEditorProps> = ({
   const handleSaveWebsite = () => {
     setPendingField("website");
     writeContract({
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+      abi: flsNamingAbi,
+      functionName: "setMetadata" as const,
       chainId,
       args: [METADATA_KEYS.website, toHex(website)],
     });

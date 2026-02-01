@@ -3,11 +3,10 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { sepolia, baseSepolia, mainnet } from "viem/chains";
 import { keccak256, encodePacked, ContractFunctionRevertedError, ContractFunctionExecutionError, AbiEncodingLengthMismatchError } from "viem";
-import { useWaitForTransactionReceipt } from "wagmi";
+import { useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import {
-  useWriteFlsNamingCommitName,
-  useWriteFlsNamingClaimName,
-  useSimulateFlsNamingClaimName,
+  flsNamingAddress,
+  flsNamingAbi,
 } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "./useOwnedGateNftTokens";
@@ -100,7 +99,10 @@ export function useClaimName(network: NetworkType) {
     isError: isSimulateClaimError,
     error: simulateClaimError,
     isLoading: isSimulating,
-  } = useSimulateFlsNamingClaimName({
+  } = useSimulateContract({
+    abi: flsNamingAbi,
+    address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+    functionName: "claimName" as const,
     chainId,
     args: salt && primaryTokenId !== null ? [name, salt, primaryTokenId] : undefined,
   })
@@ -120,8 +122,19 @@ export function useClaimName(network: NetworkType) {
   }>({ name: "", salt: null, primaryTokenId: null });
 
   // Contract reads
-  const { data: minCommitAge } = useReadFlsNamingMinCommitAge({ chainId });
-  const { data: maxCommitAge } = useReadFlsNamingMaxCommitAge({ chainId });
+  // const { data: minCommitAge } = useReadFlsNamingMinCommitAge({ chainId });
+  const { data: minCommitAge } = useReadContract({
+    address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+    abi: flsNamingAbi,
+    functionName: "MIN_COMMIT_AGE" as const,
+    chainId,
+  });
+  const { data: maxCommitAge } = useReadContract({
+    address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
+    abi: flsNamingAbi,
+    functionName: "MAX_COMMIT_AGE" as const,
+    chainId,
+  });
 
   // Check if address already has an identity
   // const { data: existingTokenId } = useReadFlsNamingAddressToTokenId({
@@ -137,7 +150,7 @@ export function useClaimName(network: NetworkType) {
     isPending: isCommitPending,
     error: commitError,
     reset: resetCommit,
-  } = useWriteFlsNamingCommitName();
+  } = useWriteContract();
 
   const {
     writeContract: writeClaimName,
@@ -145,7 +158,7 @@ export function useClaimName(network: NetworkType) {
     isPending: isClaimPending,
     error: claimError,
     reset: resetClaim,
-  } = useWriteFlsNamingClaimName();
+  } = useWriteContract();
 
   // Transaction receipts
   const { isLoading: isCommitConfirming, isSuccess: isCommitConfirmed } =
@@ -252,6 +265,9 @@ export function useClaimName(network: NetworkType) {
         writeCommitName({
           chainId,
           args: [newCommitment],
+          abi: flsNamingAbi,
+          functionName: "commitName" as const,
+          address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
         });
       } catch (err) {
         setError(mapContractError(err));
@@ -280,6 +296,9 @@ export function useClaimName(network: NetworkType) {
       writeClaimName({
         chainId,
         args: [claimName, claimSalt, claimTokenId],
+        abi: flsNamingAbi,
+        functionName: "claimName" as const,
+        address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
       });
     } catch (err) {
       setError(mapContractError(err));

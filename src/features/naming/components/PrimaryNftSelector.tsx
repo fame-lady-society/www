@@ -11,9 +11,9 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
-import { useWriteFlsNamingSetPrimaryTokenId } from "@/wagmi";
+import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 
 const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
@@ -52,12 +52,12 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
     useOwnedGateNftTokens(network);
 
   const {
-    writeContract,
+    mutate: writeContract,
     data: txHash,
     isPending,
     error,
     reset,
-  } = useWriteFlsNamingSetPrimaryTokenId();
+  } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -77,6 +77,9 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
     writeContract({
       chainId,
       args: [BigInt(selectedTokenId)],
+      abi: flsNamingAbi,
+      functionName: "setPrimaryTokenId" as const,
+      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
     });
   };
 
