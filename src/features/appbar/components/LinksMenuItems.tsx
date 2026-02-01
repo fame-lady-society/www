@@ -1,6 +1,7 @@
 import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import PersonIcon from "@mui/icons-material/Person";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { TwitterIcon } from "@/components/icons/twitter";
@@ -184,6 +185,21 @@ export const LinksMenuItems: FC<{}> = ({}) => {
           primary={
             <Typography textAlign="right" color="white">
               FAMEus DAO
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="/mainnet/~"
+      >
+        <ListItemIcon>
+          <PersonIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              Profiles
             </Typography>
           }
         />

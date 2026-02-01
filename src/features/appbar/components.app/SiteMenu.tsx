@@ -2,6 +2,7 @@ import { FC } from "react";
 import InputIcon from "@mui/icons-material/Input";
 import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import QAIcon from "@mui/icons-material/QuestionAnswer";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import EditIcon from "@mui/icons-material/Edit";
 import ReloadIcon from "@mui/icons-material/Replay";
 import BankIcon from "@mui/icons-material/AccountBalance";
@@ -69,7 +70,13 @@ export const SiteMenu: FC<{
         href="/mainnet/~"
         disabled={isProfile}
         icon={<PersonIcon />}
-        text="Profile"
+        text="Profiles"
+      />
+      <MenuItem
+        href="https://github.com/fame-lady-society"
+        disabled={false}
+        icon={<GitHubIcon />}
+        text="GitHub"
       />
       <MenuItem href="/faq" disabled={isFaq} icon={<QAIcon />} text="FAQ" />
     </>
