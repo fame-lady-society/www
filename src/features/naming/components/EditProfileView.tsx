@@ -1,6 +1,7 @@
 "use client";
 
 import { type FC } from "react";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -17,7 +18,6 @@ import { MetadataEditor } from "./MetadataEditor";
 import { PrimaryNftSelector } from "./PrimaryNftSelector";
 import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
 import { SocialAttestationsEditor } from "./SocialAttestationsEditor";
-import { encodeIdentifier } from "../utils/networkUtils";
 import { useAddressVerificationSession } from "../hooks/useAddressVerificationSession";
 import { SocialCheckmark } from "./SocialCheckmark";
 
@@ -26,6 +26,8 @@ export interface EditProfileViewProps {
   identity: FullIdentity;
   onRefetchIdentity?: () => Promise<void> | void;
 }
+
+const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
 
 export const EditProfileView: FC<EditProfileViewProps> = ({
   network,
@@ -131,13 +133,16 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
               </Typography>
             </Box>
 
-            <Box component="div">
-              <Typography variant="caption" color="text.secondary">
-                My Fame Lady
-              </Typography>
-              <Typography variant="body1">
-                Token #{identity.primaryTokenId.toString()}
-              </Typography>
+            <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Avatar src={`${BASE_IMAGE_URL}${identity.primaryTokenId}`} sx={{ marginRight: 1 }}/>
+              <Box component="div">
+                <Typography variant="caption" color="text.secondary">
+                  My Fame Lady
+                </Typography>
+                <Typography variant="body1">
+                  Token #{identity.primaryTokenId.toString()}
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </CardContent>
@@ -151,7 +156,7 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
           action={
             <Button
               component={Link}
-              href={`/${network}/~/edit/${identity.name}/add-address/${session.currentStep}`}
+              href={`/${network}/profile/edit/${identity.name}/add-address/${session.currentStep}`}
               size="small"
               color="inherit"
             >

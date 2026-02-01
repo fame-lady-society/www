@@ -27,12 +27,10 @@ import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
 
 function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   switch (network) {
-    case "mainnet":
-      return `https://fame.support/fls/thumb/${tokenId}`;
     case "sepolia":
     case "base-sepolia":
-      // For testnets, use a placeholder with the token number
-      return `https://placehold.co/200x200/1a1a2e/c44dff?text=%23${tokenId}`;
+    case "mainnet":
+      return `https://fame.support/fls/thumb/${tokenId}`;
   }
 }
 
@@ -40,8 +38,8 @@ function getExpectedChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    // case "mainnet":
-    //   return mainnet.id;
+    case "mainnet":
+      return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
     default:
@@ -79,7 +77,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
 
   const isWrongChain = chainId !== expectedChainId;
   const needsSetup = !isConnected || !token || isWrongChain;
-  const isBulkMinterNetwork = network === "base-sepolia";
+  const isBulkMinterNetwork = network === "base-sepolia" || network === "sepolia";
 
   const { data: availableTokens, isLoading: isLoadingTokens, refetch: refetchTokens } =
     useOwnedGateNftTokens(network);
@@ -182,6 +180,10 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   };
 
   const handleMintGateNft = () => {
+    if (expectedChainId === mainnet.id) {
+      setMintError("Mainnet is not supported for minting gate NFTs.");
+      return;
+    }
     setMintError(null);
     writeBulkMinterMint({
       chainId: expectedChainId,
@@ -223,7 +225,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
             </Alert>
           )}
           <Button
-            variant="contained"
+            variant="outlined"
             onClick={handleSetup}
             disabled={isSettingUp}
             startIcon={isSettingUp ? <CircularProgress size={20} color="inherit" /> : null}
@@ -251,14 +253,14 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
           <Box component="div" sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
             <Button
               component={Link}
-              href={`/${network}/~/${encodeIdentifier(name)}`}
-              variant="contained"
+              href={`/${network}/~/${encodeIdentifier(normalize(name))}`}
+              variant="outlined"
             >
               View Your Profile
             </Button>
             <Button
               component={Link}
-              href={`/${network}/naming`}
+              href={`/${network}/~/`}
               variant="outlined"
             >
               Back to All Profiles
@@ -385,7 +387,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
               {isBulkMinterNetwork && (
                 <Box component="div">
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Need more gate NFTs? Mint a test BulkMinter NFT on Base Sepolia.
+                    Need more gate NFTs? Mint a test BulkMinter NFT on {getNetworkDisplayName(network)}.
                   </Typography>
                   {mintError && (
                     <Alert severity="error" sx={{ mb: 2 }}>
@@ -407,7 +409,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
               )}
 
               <Button
-                variant="contained"
+                variant="outlined"
                 size="large"
                 onClick={handleStartClaim}
                 disabled={
@@ -464,7 +466,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                 </>
               ) : (
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   onClick={handleSubmitClaim}
                   disabled={!canClaim}

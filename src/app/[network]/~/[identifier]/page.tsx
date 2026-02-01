@@ -19,12 +19,12 @@ export default function PublicProfilePage({
 }) {
   const { network, identifier } = params;
   const resolvedNetwork = resolveNetwork(network);
-
+  const name = parseIdentifier(identifier);
+  
   if (!resolvedNetwork) {
-    redirect(`/base-sepolia/naming`, RedirectType.replace);
+    redirect(`/mainnet/~/${encodeIdentifier(normalize(name))}`, RedirectType.replace);
   }
 
-  const name = parseIdentifier(identifier);
 
   return (
     <AppMain
@@ -33,7 +33,7 @@ export default function PublicProfilePage({
       headerLeft={
         <Button
           component={Link}
-          href={`/${network}/naming`}
+          href={`/${network}/~/`}
           startIcon={<ArrowBackIcon />}
           size="small"
           sx={{ ml: 2 }}

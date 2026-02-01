@@ -20,8 +20,8 @@ function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    // case "mainnet":
-    //   return mainnet.id;
+    case "mainnet":
+      return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
     default:
@@ -136,7 +136,7 @@ export const PrimaryAddressSelector: FC<PrimaryAddressSelectorProps> = ({
           </FormControl>
 
           <Button
-            variant="contained"
+            variant="outlined"
             color="warning"
             onClick={handleTransfer}
             disabled={!selectedAddress || isWorking}

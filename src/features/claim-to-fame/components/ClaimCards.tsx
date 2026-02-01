@@ -140,6 +140,10 @@ export const ClaimCard: FC<{
     chainId,
     address: claimToFameFromNetwork(chainId),
     functionName: "claimWithTokens",
+    query: {
+      // wait until after the reveal wait period has passed
+      enabled: !!unconfirmedClaim && unconfirmedClaim.deadlineSeconds < Date.now() / 1000,
+    },
     args: unconfirmedClaim
       ? ([
           unconfirmedClaim.address,

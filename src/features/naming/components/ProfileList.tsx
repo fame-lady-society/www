@@ -65,8 +65,8 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
         {isConnected && (
           <Button
             component={Link}
-            href={`/${network}/naming/claim`}
-            variant="contained"
+            href={`/${network}/profile/claim`}
+            variant="outlined"
             size="large"
             sx={{
               background:
@@ -112,7 +112,7 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
           {isConnected && (
             <Button
               component={Link}
-              href={`/${network}/naming/claim`}
+              href={`/${network}/profile/claim`}
               variant="outlined"
             >
               Claim the first name

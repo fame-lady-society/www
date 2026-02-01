@@ -1,15 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useEnsName, useReadContracts } from "wagmi";
+import { useReadContract, useReadContracts } from "wagmi";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { keccak256, toHex } from "viem";
 import {
   flsNamingAbi,
   flsNamingAddress,
-  useReadFlsNamingResolveName,
-  useReadFlsNamingGetIdentity,
-  useReadFlsNamingGetVerifiedAddresses,
 } from "@/wagmi";
 import type { NetworkType } from "./useOwnedGateNftTokens";
 import {
@@ -45,8 +42,8 @@ function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    // case "mainnet":
-    //   return mainnet.id;
+    case "mainnet":
+      return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
     default:
@@ -75,7 +72,10 @@ export function useIdentity(
     data: resolvedTokenId,
     isLoading: isResolvingName,
     refetch: refetchResolvedTokenId,
-  } = useReadFlsNamingResolveName({
+  } = useReadContract({
+    address: contractAddress,
+    abi: flsNamingAbi,
+    functionName: "resolveName" as const,
     chainId,
     args: nameToResolve ? [nameToResolve] : undefined,
     query: {
@@ -90,7 +90,10 @@ export function useIdentity(
     data: identityData,
     isLoading: isLoadingIdentity,
     refetch: refetchIdentityData,
-  } = useReadFlsNamingGetIdentity({
+  } = useReadContract({
+    address: contractAddress,
+    abi: flsNamingAbi,
+    functionName: "getIdentity" as const,
     chainId,
     args: tokenId ? [tokenId] : undefined,
     query: {
@@ -103,7 +106,10 @@ export function useIdentity(
     data: verifiedAddresses,
     isLoading: isLoadingVerified,
     refetch: refetchVerifiedAddresses,
-  } = useReadFlsNamingGetVerifiedAddresses({
+  } = useReadContract({
+    address: contractAddress,
+    abi: flsNamingAbi,
+    functionName: "getVerifiedAddresses" as const,
     chainId,
     args: tokenId ? [tokenId] : undefined,
     query: {

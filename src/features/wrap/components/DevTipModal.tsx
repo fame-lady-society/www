@@ -187,7 +187,7 @@ export const DevTipModal: FC<{
           <CardActions>
             <Button
               onClick={() => handleClose("confirm", tip)}
-              variant="contained"
+              variant="outlined"
               color="success"
               fullWidth
             >
@@ -204,7 +204,7 @@ export const DevTipModal: FC<{
             </Button>
             <Button
               onClick={() => handleClose("confirm", 0n)}
-              variant="contained"
+              variant="outlined"
               color="success"
             >
               No Tip

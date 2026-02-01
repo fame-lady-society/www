@@ -1,6 +1,7 @@
 "use client";
 
 import { type FC, useState, useEffect, useMemo } from "react";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -15,12 +16,14 @@ import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { useWriteFlsNamingSetPrimaryTokenId } from "@/wagmi";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 
+const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
+
 function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    // case "mainnet":
-    //   return mainnet.id;
+    case "mainnet":
+      return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
     default:
@@ -105,7 +108,7 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
         this identity. The bound NFT determines your identity&apos;s validity.
       </Typography>
 
-      <Box component="div" sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
+      <Box component="div" sx={{ display: "flex", gap: 2, alignItems: "flex-start", flexDirection: "column" }}>
         {isLoadingTokens ? (
           <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CircularProgress size={20} />
@@ -123,15 +126,19 @@ export const PrimaryNftSelector: FC<PrimaryNftSelectorProps> = ({
               >
                 {availableTokens.map((tid) => (
                   <MenuItem key={tid} value={tid.toString()}>
-                    Token #{tid}
-                    {tid === Number(currentPrimaryTokenId) && " (current)"}
+                    <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Avatar src={`${BASE_IMAGE_URL}${tid}`}/>
+                      <Typography variant="body2">
+                        Token #{tid} {tid === Number(currentPrimaryTokenId) && " (current)"}
+                      </Typography>
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={handleChange}
               disabled={!hasChanged || isWorking}
               startIcon={isWorking ? <CircularProgress size={16} /> : null}

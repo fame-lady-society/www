@@ -21,7 +21,7 @@ export const SwitchToChainBanner: FC<{ chainId: 11155111 | 1 }> = ({
         {`This page is only available on the ${chainId === 11155111 ? "Sepolia" : "Ethereum"} chain.`}
       </Typography>
       <Button
-        variant="contained"
+        variant="outlined"
         onClick={() => {
           switchChain({
             chainId,

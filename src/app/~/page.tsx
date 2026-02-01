@@ -21,7 +21,7 @@ export default function NamingPage({ params }: { params: { network: string } }) 
       break;
     }
     default: {
-      redirect(`/base-sepolia/naming`, RedirectType.replace);
+      redirect(`/mainnet/~`, RedirectType.replace);
     }
   }
 

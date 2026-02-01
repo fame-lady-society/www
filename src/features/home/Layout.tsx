@@ -267,7 +267,7 @@ export const Layout: FC = () => {
                 <Button
                   component={WrappedLink}
                   href="/fame"
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   endIcon={<ArrowForwardIcon />}
                   sx={{
@@ -541,7 +541,7 @@ export const Layout: FC = () => {
                 <Button
                   component={WrappedLink}
                   href="/fame"
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   endIcon={<ArrowForwardIcon />}
                   sx={{
@@ -830,7 +830,7 @@ export const Layout: FC = () => {
                 href="https://opensea.io/collection/fameladysociety"
                 target="_blank"
                 rel="noreferrer"
-                variant="contained"
+                variant="outlined"
                 size="large"
                 sx={{
                   backgroundColor: "transparent !important",

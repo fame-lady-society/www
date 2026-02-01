@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { sepolia, baseSepolia } from "viem/chains";
+import { sepolia, baseSepolia, mainnet } from "viem/chains";
 import { keccak256, encodePacked, ContractFunctionRevertedError, ContractFunctionExecutionError, AbiEncodingLengthMismatchError } from "viem";
 import { useWaitForTransactionReceipt } from "wagmi";
 import {
@@ -22,8 +22,8 @@ function getChainId(network: NetworkType) {
   switch (network) {
     case "sepolia":
       return sepolia.id;
-    // case "mainnet":
-    //   return mainnet.id;
+    case "mainnet":
+      return mainnet.id;
     case "base-sepolia":
       return baseSepolia.id;
     default:

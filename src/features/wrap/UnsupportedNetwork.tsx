@@ -26,16 +26,9 @@ export const UnsupportedNetwork: FC = () => {
             supported network to use this feature.
           </Typography>
           <Button
-            variant="contained"
+            variant="outlined"
             onClick={onClick}
-            sx={{
-              backgroundColor: "#ff6b9d !important",
-              color: "#fff !important",
-              fontWeight: 600,
-              "&:hover": {
-                backgroundColor: "#ff8cb5 !important",
-              },
-            }}
+          
           >
             Switch to Mainnet
           </Button>

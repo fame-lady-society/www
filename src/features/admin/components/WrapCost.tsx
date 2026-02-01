@@ -108,7 +108,7 @@ export const WrapCost: FC<{}> = ({}) => {
           <Button
             onClick={onSubmit}
             disabled={!isValidCostInput}
-            variant="contained"
+            variant="outlined"
             color="primary"
           >
             Update

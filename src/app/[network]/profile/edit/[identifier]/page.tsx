@@ -30,12 +30,12 @@ export default function EditProfilePage({
   const { address: connectedAddress, isConnected } = useAccount();
 
   const { identity, isLoading, notFound, refetchIdentity } = useIdentity(
-    resolvedNetwork ?? "base-sepolia",
+    resolvedNetwork ?? "mainnet",
     name
   );
   const permissions = useIdentityPermissions(identity);
   const { session, isSessionForCurrentIdentity } = useAddressVerificationSession(
-    resolvedNetwork ?? "base-sepolia",
+    resolvedNetwork ?? "mainnet",
     name
   );
 
@@ -85,7 +85,7 @@ export default function EditProfilePage({
         </Alert>
         <Button
           component={Link}
-          href={`/${network}/naming`}
+          href={`/${network}/~`}
           variant="outlined"
         >
           Back to all identities

@@ -20,6 +20,7 @@ import { StartStep } from "@/features/naming/components/AddAddressWizard/StartSt
 import { SignStep } from "@/features/naming/components/AddAddressWizard/SignStep";
 import { SubmitStep } from "@/features/naming/components/AddAddressWizard/SubmitStep";
 import { CompleteStep } from "@/features/naming/components/AddAddressWizard/CompleteStep";
+import { normalize } from "viem/ens";
 
 type WizardStep = "start" | "sign" | "submit" | "complete";
 
@@ -41,16 +42,16 @@ export default function AddAddressWizardPage({
   const { address: connectedAddress, isConnected } = useAccount();
 
   const { identity, isLoading, notFound } = useIdentity(
-    resolvedNetwork ?? "base-sepolia",
+    resolvedNetwork ?? "mainnet",
     name
   );
   const permissions = useIdentityPermissions(identity);
   const { session, isSessionForCurrentIdentity } = useAddressVerificationSession(
-    resolvedNetwork ?? "base-sepolia",
+    resolvedNetwork ?? "mainnet",
     name
   );
 
-  const editUrl = `/${network}/~/edit/${name}`;
+  const editUrl = `/${network}/edit/${encodeIdentifier(normalize(name))}`;
   const wizardBaseUrl = `${editUrl}/add-address`;
 
   // Only redirect if ALL of these are true:
@@ -67,7 +68,7 @@ export default function AddAddressWizardPage({
       
       // Allow access if user is primary OR if they're the target address in an active session for THIS identity
       if (!isPrimaryAddress && !isTargetAddress) {
-        router.replace(`/${network}/~/${encodeIdentifier(name)}`);
+        router.replace(`/${network}/~/${encodeIdentifier(normalize(name))}`);
       }
     }
     // NOTE: Explicitly not redirecting when isConnected===false or connectedAddress===undefined
@@ -111,7 +112,7 @@ export default function AddAddressWizardPage({
         </Alert>
         <Button
           component={Link}
-          href={`/${network}/naming`}
+          href={`/${network}/~`}
           variant="outlined"
         >
           Back to all identities

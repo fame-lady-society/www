@@ -6,8 +6,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import ReloadIcon from "@mui/icons-material/Replay";
 import BankIcon from "@mui/icons-material/AccountBalance";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import PersonIcon from "@mui/icons-material/Person";
 
-import NextLink from "next/link";
 import { MenuItem } from "./MenuItem";
 import { NetworkMenuItem } from "./NetworkMenuItem";
 import { mainnet } from "viem/chains";
@@ -20,6 +20,7 @@ export const SiteMenu: FC<{
   isWrap?: boolean;
   isDao?: boolean;
   isLore?: boolean;
+  isProfile?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
@@ -28,6 +29,7 @@ export const SiteMenu: FC<{
   isWrap = false,
   isDao = false,
   isLore = false,
+  isProfile = false,
 }) => {
   return (
     <>
@@ -62,6 +64,12 @@ export const SiteMenu: FC<{
         disabled={isCustomize}
         icon={<EditIcon />}
         text="Customize"
+      />
+      <MenuItem
+        href="/mainnet/~"
+        disabled={isProfile}
+        icon={<PersonIcon />}
+        text="Profile"
       />
       <MenuItem href="/faq" disabled={isFaq} icon={<QAIcon />} text="FAQ" />
     </>

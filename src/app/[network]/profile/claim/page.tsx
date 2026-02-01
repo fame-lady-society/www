@@ -28,7 +28,7 @@ export default function ClaimNamePage({
       break;
     }
     default: {
-      redirect(`/base-sepolia/naming/claim`, RedirectType.replace);
+      redirect(`/mainnet/profile/claim`, RedirectType.replace);
     }
   }
 
@@ -39,7 +39,7 @@ export default function ClaimNamePage({
       headerLeft={
         <Button
           component={Link}
-          href={`/${network}/naming`}
+          href={`/${network}/~`}
           startIcon={<ArrowBackIcon />}
           size="small"
           sx={{ ml: 2 }}

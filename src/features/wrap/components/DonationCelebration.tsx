@@ -113,7 +113,7 @@ export const DonationCelebration: FC<{
               </Button>
             </WrappedLink>
           ) : null}
-          <Button variant="contained" onClick={onClose} fullWidth>
+          <Button variant="outlined" onClick={onClose} fullWidth>
             Keep wrapping
           </Button>
         </CardActions>

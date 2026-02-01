@@ -1,6 +1,7 @@
 "use client";
 
 import { type FC } from "react";
+import Avatar from "@mui/material/Avatar";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActionArea from "@mui/material/CardActionArea";
@@ -11,11 +12,14 @@ import type { Identity } from "../hooks/useAllIdentities";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { encodeIdentifier } from "../utils/networkUtils";
 import { SocialCheckmark } from "./SocialCheckmark";
+import { normalize } from "viem/ens";
 
 export interface ProfileCardProps {
   identity: Identity;
   network: NetworkType;
 }
+
+const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
 
 export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
   const { name, socialHandles } = identity;
@@ -38,11 +42,12 @@ export const ProfileCard: FC<ProfileCardProps> = ({ identity, network }) => {
     >
       <CardActionArea
         component={Link}
-        href={`/${network}/~/${encodeIdentifier(name)}`}
+        href={`/${network}/~/${encodeIdentifier(normalize(name))}`}
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
       >
         <CardContent sx={{ flexGrow: 1 }}>
           <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Avatar src={`${BASE_IMAGE_URL}${identity.primaryTokenId}`} sx={{ marginRight: 1 }}/>
             <Typography
               variant="h6"
               component="h3"

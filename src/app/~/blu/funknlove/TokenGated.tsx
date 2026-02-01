@@ -28,7 +28,7 @@ export const TokenGated: FC<{
         </Typography>
         <CardActions>
           <Button
-            variant="contained"
+            variant="outlined"
             component="a"
             href="/~/blu/funknlove/gated"
             size="large"

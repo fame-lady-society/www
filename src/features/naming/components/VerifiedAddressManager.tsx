@@ -74,9 +74,9 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
 
   const isWorking = isRemovePending || isRemoveConfirming;
 
-  const addAddressUrl = `/${network}/~/edit/${encodeIdentifier(identifier)}/add-address/start`;
+  const addAddressUrl = `/${network}/profile/edit/${encodeIdentifier(identifier)}/add-address/start`;
   const resumeUrl = hasIncompleteSession
-    ? `/${network}/~/edit/${encodeIdentifier(identifier)}/add-address/${session.currentStep}`
+    ? `/${network}/profile/edit/${encodeIdentifier(identifier)}/add-address/${session.currentStep}`
     : addAddressUrl;
 
   return (
@@ -184,7 +184,7 @@ export const VerifiedAddressManager: FC<VerifiedAddressManagerProps> = ({
         <Button
           component={Link}
           href={addAddressUrl}
-          variant="contained"
+          variant="outlined"
           startIcon={<AddIcon />}
           disabled={isWorking}
         >

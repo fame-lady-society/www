@@ -259,7 +259,7 @@ export const DonateCard: FC<{
         )}
         <Button
           onClick={handleDonate}
-          variant="contained"
+          variant="outlined"
           size="large"
           disabled={
             transactionInProgress ||

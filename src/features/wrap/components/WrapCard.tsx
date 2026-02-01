@@ -156,7 +156,7 @@ export const WrapCard: FC<{
               </Box>
               <Button
                 onClick={handleTurboWrap}
-                variant="contained"
+                variant="outlined"
                 disabled={
                   transactionInProgress ||
                   !isApprovedForAll ||
@@ -441,7 +441,7 @@ export const WrapCard: FC<{
           )}
           <Button
             onClick={() => onRequestWrapTip(false)}
-            variant="contained"
+            variant="outlined"
             size="large"
             disabled={
               transactionInProgress ||

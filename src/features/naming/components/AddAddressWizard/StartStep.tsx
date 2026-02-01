@@ -186,7 +186,7 @@ export const StartStep: FC<WizardStepProps> = ({
             <strong>{session?.targetAddress}</strong>
           </Typography>
           <Box component="div" sx={{ display: "flex", gap: 1, mt: 1 }}>
-            <Button size="small" variant="contained" onClick={handleResume}>
+            <Button size="small" variant="outlined" onClick={handleResume}>
               Resume
             </Button>
             <Button size="small" variant="outlined" onClick={handleStartOver}>
@@ -262,7 +262,7 @@ export const StartStep: FC<WizardStepProps> = ({
 
         <Box component="div" sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
           <Button
-            variant="contained"
+            variant="outlined"
             onClick={handleContinue}
             disabled={!canProceed || isCreating || isLoadingNonce}
             endIcon={isCreating ? <CircularProgress size={16} /> : null}

@@ -21,12 +21,11 @@ export default function EditProfileLayout({
 }) {
   const { network, identifier } = params;
   const resolvedNetwork = resolveNetwork(network);
-
+  const name = parseIdentifier(identifier);
   if (!resolvedNetwork) {
-    redirect(`/base-sepolia/naming`, RedirectType.replace);
+    redirect(`/mainnet/profile/edit/${encodeIdentifier(name)}`, RedirectType.replace);
   }
 
-  const name = parseIdentifier(identifier);
 
   return (
     <AppMain
@@ -35,7 +34,7 @@ export default function EditProfileLayout({
       headerLeft={
         <Button
           component={Link}
-          href={`/${network}/~/${encodeIdentifier(name)}`}
+          href={`/${network}/~/${encodeIdentifier(normalize(name))}`}
           startIcon={<ArrowBackIcon />}
           size="small"
           sx={{ ml: 2 }}

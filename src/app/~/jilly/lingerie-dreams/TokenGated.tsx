@@ -24,7 +24,7 @@ export const TokenGated: FC<{
         </Typography>
         <CardActions>
           <Button
-            variant="contained"
+            variant="outlined"
             component="a"
             href="./lingerie-dreams/gated"
             size="large"

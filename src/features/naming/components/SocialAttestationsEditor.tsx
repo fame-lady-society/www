@@ -9,7 +9,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useWaitForTransactionReceipt } from "wagmi";
-import { baseSepolia, sepolia } from "viem/chains";
+import { baseSepolia, mainnet, sepolia } from "viem/chains";
 import { isHex, keccak256, toHex } from "viem";
 import {
   SOCIAL_PROVIDERS,
@@ -42,6 +42,8 @@ function getChainId(network: NetworkType) {
       return sepolia.id;
     case "base-sepolia":
       return baseSepolia.id;
+    case "mainnet":
+      return mainnet.id;
     default:
       return null;
   }
@@ -365,7 +367,7 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
             <Box component="div" sx={{ display: "flex", gap: 1 }}>
               {pendingForProvider ? (
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="small"
                   onClick={handleWriteAttestation}
                   disabled={isWorking || isRefreshing || !isSupportedNetwork}

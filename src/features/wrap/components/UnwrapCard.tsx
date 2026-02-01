@@ -471,27 +471,13 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               <Box component="div" display="flex" gap={2} flexWrap="wrap">
                 <Button
                   onClick={handleUnwrapClick}
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   disabled={
                     transactionInProgress ||
                     selectedTokenIds.length === 0 ||
                     (transferTo && !(resolvedAddress && isAddress(resolvedAddress)))
                   }
-                  sx={{
-                    borderRadius: 2,
-                    px: 4,
-                    fontWeight: 600,
-                    backgroundColor: "#ff9800 !important",
-                    color: "#000 !important",
-                    "&:hover": {
-                      backgroundColor: "#ffa726 !important",
-                    },
-                    "&.Mui-disabled": {
-                      backgroundColor: "rgba(255,255,255,0.12) !important",
-                      color: "rgba(255,255,255,0.3) !important",
-                    },
-                  }}
                 >
                   {transactionInProgress ? (
                     <>
@@ -684,7 +670,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
         >
           <Button
             onClick={handleCancelUnwrap}
-            variant="contained"
+            variant="outlined"
             size="large"
             sx={{
               borderRadius: 2,

@@ -1,6 +1,7 @@
 "use client";
 
 import { type FC, useEffect, useRef, useState } from "react";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -20,7 +21,6 @@ import { useIdentityPermissions } from "../hooks/useIdentityPermissions";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { encodeIdentifier } from "../utils/networkUtils";
-import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
 import { SocialCheckmark } from "./SocialCheckmark";
 import { mainnet } from "viem/chains";
 
@@ -33,6 +33,8 @@ interface VerifiedAddressRowProps {
   address: Address;
   isPrimary: boolean;
 }
+
+const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
 
 const VerifiedAddressRow: FC<VerifiedAddressRowProps> = ({ address, isPrimary }) => {
   const { data: ensName } = useEnsName({ address, chainId: mainnet.id });
@@ -134,14 +136,14 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           The identity &ldquo;{identifier}&rdquo; does not exist.
         </Typography>
-        <Button component={Link} href={`/${network}/naming`} variant="outlined">
+        <Button component={Link} href={`/${network}/profile`} variant="outlined">
           Back to all identities
         </Button>
       </Box>
     );
   }
 
-  const editUrl = `/${network}/~/edit/${encodeIdentifier(identity.name)}`;
+  const editUrl = `/${network}/profile/edit/${encodeIdentifier(identity.name)}`;
 
   const verifiedSocial = identity.socialAttestations.filter(
     (attestation) => attestation.verified,
@@ -164,6 +166,7 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
           >
             <Box component="div">
               <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar src={`${BASE_IMAGE_URL}${identity.primaryTokenId}`} sx={{ marginRight: 1 }}/>
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
                   {identity.name}
                 </Typography>

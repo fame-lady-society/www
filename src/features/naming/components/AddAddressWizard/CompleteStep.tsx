@@ -106,7 +106,7 @@ export const CompleteStep: FC<WizardStepProps> = ({
           }}
         >
           <Button
-            variant="contained"
+            variant="outlined"
             component={Link}
             href={editUrl}
             fullWidth

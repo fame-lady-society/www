@@ -81,21 +81,7 @@ export const MintCard: FC<{
         size="large"
         onClick={onClick}
         disabled={!(Number(count) > 0) || transactionInProgress}
-        variant="contained"
-        sx={{
-          borderRadius: 2,
-          px: 4,
-          fontWeight: 600,
-          backgroundColor: "#ffc107 !important",
-          color: "#000 !important",
-          "&:hover": {
-            backgroundColor: "#ffca28 !important",
-          },
-          "&.Mui-disabled": {
-            backgroundColor: "rgba(255,255,255,0.12) !important",
-            color: "rgba(255,255,255,0.3) !important",
-          },
-        }}
+        variant="outlined"
       >
         Mint {count || "0"} Testnet NFT{Number(count) !== 1 ? "s" : ""}
       </Button>

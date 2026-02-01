@@ -45,7 +45,6 @@ export default async function Home({
   children: React.ReactNode;
 }) {
   return (
-    <DefaultProvider mainnet sepolia siwe>
       <AppMain
         title="Funk n Love"
         mobileTitle="FNL"
@@ -54,6 +53,5 @@ export default async function Home({
       >
         {children}
       </AppMain>
-    </DefaultProvider>
   );
 }

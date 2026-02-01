@@ -180,7 +180,7 @@ export const LockWithGuardianModal: FC<{
                   handleClose("confirm", undefined);
                 }
               }}
-              variant="contained"
+              variant="outlined"
               color="success"
               fullWidth
               className="bg-blue-500"

@@ -79,7 +79,7 @@ const EditableNameAndDescription: FC<{
         />
       </FormGroup>
       <Button
-        variant="contained"
+        variant="outlined"
         onClick={doSubmit}
         sx={{
           backgroundColor: "#ff6b9d !important",

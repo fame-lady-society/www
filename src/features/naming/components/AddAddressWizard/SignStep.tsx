@@ -59,7 +59,7 @@ const ConnectActionButton: FC<ConnectActionProps> = ({
 
         if (!isConnected) {
           return (
-            <Button variant="contained" onClick={() => showRef.current?.()}>
+            <Button variant="outlined" onClick={() => showRef.current?.()}>
               Connect Wallet
             </Button>
           );
@@ -430,7 +430,7 @@ export const SignStep: FC<WizardStepProps> = ({
             </Button>
             {signSuccess ? (
               <Button
-                variant="contained"
+                variant="outlined"
                 color="success"
                 onClick={handleContinueToSubmit}
               >
@@ -438,7 +438,7 @@ export const SignStep: FC<WizardStepProps> = ({
               </Button>
             ) : (
               <Button
-                variant="contained"
+                variant="outlined"
                 onClick={handleSign}
                 disabled={!isTargetWalletConnected || isSigning || isSwitchingChain || pendingSign}
                 endIcon={(isSigning || isSwitchingChain || pendingSign) ? <CircularProgress size={16} /> : null}

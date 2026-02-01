@@ -1,4 +1,3 @@
-import { DefaultProvider } from "@/context/default";
 import { AppMain } from "@/layouts/AppMain";
 import { Metadata } from "next";
 
@@ -32,12 +31,10 @@ export default async function Home({
   children: React.ReactNode;
 }) {
   return (
-    <DefaultProvider polygon siwe>
       <AppMain title="Lingerie Dreams" mobileTitle="LD" disableDesktopMenu>
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">{children}</div>
         </div>
       </AppMain>
-    </DefaultProvider>
   );
 }
