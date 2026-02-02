@@ -4,6 +4,7 @@ import { client as baseSepoliaClient } from "@/viem/base-sepolia-client";
 import { client as sepoliaClient } from "@/viem/sepolia-client";
 import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import { baseSepolia, mainnet, sepolia } from "viem/chains";
+import { IMetadata } from "@/utils/metadata";
 
 type SupportedNetwork = "mainnet" | "base-sepolia" | "sepolia";
 
@@ -51,7 +52,7 @@ function parseTokenId(value: string): number | null {
 }
 
 export async function GET(
-  req: NextRequest,
+  _: NextRequest,
   { params }: { params: { tokenId: string; network: string } },
 ) {
   const config = resolveNetwork(params.network);
@@ -79,7 +80,7 @@ export async function GET(
       id: tokenId,
       name: identityName,
       image: `${process.env.NEXT_PUBLIC_BASE_URL}/${network}/profile/image/${tokenId}`,
-    });
+    } as IMetadata);
   } catch {
     return new NextResponse("Not Found", { status: 404 });
   }

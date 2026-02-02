@@ -51,7 +51,7 @@ export default function AddAddressWizardPage({
     name
   );
 
-  const editUrl = `/${network}/edit/${encodeIdentifier(normalize(name))}`;
+  const editUrl = `/${network}/profile/edit/${encodeIdentifier(normalize(name))}`;
   const wizardBaseUrl = `${editUrl}/add-address`;
 
   // Only redirect if ALL of these are true:
