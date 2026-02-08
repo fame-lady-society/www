@@ -8,7 +8,6 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { baseSepolia, mainnet, sepolia } from "viem/chains";
 import { isHex, keccak256, toHex } from "viem";
 import {
@@ -19,9 +18,10 @@ import {
   type SocialProviderId,
   type SocialAttestationStatus,
 } from "@/features/naming/attestations";
-import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
+import { flsNamingAddress } from "@/wagmi";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import type { FullIdentity } from "../hooks/useIdentity";
+import { useProfileBatchContext } from "../context/ProfileBatchContext";
 
 type PendingAttestationPayload = {
   provider: SocialProviderId;
@@ -30,10 +30,9 @@ type PendingAttestationPayload = {
   name: string;
 };
 
-type RefreshingState = {
-  provider: SocialProviderId;
-  previousStatusKey: string;
-  startedAt: number;
+type StagedSocialChange = {
+  attestation: `0x${string}`;
+  subtag: `0x${string}`;
 };
 
 function getChainId(network: NetworkType) {
@@ -77,38 +76,37 @@ function formatProvider(provider: SocialProviderId): string {
   return provider === "x" ? "X" : "Discord";
 }
 
-function getStatusKey(status: SocialAttestationStatus | null): string {
-  if (!status) return "none";
-  return `${status.provider}:${status.handle}:${status.verified ? "1" : "0"}`;
+function getSocialChangeIds(provider: SocialProviderId) {
+  return {
+    attestationId: `social:${provider}:attestation`,
+    subtagId: `social:${provider}:subtag`,
+  };
 }
 
 export interface SocialAttestationsEditorProps {
   network: NetworkType;
   identity: FullIdentity;
-  onRefetchIdentity?: () => Promise<void> | void;
+  disabled?: boolean;
+  stagedSocialChanges?: Partial<Record<SocialProviderId, StagedSocialChange>>;
 }
 
 export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
   network,
   identity,
-  onRefetchIdentity,
+  disabled = false,
+  stagedSocialChanges,
 }) => {
+  const { stageChange: onStageMetadataChange, removeChange: onRemoveMetadataChange } =
+    useProfileBatchContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const chainId = getChainId(network);
   const [pending, setPending] = useState<PendingAttestationPayload | null>(null);
   const [pendingStatus, setPendingStatus] = useState<SocialAttestationStatus | null>(null);
   const [pendingError, setPendingError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState<RefreshingState | null>(null);
   const [activeProvider, setActiveProvider] = useState<SocialProviderId | null>(
     null,
   );
-
-  const { mutate: writeContract, data: txHash, isPending, error, reset } =
-    useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
 
   useEffect(() => {
     let active = true;
@@ -190,12 +188,6 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
     }));
   }, [identity.socialAttestations]);
 
-  const statusByProvider = useMemo(() => {
-    return new Map(
-      currentAttestations.map(({ provider, status }) => [provider, status] as const),
-    );
-  }, [currentAttestations]);
-
   const handleStartLink = useCallback(
     async (provider: SocialProviderId) => {
       setActiveProvider(provider);
@@ -224,80 +216,49 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
     [identity.name],
   );
 
-  const handleWriteAttestation = useCallback(() => {
-    if (!pending || !chainId) return;
-    const attestationKey = getSocialAttestationKey(pending.provider);
-    const subtagKey = getSocialSubtagKey(pending.provider);
-    setActiveProvider(pending.provider);
+  const stageAttestation = useCallback(
+    (provider: SocialProviderId, attestation: `0x${string}`, subtag: `0x${string}`) => {
+      const { attestationId, subtagId } = getSocialChangeIds(provider);
+      const attestationKey = getSocialAttestationKey(provider);
+      const subtagKey = getSocialSubtagKey(provider);
+      const label = `Update ${formatProvider(provider)} attestation`;
 
-    writeContract({
-      address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
-      abi: flsNamingAbi,
-      functionName: "setMetadataBatch" as const,
-      chainId,
-      args: [
-        [attestationKey, subtagKey],
-        [pending.attestation, pending.subtag],
-      ],
-    });
-  }, [pending, writeContract, chainId]);
+      onStageMetadataChange(attestationId, attestationKey, attestation, label);
+      onStageMetadataChange(subtagId, subtagKey, subtag, label);
+    },
+    [onStageMetadataChange],
+  );
 
-  const handleClearAttestation = useCallback(
+  const stageClearAttestation = useCallback(
     (provider: SocialProviderId) => {
       if (!chainId) {
         setPendingError("Social attestations are not supported on mainnet yet.");
         return;
       }
-      setActiveProvider(provider);
-      writeContract({
-        address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
-        abi: flsNamingAbi,
-        functionName: "setMetadataBatch" as const,
-        chainId,
-        args: [
-          [getSocialAttestationKey(provider), getSocialSubtagKey(provider)],
-          ["0x", "0x"],
-        ],
-      });
+      const { attestationId, subtagId } = getSocialChangeIds(provider);
+      const attestationKey = getSocialAttestationKey(provider);
+      const subtagKey = getSocialSubtagKey(provider);
+      const label = `Clear ${formatProvider(provider)} attestation`;
+
+      onStageMetadataChange(attestationId, attestationKey, "0x", label);
+      onStageMetadataChange(subtagId, subtagKey, "0x", label);
     },
-    [writeContract, chainId],
+    [chainId, onStageMetadataChange],
+  );
+
+  const unstageProvider = useCallback(
+    (provider: SocialProviderId) => {
+      const { attestationId, subtagId } = getSocialChangeIds(provider);
+      onRemoveMetadataChange(attestationId);
+      onRemoveMetadataChange(subtagId);
+    },
+    [onRemoveMetadataChange],
   );
 
   useEffect(() => {
-    if (isSuccess && activeProvider) {
-      const previousStatusKey = getStatusKey(statusByProvider.get(activeProvider) ?? null);
-      setRefreshing({
-        provider: activeProvider,
-        previousStatusKey,
-        startedAt: Date.now(),
-      });
-      setPending(null);
-      setPendingStatus(null);
-      setActiveProvider(null);
-      reset();
-      void onRefetchIdentity?.();
-    }
-  }, [isSuccess, activeProvider, reset, statusByProvider, onRefetchIdentity]);
-
-  useEffect(() => {
-    if (!refreshing) return;
-    const currentStatusKey = getStatusKey(
-      statusByProvider.get(refreshing.provider) ?? null,
-    );
-    if (currentStatusKey !== refreshing.previousStatusKey) {
-      setRefreshing(null);
-    }
-  }, [refreshing, statusByProvider]);
-
-  useEffect(() => {
-    if (!refreshing) return;
-    const timeout = window.setTimeout(() => {
-      setRefreshing(null);
-    }, 30000);
-    return () => window.clearTimeout(timeout);
-  }, [refreshing]);
-
-  const isWorking = isPending || isConfirming;
+    if (!pending || !pendingStatus) return;
+    stageAttestation(pending.provider, pending.attestation, pending.subtag);
+  }, [pending, pendingStatus, stageAttestation]);
 
   return (
     <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -307,23 +268,19 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
         </Alert>
       )}
 
-      {error && (
-        <Alert severity="error" onClose={() => reset()}>
-          {error.message}
-        </Alert>
-      )}
-
       {pending && (
         <Alert severity="info">
-          Attestation ready for {formatProvider(pending.provider)}. Review and
-          save to chain.
+          Attestation ready for {formatProvider(pending.provider)}. Staged for
+          batch submission.
         </Alert>
       )}
 
       {currentAttestations.map(({ provider, status }) => {
         const pendingForProvider = pending?.provider === provider ? pending : null;
         const isActive = activeProvider === provider;
-        const isRefreshing = refreshing?.provider === provider;
+        const stagedChange = stagedSocialChanges?.[provider];
+        const isClearStaged =
+          stagedChange?.attestation === "0x" && stagedChange?.subtag === "0x";
         const isSupportedNetwork = !!chainId;
         return (
           <Box
@@ -363,49 +320,32 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
                 Pending handle: <strong>{pendingStatus.handle}</strong>
               </Typography>
             )}
-
-            {isRefreshing && (
+            {stagedChange && (
               <Typography variant="body2" color="text.secondary">
-                Refreshing attestation...
+                {isClearStaged ? "Clear staged for batch" : "Update staged for batch"}
               </Typography>
             )}
 
             <Box component="div" sx={{ display: "flex", gap: 1 }}>
-              {pendingForProvider ? (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => handleStartLink(provider)}
+                disabled={disabled || isActive || !isSupportedNetwork}
+                startIcon={isActive ? <CircularProgress size={16} /> : null}
+              >
+                {isActive ? "Starting..." : "Link Account"}
+              </Button>
+
+              {stagedChange && !isClearStaged && (
                 <Button
-                  variant="outlined"
+                  variant="text"
                   size="small"
-                  onClick={handleWriteAttestation}
-                  disabled={isWorking || isRefreshing || !isSupportedNetwork}
-                  startIcon={
-                    (isWorking && isActive) || isRefreshing ? (
-                      <CircularProgress size={16} />
-                    ) : null
-                  }
+                  color="warning"
+                  onClick={() => unstageProvider(provider)}
+                  disabled={disabled}
                 >
-                  {isWorking && isActive
-                    ? "Saving..."
-                    : isRefreshing
-                      ? "Refreshing..."
-                      : "Save Attestation"}
-                </Button>
-              ) : (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => handleStartLink(provider)}
-                  disabled={(isWorking && isActive) || isRefreshing || !isSupportedNetwork}
-                  startIcon={
-                    (isWorking && isActive) || isRefreshing ? (
-                      <CircularProgress size={16} />
-                    ) : null
-                  }
-                >
-                  {isWorking && isActive
-                    ? "Starting..."
-                    : isRefreshing
-                      ? "Refreshing..."
-                      : "Link Account"}
+                  Undo Staged
                 </Button>
               )}
 
@@ -414,10 +354,14 @@ export const SocialAttestationsEditor: FC<SocialAttestationsEditorProps> = ({
                   variant="text"
                   size="small"
                   color="warning"
-                  onClick={() => handleClearAttestation(provider)}
-                  disabled={(isWorking && isActive) || isRefreshing}
+                  onClick={() =>
+                    isClearStaged
+                      ? unstageProvider(provider)
+                      : stageClearAttestation(provider)
+                  }
+                  disabled={disabled || !isSupportedNetwork}
                 >
-                  Clear
+                  {isClearStaged ? "Undo Clear" : "Clear"}
                 </Button>
               )}
             </Box>

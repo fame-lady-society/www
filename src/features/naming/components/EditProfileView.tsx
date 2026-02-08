@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC } from "react";
+import { type FC, useCallback, useMemo } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -18,8 +18,12 @@ import { MetadataEditor } from "./MetadataEditor";
 import { PrimaryNftSelector } from "./PrimaryNftSelector";
 import { PrimaryAddressSelector } from "./PrimaryAddressSelector";
 import { SocialAttestationsEditor } from "./SocialAttestationsEditor";
+import { BatchSubmitBar } from "./BatchSubmitBar";
 import { useAddressVerificationSession } from "../hooks/useAddressVerificationSession";
 import { SocialCheckmark } from "./SocialCheckmark";
+import { useProfileBatch } from "../hooks/useProfileBatch";
+import { SOCIAL_PROVIDERS, type SocialProviderId } from "../attestations";
+import { ProfileBatchContext } from "../context/ProfileBatchContext";
 
 export interface EditProfileViewProps {
   network: NetworkType;
@@ -38,6 +42,58 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
     network,
     identity.name
   );
+  const {
+    pendingChanges,
+    pendingList,
+    addChange,
+    removeChange,
+    submitBatch,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  } = useProfileBatch({
+    network,
+    onRefetchIdentity,
+  });
+
+  const isSubmitting = isPending || isConfirming;
+
+  const handleStageChange = useCallback(
+    (
+      id: string,
+      key: `0x${string}`,
+      value: `0x${string}`,
+      label: string,
+    ) => {
+      addChange(id, { key, value, label });
+    },
+    [addChange],
+  );
+
+  const handleRemoveChange = useCallback(
+    (id: string) => {
+      removeChange(id);
+    },
+    [removeChange],
+  );
+
+  const stagedSocialChanges = useMemo(() => {
+    const staged: Partial<
+      Record<SocialProviderId, { attestation: `0x${string}`; subtag: `0x${string}` }>
+    > = {};
+    SOCIAL_PROVIDERS.forEach((provider) => {
+      const attestationChange = pendingChanges.get(`social:${provider}:attestation`);
+      const subtagChange = pendingChanges.get(`social:${provider}:subtag`);
+      if (attestationChange && subtagChange) {
+        staged[provider] = {
+          attestation: attestationChange.value,
+          subtag: subtagChange.value,
+        };
+      }
+    });
+    return staged;
+  }, [pendingChanges]);
 
   const hasIncompleteVerification =
     session !== null &&
@@ -181,9 +237,11 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
             </Typography>
             <MetadataEditor
               network={network}
-              tokenId={identity.tokenId}
               currentDescription={identity.description}
               currentWebsite={identity.website}
+              disabled={isSubmitting}
+              onFieldChange={handleStageChange}
+              onFieldReset={handleRemoveChange}
             />
           </CardContent>
         </Card>
@@ -194,11 +252,19 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
             <Typography variant="h6" gutterBottom>
               Social Accounts
             </Typography>
-            <SocialAttestationsEditor
-              network={network}
-              identity={identity}
-              onRefetchIdentity={onRefetchIdentity}
-            />
+            <ProfileBatchContext.Provider
+              value={{
+                stageChange: handleStageChange,
+                removeChange: handleRemoveChange,
+              }}
+            >
+              <SocialAttestationsEditor
+                network={network}
+                identity={identity}
+                disabled={isSubmitting}
+                stagedSocialChanges={stagedSocialChanges}
+              />
+            </ProfileBatchContext.Provider>
           </CardContent>
         </Card>
 
@@ -250,6 +316,15 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
           </CardContent>
         </Card>
       </Box>
+
+      <BatchSubmitBar
+        pendingChanges={pendingList}
+        onSubmit={submitBatch}
+        isPending={isPending}
+        isConfirming={isConfirming}
+        isSuccess={isSuccess}
+        error={error ?? null}
+      />
     </Box>
   );
 };
