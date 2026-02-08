@@ -14,16 +14,19 @@ export type PendingChange = {
 type UseProfileBatchOptions = {
   network: NetworkType;
   onRefetchIdentity?: () => Promise<void> | void;
+  storageKey?: string;
 };
 
 export function useProfileBatch({
   network,
   onRefetchIdentity,
+  storageKey,
 }: UseProfileBatchOptions) {
   const chainId = getChainId(network);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(
     () => new Map(),
   );
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
 
   const {
     mutate: writeContract,
@@ -73,6 +76,35 @@ export function useProfileBatch({
       args: [keys, values],
     });
   }, [hasPendingChanges, pendingList, writeContract, chainId]);
+
+  useEffect(() => {
+    if (!storageKey || hasLoadedStorage) return;
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      setHasLoadedStorage(true);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as Array<[string, PendingChange]>;
+      setPendingChanges(new Map(parsed));
+    } catch {
+      window.localStorage.removeItem(storageKey);
+    } finally {
+      setHasLoadedStorage(true);
+    }
+  }, [storageKey, hasLoadedStorage]);
+
+  useEffect(() => {
+    if (!storageKey || !hasLoadedStorage) return;
+    if (typeof window === "undefined") return;
+    if (pendingChanges.size === 0) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+    const payload = JSON.stringify(Array.from(pendingChanges.entries()));
+    window.localStorage.setItem(storageKey, payload);
+  }, [pendingChanges, storageKey, hasLoadedStorage]);
 
   useEffect(() => {
     if (!isSuccess) return;

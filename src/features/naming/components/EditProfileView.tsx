@@ -55,6 +55,7 @@ export const EditProfileView: FC<EditProfileViewProps> = ({
   } = useProfileBatch({
     network,
     onRefetchIdentity,
+    storageKey: `fls.profileBatch:${network}:${identity.name}`,
   });
 
   const isSubmitting = isPending || isConfirming;
