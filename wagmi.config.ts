@@ -84,7 +84,7 @@ export default defineConfig({
           name: "NamedLadyRenderer",
           address: {
             [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
-            [mainnet.id]: "0xC7A29659c34CB2551Aec0dc589e6450aF342bf24",
+            [mainnet.id]: "0xeb3577c4df71ee2fb6a6717f6b0887f2d77bc201",
           },
         },
         {

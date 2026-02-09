@@ -32,5 +32,52 @@ export function thumbnailImageUrl(tokenId: string | number) {
 }
 
 export function imageUrl(tokenId: string | number) {
-  return `https://ipfs.fameladysociety.com/bafybeifrehxmpmvh4hiywtpmuuuvt4lotol7wl7dnxlsxikfevn2ivvm7m/${tokenId}.png`;
+  // return `https://fame.support/fls/image/${tokenId}`;
+  return `https://gateway.irys.xyz/f5Lq-xaNRrAi2yCBHnTOPbhvJ6Q9CKXvXscit54Hdv0/${tokenId}.png`;
+}
+
+
+async function resolveIpfsUrl(url: string): Promise<{
+  url: string;
+  content: ArrayBuffer | null;
+}> {
+  if (!url.startsWith("ipfs://")) {
+    const response = await fetch(url);
+    if (response.ok) {
+      return {
+        url,
+        content: await response.arrayBuffer(),
+      };
+    }
+    return {
+      url,
+      content: null,
+    };
+  }
+
+  const ipfsPath = url.slice("ipfs://".length);
+  const [cid, ...pathParts] = ipfsPath.split("/");
+  if (!cid) {
+    throw new Error(`Invalid ipfs url: ${url}`);
+  }
+
+  const path = pathParts.length > 0 ? `/${pathParts.join("/")}` : "";
+  const gatewayDomains = ["storry.tv", "dweb.link", "dget.top"];
+  const gatewayUrls = gatewayDomains.map(
+    (domain) => `https://${cid}.ipfs.${domain}${path}`,
+  );
+
+  for (const gatewayUrl of gatewayUrls) {
+    const response = await fetch(gatewayUrl);
+    if (response.ok) {
+      return {
+        url: gatewayUrl,
+        content: await response.arrayBuffer(),
+      };
+    }
+  }
+
+  throw new Error(
+    `Failed to resolve ipfs url via gateways: ${gatewayUrls.join(", ")}`,
+  );
 }
