@@ -6,6 +6,7 @@ import UpdateIcon from "@mui/icons-material/Update";
 import QAIcon from "@mui/icons-material/QuestionAnswer";
 import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import DollarIcon from "@mui/icons-material/MonetizationOn";
+import PersonIcon from "@mui/icons-material/Person";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -90,6 +91,18 @@ export const SiteMenu: FC<{
           primary={
             <Typography textAlign="right" color="white">
               Customize
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/mainnet/~">
+        <ListItemIcon>
+          <PersonIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="white">
+              Profiles
             </Typography>
           }
         />

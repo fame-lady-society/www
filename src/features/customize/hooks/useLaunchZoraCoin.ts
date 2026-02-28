@@ -4,38 +4,22 @@ import { useMutation } from "@tanstack/react-query";
 import {
   useChainId,
   useSwitchChain,
-  useWalletClient,
   useWriteContract,
 } from "wagmi";
 import {
-  Address,
-  decodeFunctionData,
-  encodeAbiParameters,
-  encodeFunctionData,
-  Hex,
   zeroAddress,
 } from "viem";
 import { base, mainnet } from "viem/chains";
-import { useWriteZoraFactoryImplDeploy } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { Transaction } from "@/features/wrap/types";
-import { readContract } from "viem/actions";
 import {
-  fameLadySocietyAbi,
-  fameLadySocietyAddress,
   zoraFactoryImplAbi,
 } from "@/wagmi";
-import { client } from "@/viem/mainnet-client";
-import { IMetadata } from "@/utils/metadata";
-import { fetchJson } from "@/ipfs/client";
-import { createMetadataBuilder } from "@zoralabs/coins-sdk";
 import {
-  decodeDopplerMultiCurveUniV4,
   encodeDopplerMultiCurveUniV4,
 } from "@/service/zora/utils";
 import {
   baseCommunityMultiSigAddress,
-  fameFromNetwork,
 } from "@/features/fame/contract";
 import { useCallback } from "react";
 

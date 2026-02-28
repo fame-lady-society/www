@@ -2,16 +2,30 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { sepolia, baseSepolia, mainnet } from "viem/chains";
-import { keccak256, encodePacked, ContractFunctionRevertedError, ContractFunctionExecutionError, AbiEncodingLengthMismatchError } from "viem";
-import { useReadContract, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import {
-  flsNamingAddress,
-  flsNamingAbi,
-} from "@/wagmi";
+  keccak256,
+  encodePacked,
+  ContractFunctionRevertedError,
+  ContractFunctionExecutionError,
+  AbiEncodingLengthMismatchError,
+} from "viem";
+import {
+  useReadContract,
+  useSimulateContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { flsNamingAddress, flsNamingAbi } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "./useOwnedGateNftTokens";
 
-export type ClaimStep = "idle" | "committing" | "waiting" | "claiming" | "complete" | "error";
+export type ClaimStep =
+  | "idle"
+  | "committing"
+  | "waiting"
+  | "claiming"
+  | "complete"
+  | "error";
 
 function getChainId(network: NetworkType) {
   switch (network) {
@@ -37,9 +51,11 @@ function generateSalt(): `0x${string}` {
 function makeCommitment(
   name: string,
   salt: `0x${string}`,
-  owner: `0x${string}`
+  owner: `0x${string}`,
 ): `0x${string}` {
-  return keccak256(encodePacked(["string", "bytes32", "address"], [name, salt, owner]));
+  return keccak256(
+    encodePacked(["string", "bytes32", "address"], [name, salt, owner]),
+  );
 }
 
 // Map contract revert errors to human-readable messages
@@ -47,8 +63,11 @@ function mapContractError(error: unknown) {
   if (error instanceof AbiEncodingLengthMismatchError) {
     return null;
   }
-  if (error instanceof ContractFunctionRevertedError || error instanceof ContractFunctionExecutionError) {
-    const errorString = error.shortMessage
+  if (
+    error instanceof ContractFunctionRevertedError ||
+    error instanceof ContractFunctionExecutionError
+  ) {
+    const errorString = error.shortMessage;
     // Expected
     if (error.metaMessages?.includes("Error: CommitmentTooNew()")) {
       return null;
@@ -79,8 +98,7 @@ function mapContractError(error: unknown) {
       return "Transaction was cancelled.";
     }
   }
-  // Generic fallback
-  return "Transaction failed. Please try again.";
+  return null;
 }
 
 export function useClaimName(network: NetworkType) {
@@ -104,14 +122,27 @@ export function useClaimName(network: NetworkType) {
     address: flsNamingAddress[chainId as keyof typeof flsNamingAddress],
     functionName: "claimName" as const,
     chainId,
-    args: salt && primaryTokenId !== null ? [name, salt, primaryTokenId] : undefined,
-  })
-  const errorMessage = isSimulateClaimError ? mapContractError(simulateClaimError) : null;
+    args:
+      salt && primaryTokenId !== null
+        ? [name, salt, primaryTokenId]
+        : undefined,
+  });
+  const errorMessage = isSimulateClaimError
+    ? mapContractError(simulateClaimError)
+    : null;
   useEffect(() => {
-     setError(errorMessage);
-  }, [errorMessage]);
+    // Don't show simulation errors during the waiting period — the commitment
+    // is intentionally too new and the claim can't succeed yet.
+    if (step === "waiting" && secondsRemaining > 0) return;
+    setError(errorMessage);
+  }, [errorMessage, step, secondsRemaining]);
   if (salt && primaryTokenId !== null) {
-  console.log(simulateClaimError, simulateClaimData, errorMessage, isSimulating);
+    console.log(
+      simulateClaimError,
+      simulateClaimData,
+      errorMessage,
+      isSimulating,
+    );
   }
 
   // Use refs to preserve claim data across re-renders (wagmi hooks can cause re-renders)
@@ -274,7 +305,7 @@ export function useClaimName(network: NetworkType) {
         setStep("error");
       }
     },
-    [address, chainId, writeCommitName]
+    [address, chainId, writeCommitName],
   );
 
   const submitClaim = useCallback(async () => {

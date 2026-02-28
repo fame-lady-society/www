@@ -15,6 +15,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
+import { ConnectKitButton } from "connectkit";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
 import { normalize } from  "viem/ens";
 import { useClaimName } from "../hooks/useClaimName";
@@ -224,14 +225,24 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
               {setupError}
             </Alert>
           )}
-          <Button
-            variant="outlined"
-            onClick={handleSetup}
-            disabled={isSettingUp}
-            startIcon={isSettingUp ? <CircularProgress size={20} color="inherit" /> : null}
-          >
-            {isSettingUp ? "Please wait..." : title}
-          </Button>
+          {!isConnected ? (
+            <ConnectKitButton.Custom>
+              {({ show }) => (
+                <Button variant="outlined" onClick={show}>
+                  Connect Your Wallet
+                </Button>
+              )}
+            </ConnectKitButton.Custom>
+          ) : (
+            <Button
+              variant="outlined"
+              onClick={handleSetup}
+              disabled={isSettingUp}
+              startIcon={isSettingUp ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {isSettingUp ? "Please wait..." : title}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
