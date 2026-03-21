@@ -147,11 +147,11 @@ export function useSwapMetadata(chainId: typeof base.id) {
   const { addNotification } = useNotifications();
 
   // Contract calls
-  const { mutateAsync: writeBanishToArtPool } =
+  const { writeContractAsync: writeBanishToArtPool } =
     useWriteCreatorArtistMagicBanishToArtPool();
-  const { mutateAsync: writeBanishToMintPool } =
+  const { writeContractAsync: writeBanishToMintPool } =
     useWriteCreatorArtistMagicBanishToMintPool();
-  const { mutateAsync: writeBanishToBurnPool } =
+  const { writeContractAsync: writeBanishToBurnPool } =
     useWriteCreatorArtistMagicBanishToBurnPool();
 
   // Transaction watchers

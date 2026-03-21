@@ -150,15 +150,15 @@ export function useSwapMetadata(chainId: typeof base.id) {
   const { addNotification } = useNotifications();
 
   // Contract calls
-  const { mutateAsync: writeBanishToArtPool } =
+  const { writeContractAsync: writeBanishToArtPool } =
     useWriteCreatorArtistMagicBanishToArtPool();
-  const { mutateAsync: writeBanishToMintPool } =
+  const { writeContractAsync: writeBanishToMintPool } =
     useWriteCreatorArtistMagicBanishToMintPool();
-  const { mutateAsync: writeBanishToBurnPool } =
+  const { writeContractAsync: writeBanishToBurnPool } =
     useWriteCreatorArtistMagicBanishToBurnPool();
-  const { mutateAsync: writeBanishToEndOfMintPool } =
+  const { writeContractAsync: writeBanishToEndOfMintPool } =
     useWriteCreatorArtistMagicBanishToEndOfMintPool();
-  const { mutateAsync: writeUpdateMetadata } =
+  const { writeContractAsync: writeUpdateMetadata } =
     useWriteCreatorArtistMagicUpdateMetadata();
 
   // Transaction watchers
@@ -254,30 +254,23 @@ export function useSwapMetadata(chainId: typeof base.id) {
           },
         });
       } catch (error) {
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "banish-to-art-pool-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message:
+            error instanceof BaseError
+              ? (error.metaMessages?.length
+                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                  : error.message)
+              : error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+          type: "error",
+          id: "banish-to-art-pool-error",
+          autoHideMs: 5000,
+        });
       }
     },
-    [
-      address,
-      writeBanishToArtPool,
-      chainId,
-      addNotification,
-      transactionState.activeTransactionHashList.length,
-    ],
+    [address, writeBanishToArtPool, chainId, addNotification],
   );
 
   // -----------------------------------------
@@ -307,30 +300,23 @@ export function useSwapMetadata(chainId: typeof base.id) {
           },
         });
       } catch (error) {
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "banish-to-mint-pool-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message:
+            error instanceof BaseError
+              ? (error.metaMessages?.length
+                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                  : error.message)
+              : error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+          type: "error",
+          id: "banish-to-mint-pool-error",
+          autoHideMs: 5000,
+        });
       }
     },
-    [
-      address,
-      writeBanishToMintPool,
-      chainId,
-      addNotification,
-      transactionState.activeTransactionHashList.length,
-    ],
+    [address, writeBanishToMintPool, chainId, addNotification],
   );
 
   // -----------------------------------------
@@ -360,30 +346,23 @@ export function useSwapMetadata(chainId: typeof base.id) {
           },
         });
       } catch (error) {
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "banish-to-burn-pool-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message:
+            error instanceof BaseError
+              ? (error.metaMessages?.length
+                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                  : error.message)
+              : error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+          type: "error",
+          id: "banish-to-burn-pool-error",
+          autoHideMs: 5000,
+        });
       }
     },
-    [
-      address,
-      writeBanishToBurnPool,
-      chainId,
-      addNotification,
-      transactionState.activeTransactionHashList.length,
-    ],
+    [address, writeBanishToBurnPool, chainId, addNotification],
   );
 
   // -----------------------------------------
@@ -424,30 +403,23 @@ export function useSwapMetadata(chainId: typeof base.id) {
           },
         });
       } catch (error) {
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "banish-to-end-of-mint-pool-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message:
+            error instanceof BaseError
+              ? (error.metaMessages?.length
+                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                  : error.message)
+              : error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+          type: "error",
+          id: "banish-to-end-of-mint-pool-error",
+          autoHideMs: 5000,
+        });
       }
     },
-    [
-      address,
-      writeBanishToEndOfMintPool,
-      chainId,
-      addNotification,
-      transactionState.activeTransactionHashList.length,
-    ],
+    [address, writeBanishToEndOfMintPool, chainId, addNotification],
   );
 
   // -----------------------------------------
@@ -477,30 +449,23 @@ export function useSwapMetadata(chainId: typeof base.id) {
           },
         });
       } catch (error) {
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "update-metadata-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message:
+            error instanceof BaseError
+              ? (error.metaMessages?.length
+                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                  : error.message)
+              : error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+          type: "error",
+          id: "update-metadata-error",
+          autoHideMs: 5000,
+        });
       }
     },
-    [
-      address,
-      writeUpdateMetadata,
-      chainId,
-      addNotification,
-      transactionState.activeTransactionHashList.length,
-    ],
+    [address, writeUpdateMetadata, chainId, addNotification],
   );
 
   return {
