@@ -1,13 +1,14 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme, type PaletteMode } from "@mui/material/styles";
 
-const theme = createTheme({
-  palette: {
-    mode: "dark",
+export function createAppTheme(mode: PaletteMode) {
+  return createTheme({
+    palette: {
+      mode,
+    },
+  });
+}
 
-    // background: {
-    //   default: "#1e1e1e",
-    // },
-  },
-});
+// Static dark theme kept for backward-compatible breakpoint imports
+const theme = createAppTheme("dark");
 
 export default theme;

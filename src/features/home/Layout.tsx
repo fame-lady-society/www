@@ -350,6 +350,14 @@ export const Layout: FC = () => {
                 component="div"
                 sx={{
                   position: "relative",
+                  borderRadius: (theme) =>
+                    theme.palette.mode === "light" ? 4 : 0,
+                  background: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.6) 70%)"
+                      : "none",
+                  p: (theme) =>
+                    theme.palette.mode === "light" ? 2 : 0,
                   "&::before": {
                     content: '""',
                     position: "absolute",

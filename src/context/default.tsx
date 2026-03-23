@@ -3,7 +3,8 @@ import { FC, PropsWithChildren, useEffect, useMemo } from "react";
 import * as Sentry from "@sentry/nextjs";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
-import flsTheme from "@/theme";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { createAppTheme } from "@/theme";
 import {
   Web3Provider,
 } from "./Wagmi";
@@ -48,6 +49,12 @@ export const DefaultProvider: FC<
   sepolia,
   baseSepolia,
 }) => {
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+  const theme = useMemo(
+    () => createAppTheme(prefersDarkMode ? "dark" : "light"),
+    [prefersDarkMode],
+  );
+
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
     const chainSet = new Set<Chain>();
     if (mainnet) {
@@ -124,7 +131,7 @@ export const DefaultProvider: FC<
   }, [mainnet, base, polygon, polygonAmoy, baseSepolia]);
 
   return (
-    <ThemeProvider theme={flsTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Web3Provider siwe={siwe} chains={chains} transports={transports}>
         <NotificationsProvider>
