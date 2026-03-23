@@ -26,7 +26,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               @FameLadySociety
             </Typography>
           }
@@ -43,7 +43,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               famelady.society
             </Typography>
           }
@@ -69,7 +69,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               @famelady.society
             </Typography>
           }
@@ -96,7 +96,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Our Marketplace
             </Typography>
           }
@@ -113,7 +113,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               OpenSea Collection
             </Typography>
           }
@@ -139,7 +139,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Invite
             </Typography>
           }
@@ -165,7 +165,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Join Telegram Group
             </Typography>
           }
@@ -182,7 +182,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               FAMEus DAO
             </Typography>
           }
@@ -200,7 +200,7 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               GitHub
             </Typography>
           }

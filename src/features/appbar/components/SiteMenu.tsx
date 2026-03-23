@@ -37,7 +37,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Lore
             </Typography>
           }
@@ -49,7 +49,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Wrap
             </Typography>
           }
@@ -61,7 +61,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               $FAME
             </Typography>
           }
@@ -73,7 +73,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               FAMEus DAO
             </Typography>
           }
@@ -89,7 +89,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Customize
             </Typography>
           }
@@ -101,7 +101,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               Profiles
             </Typography>
           }
@@ -113,7 +113,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               FAQ
             </Typography>
           }
@@ -125,7 +125,7 @@ export const SiteMenu: FC<{
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography textAlign="right" color="white">
+            <Typography textAlign="right" color="text.primary">
               home
             </Typography>
           }
