@@ -54,7 +54,12 @@ const TimelineItem: FC<{
           mb: 4,
           borderLeft: highlight ? "4px solid" : "2px solid",
           borderColor: highlight ? "primary.main" : "grey.700",
-          backgroundColor: highlight ? "rgba(255,255,255,0.05)" : "transparent",
+          backgroundColor: (theme) =>
+            highlight
+              ? theme.palette.mode === "light"
+                ? "rgba(15, 23, 42, 0.04)"
+                : "rgba(255,255,255,0.05)"
+              : "transparent",
         }}
       >
         <CardContent>
@@ -467,7 +472,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box
@@ -525,7 +533,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box
@@ -560,7 +571,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box
@@ -618,7 +632,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box
@@ -676,7 +693,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box
@@ -711,7 +731,10 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  "&:hover": { backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.04)"
+                      : "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box

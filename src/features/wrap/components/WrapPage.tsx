@@ -98,7 +98,10 @@ const BenefitItem: FC<{
       borderRadius: 2,
       transition: "all 0.2s ease",
       "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.03)",
+        backgroundColor: (theme) =>
+          theme.palette.mode === "light"
+            ? "rgba(15, 23, 42, 0.04)"
+            : "rgba(255,255,255,0.03)",
       },
     }}
   >
@@ -135,8 +138,18 @@ const StyledCard: FC<PropsWithChildren<{ title?: string; subtitle?: string; icon
 }) => (
   <Card
     sx={{
-      background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
-      border: "1px solid rgba(255,255,255,0.08)",
+      background: (theme) =>
+        theme.palette.mode === "light"
+          ? "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248, 250, 252, 0.95) 100%)"
+          : "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+      border: (theme) =>
+        theme.palette.mode === "light"
+          ? "1px solid rgba(15, 23, 42, 0.12)"
+          : "1px solid rgba(255,255,255,0.08)",
+      boxShadow: (theme) =>
+        theme.palette.mode === "light"
+          ? "0 12px 30px rgba(15, 23, 42, 0.06)"
+          : "none",
       backdropFilter: "blur(10px)",
       borderRadius: 3,
       overflow: "visible",
@@ -173,6 +186,7 @@ export const WrapPage: FC<{
   const [nonce, setNonce] = useState<number>(0);
   const { addNotification } = useNotifications();
   const theme = useTheme();
+  const isLightMode = theme.palette.mode === "light";
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -798,7 +812,9 @@ export const WrapPage: FC<{
       component="div"
       sx={{
         minHeight: "100vh",
-        background: "radial-gradient(ellipse at 50% 0%, rgba(196, 77, 255, 0.06) 0%, transparent 50%)",
+        background: isLightMode
+          ? "radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.1) 0%, rgba(255,255,255,1) 55%)"
+          : "radial-gradient(ellipse at 50% 0%, rgba(196, 77, 255, 0.06) 0%, transparent 50%)",
       }}
     >
       {/* Hero Section */}
@@ -869,7 +885,14 @@ export const WrapPage: FC<{
           </Grid2>
         </AnimatedFadeIn>
 
-        <Divider sx={{ mb: 6, borderColor: "rgba(255,255,255,0.08)" }} />
+        <Divider
+          sx={{
+            mb: 6,
+            borderColor: isLightMode
+              ? "rgba(15, 23, 42, 0.12)"
+              : "rgba(255,255,255,0.08)",
+          }}
+        />
 
         {/* Main Content Grid */}
         <Grid2 container spacing={4}>
@@ -909,8 +932,15 @@ export const WrapPage: FC<{
               <AnimatedFadeIn component="div" delay={150}>
                 <Card
                   sx={{
-                    background: "linear-gradient(135deg, rgba(107, 91, 255, 0.12) 0%, rgba(196, 77, 255, 0.08) 100%)",
-                    border: "1px solid rgba(196, 77, 255, 0.2)",
+                    background: isLightMode
+                      ? "linear-gradient(135deg, rgba(107, 91, 255, 0.16) 0%, rgba(196, 77, 255, 0.12) 100%)"
+                      : "linear-gradient(135deg, rgba(107, 91, 255, 0.12) 0%, rgba(196, 77, 255, 0.08) 100%)",
+                    border: isLightMode
+                      ? "1px solid rgba(107, 91, 255, 0.35)"
+                      : "1px solid rgba(196, 77, 255, 0.2)",
+                    boxShadow: isLightMode
+                      ? "0 12px 26px rgba(107, 91, 255, 0.15)"
+                      : "none",
                     borderRadius: 3,
                   }}
                 >
@@ -1078,8 +1108,15 @@ export const WrapPage: FC<{
               p: 4,
               textAlign: "center",
               borderRadius: 3,
-              background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: isLightMode
+                ? "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248, 250, 252, 0.95) 100%)"
+                : "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+              border: isLightMode
+                ? "1px solid rgba(15, 23, 42, 0.12)"
+                : "1px solid rgba(255,255,255,0.08)",
+              boxShadow: isLightMode
+                ? "0 10px 24px rgba(15, 23, 42, 0.06)"
+                : "none",
             }}
           >
             <Typography variant="h6" fontWeight={600} mb={1}>

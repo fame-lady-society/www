@@ -62,7 +62,7 @@ export const Empty: FC<{}> = ({}) => {
             gap={2}
           >
             <OpenSeaIcon />
-            <Typography component="span" color="white">
+            <Typography component="span" color="text.primary">
               Go get a Fame Lady using the{" "}
               <WrappedLink href="/save-a-lady">save a lady</WrappedLink> tool
             </Typography>
@@ -76,11 +76,11 @@ export const Empty: FC<{}> = ({}) => {
           justifyContent="center"
           gap={2}
         >
-          <Typography component="span" color="white">
+          <Typography component="span" color="text.primary">
             Have a Fame Lady?
           </Typography>
           <WrappedLink href="/wrap">
-            <Typography component="span" color="white">
+            <Typography component="span" color="text.primary">
               Wrap it
             </Typography>
           </WrappedLink>

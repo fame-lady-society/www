@@ -89,8 +89,14 @@ const EditableNameAndDescription: FC<{
             backgroundColor: "#ff8cb5 !important",
           },
           "&.Mui-disabled": {
-            backgroundColor: "rgba(255,255,255,0.12) !important",
-            color: "rgba(255,255,255,0.3) !important",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "light"
+                ? "rgba(15, 23, 42, 0.08) !important"
+                : "rgba(255,255,255,0.12) !important",
+            color: (theme) =>
+              theme.palette.mode === "light"
+                ? "rgba(15, 23, 42, 0.26) !important"
+                : "rgba(255,255,255,0.3) !important",
           },
         }}
       >

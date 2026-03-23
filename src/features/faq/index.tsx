@@ -46,7 +46,10 @@ const QA: FC<{
     defaultExpanded={defaultExpanded}
     sx={{
       background: "transparent",
-      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      borderBottom: (theme) =>
+        theme.palette.mode === "light"
+          ? "1px solid rgba(15, 23, 42, 0.1)"
+          : "1px solid rgba(255,255,255,0.08)",
       boxShadow: "none",
       "&:before": { display: "none" },
       "&.Mui-expanded": {
@@ -193,7 +196,10 @@ export const FAQ: FC = () => {
               sx={{
                 px: 1,
                 fontWeight: 600,
-                border: "1px solid rgba(255,255,255,0.2)",
+                border: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "1px solid rgba(15, 23, 42, 0.2)"
+                    : "1px solid rgba(255,255,255,0.2)",
                 "&:hover": {
                   borderColor: "primary.main",
                   backgroundColor: "rgba(196, 77, 255, 0.1)",
@@ -617,9 +623,18 @@ export const FAQ: FC = () => {
             p: { xs: 4, md: 6 },
             textAlign: "center",
             borderRadius: 3,
-            background:
-              "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: (theme) =>
+              theme.palette.mode === "light"
+                ? "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)"
+                : "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+            border: (theme) =>
+              theme.palette.mode === "light"
+                ? "1px solid rgba(15, 23, 42, 0.12)"
+                : "1px solid rgba(255,255,255,0.08)",
+            boxShadow: (theme) =>
+              theme.palette.mode === "light"
+                ? "0 4px 20px rgba(15, 23, 42, 0.06)"
+                : "none",
           }}
         >
           <Typography variant="h4" fontWeight={700} mb={2}>

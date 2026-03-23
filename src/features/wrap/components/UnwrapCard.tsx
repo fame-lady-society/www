@@ -159,12 +159,18 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
           cursor: "pointer",
           p: 2,
           borderRadius: 2,
-          background: expanded 
-            ? "rgba(255, 152, 0, 0.08)" 
-            : "rgba(255, 255, 255, 0.03)",
-          border: expanded 
-            ? "1px solid rgba(255, 152, 0, 0.3)" 
-            : "1px solid rgba(255, 255, 255, 0.08)",
+          background: (theme) =>
+            expanded
+              ? "rgba(255, 152, 0, 0.08)"
+              : theme.palette.mode === "light"
+                ? "rgba(15, 23, 42, 0.03)"
+                : "rgba(255, 255, 255, 0.03)",
+          border: (theme) =>
+            expanded
+              ? "1px solid rgba(255, 152, 0, 0.3)"
+              : theme.palette.mode === "light"
+                ? "1px solid rgba(15, 23, 42, 0.12)"
+                : "1px solid rgba(255, 255, 255, 0.08)",
           transition: "all 0.2s ease",
           "&:hover": {
             background: "rgba(255, 152, 0, 0.12)",
@@ -496,8 +502,14 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               sx={{
                 p: 3,
                 borderRadius: 2,
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                background: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "rgba(15, 23, 42, 0.03)"
+                    : "rgba(255, 255, 255, 0.03)",
+                border: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "1px solid rgba(15, 23, 42, 0.12)"
+                    : "1px solid rgba(255, 255, 255, 0.08)",
                 textAlign: "center",
               }}
             >
@@ -509,9 +521,15 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                 onClick={handleRefresh}
                 startIcon={<RefreshIcon />}
                 sx={{
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(15, 23, 42, 0.28)"
+                      : "rgba(255, 255, 255, 0.2)",
                   "&:hover": {
-                    borderColor: "rgba(255, 255, 255, 0.4)",
+                    borderColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.4)"
+                        : "rgba(255, 255, 255, 0.4)",
                   },
                 }}
               >

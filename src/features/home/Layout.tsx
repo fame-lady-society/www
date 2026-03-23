@@ -95,8 +95,18 @@ const FeatureCard: FC<{
     <Card
       sx={{
         height: "100%",
-        background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: (theme) =>
+          theme.palette.mode === "light"
+            ? "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)"
+            : "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+        border: (theme) =>
+          theme.palette.mode === "light"
+            ? "1px solid rgba(15, 23, 42, 0.12)"
+            : "1px solid rgba(255,255,255,0.08)",
+        boxShadow: (theme) =>
+          theme.palette.mode === "light"
+            ? "0 4px 20px rgba(15, 23, 42, 0.06)"
+            : "none",
         backdropFilter: "blur(10px)",
         transition: "all 0.3s ease",
         "&:hover": {
@@ -180,10 +190,16 @@ const SocialCard: FC<{
         flexDirection: "column",
         alignItems: "center",
         background: "transparent",
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: (theme) =>
+          theme.palette.mode === "light"
+            ? "1px solid rgba(15, 23, 42, 0.12)"
+            : "1px solid rgba(255,255,255,0.1)",
         transition: "all 0.3s ease",
         "&:hover": {
-          backgroundColor: "rgba(255,255,255,0.05)",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light"
+              ? "rgba(15, 23, 42, 0.04)"
+              : "rgba(255,255,255,0.05)",
           borderColor: "rgba(196, 77, 255, 0.4)",
           transform: "translateY(-2px)",
         },
@@ -296,7 +312,10 @@ export const Layout: FC = () => {
                     py: 1.5,
                     fontWeight: 700,
                     fontSize: "1rem",
-                    borderColor: "rgba(255,255,255,0.3)",
+                    borderColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.3)"
+                        : "rgba(255,255,255,0.3)",
                     "&:hover": {
                       borderColor: "primary.main",
                       backgroundColor: "rgba(196, 77, 255, 0.1)",
@@ -368,9 +387,18 @@ export const Layout: FC = () => {
         component="section"
         sx={{
           py: 6,
-          background: "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: (theme) =>
+            theme.palette.mode === "light"
+              ? "linear-gradient(180deg, rgba(15, 23, 42, 0.02) 0%, transparent 100%)"
+              : "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)",
+          borderTop: (theme) =>
+            theme.palette.mode === "light"
+              ? "1px solid rgba(15, 23, 42, 0.08)"
+              : "1px solid rgba(255,255,255,0.05)",
+          borderBottom: (theme) =>
+            theme.palette.mode === "light"
+              ? "1px solid rgba(15, 23, 42, 0.08)"
+              : "1px solid rgba(255,255,255,0.05)",
         }}
       >
         <Container maxWidth="lg">
@@ -522,8 +550,14 @@ export const Layout: FC = () => {
                     p: 3,
                     mb: 4,
                     borderRadius: 2,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.03)"
+                        : "rgba(255,255,255,0.03)",
+                    border: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "1px solid rgba(15, 23, 42, 0.12)"
+                        : "1px solid rgba(255,255,255,0.1)",
                   }}
                 >
                   <Typography
@@ -682,7 +716,11 @@ export const Layout: FC = () => {
         </Grid2>
       </Container>
 
-      <Divider sx={{ borderColor: "rgba(255,255,255,0.05)" }} />
+      <Divider sx={{ borderColor: (theme) =>
+        theme.palette.mode === "light"
+          ? "rgba(15, 23, 42, 0.08)"
+          : "rgba(255,255,255,0.05)"
+      }} />
 
       {/* Community Section */}
       <Container maxWidth="lg" sx={{ py: 12 }}>
@@ -800,8 +838,18 @@ export const Layout: FC = () => {
               sx={{
                 p: { xs: 4, md: 6 },
                 textAlign: "center",
-                background: "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%)"
+                    : "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+                border: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "1px solid rgba(15, 23, 42, 0.12)"
+                    : "1px solid rgba(255,255,255,0.1)",
+                boxShadow: (theme) =>
+                  theme.palette.mode === "light"
+                    ? "0 8px 30px rgba(15, 23, 42, 0.06)"
+                    : "none",
               }}
             >
               <Typography

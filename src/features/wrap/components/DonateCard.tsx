@@ -193,8 +193,14 @@ export const DonateCard: FC<{
             mb: 3,
             p: 3,
             borderRadius: 2,
-            background: "rgba(255, 255, 255, 0.03)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: (theme) =>
+              theme.palette.mode === "light"
+                ? "rgba(15, 23, 42, 0.03)"
+                : "rgba(255, 255, 255, 0.03)",
+            border: (theme) =>
+              theme.palette.mode === "light"
+                ? "1px solid rgba(15, 23, 42, 0.12)"
+                : "1px solid rgba(255, 255, 255, 0.08)",
             textAlign: "center",
           }}
         >
@@ -276,8 +282,14 @@ export const DonateCard: FC<{
               backgroundColor: "#66bb6a !important",
             },
             "&.Mui-disabled": {
-              backgroundColor: "rgba(255,255,255,0.12) !important",
-              color: "rgba(255,255,255,0.3) !important",
+              backgroundColor: (theme) =>
+                theme.palette.mode === "light"
+                  ? "rgba(15, 23, 42, 0.08) !important"
+                  : "rgba(255,255,255,0.12) !important",
+              color: (theme) =>
+                theme.palette.mode === "light"
+                  ? "rgba(15, 23, 42, 0.35) !important"
+                  : "rgba(255,255,255,0.3) !important",
             },
           }}
         >
