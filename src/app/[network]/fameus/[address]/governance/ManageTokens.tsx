@@ -57,9 +57,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
       const filteredIndexes = tokenIds
         .map((_, index) => index)
         .filter(
-          (index) =>
-            !pendingTokenIds.includes(tokenIds[index]) &&
-            !completedTokenIds.includes(tokenIds[index]),
+          (index) => !completedTokenIds.includes(tokenIds[index]),
         );
 
       return {
@@ -71,7 +69,6 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
       };
     }, [
       tokenIds,
-      pendingTokenIds,
       completedTokenIds,
       lockStatus,
       guardianAddresses,
@@ -126,6 +123,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
       <SelectableGrid
         tokenIds={tokenIdsToDisplay}
         selectedTokenIds={toUnwrapSelectedTokenIds}
+        pendingTokenIds={pendingTokenIds}
         onTokenSelected={addToUnwrapSelectedTokenIds}
         onTokenUnselected={removeFromUnwrapSelectedTokenIds}
         lockStatuses={lockStatusToDisplay}

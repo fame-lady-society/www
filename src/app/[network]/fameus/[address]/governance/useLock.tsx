@@ -1,6 +1,5 @@
 "use client";
-import { useReducer, useCallback } from "react";
-import { BaseError } from "viem";
+import { useReducer, useCallback, useEffect } from "react";
 import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
@@ -13,11 +12,12 @@ import { type base, type sepolia } from "viem/chains";
 import { useWaitForTransactionReceipt } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useFameusUnwrap } from "./context";
+import { getContractWriteErrorMessage } from "@/lib/getContractWriteErrorMessage";
 
 // -------------------------------
 // State & Actions
 // -------------------------------
-type TransactionKind = "unwrap" | string;
+type TransactionKind = "lock" | string;
 
 interface ActiveTransaction {
   kind: TransactionKind;
@@ -145,83 +145,99 @@ export function useLock(
     useWriteGovSocietyLockMany();
   const { writeContractAsync: writeGovSocietyLockWithGuardianMany } =
     useWriteGovSocietyLockWithGuardianMany();
+  const activeTransaction = transactionState.activeTransactionHashList[0];
 
   // Transaction watchers
   const { isSuccess: isSuccess0, isError: isError0 } =
     useWaitForTransactionReceipt({
-      hash: transactionState.activeTransactionHashList[0]?.hash,
+      hash: activeTransaction?.hash,
     });
 
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  if (isSuccess0) {
+  useEffect(() => {
+    if (!isSuccess0 || !activeTransaction?.hash) {
+      return;
+    }
+
     addNotification({
       message: "Lock successful",
       type: "success",
       id: "lock-success",
       autoHideMs: 5000,
     });
-    removeFromPendingTokenIds(...toLockSelectedTokenIds);
-    addToCompletedTokenIds(...toLockSelectedTokenIds);
-  }
 
-  if (isSuccess0 || isError0) {
+    if (activeTransaction.context?.length) {
+      removeFromPendingTokenIds(...activeTransaction.context);
+      addToCompletedTokenIds(...activeTransaction.context);
+    }
+  }, [
+    activeTransaction,
+    addNotification,
+    addToCompletedTokenIds,
+    isSuccess0,
+    removeFromPendingTokenIds,
+  ]);
+
+  useEffect(() => {
+    if (!activeTransaction?.hash || (!isSuccess0 && !isError0)) {
+      return;
+    }
+
+    if (isError0 && activeTransaction.context?.length) {
+      removeFromPendingTokenIds(...activeTransaction.context);
+    }
+
     dispatch({
       type: "REMOVE_ACTIVE_TX",
-      payload: { hash: transactionState.activeTransactionHashList[0]?.hash },
+      payload: { hash: activeTransaction.hash },
     });
-  }
+  }, [activeTransaction, isError0, isSuccess0, removeFromPendingTokenIds]);
 
   // -----------------------------------------
-  // Main unwrap call
+  // Main lock call
   // -----------------------------------------
   const lock = useCallback(
     async (guardianAddress?: `0x${string}`) => {
       if (!address) return;
+
+      const selectedTokenIds = [...toLockSelectedTokenIds];
+      if (selectedTokenIds.length === 0) return;
+
       try {
         dispatch({ type: "OPEN_MODAL" });
-        dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "unwrap" } });
+        dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "lock" } });
 
-        addToPendingTokenIds(...toLockSelectedTokenIds);
-        const withdrawResponse = guardianAddress
+        const lockResponse = guardianAddress
           ? await writeGovSocietyLockWithGuardianMany({
               address: govSocietyFromNetwork(chainId),
-              args: [toLockSelectedTokenIds, guardianAddress],
+              args: [selectedTokenIds, guardianAddress],
             })
           : await writeGovSocietyLockMany({
               address: govSocietyFromNetwork(chainId),
-              args: [toLockSelectedTokenIds],
+              args: [selectedTokenIds],
             });
 
+        addToPendingTokenIds(...selectedTokenIds);
         resetUnwrapSelectedTokenIds();
 
         dispatch({
           type: "SET_ACTIVE_TX_HASH",
           payload: {
             kind: "lock",
-            hash: withdrawResponse,
-            context: toLockSelectedTokenIds,
+            hash: lockResponse,
+            context: selectedTokenIds,
           },
         });
       } catch (error) {
-        removeFromPendingTokenIds(...toLockSelectedTokenIds);
-        if (error instanceof BaseError) {
-          dispatch({ type: "CLOSE_MODAL" });
-          addNotification({
-            message: error.metaMessages?.length
-              ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-              : error.message,
-            type: "error",
-            id: "lock-error",
-            autoHideMs: 5000,
-          });
-        }
-      } finally {
-        // If no active transactions, close the modal
-        if (!transactionState.activeTransactionHashList.length) {
-          dispatch({ type: "CLOSE_MODAL" });
-        }
+        dispatch({ type: "CLOSE_MODAL" });
+        addNotification({
+          message: getContractWriteErrorMessage(error),
+          type: "error",
+          id: "lock-error",
+          autoHideMs: 5000,
+        });
       }
     },
     [
@@ -232,9 +248,7 @@ export function useLock(
       chainId,
       writeGovSocietyLockMany,
       resetUnwrapSelectedTokenIds,
-      removeFromPendingTokenIds,
       addNotification,
-      transactionState.activeTransactionHashList.length,
     ],
   );
 

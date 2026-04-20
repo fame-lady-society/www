@@ -1,6 +1,5 @@
 "use client";
-import { useReducer, useCallback } from "react";
-import { BaseError } from "viem";
+import { useReducer, useCallback, useEffect } from "react";
 import { WriteContractData } from "wagmi/query";
 import { Transaction } from "@/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
@@ -11,6 +10,7 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useFameusUnwrap } from "./context";
 import { revalidate } from "../actions";
+import { getContractWriteErrorMessage } from "@/lib/getContractWriteErrorMessage";
 
 // -------------------------------
 // State & Actions
@@ -138,59 +138,91 @@ export function useUnwrap(
   const { addNotification } = useNotifications();
 
   // Contract calls
-  const { mutateAsync: writeGovSocietyWithdrawTo } =
+  const { writeContractAsync: writeGovSocietyWithdrawTo } =
     useWriteGovSocietyWithdrawTo();
+  const activeTransaction = transactionState.activeTransactionHashList[0];
 
   // Transaction watchers
   const { isSuccess: isSuccess0, isError: isError0 } =
     useWaitForTransactionReceipt({
-      hash: transactionState.activeTransactionHashList[0]?.hash,
+      hash: activeTransaction?.hash,
     });
 
   // -----------------------------------------
   // Effects for success/failure notifications
   // -----------------------------------------
-  if (isSuccess0 && transactionState.activeTransactionHashList[0]?.hash) {
+  useEffect(() => {
+    if (!isSuccess0 || !activeTransaction?.hash) {
+      return;
+    }
+
     addNotification({
       message: "Unwrap successful",
       type: "success",
       id: "unwrap-success",
       autoHideMs: 5000,
     });
-    removeFromPendingTokenIds(...toWrapSelectedTokenIds);
-    addToCompletedTokenIds(...toWrapSelectedTokenIds);
+
+    if (activeTransaction.context?.length) {
+      removeFromPendingTokenIds(...activeTransaction.context);
+      addToCompletedTokenIds(...activeTransaction.context);
+    }
+
     if (address) {
       revalidate(chainId === sepolia.id ? "sepolia" : "base", address);
     }
+
     dispatch({
       type: "COMPLETE_TX",
       payload: {
         kind: "unwrapped tokens",
-        hash: transactionState.activeTransactionHashList[0]?.hash,
+        hash: activeTransaction.hash,
       },
     });
-  }
-  if (isSuccess0 || isError0) {
+  }, [
+    activeTransaction,
+    addNotification,
+    addToCompletedTokenIds,
+    address,
+    chainId,
+    isSuccess0,
+    removeFromPendingTokenIds,
+  ]);
+
+  useEffect(() => {
+    if (!activeTransaction?.hash || (!isSuccess0 && !isError0)) {
+      return;
+    }
+
+    if (isError0 && activeTransaction.context?.length) {
+      removeFromPendingTokenIds(...activeTransaction.context);
+    }
+
     dispatch({
       type: "REMOVE_ACTIVE_TX",
-      payload: { hash: transactionState.activeTransactionHashList[0]?.hash },
+      payload: { hash: activeTransaction.hash },
     });
-  }
+  }, [activeTransaction, isError0, isSuccess0, removeFromPendingTokenIds]);
 
   // -----------------------------------------
   // Main unwrap call
   // -----------------------------------------
   const unwrap = useCallback(async () => {
     if (!address) return;
+
+    const selectedTokenIds = [...toWrapSelectedTokenIds];
+    if (selectedTokenIds.length === 0) return;
+
     try {
       dispatch({ type: "OPEN_MODAL" });
       dispatch({ type: "ADD_ACTIVE_TX", payload: { kind: "unwrap" } });
-      addToPendingTokenIds(...toWrapSelectedTokenIds);
+
       const withdrawResponse = await writeGovSocietyWithdrawTo({
         address: govSocietyFromNetwork(chainId),
-        args: [address, toWrapSelectedTokenIds],
+        args: [address, selectedTokenIds],
       });
 
+      addToPendingTokenIds(...selectedTokenIds);
       resetUnwrapSelectedTokenIds();
 
       dispatch({
@@ -198,27 +230,17 @@ export function useUnwrap(
         payload: {
           kind: "unwrap",
           hash: withdrawResponse,
-          context: toWrapSelectedTokenIds,
+          context: selectedTokenIds,
         },
       });
     } catch (error) {
-      removeFromPendingTokenIds(...toWrapSelectedTokenIds);
-      if (error instanceof BaseError) {
-        dispatch({ type: "CLOSE_MODAL" });
-        addNotification({
-          message: error.metaMessages?.length
-            ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-            : error.message,
-          type: "error",
-          id: "unwrap-error",
-          autoHideMs: 5000,
-        });
-      }
-    } finally {
-      // If no active transactions, close the modal
-      if (!transactionState.activeTransactionHashList.length) {
-        dispatch({ type: "CLOSE_MODAL" });
-      }
+      dispatch({ type: "CLOSE_MODAL" });
+      addNotification({
+        message: getContractWriteErrorMessage(error),
+        type: "error",
+        id: "unwrap-error",
+        autoHideMs: 5000,
+      });
     }
   }, [
     address,
@@ -227,9 +249,7 @@ export function useUnwrap(
     writeGovSocietyWithdrawTo,
     chainId,
     resetUnwrapSelectedTokenIds,
-    removeFromPendingTokenIds,
     addNotification,
-    transactionState.activeTransactionHashList.length,
   ]);
 
   // -----------------------------------------

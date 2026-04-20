@@ -2,6 +2,7 @@ import { FC, useCallback, useState } from "react";
 import cn from "classnames";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import UnlockIcon from "@mui/icons-material/LockOpenOutlined";
+import CircularProgress from "@mui/material/CircularProgress";
 import NextImage from "next/image";
 
 import { FlowerSelect } from "@/components/FlowerSelect";
@@ -40,6 +41,7 @@ export const SelectableToken = ({
   onTokenSelected,
   onTokenUnselected,
   isSelected,
+  isPending,
 }: {
   tokenId: bigint;
   isLocked: boolean;
@@ -47,16 +49,21 @@ export const SelectableToken = ({
   onTokenSelected: (tokenId: bigint) => void;
   onTokenUnselected: (tokenId: bigint) => void;
   isSelected: boolean;
+  isPending: boolean;
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [hasHovered, setHasHovered] = useState(false);
   const handleClick = useCallback(() => {
+    if (isPending) {
+      return;
+    }
+
     if (isSelected) {
       onTokenUnselected(tokenId);
     } else {
       onTokenSelected(tokenId);
     }
-  }, [isSelected, onTokenSelected, onTokenUnselected, tokenId]);
+  }, [isPending, isSelected, onTokenSelected, onTokenUnselected, tokenId]);
 
   const handleHoverIn = useCallback(() => {
     setHasHovered(true);
@@ -105,7 +112,12 @@ export const SelectableToken = ({
             : (guardianAddress === zeroAddress || guardianAddress === null) &&
                 isLocked
               ? "This token is locked by you"
-              : `This token is locked by ${guardianAddress}`}
+            : `This token is locked by ${guardianAddress}`}
+        </div>
+      )}
+      {isPending && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <CircularProgress />
         </div>
       )}
     </div>

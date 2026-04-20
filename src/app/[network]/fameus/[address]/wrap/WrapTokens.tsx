@@ -83,16 +83,6 @@ export const WrapTokens: FC<WrapTokensProps> = ({ tokenIds, chainId }) => {
               </button>
             )}
 
-          {hasCreatorRole && (
-            <button
-              className="bg-blue-400 text-white px-4 py-2 rounded-md"
-              disabled={toWrapSelectedTokenIds.length !== 1}
-              onClick={() => {}}
-            >
-              Metadata Swap
-            </button>
-          )}
-
           {toWrapSelectedTokenIds.length > 0 && (
             <button
               className="bg-blue-400 text-white px-4 py-2 rounded-md"

@@ -5,6 +5,7 @@ export const SelectableGrid = ({
   lockStatuses,
   guardianAddresses,
   selectedTokenIds,
+  pendingTokenIds,
   onTokenSelected,
   onTokenUnselected,
 }: {
@@ -12,6 +13,7 @@ export const SelectableGrid = ({
   lockStatuses: boolean[];
   guardianAddresses: (string | null)[];
   selectedTokenIds: bigint[];
+  pendingTokenIds: bigint[];
   onTokenSelected: (tokenId: bigint) => void;
   onTokenUnselected: (tokenId: bigint) => void;
 }) => {
@@ -24,6 +26,7 @@ export const SelectableGrid = ({
           onTokenSelected={onTokenSelected}
           onTokenUnselected={onTokenUnselected}
           isSelected={selectedTokenIds.includes(tokenId)}
+          isPending={pendingTokenIds.includes(tokenId)}
           isLocked={lockStatuses[index]}
           guardianAddress={guardianAddresses[index]}
         />

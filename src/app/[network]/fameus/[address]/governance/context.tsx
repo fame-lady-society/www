@@ -53,9 +53,17 @@ export const FameusProvider = ({
   const [pendingTokenIds, setPendingTokenIds] = useState<bigint[]>([]);
   const [completedTokenIds, setCompletedTokenIds] = useState<bigint[]>([]);
 
+  const mergeUniqueTokenIds = useCallback(
+    (prev: bigint[], tokenIds: bigint[]) => [
+      ...tokenIds,
+      ...prev.filter((id) => !tokenIds.includes(id)),
+    ],
+    [],
+  );
+
   const addToUnwrapSelectedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setToUnwrapSelectedTokenIds((prev) => [...prev, ...tokenIds]);
-  }, []);
+    setToUnwrapSelectedTokenIds((prev) => mergeUniqueTokenIds(prev, tokenIds));
+  }, [mergeUniqueTokenIds]);
 
   const removeFromUnwrapSelectedTokenIds = useCallback(
     (...tokenIds: bigint[]) => {
@@ -71,8 +79,8 @@ export const FameusProvider = ({
   }, []);
 
   const addToPendingTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setPendingTokenIds((prev) => [...prev, ...tokenIds]);
-  }, []);
+    setPendingTokenIds((prev) => mergeUniqueTokenIds(prev, tokenIds));
+  }, [mergeUniqueTokenIds]);
 
   const removeFromPendingTokenIds = useCallback((...tokenIds: bigint[]) => {
     setPendingTokenIds((prev) => prev.filter((id) => !tokenIds.includes(id)));
@@ -83,8 +91,8 @@ export const FameusProvider = ({
   }, []);
 
   const addToCompletedTokenIds = useCallback((...tokenIds: bigint[]) => {
-    setCompletedTokenIds((prev) => [...prev, ...tokenIds]);
-  }, []);
+    setCompletedTokenIds((prev) => mergeUniqueTokenIds(prev, tokenIds));
+  }, [mergeUniqueTokenIds]);
 
   const removeFromCompletedTokenIds = useCallback((...tokenIds: bigint[]) => {
     setCompletedTokenIds((prev) => prev.filter((id) => !tokenIds.includes(id)));

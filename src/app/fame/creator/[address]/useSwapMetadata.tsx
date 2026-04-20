@@ -12,12 +12,9 @@ import {
   useWriteCreatorArtistMagicUpdateMetadata,
 } from "@/wagmi";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
-import { sepolia, type base } from "viem/chains";
+import { type base } from "viem/chains";
 import { useAccount } from "@/hooks/useAccount";
 import { useWaitForTransactionReceipt } from "wagmi";
-import { useFameusWrap } from "./context";
-import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
 
 // -------------------------------
 // State & Actions
@@ -258,9 +255,9 @@ export function useSwapMetadata(chainId: typeof base.id) {
         addNotification({
           message:
             error instanceof BaseError
-              ? (error.metaMessages?.length
-                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-                  : error.message)
+              ? error.metaMessages?.length
+                ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                : error.message
               : error instanceof Error
                 ? error.message
                 : "An unknown error occurred",
@@ -304,9 +301,9 @@ export function useSwapMetadata(chainId: typeof base.id) {
         addNotification({
           message:
             error instanceof BaseError
-              ? (error.metaMessages?.length
-                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-                  : error.message)
+              ? error.metaMessages?.length
+                ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                : error.message
               : error instanceof Error
                 ? error.message
                 : "An unknown error occurred",
@@ -350,9 +347,9 @@ export function useSwapMetadata(chainId: typeof base.id) {
         addNotification({
           message:
             error instanceof BaseError
-              ? (error.metaMessages?.length
-                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-                  : error.message)
+              ? error.metaMessages?.length
+                ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                : error.message
               : error instanceof Error
                 ? error.message
                 : "An unknown error occurred",
@@ -407,9 +404,9 @@ export function useSwapMetadata(chainId: typeof base.id) {
         addNotification({
           message:
             error instanceof BaseError
-              ? (error.metaMessages?.length
-                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-                  : error.message)
+              ? error.metaMessages?.length
+                ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                : error.message
               : error instanceof Error
                 ? error.message
                 : "An unknown error occurred",
@@ -453,9 +450,9 @@ export function useSwapMetadata(chainId: typeof base.id) {
         addNotification({
           message:
             error instanceof BaseError
-              ? (error.metaMessages?.length
-                  ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
-                  : error.message)
+              ? error.metaMessages?.length
+                ? error.metaMessages.map((m) => <p key={m}>{m}</p>)
+                : error.message
               : error instanceof Error
                 ? error.message
                 : "An unknown error occurred",
