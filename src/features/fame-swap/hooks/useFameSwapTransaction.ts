@@ -1,9 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Hash } from "viem";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  decodeFunctionResult,
+  encodeFunctionData,
+  type Address,
+  type Hash,
+} from "viem";
+import { simulateCalls } from "viem/actions";
 import { base } from "viem/chains";
 import {
+  usePublicClient,
   useSimulateContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -12,6 +19,8 @@ import { hashFameRoute } from "../router/encodeRoute";
 import type { FameSwapQuote } from "../solver/types";
 import { applySlippageToAmount } from "../solver/slippage";
 import { fameRouterAbi } from "../router/abi";
+import { erc20ApprovalAbi } from "../router/erc20Abi";
+import { fameRouteToCall } from "../router/callRoute";
 import {
   fameSwapTransactionRequests,
   type FameSwapTransactionRequests,
@@ -21,8 +30,11 @@ export type FameSwapSubmissionKind = "approval" | "swap";
 
 export interface FameSwapTransactionState {
   requests: FameSwapTransactionRequests;
+  submissionKind: FameSwapSubmissionKind | null;
   approvalConfirmed: boolean;
+  approvalPending: boolean;
   swapConfirmed: boolean;
+  swapPending: boolean;
   reverted: boolean;
   submitting: boolean;
   canApprove: boolean;
@@ -31,10 +43,13 @@ export interface FameSwapTransactionState {
   simulatedOutput: bigint | null;
   protectedMinimum: bigint | null;
   protectedRouteHash: Hash | null;
+  protectedSimulationPending: boolean;
+  protectedSimulationReady: boolean;
   hash: Hash | null;
   error: Error | null;
   submitApproval: () => Promise<Hash | null>;
   submitSwap: () => Promise<Hash | null>;
+  reset: () => void;
 }
 
 function quoteExecutionKey(quote: FameSwapQuote | null): string {
@@ -43,16 +58,22 @@ function quoteExecutionKey(quote: FameSwapQuote | null): string {
   return [
     quote.routeArtifactId,
     quote.materializedRouteHash,
+    quote.routerAddress,
+    quote.route.recipient,
+    quote.route.deadline.toString(),
     quote.approval?.token.address ?? "native",
+    quote.approval?.spender ?? quote.routerAddress,
     quote.approval?.amount.toString() ?? "0",
   ].join(":");
 }
 
 export function useFameSwapTransaction(
   quote: FameSwapQuote | null,
+  account?: Address,
 ): FameSwapTransactionState {
   const requests = useMemo(() => fameSwapTransactionRequests(quote), [quote]);
   const executionKey = quoteExecutionKey(quote);
+  const publicClient = usePublicClient({ chainId: base.id });
   const { writeContractAsync } = useWriteContract();
   const [hash, setHash] = useState<Hash | null>(null);
   const [submissionKind, setSubmissionKind] =
@@ -61,6 +82,12 @@ export function useFameSwapTransaction(
   const [swapConfirmed, setSwapConfirmed] = useState(false);
   const [localError, setLocalError] = useState<Error | null>(null);
   const [writing, setWriting] = useState(false);
+  const [approvalFlowActive, setApprovalFlowActive] = useState(false);
+  const [approvalSimulationOutput, setApprovalSimulationOutput] =
+    useState<bigint | null>(null);
+  const [approvalSimulationPending, setApprovalSimulationPending] =
+    useState(false);
+  const autoSwapSubmitted = useRef(false);
   const [nowSeconds, setNowSeconds] = useState(() =>
     Math.floor(Date.now() / 1000),
   );
@@ -85,10 +112,11 @@ export function useFameSwapTransaction(
     },
   });
 
-  const simulatedOutput =
+  const directSimulatedOutput =
     typeof swapSimulation.data?.result === "bigint"
       ? swapSimulation.data.result
       : null;
+  const simulatedOutput = directSimulatedOutput ?? approvalSimulationOutput;
   const protectedMinimum =
     quote?.status === "ready" && simulatedOutput !== null
       ? applySlippageToAmount(simulatedOutput, quote.slippageBps)
@@ -150,7 +178,24 @@ export function useFameSwapTransaction(
     setSwapConfirmed(false);
     setLocalError(null);
     setWriting(false);
+    setApprovalFlowActive(false);
+    setApprovalSimulationOutput(null);
+    setApprovalSimulationPending(false);
+    autoSwapSubmitted.current = false;
   }, [executionKey]);
+
+  const reset = useCallback(() => {
+    setHash(null);
+    setSubmissionKind(null);
+    setApprovalConfirmed(false);
+    setSwapConfirmed(false);
+    setLocalError(null);
+    setWriting(false);
+    setApprovalFlowActive(false);
+    setApprovalSimulationOutput(null);
+    setApprovalSimulationPending(false);
+    autoSwapSubmitted.current = false;
+  }, []);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -165,11 +210,101 @@ export function useFameSwapTransaction(
   const receiptStatus = receipt.data?.status;
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function simulateApprovalThenSwap() {
+      if (
+        !publicClient ||
+        !account ||
+        quote?.status !== "ready" ||
+        !requests.approval ||
+        !requests.swap ||
+        approvalConfirmed ||
+        swapConfirmed ||
+        quoteExpired
+      ) {
+        setApprovalSimulationOutput(null);
+        setApprovalSimulationPending(false);
+        return;
+      }
+
+      setApprovalSimulationPending(true);
+
+      try {
+        const approval = requests.approval.contract;
+        const swap = requests.swap.contract;
+        const result = await simulateCalls(publicClient, {
+          account,
+          calls: [
+            {
+              to: approval.address,
+              data: encodeFunctionData({
+                abi: erc20ApprovalAbi,
+                functionName: "approve",
+                args: approval.args,
+              }),
+            },
+            {
+              to: swap.address,
+              data: encodeFunctionData({
+                abi: fameRouterAbi,
+                functionName: "executeRoute",
+                args: [fameRouteToCall(quote.route)],
+              }),
+              value: swap.value,
+            },
+          ],
+        });
+
+        if (cancelled) return;
+
+        const swapResult = result.results[1];
+        if (!swapResult || swapResult.status !== "success") {
+          throw new Error("Bundled quote simulation failed.");
+        }
+
+        const output = decodeFunctionResult({
+          abi: fameRouterAbi,
+          functionName: "executeRoute",
+          data: swapResult.data,
+        });
+
+        setApprovalSimulationOutput(
+          typeof output === "bigint" ? output : null,
+        );
+      } catch {
+        if (cancelled) return;
+        // Some RPCs do not expose eth_simulateV1. Keep this non-blocking; the
+        // post-approval protected simulation will still gate the actual swap.
+        setApprovalSimulationOutput(null);
+      } finally {
+        if (!cancelled) setApprovalSimulationPending(false);
+      }
+    }
+
+    void simulateApprovalThenSwap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    account,
+    approvalConfirmed,
+    publicClient,
+    quote,
+    quoteExpired,
+    requests.approval,
+    requests.swap,
+    swapConfirmed,
+  ]);
+
+  useEffect(() => {
     if (!receipt.isSuccess || !receiptStatus) return;
 
     if (receiptStatus === "reverted") {
       setLocalError(new Error("Transaction reverted on Base."));
       setSubmissionKind(null);
+      setApprovalFlowActive(false);
       return;
     }
 
@@ -181,6 +316,7 @@ export function useFameSwapTransaction(
 
     if (submissionKind === "swap") {
       setSwapConfirmed(true);
+      setApprovalFlowActive(false);
     }
   }, [receipt.isSuccess, receiptStatus, submissionKind]);
 
@@ -200,6 +336,8 @@ export function useFameSwapTransaction(
     setWriting(true);
     setLocalError(null);
     setSubmissionKind("approval");
+    setApprovalFlowActive(true);
+    autoSwapSubmitted.current = false;
 
     try {
       const txHash = await writeContractAsync(requests.approval.contract);
@@ -207,6 +345,7 @@ export function useFameSwapTransaction(
       return txHash;
     } catch (error) {
       setSubmissionKind(null);
+      setApprovalFlowActive(false);
       setLocalError(
         error instanceof Error ? error : new Error("Approval transaction failed."),
       );
@@ -231,6 +370,7 @@ export function useFameSwapTransaction(
       return txHash;
     } catch (error) {
       setSubmissionKind(null);
+      setApprovalFlowActive(false);
       setLocalError(
         error instanceof Error ? error : new Error("Swap transaction failed."),
       );
@@ -246,10 +386,37 @@ export function useFameSwapTransaction(
     writeContractAsync,
   ]);
 
+  useEffect(() => {
+    if (!approvalFlowActive || autoSwapSubmitted.current) return;
+    if (!approvalConfirmed || !protectedSimulation.data?.request) return;
+    if (quoteExpired || swapConfirmed || writing || receipt.isLoading) return;
+    if (localError !== null) return;
+
+    autoSwapSubmitted.current = true;
+    void submitSwap();
+  }, [
+    approvalConfirmed,
+    approvalFlowActive,
+    localError,
+    protectedSimulation.data?.request,
+    quoteExpired,
+    receipt.isLoading,
+    submitSwap,
+    swapConfirmed,
+    writing,
+  ]);
+
   const receiptPending = Boolean(hash) && receipt.isLoading;
   const reverted = receipt.isError || localError !== null;
   const submitting = writing || receiptPending;
-  const canApprove = requests.approval !== null && !submitting && !quoteExpired;
+  const approvalPending =
+    submissionKind === "approval" && (writing || receiptPending);
+  const swapPending = submissionKind === "swap" && (writing || receiptPending);
+  const canApprove =
+    requests.approval !== null &&
+    !approvalConfirmed &&
+    !submitting &&
+    !quoteExpired;
   const canSwap =
     protectedRequests.swap !== null &&
     !submitting &&
@@ -259,8 +426,11 @@ export function useFameSwapTransaction(
 
   return {
     requests,
+    submissionKind,
     approvalConfirmed,
+    approvalPending,
     swapConfirmed,
+    swapPending,
     reverted,
     submitting,
     canApprove,
@@ -269,6 +439,11 @@ export function useFameSwapTransaction(
     simulatedOutput,
     protectedMinimum,
     protectedRouteHash,
+    protectedSimulationPending:
+      (protectedSimulationEnabled && protectedSimulation.isLoading) ||
+      approvalSimulationPending,
+    protectedSimulationReady:
+      protectedSimulation.isSuccess || approvalSimulationOutput !== null,
     hash,
     error:
       localError ??
@@ -280,5 +455,6 @@ export function useFameSwapTransaction(
         : null),
     submitApproval,
     submitSwap,
+    reset,
   };
 }

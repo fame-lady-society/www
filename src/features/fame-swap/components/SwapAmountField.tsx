@@ -7,6 +7,9 @@ import type { FameSwapToken } from "../tokens";
 export interface FameSwapAmountFieldProps {
   value: string;
   token: FameSwapToken;
+  label?: string;
+  helperText?: string | null;
+  error?: boolean;
   disabled?: boolean;
   onChange: (value: string) => void;
 }
@@ -14,14 +17,19 @@ export interface FameSwapAmountFieldProps {
 export const FameSwapAmountField: FC<FameSwapAmountFieldProps> = ({
   value,
   token,
+  label = "Amount",
+  helperText,
+  error,
   disabled,
   onChange,
 }) => (
   <TextField
     fullWidth
     size="small"
-    label="Amount"
+    label={label}
     value={value}
+    error={error}
+    helperText={helperText}
     disabled={disabled}
     onChange={(event) => onChange(event.target.value)}
     inputProps={{

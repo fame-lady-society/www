@@ -1,4 +1,8 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import {
+  spawn,
+  type ChildProcess,
+  type ChildProcessByStdio,
+} from "node:child_process";
 import {
   existsSync,
   readFileSync,
@@ -7,6 +11,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import type { Readable } from "node:stream";
+
+type PipedChildProcess = ChildProcessByStdio<null, Readable, Readable>;
 
 const ENV_LOCAL_PATH = ".env.local";
 const NEXT_BUILD_DIR = ".next";
@@ -25,7 +31,7 @@ const fallbackRpcUrlEnv = [
 let forkRpcUrl: string | null = null;
 let routerAddress: string | null = null;
 let slippageBps = process.env.NEXT_PUBLIC_FAME_SWAP_SLIPPAGE_BPS ?? "100";
-let dev: ChildProcessWithoutNullStreams | null = null;
+let dev: PipedChildProcess | null = null;
 let shuttingDown = false;
 const originalEnvLocal = existsSync(ENV_LOCAL_PATH)
   ? readFileSync(ENV_LOCAL_PATH, "utf8")
@@ -54,14 +60,14 @@ function startChild(
   command: string,
   args: string[],
   env: NodeJS.ProcessEnv,
-): ChildProcessWithoutNullStreams {
+): PipedChildProcess {
   return spawn(command, args, {
     env,
     stdio: ["inherit", "pipe", "pipe"],
   });
 }
 
-function stopChild(child: ChildProcessWithoutNullStreams | null): void {
+function stopChild(child: ChildProcess | null): void {
   if (!child || child.exitCode !== null || child.signalCode !== null) return;
   child.kill("SIGTERM");
 }
@@ -81,10 +87,7 @@ function restoreEnvLocal(): void {
   writeFileSync(ENV_LOCAL_PATH, originalEnvLocal);
 }
 
-function shutdown(
-  fork: ChildProcessWithoutNullStreams,
-  exitCode = 0,
-): void {
+function shutdown(fork: ChildProcess, exitCode = 0): void {
   if (shuttingDown) return;
   shuttingDown = true;
   stopChild(dev);
@@ -140,7 +143,7 @@ function cleanNextCache(): void {
   rmSync(NEXT_BUILD_DIR, { recursive: true, force: true });
 }
 
-function maybeStartDev(fork: ChildProcessWithoutNullStreams): void {
+function maybeStartDev(fork: PipedChildProcess): void {
   if (dev || !forkRpcUrl || !routerAddress) return;
   const env = localDevEnv();
 
@@ -160,7 +163,7 @@ function maybeStartDev(fork: ChildProcessWithoutNullStreams): void {
   });
 }
 
-function handleLine(line: string, fork: ChildProcessWithoutNullStreams): void {
+function handleLine(line: string, fork: PipedChildProcess): void {
   if (line.startsWith("NEXT_PUBLIC_BASE_RPC_URL_1=")) {
     forkRpcUrl = line.slice("NEXT_PUBLIC_BASE_RPC_URL_1=".length).trim();
     maybeStartDev(fork);

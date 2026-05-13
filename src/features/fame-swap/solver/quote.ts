@@ -14,6 +14,10 @@ import {
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
   normalizeSlippageBps,
 } from "./slippage";
+import {
+  deadlineMinutesToSeconds,
+  DEFAULT_FAME_SWAP_DEADLINE_MINUTES,
+} from "./deadline";
 import type {
   FameSwapQuote,
   FameSwapQuoteRequest,
@@ -21,10 +25,11 @@ import type {
   FameSwapRouteDisplayLeg,
 } from "./types";
 
-const ROUTE_DEADLINE_SECONDS = 20n * 60n;
-
-function defaultDeadline(now: Date): bigint {
-  return BigInt(Math.floor(now.getTime() / 1000)) + ROUTE_DEADLINE_SECONDS;
+function defaultDeadline(now: Date, seconds?: bigint): bigint {
+  return (
+    BigInt(Math.floor(now.getTime() / 1000)) +
+    (seconds ?? deadlineMinutesToSeconds(DEFAULT_FAME_SWAP_DEADLINE_MINUTES))
+  );
 }
 
 function notLiveReady(
@@ -150,7 +155,7 @@ export function quoteFameSwap(request: FameSwapQuoteRequest): FameSwapQuote {
     });
   }
 
-  const deadline = defaultDeadline(request.now ?? new Date());
+  const deadline = defaultDeadline(request.now ?? new Date(), request.deadlineSeconds);
   const slippageBps = normalizeSlippageBps(request.config.defaultSlippageBps);
   const materialized = materializeFameRoute(
     artifact.route,

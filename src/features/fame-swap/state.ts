@@ -62,8 +62,8 @@ export function fameSwapWidgetState(
       kind: "confirmed",
       title: "Swap confirmed",
       message: "Your FAME router transaction confirmed on Base.",
-      ctaLabel: "Swap confirmed",
-      ctaDisabled: true,
+      ctaLabel: "Start another swap",
+      ctaDisabled: false,
       recoveryAction: "View the transaction or start another swap.",
       tokenSelectDisabled: true,
     };

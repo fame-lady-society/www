@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import {
   existsSync,
   readFileSync,
@@ -52,7 +52,7 @@ const originalEnvLocal = existsSync(ENV_LOCAL_PATH)
   ? readFileSync(ENV_LOCAL_PATH, "utf8")
   : null;
 
-function stopChild(child: ChildProcessWithoutNullStreams): void {
+function stopChild(child: ChildProcess): void {
   if (child.exitCode !== null || child.signalCode !== null) return;
   child.kill("SIGTERM");
 }
@@ -72,7 +72,7 @@ function restoreEnvLocal(): void {
   writeFileSync(ENV_LOCAL_PATH, originalEnvLocal);
 }
 
-function shutdown(child: ChildProcessWithoutNullStreams, exitCode = 0): void {
+function shutdown(child: ChildProcess, exitCode = 0): void {
   if (shuttingDown) return;
   shuttingDown = true;
   stopChild(child);

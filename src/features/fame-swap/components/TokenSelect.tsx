@@ -16,6 +16,7 @@ export interface FameSwapTokenSelectProps {
   id: string;
   label: string;
   value: FameSwapToken;
+  tokens?: readonly FameSwapToken[];
   disabled?: boolean;
   onChange: (token: FameSwapToken) => void;
 }
@@ -24,6 +25,7 @@ export const FameSwapTokenSelect: FC<FameSwapTokenSelectProps> = ({
   id,
   label,
   value,
+  tokens = FAME_SWAP_TOKENS,
   disabled,
   onChange,
 }) => {
@@ -45,7 +47,7 @@ export const FameSwapTokenSelect: FC<FameSwapTokenSelectProps> = ({
         inputProps={{ "aria-label": label }}
         sx={{ minHeight: 44 }}
       >
-        {FAME_SWAP_TOKENS.map((token) => (
+        {tokens.map((token) => (
           <MenuItem key={token.address} value={token.address}>
             {token.symbol}
           </MenuItem>

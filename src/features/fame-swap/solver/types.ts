@@ -54,6 +54,7 @@ export interface FameSwapQuoteRequest {
   config: FameSwapConfig;
   readiness?: FameSwapReadiness;
   now?: Date;
+  deadlineSeconds?: bigint;
 }
 
 export interface FameSwapApprovalRequirement {

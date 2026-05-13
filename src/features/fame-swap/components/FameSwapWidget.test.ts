@@ -31,7 +31,7 @@ describe("FameSwapWidget quote summary", () => {
       assert.equal(quote.minAmountOutAfterFee, 1n);
       assert.equal(
         quoteSummary(quote),
-        "Minimum after fee: pending wallet simulation.",
+        "Minimum after fee: waiting for wallet checks.",
       );
     }
   });

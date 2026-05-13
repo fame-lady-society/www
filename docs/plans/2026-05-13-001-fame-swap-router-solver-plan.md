@@ -11,6 +11,28 @@ topic: fame-swap-router-solver-www
 
 Build the first `www` FAME swap beta at `/fame/swap`: a reusable widget and typed solver boundary that consumes the `FameRouter` artifact set without pretending fixed fork fixtures are live arbitrary quotes. The first implementation ships a fork-first, fail-closed exact-fixture mode. It can show supported FAME <-> USDC, WETH, and native ETH route evidence, encode router payloads, and prepare transaction intent only when the user amount matches a pinned executable route and the route has been materialized for the connected wallet.
 
+## 2026-05-13 Status Review
+
+Recent commit `6c07283 feat(fame-swap): enable live router swaps` materially completed the first backend/router-solver slice and exceeded the original exact-fixture constraint by adding arbitrary positive input amounts, a quote API, live router policy reads, wallet-side simulation, slippage-backed protected minimums, and a local fork harness.
+
+What can be checked off:
+
+- Unit 1 is complete for copied artifacts, manifest metadata, route typing, ABI encoding, route hash parity, and gap-matrix evidence. Follow-up todo `003` remains for generated typed artifact modules or stronger schema parsing.
+- Unit 2 is complete, with the exact-fixture-only behavior superseded by arbitrary-amount materialization from pinned route templates plus live readiness and slippage policy.
+- Unit 4 is complete for exact ERC-20 approval request construction, native ETH value handling, router transaction construction, protected-route simulation, and receipt tracking. The smoother approve-to-submit user flow is now frontend UX work, not a missing transaction boundary.
+- Todo `001` is complete: live slippage-backed quote protection is implemented and the focused tests pass.
+
+What is only partially complete:
+
+- Unit 3 exists as a functional beta widget and state machine, but the current UI is still a technical prototype. The remaining work is a dedicated widget UX pass: FAME-first buy/sell modes, top-level output estimates, price context, route visualization, advanced controls, balance presets, clearer transaction feedback, and theme-aware CTA styling.
+- Unit 5 has a fork harness, local router deployment, latest-state smoke validation, operator docs, and local-dev scripts. Pinned manifest-block validation still needs an archive-capable RPC path, tracked by todo `002`.
+
+Open durable todos after this review:
+
+- `002`: validate pinned archive RPC path for default fork smoke.
+- `003`: generate typed FAME swap artifacts or add an equivalent schema parser.
+- New UI/UX hardening work is tracked in `docs/ideation/2026-05-13-fame-swap-widget-ui-ux-hardening-ideation.md`.
+
 ## Source Trace
 
 - Origin requirements: `docs/brainstorms/2026-05-12-fame-swap-router-solver-requirements.md`
@@ -39,7 +61,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ### Unit 1: Pinned Artifact Contract And Route Encoding
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Bring the contract artifact boundary into `www` with strongly typed schemas and route ABI parity checks.
 
@@ -69,7 +91,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ### Unit 2: Exact-Fixture Solver And Readiness Model
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Add a typed solver/quote service that turns pinned route artifacts into safe quote results and fail-closed readiness states.
 
@@ -109,7 +131,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ### Unit 3: Widget State Machine And `/fame/swap` Page
 
-**Status:** pending
+**Status:** partial
 
 **Goal:** Build a reusable `FameSwapWidget` and App Router page with explicit state copy, compact/full modes, route diagnostics, and accessible mobile-first controls.
 
@@ -153,7 +175,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ### Unit 4: Wallet Transaction Boundary
 
-**Status:** pending
+**Status:** completed
 
 **Goal:** Add a narrowly scoped transaction hook that can approve exact ERC-20 allowance and submit `executeRoute` only when the quote and readiness state allow it.
 
@@ -182,7 +204,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ### Unit 5: Minimal Fork Execution Harness And Operator Notes
 
-**Status:** pending
+**Status:** partial
 
 **Goal:** Provide a safe local fork execution gate that proves at least one pinned exact-fixture route can be materialized and simulated or executed against a Base fork without leaking secrets.
 
@@ -224,7 +246,8 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 
 ## Deferred Work To Track As Durable TODOs If Not Completed
 
-- Live quote or fork-simulation path for arbitrary user-entered amounts.
-- Full Playwright E2E against `/fame/swap` with a local router deployment.
+- Pinned archive RPC path for deterministic manifest-block fork smoke.
+- Generated typed artifact modules or runtime schema parsing for copied route JSON.
+- Full browser E2E against `/fame/swap` with a local router deployment and wallet flow.
+- Widget UI/UX hardening before promoting the beta into existing FAME page entry points.
 - Automated artifact sync command from `../fame-contracts`.
-- Promotion of the widget into existing FAME page entry points after live readiness gates pass.

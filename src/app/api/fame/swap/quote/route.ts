@@ -20,6 +20,7 @@ import {
   type RouterPolicySnapshot,
 } from "@/features/fame-swap/solver/readiness";
 import { normalizeSlippageBps } from "@/features/fame-swap/solver/slippage";
+import { deadlineMinutesToSeconds } from "@/features/fame-swap/solver/deadline";
 import { tokenForAddress } from "@/features/fame-swap/tokens";
 
 export const runtime = "nodejs";
@@ -32,6 +33,7 @@ interface QuoteBody {
   recipient?: string;
   routerAddress?: string;
   slippageBps?: number;
+  deadlineMinutes?: number;
 }
 
 function json(data: unknown, init?: ResponseInit): Response {
@@ -175,6 +177,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     recipient,
     config,
     readiness,
+    deadlineSeconds:
+      typeof body.deadlineMinutes === "number"
+        ? deadlineMinutesToSeconds(body.deadlineMinutes)
+        : undefined,
   });
   const requests = fameSwapTransactionRequests(quote);
 

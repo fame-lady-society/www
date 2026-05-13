@@ -24,7 +24,7 @@ export function FameSwapPage() {
           </Typography>
         }
       >
-        <div className="flex min-h-[calc(100vh-64px)] items-start px-0 py-2 sm:px-2 sm:py-5">
+        <div className="flex min-h-[calc(100vh-64px)] items-start px-0 pb-2 pt-12 sm:px-2 sm:pb-5 sm:pt-10">
           <FameSwapWidget mode="full" />
         </div>
       </Main>
