@@ -15,7 +15,7 @@ export function FameSwapPage() {
         menu={
           <MenuList dense disablePadding>
             <LinksMenuItems />
-            <SiteMenu isFame />
+            <SiteMenu isFameSwap />
           </MenuList>
         }
         title={
