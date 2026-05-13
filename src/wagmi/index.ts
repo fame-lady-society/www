@@ -4356,6 +4356,681 @@ export const fameMirrorAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameRouter
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const fameRouterAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'initialFeeRecipient', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'payable',
+  },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'DEFAULT_FEE_RECIPIENT',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+    ],
+    name: 'executeRoute',
+    outputs: [
+      { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'feePpm',
+    outputs: [{ name: '', internalType: 'uint32', type: 'uint32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'feeRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+    ],
+    name: 'hashRoute',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'asset', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rescue',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newFeePpm', internalType: 'uint32', type: 'uint32' }],
+    name: 'setFeePpm',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newFeeRecipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'setFeeRecipient',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'hookDataKey', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'enabled', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setV4HookDataHashEnabled',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+      { name: 'enabled', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setVenueFamilyEnabled',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+      { name: 'target', internalType: 'address', type: 'address' },
+      { name: 'enabled', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setVenueTargetEnabled',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'v4HookDataHashEnabled',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: '',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+    ],
+    name: 'venueFamilyEnabled',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: '',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+      { name: '', internalType: 'address', type: 'address' },
+    ],
+    name: 'venueTargetEnabled',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'feePpm',
+        internalType: 'uint32',
+        type: 'uint32',
+        indexed: false,
+      },
+    ],
+    name: 'FeePpmUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'feeRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'FeeRecipientUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'asset',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'Rescue',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'payer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenOut',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'routeHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'schemaVersion',
+        internalType: 'uint16',
+        type: 'uint16',
+        indexed: false,
+      },
+      {
+        name: 'tokenIn',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'amountIn',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'grossAmountOut',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'feeAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'netAmountOut',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'RouteExecuted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'hookDataKey',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      { name: 'enabled', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'V4HookDataHashEnabled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+        indexed: true,
+      },
+      { name: 'enabled', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'VenueFamilyEnabled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+        indexed: true,
+      },
+      {
+        name: 'target',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'enabled', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'VenueTargetEnabled',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'version', internalType: 'uint16', type: 'uint16' }],
+    name: 'BadRouteVersion',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'bps', internalType: 'uint256', type: 'uint256' }],
+    name: 'BalanceBpsTooHigh',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'account', internalType: 'address', type: 'address' },
+    ],
+    name: 'BalanceReadFailed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'timestamp', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'DeadlineExpired',
+  },
+  { type: 'error', inputs: [], name: 'EmptyRoute' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'requested', internalType: 'uint32', type: 'uint32' },
+      { name: 'maximum', internalType: 'uint32', type: 'uint32' },
+    ],
+    name: 'FeeTooHigh',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'index', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenOut', internalType: 'address', type: 'address' },
+    ],
+    name: 'FinalOutputConsumed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
+      { name: 'minimum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FinalOutputTooLow',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'requested', internalType: 'uint256', type: 'uint256' },
+      { name: 'available', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InsufficientRouteBalance',
+  },
+  { type: 'error', inputs: [], name: 'InvalidPath' },
+  { type: 'error', inputs: [], name: 'InvalidPath' },
+  { type: 'error', inputs: [], name: 'InvalidRoute' },
+  { type: 'error', inputs: [], name: 'InvalidUniversalRouterPayload' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'index', internalType: 'uint256', type: 'uint256' },
+      { name: 'produced', internalType: 'uint256', type: 'uint256' },
+      { name: 'minimum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'LegOutputTooLow',
+  },
+  { type: 'error', inputs: [], name: 'NativeEthUnsupported' },
+  { type: 'error', inputs: [], name: 'NativeEthUnsupported' },
+  { type: 'error', inputs: [], name: 'NativeEthUnsupported' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'NativeValueMismatch',
+  },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'index', internalType: 'uint256', type: 'uint256' },
+      { name: 'length', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'PayloadTooLarge',
+  },
+  { type: 'error', inputs: [], name: 'RawUniversalRouterCommandsDisabled' },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
+  { type: 'error', inputs: [], name: 'RescueDuringExecution' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenOut', internalType: 'address', type: 'address' }],
+    name: 'RouteNeverProducesOutput',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'asset', internalType: 'address', type: 'address' }],
+    name: 'SameAssetRouteUnsupported',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'legCount', internalType: 'uint256', type: 'uint256' }],
+    name: 'TooManyLegs',
+  },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'actual', internalType: 'uint256', type: 'uint256' }],
+    name: 'UnexpectedNativeValue',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'hookDataKey', internalType: 'bytes32', type: 'bytes32' }],
+    name: 'V4HookDataNotAllowed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+    ],
+    name: 'VenueFamilyDisabled',
+  },
+  {
+    type: 'error',
+    inputs: [
+      {
+        name: 'family',
+        internalType: 'enum FameRouterTypes.VenueFamily',
+        type: 'uint8',
+      },
+      { name: 'target', internalType: 'address', type: 'address' },
+    ],
+    name: 'VenueTargetDisabled',
+  },
+  { type: 'error', inputs: [], name: 'ZeroAddress' },
+  { type: 'error', inputs: [], name: 'ZeroAmountIn' },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'ZeroSpend',
+  },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const fameRouterAddress = {
+  8453: '0x13e0075EC96601AA90240d9e6D900C91AF764bBB',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const fameRouterConfig = {
+  address: fameRouterAddress,
+  abi: fameRouterAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameSale
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15000,6 +15675,556 @@ export const useWatchFameMirrorTransferEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: fameMirrorAbi,
     eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouter = /*#__PURE__*/ createUseReadContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"DEFAULT_FEE_RECIPIENT"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterDefaultFeeRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'DEFAULT_FEE_RECIPIENT',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"feePpm"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterFeePpm = /*#__PURE__*/ createUseReadContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+  functionName: 'feePpm',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"feeRecipient"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterFeeRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'feeRecipient',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"hashRoute"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterHashRoute = /*#__PURE__*/ createUseReadContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+  functionName: 'hashRoute',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"owner"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterOwner = /*#__PURE__*/ createUseReadContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+  functionName: 'owner',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"v4HookDataHashEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterV4HookDataHashEnabled =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'v4HookDataHashEnabled',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"venueFamilyEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterVenueFamilyEnabled =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'venueFamilyEnabled',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"venueTargetEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useReadFameRouterVenueTargetEnabled =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'venueTargetEnabled',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouter = /*#__PURE__*/ createUseWriteContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"executeRoute"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterExecuteRoute =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'executeRoute',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"rescue"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterRescue = /*#__PURE__*/ createUseWriteContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+  functionName: 'rescue',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeePpm"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterSetFeePpm = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameRouterAbi, address: fameRouterAddress, functionName: 'setFeePpm' },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeeRecipient"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterSetFeeRecipient =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setV4HookDataHashEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterSetV4HookDataHashEnabled =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setV4HookDataHashEnabled',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueFamilyEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterSetVenueFamilyEnabled =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setVenueFamilyEnabled',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueTargetEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterSetVenueTargetEnabled =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setVenueTargetEnabled',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWriteFameRouterTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouter = /*#__PURE__*/ createUseSimulateContract({
+  abi: fameRouterAbi,
+  address: fameRouterAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"executeRoute"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterExecuteRoute =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'executeRoute',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"renounceOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"rescue"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterRescue =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'rescue',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeePpm"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterSetFeePpm =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setFeePpm',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeeRecipient"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterSetFeeRecipient =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setV4HookDataHashEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterSetV4HookDataHashEnabled =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setV4HookDataHashEnabled',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueFamilyEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterSetVenueFamilyEnabled =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setVenueFamilyEnabled',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueTargetEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterSetVenueTargetEnabled =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'setVenueTargetEnabled',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"transferOwnership"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useSimulateFameRouterTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"FeePpmUpdated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterFeePpmUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'FeePpmUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterFeeRecipientUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'FeeRecipientUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"Rescue"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterRescueEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'Rescue',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"RouteExecuted"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterRouteExecutedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'RouteExecuted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"V4HookDataHashEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterV4HookDataHashEnabledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'V4HookDataHashEnabled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"VenueFamilyEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterVenueFamilyEnabledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'VenueFamilyEnabled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"VenueTargetEnabled"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ */
+export const useWatchFameRouterVenueTargetEnabledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameRouterAbi,
+    address: fameRouterAddress,
+    eventName: 'VenueTargetEnabled',
   })
 
 /**

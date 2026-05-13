@@ -13,6 +13,10 @@ config({
 
 type SupportedChainId = typeof sepolia.id | typeof baseSepolia.id | typeof mainnet.id | typeof base.id;
 
+const fameRouterAddress = {
+  [base.id]: "0x13e0075EC96601AA90240d9e6D900C91AF764bBB",
+} as const satisfies Partial<Record<SupportedChainId, `0x${string}`>>;
+
 export default defineConfig({
   out: "src/wagmi/index.ts",
   contracts: [],
@@ -104,9 +108,13 @@ export default defineConfig({
     }),
     foundry({
       project: "../fame-contracts",
+      deployments: {
+        FameRouter: fameRouterAddress,
+      },
       include: [
         "ClaimToFame.sol/**",
         "Fame.sol/**",
+        "FameRouter.sol/**",
         "FameMirror.sol/**",
         "IBalanceOf.sol/**",
         "FameVesting.sol/**",
