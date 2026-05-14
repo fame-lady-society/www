@@ -22,6 +22,7 @@ export const SiteMenu: FC<{
   isDao?: boolean;
   isLore?: boolean;
   isProfile?: boolean;
+  isFameSwap?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
@@ -31,6 +32,7 @@ export const SiteMenu: FC<{
   isDao = false,
   isLore = false,
   isProfile = false,
+  isFameSwap = false,
 }) => {
   return (
     <>
@@ -53,6 +55,12 @@ export const SiteMenu: FC<{
         disabled={isFame}
         icon={<ReloadIcon />}
         text="$FAME"
+      />
+      <MenuItem
+        href="/fame/swap"
+        disabled={isFameSwap}
+        icon={<ExchangeIcon />}
+        text="FAME Swap"
       />
       <MenuItem
         href="/fameus"

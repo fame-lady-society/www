@@ -116,21 +116,25 @@ export const Web3Provider: FC<
   }>
 > = ({ children, siwe = false, transports, chains }) => {
   const config = useMemo(() => {
-    const connectors = [
-      miniAppConnector(),
-      ...getDefaultConnectors({
-        app: {
-          name: defaultConfig.appName,
-          icon: defaultConfig.appIcon,
-          description: defaultConfig.appDescription,
-          url: defaultConfig.appUrl,
-        },
-        walletConnectProjectId: defaultConfig.walletConnectProjectId,
-      }),
-    ];
+    const connectors =
+      typeof window === "undefined"
+        ? []
+        : [
+            miniAppConnector(),
+            ...getDefaultConnectors({
+              app: {
+                name: defaultConfig.appName,
+                icon: defaultConfig.appIcon,
+                description: defaultConfig.appDescription,
+                url: defaultConfig.appUrl,
+              },
+              walletConnectProjectId: defaultConfig.walletConnectProjectId,
+            }),
+          ];
     return createConfig(
       getDefaultConfig({
         ...defaultConfig,
+        multiInjectedProviderDiscovery: typeof window !== "undefined",
         ...(chains && chains.length && { chains }),
         ...(transports && { transports }),
         connectors,

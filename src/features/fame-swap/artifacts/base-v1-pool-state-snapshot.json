@@ -1,0 +1,3365 @@
+{
+  "schemaVersion": 1,
+  "status": "generated-live-liquidity-snapshot",
+  "snapshotId": "base-v1-live-45964183",
+  "pinnedBaseBlock": 45884844,
+  "capturedBaseBlock": 45964183,
+  "generatedAt": "2026-05-14T00:16:17.385Z",
+  "source": "scripts/fame-swap-pool-snapshot.ts live Base read-only quote capture",
+  "reserveStates": [
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "pool": "0xeded4e8790e01199da13dfec93bf5432f1980489",
+      "token0": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "token1": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "reserve0": "1939232544669452826426",
+      "reserve1": "7687989928607472710708170",
+      "source": "getReserves"
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "pool": "0xbbf6e67f14ed21884d9e12505a9b979fc42808be",
+      "token0": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "token1": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "reserve0": "21829256780697499759188",
+      "reserve1": "2879174494787556644618159",
+      "source": "getReserves"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "pool": "0xd467b1bb20e9c5569ad8bc91d2236a8ceb574075",
+      "token0": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "token1": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "reserve0": "28579618868410037020211",
+      "reserve1": "933665691",
+      "source": "getReserves"
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "pool": "0x0db3a3228520fc31162c24f1b47177255cc1b82e",
+      "token0": "0x4200000000000000000000000000000000000006",
+      "token1": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "reserve0": "8385233075088654774",
+      "reserve1": "75399346045597022935665128",
+      "source": "getReserves"
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "pool": "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
+      "token0": "0x4200000000000000000000000000000000000006",
+      "token1": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "reserve0": "10399730730271848155",
+      "reserve1": "94047834861660693011982262",
+      "source": "getReserves"
+    }
+  ],
+  "quoteTable": [
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000070418872246579",
+      "amountOut": "3913176969580394452590",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960389435721391906514",
+        "executionPriceX18": "3912901427474659657927",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000158122437113100",
+      "amountOut": "3913519970293405842959",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960389079918202015682",
+        "executionPriceX18": "3912901252811128445096",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000207319177019738",
+      "amountOut": "3913712374281952101080",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960388880332755556652",
+        "executionPriceX18": "3912901154834772173698",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000238483906584419",
+      "amountOut": "3913834256708233555549",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960388753901083626385",
+        "executionPriceX18": "3912901092769551430822",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1999521349890061919",
+      "amountOut": "7819952064326306403086",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956337890241000893418",
+        "executionPriceX18": "3910912011395259452757",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1999661116394788379",
+      "amountOut": "7820498122792624378272",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956337324094415503902",
+        "executionPriceX18": "3910911733330239879834",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1999847276273180968",
+      "amountOut": "7821225436973011721147",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956336570024237407602",
+        "executionPriceX18": "3910911362965811379913",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000103497412049963",
+      "amountOut": "7822226475581794535846",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956335532160139868328",
+        "executionPriceX18": "3910910853214864342333",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000307634096613940",
+      "amountOut": "7823024023573985662428",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956334705272624110402",
+        "executionPriceX18": "3910910447085829196584",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000411584916693901",
+      "amountOut": "7823430152217766882046",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956334284203695586600",
+        "executionPriceX18": "3910910240276162746629",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000474430451148478",
+      "amountOut": "7823675685340934677915",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3956334029638138089192",
+        "executionPriceX18": "3910910115245278857089",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "4995404641819353998",
+      "amountOut": "19506859208589083324951",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944230444848498789233",
+        "executionPriceX18": "3904960780411289628196",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "4996701974925920786",
+      "amountOut": "19511912386028558267242",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944225213902511808211",
+        "executionPriceX18": "3904958207221841463125",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "4998205918261226233",
+      "amountOut": "19517770312324065048540",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944219149901355908755",
+        "executionPriceX18": "3904955224236519401696",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "4999813874606959126",
+      "amountOut": "19524033364029686760474",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944212666528182289631",
+        "executionPriceX18": "3904952034952399607319",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "5000685624290558235",
+      "amountOut": "19527428858242275119811",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944209151589619260642",
+        "executionPriceX18": "3904950305891826574692",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "5001004055665178707",
+      "amountOut": "19528669158360919924646",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944207867659475059092",
+        "executionPriceX18": "3904949674303639521722",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "5001167046009268183",
+      "amountOut": "19529304010670683940117",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3944207210475053466650",
+        "executionPriceX18": "3904949351022835671729",
+        "marketImpactBps": 150,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "999865013505465544",
+      "amountOut": "3912373647641543343896",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960390269027327536870",
+        "executionPriceX18": "3912901836543915842036",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "999909316146740318",
+      "amountOut": "3912546911306271102823",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960390089296587847279",
+        "executionPriceX18": "3912901748314234784039",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "999972675346147431",
+      "amountOut": "3912794703450623522110",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "3964449725093650572017",
+        "postSwapPriceX18": "3960389832255596475476",
+        "executionPriceX18": "3912901622133007462281",
+        "marketImpactBps": 130,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "31597600141347829",
+      "amountOut": "7870608073407",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "252241816479682",
+        "postSwapPriceX18": "252241814419216",
+        "executionPriceX18": "249088792762704",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-frxusd-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "31597600141347829000",
+      "amountOut": "7870576161673305",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "252241816479682",
+        "postSwapPriceX18": "252239756026006",
+        "executionPriceX18": "249087782821014",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "tokenIn": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "150342412550752299527",
+      "amountOut": "19449299831602403815065",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "131895214010834489098",
+        "postSwapPriceX18": "130108159380559211382",
+        "executionPriceX18": "129366687028763403448",
+        "marketImpactBps": 191,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "tokenIn": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "30195556923482339619",
+      "amountOut": "3927501474913173764923",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "131895214010834489098",
+        "postSwapPriceX18": "131533349916741951866",
+        "executionPriceX18": "130068853668297562322",
+        "marketImpactBps": 138,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "tokenIn": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "60327375463739662338",
+      "amountOut": "7836045931269864473569",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "131895214010834489098",
+        "postSwapPriceX18": "131173732144568585172",
+        "executionPriceX18": "129892041068151452109",
+        "marketImpactBps": 151,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "amountIn": "31597600141347829",
+      "amountOut": "236571357311448",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "7581776241841916",
+        "postSwapPriceX18": "7581776076469068",
+        "executionPriceX18": "7487003957679578",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-scale-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "amountIn": "31597600141347829000",
+      "amountOut": "236568796095720705",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "7581776241841916",
+        "postSwapPriceX18": "7581610871696512",
+        "executionPriceX18": "7486922900393080",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "100000",
+      "amountOut": "99992569479643537",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1000000",
+      "amountOut": "999865013505465544",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1250000",
+      "amountOut": "1249804392884743765",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1500000",
+      "amountOut": "1499727717149032774",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1800000",
+      "amountOut": "1799613216624046425",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "200000",
+      "amountOut": "199984140785960047",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "2000000",
+      "amountOut": "1999521349890061919",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "250000",
+      "amountOut": "249979021629108228",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "2500000",
+      "amountOut": "2499222422391269067",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "3750000",
+      "amountOut": "3747908209841188539",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "4500000",
+      "amountOut": "4496582415801772592",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "500000",
+      "amountOut": "499950859748098385",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "5000000",
+      "amountOut": "4995404641819353998",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "750000",
+      "amountOut": "749912816491283908",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "900000",
+      "amountOut": "899885353574515792",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "7870576161673305",
+      "amountOut": "7870",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-frxusd",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "7870608073407",
+      "amountOut": "7",
+      "evidence": "live pool getAmountOut at live block 45964183"
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "tokenIn": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "236568796095720705",
+      "amountOut": "7631",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "32668",
+        "postSwapPriceX18": "32668",
+        "executionPriceX18": "32257",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "tokenIn": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "236571357311448",
+      "amountOut": "7",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "32668",
+        "postSwapPriceX18": "32668",
+        "executionPriceX18": "29589",
+        "marketImpactBps": 942,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "amountIn": "1000000",
+      "amountOut": "30195556923482339619",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "30610120028936606839729103851155",
+        "postSwapPriceX18": "30545063958581266337069389658382",
+        "executionPriceX18": "30195556923482339619000000000000",
+        "marketImpactBps": 135,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "amountIn": "2000000",
+      "amountOut": "60327375463739662338",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "30610120028936606839729103851155",
+        "postSwapPriceX18": "30480215067484287353091586212708",
+        "executionPriceX18": "30163687731869831169000000000000",
+        "marketImpactBps": 145,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-usdc-scale",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "amountIn": "5000000",
+      "amountOut": "150342412550752299527",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "30610120028936606839729103851155",
+        "postSwapPriceX18": "30286902705022042528966790584444",
+        "executionPriceX18": "30068482510150459905400000000000",
+        "marketImpactBps": 176,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "10000000000000",
+      "amountOut": "88795106669198951638",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991898812628419716938146",
+        "executionPriceX18": "8879510666919895163800000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "100000000000000",
+      "amountOut": "887941655418506440335",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991706999443721760249206",
+        "executionPriceX18": "8879416554185064403350000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000000000000000",
+      "amountOut": "8878475536548827408681",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8989789205120975769919059",
+        "executionPriceX18": "8878475536548827408681000",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1500000000000000",
+      "amountOut": "13316929252727346340150",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8988724028938694020852815",
+        "executionPriceX18": "8877952835151564226766666",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1800000000000000",
+      "amountOut": "15979750638937524779104",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8988085014099130492014696",
+        "executionPriceX18": "8877639243854180432835555",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "200000000000000",
+      "amountOut": "1775862397363891281194",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991493880881342575911264",
+        "executionPriceX18": "8879311986819456405970000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000000000000000",
+      "amountOut": "17754860390593095803529",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8987659042062525603379454",
+        "executionPriceX18": "8877430195296547901764500",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2199921661054375",
+      "amountOut": "19529191292463120031638",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8987233267140933570452903",
+        "executionPriceX18": "8877221238461373160140297",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200075445626199",
+      "amountOut": "19530556118510243999125",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8987232939636222928596397",
+        "executionPriceX18": "8877221077730512572250098",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200315889201459",
+      "amountOut": "19532690036336035035681",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8987232427579668165197905",
+        "executionPriceX18": "8877220826426363639830067",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200469712666512",
+      "amountOut": "19534055207430792997787",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8987232099992175122350052",
+        "executionPriceX18": "8877220665654869462470493",
+        "marketImpactBps": 127,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "25000000000000",
+      "amountOut": "221987374533138719741",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991866843338070769409343",
+        "executionPriceX18": "8879494981325548789640000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "400000000000000",
+      "amountOut": "3551641143790646130779",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991067666486961238468359",
+        "executionPriceX18": "8879102859476615326947500",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440015904698000",
+      "amountOut": "3906928066950490649728",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990982393352380869356505",
+        "executionPriceX18": "8879061018560151995717440",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440044977471748",
+      "amountOut": "3907186192505853230678",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990982331399291973772471",
+        "executionPriceX18": "8879060988161612324539124",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440068814264432",
+      "amountOut": "3907397829873663970907",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990982280603900553166513",
+        "executionPriceX18": "8879060963237799718923282",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440097890962574",
+      "amountOut": "3907655990268927876881",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990982218642450074590931",
+        "executionPriceX18": "8879060932835135107142078",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "50000000000000",
+      "amountOut": "443973441939572666665",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991813561566365624913343",
+        "executionPriceX18": "8879468838791453333300000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "500000000000000",
+      "amountOut": "4439499149749604117433",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990854570654240762548893",
+        "executionPriceX18": "8878998299499208234866000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "600000000000000",
+      "amountOut": "5327336245190616464562",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990641482397354902090464",
+        "executionPriceX18": "8878893741984360774270000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "720000000000000",
+      "amountOut": "6392713158876240033464",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990385786488687939093636",
+        "executionPriceX18": "8878768276217000046477777",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "75000000000000",
+      "amountOut": "665958202230846924330",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991760280268251159422242",
+        "executionPriceX18": "8879442696411292324400000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "80000000000000",
+      "amountOut": "710354997436298570934",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991749624065458653886704",
+        "executionPriceX18": "8879437467953732136675000",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "800000000000000",
+      "amountOut": "7102947707473597417383",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990215328609650616012925",
+        "executionPriceX18": "8878684634341996771728750",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880016022302859",
+      "amountOut": "7813311115650476544344",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990044841440817431369725",
+        "executionPriceX18": "8878600977291652459212188",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880075010008935",
+      "amountOut": "7813834789679933338342",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990044715759690393229917",
+        "executionPriceX18": "8878600915620366313049761",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880134810289722",
+      "amountOut": "7814365677480925790209",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990044588347267911105724",
+        "executionPriceX18": "8878600853099538005828102",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880193807697228",
+      "amountOut": "7814889437621927822504",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8990044462645475999034805",
+        "executionPriceX18": "8878600791418109523128165",
+        "marketImpactBps": 126,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "90000000000000",
+      "amountOut": "799148430995137531942",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "8991920125583372205680219",
+        "postSwapPriceX18": "8991728311716703671168751",
+        "executionPriceX18": "8879427011057083688244444",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "15798800070673914",
+      "amountOut": "1735037105",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952234",
+        "executionPriceX18": "109820815330",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "23698200106010871",
+      "amountOut": "2602555657",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952211",
+        "executionPriceX18": "109820815309",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "28437840127213046",
+      "amountOut": "3123066789",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952197",
+        "executionPriceX18": "109820815330",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "3159760014134782",
+      "amountOut": "347007421",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952271",
+        "executionPriceX18": "109820815330",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "31597600141347829",
+      "amountOut": "3470074210",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952188",
+        "executionPriceX18": "109820815330",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "31597600141347829000",
+      "amountOut": "3470072775466",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210859653",
+        "executionPriceX18": "109820769930",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "scale-equalizer-weth-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "7899400035336957",
+      "amountOut": "867518552",
+      "evidence": "live pool getAmountOut at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "111210952280",
+        "postSwapPriceX18": "111210952257",
+        "executionPriceX18": "109820815266",
+        "marketImpactBps": 125,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "134546737670480388583020",
+      "amountOut": "3972013233855195237012",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29727735434135278",
+        "executionPriceX18": "29521438443071642",
+        "marketImpactBps": 130,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "134555620448395970385208",
+      "amountOut": "3972274658025081698959",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29727723337141024",
+        "executionPriceX18": "29521432436547729",
+        "marketImpactBps": 130,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "151896709499685649649971",
+      "amountOut": "4482428009942653314729",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29704121478168754",
+        "executionPriceX18": "29509711070811113",
+        "marketImpactBps": 134,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "242986360883556122697857",
+      "amountOut": "7155533638877114309827",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29580605493120898",
+        "executionPriceX18": "29448293364524224",
+        "marketImpactBps": 154,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "243210648068301961046275",
+      "amountOut": "7162101810439383921815",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29580302315059039",
+        "executionPriceX18": "29448142453154510",
+        "marketImpactBps": 155,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "268875749305626729293743",
+      "amountOut": "7913250969102613575540",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29545640517978153",
+        "executionPriceX18": "29430883928872844",
+        "marketImpactBps": 160,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "268893743531029755421388",
+      "amountOut": "7913777303292348671292",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29545616237397707",
+        "executionPriceX18": "29430871835733567",
+        "marketImpactBps": 160,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "30412773642679698048959",
+      "amountOut": "899975469102186725189",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29870059127190770",
+        "executionPriceX18": "29592022078486394",
+        "marketImpactBps": 106,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "30440170661083509412425",
+      "amountOut": "900785635646594837439",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29870021548376127",
+        "executionPriceX18": "29592003463969134",
+        "marketImpactBps": 106,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "605580158771702118358778",
+      "amountOut": "17686771502280719574901",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29096493420761231",
+        "executionPriceX18": "29206325943958910",
+        "marketImpactBps": 235,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "606107166214894329503665",
+      "amountOut": "17701952048905420636694",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29095798466838843",
+        "executionPriceX18": "29205977153269990",
+        "marketImpactBps": 235,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "606689618632800752667988",
+      "amountOut": "17718729276453820988031",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29095030427728245",
+        "executionPriceX18": "29205591676982513",
+        "marketImpactBps": 236,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "670555836556807018131195",
+      "amountOut": "19555678452174185258127",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29010998660904529",
+        "executionPriceX18": "29163385636294435",
+        "marketImpactBps": 250,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "670602525687665088369765",
+      "amountOut": "19557019404087197003335",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "29911818242517843",
+        "postSwapPriceX18": "29010937363063075",
+        "executionPriceX18": "29163354826366894",
+        "marketImpactBps": 250,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "31597600141347829",
+      "amountOut": "1045794780078973192",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "33431601913739913862",
+        "postSwapPriceX18": "33431600290899086403",
+        "executionPriceX18": "33097285091296294609",
+        "marketImpactBps": 100,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-basedflick-fame",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "31597600141347829000",
+      "amountOut": "1045769423528242534416",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "33431601913739913862",
+        "postSwapPriceX18": "33429979131933566271",
+        "executionPriceX18": "33096482607860298575",
+        "marketImpactBps": 100,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "100000",
+      "amountOut": "100023962572224526",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000339532806974376657802826272",
+        "executionPriceX18": "1000239625722245260000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1000000",
+      "amountOut": "1000238483906584419",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000337248948859955232018644407",
+        "executionPriceX18": "1000238483906584419000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1250000",
+      "amountOut": "1250297708420037694",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000336614545216220773679592150",
+        "executionPriceX18": "1000238166736030155200000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1500000",
+      "amountOut": "1500356774348515555",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000335980142175984569533260110",
+        "executionPriceX18": "1000237849565677036666666666666",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "1800000",
+      "amountOut": "1800427444130733854",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000335218859324317742318339697",
+        "executionPriceX18": "1000237468961518807777777777777",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "200000",
+      "amountOut": "200047899770741954",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000339279044575422683029296082",
+        "executionPriceX18": "1000239498853709770000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "2000000",
+      "amountOut": "2000474430451148478",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000334711337906003861962589364",
+        "executionPriceX18": "1000237215225574239000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "250000",
+      "amountOut": "250059858854863523",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000339152163412155786853779225",
+        "executionPriceX18": "1000239435419454092000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "2500000",
+      "amountOut": "2500591452215690059",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000333442536050006985606433747",
+        "executionPriceX18": "1000236580886276023600000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "3750000",
+      "amountOut": "3750881231405814470",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000330270541971153869672212213",
+        "executionPriceX18": "1000234995041550525333333333333",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "4500000",
+      "amountOut": "4501053195917080322",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000328367352765735319002618895",
+        "executionPriceX18": "1000234043537128960444444444444",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "500000",
+      "amountOut": "500119559124148194",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000338517757957921973138358641",
+        "executionPriceX18": "1000239118248296388000000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "5000000",
+      "amountOut": "5001167046009268183",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000327098562979565743895686313",
+        "executionPriceX18": "1000233409201853636600000000000",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "750000",
+      "amountOut": "750179100808004872",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000337883353107188710015975741",
+        "executionPriceX18": "1000238801077339829333333333333",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "amountIn": "900000",
+      "amountOut": "900214749697376201",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1000339786569469890916631437243",
+        "postSwapPriceX18": "1000337502710486428697992471377",
+        "executionPriceX18": "1000238610774862445555555555555",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "7870576161673305",
+      "amountOut": "7867",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "999660",
+        "postSwapPriceX18": "999660",
+        "executionPriceX18": "999545",
+        "marketImpactBps": 1,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-usdc-frxusd",
+      "tokenIn": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "7870608073407",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "999660",
+        "postSwapPriceX18": "999660",
+        "executionPriceX18": "889384",
+        "marketImpactBps": 1103,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "583370986295932128",
+      "amountOut": "7270",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "12462",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "583388653295725",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "11998",
+        "marketImpactBps": 396,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "625810599552601152",
+      "amountOut": "7799",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "12462",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "625810939086033",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "11185",
+        "marketImpactBps": 1047,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "626372437570405959",
+      "amountOut": "7806",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "12462",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "626372704884511",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "11175",
+        "marketImpactBps": 1055,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628241665850024038",
+      "amountOut": "7830",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "12463",
+        "marketImpactBps": 24,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628241957255011",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "11142",
+        "marketImpactBps": 1082,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628805686704769489",
+      "amountOut": "7837",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "12463",
+        "marketImpactBps": 24,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628805905300039",
+      "amountOut": "7",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12494",
+        "postSwapPriceX18": "12494",
+        "executionPriceX18": "11132",
+        "marketImpactBps": 1090,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "1000000",
+      "amountOut": "79834313020494511631",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80034517780561598115975059980411",
+        "postSwapPriceX18": "80034280255693856334713985861761",
+        "executionPriceX18": "79834313020494511631000000000000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "2000000",
+      "amountOut": "159668389110460820070",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80034517780561598115975059980411",
+        "postSwapPriceX18": "80034042731883495430645349609668",
+        "executionPriceX18": "79834194555230410035000000000000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "5000000",
+      "amountOut": "399169195807737843951",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80034517780561598115975059980411",
+        "postSwapPriceX18": "80033330166796635220511668391026",
+        "executionPriceX18": "79833839161547568790200000000000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "159668389110460820070",
+      "amountOut": "880134810289722",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526063329478",
+        "executionPriceX18": "5512267113065",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "159679092076961462448",
+      "amountOut": "880193807697228",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526063326932",
+        "executionPriceX18": "5512267111795",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "399169195807737843951",
+      "amountOut": "2200315889201459",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526006362384",
+        "executionPriceX18": "5512238700556",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "399197101853714245266",
+      "amountOut": "2200469712666512",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526006355747",
+        "executionPriceX18": "5512238697246",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "583388653295725",
+      "amountOut": "3215805138",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526101308173",
+        "executionPriceX18": "5512286054644",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "79834313020494511631",
+      "amountOut": "440068814264432",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526082318818",
+        "executionPriceX18": "5512276584022",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "79839587927814595880",
+      "amountOut": "440097890962574",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5526101308311",
+        "postSwapPriceX18": "5526082317563",
+        "executionPriceX18": "5512276583397",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "100000000000000",
+      "amountOut": "18050693533585036988",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180959263194543181972931",
+        "executionPriceX18": "180506935335850369880000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "2000000000000000",
+      "amountOut": "361011199318313053564",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180956585156985424252395",
+        "executionPriceX18": "180505599659156526782000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3470072775466",
+      "amountOut": "626372437570405959",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180959399254430375447316",
+        "executionPriceX18": "180507003195715310469474",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3470074210",
+      "amountOut": "626372704884511",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180959404140644025122841",
+        "executionPriceX18": "180507005607961047034783",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3483552857260",
+      "amountOut": "628805686704769489",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180959399235430056115906",
+        "executionPriceX18": "180507003186212216033438",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3483554022",
+      "amountOut": "628805905300039",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180959404140625025183679",
+        "executionPriceX18": "180507005583632370033617",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "slipstream-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "800000000000000",
+      "amountOut": "144405154593709669296",
+      "evidence": "live Slipstream quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180959404145535131999765",
+        "postSwapPriceX18": "180958276542210614191981",
+        "executionPriceX18": "180506443242137086620000",
+        "marketImpactBps": 25,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "10000000000000",
+      "amountOut": "90161566580813582573",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043277821949674105707272",
+        "executionPriceX18": "9016156658081358257300000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "100000000000000",
+      "amountOut": "901607886645366260339",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043121536586364395621288",
+        "executionPriceX18": "9016078866453662603390000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1000000000000000",
+      "amountOut": "9015301024001030933900",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041558905753803788187810",
+        "executionPriceX18": "9015301024001030933900000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1500000000000000",
+      "amountOut": "13522303420943623986831",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9040690952519813415640643",
+        "executionPriceX18": "9014868947295749324554000",
+        "marketImpactBps": 31,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "1800000000000000",
+      "amountOut": "16226297498073312930342",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9040170240568530829910595",
+        "executionPriceX18": "9014609721151840516856666",
+        "marketImpactBps": 31,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "200000000000000",
+      "amountOut": "1803198486577231072697",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042947890934251163132309",
+        "executionPriceX18": "9015992432886155363485000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2000000000000000",
+      "amountOut": "18028873824009598240935",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9039823124259939785605748",
+        "executionPriceX18": "9014436912004799120467500",
+        "marketImpactBps": 31,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2199921661054375",
+      "amountOut": "19830675021817578751490",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9039476163895252376650188",
+        "executionPriceX18": "9014264177167637851108239",
+        "marketImpactBps": 32,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200075445626199",
+      "amountOut": "19832060984251972102094",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9039475897012645904653511",
+        "executionPriceX18": "9014264044298375854932739",
+        "marketImpactBps": 32,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200315889201459",
+      "amountOut": "19834227949028458294839",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9039475479739289603911583",
+        "executionPriceX18": "9014263836556085386969746",
+        "marketImpactBps": 32,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "2200469712666512",
+      "amountOut": "19835614261877990941143",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9039475212789216900882444",
+        "executionPriceX18": "9014263703653229838908902",
+        "marketImpactBps": 32,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "25000000000000",
+      "amountOut": "225403592317921360107",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043251774107773566007639",
+        "executionPriceX18": "9016143692716854404280000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "400000000000000",
+      "amountOut": "3606327828289068511893",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042600614634215242213613",
+        "executionPriceX18": "9015819570722671279732500",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440015904698000",
+      "amountOut": "3967088786886655098733",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042531134159264336147267",
+        "executionPriceX18": "9015784985339159874926399",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440044977471748",
+      "amountOut": "3967350889706579503972",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042531083679873848977324",
+        "executionPriceX18": "9015784960211921656730889",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440068814264432",
+      "amountOut": "3967565788037330302544",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042531042291777648775916",
+        "executionPriceX18": "9015784939610077117150655",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "440097890962574",
+      "amountOut": "3967827926234595374832",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042530991805573960695953",
+        "executionPriceX18": "9015784914479447348774747",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "50000000000000",
+      "amountOut": "450806104192943918722",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043208361288028864024599",
+        "executionPriceX18": "9016122083858878374440000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "500000000000000",
+      "amountOut": "4507866571063299559229",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042426983985908418409122",
+        "executionPriceX18": "9015733142126599118458000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "600000000000000",
+      "amountOut": "5409388029112546001405",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042253358338486277491099",
+        "executionPriceX18": "9015646715187576669008333",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "720000000000000",
+      "amountOut": "6491190963634551541703",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9042045014162477091597504",
+        "executionPriceX18": "9015543005047988252365277",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "75000000000000",
+      "amountOut": "676207535632836101679",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043164948780893474362412",
+        "executionPriceX18": "9016100475104481355720000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "80000000000000",
+      "amountOut": "721287692269282509422",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043156266316979249784662",
+        "executionPriceX18": "9016096153366031367775000",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "800000000000000",
+      "amountOut": "7212379093024392232654",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041906122045527874978772",
+        "executionPriceX18": "9015473866280490290817500",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880016022302859",
+      "amountOut": "7933700596504234306620",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041767205312593071241645",
+        "executionPriceX18": "9015404714726702839647373",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880075010008935",
+      "amountOut": "7934232349683201164920",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041767102904541734434695",
+        "executionPriceX18": "9015404663748659928713810",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880134810289722",
+      "amountOut": "7934771427927887155330",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041766999085788176846030",
+        "executionPriceX18": "9015404612068378593402441",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "880193807697228",
+      "amountOut": "7935303268549680499528",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9041766896660897774844127",
+        "executionPriceX18": "9015404561081952725229697",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "amountIn": "90000000000000",
+      "amountOut": "811447875891140468402",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "9043295187240130581747346",
+        "postSwapPriceX18": "9043138901426663461895298",
+        "executionPriceX18": "9016087509901560760022222",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "15798800070673915",
+      "amountOut": "1741777011",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161573",
+        "executionPriceX18": "110247424058",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "23698200106010872",
+      "amountOut": "2612665517",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161554",
+        "executionPriceX18": "110247424079",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "28437840127213047",
+      "amountOut": "3135198620",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161543",
+        "executionPriceX18": "110247424065",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "31597600141347829",
+      "amountOut": "3483554022",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161536",
+        "executionPriceX18": "110247424058",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "31597600141347829000",
+      "amountOut": "3483552857260",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579087418",
+        "executionPriceX18": "110247387196",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "3159760014134783",
+      "amountOut": "348355402",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161602",
+        "executionPriceX18": "110247423994",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v2-fame-direct",
+      "tokenIn": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "7899400035336958",
+      "amountOut": "870888505",
+      "evidence": "live reserves at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "110579161610",
+        "postSwapPriceX18": "110579161591",
+        "executionPriceX18": "110247423994",
+        "marketImpactBps": 30,
+        "method": "constant-product-reserves"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "583370986295932128",
+      "amountOut": "7263",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "12450",
+        "marketImpactBps": 29,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "583388653295725",
+      "amountOut": "7",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "11998",
+        "marketImpactBps": 391,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "625810599552601152",
+      "amountOut": "7791",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "12449",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "625810939086033",
+      "amountOut": "7",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "11185",
+        "marketImpactBps": 1042,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "626372437570405959",
+      "amountOut": "7798",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "12449",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "626372704884511",
+      "amountOut": "7",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "11175",
+        "marketImpactBps": 1050,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628241665850024038",
+      "amountOut": "7821",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "12449",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628241957255011",
+      "amountOut": "7",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "11142",
+        "marketImpactBps": 1077,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628805686704769489",
+      "amountOut": "7828",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "12448",
+        "marketImpactBps": 31,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "amountIn": "628805905300039",
+      "amountOut": "7",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "12487",
+        "postSwapPriceX18": "12487",
+        "executionPriceX18": "11132",
+        "marketImpactBps": 1085,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "1000000",
+      "amountOut": "79839587927814595880",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80079869425468844968252581695652",
+        "postSwapPriceX18": "80079785394642685865003735327842",
+        "executionPriceX18": "79839587927814595880000000000000",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "2000000",
+      "amountOut": "159679092076961462448",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80079869425468844968252581695652",
+        "postSwapPriceX18": "80079701363948791763369463984190",
+        "executionPriceX18": "79839546038480731224000000000000",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-usdc",
+      "tokenIn": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "5000000",
+      "amountOut": "399197101853714245266",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "80079869425468844968252581695652",
+        "postSwapPriceX18": "80079449272660696692474225397364",
+        "executionPriceX18": "79839420370742849053200000000000",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "159668389110460820070",
+      "amountOut": "880016022302859",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5527925534303",
+        "executionPriceX18": "5511523146225",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "159679092076961462448",
+      "amountOut": "880075010008935",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5527925509913",
+        "executionPriceX18": "5511523134066",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "399169195807737843951",
+      "amountOut": "2199921661054375",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5527379793745",
+        "executionPriceX18": "5511251078888",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "399197101853714245266",
+      "amountOut": "2200075445626199",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5527379730161",
+        "executionPriceX18": "5511251047189",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "583388653295725",
+      "amountOut": "3215465888",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5528289407617",
+        "executionPriceX18": "5511704538363",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "79834313020494511631",
+      "amountOut": "440015904698000",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5528107466864",
+        "executionPriceX18": "5511613841845",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x4200000000000000000000000000000000000006",
+      "amountIn": "79839587927814595880",
+      "amountOut": "440044977471748",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5528289408946",
+        "postSwapPriceX18": "5528107454843",
+        "executionPriceX18": "5511613835853",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "100000000000000",
+      "amountOut": "18034444452423345875",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180886431393337532818451",
+        "executionPriceX18": "180344444524233458750000",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "2000000000000000",
+      "amountOut": "360663338705634975772",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180860805172067142451756",
+        "executionPriceX18": "180331669352817487886000",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3470072775466",
+      "amountOut": "625810599552601152",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180887733484652602210318",
+        "executionPriceX18": "180345093617974723418883",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3470074210",
+      "amountOut": "625810939086033",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180887780245886597374081",
+        "executionPriceX18": "180345116909195149460506",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3483552857260",
+      "amountOut": "628241665850024038",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180887733302818919295118",
+        "executionPriceX18": "180345093527350578014464",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "3483554022",
+      "amountOut": "628241957255011",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180887780245704767267426",
+        "executionPriceX18": "180345116879892899217969",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v3-zora-weth",
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "800000000000000",
+      "amountOut": "144271790137240293094",
+      "evidence": "live Uniswap V3 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180887780292694667860511",
+        "postSwapPriceX18": "180876989520296603286685",
+        "executionPriceX18": "180339737671550366367500",
+        "marketImpactBps": 30,
+        "method": "quoter-price-after"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "144271790137240293094",
+      "amountOut": "242986360883556122697857",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1684226421897256524785",
+        "marketImpactBps": 314,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "144405154593709669296",
+      "amountOut": "243210648068301961046275",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1684224145270893868075",
+        "marketImpactBps": 314,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "159668389110460820070",
+      "amountOut": "268875749305626729293743",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1683963562252856031755",
+        "marketImpactBps": 315,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "159679092076961462448",
+      "amountOut": "268893743531029755421388",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1683963379510133180275",
+        "marketImpactBps": 315,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "18034444452423345875",
+      "amountOut": "30412773642679698048959",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1686371527712517729569",
+        "marketImpactBps": 301,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "18050693533585036988",
+      "amountOut": "30440170661083509412425",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1686371252409037277419",
+        "marketImpactBps": 301,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "360348593853444020159",
+      "amountOut": "605580158771702118358778",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1680539813672744002473",
+        "marketImpactBps": 335,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "360663338705634975772",
+      "amountOut": "606107166214894329503665",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1680534451852299005469",
+        "marketImpactBps": 335,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "361011199318313053564",
+      "amountOut": "606689618632800752667988",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1680528525924943912832",
+        "marketImpactBps": 335,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "399169195807737843951",
+      "amountOut": "670555836556807018131195",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1679878717093650989492",
+        "marketImpactBps": 339,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "399197101853714245266",
+      "amountOut": "670602525687665088369765",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1679878242035452814652",
+        "marketImpactBps": 339,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "79834313020494511631",
+      "amountOut": "134546737670480388583020",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1685324675317748177061",
+        "marketImpactBps": 307,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "79839587927814595880",
+      "amountOut": "134555620448395970385208",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1685324585718701437671",
+        "marketImpactBps": 307,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "amountIn": "90138418366337405067",
+      "amountOut": "151896709499685649649971",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "1738842407741593134010",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "1685149487340152334466",
+        "marketImpactBps": 308,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "1045769423528242534416",
+      "amountOut": "583370986295932128",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "575095244714441",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "557839016107146",
+        "marketImpactBps": 300,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-basedflick-zora",
+      "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "1045794780078973192",
+      "amountOut": "583388653295725",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "575095244714441",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "557842384001639",
+        "marketImpactBps": 300,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-zora-eth",
+      "tokenIn": "0x0000000000000000000000000000000000000000",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "2000000000000000",
+      "amountOut": "360348593853444020159",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180853603419568303640691",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "180174296926722010079500",
+        "marketImpactBps": 37,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-zora-eth",
+      "tokenIn": "0x0000000000000000000000000000000000000000",
+      "tokenOut": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "amountIn": "500000000000000",
+      "amountOut": "90138418366337405067",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "180853603419568303640691",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "180276836732674810134000",
+        "marketImpactBps": 31,
+        "method": "concentrated-liquidity-slot0"
+      }
+    },
+    {
+      "poolId": "uniswap-v4-zora-eth",
+      "tokenIn": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "tokenOut": "0x0000000000000000000000000000000000000000",
+      "amountIn": "583388653295725",
+      "amountOut": "3216073529",
+      "evidence": "live Uniswap V4 quoter at live block 45964183",
+      "priceImpact": {
+        "preSwapPriceX18": "5529334119376",
+        "postSwapPriceX18": null,
+        "executionPriceX18": "5512746109872",
+        "marketImpactBps": 30,
+        "method": "concentrated-liquidity-slot0"
+      }
+    }
+  ],
+  "unsupportedQuotePools": [
+    {
+      "poolId": "aerodrome-slipstream2",
+      "reason": "No validated live Slipstream2 quoter is configured."
+    }
+  ]
+}

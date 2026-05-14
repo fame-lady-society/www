@@ -411,18 +411,13 @@ const Content: FC<{
           </WrappedLink>
         </AnimatedBoxPopAndFadeIn>
       </Grid2>
-      <Grid2
-        xs={12}
-        height={isSmallScreen ? "700px" : "420px"}
-        marginBottom={4}
-      >
+      <Grid2 xs={12} marginBottom={4}>
         <Box
           component="div"
           sx={{
-            position: "absolute",
+            position: "relative",
             left: "50%",
             width: "100vw",
-            height: isSmallScreen ? "700px" : "420px",
             backgroundColor: "white",
             transform: "translateX(-50%)",
             zIndex: 1, // Ensure it's above other content
@@ -524,35 +519,45 @@ const Content: FC<{
                 )}
               </CopyToClipboard>
             </Grid2>
-            <Grid2 xs={6} md={3} p={4}>
-              <Card>
-                <CardActionArea
-                  href="https://base.equalizer.exchange/swap?fromToken=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&toToken=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
+            <Grid2 xs={12} p={4}>
+              <Card
+                variant="outlined"
+                sx={{
+                  borderColor: "primary.main",
+                  borderWidth: 2,
+                }}
+              >
+                <CardActionArea href="/fame/swap" aria-label="Open FAME swap">
                   <CardContent
                     sx={{
-                      height: "220px",
+                      minHeight: "180px",
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
                     }}
                   >
                     <Typography
-                      variant={isTinyScreen ? "body1" : "h5"}
+                      variant={isTinyScreen ? "h5" : "h4"}
                       textAlign="center"
                       textTransform="uppercase"
-                      sx={{
-                        width: "100%",
-                      }}
+                      fontWeight={700}
                     >
-                      equalizer (swap)
+                      Swap FAME
+                    </Typography>
+                    <Typography
+                      variant={isTinyScreen ? "body2" : "h6"}
+                      textAlign="center"
+                      color="text.secondary"
+                    >
+                      using FAME preferred pools
                     </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>
             </Grid2>
-            <Grid2 xs={6} md={3} p={4}>
+            <Grid2 xs={12} sm={4} p={4}>
               <Card>
                 <CardActionArea
                   href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
@@ -580,35 +585,8 @@ const Content: FC<{
                 </CardActionArea>
               </Card>
             </Grid2>
-            <Grid2 xs={6} md={3} p={4}>
-              <Card>
-                <CardActionArea
-                  href="https://v3.nftx.io/base/collections/famesociety/info/society-8"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  <CardContent
-                    sx={{
-                      height: "220px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      variant={isTinyScreen ? "body1" : "h5"}
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        width: "100%",
-                      }}
-                    >
-                      nftx vault
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid2>
-            <Grid2 xs={6} md={3} p={4}>
+
+            <Grid2 xs={12} sm={4} p={4}>
               <Card>
                 <CardActionArea
                   href="https://opensea.io/collection/fameladysociety"

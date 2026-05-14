@@ -20,6 +20,7 @@ export const SiteMenu: FC<{
   isWrap?: boolean;
   isDao?: boolean;
   isLore?: boolean;
+  isFameSwap?: boolean;
 }> = ({
   isFame = false,
   isHome = false,
@@ -28,6 +29,7 @@ export const SiteMenu: FC<{
   isWrap = false,
   isDao = false,
   isLore = false,
+  isFameSwap = false,
 }) => {
   return (
     <>
@@ -63,6 +65,22 @@ export const SiteMenu: FC<{
           primary={
             <Typography textAlign="right" color="text.primary">
               $FAME
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame/swap"
+        disabled={isFameSwap}
+      >
+        <ListItemIcon>
+          <ExchangeIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Swap
             </Typography>
           }
         />
