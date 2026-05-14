@@ -411,10 +411,7 @@ const Content: FC<{
           </WrappedLink>
         </AnimatedBoxPopAndFadeIn>
       </Grid2>
-      <Grid2
-        xs={12}
-        marginBottom={4}
-      >
+      <Grid2 xs={12} marginBottom={4}>
         <Box
           component="div"
           sx={{
@@ -588,34 +585,7 @@ const Content: FC<{
                 </CardActionArea>
               </Card>
             </Grid2>
-            <Grid2 xs={12} sm={4} p={4}>
-              <Card>
-                <CardActionArea
-                  href="https://v3.nftx.io/base/collections/famesociety/info/society-8"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  <CardContent
-                    sx={{
-                      height: "220px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      variant={isTinyScreen ? "body1" : "h5"}
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        width: "100%",
-                      }}
-                    >
-                      nftx vault
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid2>
+
             <Grid2 xs={12} sm={4} p={4}>
               <Card>
                 <CardActionArea
