@@ -206,13 +206,6 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
           tooltip={view.feeTooltip}
         />
       ) : null}
-      {view.venueFeeLabel ? (
-        <QuoteMetric
-          label="Venue fees"
-          value={view.venueFeeLabel}
-          tooltip={view.venueFeeTooltip}
-        />
-      ) : null}
       {view.marketImpactLabel ? (
         <QuoteMetric
           label="Market impact"
