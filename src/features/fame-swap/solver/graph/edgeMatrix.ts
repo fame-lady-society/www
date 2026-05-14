@@ -339,6 +339,10 @@ function edgeMatchesProbe(edge: FamePoolEdge, probe: ConnectorProbe): boolean {
 }
 
 function disabledReasonForEdge(edge: FamePoolEdge): string {
+  if (edge.pool.enablement?.status === "blocked") {
+    return `${edge.poolId} is disabled: ${edge.pool.enablement.reason}`;
+  }
+
   return `${edge.poolId} is disabled because its venue family or target is not enabled by the current FAME router manifest/readiness policy.`;
 }
 

@@ -1,10 +1,9 @@
 import type { Hex } from "viem";
-import type { FameRouteLeg } from "../router/types";
 import { formatTokenAmount } from "../solver/format";
 import type { FameSwapQuote } from "../solver/types";
 import { FAME, USDC, tokenForAddress, type FameSwapToken } from "../tokens";
-import { poolDisplayMetadata, poolDisplayName } from "./poolDisplay";
-import { routeTokenMetadataForAddress } from "./routeMetadata";
+import { poolDisplayName } from "./poolDisplay";
+import { buildFameSwapRouteGraph, type FameSwapRouteGraph } from "./routeGraph";
 
 export interface FameSwapQuoteViewTransaction {
   simulatedOutput: bigint | null;
@@ -22,15 +21,17 @@ export interface FameSwapQuoteViewTransaction {
   error: Error | null;
 }
 
-export type FameSwapUsdcEstimate =
+export type FameSwapDebitEstimate =
   | {
       status: "available";
+      metricLabel: string;
       label: string;
-      tone: FameSwapValueTone;
+      tone: "negative";
     }
   | {
       status: "unavailable";
-      label: "USDC estimate unavailable";
+      metricLabel: string;
+      label: "Debit estimate unavailable";
       tone: "neutral";
     };
 
@@ -57,6 +58,8 @@ export interface FameSwapRouteMapEdge {
   poolTypeLabel: string;
   pairLabel: string;
   feeLabel: string;
+  feeAmountLabel: string | null;
+  feeDetailLabel: string;
   feeTooltip: string | null;
   amountMode: string;
   amountLabel: string | null;
@@ -67,6 +70,7 @@ export interface FameSwapRouteMap {
   edges: FameSwapRouteMapEdge[];
   split: boolean;
   splitShareLabel: string | null;
+  graph: FameSwapRouteGraph;
 }
 
 export interface FameSwapDiagnosticsView {
@@ -81,7 +85,7 @@ export interface FameSwapQuoteView {
   receiveTone: FameSwapValueTone;
   protectedMinimumLabel: string;
   protectedMinimumTone: FameSwapValueTone;
-  usdcEstimate: FameSwapUsdcEstimate;
+  debitEstimate: FameSwapDebitEstimate;
   freshnessLabel: string;
   feeLabel: string | null;
   feeTooltip: string | null;
@@ -103,96 +107,39 @@ function shortHash(value: Hex): string {
   return `${value.slice(0, 10)}...${value.slice(-8)}`;
 }
 
-function routeTokenView(
-  address: FameRouteLeg["tokenIn"],
-): FameSwapRouteTokenView {
-  const metadata = routeTokenMetadataForAddress(address);
-  return {
-    symbol: metadata.symbol,
-    label: metadata.label,
-    iconLabel: metadata.iconLabel,
-    iconBackground: metadata.iconBackground,
-    iconForeground: metadata.iconForeground,
-  };
-}
-
-function legAmountLabel(leg: FameRouteLeg): string | null {
-  if (leg.amountMode === "All") return "remaining";
-  if (leg.amountMode !== "Exact") return null;
-
-  const token = tokenForAddress(leg.tokenIn);
-  return token ? formatTokenAmount(leg.amount, token) : null;
-}
-
-function venueFeeTooltip(poolName: string, feeLabel: string): string {
-  return `${poolName} uses reviewed pool metadata for a ${feeLabel} venue fee tier. Venue fees are already included in the quoted output; this is not a live fee read.`;
-}
-
-function unavailableVenueFeeTooltip(poolName: string, reason: string): string {
-  return `${poolName} has no reviewed venue fee metadata: ${reason}`;
-}
-
 function buildRouteMap(quote: FameSwapQuote): FameSwapRouteMap | null {
   if (quote.status !== "ready") return null;
 
-  const edges = quote.route.legs.map((leg, index) => {
-    const poolId = quote.poolIds[index];
-    const quotedLeg = quote.feeBreakdown.legs[index];
-    const fromToken = routeTokenView(leg.tokenIn);
-    const toToken = routeTokenView(leg.tokenOut);
-    const poolMetadata = poolDisplayMetadata(poolId, leg.venue);
-    const poolName = poolMetadata.displayName;
-    const fee =
-      quotedLeg?.fee.status === "available"
-        ? {
-            label: quotedLeg.fee.label,
-            tooltip: venueFeeTooltip(poolName, quotedLeg.fee.label),
-          }
-        : {
-            label: "Fee unavailable",
-            tooltip: unavailableVenueFeeTooltip(
-              poolName,
-              quotedLeg?.fee.reason ?? "No selected leg fee descriptor.",
-            ),
-          };
-
-    return {
-      id: `${index}-${leg.venue}-${leg.amountMode}`,
-      from: fromToken.symbol,
-      to: toToken.symbol,
-      fromToken,
-      toToken,
-      venue: leg.venue,
-      venueLabel: poolMetadata.venueLabel,
-      poolId: poolId ?? null,
-      poolName,
-      poolTypeLabel: poolMetadata.poolTypeLabel,
-      pairLabel: poolMetadata.pairLabel,
-      feeLabel: fee.label,
-      feeTooltip: fee.tooltip,
-      amountMode: leg.amountMode,
-      amountLabel: legAmountLabel(leg),
-    };
-  });
-  const path = edges.reduce<string[]>((tokens, edge) => {
-    if (tokens.length === 0) return [edge.from, edge.to];
-    return tokens[tokens.length - 1] === edge.to
-      ? tokens
-      : [...tokens, edge.to];
-  }, []);
-  const summary =
-    path.length > 0
-      ? path.join(" -> ")
-      : `${quote.tokenIn.symbol} -> ${quote.tokenOut.symbol}`;
+  const graph = buildFameSwapRouteGraph(quote);
+  const edges = graph.edges.map((edge) => ({
+    id: edge.id,
+    from: edge.fromToken.symbol,
+    to: edge.toToken.symbol,
+    fromToken: edge.fromToken,
+    toToken: edge.toToken,
+    venue: edge.venue,
+    venueLabel: edge.venueLabel,
+    poolId: edge.poolId,
+    poolName: edge.poolName,
+    poolTypeLabel: edge.poolTypeLabel,
+    pairLabel: edge.pairLabel,
+    feeLabel: edge.feeLabel,
+    feeAmountLabel: edge.feeAmountLabel,
+    feeDetailLabel: edge.feeDetailLabel,
+    feeTooltip: edge.feeTooltip,
+    amountMode: edge.amountMode,
+    amountLabel: edge.amountLabel,
+  }));
 
   return {
-    summary,
+    summary: graph.summary,
     edges,
     split: quote.capabilities.split || quote.capabilities.splitThenMerge,
     splitShareLabel:
       quote.capabilities.split || quote.capabilities.splitThenMerge
         ? "Split share unavailable"
         : null,
+    graph,
   };
 }
 
@@ -261,42 +208,41 @@ function marketImpactSummary(quote: FameSwapQuote | null): {
   };
 }
 
-function usdcEstimate(
-  quote: FameSwapQuote | null,
-  transaction: FameSwapQuoteViewTransaction,
-): FameSwapUsdcEstimate {
+function debitEstimate(quote: FameSwapQuote | null): FameSwapDebitEstimate {
+  const fame = tokenForAddress(FAME);
   const usdc = tokenForAddress(USDC);
-  if (!quote || !usdc) {
+  if (!quote) {
     return {
       status: "unavailable",
-      label: "USDC estimate unavailable",
+      metricLabel: "Est. USDC",
+      label: "Debit estimate unavailable",
       tone: "neutral",
     };
   }
 
-  if (quote.tokenIn.address.toLowerCase() === USDC.toLowerCase()) {
+  const tokenInAddress = quote.tokenIn.address.toLowerCase();
+  if (tokenInAddress === USDC.toLowerCase() && usdc) {
     return {
       status: "available",
+      metricLabel: "Est. USDC",
       label: formatTokenAmount(quote.requestedAmountIn, usdc),
-      tone: "positive",
+      tone: "negative",
     };
   }
 
-  if (
-    quote.status === "ready" &&
-    quote.tokenOut.address.toLowerCase() === USDC.toLowerCase() &&
-    transaction.simulatedOutput !== null
-  ) {
+  if (tokenInAddress === FAME.toLowerCase() && fame) {
     return {
       status: "available",
-      label: formatTokenAmount(transaction.simulatedOutput, usdc),
-      tone: "positive",
+      metricLabel: "$FAME",
+      label: formatTokenAmount(quote.requestedAmountIn, fame),
+      tone: "negative",
     };
   }
 
   return {
     status: "unavailable",
-    label: "USDC estimate unavailable",
+    metricLabel: "Est. USDC",
+    label: "Debit estimate unavailable",
     tone: "neutral",
   };
 }
@@ -430,7 +376,7 @@ export function fameSwapQuoteView(
     receiveTone: estimates.receiveTone,
     protectedMinimumLabel: estimates.protectedMinimumLabel,
     protectedMinimumTone: estimates.protectedMinimumTone,
-    usdcEstimate: usdcEstimate(quote, transaction),
+    debitEstimate: debitEstimate(quote),
     freshnessLabel: freshnessLabel(quote, transaction.quoteExpired),
     feeLabel: feePercentLabel,
     feeTooltip:

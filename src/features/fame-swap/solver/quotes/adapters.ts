@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import type { VenueFamilyName } from "../../router/types";
 import type { FamePoolFeeDescriptor, FamePoolEdge } from "../poolUniverse";
 import type { FameQuoteContext } from "./quoteContext";
 
@@ -67,7 +68,7 @@ export interface FameLegQuote {
   poolId: string;
   tokenIn: Address;
   tokenOut: Address;
-  venue: string;
+  venue: VenueFamilyName;
   amountIn: bigint;
   amountOut: bigint;
   minAmountOut: bigint;

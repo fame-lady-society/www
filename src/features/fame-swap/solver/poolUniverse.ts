@@ -60,7 +60,8 @@ function sameAddress(left: Address, right: Address): boolean {
 
 function feeLabel(feeBps: number): string {
   const percent = feeBps / 100;
-  return `${percent.toFixed(percent < 1 ? 2 : 2)}%`;
+  const decimals = percent < 0.01 ? 4 : percent < 0.1 ? 3 : 2;
+  return `${percent.toFixed(decimals)}%`;
 }
 
 export function feeDescriptorForPool(
@@ -98,7 +99,17 @@ function poolTokens(pool: FamePoolConfig): readonly [Address, Address] {
   return [pool.token0, pool.token1];
 }
 
-function manifestReady(venueOrdinal: VenueFamilyOrdinal, target: Address): boolean {
+function poolEnablementReady(pool: FamePoolConfig): boolean {
+  return pool.enablement?.status !== "blocked";
+}
+
+function manifestReady(
+  pool: FamePoolConfig,
+  venueOrdinal: VenueFamilyOrdinal,
+  target: Address,
+): boolean {
+  if (!poolEnablementReady(pool)) return false;
+
   return FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.some(
     (required) =>
       required.familyOrdinal === venueOrdinal &&
@@ -124,7 +135,7 @@ function buildEdge(
     venueOrdinal,
     target: pool.router,
     fee: feeDescriptorForPool(pool),
-    manifestReady: manifestReady(venueOrdinal, pool.router),
+    manifestReady: manifestReady(pool, venueOrdinal, pool.router),
   };
 }
 

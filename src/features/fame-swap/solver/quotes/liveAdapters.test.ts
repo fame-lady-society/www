@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { Address } from "viem";
 import { FAME, NATIVE_ETH, USDC, tokenForAddress } from "../../tokens";
 import { solveFameSwapAmountAsync } from "../amountSolver";
 import { famePoolEdges } from "../poolUniverse";
@@ -419,8 +420,10 @@ describe("FAME live liquidity quote adapter", () => {
       ...edge,
       pool: {
         ...edge.pool,
-        factory: "0x00000000000000000000000000000000000000f1",
-        router: "0x00000000000000000000000000000000000000f2",
+        factory:
+          "0x00000000000000000000000000000000000000f1" as const satisfies Address,
+        router:
+          "0x00000000000000000000000000000000000000f2" as const satisfies Address,
       },
     };
 

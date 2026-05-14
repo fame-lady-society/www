@@ -44,14 +44,14 @@ describe("FAME route lab", () => {
     }
   });
 
-  it("includes connector gap statuses in route-lab JSON rows", () => {
+  it("includes reviewed connector statuses in route-lab JSON rows", () => {
     const rows = runSnapshotRouteLab();
 
     for (const row of rows) {
       assert.ok(
         row.edgeMatrix.some(
           (edge) =>
-            edge.status === "missing" &&
+            edge.status !== "missing" &&
             edge.tokenIn.toLowerCase() === WETH.toLowerCase() &&
             edge.tokenOut.toLowerCase() === USDC.toLowerCase(),
         ),
@@ -76,8 +76,8 @@ describe("FAME route lab", () => {
       assert.ok(
         row.protocolCoverage.some(
           (coverage) =>
-            coverage.edgeStatus === "missing" &&
-            coverage.quote.status === "unavailable",
+            coverage.edgeStatus === "disabled" &&
+            coverage.quote.status === "disabled",
         ),
         row.id,
       );

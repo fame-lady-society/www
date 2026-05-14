@@ -4,6 +4,7 @@ import { FAME, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
 import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
+import { fameSwapQuoteView } from "../ui/quoteView";
 import {
   fameSwapErrorDetails,
   fameSwapErrorSummary,
@@ -40,6 +41,49 @@ describe("FameSwapWidget quote summary", () => {
         "Minimum after fee: waiting for wallet checks.",
       );
     }
+  });
+
+  it("exposes a route graph for the widget without changing quote summary behavior", () => {
+    const tokenIn = tokenForAddress(WETH);
+    const tokenOut = tokenForAddress(FAME);
+    const artifact = routeArtifactById("solver-weth-split-fame");
+    assert.ok(tokenIn);
+    assert.ok(tokenOut);
+    assert.ok(artifact);
+
+    const quote = quoteWithReadyReadiness({
+      tokenIn,
+      tokenOut,
+      amountIn: BigInt(artifact.route.amountIn),
+      recipient,
+      routerAddress,
+      now: new Date("2026-05-13T00:00:00Z"),
+      adapter: createDeterministicQuoteAdapter(),
+    });
+    const view = fameSwapQuoteView(quote, tokenOut, {
+      simulatedOutput: null,
+      protectedMinimum: null,
+      quoteExpired: false,
+      canApprove: false,
+      canSwap: false,
+      approvalConfirmed: false,
+      submitting: false,
+      protectedSimulationPending: false,
+      preApprovalSimulationError: null,
+      error: null,
+    });
+
+    assert.equal(
+      quoteSummary(quote),
+      "Minimum after fee: waiting for wallet checks.",
+    );
+    assert.equal(view.routeMap?.graph.topology, "split");
+    assert.equal(view.routeMap?.graph.branchGroups.length, 1);
+    assert.ok(
+      view.routeMap?.graph.edges.every(
+        (edge) => edge.share.source === "quoted_amount",
+      ),
+    );
   });
 });
 

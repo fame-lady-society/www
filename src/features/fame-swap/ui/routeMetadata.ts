@@ -1,5 +1,9 @@
 import type { Address } from "viem";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
+import {
+  routeTokenVisualAssetForAddress,
+  type FameSwapRouteAssetStatus,
+} from "./routeAssets";
 
 export interface FameRouteTokenMetadata {
   address: Address;
@@ -8,12 +12,21 @@ export interface FameRouteTokenMetadata {
   iconLabel: string;
   iconBackground: string;
   iconForeground: string;
+  imageSrc: string | null;
+  imageAlt: string | null;
+  imageStatus: FameSwapRouteAssetStatus;
+  imageProvenance: string;
   known: boolean;
 }
 
 type FameKnownRouteTokenMetadata = Omit<
   FameRouteTokenMetadata,
-  "address" | "known"
+  | "address"
+  | "imageAlt"
+  | "imageProvenance"
+  | "imageSrc"
+  | "imageStatus"
+  | "known"
 >;
 
 export const ZORA =
@@ -94,8 +107,11 @@ export function routeTokenMetadataForAddress(
   const normalized = address.toLowerCase();
   const known = ROUTE_TOKEN_METADATA[normalized];
   if (known) {
+    const visualAsset = routeTokenVisualAssetForAddress(address);
+
     return {
       ...known,
+      ...visualAsset,
       address,
       known: true,
     };
@@ -103,6 +119,8 @@ export function routeTokenMetadataForAddress(
 
   const appToken = tokenForAddress(address);
   if (appToken) {
+    const visualAsset = routeTokenVisualAssetForAddress(address);
+
     return {
       address,
       symbol: appToken.symbol,
@@ -110,9 +128,12 @@ export function routeTokenMetadataForAddress(
       iconLabel: appToken.symbol.slice(0, 2),
       iconBackground: "#64748b",
       iconForeground: "#ffffff",
+      ...visualAsset,
       known: true,
     };
   }
+
+  const visualAsset = routeTokenVisualAssetForAddress(address);
 
   return {
     address,
@@ -121,6 +142,7 @@ export function routeTokenMetadataForAddress(
     iconLabel: "??",
     iconBackground: "#64748b",
     iconForeground: "#ffffff",
+    ...visualAsset,
     known: false,
   };
 }

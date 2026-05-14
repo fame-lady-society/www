@@ -34,11 +34,12 @@ Route lab reports `computablePriceImpactLegs` and `maxLegMarketImpactBps`.
 
 ## Protocol Coverage Status
 
-- Uniswap V3: enabled. Quotes use the validated quoter path and carry after-price evidence.
+- Uniswap V2: enabled for reviewed pools. The current universe includes a direct USDC/WETH pair with reserve-based output and market-impact evidence.
+- Uniswap V3: enabled. Quotes use the validated quoter path and carry after-price evidence. The current universe includes reviewed direct USDC/WETH 5 bps and 30 bps pools.
 - Uniswap V4: enabled. Latest live route-lab runs select V4 pools on USDC, WETH, native ETH, and FAME sell routes. V4 legs carry output, pre-price, and market-impact-against-execution evidence; after-price remains unavailable from the current Base V4 quoter shape and should be filled by route or one-pool simulation evidence, not guessed.
-- Aerodrome Slipstream V1: enabled. Quotes use the validated Slipstream quoter path and carry after-price evidence where the quoter returns it.
+- Aerodrome Slipstream V1: enabled. Quotes use the validated Slipstream quoter path and carry after-price evidence where the quoter returns it. The reviewed USDC/WETH tick-spacing 100 pool is enabled. The migrating factory tick-spacing 50 USDC/WETH pool is present but disabled until router and quoter factory support are validated.
 - Aerodrome Slipstream2: enabled for the Base Gauge Caps deployment. Quotes use the dedicated Slipstream2 quoter path, read `slot0`, and report active-liquidity evidence from pool `liquidity()` when that read succeeds. Unknown Slipstream2 deployments still fail closed.
-- Solidly volatile: enabled with reserve-based impact evidence.
+- Solidly volatile: enabled with reserve-based impact evidence. The Aerodrome V2 USDC/WETH pool is present but disabled because the current Solidly adapter encodes 3-field routes, while Aerodrome V2 expects an explicit factory route shape.
 - Solidly stable: enabled for output quotes, but market-impact state output remains unavailable until the stable-curve transition price source is validated.
 
 ## Simulation Fallback
@@ -65,7 +66,7 @@ Every route-lab row includes an edge matrix for the amount bucket. Matrix status
 - `disabled`: edge exists in the reviewed pool universe but is not executable under current manifest/readiness policy.
 - `missing`: a configured connector probe has no reviewed pool-universe edge.
 
-The matrix always checks WETH/USDC connector probes for Aerodrome Slipstream and Solidly in both directions. If reviewed WETH/USDC pools are added later, those edges move to normal selected/considered/rejected/disabled statuses; until then they appear as missing connector gaps. Slipstream2 Gauge Caps edges are executable only when the router manifest/readiness policy includes their venue family and target.
+The matrix always checks WETH/USDC connector probes for Aerodrome Slipstream and Solidly in both directions. Reviewed WETH/USDC pools now appear as normal selected, considered, rejected, or disabled rows. Disabled rows are intentional for reviewed pools that are on-chain valid but not executable under the current router adapter or manifest policy. Slipstream2 Gauge Caps edges are executable only when the router manifest/readiness policy includes their venue family and target.
 
 The edge matrix is a follow-up source, not launch approval. Use it to create exact manifest or pool-universe follow-ups after reviewing recorded-state quote evidence and, where needed, live or fork simulation evidence.
 
@@ -86,10 +87,11 @@ Protocol coverage is route-lab/operator evidence. `/api/fame/swap/quote` strips 
 Recent verified runs:
 
 - Recorded route lab: `base-v1-live-45964183`, pinned Base block `45884844`.
-- Live route lab: Base block `45969952` through Doppler RPC.
+- Live route lab: Base block `45998621` through Doppler RPC.
 - Full-corpus fork smoke: pinned local Base fork block `45884844`, fork quote context block `45884855`, all 12 `FAME_ROUTE_CORPUS` cases passed protected route simulation.
 - Live V4 selections at block `45969952` included `uniswap-v4-basedflick-zora` on USDC -> FAME and WETH -> FAME, `uniswap-v4-zora-eth` plus `uniswap-v4-basedflick-zora` on native ETH -> FAME, and the reverse V4 path on FAME -> ETH.
-- `$5` USDC -> FAME is `ready` in both recorded and live modes, selecting `uniswap-v3-zora-usdc`, `slipstream-zora-weth`, and `uniswap-v2-fame-direct` in the latest live run. Deterministic mode remains the expected cap-profile failure.
+- `$5` USDC -> FAME is `ready` in both recorded and live modes. The latest live run considered the reviewed USDC/WETH connector pools, selected the USDC/frxUSD corridor, and kept deterministic mode as the expected cap-profile failure.
+- FAME -> USDC and representative WETH -> FAME live buckets now select the reviewed `slipstream-usdc-weth-100` connector. Native ETH buckets select `uniswap-v4-usdc-eth` without adding an ETH/WETH wrap or unwrap leg.
 - Solidly FAME -> USDC routes now report one computable market-impact leg for the volatile FAME/frxUSD hop; the stable USDC/frxUSD hop remains quoted but non-computable for market impact.
 - Representative larger USDC, WETH, and native ETH buckets now quote from liquidity evidence instead of deterministic capacity caps.
 

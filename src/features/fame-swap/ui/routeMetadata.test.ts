@@ -67,6 +67,15 @@ describe("FAME swap route metadata", () => {
         /^#[0-9a-f]{6}$/i,
         `${metadata.symbol} is missing a stable token badge color`,
       );
+      assert.equal(
+        metadata.imageStatus === "local" || metadata.imageStatus === "fallback",
+        true,
+        `${metadata.symbol} must resolve to a local image or badge fallback`,
+      );
+      assert.ok(
+        metadata.imageSrc || metadata.iconLabel,
+        `${metadata.symbol} is missing an image or first-class badge fallback`,
+      );
       assert.doesNotMatch(metadata.symbol, /^0x/i);
     }
   });
@@ -81,6 +90,11 @@ describe("FAME swap route metadata", () => {
         `${address} is missing route token metadata`,
       );
       assert.ok(metadata.symbol, `${address} is missing a token symbol`);
+      assert.equal(
+        metadata.imageStatus === "local" || metadata.imageStatus === "fallback",
+        true,
+        `${metadata.symbol} must resolve to a local image or badge fallback`,
+      );
       assert.doesNotMatch(metadata.symbol, /^0x/i);
     }
   });

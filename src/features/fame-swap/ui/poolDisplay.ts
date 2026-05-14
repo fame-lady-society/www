@@ -42,6 +42,11 @@ const POOL_DISPLAY_METADATA = {
     poolTypeLabel: "Solidly volatile pool",
     pairLabel: "WETH/FAME",
   },
+  "aerodrome-v2-usdc-weth": {
+    venueLabel: "Aerodrome",
+    poolTypeLabel: "Solidly volatile pool",
+    pairLabel: "USDC/WETH",
+  },
   "slipstream-basedflick-fame": {
     venueLabel: "Aerodrome Slipstream",
     poolTypeLabel: "Concentrated liquidity pool",
@@ -51,6 +56,16 @@ const POOL_DISPLAY_METADATA = {
     venueLabel: "Aerodrome Slipstream",
     poolTypeLabel: "Concentrated liquidity pool",
     pairLabel: "USDC/frxUSD",
+  },
+  "slipstream-usdc-weth-100": {
+    venueLabel: "Aerodrome Slipstream",
+    poolTypeLabel: "Concentrated liquidity pool",
+    pairLabel: "USDC/WETH",
+  },
+  "slipstream-usdc-weth-migrating-50": {
+    venueLabel: "Aerodrome Slipstream",
+    poolTypeLabel: "Migrating concentrated liquidity pool",
+    pairLabel: "USDC/WETH",
   },
   "slipstream-zora-usdc": {
     venueLabel: "Aerodrome Slipstream",
@@ -66,6 +81,21 @@ const POOL_DISPLAY_METADATA = {
     venueLabel: "Uniswap v2",
     poolTypeLabel: "Constant product pool",
     pairLabel: "WETH/FAME",
+  },
+  "uniswap-v2-usdc-weth": {
+    venueLabel: "Uniswap v2",
+    poolTypeLabel: "Constant product pool",
+    pairLabel: "USDC/WETH",
+  },
+  "uniswap-v3-usdc-weth-5bps": {
+    venueLabel: "Uniswap v3",
+    poolTypeLabel: "Concentrated liquidity pool",
+    pairLabel: "USDC/WETH",
+  },
+  "uniswap-v3-usdc-weth-30bps": {
+    venueLabel: "Uniswap v3",
+    poolTypeLabel: "Concentrated liquidity pool",
+    pairLabel: "USDC/WETH",
   },
   "uniswap-v3-zora-usdc": {
     venueLabel: "Uniswap v3",
@@ -86,6 +116,11 @@ const POOL_DISPLAY_METADATA = {
     venueLabel: "Uniswap v4",
     poolTypeLabel: "PoolManager pool",
     pairLabel: "ZORA/ETH",
+  },
+  "uniswap-v4-usdc-eth": {
+    venueLabel: "Uniswap v4",
+    poolTypeLabel: "PoolManager pool",
+    pairLabel: "USDC/ETH",
   },
 } as const satisfies Record<string, ReviewedFamePoolDisplayMetadata>;
 

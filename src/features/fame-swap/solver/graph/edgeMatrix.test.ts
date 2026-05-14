@@ -28,7 +28,7 @@ function cloneWethUsdcEdge(
 }
 
 describe("FAME route edge matrix", () => {
-  it("marks selected and missing WETH/USDC edges without disabling Slipstream2", () => {
+  it("marks selected and reviewed WETH/USDC edges without disabling Slipstream2", () => {
     const candidateSet = routeCandidatesForPair(USDC, FAME);
     const selectedCandidate = candidateSet.candidates[0];
     assert.ok(selectedCandidate);
@@ -48,7 +48,7 @@ describe("FAME route edge matrix", () => {
     assert.ok(
       rows.some(
         (row) =>
-          row.status === "missing" &&
+          row.status !== "missing" &&
           row.tokenIn.toLowerCase() === WETH.toLowerCase() &&
           row.tokenOut.toLowerCase() === USDC.toLowerCase(),
       ),
@@ -319,6 +319,16 @@ describe("FAME route edge matrix", () => {
         rejectedEdge,
         consideredEdge,
         disabledEdge,
+      ],
+      connectorProbes: [
+        {
+          id: "coverage-missing",
+          tokenIn: USDC,
+          tokenOut: FAME,
+          venue: "Any",
+          protocolVariant: "unit-missing",
+          reason: "Unit test missing connector.",
+        },
       ],
     });
     const coverage = buildFameRouteProtocolCoverage({

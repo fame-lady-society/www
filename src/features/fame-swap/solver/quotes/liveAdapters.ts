@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import type { FameSlipstreamPoolConfig } from "../../router/types";
 import type {
   FameAsyncQuoteAdapter,
   FameEdgeQuoteRequest,
@@ -863,10 +864,7 @@ async function quoteFromSlipstreamQuoter(
 }
 
 function slipstream2QuoterForPool(
-  pool: Extract<
-    FameEdgeQuoteRequest["edge"]["pool"],
-    { venue: "aerodrome-slipstream2" }
-  >,
+  pool: FameSlipstreamPoolConfig,
   quoterAddress: Address,
 ): Address | null {
   if (

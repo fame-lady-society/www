@@ -4,6 +4,7 @@ import {
   FAME_SWAP_SCHEMA_VERSION,
   venueFamilyOrdinals,
   type AmountModeName,
+  type FamePoolEnablement,
   type FamePoolConfig,
   type FamePoolUniverseFile,
   type FameRouteArtifact,
@@ -159,9 +160,19 @@ function parseInteger(
   return value;
 }
 
-function parseFiniteNumber(value: unknown, path: string): number {
+function parseFiniteNumber(
+  value: unknown,
+  path: string,
+  options: { min?: number } = {},
+): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     schemaError(path, "expected a finite number");
+  }
+  if (options.min !== undefined && value < options.min) {
+    schemaError(
+      path,
+      `expected a finite number greater than or equal to ${options.min}`,
+    );
   }
   return value;
 }
@@ -682,6 +693,39 @@ function parseConstantProductPoolFields(
   };
 }
 
+function parsePoolEnablement(
+  value: unknown,
+  path: string,
+): FamePoolEnablement {
+  const record = parseObject(value, path);
+  const status = parseEnum(getField(record, "status", path), `${path}.status`, [
+    "enabled",
+    "blocked",
+  ] as const);
+
+  if (status === "enabled") return { status };
+
+  return {
+    status,
+    reason: parseNonEmptyString(
+      getField(record, "reason", path),
+      `${path}.reason`,
+    ),
+  };
+}
+
+function poolBaseFields(
+  record: Record<string, unknown>,
+  path: string,
+): {
+  enablement?: FamePoolEnablement;
+} {
+  const enablement = getOptionalField(record, "enablement");
+  return enablement === undefined
+    ? {}
+    : { enablement: parsePoolEnablement(enablement, `${path}.enablement`) };
+}
+
 function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
   const record = parseObject(value, path);
   const id = parseRouteId(getField(record, "id", path), `${path}.id`);
@@ -694,6 +738,7 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
     getField(record, "router", path),
     `${path}.router`,
   );
+  const baseFields = poolBaseFields(record, path);
 
   switch (venue) {
     case "solidly": {
@@ -702,14 +747,16 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         id,
         venue,
         router,
+        ...baseFields,
         ...constantProduct,
         stable: parseBoolean(
           getField(record, "stable", path),
           `${path}.stable`,
         ),
-        feeBps: parseInteger(
+        feeBps: parseFiniteNumber(
           getField(record, "feeBps", path),
           `${path}.feeBps`,
+          { min: 0 },
         ),
       };
     }
@@ -719,10 +766,12 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         id,
         venue,
         router,
+        ...baseFields,
         ...constantProduct,
-        feeBps: parseInteger(
+        feeBps: parseFiniteNumber(
           getField(record, "feeBps", path),
           `${path}.feeBps`,
+          { min: 0 },
         ),
       };
     }
@@ -733,6 +782,7 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         id,
         venue,
         router,
+        ...baseFields,
         ...constantProduct,
         factory: parseAddress(
           getField(record, "factory", path),
@@ -743,9 +793,10 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
           `${path}.tickSpacing`,
           { min: 1 },
         ),
-        feeBps: parseInteger(
+        feeBps: parseFiniteNumber(
           getField(record, "feeBps", path),
           `${path}.feeBps`,
+          { min: 0 },
         ),
       };
     }
@@ -755,6 +806,7 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         id,
         venue,
         router,
+        ...baseFields,
         ...constantProduct,
         fee: parseInteger(getField(record, "fee", path), `${path}.fee`),
         tickSpacing: parseInteger(
@@ -770,6 +822,7 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         id,
         venue,
         router,
+        ...baseFields,
         poolManager: parseAddress(
           getField(record, "poolManager", path),
           `${path}.poolManager`,

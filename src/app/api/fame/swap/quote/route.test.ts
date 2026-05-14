@@ -8,7 +8,8 @@ import {
 import { createDeterministicQuoteAdapter } from "../../../../../features/fame-swap/solver/quotes/deterministicAdapter";
 import { FAME, USDC } from "../../../../../features/fame-swap/tokens";
 import { publicFeeBreakdown } from "../../../../../features/fame-swap/solver/quoteWire";
-import { handleFameSwapQuotePost, POST } from "./route";
+import { handleFameSwapQuotePost } from "./handler";
+import { POST } from "./route";
 
 function request(body: unknown): NextRequest {
   return new NextRequest("http://localhost/api/fame/swap/quote", {

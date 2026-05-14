@@ -4,6 +4,7 @@ import { FAME, USDC, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
 import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
+import type { FameRouteMarketImpactSummary } from "../solver/quotes/rankRoutes";
 import {
   fameSwapQuoteView,
   type FameSwapQuoteViewTransaction,
@@ -47,7 +48,7 @@ function quoteAdapter() {
 }
 
 function withMarketImpact<
-  T extends { feeBreakdown: { marketImpact: unknown } },
+  T extends { feeBreakdown: { marketImpact: FameRouteMarketImpactSummary } },
 >(quote: T, maxLegMarketImpactBps: number): T {
   return {
     ...quote,
@@ -63,7 +64,7 @@ function withMarketImpact<
 }
 
 describe("FAME swap quote view", () => {
-  it("shows direct USDC input as the USDC estimate for buy FAME", () => {
+  it("shows direct USDC input as the debit estimate for buy FAME", () => {
     const quote = quoteWithReadyReadiness({
       tokenIn: token(USDC),
       tokenOut: token(FAME),
@@ -77,9 +78,10 @@ describe("FAME swap quote view", () => {
 
     assert.equal(view.receiveTone, "positive");
     assert.equal(view.protectedMinimumTone, "positive");
-    assert.equal(view.usdcEstimate.status, "available");
-    assert.equal(view.usdcEstimate.label, "1 USDC");
-    assert.equal(view.usdcEstimate.tone, "positive");
+    assert.equal(view.debitEstimate.status, "available");
+    assert.equal(view.debitEstimate.metricLabel, "Est. USDC");
+    assert.equal(view.debitEstimate.label, "1 USDC");
+    assert.equal(view.debitEstimate.tone, "negative");
     assert.equal(view.feeLabel, "0.2222%");
     assert.match(view.feeTooltip ?? "", /router contract/i);
     assert.equal(view.venueFeeLabel, "Included in quote");
@@ -111,7 +113,7 @@ describe("FAME swap quote view", () => {
     );
   });
 
-  it("shows direct USDC output only after simulation", () => {
+  it("shows exact FAME input as the debit estimate for FAME sells", () => {
     const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc");
     const quote = quoteWithReadyReadiness({
       tokenIn: token(FAME),
@@ -135,8 +137,10 @@ describe("FAME swap quote view", () => {
     assert.equal(view.receiveTone, "positive");
     assert.equal(view.protectedMinimumLabel, "2.475 USDC");
     assert.equal(view.protectedMinimumTone, "positive");
-    assert.equal(view.usdcEstimate.label, "2.5 USDC");
-    assert.equal(view.usdcEstimate.tone, "positive");
+    assert.equal(view.debitEstimate.status, "available");
+    assert.equal(view.debitEstimate.metricLabel, "$FAME");
+    assert.equal(view.debitEstimate.label, "0.031597 FAME");
+    assert.equal(view.debitEstimate.tone, "negative");
     assert.equal(view.estimateSourceLabel, "Wallet-simulated output");
   });
 
@@ -167,7 +171,7 @@ describe("FAME swap quote view", () => {
     );
   });
 
-  it("does not invent USDC estimates for non-USDC routes", () => {
+  it("does not invent debit estimates for non-USDC non-FAME routes", () => {
     const amountIn = artifactAmount("solver-weth-split-fame");
     const quote = quoteWithReadyReadiness({
       tokenIn: token(WETH),
@@ -180,7 +184,7 @@ describe("FAME swap quote view", () => {
     });
     const view = fameSwapQuoteView(quote, token(FAME), transaction());
 
-    assert.equal(view.usdcEstimate.status, "unavailable");
+    assert.equal(view.debitEstimate.status, "unavailable");
   });
 
   it("uses server quote output when pre-approval wallet simulation is unavailable", () => {
@@ -236,6 +240,7 @@ describe("FAME swap quote view", () => {
     assert.equal(view.protectedMinimumLabel, "Enter amount");
     assert.equal(view.protectedMinimumTone, "neutral");
     assert.equal(view.estimateSourceLabel, null);
+    assert.equal(view.routeMap, null);
   });
 
   it("labels split routes without fake percentages", () => {
@@ -253,6 +258,13 @@ describe("FAME swap quote view", () => {
 
     assert.equal(view.routeMap?.split, true);
     assert.equal(view.routeMap?.splitShareLabel, "Split share unavailable");
+    assert.equal(view.routeMap?.graph.topology, "split");
+    assert.equal(view.routeMap?.graph.branchGroups.length, 1);
+    assert.ok(
+      view.routeMap?.graph.edges.every(
+        (edge) => edge.share.source === "quoted_amount",
+      ),
+    );
     assert.ok(
       view.routeMap?.edges.some((edge) => edge.amountLabel === "remaining"),
     );

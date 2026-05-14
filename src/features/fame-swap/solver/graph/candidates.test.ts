@@ -351,7 +351,11 @@ describe("FAME route candidate graph", () => {
     const { candidates } = routeCandidatesForPair(USDC, FAME, graph);
 
     assert.equal(
-      candidates.some((candidate) => candidate.kind === "split_merge"),
+      candidates.some(
+        (candidate) =>
+          candidate.kind === "split_merge" &&
+          poolPath(candidate).some((poolId) => poolId.includes("frxusd")),
+      ),
       false,
     );
   });

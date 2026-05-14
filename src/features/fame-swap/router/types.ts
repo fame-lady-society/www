@@ -178,6 +178,15 @@ export interface FameRouteGapMatrixFile {
   rows: FameRouteGapRow[];
 }
 
+export type FamePoolEnablement =
+  | {
+      status: "enabled";
+    }
+  | {
+      status: "blocked";
+      reason: string;
+    };
+
 export type FamePoolVenue =
   | "solidly"
   | "uniswap-v2"
@@ -190,6 +199,7 @@ export interface FamePoolBase {
   id: string;
   venue: FamePoolVenue;
   router: Address;
+  enablement?: FamePoolEnablement;
 }
 
 export interface FameConstantProductPoolBase extends FamePoolBase {

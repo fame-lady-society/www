@@ -54,7 +54,17 @@ describe("FAME pool universe", () => {
   it("builds directed edges for known launch route families", () => {
     assert.ok(famePoolEdgesForPair(WETH, FAME).length >= 2);
     assert.ok(famePoolEdgesForPair(USDC, FAME).length === 0);
-    assert.ok(famePoolEdgesForPair(USDC, WETH).length === 0);
+    assert.ok(
+      famePoolEdgesForPair(USDC, WETH).some(
+        (edge) => edge.poolId === "slipstream-usdc-weth-100",
+      ),
+    );
+    assert.ok(
+      famePoolEdgesForPair(USDC, WETH).some(
+        (edge) =>
+          edge.poolId === "aerodrome-v2-usdc-weth" && !edge.manifestReady,
+      ),
+    );
 
     const wethToFame = famePoolEdgesForPair(WETH, FAME).map(
       (edge) => edge.poolId,
@@ -64,8 +74,10 @@ describe("FAME pool universe", () => {
   });
 
   it("keeps native ETH distinct from WETH in v4 edges", () => {
-    const ethToZora = famePoolEdgesForPair(NATIVE_ETH, USDC);
-    assert.equal(ethToZora.length, 0);
+    const ethToUsdc = famePoolEdgesForPair(NATIVE_ETH, USDC);
+    assert.ok(
+      ethToUsdc.some((edge) => edge.poolId === "uniswap-v4-usdc-eth"),
+    );
 
     const universe = famePoolUniverse();
     const nativeEdges = universe.edges.filter((edge) =>

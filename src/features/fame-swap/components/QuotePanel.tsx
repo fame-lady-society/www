@@ -192,11 +192,11 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
         value={view.protectedMinimumLabel}
         tone={view.protectedMinimumTone}
       />
-      {view.usdcEstimate.status === "available" ? (
+      {view.debitEstimate.status === "available" ? (
         <QuoteMetric
-          label="Est. USDC"
-          value={view.usdcEstimate.label}
-          tone={view.usdcEstimate.tone}
+          label={view.debitEstimate.metricLabel}
+          value={view.debitEstimate.label}
+          tone={view.debitEstimate.tone}
         />
       ) : null}
       {view.feeLabel ? (
