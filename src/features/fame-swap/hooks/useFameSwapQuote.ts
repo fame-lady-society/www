@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
 import type { FameSwapConfig } from "../config";
@@ -32,6 +32,8 @@ export type FameSwapQuoteQueryKey = readonly [
     readonly refreshNonce: number;
   },
 ];
+
+export const FAME_SWAP_QUOTE_DEBOUNCE_MS = 350;
 
 export type FameSwapRemoteQuoteInput = UseFameSwapQuoteInput & {
   amountIn: bigint;
@@ -65,16 +67,45 @@ function quoteKey(
   const queryKey = fameSwapQuoteQueryKey(input, refreshNonce)[1];
 
   return [
+    ...quoteIdentityParts(queryKey),
+    queryKey.refreshNonce.toString(),
+  ].join(":");
+}
+
+function quoteIdentityParts(
+  queryKey: FameSwapQuoteQueryKey[1],
+): readonly string[] {
+  return [
     queryKey.tokenIn,
     queryKey.tokenOut,
-    queryKey.amountIn,
+    queryKey.amountIn ?? "no-amount",
     queryKey.recipient ?? "no-recipient",
     queryKey.routerAddress ?? "no-router",
     queryKey.slippageBps.toString(),
     queryKey.deadlineMinutes.toString(),
     queryKey.readiness,
-    queryKey.refreshNonce.toString(),
-  ].join(":");
+  ];
+}
+
+export function fameSwapQuoteInputKey(
+  input: UseFameSwapQuoteInput,
+): string | null {
+  if (input.amountIn === null) return null;
+  return quoteIdentityParts(fameSwapQuoteQueryKey(input, 0)[1]).join(":");
+}
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delayMs);
+
+    return () => clearTimeout(timeout);
+  }, [delayMs, value]);
+
+  return debouncedValue;
 }
 
 function readinessKey(readiness: FameSwapReadiness): string {
@@ -214,130 +245,93 @@ export function useFameSwapQuote(
     deadlineMinutes,
   } = input;
   const [refreshNonce, setRefreshNonce] = useState(0);
-  const key = useMemo(
-    () =>
-      quoteKey(
-        {
-          tokenIn,
-          tokenOut,
-          amountIn,
-          recipient,
-          config,
-          readiness,
-          deadlineMinutes,
-        },
-        refreshNonce,
-      ),
+  const currentInput = useMemo(
+    () => ({
+      tokenIn,
+      tokenOut,
+      amountIn,
+      recipient,
+      config,
+      readiness,
+      deadlineMinutes,
+    }),
     [
       amountIn,
       config,
       deadlineMinutes,
       readiness,
-      refreshNonce,
       recipient,
       tokenIn,
       tokenOut,
     ],
+  );
+  const debouncedInput = useDebouncedValue(
+    currentInput,
+    FAME_SWAP_QUOTE_DEBOUNCE_MS,
+  );
+  const key = useMemo(
+    () => quoteKey(currentInput, refreshNonce),
+    [currentInput, refreshNonce],
+  );
+  const inputKey = useMemo(
+    () => fameSwapQuoteInputKey(currentInput),
+    [currentInput],
+  );
+  const debouncedInputKey = useMemo(
+    () => fameSwapQuoteInputKey(debouncedInput),
+    [debouncedInput],
   );
   const queryKey = useMemo(
-    () =>
-      fameSwapQuoteQueryKey(
-        {
-          tokenIn,
-          tokenOut,
-          amountIn,
-          recipient,
-          config,
-          readiness,
-          deadlineMinutes,
-        },
-        refreshNonce,
-      ),
-    [
-      amountIn,
-      config,
-      deadlineMinutes,
-      readiness,
-      refreshNonce,
-      recipient,
-      tokenIn,
-      tokenOut,
-    ],
+    () => fameSwapQuoteQueryKey(debouncedInput, refreshNonce),
+    [debouncedInput, refreshNonce],
   );
-  const remoteInput = useMemo(
-    () =>
-      fameSwapRemoteQuoteInput({
-        tokenIn,
-        tokenOut,
-        amountIn,
-        recipient,
-        config,
-        readiness,
-        deadlineMinutes,
-      }),
-    [
-      amountIn,
-      config,
-      deadlineMinutes,
-      readiness,
-      recipient,
-      tokenIn,
-      tokenOut,
-    ],
+  const currentRemoteInput = useMemo(
+    () => fameSwapRemoteQuoteInput(currentInput),
+    [currentInput],
   );
+  const debouncedRemoteInput = useMemo(
+    () => fameSwapRemoteQuoteInput(debouncedInput),
+    [debouncedInput],
+  );
+  const quoteDebouncing =
+    currentRemoteInput !== null && inputKey !== debouncedInputKey;
   const query = useQuery<FameSwapQuote, Error>({
     queryKey,
-    enabled: remoteInput !== null,
+    enabled: debouncedRemoteInput !== null && !quoteDebouncing,
     queryFn: ({ signal }) => {
-      if (!remoteInput) {
+      if (!debouncedRemoteInput) {
         throw new Error("FAME quote query is disabled.");
       }
-      return fetchFameSwapRemoteQuote(remoteInput, signal);
+      return fetchFameSwapRemoteQuote(debouncedRemoteInput, signal);
     },
     retry: false,
     refetchOnWindowFocus: false,
   });
   const localQuote = useMemo(
-    () =>
-      remoteInput
-        ? null
-        : localBlockedQuote({
-            tokenIn,
-            tokenOut,
-            amountIn,
-            recipient,
-            config,
-            readiness,
-            deadlineMinutes,
-          }),
-    [
-      amountIn,
-      config,
-      deadlineMinutes,
-      readiness,
-      recipient,
-      remoteInput,
-      tokenIn,
-      tokenOut,
-    ],
+    () => (currentRemoteInput ? null : localBlockedQuote(currentInput)),
+    [currentInput, currentRemoteInput],
   );
 
   const refresh = useCallback(() => {
     setRefreshNonce((current) => current + 1);
   }, []);
-  const queryError = remoteInput && query.error ? query.error : null;
+  const queryError =
+    !quoteDebouncing && debouncedRemoteInput && query.error
+      ? query.error
+      : null;
   const remoteQuote =
-    remoteInput && queryError
-      ? queryFailureQuote(remoteInput, queryError)
-      : query.data ?? null;
+    !quoteDebouncing && debouncedRemoteInput && queryError
+      ? queryFailureQuote(debouncedRemoteInput, queryError)
+      : !quoteDebouncing
+        ? query.data ?? null
+        : null;
 
   return {
-    quote: remoteInput ? remoteQuote : localQuote,
+    quote: currentRemoteInput ? remoteQuote : localQuote,
     isLoading:
-      remoteInput !== null &&
-      query.isFetching &&
-      query.data === undefined &&
-      !queryError,
+      currentRemoteInput !== null &&
+      (quoteDebouncing ||
+        (query.isFetching && query.data === undefined && !queryError)),
     error: queryError,
     quoteKey: key,
     refresh,

@@ -14,6 +14,8 @@ import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "../solver/slippage";
 import type { FameSwapReadiness } from "../solver/types";
 import { FAME, USDC, tokenForAddress } from "../tokens";
 import {
+  FAME_SWAP_QUOTE_DEBOUNCE_MS,
+  fameSwapQuoteInputKey,
   fameSwapQuoteQueryKey,
   fameSwapRemoteQuoteEnabled,
   fameSwapRemoteQuoteInput,
@@ -103,6 +105,22 @@ describe("useFameSwapQuote", () => {
     assert.equal(key[1].deadlineMinutes, 20);
     assert.equal(key[1].readiness, `ready:${routerAddress}:2222`);
     assert.equal(key[1].refreshNonce, 7);
+  });
+
+  it("uses a bounded debounce window for quote-affecting input changes", () => {
+    const input = quoteInput();
+    const changedAmount = quoteInput({ amountIn: 2_000_000n });
+    const identity = fameSwapQuoteInputKey(input);
+
+    assert.equal(FAME_SWAP_QUOTE_DEBOUNCE_MS, 350);
+    assert.ok(identity);
+    assert.equal(identity.endsWith(":0"), false);
+    assert.notDeepEqual(
+      fameSwapQuoteQueryKey(input, 0),
+      fameSwapQuoteQueryKey(input, 1),
+    );
+    assert.notEqual(identity, fameSwapQuoteInputKey(changedAmount));
+    assert.equal(fameSwapQuoteInputKey(quoteInput({ amountIn: null })), null);
   });
 
   it("disables remote fetches for empty amount and local blocked states", () => {
