@@ -1,20 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import solverRoutesJson from "../artifacts/base-v1-solver-routes.json";
-import gapMatrixJson from "../artifacts/base-v1-route-gap-matrix.json";
-import parityVectorsJson from "../artifacts/base-v1-route-parity-vectors.json";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
+import { parsedFameSwapArtifactFiles } from "../solver/artifactFiles";
 import { FAME, NATIVE_ETH, USDC, WETH } from "../tokens";
 import { encodeJsonFameRoute, hashJsonFameRoute } from "./encodeRoute";
-import type {
-  FameRouteGapMatrixFile,
-  FameRouteParityVectorsFile,
-  FameSolverRoutesFile,
-} from "./types";
 
-const solverRoutes = solverRoutesJson as FameSolverRoutesFile;
-const gapMatrix = gapMatrixJson as FameRouteGapMatrixFile;
-const parityVectors = parityVectorsJson as FameRouteParityVectorsFile;
+const { solverRoutes, gapMatrix, parityVectors } =
+  parsedFameSwapArtifactFiles();
 
 describe("FAME router route encoding", () => {
   it("matches every checked-in parity vector", () => {

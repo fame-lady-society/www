@@ -1,0 +1,125 @@
+{
+  "reviewer": "testing",
+  "findings": [
+    {
+      "title": "Quote API lacks ready-path contract coverage",
+      "severity": "P2",
+      "file": "src/app/api/fame/swap/quote/route.ts",
+      "line": 215,
+      "why_it_matters": "The quote endpoint is the widget's executable API boundary. Current tests can pass while the ready path stops emitting usable approval, swap, route hash, deadline, slippage, or bigint-serialized quote fields, because the tested cases never force a successful live quote response.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Introduce an injectable handler/helper for readiness and quote adapter creation, then add a POST test with fake ready readiness and quote evidence that asserts the ready JSON contract, approval/swap shape, routeHash, expiresAt, and slippage/deadline handling.",
+      "confidence": 0.84,
+      "evidence": [
+        "route.ts:215-237 selects the live async quote path only when readiness is ready, then route.ts:251-275 serializes the executable API contract including routeHash, approval, swap, and route.",
+        "route.test.ts:15-75 only covers router override rejection, overlong amount rejection, and missing-RPC quote_adapter_failure. It never exercises a 200 ready response.",
+        "The endpoint constructs createPublicClient/createLiveLiquidityQuoteAdapter internally, so the current test surface has no seam for deterministic ready-path coverage without live RPC."
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "Quote hook fetch lifecycle is untested",
+      "severity": "P2",
+      "file": "src/features/fame-swap/hooks/useFameSwapQuote.ts",
+      "line": 425,
+      "why_it_matters": "This hook decides when the widget calls the API, when it stays local, how stale requests are aborted, and how API failures become non-executable quote_adapter_failure quotes. A regression here can leave the widget showing stale executable data or skipping the safe failure state even though the deserializer tests still pass.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Add hook-level tests with a mocked fetch and controllable readiness/recipient inputs for amount-null reset, not-ready or missing-recipient local quotes, ready POST body construction, non-OK error conversion, and stale/aborted response suppression.",
+      "confidence": 0.9,
+      "evidence": [
+        "useFameSwapQuote.ts:425-512 has branches for amount/key reset, local blocked quotes, live fetch, non-OK response handling, cancellation, AbortError, and generic fetch failures.",
+        "useFameSwapQuote.test.ts:38-132 imports and tests deserializeFameSwapQuoteResponse only. It does not render or invoke useFameSwapQuote and does not mock fetch.",
+        "No changed test file references fetch(), AbortError, refresh(), or the hook result fields isLoading/error/quoteKey."
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "Widget actions lack behavioral tests",
+      "severity": "P2",
+      "file": "src/features/fame-swap/components/FameSwapWidget.tsx",
+      "line": 231,
+      "why_it_matters": "The component wires amount validation, balance checks, readiness, wallet chain switching, approvals, swaps, and reset into a single primary CTA. Pure state tests do not prove the rendered widget disables or dispatches the correct action at the point where users can spend funds.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Add a component harness or extract a tested CTA decision helper covering invalid/excess amounts, wrong-chain switch, approval_needed submitApproval, ready submitSwap, confirmed reset, and advanced slippage/deadline propagation into the quote hook.",
+      "confidence": 0.88,
+      "evidence": [
+        "FameSwapWidget.tsx:231-240 computes primaryDisabled from state, readiness, amountBlocked, transaction capabilities, and switching/submitting state.",
+        "FameSwapWidget.tsx:248-269 handles the primary action branches for disconnected/no-op, chain switch, approval, swap, and confirmed reset.",
+        "FameSwapWidget.test.ts:12-39 only exercises quoteSummary. state.test.ts covers the pure fameSwapWidgetState mapper but not rendered wiring, hook inputs, button disabled state, or action dispatch."
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "V4 overflow guard lacks regression",
+      "severity": "P3",
+      "file": "src/features/fame-swap/solver/quotes/liveAdapters.ts",
+      "line": 713,
+      "why_it_matters": "The Uniswap V4 adapter has an explicit fail-closed guard before passing exactAmount into a uint128 quoter field. Without a regression test, a later refactor could remove or move the guard and only fail against live RPC with an encoding or revert error instead of a safe adapter rejection.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Add a liveAdapters test using a Uniswap V4 edge with amountIn = 1n << 128n, assert status failed/reason adapter_failure/message mentions uint128, and assert the quoter read is not called.",
+      "confidence": 0.89,
+      "evidence": [
+        "liveAdapters.ts:713-718 returns adapter_failure when request.amountIn exceeds MAX_UINT128.",
+        "liveAdapters.test.ts:361-412 covers the normal V4 quote request and asserts exactAmount: 12_345n, but no test uses an amount above the uint128 boundary.",
+        "Repository search for MAX_UINT128, uint128, and 'exceeds Uniswap V4' finds only the implementation, not a regression assertion."
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "Route-lab simulation path is untested",
+      "severity": "P2",
+      "file": "scripts/fame-swap-route-lab.ts",
+      "line": 207,
+      "why_it_matters": "The route lab is used as validation evidence, but the --simulate path contains separate approval-bundled simulation, native swap simulation, protected-minimum recalculation, and failure redaction logic. Bugs there can report false validation or leak provider diagnostics while the current recorded/deterministic tests stay green.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Expose or inject the simulation helper/client seam and add fake-client tests for missing account, non-ready skip, approval-then-swap success, native swap success, protected-minimum rerun, and failed simulation redaction.",
+      "confidence": 0.87,
+      "evidence": [
+        "fame-swap-route-lab.ts:207-333 implements simulateQuote with not-ready, no-client, no-account, approve-then-swap simulateCalls, direct simulateContract, protected minimum, and catch/redaction branches.",
+        "fame-swap-route-lab.ts:448-545 is the live route-lab path that calls simulateQuote when options.simulate is true.",
+        "fame-swap-route-lab.test.ts:12-104 covers recorded replay, deterministic replay, and markdown redaction only. It does not call runLiveRouteLab or exercise any simulation branch."
+      ],
+      "pre_existing": false
+    },
+    {
+      "title": "Fork harness has no unit-test seams",
+      "severity": "P2",
+      "file": "scripts/fame-swap-fork-smoke.ts",
+      "line": 204,
+      "why_it_matters": "The fork smoke harness now owns case selection, artifact hash validation, RPC proxying, local router readiness, token balance seeding, and protected-route execution evidence. With no unit-testable helpers, regressions in env parsing, redaction, hash checks, or selected cases are only caught by a full Anvil/RPC run, which is expensive and often skipped.",
+      "autofix_class": "safe_auto",
+      "owner": "review-fixer",
+      "requires_verification": true,
+      "suggested_fix": "Move pure helper logic into a side-effect-free module and add node:test coverage for FAME_SWAP_FORK_CASES default/all/empty/unknown handling, displaySafeProcessOutput redaction, artifact hash mismatch reporting with temp fixtures, and wrapper env generation/restoration behavior.",
+      "confidence": 0.86,
+      "evidence": [
+        "fame-swap-fork-smoke.ts:204-228 parses FAME_SWAP_FORK_CASES and throws for empty or unknown ids, but the function is private and the script executes main at import time.",
+        "fame-swap-fork-smoke.ts:437-445 redacts process output, and fame-swap-fork-smoke.ts:546-585 verifies all artifact hashes, but there is no changed fame-swap-fork-smoke.test.ts or helper test.",
+        "package.json adds fame-swap:fork, fame-swap:fork-smoke, and fame-swap:local-dev scripts, while scripts/fame-swap-fork.ts and scripts/fame-swap-local-dev.ts also have untested env write/restore and child-process line parsing logic."
+      ],
+      "pre_existing": false
+    }
+  ],
+  "residual_risks": [
+    "I did not execute the test suite; findings are based on tracked diff inspection only.",
+    "Generated wagmi output was not reviewed for dedicated test coverage because it appears code-generated and outside the requested focus."
+  ],
+  "testing_gaps": [
+    "No deterministic ready-path contract test for POST /api/fame/swap/quote.",
+    "No hook-level tests for useFameSwapQuote fetch/local/abort/error behavior.",
+    "No rendered FameSwapWidget tests for CTA gating and wallet action dispatch.",
+    "No regression test for Uniswap V4 uint128 overflow fail-closed behavior.",
+    "No simulation-path tests for route-lab --simulate.",
+    "No unit-testable coverage for fork smoke/fork/local-dev harness helper behavior."
+  ]
+}

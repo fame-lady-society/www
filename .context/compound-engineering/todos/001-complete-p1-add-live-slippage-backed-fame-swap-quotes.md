@@ -1,5 +1,5 @@
 ---
-status: completed
+status: complete
 priority: p1
 issue_id: "001"
 tags: [fame-swap, router, slippage, safety]
@@ -25,10 +25,12 @@ The FAME swap beta currently executes only exact pinned route amounts and gates 
 **Approach:** Simulate the materialized route, compute final minimum from the simulated net output and a configured slippage tolerance, then submit a route whose final minimum is updated immediately before wallet submission.
 
 **Pros:**
+
 - Prevents submissions with a `1` wei final minimum.
 - Keeps the existing exact-artifact route compiler as the source of path structure.
 
 **Cons:**
+
 - Per-leg minimums remain weak unless the router exposes per-leg quote data or the solver can recompute each leg.
 
 **Effort:** 1 day
@@ -40,10 +42,12 @@ The FAME swap beta currently executes only exact pinned route amounts and gates 
 **Approach:** Add a server-side quote endpoint that recomputes leg quotes, per-leg minimums, final minimum, route hash, and transaction request from live RPC state.
 
 **Pros:**
+
 - Produces complete slippage protection across split and multi-hop routes.
 - Gives the UI an explicit quote freshness boundary.
 
 **Cons:**
+
 - Larger surface area and needs rate limiting, caching, and RPC failure design.
 
 **Effort:** 2-4 days
@@ -72,14 +76,30 @@ Implemented in `src/features/fame-swap`: arbitrary amounts now materialize from 
 
 ## Work Log
 
+### 2026-05-14 - Completion Review
+
+**By:** Codex
+
+**Actions:**
+
+- Confirmed production quotes now use live or recorded quote evidence instead of arbitrary deterministic caps.
+- Confirmed non-ready quotes do not expose executable approval or swap requests.
+- Left follow-up route coverage, wire-contract tests, and protocol-state gaps as separate ready todos instead of keeping this P1 open.
+
+**Learnings:**
+
+- Slippage-backed quote protection is complete enough to close this item, but per-protocol leg evidence and route display work still need their own backlog entries.
+
 ### 2026-05-13 - Initial Discovery
 
 **By:** Codex
 
 **Actions:**
+
 - Built exact-artifact route materialization and transaction submission.
 - Added current-chain wallet simulation gating before swap submission.
 - Captured remaining slippage-policy gap from subagent review.
 
 **Learnings:**
+
 - The launch artifacts are good path evidence but not sufficient live slippage policy by themselves.

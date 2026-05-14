@@ -8,14 +8,24 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
   pinnedBaseBlock: 45_884_844,
   solverRoutesJsonHash:
     "0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218" as Hex,
+  solverRoutesContentHash:
+    "0x053806dd44f7bf3751a0675b628dd4558a155a9608e8635f8cbdb180c48041a8" as Hex,
   gapMatrixJsonHash:
     "0xe12b694540180d42f640c9b660379eab7e38caef92f24e22c629f6b6da4c427e" as Hex,
+  gapMatrixContentHash:
+    "0xb3d7a0f5f3a10368c5501ac0deb4e8bca4cfebb10749f79ee7cd7ee24a6cb11e" as Hex,
   parityVectorsJsonHash:
     "0xf9a0cfbddc5ad9a5a2507c490f592ec72ba111e48d3ec0ea8612f69e35998aee" as Hex,
+  parityVectorsContentHash:
+    "0x8ccba890d2ec3ed28586f548b087d53e36630fe1d4a55c8c21471bc9e1fb9cf2" as Hex,
   poolsJsonHash:
-    "0xa3a83e1eb4ab889a20c144f885ed3533a59784726098be3d43f3257d219af28b" as Hex,
+    "0xbff2a3e7f894e28a310faf27f5330928fa5795dd31b2431fd396d6c3da7fee18" as Hex,
+  poolsContentHash:
+    "0x22bb630d8fa7c58aa86ea870e07af5b519b0e931d660ebd19866892760f99dfa" as Hex,
   poolStateSnapshotJsonHash:
-    "0xf235b93fbf297af3210e779c0bd8d792f0c8912e6d1335853879339f94a80407" as Hex,
+    "0x5d7fa2a9ccd334bfae92e1ef1e8eb5b77ba48cc2e9945ee71769f014c75f4c07" as Hex,
+  poolStateSnapshotContentHash:
+    "0x2ade046cb16534b3e50a41b04c2885427d6d7fc0deba9d7865c7f3a553ba15de" as Hex,
   routeArtifactIds: [
     "solver-eth-zora-basedflick-fame",
     "solver-fame-basedflick-zora-eth",
@@ -30,6 +40,11 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
       family: "Slipstream",
       familyOrdinal: 2,
       target: "0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5",
+    },
+    {
+      family: "Slipstream2",
+      familyOrdinal: 3,
+      target: "0xcbBb8035cAc7D4B3Ca7aBb74cF7BdF900215Ce0D",
     },
     {
       family: "Solidly",

@@ -1,5 +1,6 @@
 "use client";
 
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -13,7 +14,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import type { FC, SyntheticEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { parseUnits } from "viem";
 import { base } from "viem/chains";
 import { useChainId, useSwitchChain } from "wagmi";
@@ -66,6 +67,35 @@ const fallbackLinks = [
     href: "https://aerodrome.finance/",
   },
 ] as const;
+
+function errorMessage(error: Error): string {
+  return error.message.trim() || "Wallet request failed.";
+}
+
+export function fameSwapErrorSummary(error: Error): string {
+  const normalized = errorMessage(error).replace(/\s+/g, " ");
+  const markerIndex = normalized.search(
+    /\b(?:Request Arguments|Contract Call|Docs|Details|Version):/i,
+  );
+  const summary =
+    markerIndex >= 0 ? normalized.slice(0, markerIndex).trim() : normalized;
+
+  if (/user (?:rejected|denied)|request rejected/i.test(normalized)) {
+    return "User rejected the request.";
+  }
+
+  return summary || "Wallet request failed.";
+}
+
+export function fameSwapErrorDetails(error: Error): string | null {
+  const raw = errorMessage(error);
+  return raw === fameSwapErrorSummary(error) ? null : raw;
+}
+
+function copyErrorDetails(details: string): void {
+  if (typeof navigator === "undefined" || !navigator.clipboard) return;
+  void navigator.clipboard.writeText(details);
+}
 
 function parseAmount(value: string, token: FameSwapToken): bigint | null {
   const trimmed = value.trim();
@@ -130,11 +160,50 @@ function balanceHelperText(
   return balanceStatus.status === "stale" ? `${label} (stale)` : label;
 }
 
+const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
+  const summary = fameSwapErrorSummary(error);
+  const details = fameSwapErrorDetails(error);
+
+  return (
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={{ xs: 0.5, sm: 1 }}
+      alignItems={{ xs: "flex-start", sm: "center" }}
+      sx={{ mt: 0.75 }}
+    >
+      <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }}>
+        {summary}
+      </Typography>
+      {details ? (
+        <Tooltip title="Copy full wallet error details" arrow>
+          <Button
+            type="button"
+            size="small"
+            color="inherit"
+            variant="text"
+            startIcon={<ContentCopyIcon fontSize="small" />}
+            onClick={() => copyErrorDetails(details)}
+            sx={{
+              flex: "0 0 auto",
+              minWidth: 0,
+              px: 0.75,
+              py: 0.25,
+              textTransform: "none",
+            }}
+          >
+            Copy details
+          </Button>
+        </Tooltip>
+      ) : null}
+    </Stack>
+  );
+};
+
 export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const {
-    switchChain,
+    switchChainAsync,
     isPending: isSwitchingChain,
     error: switchChainError,
   } = useSwitchChain();
@@ -148,7 +217,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     DEFAULT_FAME_SWAP_DEADLINE_MINUTES,
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const autoSwitchRequested = useRef(false);
   const compact = mode === "compact";
   const onBase = chainId === base.id;
   const pair = useMemo(() => deriveFameSwapPair(trade), [trade]);
@@ -160,16 +228,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     }),
     [baseConfig, slippageBps],
   );
-
-  useEffect(() => {
-    if (!isConnected || onBase || isSwitchingChain || autoSwitchRequested.current) {
-      if (onBase) autoSwitchRequested.current = false;
-      return;
-    }
-
-    autoSwitchRequested.current = true;
-    switchChain({ chainId: base.id });
-  }, [isConnected, isSwitchingChain, onBase, switchChain]);
 
   const parsedAmount = useMemo(
     () => parseAmount(amount, pair.inputToken),
@@ -245,12 +303,28 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
       ? "Switching to Base"
       : state.ctaLabel;
 
-  const handlePrimaryAction = useCallback(() => {
+  const ensureBaseChain = useCallback(async () => {
+    if (onBase) return true;
+
+    try {
+      await switchChainAsync({ chainId: base.id });
+      return true;
+    } catch {
+      return false;
+    }
+  }, [onBase, switchChainAsync]);
+
+  const handlePrimaryAction = useCallback(async () => {
     if (!isConnected) return;
-    if (!onBase) {
-      switchChain({ chainId: base.id });
+
+    if (state.kind === "confirmed") {
+      transaction.reset();
+      setAmount("");
       return;
     }
+
+    if (state.kind !== "approval_needed" && state.kind !== "ready") return;
+    if (!(await ensureBaseChain())) return;
 
     if (state.kind === "approval_needed") {
       void transaction.submitApproval();
@@ -261,12 +335,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
       void transaction.submitSwap();
       return;
     }
-
-    if (state.kind === "confirmed") {
-      transaction.reset();
-      setAmount("");
-    }
-  }, [isConnected, onBase, state.kind, switchChain, transaction]);
+  }, [ensureBaseChain, isConnected, state.kind, transaction]);
 
   const handleModeChange = useCallback(
     (_event: SyntheticEvent, value: FameSwapTradeMode | null) => {
@@ -310,6 +379,17 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   const approvalRequired = Boolean(
     quoteReady && quote.approval !== null && !transaction.approvalConfirmed,
   );
+  const alertErrors = [
+    switchChainError,
+    transaction.error,
+    quoteRequestError,
+  ].filter((error): error is Error => error instanceof Error);
+  const uniqueAlertErrors = alertErrors.filter(
+    (error, index, errors) =>
+      errors.findIndex(
+        (entry) => errorMessage(entry) === errorMessage(error),
+      ) === index,
+  );
 
   return (
     <Box
@@ -329,7 +409,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
             FAME swap
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Base router quotes with wallet simulation before submit.
+            via preferred liquidity
           </Typography>
         </div>
 
@@ -364,7 +444,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
                   type="button"
                   aria-label="Swap side"
                   disabled={state.tokenSelectDisabled}
-                  onClick={() => setTrade((current) => flipFameSwapMode(current))}
+                  onClick={() =>
+                    setTrade((current) => flipFameSwapMode(current))
+                  }
                   sx={{
                     alignSelf: { xs: "stretch", sm: "center" },
                     border: "1px solid",
@@ -472,21 +554,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           <Typography variant="body2" sx={{ mt: 0.75 }}>
             {alertRecovery}
           </Typography>
-          {switchChainError ? (
-            <Typography variant="body2" sx={{ mt: 0.75 }}>
-              {switchChainError.message}
-            </Typography>
-          ) : null}
-          {transaction.error ? (
-            <Typography variant="body2" sx={{ mt: 0.75 }}>
-              {transaction.error.message}
-            </Typography>
-          ) : null}
-          {quoteRequestError ? (
-            <Typography variant="body2" sx={{ mt: 0.75 }}>
-              {quoteRequestError.message}
-            </Typography>
-          ) : null}
+          {uniqueAlertErrors.map((error) => (
+            <AlertErrorLine key={errorMessage(error)} error={error} />
+          ))}
         </Alert>
 
         <FameSwapTransactionTimeline

@@ -9,6 +9,14 @@ BASE_RPC_URL=<base-rpc-url> \
 bun run fame-swap:fork-smoke
 ```
 
+Verified pinned archive run on 2026-05-14:
+
+```bash
+doppler run -- bun run fame-swap:fork-smoke
+```
+
+That run used the default Doppler `fls` / `dev` secret context, with `NEXT_PUBLIC_BASE_RPC_URL_1` supplied by the local Doppler fallback file, `FAME_SWAP_FORK_BLOCK` unset, and `FAME_SWAP_ALLOW_RPC_URL_PROCESS_ARG` unset. The harness used the loopback RPC proxy, forked the manifest-pinned Base block `45884844`, deployed a local router, and passed the six default fork cases with quote context `fork:8453:45884855`.
+
 To keep the fork/router alive for browser testing:
 
 ```bash
@@ -68,6 +76,26 @@ When secrets are managed by Doppler, run the same command inside a minimal confi
 
 `fame-swap:fork-smoke` defaults to representative release route families: `usdc-fame-five-dollars`, `fame-usdc-fixture`, `weth-fame-small-direct`, `fame-weth-fixture`, `eth-fame-fixture`, and `fame-eth-fixture`. Set `FAME_SWAP_FORK_CASES=all` for the full corpus, or a comma-separated case list for targeted route and pool stress checks.
 
+## Artifact Sync
+
+The checked-in route artifacts are copied from the sibling contracts repo and pinned by `src/features/fame-swap/artifacts/manifest.ts`. To refresh them from the same source layout:
+
+```bash
+SOURCE=../fame-contracts/test/router/fixtures
+cp "$SOURCE/base-v1-solver-routes.json" src/features/fame-swap/artifacts/base-v1-solver-routes.json
+cp "$SOURCE/base-v1-route-gap-matrix.json" src/features/fame-swap/artifacts/base-v1-route-gap-matrix.json
+cp "$SOURCE/base-v1-route-parity-vectors.json" src/features/fame-swap/artifacts/base-v1-route-parity-vectors.json
+cp "$SOURCE/base-v1-pools.json" src/features/fame-swap/artifacts/base-v1-pools.json
+```
+
+After copying, update `manifest.ts` from `FameRouterSolverFixtureManifest.sol` in that same fixture directory, including the source commit, pinned Base block, route ids, JSON hashes, and imported-content hashes. The schema parser is the early shape gate; the manifest hashes remain the drift gate.
+
+Run the artifact checks before using refreshed artifacts:
+
+```bash
+bun test src/features/fame-swap/solver/artifactSchema.test.ts src/features/fame-swap/router/encodeRoute.test.ts src/features/fame-swap/solver/poolUniverse.test.ts src/features/fame-swap/solver/quotes/snapshotAdapter.test.ts src/features/fame-swap/solver/readiness.test.ts
+```
+
 ## What It Checks
 
 - Starts local `anvil` forked from the manifest-pinned Base block. Set `FAME_SWAP_FORK_BLOCK=latest` only when using a non-archive RPC for exploratory validation; that path is nondeterministic and does not replace pinned-block validation.
@@ -80,5 +108,15 @@ When secrets are managed by Doppler, run the same command inside a minimal confi
 - Simulates `executeRoute` once as a probe, computes the slippage-protected final minimum, then simulates the exact protected route that would be submitted.
 
 The script exits non-zero if RPC, `anvil`, router config, readiness, or simulation fail. It proxies the upstream RPC through a local loopback URL so secret-bearing RPC URLs are not passed to `anvil` as command-line arguments, and it uses temporary Foundry cache/output directories for local router deployment.
+
+Archive providers can be slower at the pinned block than at latest state. The harness starts Anvil with a 120s upstream fork timeout, 8 retries, and 1s initial fork retry backoff by default. Override those only for provider-specific debugging:
+
+```bash
+FAME_SWAP_ANVIL_FORK_TIMEOUT_MS=180000 \
+FAME_SWAP_ANVIL_FORK_RETRIES=10 \
+FAME_SWAP_ANVIL_FORK_RETRY_BACKOFF_MS=1000 \
+BASE_RPC_URL=<base-archive-rpc-url> \
+bun run fame-swap:fork-smoke
+```
 
 If the loopback proxy is incompatible with an RPC provider during local debugging, `FAME_SWAP_ALLOW_RPC_URL_PROCESS_ARG=1` bypasses the proxy. Use that only on a trusted workstation because the RPC URL can then appear in local process listings.

@@ -1,0 +1,56 @@
+{
+  "reviewer": "correctness",
+  "findings": [
+    {
+      "title": "Artifact hash mismatches do not fail readiness at runtime",
+      "severity": "high",
+      "file": "src/features/fame-swap/solver/integrity.ts",
+      "line": 106,
+      "confidence": 0.88,
+      "autofix_class": "manual",
+      "owner": "feature",
+      "requires_verification": true,
+      "pre_existing": false,
+      "description": "artifactIntegrityIssue() is the gate used by staticReadiness(), but it only checks schema/block headers, route self-hashes, route references, parity self-hashes, and snapshot shape. It never computes the manifest content hashes for solver routes, gap matrix, parity vectors, pools, or the pool-state snapshot. staticReadiness() separately compares config.expected*Hash values to the manifest constants, so a deployment can report ready when the imported artifact files have drifted from those manifest hashes as long as the semantic checks still pass.",
+      "impact": "The live API/widget solver can build routes from unpinned pool metadata or recorded quote artifacts while still passing readiness. For example, changing a pool address/fee in base-v1-pools.json or a positive quote amount in the snapshot does not trip artifactIntegrityIssue(), but those values are then used by route generation and quote replay.",
+      "suggested_fix": "Add runtime-safe content-hash verification for every manifest hash before returning null from artifactIntegrityIssue(). If raw file bytes are unavailable in client bundles, generate and import canonical artifact hashes during build, or hash a deterministic canonical serialization that the manifest also uses. Add regression tests that mutate each artifact class and assert staticReadiness() returns artifact_hash_mismatch."
+    },
+    {
+      "title": "78-digit amount validation still accepts values outside uint256",
+      "severity": "medium",
+      "file": "src/app/api/fame/swap/quote/route.ts",
+      "line": 161,
+      "confidence": 0.84,
+      "autofix_class": "small",
+      "owner": "feature",
+      "requires_verification": true,
+      "pre_existing": false,
+      "description": "The quote API accepts any integer string up to 78 digits, but many 78-digit values are greater than uint256 max. Those values pass the handler validation and are converted to BigInt. A live reserve-math route can then be selected, after which solveFameSwapAmountAsync() calls hashFameRoute()/encodeFameRoute() for uint256 fields and viem throws IntegerOutOfRangeError.",
+      "impact": "A public quote request such as amountIn = '9'.repeat(78) can turn an invalid user amount into an unhandled 500 instead of a controlled 400/no_safe_route response. The same boundary can surface from the widget if a user enters an extremely large decimal amount.",
+      "suggested_fix": "Parse amountIn once in the API, reject values greater than 2^256 - 1, and pass the parsed bigint forward. Consider sharing the same uint256 guard with the solver or route encoder so non-API callers also fail closed before ABI encoding."
+    },
+    {
+      "title": "Failed wallet submission is treated as terminal revert and blocks retry",
+      "severity": "medium",
+      "file": "src/features/fame-swap/hooks/useFameSwapTransaction.ts",
+      "line": 410,
+      "confidence": 0.91,
+      "autofix_class": "small",
+      "owner": "feature",
+      "requires_verification": true,
+      "pre_existing": false,
+      "description": "submitApproval() and submitSwap() set localError for wallet rejection or writeContractAsync failures before any transaction hash exists. The hook then derives reverted as receipt.isError || localError !== null. FameSwapWidget maps reverted ahead of approval/ready states and disables the primary CTA, so a user who rejects the wallet prompt or hits a transient submit failure cannot retry the same quote.",
+      "impact": "A retryable client-side failure becomes a terminal 'Swap reverted' state. The user must change the quote inputs or otherwise force the execution key to reset before trying the same approval/swap again.",
+      "suggested_fix": "Separate retryable submission errors from on-chain reverts. Only set reverted for a receipt status of reverted (or an actual transaction receipt failure that should be terminal), keep write/user-rejection errors in error, clear them at the start of another submit, and allow canApprove/canSwap to remain true when the quote is still valid."
+    }
+  ],
+  "residual_risks": [
+    "Reviewed the tracked branch diff statically; did not run the full test suite or live fork validation.",
+    "Generated wagmi output and large JSON artifact contents were sampled for correctness-relevant behavior rather than line-reviewed exhaustively."
+  ],
+  "testing_gaps": [
+    "No readiness test mutates each artifact file while leaving headers/self-hashes valid to prove manifest content-hash drift fails closed.",
+    "No API boundary test covers amountIn values above uint256 max but within the current 78-digit length limit.",
+    "No hook/widget test covers wallet rejection or writeContractAsync failure and verifies the same quote remains retryable."
+  ]
+}

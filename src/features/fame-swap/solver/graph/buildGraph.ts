@@ -6,15 +6,20 @@ export interface FamePoolGraph {
   edgesFrom(token: Address): readonly FamePoolEdge[];
 }
 
+export interface FamePoolGraphOptions {
+  includeManifestDisabled?: boolean;
+}
+
 function normalizedAddress(address: Address): string {
   return address.toLowerCase();
 }
 
 export function buildFamePoolGraph(
   edges: readonly FamePoolEdge[] = famePoolEdges(),
+  options: FamePoolGraphOptions = {},
 ): FamePoolGraph {
-  const readyEdges = edges
-    .filter((edge) => edge.manifestReady)
+  const graphEdges = edges
+    .filter((edge) => options.includeManifestDisabled || edge.manifestReady)
     .slice()
     .sort((left, right) => {
       const tokenCompare = normalizedAddress(left.tokenIn).localeCompare(
@@ -25,7 +30,7 @@ export function buildFamePoolGraph(
     });
   const edgesByInput = new Map<string, FamePoolEdge[]>();
 
-  for (const edge of readyEdges) {
+  for (const edge of graphEdges) {
     const key = normalizedAddress(edge.tokenIn);
     const existing = edgesByInput.get(key) ?? [];
     existing.push(edge);
@@ -33,7 +38,7 @@ export function buildFamePoolGraph(
   }
 
   return {
-    edges: readyEdges,
+    edges: graphEdges,
     edgesFrom(token) {
       return edgesByInput.get(normalizedAddress(token)) ?? [];
     },

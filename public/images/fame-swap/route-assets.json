@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "runtimePolicy": "local-assets-or-badge-fallback",
+  "onlineDiscoveryPerformed": false,
+  "notes": [
+    "No online token image discovery was performed for the first graph implementation.",
+    "Runtime rendering must use local image paths from this manifest or deterministic badge fallbacks from route metadata.",
+    "Fetched SVG or unreviewed remote content is not accepted into the runtime asset set."
+  ],
+  "tokens": [
+    {
+      "address": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+      "symbol": "FAME",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use FAME badge fallback."
+    },
+    {
+      "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "symbol": "USDC",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use USDC badge fallback."
+    },
+    {
+      "address": "0x4200000000000000000000000000000000000006",
+      "symbol": "WETH",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use WETH badge fallback."
+    },
+    {
+      "address": "0x0000000000000000000000000000000000000000",
+      "symbol": "ETH",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "Native ETH uses the badge fallback until a reviewed local asset is committed."
+    },
+    {
+      "address": "0x1111111111166b7fe7bd91427724b487980afc69",
+      "symbol": "ZORA",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use ZORA badge fallback."
+    },
+    {
+      "address": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      "symbol": "basedflick",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use basedflick badge fallback."
+    },
+    {
+      "address": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+      "symbol": "frxUSD",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use frxUSD badge fallback."
+    },
+    {
+      "address": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+      "symbol": "SCALE",
+      "localImagePath": null,
+      "status": "fallback",
+      "source": "Existing reviewed badge metadata",
+      "retrievedDate": null,
+      "fileType": null,
+      "provenanceNote": "No reviewed local token image cached yet; use SCALE badge fallback."
+    }
+  ]
+}

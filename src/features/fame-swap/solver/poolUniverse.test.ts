@@ -7,6 +7,7 @@ import { NATIVE_ETH, FAME, USDC, WETH } from "../tokens";
 import { solverRoutesFile } from "./artifacts";
 import { artifactIntegrityIssue } from "./integrity";
 import {
+  feeDescriptorForPool,
   famePoolById,
   famePoolEdgesForPair,
   famePoolUniverse,
@@ -19,7 +20,10 @@ describe("FAME pool universe", () => {
       "src/features/fame-swap/artifacts/base-v1-pools.json",
     );
 
-    assert.equal(keccak256(toHex(bytes)), FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash);
+    assert.equal(
+      keccak256(toHex(bytes)),
+      FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    );
     assert.equal(artifactIntegrityIssue(), null);
   });
 
@@ -31,10 +35,36 @@ describe("FAME pool universe", () => {
     }
   });
 
+  it("has reviewed fee metadata for every pinned route pool", () => {
+    for (const route of solverRoutesFile.routes) {
+      for (const poolId of route.poolIds) {
+        const pool = famePoolById(poolId);
+        assert.ok(pool, `${route.id} references ${poolId}`);
+
+        const fee = feeDescriptorForPool(pool);
+        assert.equal(
+          fee.status,
+          "available",
+          `${route.id} uses ${poolId} without reviewed fee metadata`,
+        );
+      }
+    }
+  });
+
   it("builds directed edges for known launch route families", () => {
     assert.ok(famePoolEdgesForPair(WETH, FAME).length >= 2);
     assert.ok(famePoolEdgesForPair(USDC, FAME).length === 0);
-    assert.ok(famePoolEdgesForPair(USDC, WETH).length === 0);
+    assert.ok(
+      famePoolEdgesForPair(USDC, WETH).some(
+        (edge) => edge.poolId === "slipstream-usdc-weth-100",
+      ),
+    );
+    assert.ok(
+      famePoolEdgesForPair(USDC, WETH).some(
+        (edge) =>
+          edge.poolId === "aerodrome-v2-usdc-weth" && !edge.manifestReady,
+      ),
+    );
 
     const wethToFame = famePoolEdgesForPair(WETH, FAME).map(
       (edge) => edge.poolId,
@@ -44,15 +74,19 @@ describe("FAME pool universe", () => {
   });
 
   it("keeps native ETH distinct from WETH in v4 edges", () => {
-    const ethToZora = famePoolEdgesForPair(NATIVE_ETH, USDC);
-    assert.equal(ethToZora.length, 0);
+    const ethToUsdc = famePoolEdgesForPair(NATIVE_ETH, USDC);
+    assert.ok(
+      ethToUsdc.some((edge) => edge.poolId === "uniswap-v4-usdc-eth"),
+    );
 
     const universe = famePoolUniverse();
     const nativeEdges = universe.edges.filter((edge) =>
       isNativeEthAddress(edge.tokenIn),
     );
 
-    assert.ok(nativeEdges.some((edge) => edge.poolId === "uniswap-v4-zora-eth"));
+    assert.ok(
+      nativeEdges.some((edge) => edge.poolId === "uniswap-v4-zora-eth"),
+    );
     assert.ok(
       !nativeEdges.some(
         (edge) => edge.tokenIn.toLowerCase() === WETH.toLowerCase(),

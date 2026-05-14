@@ -15,6 +15,20 @@ import {
   quoteFameSwapAsync,
   quoteWithReadyReadiness,
 } from "../src/features/fame-swap/solver/quote";
+import {
+  routeCandidatesForPair,
+  type FameRouteCandidateBudgets,
+} from "../src/features/fame-swap/solver/graph/candidates";
+import type {
+  FameRouteCandidateRejected,
+  FameRouteCandidateSet,
+} from "../src/features/fame-swap/solver/graph/routePlan";
+import {
+  buildFameRouteEdgeMatrix,
+  buildFameRouteProtocolCoverage,
+  type FameRouteEdgeMatrixRow,
+  type FameRouteProtocolCoverageRow,
+} from "../src/features/fame-swap/solver/graph/edgeMatrix";
 import { fameSwapTransactionRequests } from "../src/features/fame-swap/transactions";
 import { getFameSwapConfig } from "../src/features/fame-swap/config";
 import {
@@ -65,6 +79,12 @@ export interface FameRouteLabRow {
     reason: string;
     message: string;
   }>;
+  candidateGenerationDiagnostics: Array<{
+    reason: string;
+    detail: string;
+  }>;
+  edgeMatrix: FameRouteEdgeMatrixRow[];
+  protocolCoverage: FameRouteProtocolCoverageRow[];
   simulation: FameRouteLabSimulation;
   suggestedContractTodo: string | null;
 }
@@ -76,13 +96,13 @@ export type FameRouteLabSimulation =
     }
   | {
       status: "passed";
-      account: Address;
+      account: string;
       output: string;
       protectedMinimum: string;
     }
   | {
       status: "failed";
-      account: Address;
+      account: string;
       message: string;
     };
 
@@ -91,11 +111,24 @@ interface RouteLabClient {
   request: (request: unknown) => Promise<unknown>;
 }
 
+interface RouteLabOptions {
+  candidateBudgets?: Partial<FameRouteCandidateBudgets>;
+}
+
 export function runSnapshotRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
+  options: RouteLabOptions = {},
 ): FameRouteLabRow[] {
   const adapter = createSnapshotQuoteAdapter();
   return corpus.map((entry) => {
+    const candidateSet = routeCandidatesForPair(
+      entry.tokenIn,
+      entry.tokenOut,
+      undefined,
+      {
+        budgets: options.candidateBudgets,
+      },
+    );
     const quote = quoteWithReadyReadiness({
       tokenIn: token(entry.tokenIn),
       tokenOut: token(entry.tokenOut),
@@ -105,6 +138,11 @@ export function runSnapshotRouteLab(
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
+    const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
+    const simulation: FameRouteLabSimulation = {
+      status: "not_requested",
+      message: "Recorded quote replay does not run live route simulation.",
+    };
 
     return {
       mode: "recorded",
@@ -142,10 +180,12 @@ export function runSnapshotRouteLab(
               message: displaySafeDiagnosticMessage(candidate.message),
             }))
           : [],
-      simulation: {
-        status: "not_requested",
-        message: "Recorded quote replay does not run live route simulation.",
-      },
+      candidateGenerationDiagnostics: candidateGenerationDiagnostics(
+        candidateSet.rejected,
+      ),
+      edgeMatrix,
+      protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
+      simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
     };
   });
@@ -164,6 +204,43 @@ function quoteContextLabel(quote: FameSwapQuote): string | null {
   }
 }
 
+function routeEdgeMatrix(
+  candidateSet: FameRouteCandidateSet,
+  quote: FameSwapQuote,
+): FameRouteEdgeMatrixRow[] {
+  return buildFameRouteEdgeMatrix({
+    candidateSet,
+    selectedCandidateId:
+      quote.status === "ready" ? quote.routeArtifactId : null,
+    rejectedCandidates:
+      "rejectedCandidates" in quote ? quote.rejectedCandidates : [],
+  });
+}
+
+function routeProtocolCoverage(
+  edgeMatrix: readonly FameRouteEdgeMatrixRow[],
+  quote: FameSwapQuote,
+  simulation: FameRouteLabSimulation,
+): FameRouteProtocolCoverageRow[] {
+  return buildFameRouteProtocolCoverage({
+    edgeMatrix,
+    selectedLegQuotes:
+      quote.status === "ready" ? quote.feeBreakdown.legs : undefined,
+    rejectedCandidates:
+      "rejectedCandidates" in quote ? quote.rejectedCandidates : [],
+    simulation,
+  });
+}
+
+function candidateGenerationDiagnostics(
+  rejected: readonly FameRouteCandidateRejected[],
+) {
+  return rejected.map((diagnostic) => ({
+    reason: diagnostic.reason,
+    detail: displaySafeDiagnosticMessage(diagnostic.detail),
+  }));
+}
+
 function token(address: Address) {
   const result = tokenForAddress(address);
   if (!result) throw new Error(`Unsupported corpus token ${address}.`);
@@ -176,8 +253,13 @@ function pairLabel(entry: FameRouteCorpusCase): string {
 
 function redactSensitiveDiagnosticText(value: string): string {
   return value
-    .replace(/https?:\/\/\S+/g, "[redacted-url]")
-    .replace(/0x[a-fA-F0-9]{96,}/g, "[redacted-hex]");
+    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
+    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
+    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+}
+
+function displaySafeAccountLabel(address: Address): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 function displaySafeDiagnosticMessage(
@@ -189,7 +271,13 @@ function displaySafeDiagnosticMessage(
     raw
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .find((line) => line.length > 0) ?? fallback,
+      .find(
+        (line) =>
+          line.length > 0 &&
+          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
+            line,
+          ),
+      ) ?? fallback,
   );
 }
 
@@ -320,14 +408,14 @@ async function simulateQuote(
 
     return {
       status: "passed",
-      account: simulationAccountAddress,
+      account: displaySafeAccountLabel(simulationAccountAddress),
       output: protectedOutput.toString(),
       protectedMinimum: protectedMinimum.toString(),
     };
   } catch (error) {
     return {
       status: "failed",
-      account,
+      account: account ? displaySafeAccountLabel(account) : "unavailable",
       message: displaySafeErrorMessage(error),
     };
   }
@@ -346,7 +434,10 @@ function expectedStatusFor(
   return entry.expectedLiveStatus ?? entry.expectedStatus;
 }
 
-function suggestedTodo(entry: FameRouteCorpusCase, quote: FameSwapQuote): string | null {
+function suggestedTodo(
+  entry: FameRouteCorpusCase,
+  quote: FameSwapQuote,
+): string | null {
   if (quote.status === "ready") {
     return [
       `# Prove ${pairLabel(entry)} Route For ${entry.amountIn.toString()}`,
@@ -387,9 +478,18 @@ function suggestedTodo(entry: FameRouteCorpusCase, quote: FameSwapQuote): string
 
 export function runRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
+  options: RouteLabOptions = {},
 ): FameRouteLabRow[] {
   const adapter = createDeterministicQuoteAdapter();
   return corpus.map((entry) => {
+    const candidateSet = routeCandidatesForPair(
+      entry.tokenIn,
+      entry.tokenOut,
+      undefined,
+      {
+        budgets: options.candidateBudgets,
+      },
+    );
     const quote = quoteWithReadyReadiness({
       tokenIn: token(entry.tokenIn),
       tokenOut: token(entry.tokenOut),
@@ -399,6 +499,11 @@ export function runRouteLab(
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
+    const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
+    const simulation: FameRouteLabSimulation = {
+      status: "not_requested",
+      message: "Deterministic route lab does not run live route simulation.",
+    };
 
     return {
       mode: "deterministic",
@@ -436,10 +541,12 @@ export function runRouteLab(
               message: displaySafeDiagnosticMessage(candidate.message),
             }))
           : [],
-      simulation: {
-        status: "not_requested",
-        message: "Deterministic route lab does not run live route simulation.",
-      },
+      candidateGenerationDiagnostics: candidateGenerationDiagnostics(
+        candidateSet.rejected,
+      ),
+      edgeMatrix,
+      protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
+      simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
     };
   });
@@ -447,10 +554,11 @@ export function runRouteLab(
 
 export async function runLiveRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
-  options: { simulate?: boolean } = {},
+  options: RouteLabOptions & { simulate?: boolean } = {},
 ): Promise<FameRouteLabRow[]> {
   const config = getFameSwapConfig();
-  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1 ?? process.env.BASE_RPC_URL;
+  const rpcUrl =
+    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
   const client = rpcUrl
     ? createPublicClient({
         chain: base,
@@ -477,6 +585,14 @@ export async function runLiveRouteLab(
   const rows: FameRouteLabRow[] = [];
 
   for (const entry of corpus) {
+    const candidateSet = routeCandidatesForPair(
+      entry.tokenIn,
+      entry.tokenOut,
+      undefined,
+      {
+        budgets: options.candidateBudgets,
+      },
+    );
     const quote = await quoteFameSwapAsync({
       tokenIn: token(entry.tokenIn),
       tokenOut: token(entry.tokenOut),
@@ -485,7 +601,8 @@ export async function runLiveRouteLab(
       config: {
         ...config,
         routerAddress,
-        defaultSlippageBps: config.defaultSlippageBps ?? DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+        defaultSlippageBps:
+          config.defaultSlippageBps ?? DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
       },
       readiness: {
         status: "ready",
@@ -495,6 +612,12 @@ export async function runLiveRouteLab(
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
+    const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
+    const simulation = await simulateQuote(
+      quote,
+      options.simulate ? (client as unknown as RouteLabClient | null) : null,
+      account,
+    );
 
     rows.push({
       mode: "live",
@@ -532,11 +655,12 @@ export async function runLiveRouteLab(
               message: displaySafeDiagnosticMessage(candidate.message),
             }))
           : [],
-      simulation: await simulateQuote(
-        quote,
-        options.simulate ? (client as unknown as RouteLabClient | null) : null,
-        account,
+      candidateGenerationDiagnostics: candidateGenerationDiagnostics(
+        candidateSet.rejected,
       ),
+      edgeMatrix,
+      protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
+      simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
     });
   }
@@ -544,7 +668,9 @@ export async function runLiveRouteLab(
   return rows;
 }
 
-export function formatRouteLabMarkdown(rows: readonly FameRouteLabRow[]): string {
+export function formatRouteLabMarkdown(
+  rows: readonly FameRouteLabRow[],
+): string {
   return [
     "# FAME Swap Route Lab",
     "",
@@ -569,6 +695,9 @@ export function formatRouteLabMarkdown(rows: readonly FameRouteLabRow[]): string
         row.feeBreakdown.maxLegMarketImpactBps ?? "n/a"
       }`,
       `- Rejections: ${row.rejectedCandidates.length}`,
+      `- Candidate generation diagnostics: ${row.candidateGenerationDiagnostics.length}`,
+      `- Edge matrix: ${edgeMatrixSummary(row.edgeMatrix)}`,
+      `- Protocol coverage: ${protocolCoverageSummary(row.protocolCoverage)}`,
       `- Simulation: ${
         row.simulation.status === "passed"
           ? `passed, output ${row.simulation.output}, protected minimum ${row.simulation.protectedMinimum}`
@@ -577,6 +706,11 @@ export function formatRouteLabMarkdown(rows: readonly FameRouteLabRow[]): string
             : displaySafeDiagnosticMessage(row.simulation.message)
       }`,
       "",
+      ...formatCandidateGenerationDiagnosticsMarkdown(
+        row.candidateGenerationDiagnostics,
+      ),
+      ...formatEdgeMatrixMarkdown(row.edgeMatrix),
+      ...formatProtocolCoverageMarkdown(row.protocolCoverage),
       row.suggestedContractTodo
         ? [
             "### Suggested Contract Todo",
@@ -587,6 +721,117 @@ export function formatRouteLabMarkdown(rows: readonly FameRouteLabRow[]): string
         : "",
     ]),
   ].join("\n");
+}
+
+function formatCandidateGenerationDiagnosticsMarkdown(
+  diagnostics: FameRouteLabRow["candidateGenerationDiagnostics"],
+): string[] {
+  if (diagnostics.length === 0) return [];
+
+  return [
+    "### Candidate Generation Diagnostics",
+    "",
+    ...diagnostics.map(
+      (diagnostic) =>
+        `- ${diagnostic.reason}: ${displaySafeDiagnosticMessage(diagnostic.detail)}`,
+    ),
+    "",
+  ];
+}
+
+function edgeMatrixSummary(rows: readonly FameRouteEdgeMatrixRow[]): string {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    counts.set(row.status, (counts.get(row.status) ?? 0) + 1);
+  }
+
+  return ["selected", "considered", "rejected", "disabled", "missing"]
+    .map((status) => `${status} ${counts.get(status) ?? 0}`)
+    .join(", ");
+}
+
+function protocolCoverageSummary(
+  rows: readonly FameRouteProtocolCoverageRow[],
+): string {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    counts.set(row.edgeStatus, (counts.get(row.edgeStatus) ?? 0) + 1);
+  }
+
+  return ["selected", "considered", "rejected", "disabled", "missing"]
+    .map((status) => `${status} ${counts.get(status) ?? 0}`)
+    .join(", ");
+}
+
+function fieldLabel(field: FameRouteProtocolCoverageRow["quote"]): string {
+  if (field.status === "available") {
+    return field.value
+      ? `available ${displaySafeDiagnosticMessage(field.value)}`
+      : "available";
+  }
+
+  return field.reason
+    ? `${field.status} (${displaySafeDiagnosticMessage(field.reason)})`
+    : field.status;
+}
+
+function markdownCell(value: string): string {
+  return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+}
+
+function formatEdgeMatrixMarkdown(
+  rows: readonly FameRouteEdgeMatrixRow[],
+): string[] {
+  if (rows.length === 0) return [];
+
+  return [
+    "### Edge Matrix",
+    "",
+    "| Status | Edge | Venue | Pool | Reason |",
+    "| --- | --- | --- | --- | --- |",
+    ...rows.map((row) => {
+      const line = [
+        row.status,
+        `${row.tokenInSymbol}->${row.tokenOutSymbol}`,
+        row.venue,
+        row.poolId ?? "missing",
+        displaySafeDiagnosticMessage(row.reason),
+      ]
+        .map(markdownCell)
+        .join(" | ");
+      return `| ${line} |`;
+    }),
+    "",
+  ];
+}
+
+function formatProtocolCoverageMarkdown(
+  rows: readonly FameRouteProtocolCoverageRow[],
+): string[] {
+  if (rows.length === 0) return [];
+
+  return [
+    "### Protocol Coverage",
+    "",
+    "| Edge | Status | Quote | Pre | Post | Impact | Active Liquidity | Simulation |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...rows.map((row) => {
+      const line = [
+        `${row.tokenInSymbol}->${row.tokenOutSymbol} ${row.poolId ?? "missing"}`,
+        `${row.edgeStatus}/${row.attribution}`,
+        fieldLabel(row.quote),
+        fieldLabel(row.prePrice),
+        fieldLabel(row.postPrice),
+        fieldLabel(row.marketImpact),
+        fieldLabel(row.activeLiquidity),
+        fieldLabel(row.routeSimulation),
+      ]
+        .map(markdownCell)
+        .join(" | ");
+      return `| ${line} |`;
+    }),
+    "",
+  ];
 }
 
 function shouldRunCli(): boolean {

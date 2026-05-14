@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  fameSwapWidgetState,
-  type FameSwapWidgetStateInput,
-} from "./state";
+import { fameSwapWidgetState, type FameSwapWidgetStateInput } from "./state";
 
 const baseInput: FameSwapWidgetStateInput = {
   connected: true,
@@ -19,7 +16,7 @@ const baseInput: FameSwapWidgetStateInput = {
 };
 
 describe("FAME swap widget state", () => {
-  it("maps disconnected and wrong-chain setup states", () => {
+  it("uses connect copy only for disconnected setup state", () => {
     const disconnected = fameSwapWidgetState({
       ...baseInput,
       connected: false,
@@ -27,12 +24,26 @@ describe("FAME swap widget state", () => {
     assert.equal(disconnected.kind, "disconnected");
     assert.equal(disconnected.ctaLabel, "Connect wallet");
 
-    const wrongChain = fameSwapWidgetState({
+    const wrongChainReady = fameSwapWidgetState({
       ...baseInput,
       onBase: false,
     });
-    assert.equal(wrongChain.kind, "wrong_chain");
-    assert.equal(wrongChain.ctaLabel, "Switch to Base");
+    assert.equal(wrongChainReady.kind, "ready");
+    assert.equal(wrongChainReady.ctaLabel, "Swap with FAME router");
+    assert.match(wrongChainReady.message, /switch to Base/i);
+  });
+
+  it("does not offer chain switching before an executable swap action", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      onBase: false,
+      amountEntered: false,
+      quoteStatus: null,
+    });
+
+    assert.equal(state.kind, "amount_entry");
+    assert.equal(state.ctaDisabled, true);
+    assert.doesNotMatch(state.ctaLabel, /switch|connect/i);
   });
 
   it("blocks expired quotes while preserving recovery copy", () => {
@@ -44,6 +55,20 @@ describe("FAME swap widget state", () => {
     assert.equal(state.kind, "quote_expired");
     assert.equal(state.ctaDisabled, true);
     assert.match(state.recoveryAction, /fresh route/i);
+  });
+
+  it("keeps a valid quote retryable after wallet rejection or write failure", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      quoteStatus: "ready",
+      submitting: false,
+      confirmed: false,
+      reverted: false,
+    });
+
+    assert.equal(state.kind, "ready");
+    assert.equal(state.ctaDisabled, false);
+    assert.match(state.recoveryAction, /submit the swap/i);
   });
 
   it("shows fallback and diagnostics only for unavailable live execution", () => {
@@ -87,6 +112,18 @@ describe("FAME swap widget state", () => {
       assert.equal(state.ctaDisabled, true);
       assert.equal(state.diagnosticsVisible, true);
     }
+  });
+
+  it("blocks protected simulation failure with edit-and-diagnostics recovery", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      quoteStatus: "simulation_failure",
+    });
+
+    assert.equal(state.kind, "simulation_failure");
+    assert.equal(state.ctaDisabled, true);
+    assert.equal(state.diagnosticsVisible, true);
+    assert.match(state.recoveryAction, /edit the amount/i);
   });
 
   it("clears executable actions while a fresh quote is loading", () => {

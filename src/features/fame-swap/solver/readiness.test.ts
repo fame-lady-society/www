@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { isAddress } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import {
@@ -21,7 +22,8 @@ function liveConfig(overrides: Partial<FameSwapConfig> = {}): FameSwapConfig {
     expectedPinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
     expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
-    expectedParityVectorsHash: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedParityVectorsHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
     expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
     expectedPoolStateSnapshotHash:
       FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
@@ -63,6 +65,16 @@ function reader(snapshot: RouterPolicySnapshot): RouterPolicyReader {
 }
 
 describe("FAME swap readiness", () => {
+  it("keeps manifest venue targets strict-valid for viem live reads", () => {
+    for (const target of FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets) {
+      assert.equal(
+        isAddress(target.target),
+        true,
+        `${target.family} target must be lowercase or checksum-valid`,
+      );
+    }
+  });
+
   it("fails closed when public config is missing or mismatched", () => {
     assert.equal(
       staticReadiness(liveConfig({ routerAddress: null })).status,
@@ -109,7 +121,13 @@ describe("FAME swap readiness", () => {
       reader(
         readySnapshot({
           venueTargets: new Map([
-            [routerPolicyTargetKey(firstTarget.familyOrdinal, firstTarget.target), false],
+            [
+              routerPolicyTargetKey(
+                firstTarget.familyOrdinal,
+                firstTarget.target,
+              ),
+              false,
+            ],
           ]),
         }),
       ),
@@ -136,6 +154,23 @@ describe("FAME swap readiness", () => {
     assert.equal(readError.status, "not_live_ready");
     if (readError.status === "not_live_ready") {
       assert.equal(readError.reason, "read_error");
+    }
+  });
+
+  it("redacts provider URLs from public readiness errors", async () => {
+    const readError = await liveReadiness(liveConfig(), {
+      read: async () => {
+        throw new Error(
+          "fetch failed https://base-mainnet.g.alchemy.com/v2/super-secret-key",
+        );
+      },
+    });
+
+    assert.equal(readError.status, "not_live_ready");
+    if (readError.status === "not_live_ready") {
+      assert.equal(readError.reason, "read_error");
+      assert.match(readError.message, /\[redacted-url\]/);
+      assert.doesNotMatch(readError.message, /super-secret-key/);
     }
   });
 });

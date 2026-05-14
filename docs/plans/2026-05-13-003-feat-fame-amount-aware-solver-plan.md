@@ -17,6 +17,19 @@ Replace the current "pick a pinned artifact and scale it" quote path with an amo
 
 The first amount-aware foundation is now in place: pinned pools, route graph generation, split candidates, typed solver states, route materialization, fee breakdowns, route lab output, and contract-repo follow-up docs. The release blocker is that the executable quote path still uses deterministic synthetic rates plus hard `capacityIn` caps. Units 8-14 extend this plan to replace those caps with liquidity-derived quote evidence and add an async quote-runner path. The API is the first integration runner for live RPC-backed quotes, not the solver's authority boundary.
 
+## 2026-05-14 Status Review
+
+The deterministic-cap release blocker is resolved in the current working tree: production quote flow now runs through async live quote adapters, the API client uses batched viem reads, the widget fetch path is debounced, and route lab proves live Doppler quotes at Base block `45969952`. Arbitrary fixture scaling is hard-disabled in `materializeRoute`, and non-ready quotes do not expose approval or swap requests.
+
+Checked off by this pass:
+
+- Units 8-11: implemented for quote context, recorded-state replay, live adapters, bounded API quote runner, request bounds, RPC batching, timeout handling, readiness redaction, and non-ready union serialization.
+- Unit 12: implemented for async widget quote fetching and debounce; residual hook/CTA recovery coverage is tracked by todo `009`.
+- Unit 13: implemented for recorded/live route lab, live V4 selections, and display-safe evidence;
+- Unit 14: refreshed here with live V4 status, then-pending Slipstream2 status, and backlog triage.
+
+Remaining backlog is now in `.context/compound-engineering/todos/`, with P1 todo `007` owning protocol quoter coverage and computable state outputs for all route types.
+
 This plan is scoped to the `www` repo. When sibling contract-repo paths are referenced, the target repo is `fame-contracts` and paths are repo-relative to that repo.
 
 ## Problem Frame
@@ -98,19 +111,19 @@ Sibling `fame-contracts` references:
 
 ## Key Technical Decisions
 
-| Decision | Rationale |
-|---|---|
-| Copy the existing pool universe into `www` as a pinned artifact | The solver needs deterministic tests and does not get to discover arbitrary pools at runtime. `base-v1-pools.json` is already the bounded pool set used by contract evidence. |
-| Build candidates from a graph plus route-shape constraints | Hardcoding seven route ids repeats the current failure mode. A graph can compare known pools naturally while still limiting depth, venues, and split shapes. |
-| Use quote adapters behind the pure solver | The solver should be testable with deterministic fixtures, while production/API usage can provide live or fork-aware adapters. This prevents React or wallet simulation from being the first safety check. |
-| Split quote adapters into production async adapters and deterministic replay adapters | Liquidity reads are asynchronous and context-sensitive. Test replay can remain deterministic, but production `ready` and `no_safe_route` states must come from live, fork, or explicit snapshot evidence. |
-| Represent quote context explicitly | Candidate ranking must be explainable by one live block, one fork block, or one snapshot. The context belongs in API responses, route-lab output, selected route diagnostics, and deterministic tests. |
-| Treat unsupported venue quote sources as quote failures, not liquidity failures | A candidate that cannot be quoted has unknown safety. It should fail as `quote_adapter_failure` or candidate-level quote failure rather than becoming a misleading `no_safe_route`. |
-| Keep the solver portable and use the API as the first live runner | Live quote adapters and optional simulation need an async runner with RPC access. The API can provide that runner for now, while the solver remains usable from browser, tests, route lab, fork scripts, or any injected provider. |
-| Emit a fee breakdown as quote evidence | The FLS router fee is explicit and should be calculated from quoted gross output. Venue/pool fees are usually embedded in AMM quote output, so the solver should capture fee rates and estimated fee amounts when derivable, emit them as diagnostics, and avoid subtracting them twice. |
-| Start split search with a deterministic sampled grid | A two-branch split grid of 10/90, 25/75, 50/50, 75/25, and 90/10 basis-point allocations is bounded, explainable, and enough to prove whether splitting avoids known single-route drain failures. |
-| Treat `ready` as selected route plus quote/protection evidence | A materialized route is not enough. Ready must include selected pools, expected output, protected minimum, exact approval/call value, route hash, expiry, warnings, and candidate diagnostics. |
-| Convert route-lab findings into concrete todo text, not promotion state | The user rejected a route promotion pipeline. The durable output is evidence-rich todo bodies for exact routes or failures that need contract-repo proof. |
+| Decision                                                                              | Rationale                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Copy the existing pool universe into `www` as a pinned artifact                       | The solver needs deterministic tests and does not get to discover arbitrary pools at runtime. `base-v1-pools.json` is already the bounded pool set used by contract evidence.                                                                                                            |
+| Build candidates from a graph plus route-shape constraints                            | Hardcoding seven route ids repeats the current failure mode. A graph can compare known pools naturally while still limiting depth, venues, and split shapes.                                                                                                                             |
+| Use quote adapters behind the pure solver                                             | The solver should be testable with deterministic fixtures, while production/API usage can provide live or fork-aware adapters. This prevents React or wallet simulation from being the first safety check.                                                                               |
+| Split quote adapters into production async adapters and deterministic replay adapters | Liquidity reads are asynchronous and context-sensitive. Test replay can remain deterministic, but production `ready` and `no_safe_route` states must come from live, fork, or explicit snapshot evidence.                                                                                |
+| Represent quote context explicitly                                                    | Candidate ranking must be explainable by one live block, one fork block, or one snapshot. The context belongs in API responses, route-lab output, selected route diagnostics, and deterministic tests.                                                                                   |
+| Treat unsupported venue quote sources as quote failures, not liquidity failures       | A candidate that cannot be quoted has unknown safety. It should fail as `quote_adapter_failure` or candidate-level quote failure rather than becoming a misleading `no_safe_route`.                                                                                                      |
+| Keep the solver portable and use the API as the first live runner                     | Live quote adapters and optional simulation need an async runner with RPC access. The API can provide that runner for now, while the solver remains usable from browser, tests, route lab, fork scripts, or any injected provider.                                                       |
+| Emit a fee breakdown as quote evidence                                                | The FLS router fee is explicit and should be calculated from quoted gross output. Venue/pool fees are usually embedded in AMM quote output, so the solver should capture fee rates and estimated fee amounts when derivable, emit them as diagnostics, and avoid subtracting them twice. |
+| Start split search with a deterministic sampled grid                                  | A two-branch split grid of 10/90, 25/75, 50/50, 75/25, and 90/10 basis-point allocations is bounded, explainable, and enough to prove whether splitting avoids known single-route drain failures.                                                                                        |
+| Treat `ready` as selected route plus quote/protection evidence                        | A materialized route is not enough. Ready must include selected pools, expected output, protected minimum, exact approval/call value, route hash, expiry, warnings, and candidate diagnostics.                                                                                           |
+| Convert route-lab findings into concrete todo text, not promotion state               | The user rejected a route promotion pipeline. The durable output is evidence-rich todo bodies for exact routes or failures that need contract-repo proof.                                                                                                                                |
 
 ## Open Questions
 
@@ -203,15 +216,15 @@ flowchart TB
 
 Quote status modes:
 
-| Status | Meaning | Transaction data |
-|---|---|---|
-| `ready` | Solver selected a route for this amount with quote/protection evidence and readiness passed | Approval/swap intent allowed |
-| `unsupported` | Pair is outside supported FAME-facing directions | None |
-| `stale_artifact` | Manifest, copied artifact, pool hash, or readiness metadata is inconsistent | None |
-| `not_live_ready` | Router address, fee, venue policy, hook policy, or live read is not ready | None |
-| `no_safe_route` | Known candidates were tried or skipped and none cleared quote/protection thresholds | None |
-| `quote_adapter_failure` | A required quote source failed or returned unusable data | None |
-| `simulation_failure` | Optional route simulation failed before exposing executable intent | None |
+| Status                  | Meaning                                                                                     | Transaction data             |
+| ----------------------- | ------------------------------------------------------------------------------------------- | ---------------------------- |
+| `ready`                 | Solver selected a route for this amount with quote/protection evidence and readiness passed | Approval/swap intent allowed |
+| `unsupported`           | Pair is outside supported FAME-facing directions                                            | None                         |
+| `stale_artifact`        | Manifest, copied artifact, pool hash, or readiness metadata is inconsistent                 | None                         |
+| `not_live_ready`        | Router address, fee, venue policy, hook policy, or live read is not ready                   | None                         |
+| `no_safe_route`         | Known candidates were tried or skipped and none cleared quote/protection thresholds         | None                         |
+| `quote_adapter_failure` | A required quote source failed or returned unusable data                                    | None                         |
+| `simulation_failure`    | Optional route simulation failed before exposing executable intent                          | None                         |
 
 ## Implementation Units
 
@@ -242,6 +255,7 @@ flowchart TB
 **Dependencies:** None
 
 **Files:**
+
 - Create: `src/features/fame-swap/artifacts/base-v1-pools.json`
 - Modify: `src/features/fame-swap/artifacts/manifest.ts`
 - Modify: `src/features/fame-swap/router/types.ts`
@@ -251,6 +265,7 @@ flowchart TB
 - Test: `src/features/fame-swap/solver/poolUniverse.test.ts`
 
 **Approach:**
+
 - Copy the current `fame-contracts` pool fixture as a pinned artifact, not as a runtime sibling-repo dependency.
 - Add a pool artifact hash and pinned block check to the manifest and integrity path so stale pool metadata fails closed the same way stale route artifacts do.
 - Model venue-specific pool metadata without flattening away details needed for payload construction or fee reporting: Solidly stable flag and `feeBps`, Slipstream factory/tick spacing and fee metadata, V3/V4 fee tier, V4 pool key/hook data, native ETH currency fields.
@@ -260,11 +275,13 @@ flowchart TB
 **Execution note:** Add characterization coverage around the copied pool fixture before changing quote selection so regressions in artifact integrity are visible early.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/solver/integrity.ts` for manifest fail-closed behavior.
 - `src/features/fame-swap/router/types.ts` for JSON-to-bigint boundary style.
 - `src/features/fame-swap/solver/artifacts.ts` for artifact lookup helpers.
 
 **Test scenarios:**
+
 - Happy path: the copied pool file schema version, pinned block, and hash match the manifest and `artifactIntegrityIssue()` returns null.
 - Happy path: every pool has exactly the venue-specific metadata needed to build a directed solver edge.
 - Happy path: every pool exposes a normalized fee descriptor for diagnostics, or an explicit unavailable reason when fee precision cannot be trusted.
@@ -273,6 +290,7 @@ flowchart TB
 - Integration: every pool id referenced by current route artifacts exists in the pinned pool universe.
 
 **Verification:**
+
 - Pool metadata is loaded from `www`, integrity failures are fail-closed, and the solver can enumerate known directed pool edges without reading `fame-contracts` at runtime.
 
 - [x] **Unit 2: Build Amount-Aware Candidate Graph**
@@ -284,6 +302,7 @@ flowchart TB
 **Dependencies:** Unit 1
 
 **Files:**
+
 - Create: `src/features/fame-swap/solver/graph/buildGraph.ts`
 - Create: `src/features/fame-swap/solver/graph/candidates.ts`
 - Create: `src/features/fame-swap/solver/graph/routePlan.ts`
@@ -292,6 +311,7 @@ flowchart TB
 - Modify: `src/features/fame-swap/ui/poolDisplay.ts`
 
 **Approach:**
+
 - Build a directed graph where each edge is a known pool direction with venue, target, token in/out, and payload-building metadata.
 - Limit route generation to supported FAME-facing directions: FAME <-> USDC, FAME <-> WETH, and FAME <-> native ETH.
 - Generate simple paths up to the depth already proven by current artifacts, with no repeated pool in a candidate and no broad discovery outside the pinned universe.
@@ -309,10 +329,12 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 ```
 
 **Patterns to follow:**
+
 - `fame-contracts` `router-ts/src/compiler/compileRoute.ts` for route shapes already proven by fork artifacts.
 - `src/features/fame-swap/ui/poolDisplay.ts` for keeping pool ids human-readable in diagnostics.
 
 **Test scenarios:**
+
 - Happy path: FAME -> USDC includes the existing basedflick/ZORA multi-hop family without relying on a hardcoded fixture amount.
 - Happy path: WETH -> FAME includes direct Solidly, direct Uniswap V2, and split candidates across those pools.
 - Happy path: USDC -> FAME includes split-then-merge candidates through frxUSD when both branches and the merge pool exist.
@@ -321,6 +343,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Error path: removing a required merge pool prevents split-then-merge generation and records a clear skipped-candidate reason.
 
 **Verification:**
+
 - Candidate generation is deterministic, bounded, explainable, and covers every route family currently represented by pinned solver artifacts.
 
 - [x] **Unit 3: Add Quote Adapters And Route Ranking**
@@ -332,6 +355,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 2
 
 **Files:**
+
 - Create: `src/features/fame-swap/solver/quotes/adapters.ts`
 - Create: `src/features/fame-swap/solver/quotes/deterministicAdapter.ts`
 - Create: `src/features/fame-swap/solver/quotes/liveAdapters.ts`
@@ -340,6 +364,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Modify: `src/features/fame-swap/solver/slippage.ts`
 
 **Approach:**
+
 - Define a quote adapter boundary that the pure solver consumes. Tests use a deterministic adapter; API and route-lab can use live RPC or fork-aware adapters.
 - Quote candidates leg-by-leg so downstream `All` legs use the previous leg's quoted output for ranking and protected-minimum calculation.
 - Apply slippage and router fee policy after quote output is known; stop using placeholder `1n` as the release-ready final minimum.
@@ -350,11 +375,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Keep quote adapter timeouts and candidate budgets bounded so the API does not become an unbounded aggregator.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/hooks/useFameSwapTransaction.ts` for applying protected minimums from simulated outputs.
 - Uniswap v2, v3, and v4 official quoting docs for exact-input quote semantics on those venues.
 - Existing viem `createPublicClient` and `readContract` usage in `src/app/api/fame/swap/quote/route.ts`.
 
 **Test scenarios:**
+
 - Happy path: with deterministic quotes where a split route beats a direct route for a large WETH amount, the split route is selected and diagnostics include branch bps.
 - Happy path: with deterministic quotes where a direct route is best for a small amount, the direct route is selected instead of forcing a split.
 - Edge case: a candidate that quotes zero output or output below protected minimum is rejected, not returned ready.
@@ -365,6 +392,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: fee breakdown reports router fee separately from per-leg venue fee rates and does not double-subtract venue fees from adapter outputs.
 
 **Verification:**
+
 - Ranking picks routes based on requested amount and quote evidence, and known current large-amount failures no longer become executable just because a fixture template exists.
 
 - [x] **Unit 4: Compile Dynamic Route Plans Into Safe Quotes**
@@ -376,6 +404,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 3
 
 **Files:**
+
 - Create: `src/features/fame-swap/router/buildLegPayload.ts`
 - Create: `src/features/fame-swap/solver/amountSolver.ts`
 - Modify: `src/features/fame-swap/router/payloads.ts`
@@ -389,6 +418,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/features/fame-swap/transactions.test.ts`
 
 **Approach:**
+
 - Introduce a route-plan representation that can describe both pinned artifacts and dynamically generated candidates: route id/source, selected pools, capabilities, diagnostics, quoted gross output, router fee amount, protected net minimum, per-leg fee breakdown, warnings, and route display legs.
 - Build route legs from pool metadata and selected candidate amounts instead of patching an old artifact route for arbitrary amounts.
 - Keep `materializeFameRoute` for recipient/deadline/hash handling, but restrict or remove arbitrary scaling of fixture routes for release-ready quotes.
@@ -397,11 +427,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Keep non-ready quote variants structurally incapable of producing approval or swap requests.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/router/encodeRoute.ts` for ABI and hash parity.
 - `fame-contracts` `router-ts/src/adapters/*` for venue-specific payload construction.
 - `src/features/fame-swap/transactions.ts` for transaction request gating.
 
 **Test scenarios:**
+
 - Happy path: a selected generated USDC -> FAME route materializes with requested amount, selected pool ids, protected final minimum, and a route hash distinct from fixture hashes.
 - Happy path: a selected route carries fee diagnostics with FLS router fee amount/rate and per-leg venue fee descriptors.
 - Happy path: ERC-20 inputs build approval for the exact requested amount and FameRouter spender.
@@ -412,6 +444,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: encoded dynamic routes preserve FameRouter ABI parity and pass existing route hash expectations for unchanged pinned artifacts.
 
 **Verification:**
+
 - Ready quotes carry exact transaction intent and protected output data, while every non-ready quote is impossible to turn into executable transaction requests through the shared helper.
 
 - [x] **Unit 5: Align Quote API, Widget State, And UI Copy**
@@ -423,6 +456,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 4
 
 **Files:**
+
 - Modify: `src/app/api/fame/swap/quote/route.ts`
 - Create: `src/features/fame-swap/hooks/useFameSwapQuote.ts`
 - Modify: `src/features/fame-swap/components/FameSwapWidget.tsx`
@@ -435,6 +469,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/app/api/fame/swap/quote/route.test.ts`
 
 **Approach:**
+
 - Make the API route the executable quote source for the widget so live adapter behavior is not duplicated in client-only code.
 - Keep shared TypeScript quote/result serializers in the feature module so the API, widget, tests, and scripts agree on status names and fields.
 - Add widget states and copy for `no_safe_route`, `quote_adapter_failure`, and `simulation_failure`.
@@ -443,11 +478,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Preserve the current fallback-link behavior only for stale/not-live-ready conditions where external swap links are appropriate.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/state.ts` for pure state mapping.
 - `src/features/fame-swap/ui/quoteView.ts` for display-safe quote summaries.
 - `src/app/api/fame/swap/quote/route.ts` for JSON bigint serialization and readiness reads.
 
 **Test scenarios:**
+
 - Happy path: ready API response includes selected route summary, estimated gross output, FLS router fee, venue fee breakdown, protected net minimum, route hash, approval requirement, call value, warnings, and expiry.
 - Happy path: widget renders a ready quote from the shared response and enables only the correct next action.
 - Error path: `no_safe_route` API response includes diagnostics and no approval, swap, executable route payload, or calldata-like object.
@@ -457,6 +494,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: API and widget tests use the same status union so adding a new status fails tests until both surfaces handle it.
 
 **Verification:**
+
 - The UI never asks for approval or swap submission unless the selected quote response is `ready`, and non-ready responses are display-safe.
 
 - [x] **Unit 6: Add Solver Regression Corpus And Route Lab**
@@ -468,6 +506,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 4
 
 **Files:**
+
 - Create: `src/features/fame-swap/solver/routeCorpus.ts`
 - Test: `src/features/fame-swap/solver/routeCorpus.test.ts`
 - Create: `scripts/fame-swap-route-lab.ts`
@@ -476,6 +515,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Modify: `scripts/fame-swap-fork-smoke.ts`
 
 **Approach:**
+
 - Define representative amount buckets for FAME <-> USDC, FAME <-> WETH, and FAME <-> native ETH. Include fixture-sized amounts, small amounts, larger known-failure amounts, and route-lab-discovered regression cases.
 - Keep pure corpus tests deterministic through quote adapter fixtures and explicit expected outcomes.
 - Add route-lab modes:
@@ -485,11 +525,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Redact or avoid printing RPC URLs, signer keys, request headers, and executable payloads for failed route states.
 
 **Patterns to follow:**
+
 - `scripts/fame-swap-fork-smoke.ts` for Anvil lifecycle, environment handling, cleanup, and secret-safe logging.
 - Existing `node:test` plus `assert` tests in `src/features/fame-swap/**`.
 - `.context/compound-engineering/todos/*.md` and `fame-contracts` `.context/compound-engineering/todos/*.md` for todo body shape.
 
 **Test scenarios:**
+
 - Happy path: every supported FAME-facing direction has at least one corpus amount bucket.
 - Happy path: known large-amount failures either choose a safer route or return `no_safe_route` before transaction data is produced.
 - Edge case: amount buckets use raw bigint amounts and token decimals correctly for USDC, WETH, ETH, and FAME.
@@ -499,6 +541,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: route-lab output includes router fee and per-leg venue fee diagnostics for selected routes and rejected candidates where quote evidence exists.
 
 **Verification:**
+
 - Developers can run amount-grid exploration without React or browser wallets, and the output is concrete enough to create contract-repo follow-up todos.
 
 - [x] **Unit 7: Produce Contract-Repo Follow-Up Todo Material**
@@ -510,11 +553,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 6
 
 **Files:**
+
 - Modify: `scripts/fame-swap-route-lab.ts`
 - Modify: `docs/fame-swap-route-lab.md`
 - Create: `docs/fame-swap-contract-followups.md`
 
 **Approach:**
+
 - Add a route-lab output option that formats suggested todo text but does not write outside `www` by default.
 - Include exact amount, token pair, selected pools, split allocation, fee breakdown, rejected candidates, quote evidence, simulation evidence when present, and the requested contract-repo action.
 - Group suggested follow-ups by target evidence type:
@@ -526,19 +571,22 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Document that the next human/agent step is to create or update todos in `fame-contracts` `.context/compound-engineering/todos/` only after reviewing the route-lab evidence.
 
 **Patterns to follow:**
+
 - `fame-contracts` `.context/compound-engineering/todos/007-pending-p2-prove-non-empty-v4-hook-data-fork-route.md` for rich evidence and acceptance criteria structure.
 - `docs/brainstorms/2026-05-12-fame-swap-router-solver-requirements.md` for the rejected route promotion pipeline boundary.
 
 **Test scenarios:**
+
 - Happy path: route-lab evidence for a promising split route produces a Markdown todo body with concrete pools, amount, selected route, and acceptance criteria.
 - Happy path: route-lab evidence for a failing amount produces a regression-fixture todo body rather than a promotion todo.
 - Error path: missing quote or simulation evidence produces no suggested contract-repo todo and explains what evidence is missing.
 - Error path: generated todo text contains no private RPC, signer material, or executable transaction payload for failed states.
 
 **Verification:**
+
 - Route-lab output can be pasted into a `fame-contracts` todo with minimal editing, and the process remains evidence-driven rather than lifecycle-driven.
 
-- [ ] **Unit 8: Separate Quote Context And Async Adapter Boundary**
+- [x] **Unit 8: Separate Quote Context And Async Adapter Boundary**
 
 **Goal:** Make liquidity-derived quote evidence an explicit solver input and stop production code from silently falling back to synthetic deterministic caps.
 
@@ -547,6 +595,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Units 3 and 4
 
 **Files:**
+
 - Modify: `src/features/fame-swap/solver/quotes/adapters.ts`
 - Create: `src/features/fame-swap/solver/quotes/quoteContext.ts`
 - Create: `src/features/fame-swap/solver/quotes/asyncRankRoutes.ts`
@@ -560,6 +609,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/features/fame-swap/solver/quote.test.ts`
 
 **Approach:**
+
 - Add a quote-context type that can represent `live`, `fork`, `snapshot`, and `deterministic_test` sources with block or snapshot identifiers.
 - Add an async adapter interface while preserving the sync adapter path only for unit tests and offline replay.
 - Move the route-local balance and fee math into shared helpers so sync and async ranking cannot diverge on `All` legs, split allocation, router fee, slippage, or rejection semantics.
@@ -568,11 +618,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Rename or label deterministic cap profiles as test-only evidence so their output cannot be mistaken for liquidity-derived evidence.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/solver/quotes/rankRoutes.ts` for existing leg-by-leg balance behavior.
 - `src/features/fame-swap/solver/types.ts` for discriminated quote status expansion.
 - `src/app/api/fame/swap/quote/route.ts` for bigint-safe JSON serialization constraints.
 
 **Test scenarios:**
+
 - Happy path: async ranking selects the same candidate as sync ranking when both adapters return the same exact-input outputs.
 - Happy path: selected plan includes quote context and every leg includes quote source evidence.
 - Edge case: downstream `All` legs in async ranking spend upstream output, not the original request amount.
@@ -581,9 +633,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: router fee, protected output, venue fee descriptors, warnings, and rejection summaries match the existing ranking contract.
 
 **Verification:**
+
 - The default production quote path cannot return `ready` or `no_safe_route` from synthetic hard caps, and tests prove sync replay and async ranking share the same route math.
 
-- [ ] **Unit 9: Add Snapshot-Derived Quote Replay**
+- [x] **Unit 9: Add Snapshot-Derived Quote Replay**
 
 **Goal:** Provide deterministic liquidity-derived quote fixtures for tests and offline route-lab runs without using arbitrary capacity profiles.
 
@@ -592,6 +645,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 8
 
 **Files:**
+
 - Create: `src/features/fame-swap/solver/quotes/snapshotAdapter.ts`
 - Create: `src/features/fame-swap/artifacts/base-v1-pool-state-snapshot.json`
 - Modify: `src/features/fame-swap/artifacts/manifest.ts`
@@ -604,6 +658,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/features/fame-swap/solver/routeCorpus.test.ts`
 
 **Approach:**
+
 - Define a versioned pool-state snapshot artifact that records source block, pool ids, token ordering, reserve or quote-state fields, and per-venue support status.
 - Implement snapshot adapters only for venues whose state can be replayed accurately enough for exact-input tests. Unsupported venues fail with explicit quote diagnostics.
 - For constant-product style pools, calculate output from recorded reserves and fee metadata. For concentrated-liquidity or hook-sensitive venues, either store a generated quote table tied to exact test amounts or mark the pool unsupported until a safer live/static-call adapter exists.
@@ -612,12 +667,14 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Seed the corpus with the `$5` USDC case and currently failing larger amounts so regressions prove hard caps were removed.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/solver/poolUniverse.ts` for pool metadata normalization.
 - `src/features/fame-swap/solver/integrity.ts` for artifact hash and pinned block checks.
 - `scripts/fame-swap-route-lab.ts` for display-safe CLI output.
 
 **Test scenarios:**
-- Happy path: `$5` USDC quotes through snapshot-derived liquidity when supported pool state exists and is not rejected by a synthetic cap.
+
+- Happy path: `$5` USDC quotes through recorded-state quote evidence when supported pool state exists and is not rejected by a synthetic cap.
 - Happy path: snapshot quote output is exact-input and includes FLS router fee separately from venue fee diagnostics.
 - Edge case: snapshot pinned block mismatch or hash mismatch fails artifact integrity before the snapshot can drive quotes.
 - Error path: unsupported snapshot venue returns `no_quote_evidence` or `adapter_failure`, not `amount_exceeds_capacity`.
@@ -625,9 +682,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: route corpus uses snapshot context and records snapshot id/block in ready or rejected outcomes.
 
 **Verification:**
+
 - Deterministic solver tests calculate from explicit liquidity/state data, and no checked-in production test fixture depends on arbitrary `capacityIn` caps for normal user amounts.
 
-- [ ] **Unit 10: Implement Live Liquidity Quote Adapters**
+- [x] **Unit 10: Implement Live Liquidity Quote Adapters**
 
 **Goal:** Quote known candidate legs from live Base liquidity through bounded viem reads or venue quote calls.
 
@@ -636,12 +694,14 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 8
 
 **Files:**
+
 - Modify: `src/features/fame-swap/solver/quotes/liveAdapters.ts`
 - Modify: `src/app/api/fame/swap/quote/route.ts`
 - Test: `src/features/fame-swap/solver/quotes/liveAdapters.test.ts`
 - Test: `src/app/api/fame/swap/quote/route.test.ts`
 
 **Approach:**
+
 - Build live adapters around the known pool universe, not caller-provided pool addresses.
 - Capture one quote context per API ranking pass. Prefer a single block number for all reads where the RPC and viem path support it; otherwise record the specific consistency constraint and fail closed if it cannot be honored.
 - Use the smallest safe quote source per venue:
@@ -653,11 +713,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Keep all private RPC configuration server-side and out of diagnostics.
 
 **Patterns to follow:**
+
 - `src/app/api/fame/swap/quote/route.ts` for `createPublicClient`, `readContract`, and readiness reads.
 - `src/features/fame-swap/router/types.ts` and `src/features/fame-swap/solver/poolUniverse.ts` for venue metadata.
 - Official Uniswap v2/v3/v4 quoting guidance for exact-input semantics on Uniswap venues.
 
 **Test scenarios:**
+
 - Happy path: a fake viem client returns live quote evidence for a supported constant-product pool and the adapter emits amount out plus live block context.
 - Happy path: adapter outputs are treated as venue-fee-included and the solver emits router fee separately.
 - Edge case: live adapter preserves native ETH and WETH distinctions in quote requests.
@@ -666,9 +728,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: API quote route can inject the live adapter and serialize quote context without leaking RPC URLs or raw failed transaction payloads.
 
 **Verification:**
+
 - The API has a real liquidity-read quote path for supported venues and a typed fail-closed path for every unsupported or failing quote source.
 
-- [ ] **Unit 11: Add Bounded API Quote Runner**
+- [x] **Unit 11: Add Bounded API Quote Runner**
 
 **Goal:** Wire `/api/fame/swap/quote` as the first bounded live runner for the portable liquidity-derived solver.
 
@@ -677,6 +740,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Units 8, 9, and 10
 
 **Files:**
+
 - Modify: `src/app/api/fame/swap/quote/route.ts`
 - Modify: `src/features/fame-swap/solver/quote.ts`
 - Modify: `src/features/fame-swap/solver/types.ts`
@@ -686,6 +750,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/features/fame-swap/transactions.test.ts`
 
 **Approach:**
+
 - Keep request inputs limited to known token addresses, raw amount, recipient, supported slippage/deadline settings, and configured router address policy.
 - Do not accept arbitrary pool addresses, arbitrary router targets by default, arbitrary RPC URLs, or route-lab amount-grid inputs from public clients.
 - Build the live quote adapter in the API after static and live readiness pass, then call the async solver library and serialize only display-safe diagnostics.
@@ -695,11 +760,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Add a stale-response key in the response or hook contract so the widget can invalidate old executable quotes when any quote input changes.
 
 **Patterns to follow:**
+
 - Existing non-ready response shape in `src/app/api/fame/swap/quote/route.ts`.
 - `src/features/fame-swap/transactions.ts` for final transaction gating.
 - `src/features/fame-swap/state.ts` for UI status coverage.
 
 **Test scenarios:**
+
 - Happy path: ready API response includes quote context, selected pools, gross/net/protected output, fee breakdown, expiry, route hash, approval, swap intent, and warnings.
 - Edge case: unsupported token or malformed amount returns 400 and does not run liquidity reads.
 - Edge case: stale readiness/config returns blocked status before adapter construction.
@@ -709,9 +776,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: every status in the shared union is handled by both API serialization and transaction request construction.
 
 **Verification:**
+
 - Public quote responses are bounded, status-specific, and transaction-safe, and API-run executable quotes can only come from liquidity-derived async solver evidence.
 
-- [ ] **Unit 12: Move Widget To Async Quote Fetching**
+- [x] **Unit 12: Move Widget To Async Quote Fetching**
 
 **Goal:** Replace the current hard-cap-backed executable quote path in the widget with an async quote hook that can call the API runner now and still preserve a portable solver boundary.
 
@@ -720,6 +788,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 11
 
 **Files:**
+
 - Create: `src/features/fame-swap/hooks/useFameSwapQuote.ts`
 - Modify: `src/features/fame-swap/components/FameSwapWidget.tsx`
 - Modify: `src/features/fame-swap/state.ts`
@@ -730,6 +799,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Test: `src/features/fame-swap/ui/quoteView.test.ts`
 
 **Approach:**
+
 - Build a quote hook keyed by token pair, parsed amount, recipient, router readiness, slippage, deadline, and quote context-affecting inputs.
 - Abort or ignore stale requests when the key changes and immediately clear executable actions while a new quote is loading.
 - Keep local solver entry points available for browser/offline/test runners with injected liquidity or snapshot quote providers. Do not use the deterministic hard-cap adapter as the default executable provider.
@@ -738,11 +808,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Ensure diagnostics can show quote context and rejection reasons without exposing failed-state route payloads.
 
 **Patterns to follow:**
+
 - Existing `useFameSwapReadiness` and `useFameSwapBalance` hooks for async state shape and React integration.
 - `src/features/fame-swap/state.ts` for central button-state derivation.
 - `src/features/fame-swap/ui/quoteView.ts` for display-safe quote copy.
 
 **Test scenarios:**
+
 - Happy path: widget renders API ready quote and enables only the correct approval or swap action.
 - Happy path: quote loading state disables primary action while preserving amount and balance UI.
 - Edge case: changing amount, pair, recipient, slippage, deadline, readiness, or router address clears old executable quote intent before the new response returns.
@@ -751,9 +823,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: `useFameSwapTransaction` still receives only ready quotes with transaction intent, and non-ready states produce null approval/swap requests.
 
 **Verification:**
+
 - The widget no longer treats synchronous deterministic hard-cap quote construction as executable evidence, and stale ready quotes cannot leak approval or swap actions across input changes.
 
-- [ ] **Unit 13: Update Route Lab And Corpus For Liquidity Context**
+- [x] **Unit 13: Update Route Lab And Corpus For Liquidity Context**
 
 **Goal:** Make amount-grid exploration run against snapshot, live, and fork-aware quote contexts and emit evidence suitable for contract-repo follow-ups.
 
@@ -762,6 +835,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Units 9, 10, and 11
 
 **Files:**
+
 - Modify: `scripts/fame-swap-route-lab.ts`
 - Modify: `src/features/fame-swap/solver/routeCorpus.ts`
 - Modify: `src/features/fame-swap/solver/routeCorpus.test.ts`
@@ -769,6 +843,7 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Modify: `scripts/fame-swap-fork-smoke.ts`
 
 **Approach:**
+
 - Add route-lab modes for snapshot replay, live liquidity reads, and optional fork/router simulation.
 - Record quote source, block or snapshot id, selected pools, split allocation, gross/net/protected output, fee breakdown, rejected candidates, and simulation outcome when present.
 - Include known false-cap regressions such as `$5` USDC and larger current failures in the corpus.
@@ -777,11 +852,13 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Do not introduce lifecycle state, promotion queues, or automatic writes to `fame-contracts`.
 
 **Patterns to follow:**
+
 - Existing `scripts/fame-swap-route-lab.ts` summary and todo text output.
 - `scripts/fame-swap-fork-smoke.ts` for fork simulation setup and cleanup.
 - `docs/fame-swap-contract-followups.md` for follow-up categories.
 
 **Test scenarios:**
+
 - Happy path: snapshot mode reports ready or blocked outcomes with snapshot context for every corpus amount.
 - Happy path: live mode reports live block context and skips fork simulation unless configured.
 - Edge case: route-lab without RPC or fork configuration runs snapshot/offline checks and reports unavailable live checks as skipped, not passed.
@@ -790,9 +867,10 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 - Integration: route-lab selected route plans can feed optional fork simulation without changing API quote semantics.
 
 **Verification:**
+
 - Route lab becomes the repeatable place to build, test, and optimize routes as liquidity evidence improves, while contract-repo follow-ups remain concrete todos.
 
-- [ ] **Unit 14: Refresh Docs And Contract Follow-Up Material**
+- [x] **Unit 14: Refresh Docs And Contract Follow-Up Material**
 
 **Goal:** Document the liquidity-derived quote architecture, update launch safety notes, and prepare targeted `fame-contracts` todo material from route-lab evidence.
 
@@ -801,25 +879,30 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 **Dependencies:** Unit 13
 
 **Files:**
+
 - Modify: `docs/fame-swap-route-lab.md`
 - Modify: `docs/fame-swap-contract-followups.md`
 - Modify: `docs/brainstorms/2026-05-12-fame-swap-router-solver-requirements.md` if implementation discovers a requirements correction
 - Modify: `docs/plans/2026-05-13-003-feat-fame-amount-aware-solver-plan.md`
 
 **Approach:**
+
 - Update route-lab docs with recorded/live/fork modes, required environment variables, quote context fields, and redaction guarantees.
 - Update contract follow-up docs with concrete evidence from new route-lab runs: exact amounts, pools, selected/rejected routes, quote context, and recommended contract-repo action.
 - Mark completed plan units only after implementation and verification are done.
 - If implementation proves a planning assumption wrong, update the requirements or plan with the new decision rather than burying it in code comments.
 
 **Patterns to follow:**
+
 - `docs/fame-swap-contract-followups.md` for evidence-driven follow-up wording.
 - `.context/compound-engineering/todos/004-pending-p2-estimate-liquidity-fees-for-fame-swap-routes.md` for existing fee-related concern.
 
 **Test scenarios:**
+
 - Documentation-only unit; verify by running the route-lab command examples that are safe in the local environment and checking that docs match implemented flags and output fields.
 
 **Verification:**
+
 - A maintainer can understand which quote context selected a route, rerun route-lab evidence, and create targeted `fame-contracts` todos without a route promotion pipeline.
 
 ## System-Wide Impact
@@ -835,22 +918,22 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 
 ## Risks & Dependencies
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---:|---:|---|
-| Quote adapters are inaccurate for complex venues | Medium | High | Keep adapters explicit per venue, fail closed on uncertainty, and route-lab fork-check selected routes before turning findings into contract-repo evidence. |
-| Candidate search grows into a general aggregator | Medium | Medium | Bound pairs, depth, pool universe, split grid, and supported shapes in tests. Reject broad discovery in scope boundaries. |
-| API, widget, and local runners diverge on executable states | Medium | High | Share status union/serializer and add API, state, quote view, and solver tests for every status. |
-| Dynamic route payloads differ from contract compiler payloads | Medium | High | Mirror `fame-contracts` adapter patterns, keep ABI parity tests, and fork-test selected route plans. |
-| RPC latency makes quote API slow | Medium | Medium | Cap candidate count, parallelize bounded quote calls, time out adapter failures into typed blocked states, and document any latency tradeoff after implementation measurements. |
-| Large trades still fail after ready quote due to pool movement | Medium | High | Apply protected minimums, keep quote expiry short, and retain wallet-side protected simulation as final gate. |
-| Quote context is inconsistent across candidate reads | Medium | High | Capture one live/fork block or snapshot id per ranking pass and expose it in tests, API responses, and route-lab output. |
-| Snapshot fixtures drift into fake liquidity profiles | Medium | High | Require snapshots to store pool-state source metadata, manifest hashes, and adapter-specific state fields; keep arbitrary caps labeled test-only. |
-| Async quote API becomes an unbounded RPC fanout | Medium | High | Validate public inputs, cap candidates, time out quote calls, and fail closed with diagnostics. |
-| Quote evidence is mistaken for fair-price oracle protection | Medium | Medium | Keep UI and diagnostics framed around estimated output and protected minimum, not guaranteed fair value; defer external price/oracle policy to separate requirements. |
-| Venue fees are double-counted or mislabeled | Medium | High | Treat AMM adapter outputs as already net of venue fees, calculate only the explicit FLS router fee as an additional deduction, and label per-leg venue fees as rates/diagnostics unless a venue-specific amount estimate is proven. |
-| Native ETH/WETH confusion causes wrong approval or value | Low | High | Preserve distinct token models and add dedicated tests for labels, route selection, approval, and call value. |
-| Public diagnostics leak secrets or failed executable payloads | Low | High | Redact route-lab output, omit transaction intent for failed states, and test serializers for blocked statuses. |
-| Contract-repo evidence lags behind `www` discoveries | Medium | Medium | Emit concrete todo bodies from route-lab output and keep launch evidence expectations explicitly in `fame-contracts`. |
+| Risk                                                           | Likelihood | Impact | Mitigation                                                                                                                                                                                                                          |
+| -------------------------------------------------------------- | ---------: | -----: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quote adapters are inaccurate for complex venues               |     Medium |   High | Keep adapters explicit per venue, fail closed on uncertainty, and route-lab fork-check selected routes before turning findings into contract-repo evidence.                                                                         |
+| Candidate search grows into a general aggregator               |     Medium | Medium | Bound pairs, depth, pool universe, split grid, and supported shapes in tests. Reject broad discovery in scope boundaries.                                                                                                           |
+| API, widget, and local runners diverge on executable states    |     Medium |   High | Share status union/serializer and add API, state, quote view, and solver tests for every status.                                                                                                                                    |
+| Dynamic route payloads differ from contract compiler payloads  |     Medium |   High | Mirror `fame-contracts` adapter patterns, keep ABI parity tests, and fork-test selected route plans.                                                                                                                                |
+| RPC latency makes quote API slow                               |     Medium | Medium | Cap candidate count, parallelize bounded quote calls, time out adapter failures into typed blocked states, and document any latency tradeoff after implementation measurements.                                                     |
+| Large trades still fail after ready quote due to pool movement |     Medium |   High | Apply protected minimums, keep quote expiry short, and retain wallet-side protected simulation as final gate.                                                                                                                       |
+| Quote context is inconsistent across candidate reads           |     Medium |   High | Capture one live/fork block or snapshot id per ranking pass and expose it in tests, API responses, and route-lab output.                                                                                                            |
+| Snapshot fixtures drift into fake liquidity profiles           |     Medium |   High | Require snapshots to store pool-state source metadata, manifest hashes, and adapter-specific state fields; keep arbitrary caps labeled test-only.                                                                                   |
+| Async quote API becomes an unbounded RPC fanout                |     Medium |   High | Validate public inputs, cap candidates, time out quote calls, and fail closed with diagnostics.                                                                                                                                     |
+| Quote evidence is mistaken for fair-price oracle protection    |     Medium | Medium | Keep UI and diagnostics framed around estimated output and protected minimum, not guaranteed fair value; defer external price/oracle policy to separate requirements.                                                               |
+| Venue fees are double-counted or mislabeled                    |     Medium |   High | Treat AMM adapter outputs as already net of venue fees, calculate only the explicit FLS router fee as an additional deduction, and label per-leg venue fees as rates/diagnostics unless a venue-specific amount estimate is proven. |
+| Native ETH/WETH confusion causes wrong approval or value       |        Low |   High | Preserve distinct token models and add dedicated tests for labels, route selection, approval, and call value.                                                                                                                       |
+| Public diagnostics leak secrets or failed executable payloads  |        Low |   High | Redact route-lab output, omit transaction intent for failed states, and test serializers for blocked statuses.                                                                                                                      |
+| Contract-repo evidence lags behind `www` discoveries           |     Medium | Medium | Emit concrete todo bodies from route-lab output and keep launch evidence expectations explicitly in `fame-contracts`.                                                                                                               |
 
 ## Documentation / Operational Notes
 
@@ -874,18 +957,18 @@ candidate := single_path | split | split_merge, bounded to FAME-facing pairs
 
 ## Alternative Approaches Considered
 
-| Approach | Decision | Reason |
-|---|---|---|
-| Keep scaling pinned artifacts and rely on wallet simulation | Rejected | This is the current unsafe UX: predictable exhaustion is found too late. |
-| Hard-cap all amounts to known tiny values | Temporary fallback only | It is safe but does not finish the router solver. |
-| Build a general Base aggregator | Rejected | Too broad and outside the existing FAME router evidence model. |
-| Use an external aggregator as the route source | Rejected | It bypasses the owned FameRouter route evidence goal. |
-| Add a route promotion pipeline | Rejected | The user rejected it as too heavy; use concrete contract-repo todos instead. |
-| Solve split allocation with a continuous optimizer now | Deferred | A sampled grid is simpler, testable, and enough to address current route-drain failures. |
-| Keep hard `capacityIn` profiles and raise the caps | Rejected | It would hide the `$5` failure but still would not calculate from liquidity or prove larger routes safe. |
-| Use pool topology as a capacity proxy | Rejected | Topology proves possible paths, not executable output for a requested amount. |
-| Treat the backend API as the only quote authority | Rejected | The solver should be portable. The API is a useful runner for live RPC-backed quotes, not the only place the solver can run. |
-| Keep client-side sync hard-cap quotes as executable evidence | Rejected | Liquidity reads require injected live or snapshot evidence and stale-response handling. |
+| Approach                                                     | Decision                | Reason                                                                                                                       |
+| ------------------------------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Keep scaling pinned artifacts and rely on wallet simulation  | Rejected                | This is the current unsafe UX: predictable exhaustion is found too late.                                                     |
+| Hard-cap all amounts to known tiny values                    | Temporary fallback only | It is safe but does not finish the router solver.                                                                            |
+| Build a general Base aggregator                              | Rejected                | Too broad and outside the existing FAME router evidence model.                                                               |
+| Use an external aggregator as the route source               | Rejected                | It bypasses the owned FameRouter route evidence goal.                                                                        |
+| Add a route promotion pipeline                               | Rejected                | The user rejected it as too heavy; use concrete contract-repo todos instead.                                                 |
+| Solve split allocation with a continuous optimizer now       | Deferred                | A sampled grid is simpler, testable, and enough to address current route-drain failures.                                     |
+| Keep hard `capacityIn` profiles and raise the caps           | Rejected                | It would hide the `$5` failure but still would not calculate from liquidity or prove larger routes safe.                     |
+| Use pool topology as a capacity proxy                        | Rejected                | Topology proves possible paths, not executable output for a requested amount.                                                |
+| Treat the backend API as the only quote authority            | Rejected                | The solver should be portable. The API is a useful runner for live RPC-backed quotes, not the only place the solver can run. |
+| Keep client-side sync hard-cap quotes as executable evidence | Rejected                | Liquidity reads require injected live or snapshot evidence and stale-response handling.                                      |
 
 ## Sources & References
 

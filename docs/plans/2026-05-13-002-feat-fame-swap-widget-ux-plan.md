@@ -12,6 +12,12 @@ origin: docs/brainstorms/2026-05-13-fame-swap-widget-ui-ux-requirements.md
 
 Rework `/fame/swap` from a router diagnostic prototype into a FAME-first buy/sell widget. The implementation keeps the existing live Base router, quote, readiness, and transaction safety boundaries, but changes the user-facing model, quote hierarchy, route explanation, balance controls, risk controls, transaction timeline, and visual/accessibility polish.
 
+## 2026-05-14 Status Review
+
+The main UX implementation is in place: FAME-first buy/sell mode, balance presets, quote panel, route map, advanced controls, transaction timeline, async quote hook, and wallet simulation gating. The current follow-up stack is no longer broad UI design; it is focused on quote fetch/recovery tests, API contract tests, fallback display estimates, fee labels, and richer route graph metadata in todos `005`, `006`, `008`, and `009`.
+
+Recent code changes also addressed live feedback that frequent quote cancels were visible: `useFameSwapQuote` now debounces API requests, times out stuck fetches, and ignores stale aborts. Further proof belongs in todo `009`.
+
 ## Problem Frame
 
 The current widget proves the router plumbing, but it asks users to reason through generic Sell/Buy token selectors, alert copy, chips, and hidden diagnostics. The reviewed requirements call for a user-friendly Fame Lady Society swap widget where a user can understand the FAME trade, expected output, protected minimum, route path, risk settings, and wallet action before signing anything (see origin: `docs/brainstorms/2026-05-13-fame-swap-widget-ui-ux-requirements.md`).
@@ -106,23 +112,23 @@ The target user is a Fame Lady Society holder or buyer who is comfortable connec
 
 ## State Copy And Recovery Matrix
 
-| State | Visible Message Intent | Primary Action | Recovery / Blocking |
-|---|---|---|---|
-| Disconnected | Connect to prepare a FAME swap | Connect wallet | No executable quote |
-| Wrong chain | FAME router swaps run on Base | Switch to Base | Preserve entered trade; block approval/swap |
-| Switch failed/rejected | Wallet did not switch networks | Retry switch | Offer manual Base switch copy |
-| Balance loading | Checking balance | Disabled presets | Do not validate as zero |
-| Balance stale/error | Balance unavailable | Refresh/edit amount | Disable balance-derived presets/max |
-| Invalid amount | Amount needs attention | Disabled CTA | Inline message names empty/invalid/too small/over balance |
-| Quote checking | Checking router route | Disabled CTA | Preserve input while checking |
-| Ready | Quote ready for wallet action | Approve exact amount or Swap | Show receive, protected minimum, risk settings, route |
-| Quote expired | Quote needs refresh | Refresh quote/edit amount | Block approval/swap |
-| Protected simulation failed | Protected swap could not be simulated | Review amount/risk settings | Block swap; keep raw error secondary |
-| Approval pending | Confirm exact approval in wallet | Waiting | Explain approval is not the swap |
-| Approval confirmed | Router can spend exact input amount | Submit swap | Revalidate trade-intent snapshot |
-| Swap pending | Swap submitted to Base | View BaseScan | Disable edits that would confuse transaction state |
-| Confirmed | Swap confirmed | Start another swap | Keep BaseScan link |
-| Failed/reverted | Swap did not complete | Try again after review | Preserve trade context |
+| State                       | Visible Message Intent                | Primary Action               | Recovery / Blocking                                       |
+| --------------------------- | ------------------------------------- | ---------------------------- | --------------------------------------------------------- |
+| Disconnected                | Connect to prepare a FAME swap        | Connect wallet               | No executable quote                                       |
+| Wrong chain                 | FAME router swaps run on Base         | Switch to Base               | Preserve entered trade; block approval/swap               |
+| Switch failed/rejected      | Wallet did not switch networks        | Retry switch                 | Offer manual Base switch copy                             |
+| Balance loading             | Checking balance                      | Disabled presets             | Do not validate as zero                                   |
+| Balance stale/error         | Balance unavailable                   | Refresh/edit amount          | Disable balance-derived presets/max                       |
+| Invalid amount              | Amount needs attention                | Disabled CTA                 | Inline message names empty/invalid/too small/over balance |
+| Quote checking              | Checking router route                 | Disabled CTA                 | Preserve input while checking                             |
+| Ready                       | Quote ready for wallet action         | Approve exact amount or Swap | Show receive, protected minimum, risk settings, route     |
+| Quote expired               | Quote needs refresh                   | Refresh quote/edit amount    | Block approval/swap                                       |
+| Protected simulation failed | Protected swap could not be simulated | Review amount/risk settings  | Block swap; keep raw error secondary                      |
+| Approval pending            | Confirm exact approval in wallet      | Waiting                      | Explain approval is not the swap                          |
+| Approval confirmed          | Router can spend exact input amount   | Submit swap                  | Revalidate trade-intent snapshot                          |
+| Swap pending                | Swap submitted to Base                | View BaseScan                | Disable edits that would confuse transaction state        |
+| Confirmed                   | Swap confirmed                        | Start another swap           | Keep BaseScan link                                        |
+| Failed/reverted             | Swap did not complete                 | Try again after review       | Preserve trade context                                    |
 
 ## Responsive Rules
 
@@ -134,7 +140,7 @@ The target user is a Fame Lady Society holder or buyer who is comfortable connec
 
 ## High-Level Technical Design
 
-> *This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce.*
+> _This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce._
 
 ```mermaid
 stateDiagram-v2
@@ -169,6 +175,7 @@ stateDiagram-v2
 **Dependencies:** Reviewed requirements document.
 
 **Files:**
+
 - Create: `src/features/fame-swap/ui/tradeModel.ts`
 - Create: `src/features/fame-swap/ui/quoteView.ts`
 - Test: `src/features/fame-swap/ui/tradeModel.test.ts`
@@ -176,6 +183,7 @@ stateDiagram-v2
 - Modify: `src/features/fame-swap/solver/types.ts` only if existing display types need a non-breaking addition.
 
 **Approach:**
+
 - Model `buy` and `sell` modes so FAME is always one side and the opposite asset is one of USDC, WETH, or ETH.
 - Provide helpers for flipping sides, preserving the opposite asset, and deriving `tokenIn`, `tokenOut`, active input token, and labels.
 - Build a `quoteView` helper that converts a `FameSwapQuote` plus transaction state into display-safe values: receive estimate text, protected minimum text, direct-USDC estimate, freshness label, blocked reason, and route map model.
@@ -186,11 +194,13 @@ stateDiagram-v2
 **Execution note:** Implement new pure helpers test-first. These helpers will carry most behavioral decisions without needing browser setup.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/solver/quote.test.ts`
 - `src/features/fame-swap/state.test.ts`
 - `src/features/fame-swap/solver/format.ts`
 
 **Test scenarios:**
+
 - Happy path: buy FAME with USDC maps to `tokenIn=USDC`, `tokenOut=FAME`, active input USDC.
 - Happy path: sell FAME for WETH maps to `tokenIn=FAME`, `tokenOut=WETH`, active input FAME.
 - Edge case: swap-sides preserves USDC as the opposite asset when flipping buy to sell and back.
@@ -202,6 +212,7 @@ stateDiagram-v2
 - Edge case: every supported direction can produce at least the minimum route summary fields or an explicit fallback.
 
 **Verification:**
+
 - Pure helper tests cover the FAME-first model, quote display states, direct-USDC estimate rules, route map fallback, and safety-block predicates.
 
 - [ ] **Unit 2: Balance And Amount Controls**
@@ -213,12 +224,14 @@ stateDiagram-v2
 **Dependencies:** Unit 1 trade model.
 
 **Files:**
+
 - Create: `src/features/fame-swap/hooks/useFameSwapBalance.ts`
 - Create: `src/features/fame-swap/ui/amountPresets.ts`
 - Modify: `src/features/fame-swap/components/SwapAmountField.tsx`
 - Test: `src/features/fame-swap/ui/amountPresets.test.ts`
 
 **Approach:**
+
 - Use wagmi `useBalance` for native and ERC-20 balances on Base. For native ETH, omit token address; for ERC-20 tokens, pass active input token address.
 - Use wagmi `useBalance({ address, chainId: base.id })` only for native ETH. Use `useReadContract` or `useReadContracts` with the ERC-20 `balanceOf` ABI for FAME, USDC, and WETH balances, using decimals from `FAME_SWAP_TOKENS`.
 - Return explicit balance states: disconnected, loading, ready, stale, error/unavailable.
@@ -227,11 +240,13 @@ stateDiagram-v2
 - Add inline validation messages for invalid number, empty amount, amount above usable balance, unusable balance, and too-small amount.
 
 **Patterns to follow:**
+
 - `src/features/presale/components/PresaleCard.tsx`
 - `src/components/NumericInput.tsx`
 - `src/features/fame-swap/components/SwapAmountField.tsx`
 
 **Test scenarios:**
+
 - Happy path: 25/50/75/100 presets compute expected raw bigint values for 18-decimal and 6-decimal tokens.
 - Edge case: native ETH preset subtracts gas reserve before percentage calculation.
 - Edge case: balance below native reserve disables/maxes to zero with an inline message.
@@ -240,6 +255,7 @@ stateDiagram-v2
 - Error path: over-balance amount produces inline guidance and blocks transaction actions.
 
 **Verification:**
+
 - Amount preset tests pass and the widget can display balance states without connected-wallet crashes.
 
 - [ ] **Unit 3: Quote Panel, Route Map, And Advanced Controls**
@@ -251,6 +267,7 @@ stateDiagram-v2
 **Dependencies:** Unit 1 quote view model.
 
 **Files:**
+
 - Create: `src/features/fame-swap/components/QuotePanel.tsx`
 - Create: `src/features/fame-swap/components/RouteMap.tsx`
 - Create: `src/features/fame-swap/components/AdvancedSwapControls.tsx`
@@ -259,6 +276,7 @@ stateDiagram-v2
 - Test: `src/features/fame-swap/components/FameSwapWidget.test.ts`
 
 **Approach:**
+
 - Use a restrained MUI panel style that fits the existing app. Avoid nested cards; use full-width unframed layout bands or single-purpose panels inside the widget.
 - Quote panel should lead with receive amount. Then show protected minimum, USDC estimate state, fee, slippage, deadline/freshness, and blocking warning.
 - Advanced controls open via a MUI icon button using existing `@mui/icons-material` icons. The trigger is in or directly adjacent to the quote panel. The inline panel contains slippage and deadline controls, default/reset affordance, and changed-from-default indicators.
@@ -269,11 +287,13 @@ stateDiagram-v2
 - Add client-side debounce for amount/quote-changing inputs where useful so quote/readiness/simulation work is not triggered on every keystroke. Treat debounce as UX only; quote API inputs still need server-side validation if the API contract changes.
 
 **Patterns to follow:**
+
 - `src/features/fame-swap/components/RouteDiagnostics.tsx`
 - `src/theme.ts`
 - `src/components/TransactionProgress.tsx`
 
 **Test scenarios:**
+
 - Happy path: quote panel renders receive amount first and protected minimum after wallet simulation is available.
 - Edge case: non-USDC route displays explicit USDC estimate unavailable state.
 - Happy path: advanced panel opens/closes from gear icon, preserves focus, updates slippage/deadline labels, and exposes reset/default state.
@@ -283,6 +303,7 @@ stateDiagram-v2
 - Accessibility: route map has semantic text fallback and quote status updates are announced.
 
 **Verification:**
+
 - Component tests cover quote panel hierarchy, advanced control behavior, route map fallback, and diagnostics redaction.
 
 - [ ] **Unit 4: Transaction Timeline And Network State Hardening**
@@ -294,6 +315,7 @@ stateDiagram-v2
 **Dependencies:** Units 1 and 3.
 
 **Files:**
+
 - Create: `src/features/fame-swap/components/TransactionTimeline.tsx`
 - Modify: `src/features/fame-swap/hooks/useFameSwapTransaction.ts`
 - Modify: `src/features/fame-swap/state.ts`
@@ -302,6 +324,7 @@ stateDiagram-v2
 - Test: `src/features/fame-swap/components/FameSwapWidget.test.ts`
 
 **Approach:**
+
 - Extend state modeling to include switch pending/rejected/failed, balance blocked, quote refreshing, protected simulation blocked, approval pending/confirmed, swap pending/confirmed, and reset.
 - Keep post-approval swap manual in this pass. The CTA changes from approval to swap after approval confirmation and protected simulation success.
 - Add trade-intent snapshot validation in the transaction hook or surrounding state: account, chain, tokenIn, tokenOut, amount, recipient, router/spender, protected minimum, deadline, slippage, and route hash must match before swap.
@@ -310,11 +333,13 @@ stateDiagram-v2
 - Keep BaseScan links visible when hash exists.
 
 **Patterns to follow:**
+
 - `src/features/naming/components/ClaimNameForm.tsx`
 - `src/components/TransactionProgress.tsx`
 - `src/features/fame-swap/hooks/useFameSwapTransaction.ts`
 
 **Test scenarios:**
+
 - Happy path: ERC-20 flow shows approval needed -> approval pending -> approval confirmed -> swap ready.
 - Happy path: native ETH flow skips approval and goes directly to swap ready after protected simulation.
 - Error path: wrong chain blocks approval/swap while preserving quote context.
@@ -324,6 +349,7 @@ stateDiagram-v2
 - Happy path: confirmed state shows BaseScan link and reset affordance.
 
 **Verification:**
+
 - State and transaction tests cover every state in the requirements state matrix.
 
 - [ ] **Unit 5: Widget Composition, Theme, And Accessibility Pass**
@@ -335,12 +361,14 @@ stateDiagram-v2
 **Dependencies:** Units 1-4.
 
 **Files:**
+
 - Modify: `src/features/fame-swap/components/FameSwapWidget.tsx`
 - Modify: `src/features/fame-swap/components/FameSwapPage.tsx`
 - Modify: `src/app/fame/swap/page.tsx` only if page metadata or layout spacing needs adjustment.
 - Test: `src/features/fame-swap/components/FameSwapWidget.test.ts`
 
 **Approach:**
+
 - Visual thesis: a calm, dense, trust-forward FAME trading tool that feels native to the current MUI app, not a landing page and not a debug console.
 - Content plan: mode row, amount row, quote panel with adjacent advanced trigger, route section, transaction timeline, diagnostics.
 - Interaction plan: tab/swap-side mode changes preserve valid assets, advanced panel expands inline with focus management, transaction timeline progresses without layout jumps.
@@ -348,17 +376,20 @@ stateDiagram-v2
 - Preserve stable responsive constraints so text does not overlap or resize layout unexpectedly.
 
 **Patterns to follow:**
+
 - `src/theme.ts`
 - `src/context/default.tsx`
 - `src/features/wrap/components/WrapCard.tsx` for theme-aware `sx` patterns.
 
 **Test scenarios:**
+
 - Happy path: disconnected widget renders buy/sell mode and connect wallet without route/debug clutter.
 - Happy path: ready quote renders output, protected minimum, route summary, advanced state, and CTA in the expected order.
 - Edge case: compact mode keeps mode, amount, quote output, protected minimum, warning, and CTA visible.
 - Accessibility: primary controls have labels, focusable targets, and aria-expanded/aria-live where applicable. Browser verification, not node tests, owns focus movement and responsive interaction assertions unless a DOM test harness is added.
 
 **Verification:**
+
 - Component tests pass and manual/browser screenshots show readable CTA/text in dark and light/system modes.
 
 - [ ] **Unit 6: Verification And Browser Testing**
@@ -370,10 +401,12 @@ stateDiagram-v2
 **Dependencies:** Units 1-5.
 
 **Files:**
+
 - Modify tests listed in prior units as needed.
 - Capture browser screenshots under `docs/images/` only if useful for review artifacts.
 
 **Approach:**
+
 - Run focused FAME swap tests first, then `yarn lint`, then `yarn build`.
 - Start local dev server with `doppler run -- yarn dev` and verify `/fame/swap` using `agent-browser`.
 - Agent-browser no-wallet checks should cover initial page load, disconnected mode, amount entry if possible without wallet, route/quote unavailable states, responsive desktop/mobile screenshots, and dark/light/system theme readability where controllable.
@@ -382,10 +415,12 @@ stateDiagram-v2
 - Any screenshots committed under `docs/images/` must be disconnected/read-only or redacted so wallet addresses, balances, and transaction hashes are not exposed.
 
 **Patterns to follow:**
+
 - `docs/fame-swap-fork-validation.md` for local dev posture.
 - `package.json` scripts for build/lint/dev.
 
 **Test scenarios:**
+
 - Focused unit/component test suite passes for `src/features/fame-swap`.
 - Existing solver/transaction tests still pass.
 - Lint passes with only known unrelated warnings, or new warnings are fixed.
@@ -394,6 +429,7 @@ stateDiagram-v2
 - Human-assisted wallet test confirms switch-to-Base and approval/swap states before release completion; otherwise wallet-gated checks remain open.
 
 **Verification:**
+
 - Automated commands pass and browser screenshots validate the user-facing success criteria.
 
 ## System-Wide Impact
@@ -408,16 +444,16 @@ stateDiagram-v2
 
 ## Risks & Dependencies
 
-| Risk | Mitigation |
-|------|------------|
-| UI grows too complex and still feels diagnostic | Keep compact route summary and quote hierarchy first; move raw details to diagnostics. |
-| Route map implies fake precision | Display only exposed route data; no inferred route strength or price impact. |
-| USDC estimate disappoints for non-USDC routes | Show explicit unavailable state now; keep broader pricing as backend follow-up. |
-| Wallet signing cannot be fully automated | Use agent-browser for read-only checks and document human-assisted signing gaps. |
-| Theme contrast regresses | Verify with screenshots and explicit theme-aware CTA/disabled styling. |
-| Transaction state desynchronizes after approval | Bind swap readiness to a trade-intent snapshot and invalidate on account/chain/token/amount/route changes. |
-| Native ETH reserve is wrong for current gas | Prefer current gas estimation if cheap; otherwise use named conservative constant and keep swap simulation as final protection. |
-| API quote endpoint can be spammed | Validate inputs server-side and document current rate-limit posture; keep UI debounce for user experience only. |
+| Risk                                            | Mitigation                                                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| UI grows too complex and still feels diagnostic | Keep compact route summary and quote hierarchy first; move raw details to diagnostics.                                          |
+| Route map implies fake precision                | Display only exposed route data; no inferred route strength or price impact.                                                    |
+| USDC estimate disappoints for non-USDC routes   | Show explicit unavailable state now; keep broader pricing as backend follow-up.                                                 |
+| Wallet signing cannot be fully automated        | Use agent-browser for read-only checks and document human-assisted signing gaps.                                                |
+| Theme contrast regresses                        | Verify with screenshots and explicit theme-aware CTA/disabled styling.                                                          |
+| Transaction state desynchronizes after approval | Bind swap readiness to a trade-intent snapshot and invalidate on account/chain/token/amount/route changes.                      |
+| Native ETH reserve is wrong for current gas     | Prefer current gas estimation if cheap; otherwise use named conservative constant and keep swap simulation as final protection. |
+| API quote endpoint can be spammed               | Validate inputs server-side and document current rate-limit posture; keep UI debounce for user experience only.                 |
 
 ## Documentation / Operational Notes
 
