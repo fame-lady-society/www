@@ -12,7 +12,7 @@ depends_on:
 
 ## Overview
 
-Make route-lab evidence explicit about what each protocol adapter can prove for every edge surfaced by the expanded graph matrix. Selected route legs should carry protocol-backed output evidence plus the state outputs that are actually computable. Uniswap V4 must expose Quoter output, `StateView.getSlot0`, `StateView.getLiquidity`, and route-simulation status without inventing a post-swap price. Slipstream2 remains disabled for this task; dedicated validation and any future enabling belong to a separate task.
+Make route-lab evidence explicit about what each protocol adapter can prove for every edge surfaced by the expanded graph matrix. Selected route legs should carry protocol-backed output evidence plus the state outputs that are actually computable. Uniswap V4 must expose Quoter output, `StateView.getSlot0`, `StateView.getLiquidity`, and route-simulation status without inventing a post-swap price. Slipstream2 validation was deferred from this task and is handled by later dedicated adapter work.
 
 ## Requirements Trace
 
@@ -20,12 +20,12 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 - Todo `007`: protocol coverage must include every selected, considered, rejected, disabled, and missing edge emitted by the todo `011` edge matrix.
 - Todo `007`: V4 must expose output, pre-price, active liquidity, and route or one-pool simulation evidence without pretending the current Base V4 Quoter has an after-price field.
 - Todo `007`: V3 and Slipstream V1 keep direct after-price evidence from validated quoter outputs.
-- Todo `007`: Slipstream2 remains explicitly disabled in code, tests, docs, and route-lab output until a later task validates a dedicated live quoter path.
+- Todo `007`: Slipstream2 is not enabled by this plan; a later task must validate a dedicated live quoter path before executable use.
 - Todo `011`: route-lab diagnostics must stay non-executable for non-ready states and use recorded-state quote evidence language.
 
 ## Scope Boundaries
 
-- Do not enable Slipstream2 in this task; the official Aerodrome/Velodrome docs validate `MixedRouteQuoterV1` patterns, not the current Slipstream2 pool-family execution path.
+- Do not enable Slipstream2 in this task; dedicated adapter work must validate the current Slipstream2 pool-family execution path.
 - Do not add arbitrary pool discovery or public non-FAME pair support.
 - Do not claim V4 post-swap price or full tick-state reconstruction unless the protocol response actually supplies it.
 - Do not expose route payloads, approval requests, swap calldata, private RPC URLs, or signer material in route-lab JSON or Markdown.
@@ -36,7 +36,7 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 - `src/features/fame-swap/solver/quotes/liveAdapters.ts` already quotes Solidly, Uniswap V2, Slipstream V1, Uniswap V3, and Uniswap V4 through venue-specific paths.
 - V3 and Slipstream V1 parse quoter after-price when available and compute `quoter-price-after` price impact.
 - V4 reads `StateView.getSlot0` and calls the Base V4 Quoter, but it does not currently read `StateView.getLiquidity` or surface an explicit active-liquidity state output.
-- Slipstream2 fails closed in `quoteFromSlipstreamQuoter` with a no-quote-evidence message and is disabled by the todo `011` matrix.
+- Slipstream2 initially failed closed with a no-quote-evidence message and was treated as non-executable by the todo `011` matrix pending dedicated validation.
 - `scripts/fame-swap-route-lab.ts` now emits edge matrix rows, candidate-generation diagnostics, fee breakdowns, and route-level simulation status, but it does not yet join those into a per-edge protocol coverage table.
 - Official Uniswap docs list Base V4 Quoter and StateView deployments, say V4 quotes use simulated quoter calls, and show `StateView.getSlot0` plus `getLiquidity` as the offchain pool-state reads.
 - Official Uniswap V3 docs state QuoterV2 returns `amountOut`, `gasEstimate`, `initializedTicksCrossed`, and `sqrtPriceX96After`, which supports the existing V3 after-price path.
@@ -45,16 +45,16 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 
 ## Key Technical Decisions
 
-| Decision | Rationale |
-| --- | --- |
-| Add protocol coverage as route-lab/operator evidence, not a public API expansion | The coverage matrix is for verifying adapter capability and gaps; users should not receive implementation internals unless the widget deliberately presents them later. If selected-leg protocol evidence is carried through `FameLegQuote`, `/api/fame/swap/quote` must strip it and test that it is not part of the public response. |
-| Carry protocol state evidence on selected leg quotes only with API stripping | Selected legs already flow through ranking, so this is a narrow implementation path, but the public serializer must remove route-lab-only evidence from `feeBreakdown.legs`. |
-| Derive edge coverage from the todo `011` edge matrix | This guarantees selected, considered, rejected, disabled, and missing rows share the same identity, status, and redaction model. |
-| Read V4 active liquidity from `StateView.getLiquidity` at the quote block as non-gating evidence | The official v4 docs identify this as the offchain active-liquidity read. A failed liquidity read should mark active liquidity unavailable in coverage, not suppress an otherwise valid V4 quoter output. |
-| Keep V4 post-price unavailable and explicit | The current Base V4 Quoter shape returns output and gas, not `sqrtPriceX96After`; after-price remains unavailable unless future protocol evidence adds it. |
-| Keep route simulation as route-lab evidence | The existing `--live --simulate` path is the right execution boundary for hooks/custom accounting; protocol coverage should show whether route simulation was passed, failed, skipped, or not requested. Recorded mode may report `not_requested`; live simulation proof requires configured RPC plus `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT`. |
-| Keep Slipstream2 disabled | Enabling it requires deployed quoter address, ABI/path encoding, and live/fork proof. This task should preserve fail-closed behavior and make the disabled status obvious. |
-| Prefer server-only RPC configuration for API and operator scripts | API and route-lab live quote reads should prefer `BASE_RPC_URL` over `NEXT_PUBLIC_BASE_RPC_URL_1`; `NEXT_PUBLIC_*` remains for browser-safe or local endpoints only. |
+| Decision                                                                                         | Rationale                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add protocol coverage as route-lab/operator evidence, not a public API expansion                 | The coverage matrix is for verifying adapter capability and gaps; users should not receive implementation internals unless the widget deliberately presents them later. If selected-leg protocol evidence is carried through `FameLegQuote`, `/api/fame/swap/quote` must strip it and test that it is not part of the public response.                                              |
+| Carry protocol state evidence on selected leg quotes only with API stripping                     | Selected legs already flow through ranking, so this is a narrow implementation path, but the public serializer must remove route-lab-only evidence from `feeBreakdown.legs`.                                                                                                                                                                                                        |
+| Derive edge coverage from the todo `011` edge matrix                                             | This guarantees selected, considered, rejected, disabled, and missing rows share the same identity, status, and redaction model.                                                                                                                                                                                                                                                    |
+| Read V4 active liquidity from `StateView.getLiquidity` at the quote block as non-gating evidence | The official v4 docs identify this as the offchain active-liquidity read. A failed liquidity read should mark active liquidity unavailable in coverage, not suppress an otherwise valid V4 quoter output.                                                                                                                                                                           |
+| Keep V4 post-price unavailable and explicit                                                      | The current Base V4 Quoter shape returns output and gas, not `sqrtPriceX96After`; after-price remains unavailable unless future protocol evidence adds it.                                                                                                                                                                                                                          |
+| Keep route simulation as route-lab evidence                                                      | The existing `--live --simulate` path is the right execution boundary for hooks/custom accounting; protocol coverage should show whether route simulation was passed, failed, skipped, or not requested. Recorded mode may report `not_requested`; live simulation proof requires configured RPC plus `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT`. |
+| Keep Slipstream2 out of this task                                                                | Enabling it requires deployed quoter address, ABI/path encoding, and live/fork proof, so this plan preserved fail-closed behavior until dedicated validation.                                                                                                                                                                                                                       |
+| Prefer server-only RPC configuration for API and operator scripts                                | API and route-lab live quote reads should prefer `BASE_RPC_URL` over `NEXT_PUBLIC_BASE_RPC_URL_1`; `NEXT_PUBLIC_*` remains for browser-safe or local endpoints only.                                                                                                                                                                                                                |
 
 ## Implementation Units
 
@@ -138,7 +138,7 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 - For selected rows, attach matching selected leg protocol evidence.
 - For considered rows, report that the edge was generated in at least one executable candidate but was not part of the selected route; do not attach selected-leg quote evidence unless ranking retains that exact leg evidence.
 - For rejected rows, classify quote adapter failures separately from unsafe output using rejection metadata. Add `failedLegIndex`, `failedPoolId`, and failed `amountIn` to ranking rejections, or explicitly label rows as candidate-level rejections when exact failed-edge attribution is unavailable.
-- For disabled rows, report disabled protocol status, with Slipstream2 explicitly disabled until a dedicated quoter is validated.
+- For disabled rows, report disabled protocol status for edges not enabled by manifest/readiness policy.
 - For missing rows, report missing reviewed edge coverage rather than quote failure.
 - Include coverage rows in JSON and Markdown with sanitized reasons only.
 - Omit or truncate full simulation account addresses in default route-lab JSON/Markdown, or require an explicit include flag.
@@ -148,7 +148,7 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 - Happy path: every selected/considered/rejected/disabled/missing matrix row has a coverage row.
 - Happy path: selected V4 rows show output, pre-price, active liquidity, unavailable post-price, and route simulation status.
 - Happy path: considered rows have first-class coverage semantics and do not pretend to have selected-leg evidence.
-- Happy path: Slipstream2 rows show disabled quote/state/simulation coverage.
+- Happy path: manifest-disabled rows show disabled quote/state/simulation coverage.
 - Happy path: missing WETH/USDC connector probes show missing coverage.
 - Error path: rejected rows identify the failed leg when ranking has the failed-leg metadata; otherwise they are labeled candidate-level only.
 - Error path: Markdown and JSON coverage contain no calldata, request body, RPC URL, signer material, full simulation account address, or long raw hex.
@@ -167,7 +167,7 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 
 **Approach:**
 
-- Update docs to describe protocol coverage, V4 liquidity evidence, V4 missing after-price, and Slipstream2 disabled status.
+- Update docs to describe protocol coverage, V4 liquidity evidence, V4 missing after-price, and any non-executable protocol status.
 - Use "recorded-state quote evidence" in user-facing docs.
 - Run focused FAME swap tests and route-lab Markdown output.
 - Run recorded route-lab for deterministic coverage and live route-lab when Base RPC is configured. Run `--live --simulate` when a simulation account is configured; otherwise route-lab must surface `not_requested` simulation status without claiming execution proof.
@@ -183,14 +183,14 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 
 ## Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-| --- | --- | --- | --- |
-| Coverage rows overstate quote safety for considered/rejected edges | Medium | High | Only selected rows can attach selected-leg quote evidence; considered rows are explicitly unselected, and rejected rows use failed-leg metadata or candidate-level labeling. |
-| V4 liquidity is mistaken for full capacity proof | Medium | Medium | Label it active liquidity state evidence, not complete liquidity or complete post-swap state proof. |
-| Route simulation status appears to promise a run when `--simulate` was not used | Medium | Medium | Use explicit statuses: passed, failed, skipped, or not requested. |
-| Slipstream2 accidentally becomes executable | Low | High | Keep manifest-disabled behavior and fail-closed tests. |
-| Route-lab output leaks diagnostics | Low | High | Reuse sanitizer and add coverage-specific redaction tests. |
-| Operator evidence leaks through `/api/fame/swap/quote` | Medium | High | Add a serializer test proving protocol coverage and active-liquidity evidence are absent from public responses. |
+| Risk                                                                            | Likelihood | Impact | Mitigation                                                                                                                                                                   |
+| ------------------------------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Coverage rows overstate quote safety for considered/rejected edges              | Medium     | High   | Only selected rows can attach selected-leg quote evidence; considered rows are explicitly unselected, and rejected rows use failed-leg metadata or candidate-level labeling. |
+| V4 liquidity is mistaken for full capacity proof                                | Medium     | Medium | Label it active liquidity state evidence, not complete liquidity or complete post-swap state proof.                                                                          |
+| Route simulation status appears to promise a run when `--simulate` was not used | Medium     | Medium | Use explicit statuses: passed, failed, skipped, or not requested.                                                                                                            |
+| Manifest-disabled edges accidentally become executable                          | Low        | High   | Keep manifest-disabled behavior and fail-closed tests.                                                                                                                       |
+| Route-lab output leaks diagnostics                                              | Low        | High   | Reuse sanitizer and add coverage-specific redaction tests.                                                                                                                   |
+| Operator evidence leaks through `/api/fame/swap/quote`                          | Medium     | High   | Add a serializer test proving protocol coverage and active-liquidity evidence are absent from public responses.                                                              |
 
 ## Verification Plan
 
@@ -220,6 +220,6 @@ Make route-lab evidence explicit about what each protocol adapter can prove for 
 - Implemented selected-leg protocol evidence with public API stripping for ready quote responses.
 - Added V4 `StateView.getLiquidity` active-liquidity evidence as a non-gating live adapter read; recorded V4 rows explicitly mark active liquidity unavailable unless the snapshot provides it.
 - Added route-lab protocol coverage rows for selected, considered, rejected, disabled, and missing edge-matrix states.
-- Kept Slipstream2 disabled with explicit code, test, doc, and route-lab coverage status.
+- Kept Slipstream2 out of executable coverage in this task pending dedicated adapter validation.
 - Hardened display-safe redaction and Markdown table escaping during review.
 - Verified focused tests, Prettier checks, and recorded route-lab Markdown. Fresh live route-lab and live simulation were not run because no Base RPC env var is configured in this shell.

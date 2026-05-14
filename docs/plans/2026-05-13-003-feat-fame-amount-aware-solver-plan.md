@@ -26,7 +26,7 @@ Checked off by this pass:
 - Units 8-11: implemented for quote context, recorded-state replay, live adapters, bounded API quote runner, request bounds, RPC batching, timeout handling, readiness redaction, and non-ready union serialization.
 - Unit 12: implemented for async widget quote fetching and debounce; residual hook/CTA recovery coverage is tracked by todo `009`.
 - Unit 13: implemented for recorded/live route lab, live V4 selections, and display-safe evidence;
-- Unit 14: refreshed here with live V4 status, Slipstream2 disabled status, and backlog triage.
+- Unit 14: refreshed here with live V4 status, then-pending Slipstream2 status, and backlog triage.
 
 Remaining backlog is now in `.context/compound-engineering/todos/`, with P1 todo `007` owning protocol quoter coverage and computable state outputs for all route types.
 

@@ -149,7 +149,8 @@ async function readReserveStates(
 }
 
 export async function buildFamePoolStateSnapshot(): Promise<FamePoolStateSnapshotFile> {
-  const rpcUrl = process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl =
+    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
   if (!rpcUrl) {
     throw new Error("Base RPC is not configured for snapshot generation.");
   }
@@ -208,7 +209,8 @@ export async function buildFamePoolStateSnapshot(): Promise<FamePoolStateSnapsho
     pinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
     capturedBaseBlock: Number(liveAdapter.quoteContext.blockNumber),
     generatedAt: new Date().toISOString(),
-    source: "scripts/fame-swap-pool-snapshot.ts live Base read-only quote capture",
+    source:
+      "scripts/fame-swap-pool-snapshot.ts live Base read-only quote capture",
     reserveStates: await readReserveStates(
       client,
       liveAdapter.quoteContext.blockNumber,
@@ -216,12 +218,7 @@ export async function buildFamePoolStateSnapshot(): Promise<FamePoolStateSnapsho
     quoteTable: [...quoteEntries.values()].sort((left, right) =>
       quoteEntryKey(left).localeCompare(quoteEntryKey(right)),
     ),
-    unsupportedQuotePools: [
-      {
-        poolId: "aerodrome-slipstream2",
-        reason: "No validated live Slipstream2 quoter is configured.",
-      },
-    ],
+    unsupportedQuotePools: [],
   };
 }
 

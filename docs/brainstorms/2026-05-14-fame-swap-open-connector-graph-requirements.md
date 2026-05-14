@@ -50,7 +50,7 @@ This work should improve graph openness and diagnostics without turning `/api/fa
 
 - Route candidates for supported FAME pairs can traverse connector liquidity not present in original pinned route artifacts.
 - Route-lab Markdown and JSON answer why WETH/USDC was selected, considered, disabled, or missing for each amount bucket.
-- Slipstream2 and other disabled connector edges stay non-executable but visible in diagnostics.
+- Manifest-disabled connector edges stay non-executable but visible in diagnostics; Slipstream2 Gauge Caps edges become executable only when protocol quoter support and router readiness are both present.
 - Tests fail if candidate generation collapses back to the original manifest-ready route families or if a newly introduced connector pool lacks a matrix status.
 - The implementation remains bounded and deterministic enough for public quote API use.
 
@@ -58,7 +58,7 @@ This work should improve graph openness and diagnostics without turning `/api/fa
 
 - Do not support public non-FAME swaps.
 - Do not discover arbitrary Base pools at runtime.
-- Do not enable Slipstream2 without todo `007` validating the protocol quoter path.
+- Do not enable Slipstream2 without validating the protocol quoter path and router readiness gate.
 - Do not create a route promotion lifecycle.
 - Do not display fake route strength or unverified liquidity precision.
 - Do not depend on GraphQL subgraphs.

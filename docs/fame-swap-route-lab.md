@@ -27,7 +27,7 @@ Recorded and live quote outputs are exact-input leg quotes. Venue fees are alrea
 Route lab reports `computablePriceImpactLegs` and `maxLegMarketImpactBps`.
 
 - Uniswap V2 uses reserve math and emits pre-swap price, estimated post-swap price, execution price, and market impact.
-- Slipstream and Uniswap V3 read pool `slot0` before quoting and use the quoter's `sqrtPriceX96After` for post-quote price.
+- Slipstream and Uniswap V3 read pool `slot0` before quoting and use the quoter's `sqrtPriceX96After` for post-quote price when available. Live Slipstream and Slipstream2 rows also read pool `liquidity()` as active-liquidity state evidence; a failed active-liquidity read marks only that evidence unavailable.
 - Uniswap V4 reads `StateView.getSlot0` for pre-swap price and computes market impact against execution price. The current Base V4 quoter response exposes output and gas, not after-price, so post-swap price remains unavailable for V4 legs. Treat hooks, dynamic fees, and custom accounting as reasons to add route simulation evidence, not as a reason to backfill an unverifiable after-price.
 - Live Uniswap V4 route-lab rows also read `StateView.getLiquidity` as active-liquidity state evidence. A failed active-liquidity read marks that evidence unavailable without turning a successful V4 output quote into a failed quote. Recorded route-lab rows mark V4 active liquidity unavailable unless the recorded-state artifact explicitly includes it.
 - Solidly volatile `getAmountOut` legs emit reserve-based constant-product impact. Solidly stable legs still quote from the pool but do not emit market impact until a validated stable-curve state-transition price source is added.
@@ -37,7 +37,7 @@ Route lab reports `computablePriceImpactLegs` and `maxLegMarketImpactBps`.
 - Uniswap V3: enabled. Quotes use the validated quoter path and carry after-price evidence.
 - Uniswap V4: enabled. Latest live route-lab runs select V4 pools on USDC, WETH, native ETH, and FAME sell routes. V4 legs carry output, pre-price, and market-impact-against-execution evidence; after-price remains unavailable from the current Base V4 quoter shape and should be filled by route or one-pool simulation evidence, not guessed.
 - Aerodrome Slipstream V1: enabled. Quotes use the validated Slipstream quoter path and carry after-price evidence where the quoter returns it.
-- Aerodrome Slipstream2: DISABLED. Slipstream2 pools remain in the known pool universe, but they are not launch-ready quote targets until a dedicated quoter path is validated. The live adapter fails closed and tests assert that behavior.
+- Aerodrome Slipstream2: enabled for the Base Gauge Caps deployment. Quotes use the dedicated Slipstream2 quoter path, read `slot0`, and report active-liquidity evidence from pool `liquidity()` when that read succeeds. Unknown Slipstream2 deployments still fail closed.
 - Solidly volatile: enabled with reserve-based impact evidence.
 - Solidly stable: enabled for output quotes, but market-impact state output remains unavailable until the stable-curve transition price source is validated.
 
@@ -65,7 +65,7 @@ Every route-lab row includes an edge matrix for the amount bucket. Matrix status
 - `disabled`: edge exists in the reviewed pool universe but is not executable under current manifest/readiness policy.
 - `missing`: a configured connector probe has no reviewed pool-universe edge.
 
-The matrix always checks WETH/USDC connector probes for Aerodrome Slipstream and Solidly in both directions. If reviewed WETH/USDC pools are added later, those edges move to normal selected/considered/rejected/disabled statuses; until then they appear as missing connector gaps. Slipstream2 edges remain disabled, not executable, until a separate validation task proves a dedicated protocol quoter path.
+The matrix always checks WETH/USDC connector probes for Aerodrome Slipstream and Solidly in both directions. If reviewed WETH/USDC pools are added later, those edges move to normal selected/considered/rejected/disabled statuses; until then they appear as missing connector gaps. Slipstream2 Gauge Caps edges are executable only when the router manifest/readiness policy includes their venue family and target.
 
 The edge matrix is a follow-up source, not launch approval. Use it to create exact manifest or pool-universe follow-ups after reviewing recorded-state quote evidence and, where needed, live or fork simulation evidence.
 
@@ -76,7 +76,7 @@ Every route-lab row also includes protocol coverage rows derived from the edge m
 - `selected` rows can attach selected-leg quote evidence: quote output, pre-price, post-price when protocol-backed, market-impact computability, active-liquidity evidence, and route-simulation status.
 - `considered` rows mean the edge appeared in an executable candidate but was not selected. They do not pretend to have retained selected-leg quote evidence.
 - `rejected` rows use failed-leg metadata when ranking identifies the failed pool; otherwise they are labeled as candidate-level rejection evidence.
-- `disabled` rows keep quote, state, and simulation coverage disabled. Slipstream2 appears here until a separate validation task proves a dedicated quoter path.
+- `disabled` rows keep quote, state, and simulation coverage disabled for edges not enabled by the current manifest/readiness policy.
 - `missing` rows describe absent reviewed connector coverage, not quote failure.
 
 Protocol coverage is route-lab/operator evidence. `/api/fame/swap/quote` strips route-lab-only protocol evidence from public ready responses.

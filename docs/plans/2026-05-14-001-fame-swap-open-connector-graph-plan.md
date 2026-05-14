@@ -24,7 +24,7 @@ Expand the FAME swap solver from route-family-shaped candidate generation into a
 
 - Do not add public non-FAME swap support.
 - Do not add arbitrary Base pool discovery.
-- Do not enable Slipstream2 quote execution here; todo `007` owns protocol quoter validation.
+- Do not enable any manifest-disabled quote execution here; protocol-specific enablement must validate the quoter path first.
 - Do not rank executable routes from topology-only strength or synthetic capacity labels.
 - Do not write route promotion state or contract-repo todos automatically.
 
@@ -32,19 +32,19 @@ Expand the FAME swap solver from route-family-shaped candidate generation into a
 
 - `src/features/fame-swap/solver/graph/buildGraph.ts` filters to `manifestReady`, which is correct for executable routes but hides disabled pool-universe edges from diagnostics.
 - `src/features/fame-swap/solver/graph/candidates.ts` traverses non-FAME connectors internally, but `MAX_SIMPLE_PATH_LEGS` and lack of matrix output make connector coverage hard to audit.
-- The current pool universe has no WETH/USDC pool. It has indirect connector pairs through ZORA and several Aerodrome/Solidly pairs, plus Slipstream2 pools that should remain disabled until protocol support is validated.
+- The current pool universe has no WETH/USDC pool. It has indirect connector pairs through ZORA and several Aerodrome/Solidly pairs, plus Slipstream2 pools that require protocol support validation before executable use.
 - `scripts/fame-swap-route-lab.ts` can report selected pools and rejected candidates per corpus bucket, but it does not report considered, disabled, or missing graph edges.
 
 ## Key Technical Decisions
 
-| Decision | Rationale |
-| --- | --- |
-| Keep executable graph filtering separate from diagnostic graph coverage | Candidate routes must stay live-ready, while route-lab diagnostics need visibility into disabled and missing connector edges. |
-| Keep simple path depth at 3 and make all other budgets explicit | Current reviewed connector goals such as USDC/ZORA/WETH/FAME need three edges, not four. This keeps scope tighter while adding candidate-count, split-count, cycle, and quote-call budgets. |
-| Deduplicate and sort candidates deterministically | Broader graph traversal can produce duplicate pool paths; stable output keeps tests and route-lab diffs reviewable. |
-| Emit matrix rows from route-lab, not the public quote API | The matrix is an operator artifact and follow-up source, not a user-facing executable contract. |
-| Treat WETH/USDC as a configured connector probe | Reviewed WETH/USDC edges get normal selected/considered/rejected/disabled status; absent reviewed edges get explicit `missing` rows. |
-| Use status precedence in matrix rows | If an edge appears in multiple places for one bucket, report the strongest status in this order: `selected > considered > rejected > disabled > missing`. |
+| Decision                                                                | Rationale                                                                                                                                                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Keep executable graph filtering separate from diagnostic graph coverage | Candidate routes must stay live-ready, while route-lab diagnostics need visibility into disabled and missing connector edges.                                                               |
+| Keep simple path depth at 3 and make all other budgets explicit         | Current reviewed connector goals such as USDC/ZORA/WETH/FAME need three edges, not four. This keeps scope tighter while adding candidate-count, split-count, cycle, and quote-call budgets. |
+| Deduplicate and sort candidates deterministically                       | Broader graph traversal can produce duplicate pool paths; stable output keeps tests and route-lab diffs reviewable.                                                                         |
+| Emit matrix rows from route-lab, not the public quote API               | The matrix is an operator artifact and follow-up source, not a user-facing executable contract.                                                                                             |
+| Treat WETH/USDC as a configured connector probe                         | Reviewed WETH/USDC edges get normal selected/considered/rejected/disabled status; absent reviewed edges get explicit `missing` rows.                                                        |
+| Use status precedence in matrix rows                                    | If an edge appears in multiple places for one bucket, report the strongest status in this order: `selected > considered > rejected > disabled > missing`.                                   |
 
 ## Budget Decisions
 
@@ -78,8 +78,8 @@ Expand the FAME swap solver from route-family-shaped candidate generation into a
 
 **Test scenarios:**
 
-- Happy path: default candidate generation excludes Slipstream2 edges from executable candidates.
-- Happy path: diagnostic graph includes Slipstream2 pool-universe edges with disabled status.
+- Happy path: default candidate generation excludes manifest-disabled edges from executable candidates.
+- Happy path: diagnostic graph includes manifest-disabled pool-universe edges with disabled status.
 - Error path: manifest-disabled edges never appear in ready route candidates.
 
 **Verification:**
@@ -162,7 +162,7 @@ Expand the FAME swap solver from route-family-shaped candidate generation into a
 - Happy path: a ready route marks its selected pool edges as `selected`.
 - Happy path: WETH/USDC appears as `missing` when no reviewed pool exists.
 - Happy path: an injected reviewed WETH/USDC edge resolves to normal edge status instead of `missing`.
-- Happy path: Slipstream2 connector pools appear as `disabled`, not `missing` or executable.
+- Happy path: manifest-disabled connector pools appear as `disabled`, not `missing` or executable.
 - Happy path: parallel pools for the same token pair keep separate matrix row identities and statuses.
 - Happy path: an edge used by selected and rejected candidates resolves to `selected` by precedence.
 - Error path: rejected candidates mark their edges as `rejected` when no selected route uses the edge.
@@ -204,12 +204,12 @@ Expand the FAME swap solver from route-family-shaped candidate generation into a
 
 ## Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-| --- | --- | --- | --- |
-| Broader graph search becomes too large | Medium | Medium | Hard depth and candidate-count budgets, deterministic dedupe, focused tests around candidate count. |
-| Disabled edges accidentally become executable | Low | High | Keep default graph executable-only and test Slipstream2 exclusion. |
-| Matrix output is mistaken for launch approval | Medium | Medium | Docs and suggested follow-ups say evidence/follow-up only, not promotion or approval. |
-| WETH/native routing regresses | Low | High | Keep existing native ETH exclusion tests and add connector-depth coverage. |
+| Risk                                          | Likelihood | Impact | Mitigation                                                                                          |
+| --------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------- |
+| Broader graph search becomes too large        | Medium     | Medium | Hard depth and candidate-count budgets, deterministic dedupe, focused tests around candidate count. |
+| Disabled edges accidentally become executable | Low        | High   | Keep default graph executable-only and test Slipstream2 exclusion.                                  |
+| Matrix output is mistaken for launch approval | Medium     | Medium | Docs and suggested follow-ups say evidence/follow-up only, not promotion or approval.               |
+| WETH/native routing regresses                 | Low        | High   | Keep existing native ETH exclusion tests and add connector-depth coverage.                          |
 
 ## Verification Plan
 

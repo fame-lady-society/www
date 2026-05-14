@@ -23,9 +23,9 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
   poolsContentHash:
     "0x6aedc9d363b36928505eaf422bc2a5c8c53c48f8661f9eb24494731f33cfb82d" as Hex,
   poolStateSnapshotJsonHash:
-    "0xf235b93fbf297af3210e779c0bd8d792f0c8912e6d1335853879339f94a80407" as Hex,
+    "0x5d7fa2a9ccd334bfae92e1ef1e8eb5b77ba48cc2e9945ee71769f014c75f4c07" as Hex,
   poolStateSnapshotContentHash:
-    "0xf9906d815c8cd0cb197bac85e47d9250fd8418b52bd801dd7deb41e77b45dc77" as Hex,
+    "0x2ade046cb16534b3e50a41b04c2885427d6d7fc0deba9d7865c7f3a553ba15de" as Hex,
   routeArtifactIds: [
     "solver-eth-zora-basedflick-fame",
     "solver-fame-basedflick-zora-eth",
@@ -40,6 +40,11 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
       family: "Slipstream",
       familyOrdinal: 2,
       target: "0xBE6D8f0d05cC4be24d5167a3eF062215bE6D18a5",
+    },
+    {
+      family: "Slipstream2",
+      familyOrdinal: 3,
+      target: "0xCbbb8035caC7D4B3Ca7ABb74Cf7bDF900215Ce0d",
     },
     {
       family: "Solidly",

@@ -9,7 +9,9 @@ import {
 } from "./edgeMatrix";
 import { emptyCapabilities } from "./routePlan";
 
-function cloneWethUsdcEdge(overrides: Partial<FamePoolEdge> = {}): FamePoolEdge {
+function cloneWethUsdcEdge(
+  overrides: Partial<FamePoolEdge> = {},
+): FamePoolEdge {
   const source = famePoolEdges().find(
     (edge) => edge.poolId === "scale-equalizer-weth-fame",
   );
@@ -26,7 +28,7 @@ function cloneWethUsdcEdge(overrides: Partial<FamePoolEdge> = {}): FamePoolEdge 
 }
 
 describe("FAME route edge matrix", () => {
-  it("marks selected, missing WETH/USDC, and disabled Slipstream2 edges", () => {
+  it("marks selected and missing WETH/USDC edges without disabling Slipstream2", () => {
     const candidateSet = routeCandidatesForPair(USDC, FAME);
     const selectedCandidate = candidateSet.candidates[0];
     assert.ok(selectedCandidate);
@@ -51,13 +53,12 @@ describe("FAME route edge matrix", () => {
           row.tokenOut.toLowerCase() === USDC.toLowerCase(),
       ),
     );
-    assert.ok(
+    assert.equal(
       rows.some(
         (row) =>
-          row.status === "disabled" &&
-          row.poolId?.startsWith("slipstream2-") &&
-          /Slipstream2 quote support has not been validated/.test(row.reason),
+          row.status === "disabled" && row.poolId?.startsWith("slipstream2-"),
       ),
+      false,
     );
   });
 
@@ -114,8 +115,7 @@ describe("FAME route edge matrix", () => {
     assert.ok(
       rows.some(
         (row) =>
-          row.status === "considered" &&
-          row.poolId === reviewedWethUsdc.poolId,
+          row.status === "considered" && row.poolId === reviewedWethUsdc.poolId,
       ),
     );
   });
@@ -244,12 +244,25 @@ describe("FAME route edge matrix", () => {
       tokenIn: USDC,
       tokenOut: WETH,
     });
+    const disabledEdge = cloneWethUsdcEdge({
+      id: "coverage-disabled",
+      poolId: "coverage-disabled",
+      tokenIn: WETH,
+      tokenOut: USDC,
+      manifestReady: false,
+    });
     const selectedCandidate = {
       id: "coverage-selected-candidate",
       kind: "single_path" as const,
       tokenIn: USDC,
       tokenOut: WETH,
-      legs: [{ edge: selectedEdge, amountMode: "Exact" as const, allocationBps: null }],
+      legs: [
+        {
+          edge: selectedEdge,
+          amountMode: "Exact" as const,
+          allocationBps: null,
+        },
+      ],
       capabilities: emptyCapabilities({ weth: true }),
       summary: "coverage-selected",
     };
@@ -258,7 +271,13 @@ describe("FAME route edge matrix", () => {
       kind: "single_path" as const,
       tokenIn: USDC,
       tokenOut: WETH,
-      legs: [{ edge: rejectedEdge, amountMode: "Exact" as const, allocationBps: null }],
+      legs: [
+        {
+          edge: rejectedEdge,
+          amountMode: "Exact" as const,
+          allocationBps: null,
+        },
+      ],
       capabilities: emptyCapabilities({ weth: true }),
       summary: "coverage-rejected",
     };
@@ -267,7 +286,13 @@ describe("FAME route edge matrix", () => {
       kind: "single_path" as const,
       tokenIn: USDC,
       tokenOut: WETH,
-      legs: [{ edge: consideredEdge, amountMode: "Exact" as const, allocationBps: null }],
+      legs: [
+        {
+          edge: consideredEdge,
+          amountMode: "Exact" as const,
+          allocationBps: null,
+        },
+      ],
       capabilities: emptyCapabilities({ weth: true }),
       summary: "coverage-considered",
     };
@@ -293,6 +318,7 @@ describe("FAME route edge matrix", () => {
         selectedEdge,
         rejectedEdge,
         consideredEdge,
+        disabledEdge,
       ],
     });
     const coverage = buildFameRouteProtocolCoverage({

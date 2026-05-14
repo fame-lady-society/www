@@ -54,7 +54,9 @@ describe("FAME route candidate graph", () => {
 
   it("includes direct and split WETH to FAME candidates", () => {
     const { candidates } = routeCandidatesForPair(WETH, FAME);
-    const direct = candidates.filter((candidate) => candidate.kind === "single_path");
+    const direct = candidates.filter(
+      (candidate) => candidate.kind === "single_path",
+    );
     const split = candidates.filter((candidate) => candidate.kind === "split");
 
     assert.ok(
@@ -116,18 +118,21 @@ describe("FAME route candidate graph", () => {
     assert.equal(unsupported.rejected[0]?.reason, "unsupported_pair");
   });
 
-  it("keeps disabled pool-universe edges out of executable graph by default", () => {
+  it("includes manifest-ready Slipstream2 edges in the executable graph", () => {
     const executableGraph = buildFamePoolGraph();
     const diagnosticGraph = buildFamePoolGraph(famePoolEdges(), {
       includeManifestDisabled: true,
     });
 
-    assert.equal(
-      executableGraph.edges.some((edge) => edge.poolId.startsWith("slipstream2-")),
-      false,
+    assert.ok(
+      executableGraph.edges.some((edge) =>
+        edge.poolId.startsWith("slipstream2-"),
+      ),
     );
     assert.ok(
-      diagnosticGraph.edges.some((edge) => edge.poolId.startsWith("slipstream2-")),
+      diagnosticGraph.edges.some((edge) =>
+        edge.poolId.startsWith("slipstream2-"),
+      ),
     );
   });
 
@@ -198,7 +203,9 @@ describe("FAME route candidate graph", () => {
     const { candidates } = routeCandidatesForPair(USDC, FAME, graph);
 
     assert.equal(
-      candidates.some((candidate) => poolPath(candidate).includes("depth-c-fame")),
+      candidates.some((candidate) =>
+        poolPath(candidate).includes("depth-c-fame"),
+      ),
       false,
     );
   });
@@ -301,7 +308,8 @@ describe("FAME route candidate graph", () => {
     });
 
     assert.equal(
-      result.candidates.filter((candidate) => candidate.kind === "split").length,
+      result.candidates.filter((candidate) => candidate.kind === "split")
+        .length,
       2,
     );
     assert.ok(

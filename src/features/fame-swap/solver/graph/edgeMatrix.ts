@@ -339,10 +339,6 @@ function edgeMatchesProbe(edge: FamePoolEdge, probe: ConnectorProbe): boolean {
 }
 
 function disabledReasonForEdge(edge: FamePoolEdge): string {
-  if (edge.venue === "Slipstream2") {
-    return `${edge.poolId} is disabled because Aerodrome Slipstream2 quote support has not been validated.`;
-  }
-
   return `${edge.poolId} is disabled because its venue family or target is not enabled by the current FAME router manifest/readiness policy.`;
 }
 

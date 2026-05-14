@@ -20,7 +20,7 @@ Do not create a generic route promotion pipeline. Keep each todo tied to exact r
 - Live `--simulate` was requested, but no initiating account env was configured. Set `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT` before treating route-lab simulation as execution evidence.
 - The formerly large closed buckets now quote as `ready` from recorded and live liquidity evidence. They should become amount-sweep or fork-proof follow-ups, not failure regressions.
 - V4 routes are live-selected in current Doppler route-lab runs. V4 after-price is still not emitted by the current Base V4 quoter shape, so require route-level or one-pool simulation evidence; do not backfill unverifiable post-swap prices.
-- Slipstream2 is DISABLED until a dedicated live quoter path is validated. Keep its pools out of launch-ready route evidence unless a future todo enables and tests the adapter.
+- Slipstream2 is enabled for the Base Gauge Caps deployment through the dedicated live quoter path. Unknown Slipstream2 deployments still fail closed and should not be included in launch-ready route evidence without separate validation.
 
 ## Current Route-Lab Todo Candidates
 

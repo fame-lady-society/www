@@ -18,14 +18,14 @@ describe("FAME route lab", () => {
       assert.equal(row.mode, "recorded");
       assert.equal(row.status, row.expectedStatus, row.id);
       assert.equal(row.simulation.status, "not_requested", row.id);
-      assert.match(row.quoteContext ?? "", /^recorded:base-v1-live-\d+:45884844$/);
+      assert.match(
+        row.quoteContext ?? "",
+        /^recorded:base-v1-live-\d+:45884844$/,
+      );
       assert.ok(row.selectedPools.length > 0, row.id);
       assert.ok(row.feeBreakdown.routerFeeAmount !== null, row.id);
       assert.equal(row.feeBreakdown.venueFeesIncluded, true, row.id);
-      assert.ok(
-        (row.feeBreakdown.computablePriceImpactLegs ?? 0) > 0,
-        row.id,
-      );
+      assert.ok((row.feeBreakdown.computablePriceImpactLegs ?? 0) > 0, row.id);
       assert.ok(row.suggestedContractTodo?.includes(row.id), row.id);
       assert.ok(row.edgeMatrix.length > 0, row.id);
       assert.ok(
@@ -58,7 +58,7 @@ describe("FAME route lab", () => {
         row.id,
       );
       assert.ok(
-        row.edgeMatrix.some(
+        !row.edgeMatrix.some(
           (edge) =>
             edge.status === "disabled" &&
             edge.poolId?.startsWith("slipstream2-"),
@@ -66,18 +66,13 @@ describe("FAME route lab", () => {
         row.id,
       );
       for (const edge of row.edgeMatrix) {
-        assert.match(edge.reasonCategory, /_edge|quote_adapter_failure|unsafe_output/);
+        assert.match(
+          edge.reasonCategory,
+          /_edge|quote_adapter_failure|unsafe_output/,
+        );
         assert.doesNotMatch(edge.reason, /https?:\/\//);
         assert.doesNotMatch(edge.reason, /0x[a-fA-F0-9]{96,}/);
       }
-      assert.ok(
-        row.protocolCoverage.some(
-          (coverage) =>
-            coverage.edgeStatus === "disabled" &&
-            coverage.quote.status === "disabled",
-        ),
-        row.id,
-      );
       assert.ok(
         row.protocolCoverage.some(
           (coverage) =>
@@ -119,7 +114,6 @@ describe("FAME route lab", () => {
     assert.match(markdown, /Candidate Generation Diagnostics/);
     assert.match(markdown, /budget/);
   });
-
 
   it("keeps deterministic cap-profile failures explicit and non-executable", () => {
     const rows = runRouteLab();
@@ -176,7 +170,7 @@ describe("FAME route lab", () => {
             candidateId: "candidate",
             reason: "adapter_failure",
             message:
-              "HTTP request failed.\nURL: https://example.invalid/secret\nRequest body: {\"method\":\"eth_blockNumber\"}",
+              'HTTP request failed.\nURL: https://example.invalid/secret\nRequest body: {"method":"eth_blockNumber"}',
           },
         ],
         candidateGenerationDiagnostics: [

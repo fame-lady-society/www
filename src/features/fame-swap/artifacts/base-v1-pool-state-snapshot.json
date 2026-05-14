@@ -3356,10 +3356,5 @@
       }
     }
   ],
-  "unsupportedQuotePools": [
-    {
-      "poolId": "aerodrome-slipstream2",
-      "reason": "No validated live Slipstream2 quoter is configured."
-    }
-  ]
+  "unsupportedQuotePools": []
 }

@@ -15,7 +15,7 @@ The current FAME swap solver is amount-aware and quote-backed, but its graph sti
 
 - `src/features/fame-swap/solver/graph/buildGraph.ts` filters graph edges to `manifestReady`, so disabled or unreviewed pools are invisible to graph diagnostics.
 - `src/features/fame-swap/solver/graph/candidates.ts` only exposes candidate generation for supported public FAME pairs. The internal DFS can traverse non-FAME connector edges, but the budgets and diagnostics do not explain which connector edges were considered, disabled, missing, or rejected.
-- The pool universe already contains connector pairs such as ZORA/USDC, ZORA/WETH, USDC/frxUSD, WETH/SPX, WETH/msETH, and disabled Slipstream2 connector pools, but not a direct WETH/USDC edge.
+- The pool universe already contains connector pairs such as ZORA/USDC, ZORA/WETH, USDC/frxUSD, WETH/SPX, WETH/msETH, and Slipstream2 connector pools, but not a direct WETH/USDC edge.
 - `scripts/fame-swap-route-lab.ts` reports selected pools and candidate rejections per amount bucket, but not a per-edge graph matrix that can answer why WETH/USDC, Aerodrome/Solidly connectors, or absent-from-original-artifact routes did or did not participate.
 
 ## Candidate Ideas
@@ -38,9 +38,9 @@ Allow connector paths up to four legs behind a hard candidate budget, cycle guar
 
 This is useful but must stay conservative. A deeper path should not become a substitute for protocol quote validation or route execution proof.
 
-### 4. Treat Disabled Connector Edges As First-Class Diagnostics
+### 4. Treat Non-Executable Connector Edges As First-Class Diagnostics
 
-Keep Slipstream2 and any manifest-disabled target out of executable candidates, but surface them in graph diagnostics with clear disabled reasons.
+Keep manifest-disabled targets out of executable candidates, but surface them in graph diagnostics with clear disabled reasons. Slipstream2 Gauge Caps pools are executable only after dedicated quoter validation plus router manifest/readiness coverage.
 
 This prevents missing support from looking like missing liquidity.
 
@@ -52,12 +52,12 @@ This compounds route-lab output into actionable work while avoiding a route prom
 
 ## Rejected Ideas
 
-| Idea | Decision | Reason |
-| --- | --- | --- |
-| Add arbitrary Base pool discovery | Rejected | It violates the bounded FAME router scope and would turn the quote API into an aggregator surface. |
-| Make non-FAME public quote pairs supported | Rejected | Public swaps should remain FAME buy/sell only. Connector pairs are internal search and diagnostics tools. |
-| Enable Slipstream2 by configuration only | Rejected | Slipstream2 must stay disabled until protocol quoter support is validated. |
-| Rank routes by topology strength without quotes | Rejected | The stack now requires recorded-state or live quote evidence for executable decisions. |
+| Idea                                            | Decision | Reason                                                                                                          |
+| ----------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| Add arbitrary Base pool discovery               | Rejected | It violates the bounded FAME router scope and would turn the quote API into an aggregator surface.              |
+| Make non-FAME public quote pairs supported      | Rejected | Public swaps should remain FAME buy/sell only. Connector pairs are internal search and diagnostics tools.       |
+| Enable Slipstream2 by configuration only        | Rejected | Slipstream2 requires protocol quoter validation and router manifest/readiness coverage, not a config-only flip. |
+| Rank routes by topology strength without quotes | Rejected | The stack now requires recorded-state or live quote evidence for executable decisions.                          |
 
 ## Selected Direction
 

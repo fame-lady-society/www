@@ -40,6 +40,7 @@ export interface FameLiveQuoteAdapterOptions {
   forkUrlLabel?: string;
   readTimeoutMs?: number;
   slipstreamQuoterAddress?: Address;
+  slipstream2QuoterAddress?: Address;
   uniswapV3QuoterAddress?: Address;
   uniswapV4QuoterAddress?: Address;
 }
@@ -50,10 +51,16 @@ const MAX_UINT128 = (1n << 128n) - 1n;
 
 export const BASE_SLIPSTREAM_QUOTER_V2 =
   "0x254cF9E1E6e233aa1AC962CB9B05b2cfeAaE15b0" as const satisfies Address;
+export const BASE_SLIPSTREAM2_QUOTER =
+  "0x3d4C22254F86f64B7eC90ab8F7aeC1FBFD271c6C" as const satisfies Address;
 export const BASE_UNISWAP_V3_QUOTER_V2 =
   "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a" as const satisfies Address;
 export const BASE_UNISWAP_V4_QUOTER =
   "0x0d5e0f971ed27fbff6c2837bf31316121532048d" as const satisfies Address;
+const BASE_SLIPSTREAM2_GAUGE_CAPS_FACTORY =
+  "0xade65c38cd4849adba595a4323a8c7ddfe89716a" as const satisfies Address;
+const BASE_SLIPSTREAM2_GAUGE_CAPS_ROUTER =
+  "0xcbbb8035cac7d4b3ca7abb74cf7bdf900215ce0d" as const satisfies Address;
 
 const getReservesAbi = [
   {
@@ -117,6 +124,16 @@ const slipstreamSlot0Abi = [
   },
 ] as const;
 
+const concentratedPoolLiquidityAbi = [
+  {
+    type: "function",
+    name: "liquidity",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "liquidity", type: "uint128" }],
+  },
+] as const;
+
 const uniswapV4StateViewSlot0Abi = [
   {
     type: "function",
@@ -168,6 +185,22 @@ const slipstreamQuoterAbi = [
       },
     ],
     outputs: concentratedQuoteTupleOutputs,
+  },
+] as const;
+
+const slipstream2QuoterAbi = [
+  {
+    type: "function",
+    name: "quoteExactInputSingle",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokenIn", type: "address" },
+      { name: "tokenOut", type: "address" },
+      { name: "tickSpacing", type: "int24" },
+      { name: "amountIn", type: "uint256" },
+      { name: "sqrtPriceLimitX96", type: "uint160" },
+    ],
+    outputs: [{ name: "amountOut", type: "uint256" }],
   },
 ] as const;
 
@@ -483,6 +516,27 @@ async function readV4ActiveLiquidityEvidence(
   }
 }
 
+async function readConcentratedPoolActiveLiquidityEvidence(
+  client: FameLiveQuoteClient,
+  request: ReadContractRequest,
+  source: string,
+  timeoutMs: number,
+): Promise<FameProtocolEvidenceItem> {
+  try {
+    const raw = await readLiveContract(client, request, timeoutMs);
+    if (typeof raw !== "bigint") {
+      return unavailableEvidence(
+        source,
+        "Pool liquidity returned malformed active liquidity.",
+      );
+    }
+
+    return availableEvidence(source, raw);
+  } catch (error) {
+    return unavailableEvidence(source, displaySafeErrorMessage(error));
+  }
+}
+
 function sameAddress(left: Address, right: Address): boolean {
   return left.toLowerCase() === right.toLowerCase();
 }
@@ -722,13 +776,7 @@ async function quoteFromSlipstreamQuoter(
   quoterAddress: Address,
 ): Promise<FameEdgeQuoteResult> {
   const pool = request.edge.pool;
-  if (pool.venue !== "aerodrome-slipstream") {
-    return {
-      status: "failed",
-      reason: "no_quote_evidence",
-      message: `${request.edge.poolId} has no validated live Slipstream2 quoter.`,
-    };
-  }
+  if (pool.venue !== "aerodrome-slipstream") return noEvidence(request);
 
   const preSwapSqrtPriceX96 = await readSlot0SqrtPriceX96(
     client,
@@ -739,6 +787,17 @@ async function quoteFromSlipstreamQuoter(
       blockNumber: context.blockNumber,
     },
     timeoutMs,
+  );
+  const activeLiquidityPromise = readConcentratedPoolActiveLiquidityEvidence(
+    client,
+    {
+      address: pool.pool,
+      abi: concentratedPoolLiquidityAbi,
+      functionName: "liquidity",
+      blockNumber: context.blockNumber,
+    },
+    `Slipstream pool liquidity at ${context.source} block ${context.blockNumber.toString()}`,
+    Math.min(timeoutMs, V4_ACTIVE_LIQUIDITY_EVIDENCE_TIMEOUT_MS),
   );
 
   const rawQuote = await readLiveContract(
@@ -771,6 +830,7 @@ async function quoteFromSlipstreamQuoter(
   }
 
   const source = `live Slipstream quoter at ${context.source} block ${context.blockNumber.toString()}`;
+  const activeLiquidity = await activeLiquidityPromise;
   const priceImpact = preSwapSqrtPriceX96
     ? concentratedLiquidityPriceImpact({
         amountIn: request.amountIn,
@@ -797,10 +857,125 @@ async function quoteFromSlipstreamQuoter(
       source,
       amountOut: quote.amountOut,
       priceImpact,
-      activeLiquidity: unavailableEvidence(
-        source,
-        "Slipstream active liquidity read is not part of the current validated adapter evidence.",
-      ),
+      activeLiquidity,
+    }),
+  };
+}
+
+function slipstream2QuoterForPool(
+  pool: Extract<
+    FameEdgeQuoteRequest["edge"]["pool"],
+    { venue: "aerodrome-slipstream2" }
+  >,
+  quoterAddress: Address,
+): Address | null {
+  if (
+    sameAddress(pool.factory, BASE_SLIPSTREAM2_GAUGE_CAPS_FACTORY) &&
+    sameAddress(pool.router, BASE_SLIPSTREAM2_GAUGE_CAPS_ROUTER)
+  ) {
+    return quoterAddress;
+  }
+
+  return null;
+}
+
+async function quoteFromSlipstream2Quoter(
+  request: FameEdgeQuoteRequest,
+  client: FameLiveQuoteClient,
+  context: FameBlockQuoteContext,
+  timeoutMs: number,
+  quoterAddress: Address,
+): Promise<FameEdgeQuoteResult> {
+  const pool = request.edge.pool;
+  if (pool.venue !== "aerodrome-slipstream2") return noEvidence(request);
+
+  const supportedQuoter = slipstream2QuoterForPool(pool, quoterAddress);
+  if (!supportedQuoter) {
+    return {
+      status: "failed",
+      reason: "no_quote_evidence",
+      message: `${request.edge.poolId} uses an unsupported Slipstream2 deployment.`,
+    };
+  }
+
+  const preSwapSqrtPriceX96 = await readSlot0SqrtPriceX96(
+    client,
+    {
+      address: pool.pool,
+      abi: slipstreamSlot0Abi,
+      functionName: "slot0",
+      blockNumber: context.blockNumber,
+    },
+    timeoutMs,
+  );
+  const activeLiquidityPromise = readConcentratedPoolActiveLiquidityEvidence(
+    client,
+    {
+      address: pool.pool,
+      abi: concentratedPoolLiquidityAbi,
+      functionName: "liquidity",
+      blockNumber: context.blockNumber,
+    },
+    `Slipstream2 pool liquidity at ${context.source} block ${context.blockNumber.toString()}`,
+    Math.min(timeoutMs, V4_ACTIVE_LIQUIDITY_EVIDENCE_TIMEOUT_MS),
+  );
+
+  const rawQuote = await readLiveContract(
+    client,
+    {
+      address: supportedQuoter,
+      abi: slipstream2QuoterAbi,
+      functionName: "quoteExactInputSingle",
+      args: [
+        request.edge.tokenIn,
+        request.edge.tokenOut,
+        pool.tickSpacing,
+        request.amountIn,
+        0n,
+      ],
+      blockNumber: context.blockNumber,
+    },
+    timeoutMs,
+  );
+
+  const quote = concentratedQuoteOutput(rawQuote);
+  if (!quote || quote.amountOut <= 0n) {
+    return {
+      status: "failed",
+      reason: "zero_output",
+      message: `${request.edge.poolId} Slipstream2 quoter returned zero output.`,
+    };
+  }
+
+  const source = `live Slipstream2 quoter at ${context.source} block ${context.blockNumber.toString()}`;
+  const activeLiquidity = await activeLiquidityPromise;
+  const priceImpact = preSwapSqrtPriceX96
+    ? concentratedLiquidityPriceImpact({
+        amountIn: request.amountIn,
+        amountOut: quote.amountOut,
+        tokenIn: request.edge.tokenIn,
+        tokenOut: request.edge.tokenOut,
+        token0: pool.token0,
+        token1: pool.token1,
+        preSwapSqrtPriceX96,
+        postSwapSqrtPriceX96: null,
+      })
+    : undefined;
+
+  return {
+    status: "quoted",
+    amountIn: request.amountIn,
+    amountOut: quote.amountOut,
+    capacityIn: null,
+    fee: request.edge.fee,
+    evidence: source,
+    context,
+    priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
+      amountOut: quote.amountOut,
+      priceImpact,
+      activeLiquidity,
     }),
   };
 }
@@ -1005,6 +1180,7 @@ async function quoteLiveEdge(
   timeoutMs: number,
   quoterAddresses: {
     slipstream: Address;
+    slipstream2: Address;
     uniswapV3: Address;
     uniswapV4: Address;
   },
@@ -1023,16 +1199,23 @@ async function quoteLiveEdge(
       return await quoteFromReserves(request, client, context, timeoutMs);
     }
 
-    if (
-      request.edge.pool.venue === "aerodrome-slipstream" ||
-      request.edge.pool.venue === "aerodrome-slipstream2"
-    ) {
+    if (request.edge.pool.venue === "aerodrome-slipstream") {
       return await quoteFromSlipstreamQuoter(
         request,
         client,
         context,
         timeoutMs,
         quoterAddresses.slipstream,
+      );
+    }
+
+    if (request.edge.pool.venue === "aerodrome-slipstream2") {
+      return await quoteFromSlipstream2Quoter(
+        request,
+        client,
+        context,
+        timeoutMs,
+        quoterAddresses.slipstream2,
       );
     }
 
@@ -1068,6 +1251,7 @@ export async function createLiveLiquidityQuoteAdapter(
   const readTimeoutMs = options.readTimeoutMs ?? DEFAULT_READ_TIMEOUT_MS;
   const quoterAddresses = {
     slipstream: options.slipstreamQuoterAddress ?? BASE_SLIPSTREAM_QUOTER_V2,
+    slipstream2: options.slipstream2QuoterAddress ?? BASE_SLIPSTREAM2_QUOTER,
     uniswapV3: options.uniswapV3QuoterAddress ?? BASE_UNISWAP_V3_QUOTER_V2,
     uniswapV4: options.uniswapV4QuoterAddress ?? BASE_UNISWAP_V4_QUOTER,
   };
