@@ -1,59 +1,36 @@
 import type { Address } from "viem";
-import snapshotJson from "../../artifacts/base-v1-pool-state-snapshot.json";
-import { FAME_SWAP_ARTIFACT_MANIFEST } from "../../artifacts/manifest";
+import { parsedFameSwapArtifactFiles } from "../artifactFiles";
 import type {
   FameEdgeQuoteRequest,
   FameEdgeQuoteResult,
   FamePriceImpactEstimate,
+  FameProtocolEvidence,
+  FameProtocolEvidenceItem,
   FameQuoteAdapter,
 } from "./adapters";
 import type { FameQuoteContext } from "./quoteContext";
 import { constantProductPriceImpact } from "./routeMath";
+import {
+  snapshotIntegrityIssue as snapshotIntegrityIssueForFile,
+  type FamePoolStateSnapshotFile,
+  type FameSnapshotQuoteEntry,
+  type FameSnapshotReserveState,
+} from "./snapshotTypes";
 
-export interface FameSnapshotReserveState {
-  poolId: string;
-  pool: Address;
-  token0: Address;
-  token1: Address;
-  reserve0: string;
-  reserve1: string;
-  source: "getReserves";
-}
-
-export interface FameSnapshotQuoteEntry {
-  poolId: string;
-  tokenIn: Address;
-  tokenOut: Address;
-  amountIn: string;
-  amountOut: string;
-  evidence: string;
-  priceImpact?: {
-    preSwapPriceX18: string;
-    postSwapPriceX18: string | null;
-    executionPriceX18: string;
-    marketImpactBps: number | null;
-    method: FamePriceImpactEstimate["method"];
-  };
-}
-
-export interface FamePoolStateSnapshotFile {
-  schemaVersion: number;
-  status: "generated-live-liquidity-snapshot";
-  snapshotId: string;
-  pinnedBaseBlock: number;
-  capturedBaseBlock: number;
-  generatedAt: string;
-  source: string;
-  reserveStates: FameSnapshotReserveState[];
-  quoteTable: FameSnapshotQuoteEntry[];
-  unsupportedQuotePools: Array<{
-    poolId: string;
-    reason: string;
-  }>;
-}
+export type {
+  FamePoolStateSnapshotFile,
+  FameSnapshotQuoteEntry,
+  FameSnapshotReserveState,
+} from "./snapshotTypes";
 
 export const poolStateSnapshotFile =
-  snapshotJson as FamePoolStateSnapshotFile;
+  parsedFameSwapArtifactFiles().poolStateSnapshot;
+
+export function snapshotIntegrityIssue(
+  snapshot: FamePoolStateSnapshotFile = poolStateSnapshotFile,
+): string | null {
+  return snapshotIntegrityIssueForFile(snapshot);
+}
 
 function key(
   poolId: string,
@@ -73,12 +50,6 @@ function sameAddress(left: Address, right: Address): boolean {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-function parsePositiveBigint(value: string): bigint | null {
-  if (!/^[0-9]+$/.test(value)) return null;
-  const parsed = BigInt(value);
-  return parsed > 0n ? parsed : null;
-}
-
 function constantProductAmountOut(
   amountIn: bigint,
   reserveIn: bigint,
@@ -92,42 +63,10 @@ function constantProductAmountOut(
   if (feeNumerator <= 0n) return 0n;
 
   const amountInWithFee = amountIn * feeNumerator;
-  return (amountInWithFee * reserveOut) /
-    (reserveIn * feeDenominator + amountInWithFee);
-}
-
-export function snapshotIntegrityIssue(
-  snapshot: FamePoolStateSnapshotFile = poolStateSnapshotFile,
-): string | null {
-  if (snapshot.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion) {
-    return "FAME recorded pool state schema version does not match the manifest.";
-  }
-  if (snapshot.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock) {
-    return "FAME recorded pool state pinned Base block does not match the manifest.";
-  }
-  if (!snapshot.snapshotId) {
-    return "FAME recorded pool state id is missing.";
-  }
-
-  for (const reserve of snapshot.reserveStates) {
-    if (
-      !parsePositiveBigint(reserve.reserve0) ||
-      !parsePositiveBigint(reserve.reserve1)
-    ) {
-      return `FAME recorded pool state reserve ${reserve.poolId} is malformed.`;
-    }
-  }
-
-  for (const entry of snapshot.quoteTable) {
-    if (
-      !parsePositiveBigint(entry.amountIn) ||
-      !parsePositiveBigint(entry.amountOut)
-    ) {
-      return `FAME recorded pool state quote ${entry.poolId} is malformed.`;
-    }
-  }
-
-  return null;
+  return (
+    (amountInWithFee * reserveOut) /
+    (reserveIn * feeDenominator + amountInWithFee)
+  );
 }
 
 function quoteContext(snapshot: FamePoolStateSnapshotFile): FameQuoteContext {
@@ -154,11 +93,90 @@ function priceImpactFromSnapshot(
   };
 }
 
+function availableEvidence(
+  source: string,
+  value?: bigint | number | string | null,
+): FameProtocolEvidenceItem {
+  return {
+    status: "available",
+    source,
+    ...(value === undefined || value === null
+      ? {}
+      : { value: value.toString() }),
+  };
+}
+
+function unavailableEvidence(
+  source: string,
+  reason: string,
+): FameProtocolEvidenceItem {
+  return {
+    status: "unavailable",
+    source,
+    reason,
+  };
+}
+
+function notApplicableEvidence(
+  source: string,
+  reason: string,
+): FameProtocolEvidenceItem {
+  return {
+    status: "not_applicable",
+    source,
+    reason,
+  };
+}
+
+function protocolEvidenceFromPriceImpact(options: {
+  source: string;
+  amountOut: bigint;
+  priceImpact?: FamePriceImpactEstimate;
+  activeLiquidity?: FameProtocolEvidenceItem;
+}): FameProtocolEvidence {
+  const priceImpact = options.priceImpact;
+  return {
+    quote: availableEvidence(options.source, options.amountOut),
+    prePrice: priceImpact
+      ? availableEvidence(options.source, priceImpact.preSwapPriceX18)
+      : unavailableEvidence(
+          options.source,
+          "Recorded pre-price evidence is unavailable.",
+        ),
+    postPrice: priceImpact
+      ? priceImpact.postSwapPriceX18 === null
+        ? unavailableEvidence(
+            options.source,
+            "Recorded post-price evidence is unavailable.",
+          )
+        : availableEvidence(options.source, priceImpact.postSwapPriceX18)
+      : unavailableEvidence(
+          options.source,
+          "Recorded post-price evidence is unavailable.",
+        ),
+    marketImpact:
+      priceImpact?.marketImpactBps === undefined ||
+      priceImpact.marketImpactBps === null
+        ? unavailableEvidence(
+            options.source,
+            "Recorded market-impact evidence is unavailable.",
+          )
+        : availableEvidence(options.source, priceImpact.marketImpactBps),
+    activeLiquidity:
+      options.activeLiquidity ??
+      notApplicableEvidence(
+        options.source,
+        "Recorded active liquidity evidence is not applicable for this adapter.",
+      ),
+  };
+}
+
 function quoteFromTable(
   request: FameEdgeQuoteRequest,
   entry: FameSnapshotQuoteEntry,
   context: FameQuoteContext,
 ): FameEdgeQuoteResult {
+  const priceImpact = priceImpactFromSnapshot(entry);
   return {
     status: "quoted",
     amountIn: request.amountIn,
@@ -167,7 +185,21 @@ function quoteFromTable(
     fee: request.edge.fee,
     evidence: entry.evidence,
     context,
-    priceImpact: priceImpactFromSnapshot(entry),
+    priceImpact,
+    protocolEvidence:
+      entry.protocolEvidence ??
+      protocolEvidenceFromPriceImpact({
+        source: entry.evidence,
+        amountOut: BigInt(entry.amountOut),
+        priceImpact,
+        activeLiquidity:
+          request.edge.pool.venue === "uniswap-v4"
+            ? unavailableEvidence(
+                "recorded-state quote evidence",
+                "Recorded snapshot does not include V4 StateView.getLiquidity evidence.",
+              )
+            : undefined,
+      }),
   };
 }
 
@@ -193,7 +225,8 @@ function quoteFromReserves(
 ): FameEdgeQuoteResult {
   const reserveReplaySupported =
     request.edge.pool.venue === "uniswap-v2" ||
-    (request.edge.pool.venue === "solidly" && request.edge.pool.stable === false);
+    (request.edge.pool.venue === "solidly" &&
+      request.edge.pool.stable === false);
   if (!reserveReplaySupported) {
     return {
       status: "failed",
@@ -232,19 +265,31 @@ function quoteFromReserves(
     };
   }
 
+  const source = `recorded reserves ${reserve.source} for ${reserve.poolId}`;
+  const priceImpact = constantProductPriceImpact({
+    amountIn: request.amountIn,
+    amountOut,
+    reserveIn: reserves[0],
+    reserveOut: reserves[1],
+  });
+
   return {
     status: "quoted",
     amountIn: request.amountIn,
     amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `recorded reserves ${reserve.source} for ${reserve.poolId}`,
+    evidence: source,
     context,
-    priceImpact: constantProductPriceImpact({
-      amountIn: request.amountIn,
+    priceImpact,
+    protocolEvidence: protocolEvidenceFromPriceImpact({
+      source,
       amountOut,
-      reserveIn: reserves[0],
-      reserveOut: reserves[1],
+      priceImpact,
+      activeLiquidity: notApplicableEvidence(
+        source,
+        "Constant-product reserve replay uses reserves, not V4 active liquidity.",
+      ),
     }),
   };
 }
@@ -256,12 +301,7 @@ export function createSnapshotQuoteAdapter(
   const context = quoteContext(snapshot);
   const quotesByKey = new Map(
     snapshot.quoteTable.map((entry) => [
-      key(
-        entry.poolId,
-        entry.tokenIn,
-        entry.tokenOut,
-        BigInt(entry.amountIn),
-      ),
+      key(entry.poolId, entry.tokenIn, entry.tokenOut, BigInt(entry.amountIn)),
       entry,
     ]),
   );

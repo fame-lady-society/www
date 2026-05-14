@@ -28,6 +28,11 @@ import {
 
 export type FameSwapSubmissionKind = "approval" | "swap";
 
+export interface FameSwapPreApprovalSimulationError {
+  reason: "unsupported_rpc" | "simulation_failed";
+  message: string;
+}
+
 export interface FameSwapTransactionState {
   requests: FameSwapTransactionRequests;
   submissionKind: FameSwapSubmissionKind | null;
@@ -45,11 +50,32 @@ export interface FameSwapTransactionState {
   protectedRouteHash: Hash | null;
   protectedSimulationPending: boolean;
   protectedSimulationReady: boolean;
+  preApprovalSimulationError: FameSwapPreApprovalSimulationError | null;
   hash: Hash | null;
   error: Error | null;
   submitApproval: () => Promise<Hash | null>;
   submitSwap: () => Promise<Hash | null>;
   reset: () => void;
+}
+
+function preApprovalSimulationError(
+  error: unknown,
+): FameSwapPreApprovalSimulationError {
+  const message = error instanceof Error ? error.message : String(error);
+  const unsupported =
+    /\beth_simulateV1\b|simulateCalls|method not found|not supported|unsupported|does not exist|not available/i.test(
+      message,
+    );
+
+  return unsupported
+    ? {
+        reason: "unsupported_rpc",
+        message: "Wallet RPC does not support bundled quote simulation.",
+      }
+    : {
+        reason: "simulation_failed",
+        message: "Bundled approval-plus-swap quote simulation failed.",
+      };
 }
 
 function quoteExecutionKey(quote: FameSwapQuote | null): string {
@@ -83,11 +109,15 @@ export function useFameSwapTransaction(
   const [localError, setLocalError] = useState<Error | null>(null);
   const [writing, setWriting] = useState(false);
   const [approvalFlowActive, setApprovalFlowActive] = useState(false);
-  const [approvalSimulationOutput, setApprovalSimulationOutput] =
-    useState<bigint | null>(null);
+  const [approvalSimulationOutput, setApprovalSimulationOutput] = useState<
+    bigint | null
+  >(null);
   const [approvalSimulationPending, setApprovalSimulationPending] =
     useState(false);
+  const [approvalSimulationError, setApprovalSimulationError] =
+    useState<FameSwapPreApprovalSimulationError | null>(null);
   const autoSwapSubmitted = useRef(false);
+  const inFlightSubmission = useRef<FameSwapSubmissionKind | null>(null);
   const [nowSeconds, setNowSeconds] = useState(() =>
     Math.floor(Date.now() / 1000),
   );
@@ -181,7 +211,9 @@ export function useFameSwapTransaction(
     setApprovalFlowActive(false);
     setApprovalSimulationOutput(null);
     setApprovalSimulationPending(false);
+    setApprovalSimulationError(null);
     autoSwapSubmitted.current = false;
+    inFlightSubmission.current = null;
   }, [executionKey]);
 
   const reset = useCallback(() => {
@@ -194,7 +226,9 @@ export function useFameSwapTransaction(
     setApprovalFlowActive(false);
     setApprovalSimulationOutput(null);
     setApprovalSimulationPending(false);
+    setApprovalSimulationError(null);
     autoSwapSubmitted.current = false;
+    inFlightSubmission.current = null;
   }, []);
 
   useEffect(() => {
@@ -225,10 +259,12 @@ export function useFameSwapTransaction(
       ) {
         setApprovalSimulationOutput(null);
         setApprovalSimulationPending(false);
+        setApprovalSimulationError(null);
         return;
       }
 
       setApprovalSimulationPending(true);
+      setApprovalSimulationError(null);
 
       try {
         const approval = requests.approval.contract;
@@ -269,14 +305,14 @@ export function useFameSwapTransaction(
           data: swapResult.data,
         });
 
-        setApprovalSimulationOutput(
-          typeof output === "bigint" ? output : null,
-        );
-      } catch {
+        setApprovalSimulationOutput(typeof output === "bigint" ? output : null);
+        setApprovalSimulationError(null);
+      } catch (error) {
         if (cancelled) return;
         // Some RPCs do not expose eth_simulateV1. Keep this non-blocking; the
         // post-approval protected simulation will still gate the actual swap.
         setApprovalSimulationOutput(null);
+        setApprovalSimulationError(preApprovalSimulationError(error));
       } finally {
         if (!cancelled) setApprovalSimulationPending(false);
       }
@@ -305,6 +341,7 @@ export function useFameSwapTransaction(
       setLocalError(new Error("Transaction reverted on Base."));
       setSubmissionKind(null);
       setApprovalFlowActive(false);
+      inFlightSubmission.current = null;
       return;
     }
 
@@ -312,16 +349,19 @@ export function useFameSwapTransaction(
       setApprovalConfirmed(true);
       setHash(null);
       setSubmissionKind(null);
+      inFlightSubmission.current = null;
     }
 
     if (submissionKind === "swap") {
       setSwapConfirmed(true);
       setApprovalFlowActive(false);
+      inFlightSubmission.current = null;
     }
   }, [receipt.isSuccess, receiptStatus, submissionKind]);
 
   useEffect(() => {
     if (receipt.isError) {
+      inFlightSubmission.current = null;
       setLocalError(
         receipt.error instanceof Error
           ? receipt.error
@@ -332,7 +372,9 @@ export function useFameSwapTransaction(
 
   const submitApproval = useCallback(async (): Promise<Hash | null> => {
     if (!requests.approval) return null;
+    if (inFlightSubmission.current !== null) return null;
 
+    inFlightSubmission.current = "approval";
     setWriting(true);
     setLocalError(null);
     setSubmissionKind("approval");
@@ -344,10 +386,13 @@ export function useFameSwapTransaction(
       setHash(txHash);
       return txHash;
     } catch (error) {
+      inFlightSubmission.current = null;
       setSubmissionKind(null);
       setApprovalFlowActive(false);
       setLocalError(
-        error instanceof Error ? error : new Error("Approval transaction failed."),
+        error instanceof Error
+          ? error
+          : new Error("Approval transaction failed."),
       );
       return null;
     } finally {
@@ -359,7 +404,9 @@ export function useFameSwapTransaction(
     if (!protectedRequests.swap) return null;
     if (requests.approval && !approvalConfirmed) return null;
     if (!protectedSimulation.data?.request) return null;
+    if (inFlightSubmission.current !== null) return null;
 
+    inFlightSubmission.current = "swap";
     setWriting(true);
     setLocalError(null);
     setSubmissionKind("swap");
@@ -369,6 +416,7 @@ export function useFameSwapTransaction(
       setHash(txHash);
       return txHash;
     } catch (error) {
+      inFlightSubmission.current = null;
       setSubmissionKind(null);
       setApprovalFlowActive(false);
       setLocalError(
@@ -407,7 +455,7 @@ export function useFameSwapTransaction(
   ]);
 
   const receiptPending = Boolean(hash) && receipt.isLoading;
-  const reverted = receipt.isError || localError !== null;
+  const reverted = receipt.isError || receiptStatus === "reverted";
   const submitting = writing || receiptPending;
   const approvalPending =
     submissionKind === "approval" && (writing || receiptPending);
@@ -444,6 +492,7 @@ export function useFameSwapTransaction(
       approvalSimulationPending,
     protectedSimulationReady:
       protectedSimulation.isSuccess || approvalSimulationOutput !== null,
+    preApprovalSimulationError: approvalSimulationError,
     hash,
     error:
       localError ??

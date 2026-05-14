@@ -11,7 +11,25 @@ import {
 } from "./routePlan";
 import { isNativeEthAddress, type FamePoolEdge } from "../poolUniverse";
 
-const MAX_SIMPLE_PATH_LEGS = 3;
+export interface FameRouteCandidateBudgets {
+  maxSimplePathLegs: number;
+  maxCandidates: number;
+  maxSplitCandidates: number;
+  maxWorkUnits: number;
+}
+
+export const DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS: FameRouteCandidateBudgets = {
+  maxSimplePathLegs: 3,
+  maxCandidates: 96,
+  maxSplitCandidates: 40,
+  maxWorkUnits: 1_000,
+};
+
+interface CandidateBudgetState {
+  workUnits: number;
+  splitCandidates: number;
+  diagnostics: Map<string, FameRouteCandidateRejected>;
+}
 
 function normalizedAddress(address: Address): string {
   return address.toLowerCase();
@@ -127,10 +145,70 @@ function buildCandidate(
   };
 }
 
+function normalizeBudgets(
+  budgets: Partial<FameRouteCandidateBudgets> | undefined,
+): FameRouteCandidateBudgets {
+  return {
+    maxSimplePathLegs: Math.max(
+      1,
+      budgets?.maxSimplePathLegs ?? DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxSimplePathLegs,
+    ),
+    maxCandidates: Math.max(
+      1,
+      budgets?.maxCandidates ?? DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxCandidates,
+    ),
+    maxSplitCandidates: Math.max(
+      0,
+      budgets?.maxSplitCandidates ??
+        DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxSplitCandidates,
+    ),
+    maxWorkUnits: Math.max(
+      1,
+      budgets?.maxWorkUnits ?? DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxWorkUnits,
+    ),
+  };
+}
+
+function emptyBudgetState(): CandidateBudgetState {
+  return {
+    workUnits: 0,
+    splitCandidates: 0,
+    diagnostics: new Map(),
+  };
+}
+
+function addBudgetDiagnostic(
+  state: CandidateBudgetState,
+  reason: string,
+  detail: string,
+) {
+  if (!state.diagnostics.has(reason)) {
+    state.diagnostics.set(reason, { reason, detail });
+  }
+}
+
+function spendWork(
+  state: CandidateBudgetState,
+  budgets: FameRouteCandidateBudgets,
+): boolean {
+  if (state.workUnits >= budgets.maxWorkUnits) {
+    addBudgetDiagnostic(
+      state,
+      "candidate_work_budget_exceeded",
+      `Candidate generation stopped after ${budgets.maxWorkUnits.toString()} work units.`,
+    );
+    return false;
+  }
+  state.workUnits += 1;
+  return true;
+}
+
 function simplePathCandidates(
   graph: FamePoolGraph,
   tokenIn: Address,
   tokenOut: Address,
+  budgets: FameRouteCandidateBudgets,
+  state: CandidateBudgetState,
 ): FameRouteCandidate[] {
   const candidates: FameRouteCandidate[] = [];
 
@@ -150,9 +228,11 @@ function simplePathCandidates(
       return;
     }
 
-    if (path.length >= MAX_SIMPLE_PATH_LEGS) return;
+    if (path.length >= budgets.maxSimplePathLegs) return;
 
     for (const edge of graph.edgesFrom(currentToken)) {
+      if (!spendWork(state, budgets)) return;
+      if (!edge.manifestReady) continue;
       if (visitedPools.has(edge.poolId)) continue;
 
       const nextTokenKey = normalizedAddress(edge.tokenOut);
@@ -186,13 +266,15 @@ function directEdges(
 ): FamePoolEdge[] {
   return graph
     .edgesFrom(tokenIn)
-    .filter((edge) => sameAddress(edge.tokenOut, tokenOut));
+    .filter((edge) => edge.manifestReady && sameAddress(edge.tokenOut, tokenOut));
 }
 
 function splitCandidates(
   graph: FamePoolGraph,
   tokenIn: Address,
   tokenOut: Address,
+  budgets: FameRouteCandidateBudgets,
+  state: CandidateBudgetState,
 ): FameRouteCandidate[] {
   const direct = directEdges(graph, tokenIn, tokenOut);
   const candidates: FameRouteCandidate[] = [];
@@ -200,6 +282,16 @@ function splitCandidates(
   for (let leftIndex = 0; leftIndex < direct.length; leftIndex += 1) {
     for (let rightIndex = leftIndex + 1; rightIndex < direct.length; rightIndex += 1) {
       for (const allocationBps of FAME_ROUTE_SPLIT_ALLOCATION_BPS) {
+        if (!spendWork(state, budgets)) return candidates;
+        if (state.splitCandidates >= budgets.maxSplitCandidates) {
+          addBudgetDiagnostic(
+            state,
+            "split_candidate_budget_exceeded",
+            `Split candidate generation stopped after ${budgets.maxSplitCandidates.toString()} split candidates.`,
+          );
+          return candidates;
+        }
+        state.splitCandidates += 1;
         candidates.push(
           buildCandidate("split", tokenIn, tokenOut, [
             {
@@ -225,9 +317,13 @@ function splitMergeCandidates(
   graph: FamePoolGraph,
   tokenIn: Address,
   tokenOut: Address,
+  budgets: FameRouteCandidateBudgets,
+  state: CandidateBudgetState,
 ): FameRouteCandidate[] {
   const firstHopGroups = new Map<string, FamePoolEdge[]>();
   for (const edge of graph.edgesFrom(tokenIn)) {
+    if (!spendWork(state, budgets)) break;
+    if (!edge.manifestReady) continue;
     if (sameAddress(edge.tokenOut, tokenOut) || sameAddress(edge.tokenOut, tokenIn)) {
       continue;
     }
@@ -248,6 +344,16 @@ function splitMergeCandidates(
       ) {
         for (const mergeEdge of mergeEdges) {
           for (const allocationBps of FAME_ROUTE_SPLIT_ALLOCATION_BPS) {
+            if (!spendWork(state, budgets)) return candidates;
+            if (state.splitCandidates >= budgets.maxSplitCandidates) {
+              addBudgetDiagnostic(
+                state,
+                "split_candidate_budget_exceeded",
+                `Split candidate generation stopped after ${budgets.maxSplitCandidates.toString()} split candidates.`,
+              );
+              return candidates;
+            }
+            state.splitCandidates += 1;
             candidates.push(
               buildCandidate("split_merge", tokenIn, tokenOut, [
                 {
@@ -276,12 +382,38 @@ function splitMergeCandidates(
   return candidates;
 }
 
+function dedupeAndCapCandidates(
+  candidates: readonly FameRouteCandidate[],
+  budgets: FameRouteCandidateBudgets,
+  state: CandidateBudgetState,
+): FameRouteCandidate[] {
+  const deduped = new Map<string, FameRouteCandidate>();
+  for (const candidate of candidates.slice().sort((left, right) => left.id.localeCompare(right.id))) {
+    if (!deduped.has(candidate.id)) deduped.set(candidate.id, candidate);
+  }
+
+  const result = [...deduped.values()];
+  if (result.length <= budgets.maxCandidates) return result;
+
+  addBudgetDiagnostic(
+    state,
+    "candidate_count_budget_exceeded",
+    `Candidate generation kept the first ${budgets.maxCandidates.toString()} deterministic candidates out of ${result.length.toString()}.`,
+  );
+  return result.slice(0, budgets.maxCandidates);
+}
+
 export function routeCandidatesForPair(
   tokenIn: Address,
   tokenOut: Address,
   graph: FamePoolGraph = buildFamePoolGraph(),
+  options: {
+    budgets?: Partial<FameRouteCandidateBudgets>;
+  } = {},
 ): FameRouteCandidateSet {
   const rejected: FameRouteCandidateRejected[] = [];
+  const budgets = normalizeBudgets(options.budgets);
+  const budgetState = emptyBudgetState();
 
   if (!supportedFamePair(tokenIn, tokenOut)) {
     return {
@@ -295,11 +427,15 @@ export function routeCandidatesForPair(
     };
   }
 
-  let candidates = [
-    ...simplePathCandidates(graph, tokenIn, tokenOut),
-    ...splitCandidates(graph, tokenIn, tokenOut),
-    ...splitMergeCandidates(graph, tokenIn, tokenOut),
-  ];
+  let candidates = dedupeAndCapCandidates(
+    [
+      ...simplePathCandidates(graph, tokenIn, tokenOut, budgets, budgetState),
+      ...splitCandidates(graph, tokenIn, tokenOut, budgets, budgetState),
+      ...splitMergeCandidates(graph, tokenIn, tokenOut, budgets, budgetState),
+    ],
+    budgets,
+    budgetState,
+  );
   if (isNativeEthAddress(tokenIn) || isNativeEthAddress(tokenOut)) {
     candidates = candidates.filter(
       (candidate) => !touchesWethAddress(candidate.legs),
@@ -315,6 +451,6 @@ export function routeCandidatesForPair(
 
   return {
     candidates,
-    rejected,
+    rejected: [...rejected, ...budgetState.diagnostics.values()],
   };
 }

@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { decodeAbiParameters } from "viem";
+import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
 import { solveFameSwapAmount } from "./amountSolver";
+import type { FameQuoteAdapter } from "./quotes/adapters";
 import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import { universalRouterV4PayloadAbi } from "../router/payloads";
@@ -68,6 +70,54 @@ describe("FAME amount-aware solver", () => {
       if (v4Leg.amountMode === "All") {
         assert.equal(payload.amountIn, 0n);
       }
+    }
+  });
+
+  it("materializes a quote-backed connector route absent from original artifacts", () => {
+    const preferredPools = new Set([
+      "uniswap-v3-zora-usdc",
+      "uniswap-v3-zora-weth",
+      "scale-equalizer-weth-fame",
+    ]);
+    const adapter: FameQuoteAdapter = {
+      quoteEdge(request) {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: preferredPools.has(request.edge.poolId)
+            ? request.amountIn * 100n
+            : request.amountIn,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test connector route quote evidence",
+        };
+      },
+    };
+
+    const result = solveFameSwapAmount({
+      tokenIn: token(USDC),
+      tokenOut: token(FAME),
+      amountIn: 1_000_000n,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter,
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.equal(
+        new Set<string>(FAME_SWAP_ARTIFACT_MANIFEST.routeArtifactIds).has(
+          result.routeArtifactId,
+        ),
+        false,
+      );
+      assert.deepEqual(result.poolIds, [...preferredPools]);
+      assert.equal(result.route.legs.length, 3);
+      assert.match(result.routeHash, /^0x[a-fA-F0-9]{64}$/);
+      assert.ok(result.abiEncodedRoute.length > 2);
     }
   });
 

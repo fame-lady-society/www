@@ -54,7 +54,7 @@ export type FameRouteRankingResult =
   | {
       status: "no_safe_route" | "quote_adapter_failure";
       rejectedCandidates: FameCandidateRejection[];
-};
+    };
 
 function marketImpactSummary(
   amountIn: bigint,
@@ -89,6 +89,9 @@ function quoteCandidate(
         candidateId: candidate.id,
         reason: "unsafe_output",
         message: `${leg.edge.poolId} has no route-local input to spend.`,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
 
@@ -97,6 +100,9 @@ function quoteCandidate(
         candidateId: candidate.id,
         reason: "unsafe_output",
         message: `${leg.edge.poolId} attempted to spend more input than the route holds.`,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
 
@@ -110,6 +116,9 @@ function quoteCandidate(
         candidateId: candidate.id,
         reason: quote.reason,
         message: quote.message,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
 
@@ -128,6 +137,7 @@ function quoteCandidate(
       evidence: quote.evidence,
       quoteContext: quote.context ?? quoteContext,
       priceImpact: quote.priceImpact,
+      protocolEvidence: quote.protocolEvidence,
     });
   }
 
@@ -151,11 +161,7 @@ function quoteCandidate(
     };
   }
 
-  const marketImpact = marketImpactSummary(
-    amountIn,
-    grossAmountOut,
-    legQuotes,
-  );
+  const marketImpact = marketImpactSummary(amountIn, grossAmountOut, legQuotes);
 
   return {
     candidate,

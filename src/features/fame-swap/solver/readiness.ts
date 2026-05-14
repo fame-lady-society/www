@@ -38,13 +38,38 @@ function blocked(
   };
 }
 
+function displaySafeReadinessError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  return (
+    raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(
+        (line) =>
+          line.length > 0 &&
+          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
+            line,
+          ),
+      ) ?? "Unknown router policy read error."
+  )
+    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
+    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
+    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+}
+
 export function staticReadiness(config: FameSwapConfig): FameSwapReadiness {
   const integrityIssue = artifactIntegrityIssue();
   if (integrityIssue) {
-    return blocked("artifact_hash_mismatch", integrityIssue, config.routerAddress);
+    return blocked(
+      "artifact_hash_mismatch",
+      integrityIssue,
+      config.routerAddress,
+    );
   }
 
-  if (config.expectedSchemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion) {
+  if (
+    config.expectedSchemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion
+  ) {
     return blocked(
       "schema_mismatch",
       "Router schema config does not match the pinned FAME route artifacts.",
@@ -66,7 +91,8 @@ export function staticReadiness(config: FameSwapConfig): FameSwapReadiness {
   if (
     config.expectedSolverRoutesHash !==
       FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash ||
-    config.expectedGapMatrixHash !== FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash ||
+    config.expectedGapMatrixHash !==
+      FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash ||
     config.expectedParityVectorsHash !==
       FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash ||
     config.expectedPoolsHash !== FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash ||
@@ -122,7 +148,11 @@ export async function liveReadiness(
         );
       }
 
-      if (!snapshot.venueTargets.get(targetKey(target.familyOrdinal, target.target))) {
+      if (
+        !snapshot.venueTargets.get(
+          targetKey(target.familyOrdinal, target.target),
+        )
+      ) {
         return blocked(
           "venue_target_disabled",
           `${target.family} venue target is not enabled on the configured FAME router.`,
@@ -147,10 +177,7 @@ export async function liveReadiness(
       feePpm: snapshot.feePpm,
     };
   } catch (error) {
-    const detail =
-      error instanceof Error && error.message.trim().length > 0
-        ? ` ${error.message}`
-        : "";
+    const detail = ` ${displaySafeReadinessError(error)}`;
     return blocked(
       "read_error",
       `Could not read live FAME router readiness state.${detail}`,

@@ -4,7 +4,10 @@ import {
   type ChildProcessWithoutNullStreams,
 } from "node:child_process";
 import { accessSync, constants, readFileSync } from "node:fs";
-import { createServer as createHttpServer, request as httpRequest } from "node:http";
+import {
+  createServer as createHttpServer,
+  request as httpRequest,
+} from "node:http";
 import { request as httpsRequest } from "node:https";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
@@ -59,6 +62,9 @@ const ANVIL_LOCAL_HOST = "127.0.0.1";
 const DEFAULT_ANVIL_BIND_HOST = ANVIL_LOCAL_HOST;
 const LOCAL_RPC_TIMEOUT_MS = 90_000;
 const LOCAL_RPC_RETRY_ATTEMPTS = 4;
+const DEFAULT_ANVIL_FORK_TIMEOUT_MS = 120_000;
+const DEFAULT_ANVIL_FORK_RETRIES = 8;
+const DEFAULT_ANVIL_FORK_RETRY_BACKOFF_MS = 1_000;
 const DEFAULT_FORK_ACCOUNT =
   "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" as const satisfies Address;
 const DEFAULT_FORK_PRIVATE_KEY =
@@ -149,9 +155,10 @@ interface ChainProbeClient {
 
 interface DeploymentClient {
   getCode(parameters: { address: Address }): Promise<Hex | undefined>;
-  waitForTransactionReceipt(parameters: {
-    hash: Hash;
-  }): Promise<{ status: "success" | "reverted"; contractAddress?: Address | null }>;
+  waitForTransactionReceipt(parameters: { hash: Hash }): Promise<{
+    status: "success" | "reverted";
+    contractAddress?: Address | null;
+  }>;
   readContract(parameters: {
     address: Address;
     abi: typeof fameRouterAbi;
@@ -197,12 +204,25 @@ function envAddress(name: string): Address | null {
   return value && isAddress(value) ? value : null;
 }
 
+function envPositiveInteger(name: string, fallback: number): number {
+  const value = envValue(name);
+  if (!value) return fallback;
+
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive safe integer.`);
+  }
+  return parsed;
+}
+
 function logProgress(message: string): void {
   console.log(`Fork smoke: ${message}`);
 }
 
 function selectedForkCases(): readonly FameRouteCorpusCase[] {
-  const casesById = new Map(FAME_ROUTE_CORPUS.map((entry) => [entry.id, entry]));
+  const casesById = new Map(
+    FAME_ROUTE_CORPUS.map((entry) => [entry.id, entry]),
+  );
   const requested = envValue("FAME_SWAP_FORK_CASES");
   const ids =
     requested && requested.toLowerCase() !== "default"
@@ -227,7 +247,9 @@ function selectedForkCases(): readonly FameRouteCorpusCase[] {
   });
 }
 
-function childEnv(extra: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
+function childEnv(
+  extra: Record<string, string | undefined> = {},
+): NodeJS.ProcessEnv {
   const allowedKeys = [
     "PATH",
     "HOME",
@@ -332,9 +354,7 @@ function anvilBindHost(): string {
 function anvilPublicHost(bindHost: string): string {
   return (
     envValue("FAME_SWAP_ANVIL_PUBLIC_HOST") ??
-    (bindHost === "0.0.0.0" || bindHost === "::"
-      ? ANVIL_LOCAL_HOST
-      : bindHost)
+    (bindHost === "0.0.0.0" || bindHost === "::" ? ANVIL_LOCAL_HOST : bindHost)
   );
 }
 
@@ -364,7 +384,9 @@ function wait(milliseconds: number): Promise<void> {
 function timeoutAfter<T>(label: string, milliseconds: number): Promise<T> {
   return new Promise((_, reject) => {
     setTimeout(() => {
-      reject(new Error(`${label} timed out after ${milliseconds.toString()}ms.`));
+      reject(
+        new Error(`${label} timed out after ${milliseconds.toString()}ms.`),
+      );
     }, milliseconds);
   });
 }
@@ -389,7 +411,8 @@ async function retryLocalRpc<T>(
     }
   }
 
-  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  const message =
+    lastError instanceof Error ? lastError.message : String(lastError);
   throw new Error(`${label} failed: ${displaySafeProcessOutput(message)}`);
 }
 
@@ -413,22 +436,25 @@ async function waitForRpc(
     try {
       await client.getChainId();
       const blockNumber = await client.getBlockNumber();
-      if (expectedForkBlock !== null && blockNumber < BigInt(expectedForkBlock)) {
-        throw new Error(`Fork block ${blockNumber.toString()} is behind pinned block.`);
+      if (
+        expectedForkBlock !== null &&
+        blockNumber < BigInt(expectedForkBlock)
+      ) {
+        throw new Error(
+          `Fork block ${blockNumber.toString()} is behind pinned block.`,
+        );
       }
       return;
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error("RPC probe failed.");
+      lastError =
+        error instanceof Error ? error : new Error("RPC probe failed.");
       await wait(250);
     }
   }
 
   const detail = anvilOutput();
   throw new Error(
-    [
-      lastError?.message ?? "Timed out waiting for anvil RPC.",
-      detail,
-    ]
+    [lastError?.message ?? "Timed out waiting for anvil RPC.", detail]
       .filter((value) => value && value.length > 0)
       .join("\n"),
   );
@@ -470,7 +496,8 @@ async function startRpcProxy(upstreamUrl: string): Promise<RpcProxy> {
           path: `${upstream.pathname}${upstream.search}`,
           method: "POST",
           headers: {
-            "content-type": incoming.headers["content-type"] ?? "application/json",
+            "content-type":
+              incoming.headers["content-type"] ?? "application/json",
             "content-length": body.length.toString(),
           },
         },
@@ -625,31 +652,27 @@ function buildPolicyReader(client: RouterPolicyReadClient): RouterPolicyReader {
       const feePpm = await client.feePpm(routerAddress);
 
       const familyResults = await Promise.all(
-        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(
-          async (target) => {
-            const enabled = await client.venueFamilyEnabled(
-              routerAddress,
-              target.familyOrdinal,
-            );
-            return [target.familyOrdinal, enabled] as const;
-          },
-        ),
+        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(async (target) => {
+          const enabled = await client.venueFamilyEnabled(
+            routerAddress,
+            target.familyOrdinal,
+          );
+          return [target.familyOrdinal, enabled] as const;
+        }),
       );
 
       const targetResults = await Promise.all(
-        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(
-          async (target) => {
-            const enabled = await client.venueTargetEnabled(
-              routerAddress,
-              target.familyOrdinal,
-              target.target,
-            );
-            return [
-              routerPolicyTargetKey(target.familyOrdinal, target.target),
-              enabled,
-            ] as const;
-          },
-        ),
+        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(async (target) => {
+          const enabled = await client.venueTargetEnabled(
+            routerAddress,
+            target.familyOrdinal,
+            target.target,
+          );
+          return [
+            routerPolicyTargetKey(target.familyOrdinal, target.target),
+            enabled,
+          ] as const;
+        }),
       );
 
       const hookDataResults = await Promise.all(
@@ -690,7 +713,10 @@ async function deployLocalRouter(
   ) as FameRouterArtifact;
   const wallet = createForkWallet(anvilUrl);
 
-  async function waitForSuccess(hash: Hash, label: string): Promise<Address | null> {
+  async function waitForSuccess(
+    hash: Hash,
+    label: string,
+  ): Promise<Address | null> {
     const receipt = await retryLocalRpc(label, () =>
       client.waitForTransactionReceipt({ hash }),
     );
@@ -757,7 +783,9 @@ async function deployLocalRouter(
   }
 
   if (!(await isRouterCandidate(client, routerAddress))) {
-    throw new Error("Local FAME router deployment did not pass readiness probes.");
+    throw new Error(
+      "Local FAME router deployment did not pass readiness probes.",
+    );
   }
 
   return routerAddress;
@@ -765,7 +793,8 @@ async function deployLocalRouter(
 
 async function main(): Promise<void> {
   logProgress("starting");
-  const rpcUrl = envValue("BASE_RPC_URL") ?? envValue("NEXT_PUBLIC_BASE_RPC_URL_1");
+  const rpcUrl =
+    envValue("BASE_RPC_URL") ?? envValue("NEXT_PUBLIC_BASE_RPC_URL_1");
   if (!rpcUrl) {
     throw new Error(
       "Set BASE_RPC_URL or NEXT_PUBLIC_BASE_RPC_URL_1 to a Base RPC URL before running the fork smoke test.",
@@ -774,7 +803,9 @@ async function main(): Promise<void> {
 
   const anvilPath = findExecutable("anvil");
   if (!anvilPath) {
-    throw new Error("Install Foundry anvil or set ANVIL_BIN to its executable path.");
+    throw new Error(
+      "Install Foundry anvil or set ANVIL_BIN to its executable path.",
+    );
   }
 
   await verifyArtifactHashes();
@@ -788,9 +819,12 @@ async function main(): Promise<void> {
     throw new Error("FAME_SWAP_FORK_BLOCK must be a safe integer or latest.");
   }
 
-  const allowRpcProcessArg = envValue("FAME_SWAP_ALLOW_RPC_URL_PROCESS_ARG") === "1";
+  const allowRpcProcessArg =
+    envValue("FAME_SWAP_ALLOW_RPC_URL_PROCESS_ARG") === "1";
   logProgress(
-    allowRpcProcessArg ? "using RPC URL as Anvil argument" : "starting loopback RPC proxy",
+    allowRpcProcessArg
+      ? "using RPC URL as Anvil argument"
+      : "starting loopback RPC proxy",
   );
   const proxy = allowRpcProcessArg ? null : await startRpcProxy(rpcUrl);
   if (proxy) {
@@ -804,6 +838,18 @@ async function main(): Promise<void> {
   const publicAnvilUrl = `http://${hostForUrl(publicHost)}:${port}`;
   const forkBlockArgs =
     forkBlock === null ? [] : ["--fork-block-number", forkBlock.toString()];
+  const forkTimeoutMs = envPositiveInteger(
+    "FAME_SWAP_ANVIL_FORK_TIMEOUT_MS",
+    DEFAULT_ANVIL_FORK_TIMEOUT_MS,
+  );
+  const forkRetries = envPositiveInteger(
+    "FAME_SWAP_ANVIL_FORK_RETRIES",
+    DEFAULT_ANVIL_FORK_RETRIES,
+  );
+  const forkRetryBackoffMs = envPositiveInteger(
+    "FAME_SWAP_ANVIL_FORK_RETRY_BACKOFF_MS",
+    DEFAULT_ANVIL_FORK_RETRY_BACKOFF_MS,
+  );
   const debugAnvil = envValue("FAME_SWAP_DEBUG_ANVIL") === "1";
   logProgress(
     `starting Anvil fork at ${forkBlock === null ? "latest" : forkBlock.toString()}`,
@@ -818,6 +864,12 @@ async function main(): Promise<void> {
       "--fork-url",
       proxy?.url ?? rpcUrl,
       ...forkBlockArgs,
+      "--timeout",
+      forkTimeoutMs.toString(),
+      "--retries",
+      forkRetries.toString(),
+      "--fork-retry-backoff",
+      forkRetryBackoffMs.toString(),
       "--no-storage-caching",
       "--chain-id",
       base.id.toString(),
@@ -891,9 +943,14 @@ async function main(): Promise<void> {
           args: [hookDataKey],
         }),
     };
-    const readiness = await liveReadiness(config, buildPolicyReader(policyClient));
+    const readiness = await liveReadiness(
+      config,
+      buildPolicyReader(policyClient),
+    );
     if (readiness.status !== "ready") {
-      throw new Error(`Router readiness blocked: ${readiness.reason}. ${readiness.message}`);
+      throw new Error(
+        `Router readiness blocked: ${readiness.reason}. ${readiness.message}`,
+      );
     }
 
     if (envValue("FAME_SWAP_SKIP_ROUTE_SMOKE") === "1") {
@@ -926,9 +983,14 @@ async function main(): Promise<void> {
     });
     const wallet = createForkWallet(anvilUrl);
     const forkRequest = (method: string, params: unknown[] = []) =>
-      (client as unknown as {
-        request(request: { method: string; params?: unknown[] }): Promise<unknown>;
-      }).request({ method, params });
+      (
+        client as unknown as {
+          request(request: {
+            method: string;
+            params?: unknown[];
+          }): Promise<unknown>;
+        }
+      ).request({ method, params });
     const tokenBalanceSlotCache = new Map<Address, Hex>();
 
     async function waitForSuccess(hash: Hash, label: string): Promise<void> {
@@ -969,7 +1031,9 @@ async function main(): Promise<void> {
 
     async function seedFameBalance(amount: bigint): Promise<void> {
       if (amount > UINT96_MAX) {
-        throw new Error("FAME fork seed amount exceeds DN404 uint96 balance storage.");
+        throw new Error(
+          "FAME fork seed amount exceeds DN404 uint96 balance storage.",
+        );
       }
       if ((await readTokenBalance(FAME)) >= amount) return;
 
@@ -1002,7 +1066,11 @@ async function main(): Promise<void> {
 
       const cachedSlot = tokenBalanceSlotCache.get(tokenAddress);
       if (cachedSlot) {
-        await setStorageAt(tokenAddress, cachedSlot, toHex(amount, { size: 32 }));
+        await setStorageAt(
+          tokenAddress,
+          cachedSlot,
+          toHex(amount, { size: 32 }),
+        );
         if ((await readTokenBalance(tokenAddress)) >= amount) return;
         tokenBalanceSlotCache.delete(tokenAddress);
       }
@@ -1016,7 +1084,11 @@ async function main(): Promise<void> {
         );
         const original = await storageAt(tokenAddress, storageSlot);
 
-        await setStorageAt(tokenAddress, storageSlot, toHex(amount, { size: 32 }));
+        await setStorageAt(
+          tokenAddress,
+          storageSlot,
+          toHex(amount, { size: 32 }),
+        );
         if ((await readTokenBalance(tokenAddress)) >= amount) {
           tokenBalanceSlotCache.set(tokenAddress, storageSlot);
           return;
@@ -1056,7 +1128,9 @@ async function main(): Promise<void> {
         await seedTokenBalance(entry.tokenIn, entry.amountIn);
         return;
       }
-      throw new Error(`No fork seeding strategy for ${corpusTokenLabel(entry.tokenIn)}.`);
+      throw new Error(
+        `No fork seeding strategy for ${corpusTokenLabel(entry.tokenIn)}.`,
+      );
     }
 
     async function proveForkCase(entry: FameRouteCorpusCase) {
@@ -1127,15 +1201,17 @@ async function main(): Promise<void> {
         minAmountOutAfterFee: protectedMinimum,
       };
       const protectedRouteHash = hashFameRoute(protectedRoute);
-      const protectedSimulation = await retryLocalRpc(`Protected probe ${entry.id}`, () =>
-        client.simulateContract({
-          account: DEFAULT_FORK_ACCOUNT,
-          address: quote.routerAddress,
-          abi: fameRouterAbi,
-          functionName: "executeRoute",
-          args: [fameRouteToCall(protectedRoute)],
-          value: quote.callValue,
-        }),
+      const protectedSimulation = await retryLocalRpc(
+        `Protected probe ${entry.id}`,
+        () =>
+          client.simulateContract({
+            account: DEFAULT_FORK_ACCOUNT,
+            address: quote.routerAddress,
+            abi: fameRouterAbi,
+            functionName: "executeRoute",
+            args: [fameRouteToCall(protectedRoute)],
+            value: quote.callValue,
+          }),
       );
 
       return {
@@ -1199,7 +1275,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  const message = error instanceof Error ? error.message : "Unknown fork smoke failure.";
+  const message =
+    error instanceof Error ? error.message : "Unknown fork smoke failure.";
   console.error(`FAME swap fork smoke failed: ${message}`);
   process.exitCode = 1;
 });

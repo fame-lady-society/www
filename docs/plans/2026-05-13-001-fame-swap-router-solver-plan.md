@@ -1,6 +1,6 @@
 ---
 date: 2026-05-13
-status: active
+status: complete
 origin: docs/brainstorms/2026-05-12-fame-swap-router-solver-requirements.md
 topic: fame-swap-router-solver-www
 ---
@@ -27,10 +27,11 @@ What is only partially complete:
 - Unit 3 exists as a functional beta widget and state machine, but the current UI is still a technical prototype. The remaining work is a dedicated widget UX pass: FAME-first buy/sell modes, top-level output estimates, price context, route visualization, advanced controls, balance presets, clearer transaction feedback, and theme-aware CTA styling.
 - Unit 5 has a fork harness, local router deployment, latest-state smoke validation, operator docs, and local-dev scripts. Pinned manifest-block validation still needs an archive-capable RPC path, tracked by todo `002`.
 
-Open durable todos after this review:
+Open durable todos after the 2026-05-14 review:
 
 - `002`: validate pinned archive RPC path for default fork smoke.
 - `003`: generate typed FAME swap artifacts or add an equivalent schema parser.
+- Protocol quoter coverage and widget/API hardening are now tracked in `.context/compound-engineering/todos/007` through `011`.
 - New UI/UX hardening work is tracked in `docs/ideation/2026-05-13-fame-swap-widget-ui-ux-hardening-ideation.md`.
 
 ## Source Trace
@@ -66,6 +67,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 **Goal:** Bring the contract artifact boundary into `www` with strongly typed schemas and route ABI parity checks.
 
 **Files:**
+
 - `src/features/fame-swap/artifacts/base-v1-solver-routes.json`
 - `src/features/fame-swap/artifacts/base-v1-route-gap-matrix.json`
 - `src/features/fame-swap/artifacts/base-v1-route-parity-vectors.json`
@@ -75,6 +77,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - `src/features/fame-swap/router/encodeRoute.test.ts`
 
 **Approach:**
+
 - Copy the three JSON artifacts into `www` as the v1 pinned source.
 - Capture the `../fame-contracts` branch, commit, pinned block, route count, and manifest hashes from `FameRouterSolverFixtureManifest.sol` in `manifest.ts`.
 - Define route, leg, artifact, gap row, and parity-vector types using `Address` and `Hex` from viem.
@@ -82,6 +85,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - Convert JSON string amounts into bigint only at the typed boundary.
 
 **Test Scenarios:**
+
 - Every parity vector encodes to the checked-in `abiEncodedRoute`.
 - Every parity vector hashes to the checked-in `routeHash`.
 - Every copied artifact route id appears in the manifest route id set.
@@ -96,6 +100,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 **Goal:** Add a typed solver/quote service that turns pinned route artifacts into safe quote results and fail-closed readiness states.
 
 **Files:**
+
 - `src/features/fame-swap/tokens.ts`
 - `src/features/fame-swap/config.ts`
 - `src/features/fame-swap/solver/types.ts`
@@ -108,6 +113,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - `src/features/fame-swap/solver/readiness.test.ts`
 
 **Approach:**
+
 - Model supported tokens as FAME, USDC, WETH, and native ETH, with native ETH represented by `0x0000000000000000000000000000000000000000`.
 - Select routes by token pair through the pinned gap matrix and route artifacts.
 - Return discriminated quote results: `ready`, `amount_mismatch`, `unsupported`, `stale_artifact`, and `not_live_ready`.
@@ -118,6 +124,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - Define readiness as an on-chain check against the configured Base router when live execution is enabled: read `feePpm`, every required `venueFamilyEnabled`, every required `venueTargetEnabled`, and every required `v4HookDataHashEnabled` entry from the pinned manifest. Missing reads, false flags, fee mismatch, RPC errors, or absent router address return `not_live_ready`.
 
 **Test Scenarios:**
+
 - Exact fixture amount for each supported direction returns a typed quote with route payload and no arbitrary amount mutation.
 - Arbitrary non-fixture amount returns `amount_mismatch`, no executable transaction, and a suggested exact evidence amount.
 - Native ETH input has call value equal to `amountIn` and no ERC-20 approval.
@@ -136,6 +143,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 **Goal:** Build a reusable `FameSwapWidget` and App Router page with explicit state copy, compact/full modes, route diagnostics, and accessible mobile-first controls.
 
 **Files:**
+
 - `src/app/fame/swap/page.tsx`
 - `src/features/fame-swap/components/FameSwapWidget.tsx`
 - `src/features/fame-swap/components/RouteDiagnostics.tsx`
@@ -145,6 +153,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - `src/features/fame-swap/state.test.ts`
 
 **Approach:**
+
 - Keep the page as a Server Component that renders the client widget.
 - Implement full mode for `/fame/swap`; compact mode hides diagnostics by default but never hides critical warnings, approval requirements, or final post-fee minimums.
 - Build a pure state mapper for disconnected, wrong-chain, amount-entry, unsupported-route, stale-artifact, not-live-ready, approval-needed, ready, submitting, confirmed, and reverted states.
@@ -165,6 +174,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - Accessibility requirements: token selects and amount inputs must be keyboard reachable with visible focus, primary CTA focus must return after wallet/transaction state changes, diagnostics disclosure must be button-controlled with `aria-expanded`, and tap targets must be at least 44px high on mobile.
 
 **Test Scenarios:**
+
 - State mapper returns expected CTA, disabled fields, recovery action, and diagnostics visibility for every widget state.
 - Wrong-chain state prefers switching to Base before quote submission.
 - Amount mismatch state shows the exact executable evidence amount and disables swap submission.
@@ -180,6 +190,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 **Goal:** Add a narrowly scoped transaction hook that can approve exact ERC-20 allowance and submit `executeRoute` only when the quote and readiness state allow it.
 
 **Files:**
+
 - `src/features/fame-swap/router/abi.ts`
 - `src/features/fame-swap/router/erc20Abi.ts`
 - `src/features/fame-swap/hooks/useFameSwapTransaction.ts`
@@ -188,12 +199,14 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 - `src/features/fame-swap/components/FameSwapWidget.tsx`
 
 **Approach:**
+
 - Use minimal ABIs and `useWriteContract`, `useWaitForTransactionReceipt`, and `useSwitchChain`.
 - Build pure transaction request objects from materialized routes first, then have the hook submit them through wagmi.
 - Never submit approval or swap when quote status is not executable, chain is not Base, router address is absent, or readiness is fail-closed.
 - Default ERC-20 approval to exact input amount.
 
 **Test Scenarios:**
+
 - ERC-20 quote builds an exact approval request and a router `executeRoute` request.
 - Native ETH quote builds only the router request with `value`.
 - Non-executable quote builds no transaction requests.
@@ -209,17 +222,20 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
 **Goal:** Provide a safe local fork execution gate that proves at least one pinned exact-fixture route can be materialized and simulated or executed against a Base fork without leaking secrets.
 
 **Files:**
+
 - `scripts/fame-swap-fork-smoke.ts`
 - `docs/fame-swap-fork-validation.md`
 - `package.json`
 
 **Approach:**
+
 - Create `scripts/` and add a script that locates `anvil` on `PATH`, starts it on a random local port using `BASE_RPC_URL` from the environment, waits for JSON-RPC readiness, checks copied artifact hashes, reads router readiness when `NEXT_PUBLIC_FAME_ROUTER_ADDRESS` is set, and always cleans up the child process.
 - When a router address is configured, the script must materialize one pinned route for a local Anvil account, run `simulateContract` for `executeRoute`, and report a pass/fail result without printing RPC secrets. When no router address is configured, the script exits with a clear fail-closed message rather than counting as fork execution success.
 - Document the intended invocation through Doppler, using `BASE_RPC_URL="$RPC_URL"` in the child environment without printing the secret.
 - Local router deployment and Playwright browser execution remain follow-up work, but at least one fork simulation against a configured router is required before marking the fork gate complete.
 
 **Test Scenarios:**
+
 - Missing `BASE_RPC_URL` exits with an actionable message and no secret logging.
 - Missing `anvil` exits with an actionable Foundry prerequisite message.
 - Anvil readiness polling succeeds against a valid RPC.

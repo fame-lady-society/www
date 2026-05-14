@@ -1,8 +1,15 @@
 import type { Address } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import { supportedDirections } from "./artifacts";
-import { solveFameSwapAmount, solveFameSwapAmountAsync } from "./amountSolver";
-import type { FameAsyncQuoteAdapter, FameQuoteAdapter } from "./quotes/adapters";
+import {
+  solveFameSwapAmount,
+  solveFameSwapAmountAsync,
+  type FameAmountSolverResult,
+} from "./amountSolver";
+import type {
+  FameAsyncQuoteAdapter,
+  FameQuoteAdapter,
+} from "./quotes/adapters";
 import { routeCandidatesForPair } from "./graph/candidates";
 import {
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
@@ -17,6 +24,21 @@ import type {
   FameSwapQuoteRequest,
   FameSwapReadiness,
 } from "./types";
+
+type ReadyReadiness = Extract<FameSwapReadiness, { status: "ready" }>;
+
+type PreparedQuoteRequest =
+  | {
+      status: "blocked";
+      quote: FameSwapQuote;
+    }
+  | {
+      status: "ready";
+      readiness: ReadyReadiness;
+      recipient: Address;
+      deadline: bigint;
+      slippageBps: number;
+    };
 
 function defaultDeadline(now: Date, seconds?: bigint): bigint {
   return (
@@ -40,18 +62,34 @@ function notLiveReady(
   };
 }
 
-export function quoteFameSwap(
-  request: FameSwapQuoteRequest & { adapter?: FameQuoteAdapter },
-): FameSwapQuote {
+function readinessForRequest(request: FameSwapQuoteRequest): FameSwapReadiness {
+  return (
+    request.readiness ??
+    ({
+      status: "not_live_ready",
+      reason: "read_error",
+      message:
+        "Live FAME router readiness has not been checked for this quote.",
+      routerAddress: request.config.routerAddress,
+    } as const)
+  );
+}
+
+function prepareQuoteRequest(
+  request: FameSwapQuoteRequest,
+): PreparedQuoteRequest {
   if (request.amountIn <= 0n) {
     return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: "Enter an amount greater than zero.",
-      diagnosticsVisibleByDefault: false,
+      status: "blocked",
+      quote: {
+        status: "unsupported",
+        tokenIn: request.tokenIn,
+        tokenOut: request.tokenOut,
+        requestedAmountIn: request.amountIn,
+        availableDirections: supportedDirections(),
+        message: "Enter an amount greater than zero.",
+        diagnosticsVisibleByDefault: false,
+      },
     };
   }
 
@@ -64,55 +102,58 @@ export function quoteFameSwap(
     candidateSet.rejected[0]?.reason === "unsupported_pair"
   ) {
     return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: candidateSet.rejected[0].detail,
-      diagnosticsVisibleByDefault: true,
+      status: "blocked",
+      quote: {
+        status: "unsupported",
+        tokenIn: request.tokenIn,
+        tokenOut: request.tokenOut,
+        requestedAmountIn: request.amountIn,
+        availableDirections: supportedDirections(),
+        message: candidateSet.rejected[0].detail,
+        diagnosticsVisibleByDefault: true,
+      },
     };
   }
 
-  const readiness =
-    request.readiness ??
-    ({
-      status: "not_live_ready",
-      reason: "read_error",
-      message:
-        "Live FAME router readiness has not been checked for this quote.",
-      routerAddress: request.config.routerAddress,
-    } as const);
+  const readiness = readinessForRequest(request);
   if (readiness.status === "not_live_ready") {
-    return notLiveReady(request, readiness);
+    return {
+      status: "blocked",
+      quote: notLiveReady(request, readiness),
+    };
   }
 
   if (!request.recipient) {
-    return notLiveReady(request, {
-      status: "not_live_ready",
-      reason: "missing_recipient",
-      message: "Connect a wallet before materializing a FAME router route.",
-      routerAddress: readiness.routerAddress,
-    });
+    return {
+      status: "blocked",
+      quote: notLiveReady(request, {
+        status: "not_live_ready",
+        reason: "missing_recipient",
+        message: "Connect a wallet before materializing a FAME router route.",
+        routerAddress: readiness.routerAddress,
+      }),
+    };
   }
 
   const deadline = defaultDeadline(
     request.now ?? new Date(),
     request.deadlineSeconds,
   );
-  const slippageBps = normalizeSlippageBps(request.config.defaultSlippageBps);
-  const solved = solveFameSwapAmount({
-    tokenIn: request.tokenIn,
-    tokenOut: request.tokenOut,
-    amountIn: request.amountIn,
-    routerAddress: readiness.routerAddress,
+
+  return {
+    status: "ready",
+    readiness,
     recipient: request.recipient,
     deadline,
-    feePpm: readiness.feePpm,
-    slippageBps,
-    adapter: request.adapter,
-  });
+    slippageBps: normalizeSlippageBps(request.config.defaultSlippageBps),
+  };
+}
 
+function quoteFromSolverResult(
+  request: FameSwapQuoteRequest,
+  prepared: Extract<PreparedQuoteRequest, { status: "ready" }>,
+  solved: FameAmountSolverResult,
+): FameSwapQuote {
   if (solved.status === "unsupported") {
     return {
       status: "unsupported",
@@ -149,25 +190,13 @@ export function quoteFameSwap(
     };
   }
 
-  if (solved.status !== "ready") {
-    return {
-      status: "quote_adapter_failure",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
   const inputToken = request.tokenIn;
   const callValue = inputToken.native ? solved.route.amountIn : 0n;
   const approval = inputToken.native
     ? null
     : {
         token: request.tokenIn,
-        spender: readiness.routerAddress,
+        spender: prepared.readiness.routerAddress,
         amount: solved.route.amountIn,
       };
 
@@ -176,7 +205,7 @@ export function quoteFameSwap(
     tokenIn: request.tokenIn,
     tokenOut: request.tokenOut,
     requestedAmountIn: request.amountIn,
-    routerAddress: readiness.routerAddress,
+    routerAddress: prepared.readiness.routerAddress,
     routeArtifactId: solved.routeArtifactId,
     routeSource: "generated",
     fixtureRouteHash: solved.routeHash,
@@ -191,179 +220,58 @@ export function quoteFameSwap(
     minAmountOutAfterFee: solved.route.minAmountOutAfterFee,
     feeBreakdown: solved.plan.feeBreakdown,
     quoteContext: solved.plan.quoteContext,
-    feePpm: readiness.feePpm,
+    feePpm: prepared.readiness.feePpm,
     capabilities: solved.capabilities,
     routeDisplay: solved.routeDisplay,
     rejectedCandidates: solved.rejectedCandidates,
-    slippageBps,
-    expiresAt: new Date(Number(deadline) * 1000),
+    slippageBps: prepared.slippageBps,
+    expiresAt: new Date(Number(prepared.deadline) * 1000),
     warnings: solved.warnings,
     message: "FAME router route is ready for live wallet simulation.",
     diagnosticsVisibleByDefault: false,
   };
 }
 
+export function quoteFameSwap(
+  request: FameSwapQuoteRequest & { adapter?: FameQuoteAdapter },
+): FameSwapQuote {
+  const prepared = prepareQuoteRequest(request);
+  if (prepared.status === "blocked") return prepared.quote;
+
+  const solved = solveFameSwapAmount({
+    tokenIn: request.tokenIn,
+    tokenOut: request.tokenOut,
+    amountIn: request.amountIn,
+    routerAddress: prepared.readiness.routerAddress,
+    recipient: prepared.recipient,
+    deadline: prepared.deadline,
+    feePpm: prepared.readiness.feePpm,
+    slippageBps: prepared.slippageBps,
+    adapter: request.adapter,
+  });
+
+  return quoteFromSolverResult(request, prepared, solved);
+}
+
 export async function quoteFameSwapAsync(
   request: FameSwapQuoteRequest & { adapter: FameAsyncQuoteAdapter },
 ): Promise<FameSwapQuote> {
-  if (request.amountIn <= 0n) {
-    return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: "Enter an amount greater than zero.",
-      diagnosticsVisibleByDefault: false,
-    };
-  }
+  const prepared = prepareQuoteRequest(request);
+  if (prepared.status === "blocked") return prepared.quote;
 
-  const candidateSet = routeCandidatesForPair(
-    request.tokenIn.address,
-    request.tokenOut.address,
-  );
-  if (
-    candidateSet.candidates.length === 0 &&
-    candidateSet.rejected[0]?.reason === "unsupported_pair"
-  ) {
-    return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: candidateSet.rejected[0].detail,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  const readiness =
-    request.readiness ??
-    ({
-      status: "not_live_ready",
-      reason: "read_error",
-      message:
-        "Live FAME router readiness has not been checked for this quote.",
-      routerAddress: request.config.routerAddress,
-    } as const);
-  if (readiness.status === "not_live_ready") {
-    return notLiveReady(request, readiness);
-  }
-
-  if (!request.recipient) {
-    return notLiveReady(request, {
-      status: "not_live_ready",
-      reason: "missing_recipient",
-      message: "Connect a wallet before materializing a FAME router route.",
-      routerAddress: readiness.routerAddress,
-    });
-  }
-
-  const deadline = defaultDeadline(
-    request.now ?? new Date(),
-    request.deadlineSeconds,
-  );
-  const slippageBps = normalizeSlippageBps(request.config.defaultSlippageBps);
   const solved = await solveFameSwapAmountAsync({
     tokenIn: request.tokenIn,
     tokenOut: request.tokenOut,
     amountIn: request.amountIn,
-    routerAddress: readiness.routerAddress,
-    recipient: request.recipient,
-    deadline,
-    feePpm: readiness.feePpm,
-    slippageBps,
+    routerAddress: prepared.readiness.routerAddress,
+    recipient: prepared.recipient,
+    deadline: prepared.deadline,
+    feePpm: prepared.readiness.feePpm,
+    slippageBps: prepared.slippageBps,
     adapter: request.adapter,
   });
 
-  if (solved.status === "unsupported") {
-    return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  if (solved.status === "no_safe_route") {
-    return {
-      status: "no_safe_route",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  if (solved.status === "quote_adapter_failure") {
-    return {
-      status: "quote_adapter_failure",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  if (solved.status !== "ready") {
-    return {
-      status: "quote_adapter_failure",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  const inputToken = request.tokenIn;
-  const callValue = inputToken.native ? solved.route.amountIn : 0n;
-  const approval = inputToken.native
-    ? null
-    : {
-        token: request.tokenIn,
-        spender: readiness.routerAddress,
-        amount: solved.route.amountIn,
-      };
-
-  return {
-    status: "ready",
-    tokenIn: request.tokenIn,
-    tokenOut: request.tokenOut,
-    requestedAmountIn: request.amountIn,
-    routerAddress: readiness.routerAddress,
-    routeArtifactId: solved.routeArtifactId,
-    routeSource: "generated",
-    fixtureRouteHash: solved.routeHash,
-    materializedRouteHash: solved.routeHash,
-    poolIds: solved.poolIds,
-    route: solved.route,
-    approval,
-    callValue,
-    grossEstimatedOutput: solved.plan.grossAmountOut,
-    routerFeeAmount: solved.plan.routerFeeAmount,
-    estimatedOutput: solved.plan.netAmountOut,
-    minAmountOutAfterFee: solved.route.minAmountOutAfterFee,
-    feeBreakdown: solved.plan.feeBreakdown,
-    quoteContext: solved.plan.quoteContext,
-    feePpm: readiness.feePpm,
-    capabilities: solved.capabilities,
-    routeDisplay: solved.routeDisplay,
-    rejectedCandidates: solved.rejectedCandidates,
-    slippageBps,
-    expiresAt: new Date(Number(deadline) * 1000),
-    warnings: solved.warnings,
-    message: "FAME router route is ready for live wallet simulation.",
-    diagnosticsVisibleByDefault: false,
-  };
+  return quoteFromSolverResult(request, prepared, solved);
 }
 
 export function quoteWithReadyReadiness(
@@ -379,7 +287,8 @@ export function quoteWithReadyReadiness(
       defaultSlippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
       expectedSchemaVersion: FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion,
       expectedPinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
-      expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
+      expectedSolverRoutesHash:
+        FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
       expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
       expectedParityVectorsHash:
         FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,

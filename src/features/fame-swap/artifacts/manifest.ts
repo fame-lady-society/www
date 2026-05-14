@@ -8,14 +8,24 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
   pinnedBaseBlock: 45_884_844,
   solverRoutesJsonHash:
     "0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218" as Hex,
+  solverRoutesContentHash:
+    "0x053806dd44f7bf3751a0675b628dd4558a155a9608e8635f8cbdb180c48041a8" as Hex,
   gapMatrixJsonHash:
     "0xe12b694540180d42f640c9b660379eab7e38caef92f24e22c629f6b6da4c427e" as Hex,
+  gapMatrixContentHash:
+    "0xb3d7a0f5f3a10368c5501ac0deb4e8bca4cfebb10749f79ee7cd7ee24a6cb11e" as Hex,
   parityVectorsJsonHash:
     "0xf9a0cfbddc5ad9a5a2507c490f592ec72ba111e48d3ec0ea8612f69e35998aee" as Hex,
+  parityVectorsContentHash:
+    "0x8ccba890d2ec3ed28586f548b087d53e36630fe1d4a55c8c21471bc9e1fb9cf2" as Hex,
   poolsJsonHash:
     "0xa3a83e1eb4ab889a20c144f885ed3533a59784726098be3d43f3257d219af28b" as Hex,
+  poolsContentHash:
+    "0x6aedc9d363b36928505eaf422bc2a5c8c53c48f8661f9eb24494731f33cfb82d" as Hex,
   poolStateSnapshotJsonHash:
     "0xf235b93fbf297af3210e779c0bd8d792f0c8912e6d1335853879339f94a80407" as Hex,
+  poolStateSnapshotContentHash:
+    "0xf9906d815c8cd0cb197bac85e47d9250fd8418b52bd801dd7deb41e77b45dc77" as Hex,
   routeArtifactIds: [
     "solver-eth-zora-basedflick-fame",
     "solver-fame-basedflick-zora-eth",

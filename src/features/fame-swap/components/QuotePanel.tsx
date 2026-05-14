@@ -66,7 +66,10 @@ const infoButtonStyle: CSSProperties = {
   padding: 0,
 };
 
-function splitAmountLabel(label: string): { amount: string; symbol: string | null } {
+function splitAmountLabel(label: string): {
+  amount: string;
+  symbol: string | null;
+} {
   const parts = label.split(" ");
   const symbol = parts[parts.length - 1];
   const knownSymbols = new Set(["FAME", "USDC", "WETH", "ETH"]);
@@ -153,6 +156,15 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
       </Typography>
     </div>
     <AmountValue label={view.receiveLabel} />
+    {view.estimateSourceLabel ? (
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        title={view.estimateSourceTooltip ?? undefined}
+      >
+        {view.estimateSourceLabel}
+      </Typography>
+    ) : null}
     <div style={metricGridStyle}>
       <QuoteMetric label="Min receive" value={view.protectedMinimumLabel} />
       {view.usdcEstimate.status === "available" ? (
@@ -163,6 +175,13 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
           label="FLS fee"
           value={view.feeLabel}
           tooltip={view.feeTooltip}
+        />
+      ) : null}
+      {view.venueFeeLabel ? (
+        <QuoteMetric
+          label="Venue fees"
+          value={view.venueFeeLabel}
+          tooltip={view.venueFeeTooltip}
         />
       ) : null}
     </div>

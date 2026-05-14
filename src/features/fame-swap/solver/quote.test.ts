@@ -4,7 +4,11 @@ import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "./artifacts";
-import { quoteFameSwap } from "./quote";
+import { quoteFameSwap, quoteFameSwapAsync } from "./quote";
+import type {
+  FameAsyncQuoteAdapter,
+  FameQuoteAdapter,
+} from "./quotes/adapters";
 import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import type { FameSwapQuote } from "./types";
@@ -20,7 +24,8 @@ function config(): FameSwapConfig {
     expectedPinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
     expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
-    expectedParityVectorsHash: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedParityVectorsHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
     expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
     expectedPoolStateSnapshotHash:
       FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
@@ -57,6 +62,82 @@ function artifactAmount(id: string): bigint {
   const artifact = routeArtifactById(id);
   assert.ok(artifact);
   return BigInt(artifact.route.amountIn);
+}
+
+function asyncAdapter(adapter: FameQuoteAdapter): FameAsyncQuoteAdapter {
+  return {
+    quoteContext: adapter.quoteContext,
+    async quoteEdge(request) {
+      return adapter.quoteEdge(request);
+    },
+  };
+}
+
+function comparableQuote(quote: FameSwapQuote): Record<string, unknown> {
+  if (quote.status !== "ready") {
+    return {
+      status: quote.status,
+      message: quote.message,
+      diagnosticsVisibleByDefault: quote.diagnosticsVisibleByDefault,
+      executable: "approval" in quote || "route" in quote || "swap" in quote,
+    };
+  }
+
+  return {
+    status: quote.status,
+    routeArtifactId: quote.routeArtifactId,
+    materializedRouteHash: quote.materializedRouteHash,
+    fixtureRouteHash: quote.fixtureRouteHash,
+    routerFeeAmount: quote.routerFeeAmount,
+    estimatedOutput: quote.estimatedOutput,
+    minAmountOutAfterFee: quote.minAmountOutAfterFee,
+    routeAmountIn: quote.route.amountIn,
+    routeRecipient: quote.route.recipient,
+    routeDeadline: quote.route.deadline,
+    approvalAmount: quote.approval?.amount ?? null,
+    callValue: quote.callValue,
+    feePpm: quote.feePpm,
+    slippageBps: quote.slippageBps,
+    poolIds: quote.poolIds,
+    warnings: quote.warnings,
+    feeBreakdown: quote.feeBreakdown,
+  };
+}
+
+async function quoteBoth(
+  tokenInAddress: typeof FAME | typeof USDC | typeof WETH | typeof NATIVE_ETH,
+  tokenOutAddress: typeof FAME | typeof USDC | typeof WETH | typeof NATIVE_ETH,
+  amountIn: bigint,
+): Promise<{ sync: FameSwapQuote; async: FameSwapQuote }> {
+  const tokenIn = tokenForAddress(tokenInAddress);
+  const tokenOut = tokenForAddress(tokenOutAddress);
+  assert.ok(tokenIn);
+  assert.ok(tokenOut);
+  const adapter = createDeterministicQuoteAdapter();
+  const request = {
+    tokenIn,
+    tokenOut,
+    amountIn,
+    recipient,
+    config: config(),
+    readiness: {
+      status: "ready" as const,
+      routerAddress,
+      feePpm: 2_222n,
+    },
+    now: new Date("2026-05-13T00:00:00Z"),
+  };
+
+  return {
+    sync: quoteFameSwap({
+      ...request,
+      adapter,
+    }),
+    async: await quoteFameSwapAsync({
+      ...request,
+      adapter: asyncAdapter(adapter),
+    }),
+  };
 }
 
 describe("FAME swap quote", () => {
@@ -156,5 +237,51 @@ describe("FAME swap quote", () => {
     if (quote.status === "unsupported") {
       assert.ok(quote.availableDirections.includes("FAME->USDC"));
     }
+  });
+
+  it("keeps sync and async quote projection equivalent", async () => {
+    const readyAmount = artifactAmount("solver-usdc-split-frxusd-merge-fame");
+    const noSafeAmount =
+      artifactAmount("solver-fame-basedflick-zora-usdc") * 1_000n;
+    const cases = [
+      await quoteBoth(USDC, FAME, readyAmount),
+      await quoteBoth(FAME, USDC, noSafeAmount),
+      await quoteBoth(USDC, WETH, 1n),
+    ];
+
+    for (const quotePair of cases) {
+      assert.deepEqual(
+        comparableQuote(quotePair.async),
+        comparableQuote(quotePair.sync),
+      );
+    }
+  });
+
+  it("keeps sync and async not-live-ready projection equivalent", async () => {
+    const tokenIn = tokenForAddress(FAME);
+    const tokenOut = tokenForAddress(USDC);
+    assert.ok(tokenIn);
+    assert.ok(tokenOut);
+    const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc");
+    const adapter = createDeterministicQuoteAdapter();
+    const request = {
+      tokenIn,
+      tokenOut,
+      amountIn,
+      recipient,
+      config: config(),
+      now: new Date("2026-05-13T00:00:00Z"),
+    };
+    const sync = quoteFameSwap({
+      ...request,
+      adapter,
+    });
+    const async = await quoteFameSwapAsync({
+      ...request,
+      adapter: asyncAdapter(adapter),
+    });
+
+    assert.deepEqual(comparableQuote(async), comparableQuote(sync));
+    assert.equal(sync.status, "not_live_ready");
   });
 });

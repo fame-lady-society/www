@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  fameSwapWidgetState,
-  type FameSwapWidgetStateInput,
-} from "./state";
+import { fameSwapWidgetState, type FameSwapWidgetStateInput } from "./state";
 
 const baseInput: FameSwapWidgetStateInput = {
   connected: true,
@@ -44,6 +41,20 @@ describe("FAME swap widget state", () => {
     assert.equal(state.kind, "quote_expired");
     assert.equal(state.ctaDisabled, true);
     assert.match(state.recoveryAction, /fresh route/i);
+  });
+
+  it("keeps a valid quote retryable after wallet rejection or write failure", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      quoteStatus: "ready",
+      submitting: false,
+      confirmed: false,
+      reverted: false,
+    });
+
+    assert.equal(state.kind, "ready");
+    assert.equal(state.ctaDisabled, false);
+    assert.match(state.recoveryAction, /submit the swap/i);
   });
 
   it("shows fallback and diagnostics only for unavailable live execution", () => {
@@ -87,6 +98,18 @@ describe("FAME swap widget state", () => {
       assert.equal(state.ctaDisabled, true);
       assert.equal(state.diagnosticsVisible, true);
     }
+  });
+
+  it("blocks protected simulation failure with edit-and-diagnostics recovery", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      quoteStatus: "simulation_failure",
+    });
+
+    assert.equal(state.kind, "simulation_failure");
+    assert.equal(state.ctaDisabled, true);
+    assert.equal(state.diagnosticsVisible, true);
+    assert.match(state.recoveryAction, /edit the amount/i);
   });
 
   it("clears executable actions while a fresh quote is loading", () => {

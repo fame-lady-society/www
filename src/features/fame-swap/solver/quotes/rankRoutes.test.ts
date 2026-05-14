@@ -1,9 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { FAME, WETH } from "../../tokens";
-import { routeCandidatesForPair } from "../graph/candidates";
+import { FAME_SWAP_ARTIFACT_MANIFEST } from "../../artifacts/manifest";
+import { FAME, USDC, WETH } from "../../tokens";
+import {
+  DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS,
+  routeCandidatesForPair,
+} from "../graph/candidates";
 import { createDeterministicQuoteAdapter } from "./deterministicAdapter";
-import { rankRouteCandidatesAsync } from "./asyncRankRoutes";
+import {
+  DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS,
+  rankRouteCandidatesAsync,
+} from "./asyncRankRoutes";
 import { rankRouteCandidates } from "./rankRoutes";
 import type { FameAsyncQuoteAdapter, FameQuoteAdapter } from "./adapters";
 
@@ -14,7 +21,19 @@ function wethToFameCandidates() {
   return routeCandidatesForPair(WETH, FAME).candidates;
 }
 
+function usdcToFameCandidates() {
+  return routeCandidatesForPair(USDC, FAME).candidates;
+}
+
 describe("FAME route ranking", () => {
+  it("derives async quote-call defaults from candidate budgets", () => {
+    assert.equal(
+      DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS,
+      DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxCandidates *
+        DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxSimplePathLegs,
+    );
+  });
+
   it("selects a split route when direct pools cannot carry a larger WETH amount", () => {
     const result = rankRouteCandidates({
       candidates: wethToFameCandidates(),
@@ -52,7 +71,10 @@ describe("FAME route ranking", () => {
     assert.equal(result.status, "selected");
     if (result.status === "selected") {
       assert.equal(result.plan.candidate.kind, "single_path");
-      assert.equal(result.plan.legQuotes[0]?.poolId, "scale-equalizer-weth-fame");
+      assert.equal(
+        result.plan.legQuotes[0]?.poolId,
+        "scale-equalizer-weth-fame",
+      );
     }
   });
 
@@ -142,6 +164,50 @@ describe("FAME route ranking", () => {
     }
   });
 
+  it("can select a quote-backed connector route absent from original artifacts", () => {
+    const preferredPools = new Set([
+      "uniswap-v3-zora-usdc",
+      "uniswap-v3-zora-weth",
+      "scale-equalizer-weth-fame",
+    ]);
+    const adapter: FameQuoteAdapter = {
+      quoteEdge(request) {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: preferredPools.has(request.edge.poolId)
+            ? request.amountIn * 100n
+            : request.amountIn,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test connector quote evidence",
+        };
+      },
+    };
+
+    const result = rankRouteCandidates({
+      candidates: usdcToFameCandidates(),
+      amountIn: 1_000_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+    });
+
+    assert.equal(result.status, "selected");
+    if (result.status === "selected") {
+      assert.equal(
+        new Set<string>(FAME_SWAP_ARTIFACT_MANIFEST.routeArtifactIds).has(
+          result.plan.candidate.id,
+        ),
+        false,
+      );
+      assert.deepEqual(
+        result.plan.candidate.legs.map((leg) => leg.edge.poolId),
+        [...preferredPools],
+      );
+    }
+  });
+
   it("async ranking preserves route-local All balances and quote context", async () => {
     const context = {
       source: "snapshot" as const,
@@ -183,5 +249,109 @@ describe("FAME route ranking", () => {
         assert.ok(allLeg.amountIn > 0n);
       }
     }
+  });
+
+  it("async ranking evaluates independent candidates concurrently", async () => {
+    let active = 0;
+    let maxActive = 0;
+    const adapter: FameAsyncQuoteAdapter = {
+      async quoteEdge(request) {
+        active += 1;
+        maxActive = Math.max(maxActive, active);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        active -= 1;
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test concurrent liquidity",
+        };
+      },
+    };
+
+    const result = await rankRouteCandidatesAsync({
+      candidates: wethToFameCandidates(),
+      amountIn: 100_000_000_000_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+      maxConcurrentCandidates: 3,
+    });
+
+    assert.equal(result.status, "selected");
+    assert.ok(maxActive > 1);
+    assert.ok(maxActive <= 3);
+  });
+
+  it("async ranking enforces a quote-call budget", async () => {
+    let quoteCalls = 0;
+    const adapter: FameAsyncQuoteAdapter = {
+      async quoteEdge(request) {
+        quoteCalls += 1;
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test quote-call budget",
+        };
+      },
+    };
+
+    const result = await rankRouteCandidatesAsync({
+      candidates: usdcToFameCandidates(),
+      amountIn: 1_000_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+      maxConcurrentCandidates: 1,
+      maxQuoteCalls: 1,
+    });
+
+    assert.equal(result.status, "quote_adapter_failure");
+    assert.ok(quoteCalls <= 1);
+    assert.ok(
+      result.rejectedCandidates.some((candidate) =>
+        candidate.message.includes("quote-call budget"),
+      ),
+    );
+  });
+
+  it("async ranking fails closed when budget exhaustion follows a quoted candidate", async () => {
+    let quoteCalls = 0;
+    const adapter: FameAsyncQuoteAdapter = {
+      async quoteEdge(request) {
+        quoteCalls += 1;
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test partial budget exhaustion",
+        };
+      },
+    };
+
+    const result = await rankRouteCandidatesAsync({
+      candidates: wethToFameCandidates(),
+      amountIn: 100_000_000_000_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+      maxConcurrentCandidates: 1,
+      maxQuoteCalls: 1,
+    });
+
+    assert.equal(result.status, "quote_adapter_failure");
+    assert.ok(quoteCalls <= 1);
+    assert.ok(
+      result.rejectedCandidates.some((candidate) =>
+        candidate.message.includes("quote-call budget"),
+      ),
+    );
   });
 });

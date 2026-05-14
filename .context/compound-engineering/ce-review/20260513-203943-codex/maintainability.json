@@ -1,0 +1,65 @@
+{
+  "reviewer": "maintainability",
+  "findings": [
+    {
+      "title": "Sync and async quote pipelines duplicate the same routing logic",
+      "severity": "P2",
+      "file": "src/features/fame-swap/solver/quote.ts",
+      "line": 43,
+      "confidence": 0.94,
+      "autofix_class": "manual",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "pre_existing": false,
+      "suggested_fix": "Factor the shared quote/solver/ranking flow into common helpers, or make the async path the single implementation with a sync wrapper for deterministic adapters, so status mapping, fee/warning projection, and route ranking live in one place.",
+      "why_it_matters": "The new solver has parallel sync and async stacks that differ only in adapter call shape. Future changes to quote statuses, ranking tie-breakers, warnings, fee fields, or route materialization now have to be applied across multiple copies, which makes drift likely in exactly the code that selects executable swap routes.",
+      "evidence": [
+        "src/features/fame-swap/solver/quote.ts:43 defines quoteFameSwap and src/features/fame-swap/solver/quote.ts:206 defines quoteFameSwapAsync; the validation, readiness handling, solved-status mapping, approval/callValue construction, and ready quote projection are repeated nearly line-for-line.",
+        "src/features/fame-swap/solver/amountSolver.ts:99 and src/features/fame-swap/solver/amountSolver.ts:176 repeat candidate lookup, unsupported mapping, ranking error mapping, and ready result construction for sync and async solver entry points.",
+        "src/features/fame-swap/solver/quotes/rankRoutes.ts:71 and src/features/fame-swap/solver/quotes/asyncRankRoutes.ts:39 duplicate the route-local balance traversal, fee math, sorting, and warning selection, with await as the material difference."
+      ]
+    },
+    {
+      "title": "Quote API and hook maintain separate hand-written wire contracts",
+      "severity": "P2",
+      "file": "src/features/fame-swap/hooks/useFameSwapQuote.ts",
+      "line": 235,
+      "confidence": 0.79,
+      "autofix_class": "manual",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "pre_existing": false,
+      "suggested_fix": "Move the API DTO shape, bigint/date conversion, and exhaustive status serialization/deserialization into a shared feature module used by both the route handler and useFameSwapQuote, with tests that round-trip each FameSwapQuote status.",
+      "why_it_matters": "The server quote shape is not owned by one serializer. The API manually selects fields and the client manually reconstructs a FameSwapQuote with permissive fallbacks, so adding or renaming a quote field can silently produce inconsistent UI behavior instead of failing at the contract boundary.",
+      "evidence": [
+        "src/app/api/fame/swap/quote/route.ts:240 serializes non-ready quotes by hand and only includes status, message, diagnosticsVisibleByDefault, readiness, and rejectedCandidates.",
+        "src/app/api/fame/swap/quote/route.ts:251 serializes ready quotes through a second manual field list, including transaction requests alongside route data.",
+        "src/features/fame-swap/hooks/useFameSwapQuote.ts:235 reconstructs the union with custom parse helpers and fallbacks through src/features/fame-swap/hooks/useFameSwapQuote.ts:362, including rebuilding approval from local token/router data instead of consuming a shared response type."
+      ]
+    },
+    {
+      "title": "Slipstream2 live quote branch is declared but rejected by the helper it calls",
+      "severity": "P2",
+      "file": "src/features/fame-swap/solver/quotes/liveAdapters.ts",
+      "line": 816,
+      "confidence": 0.88,
+      "autofix_class": "manual",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "pre_existing": false,
+      "suggested_fix": "Either remove aerodrome-slipstream2 from the live quote dispatch until it has an implementation, or centralize Slipstream venue capabilities so the dispatcher and helper agree on which variants are supported and which quoter/ABI each variant uses.",
+      "why_it_matters": "Venue support is split across the pool universe, dispatcher, and helper guard. The dispatcher advertises Slipstream2 as handled, but the target helper rejects that same venue, leaving a dead branch that future route changes can easily rely on by mistake.",
+      "evidence": [
+        "src/features/fame-swap/solver/poolUniverse.ts:48 maps aerodrome-slipstream2 into the supported pool universe as Slipstream2.",
+        "src/features/fame-swap/solver/quotes/liveAdapters.ts:816 routes both aerodrome-slipstream and aerodrome-slipstream2 into quoteFromSlipstreamQuoter.",
+        "src/features/fame-swap/solver/quotes/liveAdapters.ts:559 immediately returns no_quote_evidence unless pool.venue is exactly aerodrome-slipstream, so the aerodrome-slipstream2 branch cannot produce a live quote."
+      ]
+    }
+  ],
+  "residual_risks": [
+    "The diff is very large; this maintainability pass focused on solver/API/widget structural boundaries and did not line-review every generated artifact, route-lab script path, or documentation file."
+  ],
+  "testing_gaps": [
+    "No additional maintainability-only testing gaps beyond the verification needs attached to the findings."
+  ]
+}

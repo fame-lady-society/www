@@ -162,7 +162,12 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   );
 
   useEffect(() => {
-    if (!isConnected || onBase || isSwitchingChain || autoSwitchRequested.current) {
+    if (
+      !isConnected ||
+      onBase ||
+      isSwitchingChain ||
+      autoSwitchRequested.current
+    ) {
       if (onBase) autoSwitchRequested.current = false;
       return;
     }
@@ -329,7 +334,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
             FAME swap
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Base router quotes with wallet simulation before submit.
+            via preferred liquidity
           </Typography>
         </div>
 
@@ -364,7 +369,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
                   type="button"
                   aria-label="Swap side"
                   disabled={state.tokenSelectDisabled}
-                  onClick={() => setTrade((current) => flipFameSwapMode(current))}
+                  onClick={() =>
+                    setTrade((current) => flipFameSwapMode(current))
+                  }
                   sx={{
                     alignSelf: { xs: "stretch", sm: "center" },
                     border: "1px solid",

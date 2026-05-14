@@ -1,4 +1,5 @@
 import type { FameRouteCandidate } from "../graph/routePlan";
+import { DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS } from "../graph/candidates";
 import type {
   FameAsyncQuoteAdapter,
   FameCandidateRejection,
@@ -24,6 +25,17 @@ import {
   subtractBalance,
 } from "./routeMath";
 
+const DEFAULT_MAX_CONCURRENT_CANDIDATE_QUOTES = 4;
+export const DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS =
+  DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxCandidates *
+  DEFAULT_FAME_ROUTE_CANDIDATE_BUDGETS.maxSimplePathLegs;
+
+interface QuoteCallBudget {
+  used: number;
+  max: number;
+  exhausted: boolean;
+}
+
 function marketImpactSummary(
   amountIn: bigint,
   grossAmountOut: bigint,
@@ -43,6 +55,7 @@ async function quoteCandidate(
   slippageBps: number,
   adapter: FameAsyncQuoteAdapter,
   quoteContext?: FameQuoteContext,
+  quoteCallBudget?: QuoteCallBudget,
 ): Promise<FameQuotedRoutePlan | FameCandidateRejection> {
   const balances = new Map<string, bigint>([
     [normalizedAddress(candidate.tokenIn), amountIn],
@@ -57,6 +70,9 @@ async function quoteCandidate(
         candidateId: candidate.id,
         reason: "unsafe_output",
         message: `${leg.edge.poolId} has no route-local input to spend.`,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
 
@@ -65,8 +81,24 @@ async function quoteCandidate(
         candidateId: candidate.id,
         reason: "unsafe_output",
         message: `${leg.edge.poolId} attempted to spend more input than the route holds.`,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
+
+    if (quoteCallBudget && quoteCallBudget.used >= quoteCallBudget.max) {
+      quoteCallBudget.exhausted = true;
+      return {
+        candidateId: candidate.id,
+        reason: "no_quote_evidence",
+        message: `FAME route quote-call budget ${quoteCallBudget.max.toString()} was exhausted before ${leg.edge.poolId}.`,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
+      };
+    }
+    if (quoteCallBudget) quoteCallBudget.used += 1;
 
     const quote = await adapter.quoteEdge({
       edge: leg.edge,
@@ -78,6 +110,9 @@ async function quoteCandidate(
         candidateId: candidate.id,
         reason: quote.reason,
         message: quote.message,
+        failedLegIndex: index,
+        failedPoolId: leg.edge.poolId,
+        failedAmountIn: spend,
       };
     }
 
@@ -96,6 +131,7 @@ async function quoteCandidate(
       evidence: quote.evidence,
       quoteContext: quote.context ?? quoteContext,
       priceImpact: quote.priceImpact,
+      protocolEvidence: quote.protocolEvidence,
     });
   }
 
@@ -119,11 +155,7 @@ async function quoteCandidate(
     };
   }
 
-  const marketImpact = marketImpactSummary(
-    amountIn,
-    grossAmountOut,
-    legQuotes,
-  );
+  const marketImpact = marketImpactSummary(amountIn, grossAmountOut, legQuotes);
   const feeBreakdown: FameRouteFeeBreakdown = {
     routerFeePpm: feePpm,
     routerFeeAmount,
@@ -153,25 +185,73 @@ export async function rankRouteCandidatesAsync(options: {
   slippageBps: number;
   adapter: FameAsyncQuoteAdapter;
   quoteContext?: FameQuoteContext;
+  maxConcurrentCandidates?: number;
+  maxQuoteCalls?: number;
 }): Promise<FameRouteRankingResult> {
   const plans: FameQuotedRoutePlan[] = [];
   const rejectedCandidates: FameCandidateRejection[] = [];
   const quoteContext = options.quoteContext ?? options.adapter.quoteContext;
+  const maxConcurrentCandidates = Math.max(
+    1,
+    Math.min(
+      options.maxConcurrentCandidates ??
+        DEFAULT_MAX_CONCURRENT_CANDIDATE_QUOTES,
+      options.candidates.length || 1,
+    ),
+  );
+  const quoteCallBudget: QuoteCallBudget = {
+    used: 0,
+    max: Math.max(
+      1,
+      Math.min(
+        options.maxQuoteCalls ?? DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS,
+        DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS,
+      ),
+    ),
+    exhausted: false,
+  };
+  const results = new Array<FameQuotedRoutePlan | FameCandidateRejection>(
+    options.candidates.length,
+  );
+  let nextIndex = 0;
 
-  for (const candidate of options.candidates) {
-    const result = await quoteCandidate(
-      candidate,
-      options.amountIn,
-      options.feePpm,
-      options.slippageBps,
-      options.adapter,
-      quoteContext,
-    );
+  async function worker() {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const candidate = options.candidates[index];
+      if (!candidate) return;
+
+      results[index] = await quoteCandidate(
+        candidate,
+        options.amountIn,
+        options.feePpm,
+        options.slippageBps,
+        options.adapter,
+        quoteContext,
+        quoteCallBudget,
+      );
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: maxConcurrentCandidates }, () => worker()),
+  );
+
+  for (const result of results) {
+    if (!result) continue;
     if ("candidate" in result) {
       plans.push(result);
     } else {
       rejectedCandidates.push(result);
     }
+  }
+
+  if (quoteCallBudget.exhausted) {
+    return {
+      status: "quote_adapter_failure",
+      rejectedCandidates,
+    };
   }
 
   if (plans.length === 0) {

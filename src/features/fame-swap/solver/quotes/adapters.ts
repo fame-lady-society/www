@@ -14,6 +14,27 @@ export type FameEdgeQuoteFailureReason =
   | "no_quote_evidence"
   | "zero_output";
 
+export type FameProtocolEvidenceStatus =
+  | "available"
+  | "unavailable"
+  | "not_applicable"
+  | "disabled";
+
+export interface FameProtocolEvidenceItem {
+  status: FameProtocolEvidenceStatus;
+  source: string;
+  value?: string;
+  reason?: string;
+}
+
+export interface FameProtocolEvidence {
+  quote: FameProtocolEvidenceItem;
+  prePrice: FameProtocolEvidenceItem;
+  postPrice: FameProtocolEvidenceItem;
+  marketImpact: FameProtocolEvidenceItem;
+  activeLiquidity: FameProtocolEvidenceItem;
+}
+
 export type FameEdgeQuoteResult =
   | {
       status: "quoted";
@@ -24,6 +45,7 @@ export type FameEdgeQuoteResult =
       evidence: string;
       context?: FameQuoteContext;
       priceImpact?: FamePriceImpactEstimate;
+      protocolEvidence?: FameProtocolEvidence;
     }
   | {
       status: "failed";
@@ -55,12 +77,16 @@ export interface FameLegQuote {
   evidence: string;
   quoteContext?: FameQuoteContext;
   priceImpact?: FamePriceImpactEstimate;
+  protocolEvidence?: FameProtocolEvidence;
 }
 
 export interface FameCandidateRejection {
   candidateId: string;
   reason: FameEdgeQuoteFailureReason | "unsafe_output";
   message: string;
+  failedLegIndex?: number;
+  failedPoolId?: string;
+  failedAmountIn?: bigint;
 }
 
 export interface FamePriceImpactEstimate {

@@ -1,20 +1,14 @@
 import { NextRequest } from "next/server";
-import {
-  createPublicClient,
-  http,
-  isAddress,
-  type Address,
-  type Hex,
-} from "viem";
+import { createPublicClient, http, isAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "@/features/fame-swap/artifacts/manifest";
 import { getFameSwapConfig } from "@/features/fame-swap/config";
 import { fameRouterAbi } from "@/features/fame-swap/router/abi";
-import { fameSwapTransactionRequests } from "@/features/fame-swap/transactions";
 import {
   quoteFameSwap,
   quoteFameSwapAsync,
 } from "@/features/fame-swap/solver/quote";
+import { serializeFameSwapQuoteResponse } from "@/features/fame-swap/solver/quoteWire";
 import {
   createLiveLiquidityQuoteAdapter,
   unavailableLiveAsyncQuoteAdapter,
@@ -29,19 +23,47 @@ import {
 import { normalizeSlippageBps } from "@/features/fame-swap/solver/slippage";
 import { deadlineMinutesToSeconds } from "@/features/fame-swap/solver/deadline";
 import { tokenForAddress } from "@/features/fame-swap/tokens";
+import type {
+  FameSwapQuote,
+  FameSwapQuoteRequest,
+  FameSwapReadiness,
+} from "@/features/fame-swap/solver/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface QuoteBody {
-  tokenIn?: string;
-  tokenOut?: string;
-  amountIn?: string;
-  recipient?: string;
-  routerAddress?: string;
+const MAX_JSON_BODY_BYTES = 4_096;
+const MAX_UINT256 = (1n << 256n) - 1n;
+const QUOTE_RPC_TIMEOUT_MS = 8_000;
+const QUOTE_REQUEST_TIMEOUT_MS = 15_000;
+const READINESS_CACHE_TTL_MS = 5_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 90;
+
+interface ParsedQuoteBody {
+  tokenIn: Address;
+  tokenOut: Address;
+  amountIn: bigint;
+  recipient: Address | null;
+  routerAddress?: Address;
   slippageBps?: number;
   deadlineMinutes?: number;
 }
+
+interface FameSwapQuotePostDependencies {
+  readinessForQuote?: (
+    routerAddress: Address | null,
+  ) => FameSwapReadiness | Promise<FameSwapReadiness>;
+  quoteForRequest?: (
+    request: FameSwapQuoteRequest & { readiness: FameSwapReadiness },
+  ) => FameSwapQuote | Promise<FameSwapQuote>;
+}
+
+const readinessCache = new Map<
+  string,
+  { expiresAt: number; value: Promise<FameSwapReadiness> | FameSwapReadiness }
+>();
+const rateLimitBuckets = new Map<string, { resetAt: number; count: number }>();
 
 function json(data: unknown, init?: ResponseInit): Response {
   return new Response(
@@ -58,6 +80,146 @@ function json(data: unknown, init?: ResponseInit): Response {
   );
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function bodyTooLarge(request: NextRequest): boolean {
+  const contentLength = request.headers.get("content-length");
+  if (!contentLength) return false;
+
+  const parsed = Number(contentLength);
+  return Number.isFinite(parsed) && parsed > MAX_JSON_BODY_BYTES;
+}
+
+function clientRateLimitKey(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "local"
+  );
+}
+
+function rateLimited(request: NextRequest): boolean {
+  const now = Date.now();
+  const key = clientRateLimitKey(request);
+  const current = rateLimitBuckets.get(key);
+  if (!current || current.resetAt <= now) {
+    rateLimitBuckets.set(key, {
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+      count: 1,
+    });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
+function parseQuoteBody(value: unknown): ParsedQuoteBody | string {
+  const body = asRecord(value);
+  if (!body) return "Expected a JSON quote request object.";
+
+  if (typeof body.tokenIn !== "string" || !isAddress(body.tokenIn)) {
+    return "tokenIn must be an address.";
+  }
+  if (typeof body.tokenOut !== "string" || !isAddress(body.tokenOut)) {
+    return "tokenOut must be an address.";
+  }
+  if (
+    typeof body.amountIn !== "string" ||
+    !/^[0-9]+$/.test(body.amountIn) ||
+    body.amountIn.length > 78
+  ) {
+    return "amountIn must be a raw integer string.";
+  }
+
+  const amountIn = BigInt(body.amountIn);
+  if (amountIn > MAX_UINT256) {
+    return "amountIn must fit within uint256.";
+  }
+
+  if (body.recipient !== undefined && body.recipient !== null) {
+    if (typeof body.recipient !== "string" || !isAddress(body.recipient)) {
+      return "recipient must be an address when provided.";
+    }
+  }
+
+  if (body.routerAddress !== undefined) {
+    if (
+      typeof body.routerAddress !== "string" ||
+      !isAddress(body.routerAddress)
+    ) {
+      return "routerAddress overrides are not supported.";
+    }
+  }
+
+  return {
+    tokenIn: body.tokenIn as Address,
+    tokenOut: body.tokenOut as Address,
+    amountIn,
+    recipient:
+      typeof body.recipient === "string" && isAddress(body.recipient)
+        ? (body.recipient as Address)
+        : null,
+    routerAddress:
+      typeof body.routerAddress === "string" && isAddress(body.routerAddress)
+        ? (body.routerAddress as Address)
+        : undefined,
+    slippageBps:
+      typeof body.slippageBps === "number" && Number.isFinite(body.slippageBps)
+        ? body.slippageBps
+        : undefined,
+    deadlineMinutes:
+      typeof body.deadlineMinutes === "number" &&
+      Number.isFinite(body.deadlineMinutes)
+        ? body.deadlineMinutes
+        : undefined,
+  };
+}
+
+function displaySafeErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  return (
+    raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(
+        (line) =>
+          line.length > 0 &&
+          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
+            line,
+          ),
+      ) ?? "FAME quote request failed."
+  )
+    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
+    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
+    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+}
+
+function baseRpcUrl(): string | undefined {
+  return process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 
 async function readinessForQuote(routerAddress: Address | null) {
   const config = {
@@ -65,15 +227,28 @@ async function readinessForQuote(routerAddress: Address | null) {
     routerAddress,
   };
   const staticResult = staticReadiness(config);
-  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1!;
+  const rpcUrl = baseRpcUrl();
 
   if (staticResult.status === "not_live_ready" || !rpcUrl) {
     return staticResult;
   }
 
+  const cacheKey = `${routerAddress}:${config.expectedPinnedBaseBlock}:${config.expectedSolverRoutesHash}:${config.expectedPoolsHash}`;
+  const cached = readinessCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
   const client = createPublicClient({
     chain: base,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, {
+      batch: true,
+      retryCount: 0,
+      timeout: QUOTE_RPC_TIMEOUT_MS,
+    }),
+    batch: {
+      multicall: true,
+    },
   });
   const reader: RouterPolicyReader = {
     read: async (address): Promise<RouterPolicySnapshot> => {
@@ -131,59 +306,71 @@ async function readinessForQuote(routerAddress: Address | null) {
     },
   };
 
-  return liveReadiness(config, reader);
+  const value = liveReadiness(config, reader);
+  readinessCache.set(cacheKey, {
+    expiresAt: Date.now() + READINESS_CACHE_TTL_MS,
+    value,
+  });
+  const readiness = await value;
+  readinessCache.set(cacheKey, {
+    expiresAt: Date.now() + READINESS_CACHE_TTL_MS,
+    value: readiness,
+  });
+  return readiness;
 }
 
 function publicClientForQuote() {
-  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl = baseRpcUrl();
   if (!rpcUrl) return null;
 
   return createPublicClient({
     chain: base,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, {
+      batch: true,
+      retryCount: 0,
+      timeout: QUOTE_RPC_TIMEOUT_MS,
+    }),
+    batch: {
+      multicall: true,
+    },
   });
 }
 
-export async function POST(request: NextRequest): Promise<Response> {
-  let body: QuoteBody;
+export async function handleFameSwapQuotePost(
+  request: NextRequest,
+  deps: FameSwapQuotePostDependencies = {},
+): Promise<Response> {
+  if (bodyTooLarge(request)) {
+    return json({ error: "Quote request body is too large." }, { status: 413 });
+  }
+  if (rateLimited(request)) {
+    return json({ error: "Too many FAME quote requests." }, { status: 429 });
+  }
+
+  let bodyJson: unknown;
   try {
-    body = (await request.json()) as QuoteBody;
+    bodyJson = await request.json();
   } catch {
     return json({ error: "Expected a JSON quote request." }, { status: 400 });
   }
 
-  if (!body.tokenIn || !isAddress(body.tokenIn)) {
-    return json({ error: "tokenIn must be an address." }, { status: 400 });
-  }
-  if (!body.tokenOut || !isAddress(body.tokenOut)) {
-    return json({ error: "tokenOut must be an address." }, { status: 400 });
-  }
-  if (
-    !body.amountIn ||
-    !/^[0-9]+$/.test(body.amountIn) ||
-    body.amountIn.length > 78
-  ) {
-    return json(
-      { error: "amountIn must be a raw integer string." },
-      { status: 400 },
-    );
+  const parsedBody = parseQuoteBody(bodyJson);
+  if (typeof parsedBody === "string") {
+    return json({ error: parsedBody }, { status: 400 });
   }
 
-  const tokenIn = tokenForAddress(body.tokenIn as Address);
-  const tokenOut = tokenForAddress(body.tokenOut as Address);
+  const tokenIn = tokenForAddress(parsedBody.tokenIn);
+  const tokenOut = tokenForAddress(parsedBody.tokenOut);
   if (!tokenIn || !tokenOut) {
     return json({ error: "Unsupported FAME swap token." }, { status: 400 });
   }
 
-  const recipient =
-    body.recipient && isAddress(body.recipient)
-      ? (body.recipient as Address)
-      : null;
+  const recipient = parsedBody.recipient;
   const configuredRouterAddress = getFameSwapConfig().routerAddress;
   if (
-    body.routerAddress &&
-    (!isAddress(body.routerAddress) ||
-      body.routerAddress.toLowerCase() !== configuredRouterAddress?.toLowerCase())
+    parsedBody.routerAddress &&
+    parsedBody.routerAddress.toLowerCase() !==
+      configuredRouterAddress?.toLowerCase()
   ) {
     return json(
       { error: "routerAddress overrides are not supported." },
@@ -195,84 +382,84 @@ export async function POST(request: NextRequest): Promise<Response> {
     ...getFameSwapConfig(),
     routerAddress,
     defaultSlippageBps: normalizeSlippageBps(
-      body.slippageBps ?? getFameSwapConfig().defaultSlippageBps,
+      parsedBody.slippageBps ?? getFameSwapConfig().defaultSlippageBps,
     ),
   };
-  const readiness = await readinessForQuote(routerAddress);
-  const quoteRequest = {
+  const quoteRequest: Omit<FameSwapQuoteRequest, "readiness"> = {
     tokenIn,
     tokenOut,
-    amountIn: BigInt(body.amountIn),
+    amountIn: parsedBody.amountIn,
     recipient,
     config,
-    readiness,
     deadlineSeconds:
-      typeof body.deadlineMinutes === "number"
-        ? deadlineMinutesToSeconds(body.deadlineMinutes)
+      typeof parsedBody.deadlineMinutes === "number"
+        ? deadlineMinutesToSeconds(parsedBody.deadlineMinutes)
         : undefined,
   };
 
-  const quoteClient = readiness.status === "ready" ? publicClientForQuote() : null;
-  const quote =
-    readiness.status === "ready"
-      ? await quoteFameSwapAsync({
+  const quote = await withTimeout(
+    (async (): Promise<FameSwapQuote> => {
+      const resolveReadiness = deps.readinessForQuote ?? readinessForQuote;
+      const readiness = await resolveReadiness(routerAddress);
+      if (deps.quoteForRequest) {
+        return await deps.quoteForRequest({
           ...quoteRequest,
-          adapter: quoteClient
-            ? await createLiveLiquidityQuoteAdapter({
-                client: {
-                  getBlockNumber: () => quoteClient.getBlockNumber(),
-                  readContract: (quoteRequest) =>
-                    quoteClient.readContract(
-                      quoteRequest as Parameters<
-                        typeof quoteClient.readContract
-                      >[0],
-                    ) as Promise<unknown>,
-                },
-                chainId: base.id,
-              })
-            : unavailableLiveAsyncQuoteAdapter(
-                "Base RPC is not configured for live liquidity quotes.",
-              ),
-        })
-      : quoteFameSwap(quoteRequest);
-  const requests = fameSwapTransactionRequests(quote);
+          readiness,
+        });
+      }
 
-  if (quote.status !== "ready") {
-    return json({
-      status: quote.status,
-      message: quote.message,
-      diagnosticsVisibleByDefault: quote.diagnosticsVisibleByDefault,
-      readiness: "readiness" in quote ? quote.readiness : undefined,
-      rejectedCandidates:
-        "rejectedCandidates" in quote ? quote.rejectedCandidates : undefined,
-    });
-  }
-
-  return json({
-    status: quote.status,
-    message: quote.message,
-    routeArtifactId: quote.routeArtifactId,
-    routeSource: quote.routeSource,
-    routerAddress: quote.routerAddress,
-    requestedAmountIn: quote.requestedAmountIn,
-    grossEstimatedOutput: quote.grossEstimatedOutput,
-    estimatedOutput: quote.estimatedOutput,
-    routerFeeAmount: quote.routerFeeAmount,
-    minAmountOutAfterFee: quote.minAmountOutAfterFee,
-    feeBreakdown: quote.feeBreakdown,
-    quoteContext: quote.quoteContext,
-    feePpm: quote.feePpm,
-    capabilities: quote.capabilities,
-    callValue: quote.callValue,
-    slippageBps: quote.slippageBps,
-    expiresAt: quote.expiresAt.toISOString(),
-    routeHash: quote.materializedRouteHash as Hex,
-    poolIds: quote.poolIds,
-    warnings: quote.warnings,
-    rejectedCandidates: quote.rejectedCandidates,
-    approval: requests.approval,
-    swap: requests.swap,
-    route: quote.route,
-    routeDisplay: quote.routeDisplay,
+      const quoteClient =
+        readiness.status === "ready" ? publicClientForQuote() : null;
+      return readiness.status === "ready"
+        ? quoteFameSwapAsync({
+            ...quoteRequest,
+            readiness,
+            adapter: quoteClient
+              ? await createLiveLiquidityQuoteAdapter({
+                  client: {
+                    getBlockNumber: () => quoteClient.getBlockNumber(),
+                    readContract: (quoteRequest) =>
+                      quoteClient.readContract(
+                        quoteRequest as Parameters<
+                          typeof quoteClient.readContract
+                        >[0],
+                      ) as Promise<unknown>,
+                  },
+                  chainId: base.id,
+                })
+              : unavailableLiveAsyncQuoteAdapter(
+                  "Base RPC is not configured for live liquidity quotes.",
+                ),
+          })
+        : quoteFameSwap({
+            ...quoteRequest,
+            readiness,
+          });
+    })(),
+    QUOTE_REQUEST_TIMEOUT_MS,
+    `FAME quote request timed out after ${QUOTE_REQUEST_TIMEOUT_MS}ms`,
+  ).catch((error): FameSwapQuote => {
+    const message = displaySafeErrorMessage(error);
+    return {
+      status: "quote_adapter_failure",
+      tokenIn,
+      tokenOut,
+      requestedAmountIn: parsedBody.amountIn,
+      rejectedCandidates: [
+        {
+          candidateId: "api-runner",
+          reason: "adapter_failure",
+          message,
+        },
+      ],
+      message,
+      diagnosticsVisibleByDefault: true,
+    };
   });
+
+  return json(serializeFameSwapQuoteResponse(quote));
+}
+
+export async function POST(request: NextRequest): Promise<Response> {
+  return handleFameSwapQuotePost(request);
 }

@@ -7,6 +7,7 @@ import { NATIVE_ETH, FAME, USDC, WETH } from "../tokens";
 import { solverRoutesFile } from "./artifacts";
 import { artifactIntegrityIssue } from "./integrity";
 import {
+  feeDescriptorForPool,
   famePoolById,
   famePoolEdgesForPair,
   famePoolUniverse,
@@ -19,7 +20,10 @@ describe("FAME pool universe", () => {
       "src/features/fame-swap/artifacts/base-v1-pools.json",
     );
 
-    assert.equal(keccak256(toHex(bytes)), FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash);
+    assert.equal(
+      keccak256(toHex(bytes)),
+      FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    );
     assert.equal(artifactIntegrityIssue(), null);
   });
 
@@ -27,6 +31,22 @@ describe("FAME pool universe", () => {
     for (const route of solverRoutesFile.routes) {
       for (const poolId of route.poolIds) {
         assert.ok(famePoolById(poolId), `${route.id} references ${poolId}`);
+      }
+    }
+  });
+
+  it("has reviewed fee metadata for every pinned route pool", () => {
+    for (const route of solverRoutesFile.routes) {
+      for (const poolId of route.poolIds) {
+        const pool = famePoolById(poolId);
+        assert.ok(pool, `${route.id} references ${poolId}`);
+
+        const fee = feeDescriptorForPool(pool);
+        assert.equal(
+          fee.status,
+          "available",
+          `${route.id} uses ${poolId} without reviewed fee metadata`,
+        );
       }
     }
   });
@@ -52,7 +72,9 @@ describe("FAME pool universe", () => {
       isNativeEthAddress(edge.tokenIn),
     );
 
-    assert.ok(nativeEdges.some((edge) => edge.poolId === "uniswap-v4-zora-eth"));
+    assert.ok(
+      nativeEdges.some((edge) => edge.poolId === "uniswap-v4-zora-eth"),
+    );
     assert.ok(
       !nativeEdges.some(
         (edge) => edge.tokenIn.toLowerCase() === WETH.toLowerCase(),

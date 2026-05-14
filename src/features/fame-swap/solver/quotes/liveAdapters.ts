@@ -4,6 +4,8 @@ import type {
   FameEdgeQuoteRequest,
   FameEdgeQuoteResult,
   FamePriceImpactEstimate,
+  FameProtocolEvidence,
+  FameProtocolEvidenceItem,
   FameQuoteAdapter,
 } from "./adapters";
 import type { FameQuoteContext } from "./quoteContext";
@@ -43,6 +45,7 @@ export interface FameLiveQuoteAdapterOptions {
 }
 
 const DEFAULT_READ_TIMEOUT_MS = 2_500;
+const V4_ACTIVE_LIQUIDITY_EVIDENCE_TIMEOUT_MS = 1_000;
 const MAX_UINT128 = (1n << 128n) - 1n;
 
 export const BASE_SLIPSTREAM_QUOTER_V2 =
@@ -126,6 +129,16 @@ const uniswapV4StateViewSlot0Abi = [
       { name: "protocolFee", type: "uint24" },
       { name: "lpFee", type: "uint24" },
     ],
+  },
+] as const;
+
+const uniswapV4StateViewLiquidityAbi = [
+  {
+    type: "function",
+    name: "getLiquidity",
+    stateMutability: "view",
+    inputs: [{ name: "poolId", type: "bytes32" }],
+    outputs: [{ name: "liquidity", type: "uint128" }],
   },
 ] as const;
 
@@ -227,14 +240,116 @@ function displaySafeErrorMessage(error: unknown): string {
   const firstLine = raw
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .find((line) => line.length > 0);
+    .find(
+      (line) =>
+        line.length > 0 &&
+        !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
+          line,
+        ),
+    );
   return (firstLine ?? "Unknown live quote error.")
-    .replace(/https?:\/\/\S+/g, "[redacted-url]")
-    .replace(/0x[a-fA-F0-9]{96,}/g, "[redacted-hex]");
+    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
+    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
+    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+}
+
+function availableEvidence(
+  source: string,
+  value?: bigint | number | string | null,
+): FameProtocolEvidenceItem {
+  return {
+    status: "available",
+    source,
+    ...(value === undefined || value === null
+      ? {}
+      : { value: value.toString() }),
+  };
+}
+
+function unavailableEvidence(
+  source: string,
+  reason: string,
+): FameProtocolEvidenceItem {
+  return {
+    status: "unavailable",
+    source,
+    reason,
+  };
+}
+
+function notApplicableEvidence(
+  source: string,
+  reason: string,
+): FameProtocolEvidenceItem {
+  return {
+    status: "not_applicable",
+    source,
+    reason,
+  };
+}
+
+function marketImpactEvidence(
+  source: string,
+  priceImpact: FamePriceImpactEstimate | undefined,
+): Pick<FameProtocolEvidence, "prePrice" | "postPrice" | "marketImpact"> {
+  if (!priceImpact) {
+    return {
+      prePrice: unavailableEvidence(
+        source,
+        "Pre-price evidence is unavailable.",
+      ),
+      postPrice: unavailableEvidence(
+        source,
+        "Post-price evidence is unavailable.",
+      ),
+      marketImpact: unavailableEvidence(
+        source,
+        "Market-impact evidence is unavailable.",
+      ),
+    };
+  }
+
+  return {
+    prePrice: availableEvidence(source, priceImpact.preSwapPriceX18),
+    postPrice:
+      priceImpact.postSwapPriceX18 === null
+        ? unavailableEvidence(
+            source,
+            "Protocol-backed post-price evidence is unavailable.",
+          )
+        : availableEvidence(source, priceImpact.postSwapPriceX18),
+    marketImpact:
+      priceImpact.marketImpactBps === null
+        ? unavailableEvidence(
+            source,
+            "Market impact could not be computed from available price evidence.",
+          )
+        : availableEvidence(source, priceImpact.marketImpactBps),
+  };
+}
+
+function protocolEvidence(options: {
+  source: string;
+  amountOut: bigint;
+  priceImpact?: FamePriceImpactEstimate;
+  activeLiquidity?: FameProtocolEvidenceItem;
+}): FameProtocolEvidence {
+  return {
+    quote: availableEvidence(options.source, options.amountOut),
+    ...marketImpactEvidence(options.source, options.priceImpact),
+    activeLiquidity:
+      options.activeLiquidity ??
+      notApplicableEvidence(
+        options.source,
+        "Active liquidity evidence is not applicable for this venue adapter.",
+      ),
+  };
 }
 
 function liveQuoteFailure(poolId: string, error: unknown): FameEdgeQuoteResult {
-  return unavailable(`${poolId} live quote failed: ${displaySafeErrorMessage(error)}`);
+  return unavailable(
+    `${poolId} live quote failed: ${displaySafeErrorMessage(error)}`,
+  );
 }
 
 export function unavailableLiveQuoteAdapter(message: string): FameQuoteAdapter {
@@ -277,7 +392,9 @@ interface ConcentratedQuoteOutput {
   sqrtPriceX96After: bigint | null;
 }
 
-function concentratedQuoteOutput(value: unknown): ConcentratedQuoteOutput | null {
+function concentratedQuoteOutput(
+  value: unknown,
+): ConcentratedQuoteOutput | null {
   if (typeof value === "bigint") {
     return {
       amountOut: value,
@@ -343,6 +460,29 @@ async function readSlot0SqrtPriceX96(
   return sqrtPriceX96FromSlot0(raw);
 }
 
+async function readV4ActiveLiquidityEvidence(
+  client: FameLiveQuoteClient,
+  request: ReadContractRequest,
+  timeoutMs: number,
+): Promise<FameProtocolEvidenceItem> {
+  try {
+    const raw = await readLiveContract(client, request, timeoutMs);
+    if (typeof raw !== "bigint") {
+      return unavailableEvidence(
+        "StateView.getLiquidity",
+        "StateView.getLiquidity returned malformed active liquidity.",
+      );
+    }
+
+    return availableEvidence("StateView.getLiquidity", raw);
+  } catch (error) {
+    return unavailableEvidence(
+      "StateView.getLiquidity",
+      displaySafeErrorMessage(error),
+    );
+  }
+}
+
 function sameAddress(left: Address, right: Address): boolean {
   return left.toLowerCase() === right.toLowerCase();
 }
@@ -376,8 +516,10 @@ function constantProductAmountOut(
   if (feeNumerator <= 0n) return 0n;
 
   const amountInWithFee = amountIn * feeNumerator;
-  return (amountInWithFee * reserveOut) /
-    (reserveIn * feeDenominator + amountInWithFee);
+  return (
+    (amountInWithFee * reserveOut) /
+    (reserveIn * feeDenominator + amountInWithFee)
+  );
 }
 
 function feeBpsFor(request: FameEdgeQuoteRequest): number | null {
@@ -467,6 +609,7 @@ async function quoteFromPoolGetAmountOut(
       });
     }
   }
+  const source = `live pool getAmountOut at ${context.source} block ${context.blockNumber.toString()}`;
 
   return {
     status: "quoted",
@@ -474,9 +617,20 @@ async function quoteFromPoolGetAmountOut(
     amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `live pool getAmountOut at ${context.source} block ${context.blockNumber.toString()}`,
+    evidence: source,
     context,
     priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
+      amountOut,
+      priceImpact,
+      activeLiquidity: notApplicableEvidence(
+        source,
+        pool.venue === "solidly" && pool.stable
+          ? "Stable Solidly pool active liquidity state transition is not validated."
+          : "Solidly pool uses pool quote/reserve state, not V4 active liquidity.",
+      ),
+    }),
   };
 }
 
@@ -531,19 +685,31 @@ async function quoteFromReserves(
     };
   }
 
+  const source = `live reserves at ${context.source} block ${context.blockNumber.toString()}`;
+  const priceImpact = constantProductPriceImpact({
+    amountIn: request.amountIn,
+    amountOut,
+    reserveIn: directed[0],
+    reserveOut: directed[1],
+  });
+
   return {
     status: "quoted",
     amountIn: request.amountIn,
     amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `live reserves at ${context.source} block ${context.blockNumber.toString()}`,
+    evidence: source,
     context,
-    priceImpact: constantProductPriceImpact({
-      amountIn: request.amountIn,
+    priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
       amountOut,
-      reserveIn: directed[0],
-      reserveOut: directed[1],
+      priceImpact,
+      activeLiquidity: notApplicableEvidence(
+        source,
+        "Constant-product reserve pool uses reserves, not V4 active liquidity.",
+      ),
     }),
   };
 }
@@ -604,26 +770,38 @@ async function quoteFromSlipstreamQuoter(
     };
   }
 
+  const source = `live Slipstream quoter at ${context.source} block ${context.blockNumber.toString()}`;
+  const priceImpact = preSwapSqrtPriceX96
+    ? concentratedLiquidityPriceImpact({
+        amountIn: request.amountIn,
+        amountOut: quote.amountOut,
+        tokenIn: request.edge.tokenIn,
+        tokenOut: request.edge.tokenOut,
+        token0: pool.token0,
+        token1: pool.token1,
+        preSwapSqrtPriceX96,
+        postSwapSqrtPriceX96: quote.sqrtPriceX96After,
+      })
+    : undefined;
+
   return {
     status: "quoted",
     amountIn: request.amountIn,
     amountOut: quote.amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `live Slipstream quoter at ${context.source} block ${context.blockNumber.toString()}`,
+    evidence: source,
     context,
-    priceImpact: preSwapSqrtPriceX96
-      ? concentratedLiquidityPriceImpact({
-          amountIn: request.amountIn,
-          amountOut: quote.amountOut,
-          tokenIn: request.edge.tokenIn,
-          tokenOut: request.edge.tokenOut,
-          token0: pool.token0,
-          token1: pool.token1,
-          preSwapSqrtPriceX96,
-          postSwapSqrtPriceX96: quote.sqrtPriceX96After,
-        })
-      : undefined,
+    priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
+      amountOut: quote.amountOut,
+      priceImpact,
+      activeLiquidity: unavailableEvidence(
+        source,
+        "Slipstream active liquidity read is not part of the current validated adapter evidence.",
+      ),
+    }),
   };
 }
 
@@ -677,26 +855,38 @@ async function quoteFromUniswapV3Quoter(
     };
   }
 
+  const source = `live Uniswap V3 quoter at ${context.source} block ${context.blockNumber.toString()}`;
+  const priceImpact = preSwapSqrtPriceX96
+    ? concentratedLiquidityPriceImpact({
+        amountIn: request.amountIn,
+        amountOut: quote.amountOut,
+        tokenIn: request.edge.tokenIn,
+        tokenOut: request.edge.tokenOut,
+        token0: pool.token0,
+        token1: pool.token1,
+        preSwapSqrtPriceX96,
+        postSwapSqrtPriceX96: quote.sqrtPriceX96After,
+      })
+    : undefined;
+
   return {
     status: "quoted",
     amountIn: request.amountIn,
     amountOut: quote.amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `live Uniswap V3 quoter at ${context.source} block ${context.blockNumber.toString()}`,
+    evidence: source,
     context,
-    priceImpact: preSwapSqrtPriceX96
-      ? concentratedLiquidityPriceImpact({
-          amountIn: request.amountIn,
-          amountOut: quote.amountOut,
-          tokenIn: request.edge.tokenIn,
-          tokenOut: request.edge.tokenOut,
-          token0: pool.token0,
-          token1: pool.token1,
-          preSwapSqrtPriceX96,
-          postSwapSqrtPriceX96: quote.sqrtPriceX96After,
-        })
-      : undefined,
+    priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
+      amountOut: quote.amountOut,
+      priceImpact,
+      activeLiquidity: unavailableEvidence(
+        source,
+        "Uniswap V3 active liquidity read is not part of the current validated adapter evidence.",
+      ),
+    }),
   };
 }
 
@@ -728,6 +918,17 @@ async function quoteFromUniswapV4Quoter(
       blockNumber: context.blockNumber,
     },
     timeoutMs,
+  );
+  const activeLiquidityPromise = readV4ActiveLiquidityEvidence(
+    client,
+    {
+      address: pool.stateView,
+      abi: uniswapV4StateViewLiquidityAbi,
+      functionName: "getLiquidity",
+      args: [pool.poolId],
+      blockNumber: context.blockNumber,
+    },
+    Math.min(timeoutMs, V4_ACTIVE_LIQUIDITY_EVIDENCE_TIMEOUT_MS),
   );
 
   const rawQuote = await readLiveContract(
@@ -764,26 +965,36 @@ async function quoteFromUniswapV4Quoter(
     };
   }
 
+  const source = `live Uniswap V4 quoter at ${context.source} block ${context.blockNumber.toString()}`;
+  const activeLiquidity = await activeLiquidityPromise;
+  const priceImpact = preSwapSqrtPriceX96
+    ? concentratedLiquidityPriceImpact({
+        amountIn: request.amountIn,
+        amountOut,
+        tokenIn: request.edge.tokenIn,
+        tokenOut: request.edge.tokenOut,
+        token0: pool.currency0,
+        token1: pool.currency1,
+        preSwapSqrtPriceX96,
+        postSwapSqrtPriceX96: null,
+      })
+    : undefined;
+
   return {
     status: "quoted",
     amountIn: request.amountIn,
     amountOut,
     capacityIn: null,
     fee: request.edge.fee,
-    evidence: `live Uniswap V4 quoter at ${context.source} block ${context.blockNumber.toString()}`,
+    evidence: source,
     context,
-    priceImpact: preSwapSqrtPriceX96
-      ? concentratedLiquidityPriceImpact({
-          amountIn: request.amountIn,
-          amountOut,
-          tokenIn: request.edge.tokenIn,
-          tokenOut: request.edge.tokenOut,
-          token0: pool.currency0,
-          token1: pool.currency1,
-          preSwapSqrtPriceX96,
-          postSwapSqrtPriceX96: null,
-        })
-      : undefined,
+    priceImpact,
+    protocolEvidence: protocolEvidence({
+      source,
+      amountOut,
+      priceImpact,
+      activeLiquidity,
+    }),
   };
 }
 

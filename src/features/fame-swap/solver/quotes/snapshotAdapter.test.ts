@@ -7,7 +7,7 @@ import type { FameSwapConfig } from "../../config";
 import { FAME, USDC, WETH, tokenForAddress } from "../../tokens";
 import { quoteFameSwap } from "../quote";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "../slippage";
-import { famePoolEdgesForPair } from "../poolUniverse";
+import { famePoolEdges, famePoolEdgesForPair } from "../poolUniverse";
 import {
   createSnapshotQuoteAdapter,
   poolStateSnapshotFile,
@@ -26,7 +26,8 @@ function config(): FameSwapConfig {
     expectedPinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
     expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
-    expectedParityVectorsHash: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedParityVectorsHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
     expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
     expectedPoolStateSnapshotHash:
       FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
@@ -52,7 +53,7 @@ describe("FAME snapshot quote adapter", () => {
     assert.equal(snapshotIntegrityIssue(), null);
   });
 
-  it("quotes a $5 USDC route from snapshot-derived liquidity evidence", () => {
+  it("quotes a $5 USDC route from recorded-state quote evidence", () => {
     const quote = quoteFameSwap({
       tokenIn: token(USDC),
       tokenOut: token(FAME),
@@ -71,7 +72,10 @@ describe("FAME snapshot quote adapter", () => {
     assert.equal(quote.status, "ready");
     if (quote.status === "ready") {
       assert.equal(quote.quoteContext?.source, "snapshot");
-      assert.equal(quote.quoteContext?.snapshotId, poolStateSnapshotFile.snapshotId);
+      assert.equal(
+        quote.quoteContext?.snapshotId,
+        poolStateSnapshotFile.snapshotId,
+      );
       assert.ok(
         quote.poolIds.includes("uniswap-v3-zora-usdc") ||
           quote.poolIds.includes("slipstream-zora-usdc"),
@@ -104,6 +108,8 @@ describe("FAME snapshot quote adapter", () => {
       assert.ok(quote.priceImpact);
       assert.equal(quote.priceImpact.method, "constant-product-reserves");
       assert.ok(quote.priceImpact.marketImpactBps !== null);
+      assert.equal(quote.protocolEvidence?.quote.status, "available");
+      assert.equal(quote.protocolEvidence?.postPrice.status, "available");
     }
   });
 
@@ -144,6 +150,54 @@ describe("FAME snapshot quote adapter", () => {
     if (quote.status === "quoted") {
       assert.match(quote.evidence, /recorded reserves/);
       assert.equal(quote.priceImpact?.method, "constant-product-reserves");
+      assert.equal(quote.protocolEvidence?.activeLiquidity.status, "not_applicable");
+    }
+  });
+
+  it("marks recorded V4 active liquidity unavailable when snapshot entries lack StateView liquidity", () => {
+    const edge = famePoolEdges().find(
+      (candidate) => candidate.poolId === "uniswap-v4-basedflick-zora",
+    );
+    assert.ok(edge);
+    const recorded: FamePoolStateSnapshotFile = {
+      schemaVersion: FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion,
+      status: "generated-live-liquidity-snapshot",
+      snapshotId: "unit-v4-no-liquidity",
+      pinnedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
+      capturedBaseBlock: FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock,
+      generatedAt: "2026-05-13T00:00:00.000Z",
+      source: "unit test",
+      reserveStates: [],
+      quoteTable: [
+        {
+          poolId: edge.poolId,
+          tokenIn: edge.tokenIn,
+          tokenOut: edge.tokenOut,
+          amountIn: "12345",
+          amountOut: "67890",
+          evidence: "recorded-state quote evidence",
+          priceImpact: {
+            preSwapPriceX18: "10",
+            postSwapPriceX18: null,
+            executionPriceX18: "9",
+            marketImpactBps: 1000,
+            method: "concentrated-liquidity-slot0",
+          },
+        },
+      ],
+      unsupportedQuotePools: [],
+    };
+    const quote = createSnapshotQuoteAdapter(recorded).quoteEdge({
+      edge,
+      amountIn: 12_345n,
+    });
+
+    if (quote.status === "quoted") {
+      assert.equal(quote.protocolEvidence?.activeLiquidity.status, "unavailable");
+      assert.match(
+        quote.protocolEvidence?.activeLiquidity.reason ?? "",
+        /does not include V4 StateView\.getLiquidity/,
+      );
     }
   });
 

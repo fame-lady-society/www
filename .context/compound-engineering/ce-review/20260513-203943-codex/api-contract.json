@@ -1,0 +1,47 @@
+{
+  "reviewer": "api-contract",
+  "findings": [
+    {
+      "title": "Non-ready quote responses do not match the shared quote union",
+      "severity": "P2",
+      "file": "src/app/api/fame/swap/quote/route.ts",
+      "line": 240,
+      "confidence": 0.91,
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "pre_existing": false,
+      "suggested_fix": "Serialize a JSON-safe form of the full FameSwapQuote discriminated union for every non-ready status, including the base tokenIn/tokenOut/requestedAmountIn fields and each variant's fields such as availableDirections or reason, while continuing to omit approval/swap data unless status is ready.",
+      "why_it_matters": "The endpoint is intended to be the shared quote boundary, but this branch returns a reduced ad-hoc object. The widget deserializer can paper over missing fields from the original request, yet any other consumer of /api/fame/swap/quote cannot consume the exported FameSwapQuote contract directly and loses status-specific data such as unsupported directions or simulation/stale reasons.",
+      "evidence": [
+        "src/app/api/fame/swap/quote/route.ts:240 returns only status, message, diagnosticsVisibleByDefault, readiness, and rejectedCandidates for every non-ready status.",
+        "src/features/fame-swap/solver/types.ts:79 defines FameSwapQuoteBase with tokenIn, tokenOut, requestedAmountIn, message, and diagnosticsVisibleByDefault for all quote variants.",
+        "src/features/fame-swap/solver/types.ts:114,119,140 require variant-specific fields such as availableDirections or reason that the API response branch drops."
+      ]
+    },
+    {
+      "title": "Ready quote response aliases materialized route hash and drops canonical hash fields",
+      "severity": "P2",
+      "file": "src/app/api/fame/swap/quote/route.ts",
+      "line": 269,
+      "confidence": 0.86,
+      "autofix_class": "gated_auto",
+      "owner": "downstream-resolver",
+      "requires_verification": true,
+      "pre_existing": false,
+      "suggested_fix": "Return top-level fixtureRouteHash and materializedRouteHash in the ready API response and parse them independently in useFameSwapQuote; keep routeHash only as a compatibility alias if needed.",
+      "why_it_matters": "The shared executable quote type distinguishes the fixture route hash from the materialized route hash, but the API exposes only routeHash and the hook assigns that single value to both fields. That collapses an important executable-contract distinction for consumers that need to audit whether the route they simulate or submit is the materialized route.",
+      "evidence": [
+        "src/app/api/fame/swap/quote/route.ts:269 emits routeHash: quote.materializedRouteHash instead of the canonical fixtureRouteHash and materializedRouteHash fields.",
+        "src/features/fame-swap/solver/types.ts:93 requires fixtureRouteHash and src/features/fame-swap/solver/types.ts:94 requires materializedRouteHash on FameSwapExecutableQuote.",
+        "src/features/fame-swap/hooks/useFameSwapQuote.ts:247 reads raw.routeHash as a fallback and lines 260-261 assign the same value to fixtureRouteHash and materializedRouteHash."
+      ]
+    }
+  ],
+  "residual_risks": [
+    "Live RPC behavior and wallet execution were not exercised; this review is limited to the tracked contract surface in the diff."
+  ],
+  "testing_gaps": [
+    "No API contract test asserts that ready and non-ready /api/fame/swap/quote JSON responses round-trip against the exported FameSwapQuote shape, including canonical hash fields and status-specific non-ready fields."
+  ]
+}

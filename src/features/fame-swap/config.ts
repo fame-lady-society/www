@@ -1,9 +1,12 @@
 import { isAddress, type Address, type Hex } from "viem";
+import { base } from "viem/chains";
+import { fameRouterAddress } from "@/wagmi";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "./artifacts/manifest";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./solver/slippage";
 
-export const DEFAULT_FAME_ROUTER_ADDRESS =
-  "0x13e0075EC96601AA90240d9e6D900C91AF764bBB" satisfies Address;
+export const DEFAULT_FAME_ROUTER_ADDRESS = fameRouterAddress[
+  base.id
+] satisfies Address;
 
 export interface FameSwapConfig {
   routerAddress: Address | null;
