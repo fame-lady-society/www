@@ -44,7 +44,7 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
     {
       family: "Slipstream2",
       familyOrdinal: 3,
-      target: "0xCbbb8035caC7D4B3Ca7ABb74Cf7bDF900215Ce0d",
+      target: "0xcbBb8035cAc7D4B3Ca7aBb74cF7BdF900215Ce0D",
     },
     {
       family: "Solidly",

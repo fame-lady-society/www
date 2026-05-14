@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { isAddress } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import {
@@ -64,6 +65,16 @@ function reader(snapshot: RouterPolicySnapshot): RouterPolicyReader {
 }
 
 describe("FAME swap readiness", () => {
+  it("keeps manifest venue targets strict-valid for viem live reads", () => {
+    for (const target of FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets) {
+      assert.equal(
+        isAddress(target.target),
+        true,
+        `${target.family} target must be lowercase or checksum-valid`,
+      );
+    }
+  });
+
   it("fails closed when public config is missing or mismatched", () => {
     assert.equal(
       staticReadiness(liveConfig({ routerAddress: null })).status,
