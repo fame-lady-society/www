@@ -178,6 +178,79 @@ export interface FameRouteGapMatrixFile {
   rows: FameRouteGapRow[];
 }
 
+export type FamePoolVenue =
+  | "solidly"
+  | "uniswap-v2"
+  | "aerodrome-slipstream"
+  | "aerodrome-slipstream2"
+  | "uniswap-v3"
+  | "uniswap-v4";
+
+export interface FamePoolBase {
+  id: string;
+  venue: FamePoolVenue;
+  router: Address;
+}
+
+export interface FameConstantProductPoolBase extends FamePoolBase {
+  pool: Address;
+  token0: Address;
+  token1: Address;
+}
+
+export interface FameSolidlyPoolConfig extends FameConstantProductPoolBase {
+  venue: "solidly";
+  stable: boolean;
+  feeBps: number;
+}
+
+export interface FameUniswapV2PoolConfig extends FameConstantProductPoolBase {
+  venue: "uniswap-v2";
+  feeBps: number;
+}
+
+export interface FameSlipstreamPoolConfig extends FameConstantProductPoolBase {
+  venue: "aerodrome-slipstream" | "aerodrome-slipstream2";
+  factory: Address;
+  tickSpacing: number;
+  feeBps: number;
+}
+
+export interface FameUniswapV3PoolConfig extends FameConstantProductPoolBase {
+  venue: "uniswap-v3";
+  fee: number;
+  tickSpacing: number;
+}
+
+export interface FameUniswapV4PoolConfig extends FamePoolBase {
+  venue: "uniswap-v4";
+  poolManager: Address;
+  stateView: Address;
+  poolId: Hex;
+  currency0: Address;
+  currency1: Address;
+  fee: number;
+  tickSpacing: number;
+  hooks: Address;
+  hookData?: Hex;
+}
+
+export type FamePoolConfig =
+  | FameSolidlyPoolConfig
+  | FameUniswapV2PoolConfig
+  | FameSlipstreamPoolConfig
+  | FameUniswapV3PoolConfig
+  | FameUniswapV4PoolConfig;
+
+export interface FamePoolUniverseFile {
+  schemaVersion: typeof FAME_SWAP_SCHEMA_VERSION;
+  status: string;
+  pinnedBaseBlock: number;
+  source: string;
+  pools: FamePoolConfig[];
+  pendingLaunchBlockingPools: string[];
+}
+
 export function routeFromJson(route: JsonFameRoute): FameRoute {
   return {
     version: route.version,

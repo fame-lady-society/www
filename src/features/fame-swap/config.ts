@@ -13,6 +13,8 @@ export interface FameSwapConfig {
   expectedSolverRoutesHash: Hex;
   expectedGapMatrixHash: Hex;
   expectedParityVectorsHash: Hex;
+  expectedPoolsHash: Hex;
+  expectedPoolStateSnapshotHash: Hex;
 }
 
 function envValue(value: string | undefined): string | undefined {
@@ -69,6 +71,14 @@ export function getFameSwapConfig(): FameSwapConfig {
     expectedParityVectorsHash: envHex(
       process.env.NEXT_PUBLIC_FAME_ROUTE_PARITY_VECTORS_HASH,
       FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    ),
+    expectedPoolsHash: envHex(
+      process.env.NEXT_PUBLIC_FAME_ROUTE_POOLS_HASH,
+      FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    ),
+    expectedPoolStateSnapshotHash: envHex(
+      process.env.NEXT_PUBLIC_FAME_POOL_STATE_SNAPSHOT_HASH,
+      FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
     ),
   };
 }

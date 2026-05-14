@@ -1,17 +1,24 @@
 import solverRoutesJson from "../artifacts/base-v1-solver-routes.json";
 import gapMatrixJson from "../artifacts/base-v1-route-gap-matrix.json";
+import poolsJson from "../artifacts/base-v1-pools.json";
+import poolStateSnapshotJson from "../artifacts/base-v1-pool-state-snapshot.json";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapRouteArtifactId } from "../artifacts/manifest";
 import type {
   FameRouteArtifact,
   FameRouteGapMatrixFile,
   FameRouteGapRow,
+  FamePoolUniverseFile,
   FameSolverRoutesFile,
 } from "../router/types";
+import type { FamePoolStateSnapshotFile } from "./quotes/snapshotAdapter";
 import type { FameSwapToken } from "../tokens";
 
 export const solverRoutesFile = solverRoutesJson as FameSolverRoutesFile;
 export const gapMatrixFile = gapMatrixJson as FameRouteGapMatrixFile;
+export const poolUniverseFile = poolsJson as FamePoolUniverseFile;
+export const poolStateSnapshotFile =
+  poolStateSnapshotJson as FamePoolStateSnapshotFile;
 
 const routeById = new Map<string, FameRouteArtifact>(
   solverRoutesFile.routes.map((route) => [route.id, route]),

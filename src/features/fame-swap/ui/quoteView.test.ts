@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { FAME, USDC, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
+import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
 import { fameSwapQuoteView, type FameSwapQuoteViewTransaction } from "./quoteView";
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
@@ -37,6 +38,10 @@ function transaction(
   };
 }
 
+function quoteAdapter() {
+  return createDeterministicQuoteAdapter();
+}
+
 describe("FAME swap quote view", () => {
   it("shows direct USDC input as the USDC estimate for buy FAME", () => {
     const quote = quoteWithReadyReadiness({
@@ -46,6 +51,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(quote, token(FAME), transaction());
 
@@ -64,6 +70,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(
       quote,
@@ -88,6 +95,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(quote, token(FAME), transaction());
 
@@ -103,6 +111,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const pendingView = fameSwapQuoteView(
       quote,
@@ -126,6 +135,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(quote, token(FAME), transaction());
 
@@ -148,10 +158,11 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(quote, token(FAME), transaction());
 
-    assert.equal(view.routeMap?.summary, "USDC -> ZORA -> basedflick -> FAME");
+    assert.equal(view.routeMap?.summary, "USDC -> frxUSD -> FAME");
     assert.doesNotMatch(view.routeMap?.summary ?? "", /0x/i);
   });
 
@@ -163,6 +174,7 @@ describe("FAME swap quote view", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
     const view = fameSwapQuoteView(
       quote,
@@ -172,5 +184,22 @@ describe("FAME swap quote view", () => {
 
     assert.equal(view.blocked, true);
     assert.match(view.freshnessLabel, /expired/i);
+  });
+
+  it("uses solver failure messages as blocked reasons", () => {
+    const quote = quoteWithReadyReadiness({
+      tokenIn: token(FAME),
+      tokenOut: token(USDC),
+      amountIn: artifactAmount("solver-fame-basedflick-zora-usdc") * 1_000n,
+      recipient,
+      routerAddress,
+      now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
+    });
+    const view = fameSwapQuoteView(quote, token(USDC), transaction());
+
+    assert.equal(quote.status, "no_safe_route");
+    assert.equal(view.blocked, true);
+    assert.match(view.blockedReason ?? "", /No safe FAME route/i);
   });
 });

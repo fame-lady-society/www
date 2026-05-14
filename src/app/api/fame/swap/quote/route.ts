@@ -11,7 +11,14 @@ import { FAME_SWAP_ARTIFACT_MANIFEST } from "@/features/fame-swap/artifacts/mani
 import { getFameSwapConfig } from "@/features/fame-swap/config";
 import { fameRouterAbi } from "@/features/fame-swap/router/abi";
 import { fameSwapTransactionRequests } from "@/features/fame-swap/transactions";
-import { quoteFameSwap } from "@/features/fame-swap/solver/quote";
+import {
+  quoteFameSwap,
+  quoteFameSwapAsync,
+} from "@/features/fame-swap/solver/quote";
+import {
+  createLiveLiquidityQuoteAdapter,
+  unavailableLiveAsyncQuoteAdapter,
+} from "@/features/fame-swap/solver/quotes/liveAdapters";
 import {
   liveReadiness,
   routerPolicyTargetKey,
@@ -127,6 +134,16 @@ async function readinessForQuote(routerAddress: Address | null) {
   return liveReadiness(config, reader);
 }
 
+function publicClientForQuote() {
+  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  if (!rpcUrl) return null;
+
+  return createPublicClient({
+    chain: base,
+    transport: http(rpcUrl),
+  });
+}
+
 export async function POST(request: NextRequest): Promise<Response> {
   let body: QuoteBody;
   try {
@@ -141,7 +158,11 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!body.tokenOut || !isAddress(body.tokenOut)) {
     return json({ error: "tokenOut must be an address." }, { status: 400 });
   }
-  if (!body.amountIn || !/^[0-9]+$/.test(body.amountIn)) {
+  if (
+    !body.amountIn ||
+    !/^[0-9]+$/.test(body.amountIn) ||
+    body.amountIn.length > 78
+  ) {
     return json(
       { error: "amountIn must be a raw integer string." },
       { status: 400 },
@@ -158,10 +179,18 @@ export async function POST(request: NextRequest): Promise<Response> {
     body.recipient && isAddress(body.recipient)
       ? (body.recipient as Address)
       : null;
-  const routerAddress =
-    body.routerAddress && isAddress(body.routerAddress)
-      ? (body.routerAddress as Address)
-      : getFameSwapConfig().routerAddress;
+  const configuredRouterAddress = getFameSwapConfig().routerAddress;
+  if (
+    body.routerAddress &&
+    (!isAddress(body.routerAddress) ||
+      body.routerAddress.toLowerCase() !== configuredRouterAddress?.toLowerCase())
+  ) {
+    return json(
+      { error: "routerAddress overrides are not supported." },
+      { status: 400 },
+    );
+  }
+  const routerAddress = configuredRouterAddress;
   const config = {
     ...getFameSwapConfig(),
     routerAddress,
@@ -170,7 +199,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     ),
   };
   const readiness = await readinessForQuote(routerAddress);
-  const quote = quoteFameSwap({
+  const quoteRequest = {
     tokenIn,
     tokenOut,
     amountIn: BigInt(body.amountIn),
@@ -181,7 +210,31 @@ export async function POST(request: NextRequest): Promise<Response> {
       typeof body.deadlineMinutes === "number"
         ? deadlineMinutesToSeconds(body.deadlineMinutes)
         : undefined,
-  });
+  };
+
+  const quoteClient = readiness.status === "ready" ? publicClientForQuote() : null;
+  const quote =
+    readiness.status === "ready"
+      ? await quoteFameSwapAsync({
+          ...quoteRequest,
+          adapter: quoteClient
+            ? await createLiveLiquidityQuoteAdapter({
+                client: {
+                  getBlockNumber: () => quoteClient.getBlockNumber(),
+                  readContract: (quoteRequest) =>
+                    quoteClient.readContract(
+                      quoteRequest as Parameters<
+                        typeof quoteClient.readContract
+                      >[0],
+                    ) as Promise<unknown>,
+                },
+                chainId: base.id,
+              })
+            : unavailableLiveAsyncQuoteAdapter(
+                "Base RPC is not configured for live liquidity quotes.",
+              ),
+        })
+      : quoteFameSwap(quoteRequest);
   const requests = fameSwapTransactionRequests(quote);
 
   if (quote.status !== "ready") {
@@ -190,6 +243,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       message: quote.message,
       diagnosticsVisibleByDefault: quote.diagnosticsVisibleByDefault,
       readiness: "readiness" in quote ? quote.readiness : undefined,
+      rejectedCandidates:
+        "rejectedCandidates" in quote ? quote.rejectedCandidates : undefined,
     });
   }
 
@@ -197,11 +252,24 @@ export async function POST(request: NextRequest): Promise<Response> {
     status: quote.status,
     message: quote.message,
     routeArtifactId: quote.routeArtifactId,
+    routeSource: quote.routeSource,
     routerAddress: quote.routerAddress,
     requestedAmountIn: quote.requestedAmountIn,
+    grossEstimatedOutput: quote.grossEstimatedOutput,
+    estimatedOutput: quote.estimatedOutput,
+    routerFeeAmount: quote.routerFeeAmount,
+    minAmountOutAfterFee: quote.minAmountOutAfterFee,
+    feeBreakdown: quote.feeBreakdown,
+    quoteContext: quote.quoteContext,
+    feePpm: quote.feePpm,
+    capabilities: quote.capabilities,
+    callValue: quote.callValue,
     slippageBps: quote.slippageBps,
     expiresAt: quote.expiresAt.toISOString(),
     routeHash: quote.materializedRouteHash as Hex,
+    poolIds: quote.poolIds,
+    warnings: quote.warnings,
+    rejectedCandidates: quote.rejectedCandidates,
     approval: requests.approval,
     swap: requests.swap,
     route: quote.route,

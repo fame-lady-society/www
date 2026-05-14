@@ -3,34 +3,39 @@ import {
   spawnSync,
   type ChildProcessWithoutNullStreams,
 } from "node:child_process";
-import { accessSync, constants, existsSync, readFileSync } from "node:fs";
+import { accessSync, constants, readFileSync } from "node:fs";
 import { createServer as createHttpServer, request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import {
   createPublicClient,
-  getContractAddress,
+  createWalletClient,
+  encodeAbiParameters,
   http,
   isAddress,
   keccak256,
   toHex,
   type Address,
+  type Hash,
   type Hex,
 } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import {
-  FAME_SWAP_ARTIFACT_MANIFEST,
-  type FameSwapRouteArtifactId,
-} from "../src/features/fame-swap/artifacts/manifest";
+import { FAME_SWAP_ARTIFACT_MANIFEST } from "../src/features/fame-swap/artifacts/manifest";
 import type { FameSwapConfig } from "../src/features/fame-swap/config";
 import { fameRouterAbi } from "../src/features/fame-swap/router/abi";
 import { fameRouteToCall } from "../src/features/fame-swap/router/callRoute";
 import { hashFameRoute } from "../src/features/fame-swap/router/encodeRoute";
-import { routeArtifactById } from "../src/features/fame-swap/solver/artifacts";
-import { quoteFameSwap } from "../src/features/fame-swap/solver/quote";
+import { erc20ApprovalAbi } from "../src/features/fame-swap/router/erc20Abi";
+import { quoteFameSwapAsync } from "../src/features/fame-swap/solver/quote";
+import { createLiveLiquidityQuoteAdapter } from "../src/features/fame-swap/solver/quotes/liveAdapters";
+import {
+  corpusTokenLabel,
+  FAME_ROUTE_CORPUS,
+  type FameRouteCorpusCase,
+} from "../src/features/fame-swap/solver/routeCorpus";
 import {
   liveReadiness,
   routerPolicyTargetKey,
@@ -42,16 +47,94 @@ import {
   applySlippageToAmount,
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
 } from "../src/features/fame-swap/solver/slippage";
-import { FAME, NATIVE_ETH, tokenForAddress } from "../src/features/fame-swap/tokens";
+import {
+  FAME,
+  NATIVE_ETH,
+  USDC,
+  WETH,
+  tokenForAddress,
+} from "../src/features/fame-swap/tokens";
 
 const ANVIL_LOCAL_HOST = "127.0.0.1";
 const DEFAULT_ANVIL_BIND_HOST = ANVIL_LOCAL_HOST;
+const LOCAL_RPC_TIMEOUT_MS = 90_000;
+const LOCAL_RPC_RETRY_ATTEMPTS = 4;
 const DEFAULT_FORK_ACCOUNT =
   "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" as const satisfies Address;
 const DEFAULT_FORK_PRIVATE_KEY =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-const DEFAULT_ROUTE_ID =
-  "solver-eth-zora-basedflick-fame" as const satisfies FameSwapRouteArtifactId;
+const DEFAULT_FORK_CASE_IDS = [
+  "usdc-fame-five-dollars",
+  "fame-usdc-fixture",
+  "weth-fame-small-direct",
+  "fame-weth-fixture",
+  "eth-fame-fixture",
+  "fame-eth-fixture",
+] as const;
+const FAME_DN404_STORAGE_SLOT = 0xa20d6e21d0e5255308n;
+const FAME_DN404_ADDRESS_DATA_MAPPING_SLOT = FAME_DN404_STORAGE_SLOT + 11n;
+const FAME_DN404_ADDRESS_DATA_BALANCE_SHIFT = 160n;
+const FAME_DN404_ADDRESS_DATA_LOWER_MASK =
+  (1n << FAME_DN404_ADDRESS_DATA_BALANCE_SHIFT) - 1n;
+const UINT96_MAX = (1n << 96n) - 1n;
+const fameRouterDeploymentAbi = [
+  {
+    type: "constructor",
+    stateMutability: "payable",
+    inputs: [{ name: "initialFeeRecipient", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "setVenueFamilyEnabled",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "family", type: "uint8" },
+      { name: "enabled", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setVenueTargetEnabled",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "family", type: "uint8" },
+      { name: "target", type: "address" },
+      { name: "enabled", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setV4HookDataHashEnabled",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "hookDataKey", type: "bytes32" },
+      { name: "enabled", type: "bool" },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const erc20BalanceAbi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "balance", type: "uint256" }],
+  },
+] as const;
+
+const wethDepositAbi = [
+  {
+    type: "function",
+    name: "deposit",
+    stateMutability: "payable",
+    inputs: [],
+    outputs: [],
+  },
+] as const;
 
 interface ArtifactHashExpectation {
   path: string;
@@ -65,13 +148,21 @@ interface ChainProbeClient {
 }
 
 interface DeploymentClient {
-  getTransactionCount(parameters: { address: Address }): Promise<number>;
   getCode(parameters: { address: Address }): Promise<Hex | undefined>;
+  waitForTransactionReceipt(parameters: {
+    hash: Hash;
+  }): Promise<{ status: "success" | "reverted"; contractAddress?: Address | null }>;
   readContract(parameters: {
     address: Address;
     abi: typeof fameRouterAbi;
     functionName: "feePpm";
   }): Promise<bigint | number>;
+}
+
+interface FameRouterArtifact {
+  bytecode: {
+    object: Hex;
+  };
 }
 
 interface RouterPolicyReadClient {
@@ -96,15 +187,6 @@ interface RpcProxy {
   close(): Promise<void>;
 }
 
-interface FoundryBroadcastTransaction {
-  contractAddress?: string;
-  contractName?: string;
-}
-
-interface FoundryBroadcast {
-  transactions?: FoundryBroadcastTransaction[];
-}
-
 function envValue(name: string): string | null {
   const value = process.env[name]?.trim();
   return value && value.length > 0 ? value : null;
@@ -113,6 +195,36 @@ function envValue(name: string): string | null {
 function envAddress(name: string): Address | null {
   const value = envValue(name);
   return value && isAddress(value) ? value : null;
+}
+
+function logProgress(message: string): void {
+  console.log(`Fork smoke: ${message}`);
+}
+
+function selectedForkCases(): readonly FameRouteCorpusCase[] {
+  const casesById = new Map(FAME_ROUTE_CORPUS.map((entry) => [entry.id, entry]));
+  const requested = envValue("FAME_SWAP_FORK_CASES");
+  const ids =
+    requested && requested.toLowerCase() !== "default"
+      ? requested.toLowerCase() === "all"
+        ? FAME_ROUTE_CORPUS.map((entry) => entry.id)
+        : requested
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => id.length > 0)
+      : [...DEFAULT_FORK_CASE_IDS];
+
+  if (ids.length === 0) {
+    throw new Error("FAME_SWAP_FORK_CASES did not include any case ids.");
+  }
+
+  return ids.map((id) => {
+    const entry = casesById.get(id);
+    if (!entry) {
+      throw new Error(`Unknown FAME_SWAP_FORK_CASES id: ${id}.`);
+    }
+    return entry;
+  });
 }
 
 function childEnv(extra: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
@@ -178,33 +290,16 @@ function fameContractsDir(): string {
   return resolve(envValue("FAME_CONTRACTS_DIR") ?? "../fame-contracts");
 }
 
-function deployedRouterFromBroadcast(broadcastDir: string): Address | null {
-  const latestRunPath = resolve(broadcastDir, "run-latest.json");
-  if (!existsSync(latestRunPath)) return null;
-
-  const broadcast = JSON.parse(
-    readFileSync(latestRunPath, "utf8"),
-  ) as FoundryBroadcast;
-  const routerTransaction = broadcast.transactions?.find(
-    (transaction) =>
-      transaction.contractName === "FameRouter" &&
-      transaction.contractAddress &&
-      isAddress(transaction.contractAddress),
-  );
-  if (routerTransaction?.contractAddress) {
-    return routerTransaction.contractAddress as Address;
-  }
-
-  return null;
-}
-
-function uniqueAddresses(addresses: Array<Address | null>): Address[] {
-  const unique = new Map<string, Address>();
-  for (const address of addresses) {
-    if (!address) continue;
-    unique.set(address.toLowerCase(), address);
-  }
-  return [...unique.values()];
+function createForkWallet(anvilUrl: string) {
+  return createWalletClient({
+    account: privateKeyToAccount(DEFAULT_FORK_PRIVATE_KEY),
+    chain: base,
+    transport: http(anvilUrl, {
+      retryCount: 5,
+      retryDelay: 1_000,
+      timeout: LOCAL_RPC_TIMEOUT_MS,
+    }),
+  });
 }
 
 async function isRouterCandidate(
@@ -266,14 +361,55 @@ function wait(milliseconds: number): Promise<void> {
   });
 }
 
+function timeoutAfter<T>(label: string, milliseconds: number): Promise<T> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`${label} timed out after ${milliseconds.toString()}ms.`));
+    }, milliseconds);
+  });
+}
+
+async function retryLocalRpc<T>(
+  label: string,
+  operation: () => Promise<T>,
+  attempts = LOCAL_RPC_RETRY_ATTEMPTS,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await Promise.race([
+        operation(),
+        timeoutAfter<T>(label, LOCAL_RPC_TIMEOUT_MS),
+      ]);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(1_000 * attempt);
+      }
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`${label} failed: ${displaySafeProcessOutput(message)}`);
+}
+
 async function waitForRpc(
   client: ChainProbeClient,
   expectedForkBlock: number | null,
+  anvil: ChildProcessWithoutNullStreams,
+  anvilOutput: () => string,
 ): Promise<void> {
-  const timeoutAt = Date.now() + 20_000;
+  const timeoutAt = Date.now() + 90_000;
   let lastError: Error | null = null;
 
   while (Date.now() < timeoutAt) {
+    if (anvil.exitCode !== null) {
+      const detail = anvilOutput();
+      throw new Error(
+        `Anvil exited before its RPC was ready.${detail ? `\n${detail}` : ""}`,
+      );
+    }
+
     try {
       await client.getChainId();
       const blockNumber = await client.getBlockNumber();
@@ -287,7 +423,26 @@ async function waitForRpc(
     }
   }
 
-  throw lastError ?? new Error("Timed out waiting for anvil RPC.");
+  const detail = anvilOutput();
+  throw new Error(
+    [
+      lastError?.message ?? "Timed out waiting for anvil RPC.",
+      detail,
+    ]
+      .filter((value) => value && value.length > 0)
+      .join("\n"),
+  );
+}
+
+function displaySafeProcessOutput(output: string): string {
+  return output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(-12)
+    .join("\n")
+    .replace(/https?:\/\/\S+/g, "[redacted-url]")
+    .replace(/0x[a-fA-F0-9]{96,}/g, "[redacted-hex]");
 }
 
 async function startRpcProxy(upstreamUrl: string): Promise<RpcProxy> {
@@ -389,6 +544,7 @@ async function stopAnvil(anvil: ChildProcessWithoutNullStreams): Promise<void> {
 }
 
 async function verifyArtifactHashes(): Promise<void> {
+  logProgress("verifying artifact hashes");
   const expectations: ArtifactHashExpectation[] = [
     {
       path: "src/features/fame-swap/artifacts/base-v1-solver-routes.json",
@@ -404,6 +560,16 @@ async function verifyArtifactHashes(): Promise<void> {
       path: "src/features/fame-swap/artifacts/base-v1-route-parity-vectors.json",
       expected: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
       label: "parity vectors",
+    },
+    {
+      path: "src/features/fame-swap/artifacts/base-v1-pools.json",
+      expected: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+      label: "pool universe",
+    },
+    {
+      path: "src/features/fame-swap/artifacts/base-v1-pool-state-snapshot.json",
+      expected: FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
+      label: "recorded pool state",
     },
   ];
 
@@ -428,6 +594,9 @@ function buildConfig(routerAddress: Address): FameSwapConfig {
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
     expectedParityVectorsHash:
       FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    expectedPoolStateSnapshotHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
   };
 }
 
@@ -509,131 +678,93 @@ async function deployLocalRouter(
   client: DeploymentClient,
   anvilUrl: string,
 ): Promise<Address> {
-  const forgePath = findExecutable("forge");
-  if (!forgePath) {
-    throw new Error(
-      "FAME router address is unset and forge is unavailable; install Foundry or set FAME_ROUTER_ADDRESS.",
-    );
-  }
-
-  const deployerNonce = await client.getTransactionCount({
-    address: DEFAULT_FORK_ACCOUNT,
-  });
-  const firstDeployerCreateAddress = getContractAddress({
-    from: DEFAULT_FORK_ACCOUNT,
-    nonce: BigInt(deployerNonce),
-  });
-  const predictedCodeBefore = await client.getCode({
-    address: firstDeployerCreateAddress,
-  });
-
-  const contractsDir = fameContractsDir();
-  const broadcastDir = resolve(
-    contractsDir,
-    "broadcast",
-    "DeployFameRouter.s.sol",
-    base.id.toString(),
+  logProgress("deploying local router");
+  const artifactPath = resolve(
+    fameContractsDir(),
+    "out",
+    "FameRouter.sol",
+    "FameRouter.json",
   );
-  const broadcastExisted = existsSync(broadcastDir);
-  const tempRoot = await mkdtemp(resolve(tmpdir(), "fame-swap-forge-"));
-  let broadcastRouterAddress: Address | null = null;
+  const artifact = JSON.parse(
+    readFileSync(artifactPath, "utf8"),
+  ) as FameRouterArtifact;
+  const wallet = createForkWallet(anvilUrl);
 
-  try {
-    const forgeArgs = [
-      "script",
-      "script/DeployFameRouter.s.sol:DeployFameRouter",
-      "--rpc-url",
-      anvilUrl,
-      "--broadcast",
-      "--slow",
-      "--non-interactive",
-      "--skip-simulation",
-      "--timeout",
-      "120",
-      "--cache-path",
-      resolve(tempRoot, "cache"),
-      "--out",
-      resolve(tempRoot, "out"),
-    ];
-    if (envValue("FAME_SWAP_DEBUG_FORGE") !== "1") {
-      forgeArgs.push("--quiet");
-    }
-
-    const result = spawnSync(
-      forgePath,
-      forgeArgs,
-      {
-        cwd: contractsDir,
-        encoding: "utf8",
-        env: childEnv({
-          BASE_DEPLOYER_PRIVATE_KEY: DEFAULT_FORK_PRIVATE_KEY,
-          BASE_FAME_ROUTER_FEE_RECIPIENT: DEFAULT_FORK_ACCOUNT,
-          BASE_FAME_ROUTER_OWNER: DEFAULT_FORK_ACCOUNT,
-          BASE_FAME_ROUTER_FEE_PPM: "2222",
-        }),
-      },
+  async function waitForSuccess(hash: Hash, label: string): Promise<Address | null> {
+    const receipt = await retryLocalRpc(label, () =>
+      client.waitForTransactionReceipt({ hash }),
     );
-
-    if (envValue("FAME_SWAP_DEBUG_FORGE") === "1") {
-      console.error(result.stdout.trim());
-      console.error(result.stderr.trim());
+    if (receipt.status !== "success") {
+      throw new Error(`${label} reverted on the local fork.`);
     }
-
-    if (result.status !== 0) {
-      const detail = [result.stdout.trim(), result.stderr.trim()]
-        .filter((value) => value.length > 0)
-        .join("\n");
-      throw new Error(
-        `Local FAME router deployment failed.${detail ? `\n${detail}` : ""}`,
-      );
-    }
-
-    broadcastRouterAddress = deployedRouterFromBroadcast(broadcastDir);
-  } finally {
-    await rm(tempRoot, { recursive: true, force: true });
-    if (!broadcastExisted) {
-      await rm(broadcastDir, { recursive: true, force: true });
-    }
+    return receipt.contractAddress ?? null;
   }
 
-  const deployerCreateAddresses = Array.from({ length: 8 }, (_, offset) =>
-    getContractAddress({
-      from: DEFAULT_FORK_ACCOUNT,
-      nonce: BigInt(deployerNonce + offset),
+  const deployHash = await retryLocalRpc("Deploy FAME router", () =>
+    wallet.deployContract({
+      abi: fameRouterDeploymentAbi,
+      bytecode: artifact.bytecode.object,
+      args: [DEFAULT_FORK_ACCOUNT],
     }),
   );
-  const scriptCreateAddresses = [0n, 1n, 2n].map((nonce) =>
-    getContractAddress({
-      from: firstDeployerCreateAddress,
-      nonce,
-    }),
-  );
-  const candidateAddresses = uniqueAddresses([
-    broadcastRouterAddress,
-    ...scriptCreateAddresses,
-    ...deployerCreateAddresses,
-    predictedCodeBefore && predictedCodeBefore !== "0x"
-      ? null
-      : firstDeployerCreateAddress,
-  ]);
-  let routerAddress: Address | null = null;
-  for (const candidateAddress of candidateAddresses) {
-    if (await isRouterCandidate(client, candidateAddress)) {
-      routerAddress = candidateAddress;
-      break;
-    }
-  }
+  const routerAddress = await waitForSuccess(deployHash, "FAME router deploy");
 
   if (!routerAddress) {
-    throw new Error(
-      "Local FAME router deployment completed, but the deployed router address could not be found.",
+    throw new Error("Local FAME router deployment did not return an address.");
+  }
+  logProgress(`local router deployed at ${routerAddress}`);
+
+  for (const target of FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets) {
+    logProgress(`enabling venue family ${target.family}`);
+    await waitForSuccess(
+      await retryLocalRpc(`Enable venue family ${target.family}`, () =>
+        wallet.writeContract({
+          address: routerAddress,
+          abi: fameRouterDeploymentAbi,
+          functionName: "setVenueFamilyEnabled",
+          args: [target.familyOrdinal, true],
+        }),
+      ),
+      `Enable venue family ${target.family}`,
     );
+    logProgress(`enabling venue target ${target.family}:${target.target}`);
+    await waitForSuccess(
+      await retryLocalRpc(`Enable venue target ${target.family}`, () =>
+        wallet.writeContract({
+          address: routerAddress,
+          abi: fameRouterDeploymentAbi,
+          functionName: "setVenueTargetEnabled",
+          args: [target.familyOrdinal, target.target, true],
+        }),
+      ),
+      `Enable venue target ${target.family}:${target.target}`,
+    );
+  }
+
+  for (const hookDataKey of FAME_SWAP_ARTIFACT_MANIFEST.requiredV4HookDataKeys) {
+    logProgress(`enabling V4 hook data ${hookDataKey}`);
+    await waitForSuccess(
+      await retryLocalRpc(`Enable V4 hook data ${hookDataKey}`, () =>
+        wallet.writeContract({
+          address: routerAddress,
+          abi: fameRouterDeploymentAbi,
+          functionName: "setV4HookDataHashEnabled",
+          args: [hookDataKey, true],
+        }),
+      ),
+      `Enable V4 hook data ${hookDataKey}`,
+    );
+  }
+
+  if (!(await isRouterCandidate(client, routerAddress))) {
+    throw new Error("Local FAME router deployment did not pass readiness probes.");
   }
 
   return routerAddress;
 }
 
 async function main(): Promise<void> {
+  logProgress("starting");
   const rpcUrl = envValue("BASE_RPC_URL") ?? envValue("NEXT_PUBLIC_BASE_RPC_URL_1");
   if (!rpcUrl) {
     throw new Error(
@@ -658,14 +789,25 @@ async function main(): Promise<void> {
   }
 
   const allowRpcProcessArg = envValue("FAME_SWAP_ALLOW_RPC_URL_PROCESS_ARG") === "1";
+  logProgress(
+    allowRpcProcessArg ? "using RPC URL as Anvil argument" : "starting loopback RPC proxy",
+  );
   const proxy = allowRpcProcessArg ? null : await startRpcProxy(rpcUrl);
+  if (proxy) {
+    logProgress("loopback RPC proxy ready");
+  }
   const bindHost = anvilBindHost();
   const publicHost = anvilPublicHost(bindHost);
+  logProgress(`allocating Anvil port on ${bindHost}`);
   const port = await findOpenPort(bindHost);
   const anvilUrl = `http://${ANVIL_LOCAL_HOST}:${port}`;
   const publicAnvilUrl = `http://${hostForUrl(publicHost)}:${port}`;
   const forkBlockArgs =
     forkBlock === null ? [] : ["--fork-block-number", forkBlock.toString()];
+  const debugAnvil = envValue("FAME_SWAP_DEBUG_ANVIL") === "1";
+  logProgress(
+    `starting Anvil fork at ${forkBlock === null ? "latest" : forkBlock.toString()}`,
+  );
   const anvil = spawn(
     anvilPath,
     [
@@ -679,20 +821,34 @@ async function main(): Promise<void> {
       "--no-storage-caching",
       "--chain-id",
       base.id.toString(),
-      "--silent",
+      ...(debugAnvil ? [] : ["--silent"]),
     ],
     {
       env: childEnv(),
     },
   );
+  let anvilOutput = "";
+  const appendAnvilOutput = (chunk: Buffer) => {
+    anvilOutput = `${anvilOutput}${chunk.toString("utf8")}`.slice(-8_000);
+  };
+  anvil.stdout.on("data", appendAnvilOutput);
+  anvil.stderr.on("data", appendAnvilOutput);
 
   const client = createPublicClient({
     chain: base,
-    transport: http(anvilUrl, { timeout: 120_000 }),
+    transport: http(anvilUrl, {
+      retryCount: 5,
+      retryDelay: 1_000,
+      timeout: LOCAL_RPC_TIMEOUT_MS,
+    }),
   });
 
   try {
-    await waitForRpc(client, forkBlock);
+    logProgress("waiting for Anvil RPC");
+    await waitForRpc(client, forkBlock, anvil, () =>
+      displaySafeProcessOutput(anvilOutput),
+    );
+    logProgress("Anvil RPC ready");
 
     const configuredRouterAddress =
       envValue("FAME_SWAP_IGNORE_CONFIGURED_ROUTER") === "1"
@@ -701,6 +857,9 @@ async function main(): Promise<void> {
           envAddress("FAME_ROUTER_ADDRESS");
     const routerAddress =
       configuredRouterAddress ?? (await deployLocalRouter(client, anvilUrl));
+    if (configuredRouterAddress) {
+      logProgress(`using configured router ${routerAddress}`);
+    }
 
     const config = buildConfig(routerAddress);
     const policyClient: RouterPolicyReadClient = {
@@ -752,68 +911,285 @@ async function main(): Promise<void> {
       return;
     }
 
-    const artifact = routeArtifactById(DEFAULT_ROUTE_ID);
-    const tokenIn = tokenForAddress(NATIVE_ETH);
-    const tokenOut = tokenForAddress(FAME);
-    if (!artifact || !tokenIn || !tokenOut) {
-      throw new Error("Pinned native ETH -> FAME route artifact or token metadata is missing.");
+    const quoteAdapter = await createLiveLiquidityQuoteAdapter({
+      client: {
+        getBlockNumber: () => client.getBlockNumber(),
+        readContract: (request) =>
+          client.readContract(
+            request as Parameters<typeof client.readContract>[0],
+          ) as Promise<unknown>,
+      },
+      chainId: base.id,
+      contextSource: "fork",
+      forkUrlLabel: "local-anvil",
+      readTimeoutMs: 30_000,
+    });
+    const wallet = createForkWallet(anvilUrl);
+    const forkRequest = (method: string, params: unknown[] = []) =>
+      (client as unknown as {
+        request(request: { method: string; params?: unknown[] }): Promise<unknown>;
+      }).request({ method, params });
+    const tokenBalanceSlotCache = new Map<Address, Hex>();
+
+    async function waitForSuccess(hash: Hash, label: string): Promise<void> {
+      const receipt = await retryLocalRpc(label, () =>
+        client.waitForTransactionReceipt({ hash }),
+      );
+      if (receipt.status !== "success") {
+        throw new Error(`${label} reverted on the local fork.`);
+      }
     }
 
-    const quote = quoteFameSwap({
-      tokenIn,
-      tokenOut,
-      amountIn: BigInt(artifact.route.amountIn) + 1n,
-      recipient: DEFAULT_FORK_ACCOUNT,
-      config,
-      readiness,
-      now: new Date(),
-    });
-
-    if (quote.status !== "ready") {
-      throw new Error(`Fork quote blocked with status ${quote.status}: ${quote.message}`);
+    async function readTokenBalance(tokenAddress: Address): Promise<bigint> {
+      return client.readContract({
+        address: tokenAddress,
+        abi: erc20BalanceAbi,
+        functionName: "balanceOf",
+        args: [DEFAULT_FORK_ACCOUNT],
+      }) as Promise<bigint>;
     }
 
-    const probeSimulation = await client.simulateContract({
-      account: DEFAULT_FORK_ACCOUNT,
-      address: quote.routerAddress,
-      abi: fameRouterAbi,
-      functionName: "executeRoute",
-      args: [fameRouteToCall(quote.route)],
-      value: quote.callValue,
-    });
-    const protectedMinimum = applySlippageToAmount(
-      probeSimulation.result,
-      quote.slippageBps,
-    );
-    const protectedRoute = {
-      ...quote.route,
-      minAmountOutAfterFee: protectedMinimum,
-    };
-    const protectedRouteHash = hashFameRoute(protectedRoute);
-    const protectedSimulation = await client.simulateContract({
-      account: DEFAULT_FORK_ACCOUNT,
-      address: quote.routerAddress,
-      abi: fameRouterAbi,
-      functionName: "executeRoute",
-      args: [fameRouteToCall(protectedRoute)],
-      value: quote.callValue,
-    });
+    async function setStorageAt(
+      address: Address,
+      slot: Hex,
+      value: Hex,
+    ): Promise<void> {
+      await retryLocalRpc("anvil_setStorageAt", () =>
+        forkRequest("anvil_setStorageAt", [address, slot, value]),
+      );
+      await retryLocalRpc("evm_mine", () => forkRequest("evm_mine"));
+    }
+
+    async function storageAt(address: Address, slot: Hex): Promise<Hex> {
+      const value = (await retryLocalRpc("eth_getStorageAt", () =>
+        forkRequest("eth_getStorageAt", [address, slot, "latest"]),
+      )) as Hex | undefined;
+      return value && value !== "0x" ? value : toHex(0n, { size: 32 });
+    }
+
+    async function seedFameBalance(amount: bigint): Promise<void> {
+      if (amount > UINT96_MAX) {
+        throw new Error("FAME fork seed amount exceeds DN404 uint96 balance storage.");
+      }
+      if ((await readTokenBalance(FAME)) >= amount) return;
+
+      const storageSlot = keccak256(
+        encodeAbiParameters(
+          [{ type: "address" }, { type: "uint256" }],
+          [DEFAULT_FORK_ACCOUNT, FAME_DN404_ADDRESS_DATA_MAPPING_SLOT],
+        ),
+      );
+      const currentValue = BigInt(await storageAt(FAME, storageSlot));
+      const updatedValue =
+        (currentValue & FAME_DN404_ADDRESS_DATA_LOWER_MASK) |
+        (amount << FAME_DN404_ADDRESS_DATA_BALANCE_SHIFT);
+
+      await setStorageAt(FAME, storageSlot, toHex(updatedValue, { size: 32 }));
+      if ((await readTokenBalance(FAME)) < amount) {
+        throw new Error("Could not seed DN404 FAME balance on the local fork.");
+      }
+    }
+
+    async function seedTokenBalance(
+      tokenAddress: Address,
+      amount: bigint,
+    ): Promise<void> {
+      if ((await readTokenBalance(tokenAddress)) >= amount) return;
+      if (tokenAddress === FAME) {
+        await seedFameBalance(amount);
+        return;
+      }
+
+      const cachedSlot = tokenBalanceSlotCache.get(tokenAddress);
+      if (cachedSlot) {
+        await setStorageAt(tokenAddress, cachedSlot, toHex(amount, { size: 32 }));
+        if ((await readTokenBalance(tokenAddress)) >= amount) return;
+        tokenBalanceSlotCache.delete(tokenAddress);
+      }
+
+      for (let slot = 0n; slot < 200n; slot += 1n) {
+        const storageSlot = keccak256(
+          encodeAbiParameters(
+            [{ type: "address" }, { type: "uint256" }],
+            [DEFAULT_FORK_ACCOUNT, slot],
+          ),
+        );
+        const original = await storageAt(tokenAddress, storageSlot);
+
+        await setStorageAt(tokenAddress, storageSlot, toHex(amount, { size: 32 }));
+        if ((await readTokenBalance(tokenAddress)) >= amount) {
+          tokenBalanceSlotCache.set(tokenAddress, storageSlot);
+          return;
+        }
+        await setStorageAt(
+          tokenAddress,
+          storageSlot,
+          original === "0x" ? toHex(0n, { size: 32 }) : original,
+        );
+      }
+
+      throw new Error(`Could not seed ERC20 balance for ${tokenAddress}.`);
+    }
+
+    async function prepareInputBalance(
+      entry: FameRouteCorpusCase,
+    ): Promise<void> {
+      if (entry.tokenIn === NATIVE_ETH) return;
+      if (entry.tokenIn === WETH) {
+        const balance = await readTokenBalance(WETH);
+        if (balance < entry.amountIn) {
+          await waitForSuccess(
+            await retryLocalRpc("Deposit WETH", () =>
+              wallet.writeContract({
+                address: WETH,
+                abi: wethDepositAbi,
+                functionName: "deposit",
+                value: entry.amountIn - balance,
+              }),
+            ),
+            "Deposit WETH",
+          );
+        }
+        return;
+      }
+      if (entry.tokenIn === USDC || entry.tokenIn === FAME) {
+        await seedTokenBalance(entry.tokenIn, entry.amountIn);
+        return;
+      }
+      throw new Error(`No fork seeding strategy for ${corpusTokenLabel(entry.tokenIn)}.`);
+    }
+
+    async function proveForkCase(entry: FameRouteCorpusCase) {
+      const tokenIn = tokenForAddress(entry.tokenIn);
+      const tokenOut = tokenForAddress(entry.tokenOut);
+      if (!tokenIn || !tokenOut) {
+        throw new Error(`Unsupported fork corpus token for ${entry.id}.`);
+      }
+
+      const quote = await quoteFameSwapAsync({
+        tokenIn,
+        tokenOut,
+        amountIn: entry.amountIn,
+        recipient: DEFAULT_FORK_ACCOUNT,
+        config,
+        readiness,
+        now: new Date(),
+        adapter: quoteAdapter,
+      });
+
+      if (quote.status !== "ready") {
+        const rejectionDetail =
+          "rejectedCandidates" in quote
+            ? quote.rejectedCandidates
+                .slice(0, 5)
+                .map((candidate) => `${candidate.reason}: ${candidate.message}`)
+                .join(" / ")
+            : "";
+        throw new Error(
+          `Fork quote ${entry.id} blocked with status ${quote.status}: ${
+            quote.message
+          }${rejectionDetail ? ` ${rejectionDetail}` : ""}`,
+        );
+      }
+
+      await prepareInputBalance(entry);
+      const approval = quote.approval;
+      if (approval) {
+        await waitForSuccess(
+          await retryLocalRpc(`Approve ${entry.id}`, () =>
+            wallet.writeContract({
+              address: approval.token.address,
+              abi: erc20ApprovalAbi,
+              functionName: "approve",
+              args: [approval.spender, approval.amount],
+            }),
+          ),
+          `Approve ${entry.id}`,
+        );
+      }
+
+      const probeSimulation = await retryLocalRpc(`Probe ${entry.id}`, () =>
+        client.simulateContract({
+          account: DEFAULT_FORK_ACCOUNT,
+          address: quote.routerAddress,
+          abi: fameRouterAbi,
+          functionName: "executeRoute",
+          args: [fameRouteToCall(quote.route)],
+          value: quote.callValue,
+        }),
+      );
+      const protectedMinimum = applySlippageToAmount(
+        probeSimulation.result,
+        quote.slippageBps,
+      );
+      const protectedRoute = {
+        ...quote.route,
+        minAmountOutAfterFee: protectedMinimum,
+      };
+      const protectedRouteHash = hashFameRoute(protectedRoute);
+      const protectedSimulation = await retryLocalRpc(`Protected probe ${entry.id}`, () =>
+        client.simulateContract({
+          account: DEFAULT_FORK_ACCOUNT,
+          address: quote.routerAddress,
+          abi: fameRouterAbi,
+          functionName: "executeRoute",
+          args: [fameRouteToCall(protectedRoute)],
+          value: quote.callValue,
+        }),
+      );
+
+      return {
+        id: entry.id,
+        pair: `${corpusTokenLabel(entry.tokenIn)}->${corpusTokenLabel(entry.tokenOut)}`,
+        route: quote.routeArtifactId,
+        routeHash: protectedRouteHash,
+        output: protectedSimulation.result,
+        protectedMinimum,
+        pools: quote.poolIds,
+        quoteContext:
+          quote.quoteContext?.source === "fork"
+            ? `fork:${quote.quoteContext.chainId}:${quote.quoteContext.blockNumber.toString()}`
+            : "fork:n/a",
+      };
+    }
+
+    const proofRows: Array<Awaited<ReturnType<typeof proveForkCase>>> = [];
+    const forkCases = selectedForkCases();
+    logProgress(`selected ${forkCases.length.toString()} fork case(s)`);
+    for (const entry of forkCases) {
+      console.log(
+        `Fork smoke case: ${entry.id} (${corpusTokenLabel(entry.tokenIn)}->${corpusTokenLabel(
+          entry.tokenOut,
+        )})`,
+      );
+      proofRows.push(await proveForkCase(entry));
+    }
 
     console.log("FAME swap fork smoke passed");
-    console.log(`Router: ${quote.routerAddress}`);
-    console.log(`Route: ${quote.routeArtifactId}`);
-    console.log(`Materialized route hash: ${protectedRouteHash}`);
+    console.log(`Router: ${routerAddress}`);
     console.log(`Fork RPC: ${publicAnvilUrl}`);
+    console.log(`Cases: ${forkCases.map((entry) => entry.id).join(",")}`);
     if (bindHost !== ANVIL_LOCAL_HOST) {
       console.log(`Anvil bind host: ${bindHost}`);
     }
-    console.log(`Probe output: ${probeSimulation.result.toString()}`);
-    console.log(`Protected minimum: ${protectedMinimum.toString()}`);
-    console.log(`Protected output: ${protectedSimulation.result.toString()}`);
+    for (const row of proofRows) {
+      console.log(
+        [
+          `Case: ${row.id}`,
+          `Pair: ${row.pair}`,
+          `Route: ${row.route}`,
+          `Pools: ${row.pools.join(",")}`,
+          `Quote context: ${row.quoteContext}`,
+          `Route hash: ${row.routeHash}`,
+          `Protected minimum: ${row.protectedMinimum.toString()}`,
+          `Protected output: ${row.output.toString()}`,
+        ].join(" | "),
+      );
+    }
 
     await keepForkAliveIfRequested(
       publicAnvilUrl,
-      quote.routerAddress,
+      routerAddress,
       config.defaultSlippageBps,
     );
   } finally {

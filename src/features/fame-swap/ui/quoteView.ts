@@ -96,7 +96,7 @@ function buildRouteMap(quote: FameSwapQuote): FameSwapRouteMap | null {
   if (quote.status !== "ready") return null;
 
   const edges = quote.route.legs.map((leg, index) => {
-    const poolId = quote.artifact.poolIds[index];
+    const poolId = quote.poolIds[index];
 
     return {
       id: `${index}-${leg.venue}-${leg.amountMode}`,
@@ -184,6 +184,9 @@ function blockedReason(
   if (quote.status === "not_live_ready") return quote.readiness.message;
   if (quote.status === "stale_artifact") return quote.reason;
   if (quote.status === "unsupported") return quote.message;
+  if (quote.status === "no_safe_route") return quote.message;
+  if (quote.status === "quote_adapter_failure") return quote.message;
+  if (quote.status === "simulation_failure") return quote.message;
   if (transaction.error) return transaction.error.message;
   return null;
 }

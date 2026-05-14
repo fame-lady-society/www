@@ -56,40 +56,20 @@ describe("FAME route materialization", () => {
     assert.equal(payload.deadline, deadline);
   });
 
-  it("scales exact route amounts and V4 payload policy for arbitrary input", () => {
+  it("removes arbitrary fixture scaling entirely", () => {
     const artifact = routeArtifactById("solver-fame-basedflick-zora-usdc");
     assert.ok(artifact);
     const fixtureAmountIn = BigInt(artifact.route.amountIn);
     const requestedAmountIn = fixtureAmountIn + 12_345n;
 
-    const materialized = materializeFameRoute(
-      artifact.route,
-      routerAddress,
-      recipient,
-      deadline,
-      {
-        amountIn: requestedAmountIn,
-        minAmountOutAfterFee: 1n,
-        slippageBps: 100,
-      },
+    assert.throws(
+      () =>
+        materializeFameRoute(artifact.route, routerAddress, recipient, deadline, {
+          amountIn: requestedAmountIn,
+          minAmountOutAfterFee: 1n,
+          slippageBps: 100,
+        }),
+      /fixture scaling has been removed/i,
     );
-
-    assert.equal(materialized.route.amountIn, requestedAmountIn);
-    assert.equal(materialized.route.legs[0].amount, requestedAmountIn);
-    const originalFirstLegMin = BigInt(artifact.route.legs[0].minAmountOut);
-    const scaledFirstLegMin =
-      (originalFirstLegMin * requestedAmountIn) / fixtureAmountIn;
-    assert.equal(
-      materialized.route.legs[0].minAmountOut,
-      (scaledFirstLegMin * 9_900n) / 10_000n,
-    );
-
-    const v4Leg = materialized.route.legs.find(
-      (leg) => leg.venue === "UniswapV4",
-    );
-    assert.ok(v4Leg);
-    const [payload] = decodeAbiParameters(universalRouterV4PayloadAbi, v4Leg.data);
-    assert.equal(payload.amountIn, v4Leg.amount);
-    assert.equal(payload.minAmountOut, v4Leg.minAmountOut);
   });
 });

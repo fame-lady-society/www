@@ -72,6 +72,35 @@ describe("FAME swap widget state", () => {
     assert.equal(state.diagnosticsVisible, true);
   });
 
+  it("blocks amount-aware solver failure states before approval", () => {
+    for (const quoteStatus of [
+      "no_safe_route",
+      "quote_adapter_failure",
+      "simulation_failure",
+    ] as const) {
+      const state = fameSwapWidgetState({
+        ...baseInput,
+        quoteStatus,
+      });
+
+      assert.equal(state.kind, quoteStatus);
+      assert.equal(state.ctaDisabled, true);
+      assert.equal(state.diagnosticsVisible, true);
+    }
+  });
+
+  it("clears executable actions while a fresh quote is loading", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      quoteLoading: true,
+      quoteStatus: null,
+    });
+
+    assert.equal(state.kind, "quote_loading");
+    assert.equal(state.ctaDisabled, true);
+    assert.equal(state.diagnosticsVisible, false);
+  });
+
   it("prioritizes terminal transaction states", () => {
     const confirmed = fameSwapWidgetState({
       ...baseInput,

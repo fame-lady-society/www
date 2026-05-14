@@ -66,13 +66,17 @@ When secrets are managed by Doppler, run the same command inside a minimal confi
 
 `NEXT_PUBLIC_FAME_ROUTER_ADDRESS` or `FAME_ROUTER_ADDRESS` is optional. When neither is set, the script deploys the sibling `../fame-contracts` `DeployFameRouter.s.sol` script into the local fork with the public anvil account, then validates and simulates against that local router.
 
+`fame-swap:fork-smoke` defaults to representative release route families: `usdc-fame-five-dollars`, `fame-usdc-fixture`, `weth-fame-small-direct`, `fame-weth-fixture`, `eth-fame-fixture`, and `fame-eth-fixture`. Set `FAME_SWAP_FORK_CASES=all` for the full corpus, or a comma-separated case list for targeted route and pool stress checks.
+
 ## What It Checks
 
 - Starts local `anvil` forked from the manifest-pinned Base block. Set `FAME_SWAP_FORK_BLOCK=latest` only when using a non-archive RPC for exploratory validation; that path is nondeterministic and does not replace pinned-block validation.
 - Verifies local solver route, gap matrix, and parity vector file hashes against the manifest.
 - Reads router fee, venue family gates, venue target gates, and V4 hook-data gates from the configured router.
 - Deploys a local router to the fork when no router address is configured.
-- Materializes the pinned `solver-eth-zora-basedflick-fame` route with a fresh recipient/deadline and a non-fixture input amount.
+- Quotes each selected corpus case through live fork liquidity adapters.
+- Funds the public fork account for selected ERC20 inputs using fork-only state changes: WETH deposits, USDC balance storage discovery, and DN404 FAME packed balance storage.
+- Approves exact ERC20 inputs when required.
 - Simulates `executeRoute` once as a probe, computes the slippage-protected final minimum, then simulates the exact protected route that would be submitted.
 
 The script exits non-zero if RPC, `anvil`, router config, readiness, or simulation fail. It proxies the upstream RPC through a local loopback URL so secret-bearing RPC URLs are not passed to `anvil` as command-line arguments, and it uses temporary Foundry cache/output directories for local router deployment.

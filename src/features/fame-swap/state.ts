@@ -4,9 +4,13 @@ export type FameSwapWidgetStateKind =
   | "disconnected"
   | "wrong_chain"
   | "amount_entry"
+  | "quote_loading"
   | "unsupported_route"
   | "stale_artifact"
   | "not_live_ready"
+  | "no_safe_route"
+  | "quote_adapter_failure"
+  | "simulation_failure"
   | "quote_expired"
   | "approval_needed"
   | "ready"
@@ -18,6 +22,7 @@ export interface FameSwapWidgetStateInput {
   connected: boolean;
   onBase: boolean;
   amountEntered: boolean;
+  quoteLoading?: boolean;
   quoteStatus: FameSwapQuoteStatus | null;
   quoteExpired: boolean;
   approvalRequired: boolean;
@@ -121,6 +126,18 @@ export function fameSwapWidgetState(
   }
 
   if (!input.amountEntered || input.quoteStatus === null) {
+    if (input.amountEntered && input.quoteLoading) {
+      return {
+        ...defaultState,
+        kind: "quote_loading",
+        title: "Quoting route",
+        message: "Fetching live FAME route liquidity.",
+        ctaLabel: "Quoting route",
+        ctaDisabled: true,
+        recoveryAction: "Wait for the current quote to finish.",
+      };
+    }
+
     return {
       ...defaultState,
       kind: "amount_entry",
@@ -183,6 +200,45 @@ export function fameSwapWidgetState(
       recoveryAction: "Use an allowlisted fallback link or inspect route evidence.",
       diagnosticsVisible: true,
       fallbackVisible: true,
+    };
+  }
+
+  if (input.quoteStatus === "no_safe_route") {
+    return {
+      ...defaultState,
+      kind: "no_safe_route",
+      title: "No safe route",
+      message: "No FAME router route is safe for this amount.",
+      ctaLabel: "Lower amount",
+      ctaDisabled: true,
+      recoveryAction: "Lower the amount or choose another supported pair.",
+      diagnosticsVisible: true,
+    };
+  }
+
+  if (input.quoteStatus === "quote_adapter_failure") {
+    return {
+      ...defaultState,
+      kind: "quote_adapter_failure",
+      title: "Quote unavailable",
+      message: "FAME route quote evidence is temporarily unavailable.",
+      ctaLabel: "Quote unavailable",
+      ctaDisabled: true,
+      recoveryAction: "Retry after quote data is available.",
+      diagnosticsVisible: true,
+    };
+  }
+
+  if (input.quoteStatus === "simulation_failure") {
+    return {
+      ...defaultState,
+      kind: "simulation_failure",
+      title: "Simulation failed",
+      message: "The selected FAME route failed pre-submit simulation.",
+      ctaLabel: "Simulation failed",
+      ctaDisabled: true,
+      recoveryAction: "Edit the amount or review diagnostics before retrying.",
+      diagnosticsVisible: true,
     };
   }
 

@@ -68,7 +68,10 @@ export function staticReadiness(config: FameSwapConfig): FameSwapReadiness {
       FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash ||
     config.expectedGapMatrixHash !== FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash ||
     config.expectedParityVectorsHash !==
-      FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash
+      FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash ||
+    config.expectedPoolsHash !== FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash ||
+    config.expectedPoolStateSnapshotHash !==
+      FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash
   ) {
     return blocked(
       "artifact_hash_mismatch",

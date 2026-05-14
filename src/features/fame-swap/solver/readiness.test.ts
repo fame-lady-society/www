@@ -22,6 +22,9 @@ function liveConfig(overrides: Partial<FameSwapConfig> = {}): FameSwapConfig {
     expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
     expectedParityVectorsHash: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    expectedPoolStateSnapshotHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
     ...overrides,
   };
 }

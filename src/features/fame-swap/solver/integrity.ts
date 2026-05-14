@@ -1,17 +1,26 @@
 import solverRoutesJson from "../artifacts/base-v1-solver-routes.json";
 import gapMatrixJson from "../artifacts/base-v1-route-gap-matrix.json";
 import parityVectorsJson from "../artifacts/base-v1-route-parity-vectors.json";
+import poolsJson from "../artifacts/base-v1-pools.json";
+import poolStateSnapshotJson from "../artifacts/base-v1-pool-state-snapshot.json";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import { encodeJsonFameRoute, hashJsonFameRoute } from "../router/encodeRoute";
 import type {
   FameRouteGapMatrixFile,
   FameRouteParityVectorsFile,
   FameSolverRoutesFile,
+  FamePoolUniverseFile,
 } from "../router/types";
+import {
+  snapshotIntegrityIssue,
+  type FamePoolStateSnapshotFile,
+} from "./quotes/snapshotAdapter";
 
 const solverRoutes = solverRoutesJson as FameSolverRoutesFile;
 const gapMatrix = gapMatrixJson as FameRouteGapMatrixFile;
 const parityVectors = parityVectorsJson as FameRouteParityVectorsFile;
+const pools = poolsJson as FamePoolUniverseFile;
+const poolStateSnapshot = poolStateSnapshotJson as FamePoolStateSnapshotFile;
 
 let cachedIssue: string | null | undefined;
 
@@ -19,7 +28,9 @@ function checkFileHeaders(): string | null {
   if (
     solverRoutes.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion ||
     gapMatrix.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion ||
-    parityVectors.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion
+    parityVectors.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion ||
+    pools.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion ||
+    poolStateSnapshot.schemaVersion !== FAME_SWAP_ARTIFACT_MANIFEST.schemaVersion
   ) {
     return "FAME route artifact schema versions do not match the manifest.";
   }
@@ -27,7 +38,10 @@ function checkFileHeaders(): string | null {
   if (
     solverRoutes.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock ||
     gapMatrix.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock ||
-    parityVectors.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock
+    parityVectors.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock ||
+    pools.pinnedBaseBlock !== FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock ||
+    poolStateSnapshot.pinnedBaseBlock !==
+      FAME_SWAP_ARTIFACT_MANIFEST.pinnedBaseBlock
   ) {
     return "FAME route artifact pinned Base blocks do not match the manifest.";
   }
@@ -75,10 +89,29 @@ function checkParityVectors(): string | null {
   return null;
 }
 
+function checkPoolArtifacts(): string | null {
+  const poolIds = new Set(pools.pools.map((pool) => pool.id));
+
+  for (const route of solverRoutes.routes) {
+    for (const poolId of route.poolIds) {
+      if (!poolIds.has(poolId)) {
+        return `FAME route artifact ${route.id} references missing pool ${poolId}.`;
+      }
+    }
+  }
+
+  return null;
+}
+
 export function artifactIntegrityIssue(): string | null {
   if (cachedIssue !== undefined) return cachedIssue;
 
   cachedIssue =
-    checkFileHeaders() ?? checkRouteArtifacts() ?? checkParityVectors() ?? null;
+    checkFileHeaders() ??
+    checkRouteArtifacts() ??
+    checkParityVectors() ??
+    checkPoolArtifacts() ??
+    snapshotIntegrityIssue(poolStateSnapshot) ??
+    null;
   return cachedIssue;
 }

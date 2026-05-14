@@ -5,6 +5,7 @@ import type { FameSwapConfig } from "../config";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "./artifacts";
 import { quoteFameSwap } from "./quote";
+import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import type { FameSwapQuote } from "./types";
 
@@ -20,6 +21,9 @@ function config(): FameSwapConfig {
     expectedSolverRoutesHash: FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash,
     expectedGapMatrixHash: FAME_SWAP_ARTIFACT_MANIFEST.gapMatrixJsonHash,
     expectedParityVectorsHash: FAME_SWAP_ARTIFACT_MANIFEST.parityVectorsJsonHash,
+    expectedPoolsHash: FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
+    expectedPoolStateSnapshotHash:
+      FAME_SWAP_ARTIFACT_MANIFEST.poolStateSnapshotJsonHash,
   };
 }
 
@@ -44,6 +48,7 @@ function readyQuote(
       routerAddress,
       feePpm: 2_222n,
     },
+    adapter: createDeterministicQuoteAdapter(),
     now: new Date("2026-05-13T00:00:00Z"),
   });
 }
@@ -61,26 +66,29 @@ describe("FAME swap quote", () => {
 
     assert.equal(quote.status, "ready");
     if (quote.status === "ready") {
-      assert.equal(quote.routeArtifactId, "solver-fame-basedflick-zora-usdc");
+      assert.ok(quote.routeArtifactId.includes("single_path"));
+      assert.ok(quote.poolIds.includes("slipstream-basedflick-fame"));
       assert.equal(quote.route.amountIn, amountIn);
       assert.equal(quote.callValue, 0n);
       assert.equal(quote.approval?.amount, amountIn);
       assert.equal(quote.approval?.spender, routerAddress);
-      assert.notEqual(quote.fixtureRouteHash, quote.materializedRouteHash);
+      assert.ok(quote.routerFeeAmount > 0n);
+      assert.equal(quote.feeBreakdown.venueFeesIncluded, true);
     }
   });
 
-  it("materializes arbitrary non-fixture amounts from the selected route template", () => {
+  it("fails closed for arbitrary amounts outside deterministic route capacity", () => {
     const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc");
-    const requested = amountIn + 12_345n;
+    const requested = amountIn * 1_000n;
     const quote = readyQuote(FAME, USDC, requested);
 
-    assert.equal(quote.status, "ready");
-    if (quote.status === "ready") {
-      assert.equal(quote.route.amountIn, requested);
-      assert.equal(quote.approval?.amount, requested);
-      assert.equal(quote.routeArtifactId, "solver-fame-basedflick-zora-usdc");
-      assert.notEqual(quote.materializedRouteHash, quote.fixtureRouteHash);
+    assert.equal(quote.status, "no_safe_route");
+    if (quote.status === "no_safe_route") {
+      assert.ok(
+        quote.rejectedCandidates.some(
+          (candidate) => candidate.reason === "amount_exceeds_capacity",
+        ),
+      );
     }
   });
 

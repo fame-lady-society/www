@@ -1,19 +1,23 @@
 import type { Address, Hex } from "viem";
-import type { FameSwapRouteArtifactId } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import type { FameSwapToken, FameSwapTokenSymbol } from "../tokens";
 import type {
   FameRoute,
-  FameRouteArtifact,
   FameRouteCapabilities,
   VenueFamilyName,
 } from "../router/types";
+import type { FameCandidateRejection } from "./quotes/adapters";
+import type { FameQuoteContext } from "./quotes/quoteContext";
+import type { FameRouteFeeBreakdown } from "./quotes/rankRoutes";
 
 export type FameSwapQuoteStatus =
   | "ready"
   | "unsupported"
   | "stale_artifact"
-  | "not_live_ready";
+  | "not_live_ready"
+  | "no_safe_route"
+  | "quote_adapter_failure"
+  | "simulation_failure";
 
 export type FameSwapReadinessStatus = "ready" | "not_live_ready";
 
@@ -68,6 +72,8 @@ export interface FameSwapRouteDisplayLeg {
   tokenOut: FameSwapTokenSymbol | Address;
   venue: VenueFamilyName;
   amountMode: string;
+  poolId?: string;
+  allocationBps?: number | null;
 }
 
 export interface FameSwapQuoteBase {
@@ -82,18 +88,24 @@ export interface FameSwapQuoteBase {
 export interface FameSwapExecutableQuote extends FameSwapQuoteBase {
   status: "ready";
   routerAddress: Address;
-  routeArtifactId: FameSwapRouteArtifactId;
+  routeArtifactId: string;
+  routeSource: "artifact" | "generated";
   fixtureRouteHash: Hex;
   materializedRouteHash: Hex;
-  artifact: FameRouteArtifact;
+  poolIds: string[];
   route: FameRoute;
   approval: FameSwapApprovalRequirement | null;
   callValue: bigint;
+  grossEstimatedOutput: bigint;
+  routerFeeAmount: bigint;
   estimatedOutput: bigint;
   minAmountOutAfterFee: bigint;
+  feeBreakdown: FameRouteFeeBreakdown;
+  quoteContext?: FameQuoteContext;
   feePpm: bigint;
   capabilities: FameRouteCapabilities;
   routeDisplay: FameSwapRouteDisplayLeg[];
+  rejectedCandidates: FameCandidateRejection[];
   slippageBps: number;
   expiresAt: Date;
   warnings: string[];
@@ -111,12 +123,31 @@ export interface FameSwapStaleArtifactQuote extends FameSwapQuoteBase {
 
 export interface FameSwapNotLiveReadyQuote extends FameSwapQuoteBase {
   status: "not_live_ready";
-  routeArtifactId: string;
+  routeArtifactId?: string;
   readiness: FameSwapReadinessBlocked;
+}
+
+export interface FameSwapNoSafeRouteQuote extends FameSwapQuoteBase {
+  status: "no_safe_route";
+  rejectedCandidates: FameCandidateRejection[];
+}
+
+export interface FameSwapQuoteAdapterFailureQuote extends FameSwapQuoteBase {
+  status: "quote_adapter_failure";
+  rejectedCandidates: FameCandidateRejection[];
+}
+
+export interface FameSwapSimulationFailureQuote extends FameSwapQuoteBase {
+  status: "simulation_failure";
+  reason: string;
+  rejectedCandidates: FameCandidateRejection[];
 }
 
 export type FameSwapQuote =
   | FameSwapExecutableQuote
   | FameSwapUnsupportedQuote
   | FameSwapStaleArtifactQuote
-  | FameSwapNotLiveReadyQuote;
+  | FameSwapNotLiveReadyQuote
+  | FameSwapNoSafeRouteQuote
+  | FameSwapQuoteAdapterFailureQuote
+  | FameSwapSimulationFailureQuote;

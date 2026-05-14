@@ -1,94 +1,142 @@
 ---
 date: 2026-05-12
+updated: 2026-05-13
 topic: fame-swap-router-solver-www
 origin: docs/ideation/2026-05-12-fame-swap-router-solver-ideation.md
 status: ready-for-planning
+supersedes_plan: docs/plans/2026-05-13-001-fame-swap-router-solver-plan.md
 ---
 
-# FAME Swap Router Solver Requirements
+# FAME Swap Amount-Aware Solver Requirements
 
 ## Problem Frame
 
-Fame Lady Society needs an owned FAME swap surface at `/fame/swap` that consumes the new multi-leg `FameRouter` safely instead of relying only on external swap links or letting React components invent route encoding. The current operational pain is that route correctness now depends on FAME-specific router artifacts, fee/minimum policy, ETH/WETH handling, and fork evidence that generic external links cannot express or validate.
+Fame Lady Society needs the owned `/fame/swap` flow to stop behaving like a route demo and become a user-safe swap quote system. The initial implementation proved route encoding, readiness gates, widget mechanics, and wallet simulation. A later amount-aware pass moved the system toward graph-based route selection, split candidates, typed no-safe-route states, route diagnostics, and fee breakdowns.
 
-The first version is a production-shaped, fork-first beta surface. It may be publicly discoverable, but live swap submission must remain fail-closed until live readiness gates pass. Until then, `/fame/swap` should explain why router execution is unavailable and preserve a safer fallback path to existing external swap options rather than claiming to replace them.
+The new blocker is quote evidence. The deterministic solver profile currently uses synthetic rates and hard per-pool `capacityIn` values. That can falsely reject normal user amounts, such as `$5` USDC, because the profile is not calculating from pool liquidity. Hard caps are not a production quote model.
+
+The next work should finish the solver by replacing synthetic capacity caps with liquidity-derived quote evidence. The goal remains bounded: use existing known FAME router pools, keep the route graph testable, make `/api/fame/swap/quote` the authoritative executable quote boundary, and produce concrete contract-repo follow-ups only when route lab evidence identifies exact pools, amounts, and outcomes.
 
 ## Requirements
 
-**Route Capability And Artifact Contract**
-- R1. `/fame/swap` must be the canonical owned FAME swap beta page and must compose a reusable FAME swap widget that can later be embedded in other FAME surfaces.
-- R2. The swap experience must treat the pinned contract repo route artifacts, including the gap matrix, parity vectors, route hashes, fork evidence, and capability metadata, as the source of truth for supported directions and schema compatibility.
-- R3. The experience must support FAME <-> USDC, FAME <-> WETH, and FAME <-> native ETH directions only when the corresponding artifact row is generated, executable, fork-tested, and compatible with the configured schema and router.
-- R4. Native ETH and WETH must remain distinct in labels, route selection, approvals, and transaction value. The UI must never silently substitute one for the other.
-- R5. Split and split-then-merge routes must be representable in solver output and UI diagnostics even if the default compact display summarizes them.
-- R21. Artifact provenance must be explicit: the implementation must pin the artifact source commit or package version, record a snapshot hash or manifest hash in `www`, verify expected route hashes and parity vectors in tests, and fail closed when the artifact source or hash does not match the approved manifest.
+**Release Safety**
+- R1. The swap quote boundary must not return executable approval or swap transaction data for an amount unless the system has selected a route for that amount and has liquidity-derived quote evidence to treat it as safe to present. Simulation may strengthen that evidence, but it must not replace quote selection.
+- R2. If no safe route is found for the requested amount, the user-facing quote state must fail closed before approval with a clear "no safe route for this amount" style status, not a wallet-simulation failure after the user has begun the transaction flow.
+- R3. Wallet-side or server-side simulation remains the final submission gate, but it must not be the first mechanism that discovers routine route exhaustion for common larger amounts.
+- R4. Until liquidity-derived quote evidence is in place, arbitrary scaled fixture routes must be treated as prototype behavior and must be disabled or marked non-release-ready. Emergency amount limits may be used as a kill switch, but not as production quote evidence.
 
-**Solver And Quote Boundary**
-- R6. Swap route construction must live behind a typed solver/quote boundary rather than inside React components.
-- R7. Quote output must include both human-facing data and exact transaction data: input token, output token, amount in, estimated output, final post-fee minimum, route hash, route artifact id, approval requirement, call value, warnings, and the exact route argument for `executeRoute`.
-- R8. Slippage and minimum-output policy must be explicit, testable, and based on the router's per-leg minimums plus final `minAmountOutAfterFee`; user-facing minimums must be post-fee.
-- R9. The first implementation may use pinned artifacts and deterministic fixture quotes before live market quote ranking, but it must make stale or unsupported quote status visible rather than presenting estimated amounts as live market truth.
-- R22. Executable v1 swaps must either be restricted to artifact-supported exact fixture amounts, or must recompute the route `amountIn`, per-leg minimums, final post-fee minimum, call value, and ABI payload for each user-entered amount through a validated quote or simulation path before enabling submission.
-- R23. Approval transactions must identify spender, token, chain, and allowance amount before submission, and must default to the minimum practical allowance for the quoted input amount. Unlimited approval is out of scope unless explicitly approved in a later requirements update.
+**Route Universe And Solver Behavior**
+- R5. The solver must focus on existing known pools and route families from the current FAME router fixture universe. It must not attempt broad pool discovery, general aggregation, or speculative routing outside the known FAME swap scope.
+- R6. The solver must compare candidate routes for the requested amount instead of selecting only the gap-matrix preferred artifact for a token pair.
+- R7. Candidate routes must support direct, multi-hop, split, and split-then-merge shapes when those shapes are backed by known pools and executable router semantics.
+- R8. Dynamic split behavior must be bounded and explainable. A simple sampled allocation strategy is acceptable before any more complex optimizer, as long as tests prove it avoids the current single-route-drain failure.
+- R9. Route results must include enough diagnostic information for tests and operators to understand selected pools, rejected candidates, quote/simulation evidence, protected output, and rejection reasons.
 
-**Widget Product Behavior**
-- R10. The widget must support disconnected, wrong-chain, amount-entry, unsupported-route, stale-artifact, approval-needed, ready, submitting, confirmed, and reverted states.
-- R11. The primary UI must be usable for ordinary users without requiring route diagnostics, while advanced route details must be available for developers and reviewers.
-- R12. The widget must expose a compact/full mode boundary so `/fame/swap` can use the full version while future embeds can use a smaller surface.
-- R13. The UI must present approval and native-value requirements clearly before submission.
-- R24. Each widget state must define the visible status message, enabled controls, primary CTA, disabled fields, recovery action, and diagnostics visibility before implementation begins.
-- R25. The core flow must proceed from token selection and amount entry to quote evaluation, approval when needed, swap submission, confirmation, and retry/cancel recovery. Wrong-chain, unsupported-route, stale-artifact, insufficient-readiness, and reverted paths must have explicit exits.
-- R26. Full mode must keep token inputs, quote summary, fee/minimum summary, approval/native value summary, primary CTA, transaction status, and route diagnostics available. Compact mode may collapse diagnostics and secondary route details, but critical warnings, approval requirements, and final post-fee minimum must remain visible.
-- R27. The widget must be mobile-first and accessible: controls need usable touch targets, keyboard navigation, clear focus movement through wallet and transaction states, and screen-reader labels for token, amount, approval, quote, warning, and status controls.
+**Quote And UI Contract**
+- R10. `/api/fame/swap/quote` and the client quote experience must share the same safety semantics so the widget, tests, and scripts do not diverge on which routes are executable.
+- R11. Quote states must distinguish unsupported pair, stale artifact/config, router not live-ready, no safe route for amount, quote adapter failure, simulation failure, and ready.
+- R12. A ready quote must include human-facing output information and exact transaction intent: input token, output token, amount in, estimated output when available, protected minimum, route hash, approval requirement, call value, route summary, warnings, and expiry.
+- R13. The widget must keep approval and swap actions disabled for every non-ready solver state, including "no safe route for amount."
 
-**Fork-First Validation**
-- R14. The implementation must include a no-live-market validation path that can run against an Anvil Base fork using RPC secrets from Doppler or the local secret manager, without committing or printing private RPC URLs.
-- R15. Tests must prove that `www` encodes route structs compatibly with the contract repo parity vectors before relying on any UI-level success signal.
-- R16. The fork validation path must be able to point `www` at a local or deployed router address and deterministic route artifacts.
-- R17. Live swaps must fail closed until router address, schema version, artifact snapshot, route capabilities, fee ppm, enabled venue families, enabled venue targets, and required V4 hook-data hashes match the expected configuration.
-- R28. Fork validation must provision or impersonate funded accounts for every supported input asset: FAME, USDC, WETH, and native ETH. The funded wallet strategy must be documented for UI and integration tests.
-- R29. Pinned fork evidence is not enough for live submission. Live mode must require current Base validation or bounded fresh simulation, with an explicit freshness policy for artifact snapshots, route support, and quote estimates.
+**Testing And Route Learning**
+- R14. The solver must have a pure, testable route component that can be exercised without React, browser wallets, or live user transactions.
+- R15. The test corpus must cover representative amount buckets for every supported FAME-facing direction: FAME <-> USDC, FAME <-> WETH, and FAME <-> native ETH.
+- R16. The corpus must include known large-amount failures from the current prototype and assert that the solver either chooses a safer route or fails closed before transaction data is produced.
+- R17. A route-lab or equivalent script must let developers run amount grids against the solver and, when configured, against a local fork/router simulation path.
+- R18. Solver test output should be suitable for creating concrete follow-up todos in the sibling contract repo: exact amount, token pair, selected pools, rejected candidates, simulation result, and observed failure or opportunity.
 
-**TypeScript And Integration Quality**
-- R18. New TypeScript must use expressive types for router tokens, route legs, artifacts, quote results, widget states, and transaction inputs without `as any` or `as unknown`.
-- R19. Public configuration such as router address, schema version, fixture snapshot, chain id, and public RPC aliases may be committed or exposed through `NEXT_PUBLIC_*`; private RPC URLs and signer material must stay in Doppler or local secrets.
-- R20. The implementation must avoid deprecated GraphQL integrations and prefer existing wagmi/viem patterns in this repo.
+**Contract Repo Feedback**
+- R19. `www` may discover promising routes or failure cases, but launch evidence remains contract-repo evidence. Interesting routes should become targeted contract-repo todos only when they are tied to concrete pools, amounts, and observed behavior.
+- R20. Contract-repo follow-ups should focus on amount sweeps, route-capacity metadata, new generated route artifacts for existing pools, split and split-then-merge fork examples, and failing-route regression fixtures.
+- R21. Do not introduce a generic route promotion pipeline. The rejected direction is too heavy; use concrete evidence-driven todos focused on the pools that exist.
+
+**Existing Guarantees To Preserve**
+- R22. Native ETH and WETH must remain distinct in labels, route selection, approvals, call value, and transaction construction.
+- R23. The router artifact manifest, route hashes, ABI parity checks, readiness checks, and fee/venue policy gates must remain fail-closed.
+- R24. ERC-20 approvals must remain exact to the quoted input amount unless a later requirements update explicitly approves a broader allowance model.
+- R25. The implementation must avoid deprecated GraphQL data dependencies and continue using the repo's TypeScript, wagmi, and viem patterns.
+- R26. Public quote responses and route-lab diagnostics must not expose private RPC URLs, signer material, or executable transaction payloads for failed route states.
+
+**Liquidity-Derived Quote Evidence**
+- R27. User-facing `ready` and `no_safe_route` decisions must be based on liquidity-derived quote evidence, not synthetic hard caps, copied fixture amounts, or arbitrary deterministic capacity profiles.
+- R28. The checked-in pool topology artifact is not sufficient quote evidence by itself. Production quotes must read live pool state, call venue quote functions, or use an explicitly generated pool-state snapshot.
+- R29. All candidate routes in a single ranking pass must use one consistent quote context: the same live block, the same fork block, or the same pinned pool-state snapshot.
+- R30. Quote evidence must be exact-input and leg-aware so downstream `All` legs are quoted from upstream output rather than from the original input amount.
+- R31. Quote adapter failures must remain distinguishable from true liquidity exhaustion. If a candidate cannot be quoted because the quote source failed or is unsupported, the result should be `quote_adapter_failure` or candidate-level quote failure, not a misleading liquidity-derived `no_safe_route`.
+- R32. Deterministic tests may use pinned pool-state captures, but they must not use arbitrary hard caps as a substitute for pool liquidity.
+- R33. The FLS router fee must be calculated and emitted separately from venue liquidity fees. Venue fees that are already included in AMM quote output must not be subtracted a second time.
+- R34. Quote responses and route-lab output must identify the quote source and block or snapshot context used to select the route.
+
+**API And Widget Quote Boundary**
+- R35. The production executable quote path must support asynchronous liquidity reads. The widget must not treat synchronous local deterministic quote construction as authoritative for transaction-ready quotes when liquidity evidence requires RPC or snapshot reads.
+- R36. The widget must handle quote loading, stale response, retry, and quote failure states without exposing approval or swap actions from an older ready quote.
+- R37. Local pure quote helpers may remain for tests, route-lab offline replay, and diagnostics, but they must be clearly separated from production executable quote evidence.
+- R38. Quote requests must be bounded by supported tokens, known pools, candidate budgets, RPC timeouts, and request validation. The API must not accept arbitrary pool addresses, arbitrary router targets, arbitrary RPC URLs, or unbounded amount-grid work from public clients.
+- R39. If a venue quote source is not implemented or fails for a candidate, that candidate must fail with quote diagnostics and cannot become ready. A ready route must not contain a leg whose quote evidence was unavailable.
+- R40. Quote responses must be invalidated when amount, pair, recipient, chain readiness, router address, slippage, deadline, or quote context changes.
 
 ## Success Criteria
 
-- `/fame/swap` renders a polished FAME swap beta experience that distinguishes FAME, USDC, WETH, and native ETH, and can be reused as a widget.
-- The solver/quote boundary returns a fully typed quote result containing display data and the exact router transaction payload.
-- ABI parity tests compare `www` route encoding against the pinned parity-vector artifact selected for v1. Direct reads from `../fame-contracts` are allowed only for artifact sync or local verification when the sibling checkout is present.
-- Route support comes from the pinned gap-matrix artifact and fails closed when artifacts, schema, router config, or live-readiness evidence are stale or unsupported.
-- Relevant tests pass locally without using live market transactions.
-- The final diff contains no `as any` or `as unknown` in new TypeScript.
+- Common larger amounts that currently fail simulation no longer produce misleading executable quotes. They either route safely through a better/split route or fail closed before approval.
+- Normal small-dollar amounts, such as `$5` USDC, do not fail with `no_safe_route` solely because of synthetic per-pool hard caps.
+- No production-ready quote path uses arbitrary `capacityIn` profiles as route capacity.
+- Every ready quote records whether it was selected from live liquidity, fork liquidity, or a pinned pool-state snapshot, including the block or snapshot context.
+- Public quote requests are bounded and validated so liquidity reads cannot become an unbounded public RPC fanout.
+- The solver can be tested as a standalone component with deterministic fixtures and representative amount buckets.
+- Every ready quote has a traceable selected route, output/protection data, and transaction intent that matches the final simulation gate.
+- The quote API and widget agree on solver states and never expose approval or swap actions for unsafe routes.
+- Route-lab output can be used to create specific contract-repo follow-up todos without inventing a broad route promotion process.
 
 ## Scope Boundaries
 
 - Do not build an onchain solver.
-- Do not use an external aggregator API as the primary route source.
+- Do not use an external aggregator as the primary route source.
+- Do not discover arbitrary new pools in `www`; focus on existing known FAME router pool fixtures and route families.
+- Do not add a heavyweight route promotion pipeline or lifecycle process.
 - Do not bypass `FameRouter` by submitting raw Universal Router calls from the UI.
-- Do not hide the ETH/WETH distinction.
+- Do not treat linearly scaled fixture routes as release-ready arbitrary-amount quotes.
+- Do not treat hardcoded per-pool capacity caps as production liquidity calculations.
+- Do not treat `base-v1-pools.json` topology alone as sufficient to calculate route output.
+- Do not keep production executable quotes dependent on a synchronous client-only deterministic adapter once liquidity reads are required.
+- Do not hand-roll every venue invariant as the first implementation choice when a safer venue quote/read path exists.
+- Do not expose public quote inputs that let callers choose arbitrary pool addresses, router targets, or RPC URLs.
+- Do not make UI polish, route visualization, liquidity-fee display, or browser E2E the primary work until solver safety is addressed.
 - Do not require live production swaps as the primary QA loop.
-- Do not present fixture quotes as arbitrary live-user quotes.
-- Do not migrate the project to a monorepo or package manager as part of this work.
-- Do not add new GraphQL data dependencies.
 
 ## Key Decisions
 
-- Build the page and widget fork-first, with public beta posture but fail-closed live submission: this lets the team validate real router behavior without live market risk while avoiding a false promise that the page has replaced external swap links before launch gates pass.
-- Copy or pin the contract artifacts into `www` during planning unless a package contract already exists: this favors reproducible builds over implicit `../fame-contracts` runtime coupling.
-- Keep quote construction in a typed service boundary: this keeps route correctness testable and prevents UI components from owning ABI details.
-- Treat native ETH as `address(0)` and WETH as a separate ERC-20: this matches the router schema and current route evidence.
-- Show split-route details behind developer diagnostics in v1: ordinary users need confidence and clarity, while developers still need the full route path.
-- Default approvals to exact quoted input amounts: this minimizes token exposure while the router and artifact pipeline are still moving toward launch.
+- **Focus on existing pools:** The user rejected a route promotion pipeline as too heavy. The solver should get better at using the pools already in the current FAME router universe before adding process or broad discovery.
+- **Fail closed before approval:** A route that is likely to fail should be blocked at quote time, not after the user has approved or waited for wallet simulation.
+- **Keep simulation as a final gate:** Simulation remains essential, but it should validate the selected route, not compensate for the absence of route solving.
+- **Prefer bounded split search:** Start with explainable bounded split allocation over known pools. More complex optimization must be justified by corpus results.
+- **Use concrete contract feedback:** Follow-ups to the contract repo should be created from exact route lab evidence, not from an abstract promotion workflow.
+- **Reject hard caps as quote evidence:** Hard caps may help diagnose test cases, but they are not liquidity and cannot decide production `ready` or `no_safe_route` states.
+- **Make the API the executable quote authority:** Live liquidity reads are asynchronous. `/api/fame/swap/quote` should become the authoritative path for transaction-ready quotes, while the widget consumes that result and keeps wallet simulation as the final gate.
+- **Use snapshots for deterministic tests:** Pure tests and offline route lab runs need a pinned pool-state snapshot or fixture that represents liquidity inputs, not a synthetic capacity profile.
+- **Keep quote context consistent:** A selected route should be explainable by one block or one snapshot so route-lab output and contract follow-ups are reproducible.
+- **Bound the public API:** The quote endpoint is a public surface over RPC-backed reads. It should only accept known swap inputs and should enforce candidate, timeout, and response-safety limits.
+
+## Alternatives Considered
+
+| Alternative | Decision | Reason |
+|---|---|---|
+| Keep arbitrary scaled fixture routes and rely on wallet simulation | Rejected | It protects funds but produces poor, predictable failure UX and is not a real solver. |
+| Hard-cap all amounts to tiny known-good values | Rejected for production | Useful only as a temporary emergency safety switch; it does not calculate from liquidity and can reject normal user amounts. |
+| Build a route promotion pipeline | Rejected by user | Too heavy for the current need; focus on existing pools and concrete tests. |
+| Use an external aggregator as primary solver | Rejected | It conflicts with the owned FAME router goal and does not improve FameRouter route evidence. |
+| Build a general aggregator over all Base pools | Rejected | Too broad; the requirement is a bounded FAME router solver. |
+| Keep synchronous client-side deterministic quotes as production authority | Rejected | Liquidity-derived quotes require RPC reads or pinned snapshots; a sync profile recreates false `no_safe_route` and false-ready risks. |
+| Hand-roll every AMM invariant first | Rejected as default | Safer venue quote/read paths should be preferred where available; local math belongs behind tested adapters when needed. |
 
 ## Dependencies / Assumptions
 
-- The contract repo at `../fame-contracts` contains the router artifacts and parity vectors referenced by the ideation document.
-- The current route gap matrix, as one of the contract artifacts, includes executable, generated, fork-tested rows for FAME <-> USDC, FAME <-> WETH, and FAME <-> native ETH at pinned Base block `45884844`.
-- A live `FameRouter` address may not be available yet, so local/fork config must support a placeholder or fork-deployed address while failing closed for live mode.
-- Doppler-backed RPC access may be required for fork tests, but private values must not be committed or echoed in logs.
+- The current FAME router fixture universe contains enough existing pools to improve route selection for at least some larger amounts.
+- The sibling contract repo remains the place where route artifacts and fork evidence are promoted after `www` identifies concrete route candidates or failures.
+- Some venue quote behavior may require fork simulation rather than pure view quoting; the requirements allow either as long as readiness and quote states stay explicit.
+- Current `base-v1-pools.json` is a topology artifact, not a pool-state capture. Planning must add a live read path, a recorded-state artifact, or both before liquidity-derived quotes can replace deterministic caps.
+- API-backed quote reads depend on Base RPC availability and must fail closed when required reads are unavailable.
+- Private RPC URLs and signer material must remain in Doppler or local secrets and must not be committed or printed.
+- Not every known venue must have a complete quote adapter in the first liquidity-derived release, but unsupported venue candidates must fail closed and remain visible in diagnostics.
 
 ## Outstanding Questions
 
@@ -98,11 +146,13 @@ None.
 
 ### Deferred to Planning
 
-- [Affects R2, R15][Technical] Decide the artifact sync mechanism for v1: copied fixtures in `www`, direct relative import from `../fame-contracts`, or a package-style boundary.
-- [Affects R6, R7][Technical] Decide whether quote generation is client-only, a Next API route, or a shared pure library with both entry points.
-- [Affects R14, R16][Needs research] Determine the smallest reliable fork harness that works with this Next.js app and local router deployment.
-- [Affects R17][Technical] Decide the exact router ABI source: generated wagmi output including `FameRouter.sol/**` or a minimal local ABI.
-- [Affects R22, R29][Technical] Decide whether v1 uses exact fixture-only executable swaps, fork simulation for user-entered amounts, or live quote recomputation before submission.
+- [Affects R27, R28, R32][Needs research] Choose the first pool-state snapshot shape: reserves-only for constant-product pools, venue quote snapshots, concentrated-liquidity state, or a mixed approach.
+- [Affects R29, R34][Technical] Decide how quote context is represented in API responses, route-lab output, and tests.
+- [Affects R30, R31][Needs research] Choose per-venue quote source order: live venue quote calls, pool state math, fork simulation, or unsupported/fail-closed.
+- [Affects R35, R36][Technical] Define the widget quote-fetch state model and stale-response protection.
+- [Affects R38][Technical] Choose candidate budgets, RPC timeout behavior, and any cache/debounce policy for the public quote endpoint.
+- [Affects R17, R34][Needs research] Decide which route-lab modes run against pinned snapshots, latest live liquidity, pinned fork liquidity, or local router simulation.
+- [Affects R19, R20][Technical] Choose the todo format for contract-repo follow-ups so route lab evidence is easy to paste without over-formalizing the workflow.
 
 ## Next Steps
 

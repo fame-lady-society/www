@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { FAME, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
+import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
 import { quoteSummary } from "./FameSwapWidget";
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
@@ -24,11 +25,12 @@ describe("FameSwapWidget quote summary", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: createDeterministicQuoteAdapter(),
     });
 
     assert.equal(quote.status, "ready");
     if (quote.status === "ready") {
-      assert.equal(quote.minAmountOutAfterFee, 1n);
+      assert.ok(quote.minAmountOutAfterFee > 1n);
       assert.equal(
         quoteSummary(quote),
         "Minimum after fee: waiting for wallet checks.",

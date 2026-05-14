@@ -21,17 +21,6 @@ export interface MaterializeFameRouteOptions {
   slippageBps?: number;
 }
 
-function scaleByFixtureAmount(
-  value: bigint,
-  requestedAmountIn: bigint,
-  fixtureAmountIn: bigint,
-): bigint {
-  if (value === 0n || requestedAmountIn === fixtureAmountIn) return value;
-
-  const scaled = (value * requestedAmountIn) / fixtureAmountIn;
-  return scaled > 0n ? scaled : 1n;
-}
-
 export function materializeFameRoute(
   fixtureRoute: JsonFameRoute,
   routerAddress: Address,
@@ -41,13 +30,15 @@ export function materializeFameRoute(
 ): MaterializedFameRoute {
   const route = routeFromJson(fixtureRoute);
   const amountIn = options.amountIn ?? route.amountIn;
+  if (amountIn !== route.amountIn) {
+    throw new Error(
+      "Arbitrary fixture scaling has been removed for FAME swap routes.",
+    );
+  }
   const slippageBps = options.slippageBps ?? 0;
   const scaledMinAmountOutAfterFee =
     options.minAmountOutAfterFee ??
-    applySlippageToAmount(
-      scaleByFixtureAmount(route.minAmountOutAfterFee, amountIn, route.amountIn),
-      slippageBps,
-    );
+    applySlippageToAmount(route.minAmountOutAfterFee, slippageBps);
   const materializedRoute: FameRoute = {
     ...route,
     amountIn,
@@ -67,13 +58,10 @@ export function materializeFameRoute(
       amount:
         leg.amountMode === "Exact"
           ? leg.tokenIn === route.tokenIn
-            ? scaleByFixtureAmount(leg.amount, amountIn, route.amountIn)
+            ? leg.amount
             : 0n
           : leg.amount,
-      minAmountOut: applySlippageToAmount(
-        scaleByFixtureAmount(leg.minAmountOut, amountIn, route.amountIn),
-        slippageBps,
-      ),
+      minAmountOut: applySlippageToAmount(leg.minAmountOut, slippageBps),
     })).map((leg) => ({
       ...leg,
       data: materializeLegPayload(leg, routerAddress, deadline),

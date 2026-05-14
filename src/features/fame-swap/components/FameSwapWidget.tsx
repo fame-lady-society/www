@@ -20,14 +20,11 @@ import { useChainId, useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { getFameSwapConfig } from "../config";
 import { useFameSwapBalance } from "../hooks/useFameSwapBalance";
+import { useFameSwapQuote } from "../hooks/useFameSwapQuote";
 import { useFameSwapReadiness } from "../hooks/useFameSwapReadiness";
 import { useFameSwapTransaction } from "../hooks/useFameSwapTransaction";
-import {
-  deadlineMinutesToSeconds,
-  DEFAULT_FAME_SWAP_DEADLINE_MINUTES,
-} from "../solver/deadline";
+import { DEFAULT_FAME_SWAP_DEADLINE_MINUTES } from "../solver/deadline";
 import { formatTokenAmount } from "../solver/format";
-import { quoteFameSwap } from "../solver/quote";
 import type { FameSwapQuote } from "../solver/types";
 import { fameSwapWidgetState } from "../state";
 import type { FameSwapToken } from "../tokens";
@@ -94,6 +91,10 @@ export function quoteSummary(quote: FameSwapQuote | null): string {
       return quote.reason;
     case "unsupported":
       return "This pair is not in the pinned FAME route set.";
+    case "no_safe_route":
+    case "quote_adapter_failure":
+    case "simulation_failure":
+      return quote.message;
   }
 }
 
@@ -107,6 +108,9 @@ function alertSeverity(
   if (
     stateKind === "not_live_ready" ||
     stateKind === "stale_artifact" ||
+    stateKind === "no_safe_route" ||
+    stateKind === "quote_adapter_failure" ||
+    stateKind === "simulation_failure" ||
     stateKind === "quote_expired"
   ) {
     return "warning";
@@ -187,26 +191,19 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
       ? "Amount exceeds available balance."
       : balanceHelperText(inputBalance, pair.inputToken);
 
-  const quote = useMemo(() => {
-    if (parsedAmount === null) return null;
-    return quoteFameSwap({
-      tokenIn: pair.tokenIn,
-      tokenOut: pair.tokenOut,
-      amountIn: parsedAmount,
-      recipient: address ?? null,
-      deadlineSeconds: deadlineMinutesToSeconds(deadlineMinutes),
-      config,
-      readiness,
-    });
-  }, [
-    address,
+  const {
+    quote,
+    isLoading: quoteLoading,
+    error: quoteRequestError,
+  } = useFameSwapQuote({
+    tokenIn: pair.tokenIn,
+    tokenOut: pair.tokenOut,
+    amountIn: parsedAmount,
+    recipient: address ?? null,
     config,
     deadlineMinutes,
-    pair.tokenIn,
-    pair.tokenOut,
-    parsedAmount,
     readiness,
-  ]);
+  });
 
   const transaction = useFameSwapTransaction(quote, address);
   const quoteView = useMemo(
@@ -218,6 +215,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     connected: isConnected,
     onBase,
     amountEntered: parsedAmount !== null,
+    quoteLoading,
     quoteStatus: quote?.status ?? null,
     quoteExpired: transaction.quoteExpired,
     approvalRequired:
@@ -305,7 +303,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
       ? transaction.protectedMinimum !== null
         ? `Protected minimum used: ${quoteView.protectedMinimumLabel}.`
         : "Swap receipt confirmed on Base."
-      : quoteView.blockedReason ?? quoteSummary(quote);
+      : quoteLoading
+        ? "Fetching live liquidity and route diagnostics."
+        : quoteView.blockedReason ?? quoteSummary(quote);
   const quoteReady = quote?.status === "ready";
   const approvalRequired = Boolean(
     quoteReady && quote.approval !== null && !transaction.approvalConfirmed,
@@ -480,6 +480,11 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           {transaction.error ? (
             <Typography variant="body2" sx={{ mt: 0.75 }}>
               {transaction.error.message}
+            </Typography>
+          ) : null}
+          {quoteRequestError ? (
+            <Typography variant="body2" sx={{ mt: 0.75 }}>
+              {quoteRequestError.message}
             </Typography>
           ) : null}
         </Alert>

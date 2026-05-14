@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "./tokens";
 import { routeArtifactById } from "./solver/artifacts";
 import { quoteWithReadyReadiness } from "./solver/quote";
+import { createDeterministicQuoteAdapter } from "./solver/quotes/deterministicAdapter";
 import { fameSwapTransactionRequests } from "./transactions";
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
@@ -20,6 +21,10 @@ function artifactAmount(id: string): bigint {
   return BigInt(artifact.route.amountIn);
 }
 
+function quoteAdapter() {
+  return createDeterministicQuoteAdapter();
+}
+
 describe("FAME swap transaction requests", () => {
   it("builds exact ERC20 approval and router execution requests", () => {
     const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc");
@@ -30,6 +35,7 @@ describe("FAME swap transaction requests", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
 
     const requests = fameSwapTransactionRequests(quote);
@@ -42,7 +48,10 @@ describe("FAME swap transaction requests", () => {
     assert.equal(requests.swap?.contract.functionName, "executeRoute");
     assert.equal(requests.swap?.contract.value, 0n);
     assert.equal(requests.swap?.contract.args[0].recipient, recipient);
-    assert.notEqual(requests.swap?.fixtureRouteHash, requests.swap?.materializedRouteHash);
+    assert.equal(quote.status, "ready");
+    if (quote.status === "ready") {
+      assert.equal(requests.swap?.materializedRouteHash, quote.materializedRouteHash);
+    }
   });
 
   it("uses native ETH value and skips approval for ETH input routes", () => {
@@ -54,6 +63,7 @@ describe("FAME swap transaction requests", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
 
     const requests = fameSwapTransactionRequests(quote);
@@ -62,8 +72,8 @@ describe("FAME swap transaction requests", () => {
     assert.equal(requests.swap?.contract.value, amountIn);
   });
 
-  it("builds executable requests for arbitrary non-fixture amounts", () => {
-    const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc") + 1n;
+  it("does not build executable requests for unsafe arbitrary non-fixture amounts", () => {
+    const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc") * 1_000n;
     const quote = quoteWithReadyReadiness({
       tokenIn: token(FAME),
       tokenOut: token(USDC),
@@ -71,11 +81,12 @@ describe("FAME swap transaction requests", () => {
       recipient,
       routerAddress,
       now: new Date("2026-05-13T00:00:00Z"),
+      adapter: quoteAdapter(),
     });
 
-    assert.equal(quote.status, "ready");
+    assert.equal(quote.status, "no_safe_route");
     const requests = fameSwapTransactionRequests(quote);
-    assert.equal(requests.approval?.amount, amountIn);
-    assert.equal(requests.swap?.contract.args[0].amountIn, amountIn);
+    assert.equal(requests.approval, null);
+    assert.equal(requests.swap, null);
   });
 });

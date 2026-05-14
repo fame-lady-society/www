@@ -12,6 +12,10 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
     "0xe12b694540180d42f640c9b660379eab7e38caef92f24e22c629f6b6da4c427e" as Hex,
   parityVectorsJsonHash:
     "0xf9a0cfbddc5ad9a5a2507c490f592ec72ba111e48d3ec0ea8612f69e35998aee" as Hex,
+  poolsJsonHash:
+    "0xa3a83e1eb4ab889a20c144f885ed3533a59784726098be3d43f3257d219af28b" as Hex,
+  poolStateSnapshotJsonHash:
+    "0xf235b93fbf297af3210e779c0bd8d792f0c8912e6d1335853879339f94a80407" as Hex,
   routeArtifactIds: [
     "solver-eth-zora-basedflick-fame",
     "solver-fame-basedflick-zora-eth",
