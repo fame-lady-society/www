@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
-import { quoteFameSwap } from "../../../../../features/fame-swap/solver/quote";
+import {
+  FAME_SWAP_PREVIEW_RECIPIENT,
+  quoteFameSwap,
+} from "../../../../../features/fame-swap/solver/quote";
 import { createDeterministicQuoteAdapter } from "../../../../../features/fame-swap/solver/quotes/deterministicAdapter";
 import { FAME, USDC } from "../../../../../features/fame-swap/tokens";
 import { publicFeeBreakdown } from "../../../../../features/fame-swap/solver/quoteWire";
@@ -188,6 +191,37 @@ describe("/api/fame/swap/quote", () => {
     assert.equal("swap" in json, false);
     assert.equal("route" in json, false);
     assert.doesNotMatch(JSON.stringify(json), /executeRoute|approve|calldata/);
+  });
+
+  it("quotes a preview route when no wallet recipient is connected", async () => {
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: USDC,
+        tokenOut: FAME,
+        amountIn: "1000000",
+        recipient: null,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteForRequest: (quoteRequest) =>
+          quoteFameSwap({
+            ...quoteRequest,
+            adapter: createDeterministicQuoteAdapter(),
+            now: new Date("2026-05-14T00:00:00Z"),
+          }),
+      },
+    );
+    const json = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(json.status, "ready");
+    assert.equal(json.route.recipient, FAME_SWAP_PREVIEW_RECIPIENT);
+    assert.equal(json.approval.kind, "approval");
+    assert.equal(json.swap.kind, "swap");
   });
 
   it("rejects arbitrary router address overrides", async () => {

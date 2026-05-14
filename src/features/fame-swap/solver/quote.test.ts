@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { Address } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "./artifacts";
-import { quoteFameSwap, quoteFameSwapAsync } from "./quote";
+import {
+  FAME_SWAP_PREVIEW_RECIPIENT,
+  quoteFameSwap,
+  quoteFameSwapAsync,
+} from "./quote";
 import type {
   FameAsyncQuoteAdapter,
   FameQuoteAdapter,
@@ -13,8 +18,8 @@ import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import type { FameSwapQuote } from "./types";
 
-const routerAddress = "0x0000000000000000000000000000000000000009";
-const recipient = "0x0000000000000000000000000000000000000abc";
+const routerAddress = "0x0000000000000000000000000000000000000009" as Address;
+const recipient = "0x0000000000000000000000000000000000000abc" as Address;
 
 function config(): FameSwapConfig {
   return {
@@ -194,6 +199,35 @@ describe("FAME swap quote", () => {
       assert.notEqual(quote.route.recipient, artifact.route.recipient);
       assert.equal(quote.route.recipient, recipient);
       assert.ok(quote.route.deadline < BigInt(artifact.route.deadline));
+    }
+  });
+
+  it("can materialize a preview route before a wallet recipient is connected", () => {
+    const tokenIn = tokenForAddress(FAME);
+    const tokenOut = tokenForAddress(USDC);
+    assert.ok(tokenIn);
+    assert.ok(tokenOut);
+    const amountIn = artifactAmount("solver-fame-basedflick-zora-usdc");
+
+    const quote = quoteFameSwap({
+      tokenIn,
+      tokenOut,
+      amountIn,
+      recipient: null,
+      config: config(),
+      readiness: {
+        status: "ready",
+        routerAddress,
+        feePpm: 2_222n,
+      },
+      adapter: createDeterministicQuoteAdapter(),
+      now: new Date("2026-05-13T00:00:00Z"),
+    });
+
+    assert.equal(quote.status, "ready");
+    if (quote.status === "ready") {
+      assert.equal(quote.route.recipient, FAME_SWAP_PREVIEW_RECIPIENT);
+      assert.equal(quote.approval?.amount, amountIn);
     }
   });
 

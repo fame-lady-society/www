@@ -27,6 +27,9 @@ import type {
 
 type ReadyReadiness = Extract<FameSwapReadiness, { status: "ready" }>;
 
+export const FAME_SWAP_PREVIEW_RECIPIENT =
+  "0x0000000000000000000000000000000000000001" as Address;
+
 type PreparedQuoteRequest =
   | {
       status: "blocked";
@@ -123,18 +126,6 @@ function prepareQuoteRequest(
     };
   }
 
-  if (!request.recipient) {
-    return {
-      status: "blocked",
-      quote: notLiveReady(request, {
-        status: "not_live_ready",
-        reason: "missing_recipient",
-        message: "Connect a wallet before materializing a FAME router route.",
-        routerAddress: readiness.routerAddress,
-      }),
-    };
-  }
-
   const deadline = defaultDeadline(
     request.now ?? new Date(),
     request.deadlineSeconds,
@@ -143,7 +134,7 @@ function prepareQuoteRequest(
   return {
     status: "ready",
     readiness,
-    recipient: request.recipient,
+    recipient: request.recipient ?? FAME_SWAP_PREVIEW_RECIPIENT,
     deadline,
     slippageBps: normalizeSlippageBps(request.config.defaultSlippageBps),
   };
@@ -154,40 +145,39 @@ function quoteFromSolverResult(
   prepared: Extract<PreparedQuoteRequest, { status: "ready" }>,
   solved: FameAmountSolverResult,
 ): FameSwapQuote {
-  if (solved.status === "unsupported") {
-    return {
-      status: "unsupported",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      availableDirections: supportedDirections(),
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  if (solved.status === "no_safe_route") {
-    return {
-      status: "no_safe_route",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
-  }
-
-  if (solved.status === "quote_adapter_failure") {
-    return {
-      status: "quote_adapter_failure",
-      tokenIn: request.tokenIn,
-      tokenOut: request.tokenOut,
-      requestedAmountIn: request.amountIn,
-      rejectedCandidates: solved.rejectedCandidates,
-      message: solved.message,
-      diagnosticsVisibleByDefault: true,
-    };
+  if (solved.status !== "ready") {
+    switch (solved.status) {
+      case "unsupported":
+        return {
+          status: "unsupported",
+          tokenIn: request.tokenIn,
+          tokenOut: request.tokenOut,
+          requestedAmountIn: request.amountIn,
+          availableDirections: supportedDirections(),
+          message: solved.message,
+          diagnosticsVisibleByDefault: true,
+        };
+      case "no_safe_route":
+        return {
+          status: "no_safe_route",
+          tokenIn: request.tokenIn,
+          tokenOut: request.tokenOut,
+          requestedAmountIn: request.amountIn,
+          rejectedCandidates: solved.rejectedCandidates,
+          message: solved.message,
+          diagnosticsVisibleByDefault: true,
+        };
+      case "quote_adapter_failure":
+        return {
+          status: "quote_adapter_failure",
+          tokenIn: request.tokenIn,
+          tokenOut: request.tokenOut,
+          requestedAmountIn: request.amountIn,
+          rejectedCandidates: solved.rejectedCandidates,
+          message: solved.message,
+          diagnosticsVisibleByDefault: true,
+        };
+    }
   }
 
   const inputToken = request.tokenIn;

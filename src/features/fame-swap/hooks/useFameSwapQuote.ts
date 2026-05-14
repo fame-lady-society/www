@@ -35,7 +35,7 @@ export type FameSwapQuoteQueryKey = readonly [
 
 export type FameSwapRemoteQuoteInput = UseFameSwapQuoteInput & {
   amountIn: bigint;
-  recipient: Address;
+  recipient: Address | null;
   readiness: Extract<FameSwapReadiness, { status: "ready" }>;
 };
 
@@ -120,7 +120,6 @@ export function fameSwapRemoteQuoteInput(
   input: UseFameSwapQuoteInput,
 ): FameSwapRemoteQuoteInput | null {
   if (input.amountIn === null) return null;
-  if (!input.recipient) return null;
   if (input.readiness.status !== "ready") return null;
 
   return {

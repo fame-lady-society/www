@@ -16,7 +16,7 @@ const baseInput: FameSwapWidgetStateInput = {
 };
 
 describe("FAME swap widget state", () => {
-  it("maps disconnected and wrong-chain setup states", () => {
+  it("uses connect copy only for disconnected setup state", () => {
     const disconnected = fameSwapWidgetState({
       ...baseInput,
       connected: false,
@@ -24,12 +24,26 @@ describe("FAME swap widget state", () => {
     assert.equal(disconnected.kind, "disconnected");
     assert.equal(disconnected.ctaLabel, "Connect wallet");
 
-    const wrongChain = fameSwapWidgetState({
+    const wrongChainReady = fameSwapWidgetState({
       ...baseInput,
       onBase: false,
     });
-    assert.equal(wrongChain.kind, "wrong_chain");
-    assert.equal(wrongChain.ctaLabel, "Switch to Base");
+    assert.equal(wrongChainReady.kind, "ready");
+    assert.equal(wrongChainReady.ctaLabel, "Swap with FAME router");
+    assert.match(wrongChainReady.message, /switch to Base/i);
+  });
+
+  it("does not offer chain switching before an executable swap action", () => {
+    const state = fameSwapWidgetState({
+      ...baseInput,
+      onBase: false,
+      amountEntered: false,
+      quoteStatus: null,
+    });
+
+    assert.equal(state.kind, "amount_entry");
+    assert.equal(state.ctaDisabled, true);
+    assert.doesNotMatch(state.ctaLabel, /switch|connect/i);
   });
 
   it("blocks expired quotes while preserving recovery copy", () => {

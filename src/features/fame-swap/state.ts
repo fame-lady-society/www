@@ -2,7 +2,6 @@ import type { FameSwapQuoteStatus } from "./solver/types";
 
 export type FameSwapWidgetStateKind =
   | "disconnected"
-  | "wrong_chain"
   | "amount_entry"
   | "quote_loading"
   | "unsupported_route"
@@ -79,7 +78,8 @@ export function fameSwapWidgetState(
       ...defaultState,
       kind: "reverted",
       title: "Swap reverted",
-      message: "The transaction did not complete. Review diagnostics before retrying.",
+      message:
+        "The transaction did not complete. Review diagnostics before retrying.",
       ctaLabel: "Review diagnostics",
       ctaDisabled: true,
       recoveryAction: "Retry after checking the route and wallet state.",
@@ -110,18 +110,6 @@ export function fameSwapWidgetState(
       ctaLabel: "Connect wallet",
       ctaDisabled: false,
       recoveryAction: "Connect a wallet.",
-    };
-  }
-
-  if (!input.onBase) {
-    return {
-      ...defaultState,
-      kind: "wrong_chain",
-      title: "Switch to Base",
-      message: "FAME router evidence is pinned for Base.",
-      ctaLabel: "Switch to Base",
-      ctaDisabled: false,
-      recoveryAction: "Switch your wallet network to Base.",
     };
   }
 
@@ -183,7 +171,8 @@ export function fameSwapWidgetState(
       message: "The route artifact is stale or outside the approved manifest.",
       ctaLabel: "Swap unavailable",
       ctaDisabled: true,
-      recoveryAction: "Use an allowlisted fallback link and inspect diagnostics.",
+      recoveryAction:
+        "Use an allowlisted fallback link and inspect diagnostics.",
       diagnosticsVisible: true,
       fallbackVisible: true,
     };
@@ -197,7 +186,8 @@ export function fameSwapWidgetState(
       message: "FAME router execution is blocked until live readiness passes.",
       ctaLabel: "Router unavailable",
       ctaDisabled: true,
-      recoveryAction: "Use an allowlisted fallback link or inspect route evidence.",
+      recoveryAction:
+        "Use an allowlisted fallback link or inspect route evidence.",
       diagnosticsVisible: true,
       fallbackVisible: true,
     };
@@ -247,10 +237,14 @@ export function fameSwapWidgetState(
       ...defaultState,
       kind: "approval_needed",
       title: "Approve exact amount",
-      message: "Approve only the exact input amount for the FAME router.",
+      message: input.onBase
+        ? "Approve only the exact input amount for the FAME router."
+        : "Your wallet will switch to Base before approval.",
       ctaLabel: "Approve exact amount",
       ctaDisabled: false,
-      recoveryAction: "Approve the exact amount, then submit the swap.",
+      recoveryAction: input.onBase
+        ? "Approve the exact amount, then submit the swap."
+        : "Confirm the Base network switch, then approve the exact amount.",
     };
   }
 
@@ -258,9 +252,13 @@ export function fameSwapWidgetState(
     ...defaultState,
     kind: "ready",
     title: "Ready",
-    message: "Pinned exact FAME router evidence amount is ready.",
+    message: input.onBase
+      ? "Pinned exact FAME router evidence amount is ready."
+      : "Your wallet will switch to Base before the swap.",
     ctaLabel: "Swap with FAME router",
     ctaDisabled: false,
-    recoveryAction: "Submit the swap or edit the pair and amount.",
+    recoveryAction: input.onBase
+      ? "Submit the swap or edit the pair and amount."
+      : "Confirm the Base network switch, then submit the swap.",
   };
 }

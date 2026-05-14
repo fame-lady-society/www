@@ -2,7 +2,7 @@ import type { Hex } from "viem";
 import type { FameRouteLeg } from "../router/types";
 import { formatTokenAmount } from "../solver/format";
 import type { FameSwapQuote } from "../solver/types";
-import { USDC, tokenForAddress, type FameSwapToken } from "../tokens";
+import { FAME, USDC, tokenForAddress, type FameSwapToken } from "../tokens";
 import { poolDisplayMetadata, poolDisplayName } from "./poolDisplay";
 import { routeTokenMetadataForAddress } from "./routeMetadata";
 
@@ -26,11 +26,15 @@ export type FameSwapUsdcEstimate =
   | {
       status: "available";
       label: string;
+      tone: FameSwapValueTone;
     }
   | {
       status: "unavailable";
       label: "USDC estimate unavailable";
+      tone: "neutral";
     };
+
+export type FameSwapValueTone = "positive" | "negative" | "neutral";
 
 export interface FameSwapRouteTokenView {
   symbol: string;
@@ -74,13 +78,18 @@ export interface FameSwapDiagnosticsView {
 
 export interface FameSwapQuoteView {
   receiveLabel: string;
+  receiveTone: FameSwapValueTone;
   protectedMinimumLabel: string;
+  protectedMinimumTone: FameSwapValueTone;
   usdcEstimate: FameSwapUsdcEstimate;
   freshnessLabel: string;
   feeLabel: string | null;
   feeTooltip: string | null;
   venueFeeLabel: string | null;
   venueFeeTooltip: string | null;
+  marketImpactLabel: string | null;
+  marketImpactTooltip: string | null;
+  marketImpactTone: FameSwapValueTone;
   estimateSourceLabel: string | null;
   estimateSourceTooltip: string | null;
   slippageLabel: string | null;
@@ -220,6 +229,38 @@ function venueFeeSummary(quote: FameSwapQuote | null): {
   };
 }
 
+function marketImpactSummary(quote: FameSwapQuote | null): {
+  label: string;
+  tooltip: string;
+  tone: FameSwapValueTone;
+} | null {
+  if (quote?.status !== "ready") return null;
+  const { maxLegMarketImpactBps, computableLegs } =
+    quote.feeBreakdown.marketImpact;
+  if (computableLegs <= 0 || maxLegMarketImpactBps === null) return null;
+
+  const fameIn = quote.tokenIn.address.toLowerCase() === FAME.toLowerCase();
+  const fameOut = quote.tokenOut.address.toLowerCase() === FAME.toLowerCase();
+  const signedImpact =
+    maxLegMarketImpactBps === 0
+      ? 0
+      : fameOut
+        ? maxLegMarketImpactBps
+        : fameIn
+          ? -maxLegMarketImpactBps
+          : 0;
+  const sign = signedImpact > 0 ? "+" : "";
+  const label = `${sign}${(signedImpact / 100).toFixed(2)}%`;
+  const tone =
+    signedImpact > 0 ? "positive" : signedImpact < 0 ? "negative" : "neutral";
+
+  return {
+    label,
+    tooltip: `max ${label} across all computable legs`,
+    tone,
+  };
+}
+
 function usdcEstimate(
   quote: FameSwapQuote | null,
   transaction: FameSwapQuoteViewTransaction,
@@ -229,6 +270,7 @@ function usdcEstimate(
     return {
       status: "unavailable",
       label: "USDC estimate unavailable",
+      tone: "neutral",
     };
   }
 
@@ -236,6 +278,7 @@ function usdcEstimate(
     return {
       status: "available",
       label: formatTokenAmount(quote.requestedAmountIn, usdc),
+      tone: "positive",
     };
   }
 
@@ -247,12 +290,14 @@ function usdcEstimate(
     return {
       status: "available",
       label: formatTokenAmount(transaction.simulatedOutput, usdc),
+      tone: "positive",
     };
   }
 
   return {
     status: "unavailable",
     label: "USDC estimate unavailable",
+    tone: "neutral",
   };
 }
 
@@ -287,7 +332,6 @@ function blockedReason(
   if (quote.status === "no_safe_route") return quote.message;
   if (quote.status === "quote_adapter_failure") return quote.message;
   if (quote.status === "simulation_failure") return quote.message;
-  if (transaction.error) return transaction.error.message;
   return null;
 }
 
@@ -303,7 +347,9 @@ function estimateLabels(
   transaction: FameSwapQuoteViewTransaction,
 ): {
   receiveLabel: string;
+  receiveTone: FameSwapValueTone;
   protectedMinimumLabel: string;
+  protectedMinimumTone: FameSwapValueTone;
   sourceLabel: string | null;
   sourceTooltip: string | null;
 } {
@@ -311,7 +357,9 @@ function estimateLabels(
     const label = unavailableEstimateLabel(quote);
     return {
       receiveLabel: label,
+      receiveTone: "neutral",
       protectedMinimumLabel: label,
+      protectedMinimumTone: "neutral",
       sourceLabel: null,
       sourceTooltip: null,
     };
@@ -320,10 +368,12 @@ function estimateLabels(
   if (transaction.simulatedOutput !== null) {
     return {
       receiveLabel: formatTokenAmount(transaction.simulatedOutput, outputToken),
+      receiveTone: "positive",
       protectedMinimumLabel:
         transaction.protectedMinimum !== null
           ? formatTokenAmount(transaction.protectedMinimum, outputToken)
           : formatTokenAmount(quote.minAmountOutAfterFee, outputToken),
+      protectedMinimumTone: "positive",
       sourceLabel: "Wallet-simulated output",
       sourceTooltip:
         "This display uses wallet/RPC simulation output. Swap submission still uses the protected route simulation gate.",
@@ -333,7 +383,9 @@ function estimateLabels(
   if (transaction.protectedSimulationPending) {
     return {
       receiveLabel: "Estimating",
+      receiveTone: "neutral",
       protectedMinimumLabel: "Estimating",
+      protectedMinimumTone: "neutral",
       sourceLabel: null,
       sourceTooltip: null,
     };
@@ -348,10 +400,12 @@ function estimateLabels(
 
   return {
     receiveLabel: formatTokenAmount(quote.estimatedOutput, outputToken),
+    receiveTone: "positive",
     protectedMinimumLabel: formatTokenAmount(
       quote.minAmountOutAfterFee,
       outputToken,
     ),
+    protectedMinimumTone: "positive",
     sourceLabel: `Quote estimate until ${quoteExpiryTime(quote)}`,
     sourceTooltip: `${fallbackReason} This display falls back to the server quote. It does not enable swap submission; the protected wallet simulation remains the final gate.`,
   };
@@ -369,10 +423,13 @@ export function fameSwapQuoteView(
       ? `${(Number(quote.feePpm) / 10_000).toFixed(4)}%`
       : null;
   const venueFees = venueFeeSummary(quote);
+  const marketImpact = marketImpactSummary(quote);
 
   return {
     receiveLabel: estimates.receiveLabel,
+    receiveTone: estimates.receiveTone,
     protectedMinimumLabel: estimates.protectedMinimumLabel,
+    protectedMinimumTone: estimates.protectedMinimumTone,
     usdcEstimate: usdcEstimate(quote, transaction),
     freshnessLabel: freshnessLabel(quote, transaction.quoteExpired),
     feeLabel: feePercentLabel,
@@ -382,6 +439,9 @@ export function fameSwapQuoteView(
         : null,
     venueFeeLabel: venueFees?.label ?? null,
     venueFeeTooltip: venueFees?.tooltip ?? null,
+    marketImpactLabel: marketImpact?.label ?? null,
+    marketImpactTooltip: marketImpact?.tooltip ?? null,
+    marketImpactTone: marketImpact?.tone ?? "neutral",
     estimateSourceLabel: estimates.sourceLabel,
     estimateSourceTooltip: estimates.sourceTooltip,
     slippageLabel:

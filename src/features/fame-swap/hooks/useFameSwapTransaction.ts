@@ -125,6 +125,7 @@ export function useFameSwapTransaction(
   const quoteExpired =
     quote?.status === "ready" && BigInt(nowSeconds) >= quote.route.deadline;
   const swapSimulationEnabled =
+    Boolean(account) &&
     requests.swap !== null &&
     (requests.approval === null || approvalConfirmed) &&
     !swapConfirmed &&
@@ -175,6 +176,7 @@ export function useFameSwapTransaction(
   );
   const protectedSwapContract = protectedRequests.swap?.contract;
   const protectedSimulationEnabled =
+    Boolean(account) &&
     protectedRequests.swap !== null &&
     swapSimulation.isSuccess &&
     (requests.approval === null || approvalConfirmed) &&
@@ -461,11 +463,13 @@ export function useFameSwapTransaction(
     submissionKind === "approval" && (writing || receiptPending);
   const swapPending = submissionKind === "swap" && (writing || receiptPending);
   const canApprove =
+    Boolean(account) &&
     requests.approval !== null &&
     !approvalConfirmed &&
     !submitting &&
     !quoteExpired;
   const canSwap =
+    Boolean(account) &&
     protectedRequests.swap !== null &&
     !submitting &&
     !quoteExpired &&

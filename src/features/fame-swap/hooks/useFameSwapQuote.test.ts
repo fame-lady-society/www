@@ -105,14 +105,14 @@ describe("useFameSwapQuote", () => {
     assert.equal(key[1].refreshNonce, 7);
   });
 
-  it("disables remote fetches for empty amount, missing recipient, and local blocked states", () => {
+  it("disables remote fetches for empty amount and local blocked states", () => {
     assert.equal(
       fameSwapRemoteQuoteEnabled(quoteInput({ amountIn: null })),
       false,
     );
     assert.equal(
       fameSwapRemoteQuoteEnabled(quoteInput({ recipient: null })),
-      false,
+      true,
     );
     assert.equal(
       fameSwapRemoteQuoteEnabled(quoteInput({ readiness: blockedReadiness() })),
@@ -150,14 +150,14 @@ describe("useFameSwapQuote", () => {
       }),
     );
     assert.ok(input);
-    let request: { url: string; init?: RequestInit } | null = null;
+    const requests: { url: string; init?: RequestInit }[] = [];
     const signal = new AbortController().signal;
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
-      request = {
+      requests.push({
         url: String(url),
         init,
-      };
+      });
       return new Response(
         JSON.stringify(serializeFameSwapQuoteResponse(sourceQuote)),
         {
@@ -169,18 +169,53 @@ describe("useFameSwapQuote", () => {
 
     try {
       const parsed = await fetchFameSwapRemoteQuote(input, signal);
+      const request = requests[0];
+      assert.ok(request);
 
       assert.equal(parsed.status, "ready");
-      assert.equal(request?.url, "/api/fame/swap/quote");
-      assert.equal(request?.init?.method, "POST");
-      assert.equal(request?.init?.signal, signal);
-      const body = JSON.parse(String(request?.init?.body));
+      assert.equal(request.url, "/api/fame/swap/quote");
+      assert.equal(request.init?.method, "POST");
+      assert.equal(request.init?.signal, signal);
+      const body = JSON.parse(String(request.init?.body));
       assert.equal(body.tokenIn, USDC);
       assert.equal(body.tokenOut, FAME);
       assert.equal(body.amountIn, sourceQuote.requestedAmountIn.toString());
       assert.equal(body.recipient, recipient);
       assert.equal(body.slippageBps, 175);
       assert.equal(body.deadlineMinutes, 17);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("posts remote quote preview requests without a connected recipient", async () => {
+    const input = fameSwapRemoteQuoteInput(quoteInput({ recipient: null }));
+    assert.ok(input);
+    const requestBodies: Record<string, unknown>[] = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      requestBodies.push(JSON.parse(String(init?.body)));
+      return new Response(
+        JSON.stringify({
+          status: "quote_adapter_failure",
+          message: "preview response",
+          rejectedCandidates: [],
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }) as typeof fetch;
+
+    try {
+      const parsed = await fetchFameSwapRemoteQuote(
+        input,
+        new AbortController().signal,
+      );
+
+      assert.equal(parsed.status, "quote_adapter_failure");
+      assert.equal(requestBodies[0]?.recipient, null);
     } finally {
       globalThis.fetch = originalFetch;
     }

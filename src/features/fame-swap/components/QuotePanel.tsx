@@ -4,12 +4,13 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import type { CSSProperties, FC, ReactNode } from "react";
-import type { FameSwapQuoteView } from "../ui/quoteView";
+import type { FameSwapQuoteView, FameSwapValueTone } from "../ui/quoteView";
 
 interface QuoteMetricProps {
   label: string;
   value: ReactNode;
   tooltip?: string | null;
+  tone?: FameSwapValueTone;
 }
 
 export interface FameSwapQuotePanelProps {
@@ -66,6 +67,12 @@ const infoButtonStyle: CSSProperties = {
   padding: 0,
 };
 
+function toneColor(tone: FameSwapValueTone | undefined): string | undefined {
+  if (tone === "positive") return "success.main";
+  if (tone === "negative") return "error.main";
+  return undefined;
+}
+
 function splitAmountLabel(label: string): {
   amount: string;
   symbol: string | null;
@@ -86,23 +93,32 @@ function splitAmountLabel(label: string): {
   };
 }
 
-const AmountValue: FC<{ label: string }> = ({ label }) => {
+const AmountValue: FC<{ label: string; tone?: FameSwapValueTone }> = ({
+  label,
+  tone,
+}) => {
   const { amount, symbol } = splitAmountLabel(label);
+  const color = toneColor(tone);
 
   return (
     <div style={receiveStyle}>
       <Typography
         component="span"
         variant="h5"
-        sx={{ fontWeight: 800, lineHeight: 1.15, overflowWrap: "anywhere" }}
+        sx={{
+          color,
+          fontWeight: 800,
+          lineHeight: 1.15,
+          overflowWrap: "anywhere",
+        }}
       >
         {amount}
       </Typography>
       {symbol ? (
         <Typography
           component="span"
-          color="text.secondary"
-          sx={{ fontWeight: 700, lineHeight: 1.15 }}
+          color={color ? undefined : "text.secondary"}
+          sx={{ color, fontWeight: 700, lineHeight: 1.15 }}
         >
           {symbol}
         </Typography>
@@ -111,39 +127,44 @@ const AmountValue: FC<{ label: string }> = ({ label }) => {
   );
 };
 
-const QuoteMetric: FC<QuoteMetricProps> = ({ label, value, tooltip }) => (
-  <div style={metricStyle}>
-    <Typography
-      component="div"
-      variant="caption"
-      color="text.secondary"
-      style={labelStyle}
-    >
-      <span>{label}</span>
-      {tooltip ? (
-        <Tooltip title={tooltip} arrow>
-          <button
-            type="button"
-            aria-label={`${label} details`}
-            style={infoButtonStyle}
-          >
-            <InfoOutlinedIcon fontSize="inherit" />
-          </button>
-        </Tooltip>
-      ) : null}
-    </Typography>
-    <Typography
-      variant="body2"
-      sx={{
-        mt: 0.25,
-        fontWeight: 700,
-        overflowWrap: "anywhere",
-      }}
-    >
-      {value}
-    </Typography>
-  </div>
-);
+const QuoteMetric: FC<QuoteMetricProps> = ({ label, value, tooltip, tone }) => {
+  const color = toneColor(tone);
+
+  return (
+    <div style={metricStyle}>
+      <Typography
+        component="div"
+        variant="caption"
+        color="text.secondary"
+        style={labelStyle}
+      >
+        <span>{label}</span>
+        {tooltip ? (
+          <Tooltip title={tooltip} arrow>
+            <button
+              type="button"
+              aria-label={`${label} details`}
+              style={infoButtonStyle}
+            >
+              <InfoOutlinedIcon fontSize="inherit" />
+            </button>
+          </Tooltip>
+        ) : null}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          color,
+          mt: 0.25,
+          fontWeight: 700,
+          overflowWrap: "anywhere",
+        }}
+      >
+        {value}
+      </Typography>
+    </div>
+  );
+};
 
 export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
   <section aria-label="Swap quote" style={panelStyle}>
@@ -155,7 +176,7 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
         {view.freshnessLabel}
       </Typography>
     </div>
-    <AmountValue label={view.receiveLabel} />
+    <AmountValue label={view.receiveLabel} tone={view.receiveTone} />
     {view.estimateSourceLabel ? (
       <Typography
         variant="caption"
@@ -166,9 +187,17 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
       </Typography>
     ) : null}
     <div style={metricGridStyle}>
-      <QuoteMetric label="Min receive" value={view.protectedMinimumLabel} />
+      <QuoteMetric
+        label="Min receive"
+        value={view.protectedMinimumLabel}
+        tone={view.protectedMinimumTone}
+      />
       {view.usdcEstimate.status === "available" ? (
-        <QuoteMetric label="Est. USDC" value={view.usdcEstimate.label} />
+        <QuoteMetric
+          label="Est. USDC"
+          value={view.usdcEstimate.label}
+          tone={view.usdcEstimate.tone}
+        />
       ) : null}
       {view.feeLabel ? (
         <QuoteMetric
@@ -182,6 +211,14 @@ export const FameSwapQuotePanel: FC<FameSwapQuotePanelProps> = ({ view }) => (
           label="Venue fees"
           value={view.venueFeeLabel}
           tooltip={view.venueFeeTooltip}
+        />
+      ) : null}
+      {view.marketImpactLabel ? (
+        <QuoteMetric
+          label="Market impact"
+          value={view.marketImpactLabel}
+          tooltip={view.marketImpactTooltip}
+          tone={view.marketImpactTone}
         />
       ) : null}
     </div>
