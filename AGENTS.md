@@ -32,6 +32,7 @@
 - `src/components`, `src/layouts`, `src/hooks`, `src/context` – Shared UI building blocks, layout shells, React hooks, and global context providers.
 - `src/service` – Service-layer utilities for Irys uploads, metadata fetching, owner lookups, Farcaster integrations, and other side effects.
 - `src/viem`, `src/wagmi` – Chain-specific clients, contract ABIs, and generated wagmi hooks for interacting with deployed contracts.
+- `docs` – Planning, route-lab, and documented solution notes. `docs/solutions/` stores past problem solutions and best practices organized by category with YAML frontmatter (`module`, `tags`, `problem_type`), relevant when implementing or debugging in documented areas.
 - Styling is primarily TailwindCSS with supplemental Emotion/MUI components; global styles live in `src/styles`.
 
 ## Data & Integrations
