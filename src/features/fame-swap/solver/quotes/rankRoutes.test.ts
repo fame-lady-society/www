@@ -121,6 +121,11 @@ describe("FAME route ranking", () => {
     if (result.status === "selected") {
       assert.equal(result.plan.legQuotes[0]?.poolId, "uniswap-v2-fame-direct");
       assert.match(result.plan.warnings[0] ?? "", /Solidly quote failed/);
+      assert.ok(
+        result.rejectedCandidates.some((candidate) =>
+          /Solidly quote failed/.test(candidate.message),
+        ),
+      );
     }
   });
 

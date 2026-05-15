@@ -29,6 +29,25 @@ const solidlyPayloadAbi = [
   },
 ] as const;
 
+const aerodromeV2PayloadAbi = [
+  {
+    type: "tuple",
+    components: [
+      {
+        name: "routes",
+        type: "tuple[]",
+        components: [
+          { name: "from", type: "address" },
+          { name: "to", type: "address" },
+          { name: "stable", type: "bool" },
+          { name: "factory", type: "address" },
+        ],
+      },
+      { name: "deadline", type: "uint256" },
+    ],
+  },
+] as const;
+
 const uniswapV2PayloadAbi = [
   {
     type: "tuple",
@@ -107,6 +126,26 @@ function encodeSolidlyPayload(edge: FamePoolEdge, deadline: bigint): Hex {
           from: edge.tokenIn,
           to: edge.tokenOut,
           stable: edge.pool.stable,
+        },
+      ],
+      deadline,
+    },
+  ]);
+}
+
+function encodeAerodromeV2Payload(edge: FamePoolEdge, deadline: bigint): Hex {
+  if (edge.pool.venue !== "aerodrome-v2") {
+    throw new Error("Expected Aerodrome V2 pool.");
+  }
+
+  return encodeAbiParameters(aerodromeV2PayloadAbi, [
+    {
+      routes: [
+        {
+          from: edge.tokenIn,
+          to: edge.tokenOut,
+          stable: edge.pool.stable,
+          factory: edge.pool.factory,
         },
       ],
       deadline,
@@ -199,6 +238,8 @@ function payloadForLeg(input: BuildFameRouteLegInput): Hex {
   switch (input.edge.venue) {
     case "Solidly":
       return encodeSolidlyPayload(input.edge, input.deadline);
+    case "AerodromeV2":
+      return encodeAerodromeV2Payload(input.edge, input.deadline);
     case "UniswapV2":
       return encodeUniswapV2Payload(input.edge, input.deadline);
     case "Slipstream":

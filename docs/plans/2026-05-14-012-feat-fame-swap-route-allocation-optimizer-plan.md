@@ -462,7 +462,7 @@ Same-intermediate split-merge:
 
 **Patterns to follow:**
 - `src/features/fame-swap/solver/routeCorpus.ts` for corpus cases.
-- `.context/compound-engineering/todos/013-ready-p2-add-adaptive-route-search-algorithms.md` for the follow-up algorithm boundary.
+- `.context/compound-engineering/todos/013-complete-p2-add-adaptive-route-search-algorithms.md` for the follow-up algorithm boundary.
 - Completed todo work logs in `.context/compound-engineering/todos/`.
 
 **Test scenarios:**
@@ -559,7 +559,7 @@ flowchart TB
 - **Origin document:** `docs/brainstorms/2026-05-14-fame-swap-route-allocation-optimizer-requirements.md`
 - **Ideation source:** `docs/ideation/2026-05-14-fame-swap-route-allocation-optimizer-ideation.md`
 - **Baseline optimizer todo:** `.context/compound-engineering/todos/012-ready-p1-add-route-allocation-optimizer.md`
-- **Adaptive follow-up todo:** `.context/compound-engineering/todos/013-ready-p2-add-adaptive-route-search-algorithms.md`
+- **Adaptive follow-up todo:** `.context/compound-engineering/todos/013-complete-p2-add-adaptive-route-search-algorithms.md`
 - **Route-lab docs:** `docs/fame-swap-route-lab.md`
 - **Current candidate graph:** `src/features/fame-swap/solver/graph/candidates.ts`
 - **Current route math:** `src/features/fame-swap/solver/quotes/routeMath.ts`

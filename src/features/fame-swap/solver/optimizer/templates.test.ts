@@ -79,6 +79,27 @@ describe("FAME optimizer route templates", () => {
     );
   });
 
+  it("adds capped N-way terminal split templates for 3+ eligible branches", () => {
+    const templates = routeOptimizerTemplatesForPair(FAME, USDC);
+    const nway = templates.templates.find(
+      (template) =>
+        template.kind === "terminal_split" &&
+        template.branches.length === 3 &&
+        template.prefix?.some(
+          (edge) => edge.poolId === "scale-equalizer-weth-fame",
+        ),
+    );
+
+    assert.ok(nway);
+    assert.equal(nway.branches.length, 3);
+    assert.ok(
+      templates.eligibility.some(
+        (entry) =>
+          entry.templateId.includes("branch-cap") && entry.status === "pruned",
+      ),
+    );
+  });
+
   it("enables native ETH terminal splits through the WETH wrap edge", () => {
     const templates = routeOptimizerTemplatesForPair(NATIVE_ETH, FAME);
 
@@ -103,7 +124,9 @@ describe("FAME optimizer route templates", () => {
       ),
     );
     assert.equal(
-      templates.eligibility.some((entry) => entry.reason.includes("NativeWrap")),
+      templates.eligibility.some((entry) =>
+        entry.reason.includes("NativeWrap"),
+      ),
       false,
     );
   });

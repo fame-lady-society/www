@@ -9,6 +9,8 @@ import type {
   FameOptimizerRouteTemplate,
 } from "./types";
 
+const MAX_COORDINATE_DESCENT_BRANCHES = 3;
+
 export interface FameOptimizerTemplateSet {
   templates: FameOptimizerRouteTemplate[];
   eligibility: FameOptimizerEligibilitySummary[];
@@ -59,12 +61,39 @@ function poolIds(edges: readonly FamePoolEdge[]): string[] {
   return edges.map((edge) => edge.poolId);
 }
 
+function cappedNWayEdges(edges: readonly FamePoolEdge[]): FamePoolEdge[] {
+  return [...edges]
+    .sort((left, right) => left.poolId.localeCompare(right.poolId))
+    .slice(0, MAX_COORDINATE_DESCENT_BRANCHES);
+}
+
+function nWayBranches(edges: readonly FamePoolEdge[]) {
+  return cappedNWayEdges(edges).map((edge, index) => ({
+    edge,
+    label: `branch-${(index + 1).toString()}`,
+  }));
+}
+
+function recordNWayEligibility(options: {
+  eligibility: FameOptimizerEligibilitySummary[];
+  templateId: string;
+  executable: readonly FamePoolEdge[];
+}) {
+  if (options.executable.length <= MAX_COORDINATE_DESCENT_BRANCHES) return;
+  options.eligibility.push({
+    templateId: `${options.templateId}-branch-cap`,
+    status: "pruned",
+    reason: `Coordinate descent is capped at ${MAX_COORDINATE_DESCENT_BRANCHES.toString()} branches for this milestone.`,
+    poolIds: poolIds(options.executable.slice(MAX_COORDINATE_DESCENT_BRANCHES)),
+  });
+}
+
 function singlePathTemplates(
   tokenIn: Address,
   tokenOut: Address,
 ): FameOptimizerRouteTemplate[] {
-  return routeCandidatesForPair(tokenIn, tokenOut).candidates
-    .filter((candidate) => candidate.kind === "single_path")
+  return routeCandidatesForPair(tokenIn, tokenOut)
+    .candidates.filter((candidate) => candidate.kind === "single_path")
     .map((candidate) => ({
       id: `single-${candidate.id}`,
       kind: "single_path" as const,
@@ -91,7 +120,8 @@ function directSplitTemplates(
       eligibility.push({
         templateId: `ineligible-${edge.poolId}`,
         status: "ineligible",
-        reason: "Pool is reviewed but not enabled in the current router manifest.",
+        reason:
+          "Pool is reviewed but not enabled in the current router manifest.",
         poolIds: [edge.poolId],
       });
     }
@@ -100,15 +130,38 @@ function directSplitTemplates(
   if (executable.length >= 3) {
     eligibility.push({
       templateId: `nway-direct-${normalizedAddress(tokenIn)}-${normalizedAddress(tokenOut)}`,
-      status: "unsupported_shape",
-      reason: "Three or more same-pair pools are eligible, but this milestone only executes two-branch allocations.",
+      status: "ineligible",
+      reason:
+        "Three or more same-pair pools are eligible; coordinate descent will evaluate a capped N-way template.",
       poolIds: poolIds(executable),
+    });
+    recordNWayEligibility({
+      eligibility,
+      templateId: `nway-direct-${normalizedAddress(tokenIn)}-${normalizedAddress(tokenOut)}`,
+      executable,
     });
   }
 
   const templates: FameOptimizerRouteTemplate[] = [];
+  if (executable.length >= 3) {
+    const branches = nWayBranches(executable);
+    templates.push({
+      id: `nway-direct-${normalizedAddress(tokenIn)}-${normalizedAddress(tokenOut)}`,
+      kind: "direct_split",
+      tokenIn,
+      tokenOut,
+      branches,
+      suffix: [],
+      summary: branches.map((branch) => branch.edge.poolId).join(" + "),
+    });
+  }
+
   for (let leftIndex = 0; leftIndex < executable.length; leftIndex += 1) {
-    for (let rightIndex = leftIndex + 1; rightIndex < executable.length; rightIndex += 1) {
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < executable.length;
+      rightIndex += 1
+    ) {
       const left = executable[leftIndex];
       const right = executable[rightIndex];
       templates.push({
@@ -160,10 +213,15 @@ function terminalSplitTemplates(
     if (executableFinalHops.length >= 3) {
       eligibility.push({
         templateId: `nway-terminal-split-${intermediate}`,
-        status: "unsupported_shape",
+        status: "ineligible",
         reason:
-          "Three or more same-output final-hop pools are eligible, but this milestone only executes two-branch allocations.",
+          "Three or more same-output final-hop pools are eligible; coordinate descent will evaluate a capped N-way template.",
         poolIds: poolIds(executableFinalHops),
+      });
+      recordNWayEligibility({
+        eligibility,
+        templateId: `nway-terminal-split-${intermediate}`,
+        executable: executableFinalHops,
       });
     }
     if (executableFinalHops.length < 2) continue;
@@ -176,7 +234,26 @@ function terminalSplitTemplates(
     if (prefixes.length === 0) continue;
 
     for (const prefix of prefixes) {
-      for (let leftIndex = 0; leftIndex < executableFinalHops.length; leftIndex += 1) {
+      if (executableFinalHops.length >= 3) {
+        const branches = nWayBranches(executableFinalHops);
+        templates.push({
+          id: `nway-terminal-split-${prefix.poolId}-${intermediate}`,
+          kind: "terminal_split",
+          tokenIn,
+          tokenOut,
+          prefix: [prefix],
+          branches,
+          suffix: [],
+          summary: `${prefix.poolId} -> ${branches
+            .map((branch) => branch.edge.poolId)
+            .join(" + ")}`,
+        });
+      }
+      for (
+        let leftIndex = 0;
+        leftIndex < executableFinalHops.length;
+        leftIndex += 1
+      ) {
         for (
           let rightIndex = leftIndex + 1;
           rightIndex < executableFinalHops.length;
@@ -213,7 +290,10 @@ function splitMergeTemplates(
 ): FameOptimizerRouteTemplate[] {
   const firstHopGroups = new Map<string, FamePoolEdge[]>();
   for (const edge of graph.edgesFrom(tokenIn)) {
-    if (sameAddress(edge.tokenOut, tokenOut) || sameAddress(edge.tokenOut, tokenIn)) {
+    if (
+      sameAddress(edge.tokenOut, tokenOut) ||
+      sameAddress(edge.tokenOut, tokenIn)
+    ) {
       continue;
     }
     const key = normalizedAddress(edge.tokenOut);
@@ -236,10 +316,15 @@ function splitMergeTemplates(
     if (executableFirstHops.length >= 3) {
       eligibility.push({
         templateId: `nway-split-merge-${intermediate}`,
-        status: "unsupported_shape",
+        status: "ineligible",
         reason:
-          "Three or more same-intermediate branches are eligible, but this milestone only executes two-branch allocations.",
+          "Three or more same-intermediate branches are eligible; coordinate descent will evaluate a capped N-way template.",
         poolIds: poolIds(executableFirstHops),
+      });
+      recordNWayEligibility({
+        eligibility,
+        templateId: `nway-split-merge-${intermediate}`,
+        executable: executableFirstHops,
       });
     }
     if (executableFirstHops.length < 2) continue;
@@ -251,8 +336,33 @@ function splitMergeTemplates(
     ).filter((edge) => edge.manifestReady);
     if (mergeEdges.length === 0) continue;
 
-    for (let leftIndex = 0; leftIndex < executableFirstHops.length; leftIndex += 1) {
-      for (let rightIndex = leftIndex + 1; rightIndex < executableFirstHops.length; rightIndex += 1) {
+    if (executableFirstHops.length >= 3) {
+      const branches = nWayBranches(executableFirstHops);
+      for (const mergeEdge of mergeEdges) {
+        templates.push({
+          id: `nway-split-merge-${intermediate}-${mergeEdge.poolId}`,
+          kind: "split_merge",
+          tokenIn,
+          tokenOut,
+          branches,
+          suffix: [mergeEdge],
+          summary: `${branches
+            .map((branch) => branch.edge.poolId)
+            .join(" + ")} -> ${mergeEdge.poolId}`,
+        });
+      }
+    }
+
+    for (
+      let leftIndex = 0;
+      leftIndex < executableFirstHops.length;
+      leftIndex += 1
+    ) {
+      for (
+        let rightIndex = leftIndex + 1;
+        rightIndex < executableFirstHops.length;
+        rightIndex += 1
+      ) {
         for (const mergeEdge of mergeEdges) {
           const left = executableFirstHops[leftIndex];
           const right = executableFirstHops[rightIndex];
@@ -290,7 +400,8 @@ export function routeOptimizerTemplatesForPair(
         {
           templateId: "unsupported-pair",
           status: "ineligible",
-          reason: "Only FAME paired with USDC, WETH, or native ETH is supported.",
+          reason:
+            "Only FAME paired with USDC, WETH, or native ETH is supported.",
           poolIds: [],
         },
       ],
@@ -321,7 +432,9 @@ export function routeOptimizerTemplatesForPair(
   };
 }
 
-export function templatePoolIds(template: FameOptimizerRouteTemplate): string[] {
+export function templatePoolIds(
+  template: FameOptimizerRouteTemplate,
+): string[] {
   if (template.baselineCandidate) {
     return template.baselineCandidate.legs.map((leg) => leg.edge.poolId);
   }

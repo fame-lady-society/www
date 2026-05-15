@@ -62,7 +62,13 @@ describe("FAME pool universe", () => {
     assert.ok(
       famePoolEdgesForPair(USDC, WETH).some(
         (edge) =>
-          edge.poolId === "aerodrome-v2-usdc-weth" && !edge.manifestReady,
+          edge.poolId === "aerodrome-v2-usdc-weth" &&
+          edge.venue === "AerodromeV2" &&
+          edge.venueOrdinal === 7 &&
+          edge.manifestReady &&
+          edge.pool.venue === "aerodrome-v2" &&
+          edge.pool.factory ===
+            "0x420dd381b31aef6683db6b902084cb0ffece40da",
       ),
     );
     assert.ok(

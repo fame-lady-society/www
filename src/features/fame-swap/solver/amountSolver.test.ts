@@ -15,11 +15,18 @@ import {
   FAME_OPTIMIZER_NON_STATIC_WETH_SPLIT_AMOUNT_IN,
 } from "./optimizer/fixtures";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
-import { universalRouterV4PayloadAbi } from "../router/payloads";
+import {
+  aerodromeV2PayloadAbi,
+  universalRouterV4PayloadAbi,
+} from "../router/payloads";
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
 const recipient = "0x0000000000000000000000000000000000000abc";
 const deadline = 1_800_000_000n;
+
+function assertSameAddress(actual: string | undefined, expected: string) {
+  assert.equal(actual?.toLowerCase(), expected.toLowerCase());
+}
 
 function token(address: typeof FAME | typeof USDC | typeof WETH | typeof NATIVE_ETH) {
   const result = tokenForAddress(address);
@@ -169,6 +176,77 @@ describe("FAME amount-aware solver", () => {
       assert.equal(result.route.legs.length, 3);
       assert.match(result.routeHash, /^0x[a-fA-F0-9]{64}$/);
       assert.ok(result.abiEncodedRoute.length > 2);
+    }
+  });
+
+  it("materializes Aerodrome V2 USDC/WETH connector routes with explicit factory payloads", () => {
+    const adapter: FameQuoteAdapter = {
+      quoteEdge(request) {
+        if (request.edge.poolId === "aerodrome-v2-usdc-weth") {
+          return {
+            status: "quoted",
+            amountIn: request.amountIn,
+            amountOut: request.amountIn * 1_000_000_000_000n,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit test Aerodrome V2 USDC/WETH quote evidence",
+          };
+        }
+
+        if (request.edge.poolId === "scale-equalizer-weth-fame") {
+          return {
+            status: "quoted",
+            amountIn: request.amountIn,
+            amountOut: request.amountIn * 50n,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit test WETH/FAME quote evidence",
+          };
+        }
+
+        return {
+          status: "failed",
+          reason: "no_quote_evidence",
+          message: `No unit test quote for ${request.edge.poolId}.`,
+        };
+      },
+    };
+
+    const result = solveFameSwapAmount({
+      tokenIn: token(USDC),
+      tokenOut: token(FAME),
+      amountIn: 1_000_000n,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter,
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.deepEqual(result.poolIds, [
+        "aerodrome-v2-usdc-weth",
+        "scale-equalizer-weth-fame",
+      ]);
+      const aerodromeLeg = result.route.legs[0];
+      assert.ok(aerodromeLeg);
+      assert.equal(aerodromeLeg?.venue, "AerodromeV2");
+      assert.equal(aerodromeLeg?.venueOrdinal, 7);
+      const [payload] = decodeAbiParameters(
+        aerodromeV2PayloadAbi,
+        aerodromeLeg.data,
+      );
+      const [route] = payload.routes;
+      assertSameAddress(route?.from, USDC);
+      assertSameAddress(route?.to, WETH);
+      assert.equal(route?.stable, false);
+      assertSameAddress(
+        route?.factory,
+        "0x420dd381b31aef6683db6b902084cb0ffece40da",
+      );
+      assert.equal(payload.deadline, deadline);
     }
   });
 

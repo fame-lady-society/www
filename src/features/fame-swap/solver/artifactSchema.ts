@@ -42,6 +42,7 @@ const venueFamilyNames = [
   "UniswapV3",
   "UniswapV4",
   "NativeWrap",
+  "AerodromeV2",
 ] as const satisfies readonly VenueFamilyName[];
 
 const amountModeNames = [
@@ -53,6 +54,7 @@ const amountModeNames = [
 const poolVenues = [
   "solidly",
   "uniswap-v2",
+  "aerodrome-v2",
   "aerodrome-slipstream",
   "aerodrome-slipstream2",
   "uniswap-v3",
@@ -758,6 +760,29 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         router,
         ...baseFields,
         ...constantProduct,
+        stable: parseBoolean(
+          getField(record, "stable", path),
+          `${path}.stable`,
+        ),
+        feeBps: parseFiniteNumber(
+          getField(record, "feeBps", path),
+          `${path}.feeBps`,
+          { min: 0 },
+        ),
+      };
+    }
+    case "aerodrome-v2": {
+      const constantProduct = parseConstantProductPoolFields(record, path);
+      return {
+        id,
+        venue,
+        router,
+        ...baseFields,
+        ...constantProduct,
+        factory: parseAddress(
+          getField(record, "factory", path),
+          `${path}.factory`,
+        ),
         stable: parseBoolean(
           getField(record, "stable", path),
           `${path}.stable`,

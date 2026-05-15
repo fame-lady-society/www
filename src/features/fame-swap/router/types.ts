@@ -12,6 +12,7 @@ export const venueFamilyOrdinals = {
   UniswapV3: 4,
   UniswapV4: 5,
   NativeWrap: 6,
+  AerodromeV2: 7,
 } as const;
 
 export type VenueFamilyName = keyof typeof venueFamilyOrdinals;
@@ -192,6 +193,7 @@ export type FamePoolEnablement =
 export type FamePoolVenue =
   | "solidly"
   | "uniswap-v2"
+  | "aerodrome-v2"
   | "aerodrome-slipstream"
   | "aerodrome-slipstream2"
   | "uniswap-v3"
@@ -213,6 +215,14 @@ export interface FameConstantProductPoolBase extends FamePoolBase {
 
 export interface FameSolidlyPoolConfig extends FameConstantProductPoolBase {
   venue: "solidly";
+  stable: boolean;
+  feeBps: number;
+}
+
+export interface FameAerodromeV2PoolConfig
+  extends FameConstantProductPoolBase {
+  venue: "aerodrome-v2";
+  factory: Address;
   stable: boolean;
   feeBps: number;
 }
@@ -255,6 +265,7 @@ export interface FameNativeWrapPoolConfig extends FamePoolBase {
 
 export type FamePoolConfig =
   | FameSolidlyPoolConfig
+  | FameAerodromeV2PoolConfig
   | FameUniswapV2PoolConfig
   | FameSlipstreamPoolConfig
   | FameUniswapV3PoolConfig

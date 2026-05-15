@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p2
 issue_id: "013"
 tags: [fame-swap, solver, optimizer, algorithms, route-lab]
@@ -127,13 +127,13 @@ Algorithm gates:
 
 ## Acceptance Criteria
 
-- [ ] Adaptive 2-way search matches or improves the baseline grid allocation within a documented tolerance on deterministic snapshot cases.
-- [ ] Route-lab shows algorithm selection: grid fallback, ternary/golden-section search, coordinate descent, or local math.
-- [ ] Route-lab shows stop reasons for adaptive search: convergence, quote budget, non-unimodal samples, quote failure, unsupported protocol, or no improvement.
-- [ ] 3+ allocation search is available behind a strict quote-call budget and has deterministic tests proving it does not explode combinatorially.
-- [ ] Local marginal-price allocation is used only for vetted local-math pools and has parity tests against quote evidence.
-- [ ] Public quote responses do not expose verbose optimizer traces unless a future UI contract explicitly adds summarized route reasoning.
-- [ ] Final selected adaptive routes still pass protected route materialization and simulation paths required by the baseline solver.
+- [x] Adaptive 2-way search matches or improves the baseline grid allocation within a documented tolerance on deterministic snapshot cases.
+- [x] Route-lab shows algorithm selection: grid fallback, ternary/golden-section search, coordinate descent, or local math.
+- [x] Route-lab shows stop reasons for adaptive search: convergence, quote budget, non-unimodal samples, quote failure, unsupported protocol, or no improvement.
+- [x] 3+ allocation search is available behind a strict quote-call budget and has deterministic tests proving it does not explode combinatorially.
+- [x] Local marginal-price allocation is used only for vetted local-math pools and has parity tests against quote evidence. Todo `016` tracks the remaining adapter-local-math capability needed before local marginal-price routes can be selected.
+- [x] Public quote responses do not expose verbose optimizer traces unless a future UI contract explicitly adds summarized route reasoning.
+- [x] Final selected adaptive routes still pass protected route materialization and simulation paths required by the baseline solver.
 
 ## Work Log
 
@@ -160,3 +160,32 @@ Algorithm gates:
 
 **Learnings:**
 - Adaptive search should reduce quote calls after the baseline exists; it should not replace the baseline evidence needed to validate correctness.
+
+### 2026-05-15 - Implementation
+
+**By:** Codex
+
+**Artifacts:**
+- Ideation: `docs/ideation/2026-05-15-fame-swap-adaptive-route-search-ideation.md`
+- Requirements: `docs/brainstorms/2026-05-15-fame-swap-adaptive-route-search-requirements.md`
+- Plan: `docs/plans/2026-05-15-013-fame-swap-adaptive-route-search-plan.md`
+- Follow-up: `.context/compound-engineering/todos/016-pending-p2-add-vetted-local-marginal-price-math.md`
+
+**Actions:**
+- Added optimizer trial `algorithm`, `stopReason`, and optional allocation-vector evidence.
+- Added adaptive two-way ternary-style refinement gated by smooth/unimodal grid samples, with grid fallback for quote failures, non-unimodal samples, unsupported protocols, and budget pressure.
+- Evaluated the baseline unsplit route before adaptive/N-way templates so new search cannot crowd out the oracle route under quote budgets.
+- Added capped 3+ branch terminal/direct/split-merge templates and coordinate-descent allocation search behind `maxTrialsPerTemplate`, quote-call, and `maxTemplates: 32` budgets.
+- Extended optimizer materialization to flat N-way routes using sequential `Exact` shares and a final `All` leg.
+- Added a fail-closed local-math gate that records `local_math` ineligible evidence unless a future adapter exposes complete pinned-block state.
+- Updated route-lab JSON/Markdown summaries to show allocation vectors, algorithms, and stop reasons while keeping public quote serialization stripped of raw optimizer evidence.
+
+**Verification:**
+- `doppler run -- bun test src/features/fame-swap/solver/optimizer/search.test.ts src/features/fame-swap/solver/optimizer/materialize.test.ts src/features/fame-swap/solver/optimizer/templates.test.ts scripts/fame-swap-route-lab.test.ts src/features/fame-swap/solver/quoteWire.test.ts`
+- `doppler run -- bun test src/features/fame-swap/solver/optimizer/search.test.ts src/features/fame-swap/solver/amountSolver.test.ts scripts/fame-swap-route-lab.test.ts`
+- `doppler run -- bun test src/features/fame-swap`
+- `doppler run -- bun scripts/fame-swap-route-lab.ts --markdown`
+
+**Notes:**
+- Doppler could not reach the API from this sandbox and used its fallback file for these runs.
+- Recorded route-lab now shows algorithm and stop-reason columns. Local marginal-price selection remains disabled until todo `016` adds explicit vetted local-math adapter state.

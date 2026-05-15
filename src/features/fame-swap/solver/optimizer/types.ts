@@ -7,6 +7,23 @@ import type { FameQuoteContext } from "../quotes/quoteContext";
 
 export type FameOptimizerMode = "disabled" | "shadow" | "select";
 
+export type FameOptimizerSearchAlgorithm =
+  | "grid"
+  | "adaptive_2way"
+  | "coordinate_descent"
+  | "local_math";
+
+export type FameOptimizerStopReason =
+  | "convergence"
+  | "quote_budget"
+  | "non_unimodal_samples"
+  | "quote_failure"
+  | "unsupported_protocol"
+  | "no_improvement"
+  | "grid_complete";
+
+export type FameOptimizerAllocation = number | readonly number[] | null;
+
 export type FameAllocationTrialStatus =
   | "selected"
   | "rejected"
@@ -92,6 +109,9 @@ export interface FameOptimizerEligibilitySummary {
 export interface FameAllocationTrialEvidence {
   templateId: string;
   allocationBps: number | null;
+  allocationVectorBps?: readonly number[];
+  algorithm: FameOptimizerSearchAlgorithm;
+  stopReason?: FameOptimizerStopReason;
   status: FameAllocationTrialStatus;
   reason: string;
   candidateId?: string;
@@ -112,6 +132,9 @@ export interface FameOptimizerEvidence {
   quoteContext?: FameQuoteContext;
   selectedTemplateId: string | null;
   selectedAllocationBps: number | null;
+  selectedAllocationVectorBps: readonly number[] | null;
+  selectedAlgorithm: FameOptimizerSearchAlgorithm | null;
+  selectedStopReason: FameOptimizerStopReason | null;
   selectedCandidateId: string | null;
   objective: {
     baselineProtectedAmountOut: bigint | null;

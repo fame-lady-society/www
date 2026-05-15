@@ -11,9 +11,7 @@ import { base } from "viem/chains";
 import { fameRouterAbi } from "../src/features/fame-swap/router/abi";
 import { hashFameRoute } from "../src/features/fame-swap/router/encodeRoute";
 import { erc20ApprovalAbi } from "../src/features/fame-swap/router/erc20Abi";
-import {
-  quoteFameSwapAsync,
-} from "../src/features/fame-swap/solver/quote";
+import { quoteFameSwapAsync } from "../src/features/fame-swap/solver/quote";
 import {
   routeCandidatesForPair,
   type FameRouteCandidateBudgets,
@@ -97,6 +95,9 @@ export interface FameRouteLabRow {
 export interface FameRouteLabOptimizerSummary {
   status: FameOptimizerEvidence["status"];
   selectedAllocationBps: number | null;
+  selectedAllocationVectorBps: readonly number[] | null;
+  selectedAlgorithm: FameOptimizerEvidence["selectedAlgorithm"];
+  selectedStopReason: FameOptimizerEvidence["selectedStopReason"];
   selectedCandidateId: string | null;
   selectedTemplateId: string | null;
   fallbackReason: string | null;
@@ -105,6 +106,9 @@ export interface FameRouteLabOptimizerSummary {
   allocationTrials: Array<{
     templateId: string;
     allocationBps: number | null;
+    allocationVectorBps?: readonly number[];
+    algorithm: string;
+    stopReason?: string;
     status: string;
     reason: string;
     candidateId?: string;
@@ -266,6 +270,11 @@ function optimizerTrialSummary(trial: FameAllocationTrialEvidence) {
   return {
     templateId: trial.templateId,
     allocationBps: trial.allocationBps,
+    ...(trial.allocationVectorBps
+      ? { allocationVectorBps: trial.allocationVectorBps }
+      : {}),
+    algorithm: trial.algorithm,
+    ...(trial.stopReason ? { stopReason: trial.stopReason } : {}),
     status: trial.status,
     reason: displaySafeDiagnosticMessage(trial.reason),
     ...(trial.candidateId ? { candidateId: trial.candidateId } : {}),
@@ -279,12 +288,17 @@ function optimizerTrialSummary(trial: FameAllocationTrialEvidence) {
   };
 }
 
-function optimizerSummary(quote: FameSwapQuote): FameRouteLabOptimizerSummary | null {
+function optimizerSummary(
+  quote: FameSwapQuote,
+): FameRouteLabOptimizerSummary | null {
   if (quote.status !== "ready" || !quote.optimizerEvidence) return null;
   const evidence = quote.optimizerEvidence;
   return {
     status: evidence.status,
     selectedAllocationBps: evidence.selectedAllocationBps,
+    selectedAllocationVectorBps: evidence.selectedAllocationVectorBps,
+    selectedAlgorithm: evidence.selectedAlgorithm,
+    selectedStopReason: evidence.selectedStopReason,
     selectedCandidateId: evidence.selectedCandidateId,
     selectedTemplateId: evidence.selectedTemplateId,
     fallbackReason: evidence.fallbackReason,
@@ -835,13 +849,17 @@ export function formatRouteLabMarkdown(
   ].join("\n");
 }
 
-function optimizerSummaryLine(
-  optimizer: FameRouteLabRow["optimizer"],
-): string {
+function optimizerSummaryLine(optimizer: FameRouteLabRow["optimizer"]): string {
   if (!optimizer) return "not run";
   return [
     optimizer.status,
     `allocation ${optimizer.selectedAllocationBps ?? "n/a"}`,
+    optimizer.selectedAlgorithm
+      ? `algorithm ${optimizer.selectedAlgorithm}`
+      : null,
+    optimizer.selectedStopReason
+      ? `stop ${optimizer.selectedStopReason}`
+      : null,
     `trials ${optimizer.quotePlanStats.allocationTrials}`,
     `cache hits ${optimizer.quotePlanStats.exactQuoteCacheHits}`,
     optimizer.fallbackReason ? `fallback ${optimizer.fallbackReason}` : null,
@@ -861,6 +879,11 @@ function formatOptimizerMarkdown(
     `- Status: ${optimizer.status}`,
     `- Selected template: ${optimizer.selectedTemplateId ?? "n/a"}`,
     `- Selected allocation bps: ${optimizer.selectedAllocationBps ?? "n/a"}`,
+    `- Selected allocation vector: ${
+      optimizer.selectedAllocationVectorBps?.join("/") ?? "n/a"
+    }`,
+    `- Selected algorithm: ${optimizer.selectedAlgorithm ?? "n/a"}`,
+    `- Selected stop reason: ${optimizer.selectedStopReason ?? "n/a"}`,
     `- Selected candidate: ${optimizer.selectedCandidateId ?? "n/a"}`,
     `- Fallback reason: ${optimizer.fallbackReason ?? "n/a"}`,
     `- Trial statuses: ${Object.entries(optimizer.trialStatusCounts)
@@ -868,11 +891,16 @@ function formatOptimizerMarkdown(
       .join(", ")}`,
     `- Quote plan stats: logical ${optimizer.quotePlanStats.logicalQuoteRequests}, unique exact ${optimizer.quotePlanStats.uniqueExactQuoteReads}, exact cache hits ${optimizer.quotePlanStats.exactQuoteCacheHits}, unique state ${optimizer.quotePlanStats.uniqueStateReads}, state cache hits ${optimizer.quotePlanStats.stateReadCacheHits}, rpc ${optimizer.quotePlanStats.underlyingRpcReads}`,
     "",
-    "| Allocation | Status | Pools | Protected | Reason |",
-    "| --- | --- | --- | --- | --- |",
+    "| Allocation | Algorithm | Stop | Status | Pools | Protected | Reason |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...trialRows.map((trial) => {
       const line = [
-        trial.allocationBps === null ? "n/a" : trial.allocationBps.toString(),
+        trial.allocationVectorBps?.join("/") ??
+          (trial.allocationBps === null
+            ? "n/a"
+            : trial.allocationBps.toString()),
+        trial.algorithm,
+        trial.stopReason ?? "n/a",
         trial.status,
         trial.poolIds.join(", ") || "none",
         trial.protectedAmountOut ?? "n/a",

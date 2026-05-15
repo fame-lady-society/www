@@ -19,9 +19,9 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
   parityVectorsContentHash:
     "0x8ccba890d2ec3ed28586f548b087d53e36630fe1d4a55c8c21471bc9e1fb9cf2" as Hex,
   poolsJsonHash:
-    "0xbff2a3e7f894e28a310faf27f5330928fa5795dd31b2431fd396d6c3da7fee18" as Hex,
+    "0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b" as Hex,
   poolsContentHash:
-    "0x22bb630d8fa7c58aa86ea870e07af5b519b0e931d660ebd19866892760f99dfa" as Hex,
+    "0xcf346fe2875d030a9b5872895e59e044e6e2b01613e3f3072c721c49c2234715" as Hex,
   poolStateSnapshotJsonHash:
     "0x5d7fa2a9ccd334bfae92e1ef1e8eb5b77ba48cc2e9945ee71769f014c75f4c07" as Hex,
   poolStateSnapshotContentHash:
@@ -70,6 +70,11 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
       family: "NativeWrap",
       familyOrdinal: 6,
       target: "0x4200000000000000000000000000000000000006",
+    },
+    {
+      family: "AerodromeV2",
+      familyOrdinal: 7,
+      target: "0xcf77a3ba9a5ca399b7c97c74d54e5b1beb874e43",
     },
   ],
   requiredV4HookDataKeys: [] as readonly Hex[],

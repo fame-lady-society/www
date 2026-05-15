@@ -54,6 +54,7 @@ const NATIVE_WRAP_POOL = {
 const venueFamilies = {
   solidly: "Solidly",
   "uniswap-v2": "UniswapV2",
+  "aerodrome-v2": "AerodromeV2",
   "aerodrome-slipstream": "Slipstream",
   "aerodrome-slipstream2": "Slipstream2",
   "uniswap-v3": "UniswapV3",

@@ -118,6 +118,24 @@ export const FAME_ROUTE_CONNECTOR_PROBES: readonly ConnectorProbe[] = [
       "No reviewed Aerodrome Slipstream USDC/WETH connector pool is present in the FAME pool universe.",
   },
   {
+    id: "weth-usdc-aerodrome-v2",
+    tokenIn: WETH,
+    tokenOut: USDC,
+    venue: "AerodromeV2",
+    protocolVariant: "aerodrome-v2",
+    reason:
+      "No reviewed Aerodrome V2 WETH/USDC connector pool is present in the FAME pool universe.",
+  },
+  {
+    id: "usdc-weth-aerodrome-v2",
+    tokenIn: USDC,
+    tokenOut: WETH,
+    venue: "AerodromeV2",
+    protocolVariant: "aerodrome-v2",
+    reason:
+      "No reviewed Aerodrome V2 USDC/WETH connector pool is present in the FAME pool universe.",
+  },
+  {
     id: "weth-usdc-solidly",
     tokenIn: WETH,
     tokenOut: USDC,

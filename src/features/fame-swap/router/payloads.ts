@@ -19,6 +19,25 @@ const solidlyPayloadAbi = [
   },
 ] as const;
 
+export const aerodromeV2PayloadAbi = [
+  {
+    type: "tuple",
+    components: [
+      {
+        name: "routes",
+        type: "tuple[]",
+        components: [
+          { name: "from", type: "address" },
+          { name: "to", type: "address" },
+          { name: "stable", type: "bool" },
+          { name: "factory", type: "address" },
+        ],
+      },
+      { name: "deadline", type: "uint256" },
+    ],
+  },
+] as const;
+
 const uniswapV2PayloadAbi = [
   {
     type: "tuple",
@@ -88,6 +107,16 @@ function patchSolidlyPayload(data: Hex, deadline: bigint): Hex {
   ]);
 }
 
+function patchAerodromeV2Payload(data: Hex, deadline: bigint): Hex {
+  const [payload] = decodeAbiParameters(aerodromeV2PayloadAbi, data);
+  return encodeAbiParameters(aerodromeV2PayloadAbi, [
+    {
+      ...payload,
+      deadline,
+    },
+  ]);
+}
+
 function patchUniswapV2Payload(data: Hex, deadline: bigint): Hex {
   const [payload] = decodeAbiParameters(uniswapV2PayloadAbi, data);
   return encodeAbiParameters(uniswapV2PayloadAbi, [
@@ -150,6 +179,8 @@ export function materializeLegPayload(
   switch (leg.venue) {
     case "Solidly":
       return patchSolidlyPayload(leg.data, deadline);
+    case "AerodromeV2":
+      return patchAerodromeV2Payload(leg.data, deadline);
     case "UniswapV2":
       return patchUniswapV2Payload(leg.data, deadline);
     case "Slipstream":

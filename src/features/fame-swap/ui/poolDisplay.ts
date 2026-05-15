@@ -44,7 +44,7 @@ const POOL_DISPLAY_METADATA = {
   },
   "aerodrome-v2-usdc-weth": {
     venueLabel: "Aerodrome",
-    poolTypeLabel: "Solidly volatile pool",
+    poolTypeLabel: "Aerodrome V2 volatile pool",
     pairLabel: "USDC/WETH",
   },
   "slipstream-basedflick-fame": {
@@ -157,6 +157,7 @@ function venueFallbackLabel(venue: VenueFamilyName): string {
   if (venue === "UniswapV4") return "Uniswap v4";
   if (venue === "NativeWrap") return "Native WETH";
   if (venue === "Solidly") return "Solidly";
+  if (venue === "AerodromeV2") return "Aerodrome";
   if (venue === "Slipstream" || venue === "Slipstream2") {
     return "Aerodrome Slipstream";
   }

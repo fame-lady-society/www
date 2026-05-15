@@ -226,6 +226,8 @@ function quoteFromReserves(
   const reserveReplaySupported =
     request.edge.pool.venue === "uniswap-v2" ||
     (request.edge.pool.venue === "solidly" &&
+      request.edge.pool.stable === false) ||
+    (request.edge.pool.venue === "aerodrome-v2" &&
       request.edge.pool.stable === false);
   if (!reserveReplaySupported) {
     return {

@@ -330,7 +330,11 @@ function splitMergeCandidates(
   }
 
   const candidates: FameRouteCandidate[] = [];
-  for (const firstHopEdges of firstHopGroups.values()) {
+  const orderedFirstHopGroups = [...firstHopGroups.entries()].sort(
+    ([leftKey, leftEdges], [rightKey, rightEdges]) =>
+      leftEdges.length - rightEdges.length || leftKey.localeCompare(rightKey),
+  );
+  for (const [, firstHopEdges] of orderedFirstHopGroups) {
     if (firstHopEdges.length < 2) continue;
 
     const mergeEdges = directEdges(graph, firstHopEdges[0].tokenOut, tokenOut);

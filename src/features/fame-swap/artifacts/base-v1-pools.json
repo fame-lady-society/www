@@ -74,12 +74,9 @@
     },
     {
       "id": "aerodrome-v2-usdc-weth",
-      "venue": "solidly",
+      "venue": "aerodrome-v2",
       "router": "0xcf77a3ba9a5ca399b7c97c74d54e5b1beb874e43",
-      "enablement": {
-        "status": "blocked",
-        "reason": "Aerodrome V2 router uses 4-field routes with an explicit factory; the current FameRouter Solidly adapter encodes 3-field routes and the Aerodrome router target is not enabled."
-      },
+      "factory": "0x420dd381b31aef6683db6b902084cb0ffece40da",
       "pool": "0xcdac0d6c6c59727a65f871236188350531885c43",
       "token0": "0x4200000000000000000000000000000000000006",
       "token1": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
@@ -293,7 +290,6 @@
     }
   ],
   "pendingLaunchBlockingPools": [
-    "aerodrome-v2-usdc-weth",
     "slipstream-usdc-weth-migrating-50"
   ]
 }

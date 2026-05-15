@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { FAME, WETH } from "../../tokens";
+import { FAME, USDC, WETH } from "../../tokens";
 import { createDeterministicQuoteAdapter } from "../quotes/deterministicAdapter";
 import type { FameAsyncQuoteAdapter } from "../quotes/adapters";
 import {
@@ -13,6 +13,59 @@ const feePpm = 2_222n;
 const slippageBps = 100;
 
 describe("FAME route allocation optimizer", () => {
+  it("uses adaptive two-way search on smooth unimodal split samples", async () => {
+    const adapter: FameAsyncQuoteAdapter = {
+      async quoteEdge(request) {
+        const amount = request.amountIn;
+        if (request.edge.poolId === "scale-equalizer-weth-fame") {
+          return {
+            status: "quoted",
+            amountIn: amount,
+            amountOut: amount * 1_000n - (amount * amount) / 20n,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit test smooth curve A",
+          };
+        }
+        if (request.edge.poolId === "uniswap-v2-fame-direct") {
+          return {
+            status: "quoted",
+            amountIn: amount,
+            amountOut: amount * 940n - (amount * amount) / 20n,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit test smooth curve B",
+          };
+        }
+        return {
+          status: "failed",
+          reason: "no_quote_evidence",
+          message: `No unit test quote for ${request.edge.poolId}.`,
+        };
+      },
+    };
+
+    const result = await optimizeRouteAllocations({
+      tokenIn: WETH,
+      tokenOut: FAME,
+      amountIn: 10_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+    });
+
+    assert.equal(result.status, "selected");
+    if (result.status === "selected") {
+      assert.equal(result.evidence.selectedAlgorithm, "adaptive_2way");
+      assert.equal(result.evidence.selectedStopReason, "convergence");
+      assert.ok(
+        result.evidence.allocationTrials.some(
+          (trial) => trial.algorithm === "adaptive_2way",
+        ),
+      );
+    }
+  });
+
   it("selects a non-static WETH/FAME split allocation from refinement", async () => {
     const result = await optimizeRouteAllocations({
       tokenIn: WETH,
@@ -43,6 +96,17 @@ describe("FAME route allocation optimizer", () => {
       assert.ok(
         result.evidence.allocationTrials.some(
           (trial) => trial.allocationBps === 6_250,
+        ),
+      );
+      assert.equal(
+        result.evidence.allocationTrials.some(
+          (trial) => trial.algorithm === "adaptive_2way",
+        ),
+        false,
+      );
+      assert.ok(
+        result.evidence.allocationTrials.some(
+          (trial) => trial.stopReason === "quote_failure",
         ),
       );
     }
@@ -142,6 +206,63 @@ describe("FAME route allocation optimizer", () => {
     );
   });
 
+  it("evaluates 3+ branch coordinate descent within the trial budget", async () => {
+    const adapter: FameAsyncQuoteAdapter = {
+      async quoteEdge(request) {
+        const multipliers: Record<string, bigint> = {
+          "scale-equalizer-weth-fame": 1n,
+          "uniswap-v2-fame-direct": 1n,
+          "aerodrome-v2-usdc-weth": 98n,
+          "slipstream-usdc-weth-100": 100n,
+          "uniswap-v2-usdc-weth": 96n,
+        };
+        const multiplier = multipliers[request.edge.poolId];
+        if (!multiplier) {
+          return {
+            status: "failed",
+            reason: "no_quote_evidence",
+            message: `No unit test quote for ${request.edge.poolId}.`,
+          };
+        }
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * multiplier,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test coordinate descent quote",
+        };
+      },
+    };
+
+    const result = await optimizeRouteAllocations({
+      tokenIn: FAME,
+      tokenOut: USDC,
+      amountIn: 9_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+      budgets: {
+        maxTemplates: 2,
+        maxTrialsPerTemplate: 4,
+        maxLogicalQuoteRequests: 80,
+      },
+    });
+
+    assert.equal(result.status, "selected");
+    assert.ok(
+      result.evidence.allocationTrials.some(
+        (trial) => trial.algorithm === "coordinate_descent",
+      ),
+    );
+    assert.ok(result.evidence.quotePlanStats.allocationTrials <= 8);
+    assert.ok(
+      result.evidence.allocationTrials.some(
+        (trial) => trial.allocationVectorBps?.length === 3,
+      ),
+    );
+  });
+
   it("keeps an already quoted best plan when later validation exhausts budget", async () => {
     const result = await optimizeRouteAllocations({
       tokenIn: WETH,
@@ -151,8 +272,8 @@ describe("FAME route allocation optimizer", () => {
       slippageBps,
       adapter: createDeterministicQuoteAdapter(),
       budgets: {
-        maxLogicalQuoteRequests: 20,
-        maxUniqueExactQuoteReads: 20,
+        maxLogicalQuoteRequests: 35,
+        maxUniqueExactQuoteReads: 35,
       },
     });
 
@@ -164,5 +285,4 @@ describe("FAME route allocation optimizer", () => {
     );
     assert.ok(result.evidence.quotePlanStats.budgetExhaustions > 0);
   });
-
 });

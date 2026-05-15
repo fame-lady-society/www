@@ -32,6 +32,16 @@ describe("FAME route lab", () => {
         (row.optimizer?.quotePlanStats.logicalQuoteRequests as number) > 0,
         row.id,
       );
+      assert.ok(
+        row.optimizer?.allocationTrials.every(
+          (trial) => typeof trial.algorithm === "string",
+        ),
+        row.id,
+      );
+      assert.ok(
+        row.optimizer?.allocationTrials.some((trial) => trial.stopReason),
+        row.id,
+      );
       assert.ok(row.edgeMatrix.length > 0, row.id);
       assert.ok(
         row.edgeMatrix.some((edge) => edge.status === "selected"),
@@ -144,6 +154,8 @@ describe("FAME route lab", () => {
 
     assert.match(markdown, /# FAME Swap Route Lab/);
     assert.match(markdown, /### Optimizer/);
+    assert.match(markdown, /Selected algorithm/);
+    assert.match(markdown, /Algorithm/);
     assert.match(markdown, /### Edge Matrix/);
     assert.match(markdown, /### Protocol Coverage/);
     assert.match(markdown, /WETH->USDC/);

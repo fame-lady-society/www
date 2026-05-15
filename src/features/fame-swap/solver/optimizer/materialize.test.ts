@@ -44,24 +44,18 @@ describe("FAME optimizer template materialization", () => {
       ["Exact", "All", "All"],
     );
 
-    const quoted = quoteRouteCandidate(
-      candidate,
-      800_000n,
-      2_222n,
-      100,
-      {
-        quoteEdge(request) {
-          return {
-            status: "quoted",
-            amountIn: request.amountIn,
-            amountOut: request.amountIn * 2n,
-            capacityIn: null,
-            fee: request.edge.fee,
-            evidence: "unit test proportional quote",
-          };
-        },
+    const quoted = quoteRouteCandidate(candidate, 800_000n, 2_222n, 100, {
+      quoteEdge(request) {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test proportional quote",
+        };
       },
-    );
+    });
     assert.ok("candidate" in quoted);
     if ("candidate" in quoted) {
       assert.equal(quoted.legQuotes[0]?.amountIn, 500_000n);
@@ -97,24 +91,18 @@ describe("FAME optimizer template materialization", () => {
       ["Exact", "Exact", "All"],
     );
 
-    const quoted = quoteRouteCandidate(
-      candidate,
-      800_000n,
-      2_222n,
-      100,
-      {
-        quoteEdge(request) {
-          return {
-            status: "quoted",
-            amountIn: request.amountIn,
-            amountOut: request.amountIn * 2n,
-            capacityIn: null,
-            fee: request.edge.fee,
-            evidence: "unit test proportional quote",
-          };
-        },
+    const quoted = quoteRouteCandidate(candidate, 800_000n, 2_222n, 100, {
+      quoteEdge(request) {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test proportional quote",
+        };
       },
-    );
+    });
     assert.ok("candidate" in quoted);
     if ("candidate" in quoted) {
       const prefixOutput = quoted.legQuotes[0]?.amountOut ?? 0n;
@@ -144,5 +132,47 @@ describe("FAME optimizer template materialization", () => {
     assert.equal(right.legs.length, 1);
     assert.equal(left.legs[0]?.amountMode, "Exact");
     assert.equal(right.legs[0]?.amountMode, "Exact");
+  });
+
+  it("materializes N-way terminal splits as sequential Exact shares plus final All", () => {
+    const template = routeOptimizerTemplatesForPair(FAME, USDC).templates.find(
+      (entry) =>
+        entry.kind === "terminal_split" &&
+        entry.branches.length === 3 &&
+        entry.prefix?.some(
+          (edge) => edge.poolId === "scale-equalizer-weth-fame",
+        ),
+    );
+    assert.ok(template);
+
+    const candidate = materializeOptimizerTemplate(
+      template,
+      [5_000, 3_000, 2_000],
+    );
+    assert.equal(candidate.kind, "split_merge");
+    assert.deepEqual(
+      candidate.legs.map((leg) => leg.amountMode),
+      ["Exact", "Exact", "Exact", "All"],
+    );
+
+    const quoted = quoteRouteCandidate(candidate, 9_000n, 2_222n, 100, {
+      quoteEdge(request) {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test proportional quote",
+        };
+      },
+    });
+    assert.ok("candidate" in quoted);
+    if ("candidate" in quoted) {
+      assert.deepEqual(
+        quoted.legQuotes.slice(1).map((quote) => quote.amountIn),
+        [4_500n, 2_700n, 1_800n],
+      );
+    }
   });
 });

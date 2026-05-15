@@ -8,7 +8,10 @@ import type {
 } from "../graph/routePlan";
 import { emptyCapabilities } from "../graph/routePlan";
 import { isNativeEthAddress, type FamePoolEdge } from "../poolUniverse";
-import type { FameOptimizerRouteTemplate } from "./types";
+import type {
+  FameOptimizerAllocation,
+  FameOptimizerRouteTemplate,
+} from "./types";
 
 function normalizedAddress(address: Address): string {
   return address.toLowerCase();
@@ -20,7 +23,9 @@ function sameAddress(left: Address, right: Address): boolean {
 
 function usesWeth(legs: readonly FameRouteCandidateLeg[]): boolean {
   return legs.some(
-    (leg) => sameAddress(leg.edge.tokenIn, WETH) || sameAddress(leg.edge.tokenOut, WETH),
+    (leg) =>
+      sameAddress(leg.edge.tokenIn, WETH) ||
+      sameAddress(leg.edge.tokenOut, WETH),
   );
 }
 
@@ -82,11 +87,15 @@ function summary(legs: readonly FameRouteCandidateLeg[]): string {
 
 function candidateId(
   template: FameOptimizerRouteTemplate,
-  allocationBps: number | null,
+  allocation: FameOptimizerAllocation,
 ): string {
-  return allocationBps === null
-    ? `optimizer-${template.id}`
-    : `optimizer-${template.id}-${allocationBps.toString()}bps`;
+  if (allocation === null) {
+    return `optimizer-${template.id}`;
+  }
+  if (Array.isArray(allocation)) {
+    return `optimizer-${template.id}-${allocation.join("-")}bps`;
+  }
+  return `optimizer-${template.id}-${allocation.toString()}bps`;
 }
 
 function leg(
@@ -105,10 +114,10 @@ function buildCandidate(
   template: FameOptimizerRouteTemplate,
   kind: FameRouteCandidateKind,
   legs: FameRouteCandidateLeg[],
-  allocationBps: number | null,
+  allocation: FameOptimizerAllocation,
 ): FameRouteCandidate {
   return {
-    id: candidateId(template, allocationBps),
+    id: candidateId(template, allocation),
     kind,
     tokenIn: template.tokenIn,
     tokenOut: template.tokenOut,
@@ -129,13 +138,85 @@ function singlePathFromEdges(
   return buildCandidate(template, "single_path", legs, allocationBps);
 }
 
-function templatePrefix(template: FameOptimizerRouteTemplate): readonly FamePoolEdge[] {
+function templatePrefix(
+  template: FameOptimizerRouteTemplate,
+): readonly FamePoolEdge[] {
   return template.prefix ?? [];
+}
+
+function validateAllocationVector(
+  template: FameOptimizerRouteTemplate,
+  vector: readonly number[],
+): number[] {
+  if (vector.length !== template.branches.length) {
+    throw new Error(
+      `${template.id} allocation vector does not match branches.`,
+    );
+  }
+  const normalized = vector.map((bps) => {
+    if (!Number.isInteger(bps) || bps < 0 || bps > 10_000) {
+      throw new Error(
+        `${template.id} allocation vector bps must be between 0 and 10000.`,
+      );
+    }
+    return bps;
+  });
+  const total = normalized.reduce((sum, bps) => sum + bps, 0);
+  if (total !== 10_000) {
+    throw new Error(`${template.id} allocation vector must sum to 10000.`);
+  }
+  return normalized;
+}
+
+function allocationVector(
+  template: FameOptimizerRouteTemplate,
+  allocation: FameOptimizerAllocation,
+): number[] {
+  if (Array.isArray(allocation)) {
+    return validateAllocationVector(template, allocation);
+  }
+  if (template.branches.length !== 2) {
+    throw new Error(`${template.id} requires an allocation vector.`);
+  }
+  const bps = allocation ?? 10_000;
+  if (!Number.isInteger(bps) || bps < 0 || bps > 10_000) {
+    throw new Error(
+      `${template.id} allocation bps must be between 0 and 10000.`,
+    );
+  }
+  return [bps, 10_000 - bps];
+}
+
+function sequentialBranchLegs(
+  branches: readonly FameOptimizerRouteTemplate["branches"][number][],
+  vector: readonly number[],
+): FameRouteCandidateLeg[] {
+  const nonZero = branches
+    .map((branch, index) => ({ branch, bps: vector[index] ?? 0 }))
+    .filter((entry) => entry.bps > 0);
+  if (nonZero.length === 0) return [];
+  if (nonZero.length === 1) {
+    return [leg(nonZero[0].branch.edge, "Exact", null)];
+  }
+
+  let remainingBps = 10_000;
+  return nonZero.map((entry, index) => {
+    if (index === nonZero.length - 1) {
+      return leg(entry.branch.edge, "All", entry.bps);
+    }
+
+    const sequentialBps = Math.min(
+      10_000,
+      Math.floor((entry.bps * 10_000) / remainingBps),
+    );
+    remainingBps -= entry.bps;
+    return leg(entry.branch.edge, "Exact", sequentialBps);
+  });
 }
 
 export function materializeOptimizerTemplate(
   template: FameOptimizerRouteTemplate,
-  allocationBps: number | null,
+  allocation: FameOptimizerAllocation,
 ): FameRouteCandidate {
   if (template.kind === "single_path") {
     if (!template.baselineCandidate) {
@@ -144,32 +225,30 @@ export function materializeOptimizerTemplate(
     return template.baselineCandidate;
   }
 
-  if (template.branches.length !== 2) {
-    throw new Error(`${template.id} is not a two-branch template.`);
-  }
-
-  const bps = allocationBps ?? 10_000;
-  if (!Number.isInteger(bps) || bps < 0 || bps > 10_000) {
-    throw new Error(`${template.id} allocation bps must be between 0 and 10000.`);
-  }
-
-  const left = template.branches[0].edge;
-  const right = template.branches[1].edge;
+  const vector = allocationVector(template, allocation);
   const prefix = templatePrefix(template);
-  if (bps === 10_000) {
-    return singlePathFromEdges(template, [...prefix, left, ...template.suffix], bps);
+  const nonZeroBranches = template.branches.filter(
+    (_branch, index) => (vector[index] ?? 0) > 0,
+  );
+  if (nonZeroBranches.length === 1) {
+    const onlyBranch = nonZeroBranches[0];
+    if (!onlyBranch) {
+      throw new Error(`${template.id} allocation produced no branch.`);
+    }
+    return singlePathFromEdges(
+      template,
+      [...prefix, onlyBranch.edge, ...template.suffix],
+      vector[template.branches.indexOf(onlyBranch)] ?? 10_000,
+    );
   }
-  if (bps === 0) {
-    return singlePathFromEdges(template, [...prefix, right, ...template.suffix], bps);
+
+  const branchLegs = sequentialBranchLegs(template.branches, vector);
+  if (branchLegs.length < 2) {
+    throw new Error(`${template.id} allocation produced no executable split.`);
   }
 
   if (template.kind === "direct_split") {
-    return buildCandidate(
-      template,
-      "split",
-      [leg(left, "Exact", bps), leg(right, "All", 10_000 - bps)],
-      bps,
-    );
+    return buildCandidate(template, "split", branchLegs, allocation);
   }
 
   if (template.kind === "terminal_split") {
@@ -180,22 +259,17 @@ export function materializeOptimizerTemplate(
         ...prefix.map((edge, index) =>
           leg(edge, index === 0 ? "Exact" : "All", null),
         ),
-        leg(left, "Exact", bps),
-        leg(right, "All", 10_000 - bps),
+        ...branchLegs,
         ...template.suffix.map((edge) => leg(edge, "All", null)),
       ],
-      bps,
+      allocation,
     );
   }
 
   return buildCandidate(
     template,
     "split_merge",
-    [
-      leg(left, "Exact", bps),
-      leg(right, "All", 10_000 - bps),
-      ...template.suffix.map((edge) => leg(edge, "All", null)),
-    ],
-    bps,
+    [...branchLegs, ...template.suffix.map((edge) => leg(edge, "All", null))],
+    allocation,
   );
 }

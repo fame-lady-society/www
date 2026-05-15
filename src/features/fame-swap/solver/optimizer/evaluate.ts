@@ -10,6 +10,9 @@ import {
 import { templatePoolIds } from "./templates";
 import type {
   FameAllocationTrialEvidence,
+  FameOptimizerAllocation,
+  FameOptimizerSearchAlgorithm,
+  FameOptimizerStopReason,
   FameOptimizerRunContext,
   FameOptimizerRouteTemplate,
 } from "./types";
@@ -19,10 +22,7 @@ export interface FameEvaluatedAllocationTrial {
   plan: FameQuotedRoutePlan | null;
 }
 
-function marginBps(
-  output: bigint,
-  baseline: bigint | null,
-): number | null {
+function marginBps(output: bigint, baseline: bigint | null): number | null {
   if (baseline === null || baseline <= 0n || output <= baseline) return null;
   return Number(((output - baseline) * 10_000n) / baseline);
 }
@@ -51,9 +51,23 @@ function branchOutputs(
   );
 }
 
+function allocationBps(allocation: FameOptimizerAllocation): number | null {
+  if (typeof allocation === "number") return allocation;
+  if (Array.isArray(allocation)) return allocation[0] ?? null;
+  return null;
+}
+
+function allocationVector(
+  allocation: FameOptimizerAllocation,
+): readonly number[] | undefined {
+  return Array.isArray(allocation) ? allocation : undefined;
+}
+
 export async function evaluateAllocationTrial(options: {
   template: FameOptimizerRouteTemplate;
-  allocationBps: number | null;
+  allocation: FameOptimizerAllocation;
+  algorithm: FameOptimizerSearchAlgorithm;
+  stopReason?: FameOptimizerStopReason;
   amountIn: bigint;
   feePpm: bigint;
   slippageBps: number;
@@ -68,7 +82,10 @@ export async function evaluateAllocationTrial(options: {
       plan: null,
       evidence: {
         templateId: options.template.id,
-        allocationBps: options.allocationBps,
+        allocationBps: allocationBps(options.allocation),
+        allocationVectorBps: allocationVector(options.allocation),
+        algorithm: options.algorithm,
+        stopReason: options.stopReason ?? "quote_budget",
         status: "budget_exhausted",
         reason: "Optimizer timeout elapsed before this trial could run.",
         poolIds: templatePoolIds(options.template),
@@ -80,7 +97,7 @@ export async function evaluateAllocationTrial(options: {
     consumeOptimizerTrial(options.run);
     const candidate = materializeOptimizerTemplate(
       options.template,
-      options.allocationBps,
+      options.allocation,
     );
     const result = await quoteRouteCandidateAsync(
       candidate,
@@ -93,13 +110,17 @@ export async function evaluateAllocationTrial(options: {
 
     if (!("candidate" in result)) {
       const budgetExhausted =
-        result.message.includes("budget") ||
-        result.message.includes("Budget");
+        result.message.includes("budget") || result.message.includes("Budget");
       return {
         plan: null,
         evidence: {
           templateId: options.template.id,
-          allocationBps: options.allocationBps,
+          allocationBps: allocationBps(options.allocation),
+          allocationVectorBps: allocationVector(options.allocation),
+          algorithm: options.algorithm,
+          stopReason: budgetExhausted
+            ? "quote_budget"
+            : options.stopReason ?? "quote_failure",
           status: budgetExhausted ? "budget_exhausted" : "quote_failed",
           reason: result.message,
           candidateId: candidate.id,
@@ -112,7 +133,10 @@ export async function evaluateAllocationTrial(options: {
       plan: result,
       evidence: {
         templateId: options.template.id,
-        allocationBps: options.allocationBps,
+        allocationBps: allocationBps(options.allocation),
+        allocationVectorBps: allocationVector(options.allocation),
+        algorithm: options.algorithm,
+        stopReason: options.stopReason,
         status: "rejected",
         reason: "Quoted successfully but did not win the optimizer objective.",
         candidateId: candidate.id,
@@ -136,7 +160,12 @@ export async function evaluateAllocationTrial(options: {
       plan: null,
       evidence: {
         templateId: options.template.id,
-        allocationBps: options.allocationBps,
+        allocationBps: allocationBps(options.allocation),
+        allocationVectorBps: allocationVector(options.allocation),
+        algorithm: options.algorithm,
+        stopReason: budgetExhausted
+          ? "quote_budget"
+          : options.stopReason ?? "unsupported_protocol",
         status: budgetExhausted ? "budget_exhausted" : "unsupported_shape",
         reason:
           error instanceof Error

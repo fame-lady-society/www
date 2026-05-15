@@ -585,6 +585,12 @@ function feeBpsFor(request: FameEdgeQuoteRequest): number | null {
   return fee.status === "available" ? fee.feeBps : null;
 }
 
+function poolGetAmountOutVenueLabel(
+  venue: "solidly" | "aerodrome-v2",
+): string {
+  return venue === "aerodrome-v2" ? "Aerodrome V2" : "Solidly";
+}
+
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
@@ -676,6 +682,9 @@ async function quoteFromPoolGetAmountOut(
 ): Promise<FameEdgeQuoteResult> {
   const pool = request.edge.pool;
   if (!("pool" in pool)) return noEvidence(request);
+  if (pool.venue !== "solidly" && pool.venue !== "aerodrome-v2") {
+    return noEvidence(request);
+  }
 
   const amountOut = await readLiveContract(
     client,
@@ -693,12 +702,17 @@ async function quoteFromPoolGetAmountOut(
     return {
       status: "failed",
       reason: "zero_output",
-      message: `${request.edge.poolId} live pool quote returned zero output.`,
+      message: `${request.edge.poolId} live ${poolGetAmountOutVenueLabel(
+        pool.venue,
+      )} pool quote returned zero output.`,
     };
   }
 
   let priceImpact: FamePriceImpactEstimate | undefined;
-  if (pool.venue === "solidly" && pool.stable === false) {
+  if (
+    (pool.venue === "solidly" || pool.venue === "aerodrome-v2") &&
+    pool.stable === false
+  ) {
     const rawReserves = await readLiveContract(
       client,
       {
@@ -720,7 +734,8 @@ async function quoteFromPoolGetAmountOut(
       });
     }
   }
-  const source = `live pool getAmountOut at ${context.source} block ${context.blockNumber.toString()}`;
+  const venueLabel = poolGetAmountOutVenueLabel(pool.venue);
+  const source = `live ${venueLabel} pool getAmountOut at ${context.source} block ${context.blockNumber.toString()}`;
 
   return {
     status: "quoted",
@@ -737,9 +752,9 @@ async function quoteFromPoolGetAmountOut(
       priceImpact,
       activeLiquidity: notApplicableEvidence(
         source,
-        pool.venue === "solidly" && pool.stable
-          ? "Stable Solidly pool active liquidity state transition is not validated."
-          : "Solidly pool uses pool quote/reserve state, not V4 active liquidity.",
+        pool.stable
+          ? `Stable ${venueLabel} pool active liquidity state transition is not validated.`
+          : `${venueLabel} volatile pool uses pool quote/reserve state, not V4 active liquidity.`,
       ),
     }),
   };
@@ -1279,7 +1294,10 @@ async function quoteLiveEdge(
       return quoteFromNativeWrap(request, context);
     }
 
-    if (request.edge.pool.venue === "solidly") {
+    if (
+      request.edge.pool.venue === "solidly" ||
+      request.edge.pool.venue === "aerodrome-v2"
+    ) {
       return await quoteFromPoolGetAmountOut(
         request,
         client,

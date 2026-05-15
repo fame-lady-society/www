@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
-import { FAME, NATIVE_ETH, USDC, tokenForAddress } from "../../tokens";
+import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../../tokens";
 import { solveFameSwapAmountAsync } from "../amountSolver";
 import { famePoolEdges } from "../poolUniverse";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "../slippage";
@@ -108,7 +108,7 @@ describe("FAME live liquidity quote adapter", () => {
       );
       assert.ok(
         result.plan.legQuotes.every((quote) =>
-          quote.evidence.includes("live pool getAmountOut"),
+          /live .* pool getAmountOut/.test(quote.evidence),
         ),
       );
     }
@@ -319,6 +319,53 @@ describe("FAME live liquidity quote adapter", () => {
     assert.equal(quote.status, "quoted");
     if (quote.status === "quoted") {
       assert.equal(quote.priceImpact, undefined);
+    }
+  });
+
+  it("quotes Aerodrome V2 legs through pool getAmountOut with Aerodrome diagnostics", async () => {
+    const edge = famePoolEdges().find(
+      (candidate) =>
+        candidate.poolId === "aerodrome-v2-usdc-weth" &&
+        candidate.tokenIn.toLowerCase() === USDC.toLowerCase(),
+    );
+    assert.ok(edge);
+    if (edge.pool.venue !== "aerodrome-v2" || edge.pool.stable) {
+      throw new Error("Expected volatile Aerodrome V2 edge.");
+    }
+    assert.equal(edge.tokenOut, WETH);
+    const pool = edge.pool;
+
+    const adapter = await createLiveLiquidityQuoteAdapter({
+      client: {
+        async readContract(request) {
+          assert.equal(request.address, pool.pool);
+          assert.equal(request.blockNumber, 45_884_844n);
+          if (request.functionName === "getAmountOut") {
+            assert.deepEqual(request.args, [12_345n, edge.tokenIn]);
+            return 67_890n;
+          }
+          if (request.functionName === "getReserves") {
+            return [10_000_000n, 1_000_000n, 0];
+          }
+          throw new Error(`Unexpected read ${request.functionName}.`);
+        },
+      },
+      chainId: 8453,
+      blockNumber: 45_884_844n,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 12_345n });
+
+    assert.equal(quote.status, "quoted");
+    if (quote.status === "quoted") {
+      assert.equal(quote.amountOut, 67_890n);
+      assert.match(quote.evidence, /Aerodrome V2 pool getAmountOut/);
+      assert.equal(quote.priceImpact?.method, "constant-product-reserves");
+      assert.equal(quote.protocolEvidence?.quote.status, "available");
+      assert.match(
+        quote.protocolEvidence?.activeLiquidity.reason ?? "",
+        /Aerodrome V2 volatile pool/,
+      );
     }
   });
 

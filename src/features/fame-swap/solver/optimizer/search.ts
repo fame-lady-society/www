@@ -14,35 +14,32 @@ import {
   optimizerTimedOut,
 } from "./runContext";
 import { createOptimizerQuoteAdapter } from "./quoteRunAdapter";
-import { routeOptimizerTemplatesForPair } from "./templates";
+import { routeOptimizerTemplatesForPair, templatePoolIds } from "./templates";
 import { evaluateAllocationTrial } from "./evaluate";
 import type {
   FameAllocationTrialEvidence,
   FameAllocationTrialStatus,
+  FameOptimizerAllocation,
   FameOptimizerBudgets,
   FameOptimizerEvidence,
   FameOptimizerFailureReason,
   FameOptimizerMode,
   FameOptimizerRouteTemplate,
+  FameOptimizerSearchAlgorithm,
+  FameOptimizerStopReason,
   FameRouteOptimizerResult,
 } from "./types";
 
 export const FAME_OPTIMIZER_COARSE_ALLOCATION_BPS = [
-  0,
-  500,
-  1_000,
-  2_000,
-  3_500,
-  5_000,
-  6_500,
-  8_000,
-  9_000,
-  9_500,
-  10_000,
+  0, 500, 1_000, 2_000, 3_500, 5_000, 6_500, 8_000, 9_000, 9_500, 10_000,
 ] as const;
 
 const REFINE_WINDOW_BPS = 1_000;
 const REFINE_STEP_BPS = 250;
+const ADAPTIVE_MIN_INTERVAL_BPS = 250;
+const ADAPTIVE_STEP_BPS = 50;
+const COORDINATE_DESCENT_STEP_BPS = 1_000;
+const MAX_COORDINATE_DESCENT_ROUNDS = 2;
 const COMPLEX_ROUTE_MIN_WIN_BPS = 1n;
 const MAX_CONCURRENT_OPTIMIZER_TEMPLATES = 2;
 const MAX_CONCURRENT_OPTIMIZER_TRIALS = 4;
@@ -126,6 +123,17 @@ function trialStatusCounts(
   return counts;
 }
 
+function selectedTrial(
+  trials: readonly FameAllocationTrialEvidence[],
+  selectedPlan: FameQuotedRoutePlan | null,
+): FameAllocationTrialEvidence | null {
+  if (!selectedPlan) return null;
+  return (
+    trials.find((trial) => trial.candidateId === selectedPlan.candidate.id) ??
+    null
+  );
+}
+
 function evidence(options: {
   mode: FameOptimizerMode;
   status: FameOptimizerEvidence["status"];
@@ -138,12 +146,16 @@ function evidence(options: {
   fallbackReason: FameOptimizerFailureReason | null;
   templateEligibility: FameOptimizerEvidence["templateEligibility"];
 }): FameOptimizerEvidence {
+  const trial = selectedTrial(options.trials, options.selectedPlan);
   return {
     mode: options.mode,
     status: options.status,
     quoteContext: options.run.quoteContext,
     selectedTemplateId: options.selectedTemplateId,
     selectedAllocationBps: options.selectedAllocationBps,
+    selectedAllocationVectorBps: trial?.allocationVectorBps ?? null,
+    selectedAlgorithm: trial?.algorithm ?? null,
+    selectedStopReason: trial?.stopReason ?? null,
     selectedCandidateId: options.selectedPlan?.candidate.id ?? null,
     objective: {
       baselineProtectedAmountOut:
@@ -188,6 +200,40 @@ function allocationSequence(refineCenters: readonly number[]): number[] {
   });
 }
 
+function allocationBps(allocation: FameOptimizerAllocation): number | null {
+  if (typeof allocation === "number") return allocation;
+  if (Array.isArray(allocation)) return allocation[0] ?? null;
+  return null;
+}
+
+function allocationKey(allocation: FameOptimizerAllocation): string {
+  if (allocation === null) return "null";
+  return Array.isArray(allocation)
+    ? allocation.join(":")
+    : allocation.toString();
+}
+
+function equalAllocationVector(branchCount: number): number[] {
+  const base = Math.floor(10_000 / branchCount);
+  const vector = Array.from({ length: branchCount }, () => base);
+  vector[0] += 10_000 - base * branchCount;
+  return vector;
+}
+
+function vectorWithTransfer(
+  vector: readonly number[],
+  fromIndex: number,
+  toIndex: number,
+  amountBps: number,
+): number[] | null {
+  if ((vector[fromIndex] ?? 0) < amountBps) return null;
+  return vector.map((value, index) => {
+    if (index === fromIndex) return value - amountBps;
+    if (index === toIndex) return value + amountBps;
+    return value;
+  });
+}
+
 async function mapWithConcurrency<T, R>(
   items: readonly T[],
   concurrency: number,
@@ -227,12 +273,16 @@ function rejectedCandidateFromTrial(
 
 function prunedTrial(
   template: FameOptimizerRouteTemplate,
-  allocationBps: number | null,
+  allocation: FameOptimizerAllocation,
   maxTrials: number,
+  algorithm: FameOptimizerSearchAlgorithm,
 ): FameAllocationTrialEvidence {
   return {
     templateId: template.id,
-    allocationBps,
+    allocationBps: allocationBps(allocation),
+    allocationVectorBps: Array.isArray(allocation) ? allocation : undefined,
+    algorithm,
+    stopReason: "quote_budget",
     status: "pruned",
     reason: `Template trial budget ${maxTrials.toString()} reached.`,
     poolIds: template.branches.map((branch) => branch.edge.poolId),
@@ -240,18 +290,27 @@ function prunedTrial(
 }
 
 function splitTrialBudget(
-  allocations: readonly (number | null)[],
+  allocations: readonly FameOptimizerAllocation[],
   usedTrials: number,
   maxTrials: number,
 ): {
-  runnable: (number | null)[];
-  pruned: (number | null)[];
+  runnable: FameOptimizerAllocation[];
+  pruned: FameOptimizerAllocation[];
 } {
   const remaining = Math.max(0, maxTrials - usedTrials);
   return {
     runnable: allocations.slice(0, remaining),
     pruned: allocations.slice(remaining),
   };
+}
+
+function consumedTemplateTrials(
+  trials: readonly FameAllocationTrialEvidence[],
+  templateId: string,
+): number {
+  return trials.filter(
+    (trial) => trial.templateId === templateId && trial.status !== "ineligible",
+  ).length;
 }
 
 async function settleUntilDeadline<T>(
@@ -264,7 +323,9 @@ async function settleUntilDeadline<T>(
     return null;
   }
 
-  const safe = Promise.all(promises.map((promise) => promise.catch(() => null)));
+  const safe = Promise.all(
+    promises.map((promise) => promise.catch(() => null)),
+  );
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const raced = await Promise.race([
@@ -285,24 +346,175 @@ async function settleUntilDeadline<T>(
 
 async function evaluateAllocationBatch(options: {
   run: ReturnType<typeof createFameOptimizerRunContext>;
-  allocations: readonly (number | null)[];
-  evaluate: (allocationBps: number | null) => Promise<Awaited<ReturnType<typeof evaluateAllocationTrial>>>;
+  allocations: readonly FameOptimizerAllocation[];
+  evaluate: (
+    allocation: FameOptimizerAllocation,
+    algorithm: FameOptimizerSearchAlgorithm,
+    stopReason?: FameOptimizerStopReason,
+  ) => Promise<Awaited<ReturnType<typeof evaluateAllocationTrial>>>;
+  algorithm: FameOptimizerSearchAlgorithm;
+  stopReason?: FameOptimizerStopReason;
 }): Promise<Awaited<ReturnType<typeof evaluateAllocationTrial>>[] | null> {
   const results: Awaited<ReturnType<typeof evaluateAllocationTrial>>[] = [];
-  for (let index = 0; index < options.allocations.length; index += MAX_CONCURRENT_OPTIMIZER_TRIALS) {
+  for (
+    let index = 0;
+    index < options.allocations.length;
+    index += MAX_CONCURRENT_OPTIMIZER_TRIALS
+  ) {
     const wave = options.allocations.slice(
       index,
       index + MAX_CONCURRENT_OPTIMIZER_TRIALS,
     );
     const settled = await settleUntilDeadline(
       options.run,
-      wave.map((allocationBps) => options.evaluate(allocationBps)),
+      wave.map((allocation) =>
+        options.evaluate(allocation, options.algorithm, options.stopReason),
+      ),
     );
     if (!settled) return results.length > 0 ? results : null;
     results.push(...settled);
     if (optimizerTimedOut(options.run)) return results;
   }
   return results;
+}
+
+function templateEdges(template: FameOptimizerRouteTemplate) {
+  return [
+    ...(template.prefix ?? []),
+    ...template.branches.map((branch) => branch.edge),
+    ...template.suffix,
+  ];
+}
+
+function isAdaptiveSupportedEdge(
+  edge: FameOptimizerRouteTemplate["branches"][number]["edge"],
+): boolean {
+  if (edge.venue === "NativeWrap") return true;
+  const pool = edge.pool;
+  if (pool.venue === "uniswap-v2") return true;
+  if (pool.venue === "solidly" || pool.venue === "aerodrome-v2") {
+    return pool.stable === false;
+  }
+  return false;
+}
+
+function unsupportedAdaptiveReason(
+  template: FameOptimizerRouteTemplate,
+): FameOptimizerStopReason | null {
+  if (template.branches.length !== 2) return "unsupported_protocol";
+  return templateEdges(template).every(isAdaptiveSupportedEdge)
+    ? null
+    : "unsupported_protocol";
+}
+
+function gridSamples(trials: readonly FameAllocationTrialEvidence[]) {
+  return trials
+    .filter(
+      (trial) =>
+        trial.algorithm === "grid" &&
+        typeof trial.allocationBps === "number" &&
+        trial.protectedAmountOut !== undefined,
+    )
+    .map((trial) => ({
+      bps: trial.allocationBps as number,
+      protectedAmountOut: trial.protectedAmountOut as bigint,
+    }))
+    .sort((left, right) => left.bps - right.bps);
+}
+
+function adaptiveFallbackReason(options: {
+  template: FameOptimizerRouteTemplate;
+  trials: readonly FameAllocationTrialEvidence[];
+}): FameOptimizerStopReason | null {
+  const unsupported = unsupportedAdaptiveReason(options.template);
+  if (unsupported) return unsupported;
+  if (
+    options.trials.some(
+      (trial) =>
+        trial.status === "quote_failed" || trial.status === "unsupported_shape",
+    )
+  ) {
+    return "quote_failure";
+  }
+  if (
+    options.trials.some(
+      (trial) =>
+        trial.status === "budget_exhausted" || trial.status === "pruned",
+    )
+  ) {
+    return "quote_budget";
+  }
+
+  const samples = gridSamples(options.trials);
+  if (samples.length < 5) return "non_unimodal_samples";
+  const bestIndex = samples.reduce(
+    (best, sample, index) =>
+      sample.protectedAmountOut > samples[best].protectedAmountOut
+        ? index
+        : best,
+    0,
+  );
+  if (bestIndex === 0 || bestIndex === samples.length - 1) {
+    return "no_improvement";
+  }
+
+  for (let index = 1; index <= bestIndex; index += 1) {
+    if (
+      samples[index].protectedAmountOut < samples[index - 1].protectedAmountOut
+    ) {
+      return "non_unimodal_samples";
+    }
+  }
+  for (let index = bestIndex + 1; index < samples.length; index += 1) {
+    if (
+      samples[index].protectedAmountOut > samples[index - 1].protectedAmountOut
+    ) {
+      return "non_unimodal_samples";
+    }
+  }
+
+  return null;
+}
+
+function roundBps(value: number): number {
+  return Math.max(
+    0,
+    Math.min(10_000, Math.round(value / ADAPTIVE_STEP_BPS) * ADAPTIVE_STEP_BPS),
+  );
+}
+
+function adaptiveBracket(
+  trials: readonly FameAllocationTrialEvidence[],
+): { left: number; right: number } | null {
+  const samples = gridSamples(trials);
+  if (samples.length < 3) return null;
+  const bestIndex = samples.reduce(
+    (best, sample, index) =>
+      sample.protectedAmountOut > samples[best].protectedAmountOut
+        ? index
+        : best,
+    0,
+  );
+  const left = samples[bestIndex - 1]?.bps;
+  const right = samples[bestIndex + 1]?.bps;
+  return left === undefined || right === undefined ? null : { left, right };
+}
+
+function localMathGateTrial(
+  template: FameOptimizerRouteTemplate,
+): FameAllocationTrialEvidence | null {
+  if (template.kind === "single_path") return null;
+  if (!templateEdges(template).every(isAdaptiveSupportedEdge)) return null;
+  return {
+    templateId: template.id,
+    allocationBps: null,
+    algorithm: "local_math",
+    stopReason: "unsupported_protocol",
+    status: "ineligible",
+    reason:
+      "Local marginal-price allocation requires an explicit adapter capability with complete pinned-block state.",
+    poolIds: templatePoolIds(template),
+  };
 }
 
 async function evaluateTemplate(options: {
@@ -316,6 +528,7 @@ async function evaluateTemplate(options: {
 }): Promise<{
   bestPlan: FameQuotedRoutePlan | null;
   bestAllocationBps: number | null;
+  bestAllocation: FameOptimizerAllocation;
   trials: FameAllocationTrialEvidence[];
   rejectedCandidates: FameRouteOptimizerResult["rejectedCandidates"];
 }> {
@@ -323,11 +536,18 @@ async function evaluateTemplate(options: {
   const rejectedCandidates: FameRouteOptimizerResult["rejectedCandidates"] = [];
   let bestPlan: FameQuotedRoutePlan | null = null;
   let bestAllocationBps: number | null = null;
+  let bestAllocation: FameOptimizerAllocation = null;
 
-  async function evaluate(allocationBps: number | null) {
+  async function evaluate(
+    allocation: FameOptimizerAllocation,
+    algorithm: FameOptimizerSearchAlgorithm,
+    stopReason?: FameOptimizerStopReason,
+  ) {
     return evaluateAllocationTrial({
       ...options,
-      allocationBps,
+      allocation,
+      algorithm,
+      stopReason,
       baselineProtectedAmountOut:
         options.baselinePlan?.protectedAmountOut ?? null,
     });
@@ -338,6 +558,9 @@ async function evaluateTemplate(options: {
     if (evaluated.plan && betterPlan(evaluated.plan, bestPlan)) {
       bestPlan = evaluated.plan;
       bestAllocationBps = evaluated.evidence.allocationBps;
+      bestAllocation = evaluated.evidence.allocationVectorBps
+        ? [...evaluated.evidence.allocationVectorBps]
+        : evaluated.evidence.allocationBps;
       return;
     }
 
@@ -347,13 +570,126 @@ async function evaluateTemplate(options: {
     }
   }
 
+  const localMathTrial = localMathGateTrial(options.template);
+  if (localMathTrial) trials.push(localMathTrial);
+
+  if (options.template.branches.length > 2) {
+    const seen = new Set<string>();
+    let currentVector = equalAllocationVector(options.template.branches.length);
+    let currentPlan: FameQuotedRoutePlan | null = null;
+
+    async function evaluateVector(vector: readonly number[]) {
+      const key = allocationKey(vector);
+      if (seen.has(key)) return null;
+      seen.add(key);
+      const evaluated = await evaluate(
+        vector,
+        "coordinate_descent",
+        "convergence",
+      );
+      record(evaluated);
+      return evaluated;
+    }
+
+    const initial = await evaluateVector(currentVector);
+    if (initial?.plan) currentPlan = initial.plan;
+
+    for (
+      let round = 0;
+      round < MAX_COORDINATE_DESCENT_ROUNDS && currentPlan;
+      round += 1
+    ) {
+      const candidates: number[][] = [];
+      for (
+        let fromIndex = 0;
+        fromIndex < currentVector.length;
+        fromIndex += 1
+      ) {
+        for (let toIndex = 0; toIndex < currentVector.length; toIndex += 1) {
+          if (fromIndex === toIndex) continue;
+          const moved = vectorWithTransfer(
+            currentVector,
+            fromIndex,
+            toIndex,
+            COORDINATE_DESCENT_STEP_BPS,
+          );
+          if (moved) {
+            const key = allocationKey(moved);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            candidates.push(moved);
+          }
+        }
+      }
+
+      const budget = splitTrialBudget(
+        candidates,
+        consumedTemplateTrials(trials, options.template.id),
+        options.run.budgets.maxTrialsPerTemplate,
+      );
+      const results = await evaluateAllocationBatch({
+        run: options.run,
+        allocations: budget.runnable,
+        evaluate,
+        algorithm: "coordinate_descent",
+        stopReason: "convergence",
+      });
+      if (!results) break;
+      const previousBest = bestPlan;
+      for (const evaluated of results) record(evaluated);
+      for (const allocation of budget.pruned) {
+        trials.push(
+          prunedTrial(
+            options.template,
+            allocation,
+            options.run.budgets.maxTrialsPerTemplate,
+            "coordinate_descent",
+          ),
+        );
+      }
+
+      if (!bestPlan || bestPlan === previousBest) {
+        trials.push({
+          templateId: options.template.id,
+          allocationBps: currentVector[0] ?? null,
+          allocationVectorBps: currentVector,
+          algorithm: "coordinate_descent",
+          stopReason: "no_improvement",
+          status: "pruned",
+          reason:
+            "Coordinate descent stopped because no pairwise move improved the best allocation.",
+          poolIds: options.template.branches.map(
+            (branch) => branch.edge.poolId,
+          ),
+        });
+        break;
+      }
+
+      const selected = trials.find(
+        (trial) => trial.candidateId === bestPlan?.candidate.id,
+      );
+      if (selected?.allocationVectorBps) {
+        currentVector = [...selected.allocationVectorBps];
+        currentPlan = bestPlan;
+      }
+    }
+
+    return {
+      bestPlan,
+      bestAllocationBps,
+      bestAllocation,
+      trials,
+      rejectedCandidates,
+    };
+  }
+
   const firstPass =
     options.template.kind === "single_path"
       ? [null]
       : [...FAME_OPTIMIZER_COARSE_ALLOCATION_BPS];
   const firstPassBudget = splitTrialBudget(
     firstPass,
-    trials.length,
+    consumedTemplateTrials(trials, options.template.id),
     options.run.budgets.maxTrialsPerTemplate,
   );
 
@@ -361,13 +697,17 @@ async function evaluateTemplate(options: {
     run: options.run,
     allocations: firstPassBudget.runnable,
     evaluate,
+    algorithm: "grid",
+    stopReason: "grid_complete",
   });
-  if (!firstPassResults) return {
-    bestPlan,
-    bestAllocationBps,
-    trials,
-    rejectedCandidates,
-  };
+  if (!firstPassResults)
+    return {
+      bestPlan,
+      bestAllocationBps,
+      bestAllocation,
+      trials,
+      rejectedCandidates,
+    };
   for (const evaluated of firstPassResults) record(evaluated);
   for (const allocationBps of firstPassBudget.pruned) {
     trials.push(
@@ -375,58 +715,118 @@ async function evaluateTemplate(options: {
         options.template,
         allocationBps,
         options.run.budgets.maxTrialsPerTemplate,
+        "grid",
       ),
     );
   }
 
   if (options.template.kind !== "single_path" && bestAllocationBps !== null) {
-    const failedCoarseCenters = trials
-      .filter(
-        (trial) =>
-          trial.status === "quote_failed" &&
-          typeof trial.allocationBps === "number" &&
-          Math.abs(trial.allocationBps - bestAllocationBps!) <=
-          REFINE_WINDOW_BPS * 2,
-      )
-      .map((trial) => trial.allocationBps!);
-    const refineAllocations = allocationSequence([
-      bestAllocationBps,
-      ...failedCoarseCenters,
-    ]).filter(
-      (allocationBps) =>
-        !trials.some((trial) => trial.allocationBps === allocationBps),
-    );
-    const refineBudget = splitTrialBudget(
-      refineAllocations,
-      trials.filter((trial) => trial.templateId === options.template.id).length,
-      options.run.budgets.maxTrialsPerTemplate,
-    );
-    const refineResults = await evaluateAllocationBatch({
-      run: options.run,
-      allocations: refineBudget.runnable,
-      evaluate,
-    });
-    if (!refineResults) return {
-      bestPlan,
-      bestAllocationBps,
+    const fallbackReason = adaptiveFallbackReason({
+      template: options.template,
       trials,
-      rejectedCandidates,
-    };
-    for (const evaluated of refineResults) record(evaluated);
-    for (const allocationBps of refineBudget.pruned) {
-      trials.push(
-        prunedTrial(
-          options.template,
-          allocationBps,
-          options.run.budgets.maxTrialsPerTemplate,
-        ),
+    });
+    if (!fallbackReason) {
+      let bracket = adaptiveBracket(trials);
+      const seen = new Set(trials.map((trial) => trial.allocationBps));
+      while (
+        bracket &&
+        bracket.right - bracket.left > ADAPTIVE_MIN_INTERVAL_BPS
+      ) {
+        const leftMid = roundBps(
+          bracket.left + (bracket.right - bracket.left) / 3,
+        );
+        const rightMid = roundBps(
+          bracket.right - (bracket.right - bracket.left) / 3,
+        );
+        const adaptiveAllocations = [leftMid, rightMid].filter(
+          (allocationBps, index, values) =>
+            allocationBps > bracket!.left &&
+            allocationBps < bracket!.right &&
+            !seen.has(allocationBps) &&
+            values.indexOf(allocationBps) === index,
+        );
+        if (adaptiveAllocations.length === 0) break;
+        for (const allocation of adaptiveAllocations) seen.add(allocation);
+        const adaptiveResults = await evaluateAllocationBatch({
+          run: options.run,
+          allocations: adaptiveAllocations,
+          evaluate,
+          algorithm: "adaptive_2way",
+          stopReason: "convergence",
+        });
+        if (!adaptiveResults) break;
+        for (const evaluated of adaptiveResults) record(evaluated);
+
+        const leftTrial = adaptiveResults.find(
+          (result) => result.evidence.allocationBps === leftMid,
+        );
+        const rightTrial = adaptiveResults.find(
+          (result) => result.evidence.allocationBps === rightMid,
+        );
+        if (!leftTrial?.plan || !rightTrial?.plan) break;
+        if (
+          leftTrial.plan.protectedAmountOut < rightTrial.plan.protectedAmountOut
+        ) {
+          bracket = { left: leftMid, right: bracket.right };
+        } else {
+          bracket = { left: bracket.left, right: rightMid };
+        }
+      }
+    } else {
+      const failedCoarseCenters = trials
+        .filter(
+          (trial) =>
+            trial.status === "quote_failed" &&
+            typeof trial.allocationBps === "number" &&
+            Math.abs(trial.allocationBps - bestAllocationBps!) <=
+              REFINE_WINDOW_BPS * 2,
+        )
+        .map((trial) => trial.allocationBps!);
+      const refineAllocations = allocationSequence([
+        bestAllocationBps,
+        ...failedCoarseCenters,
+      ]).filter(
+        (allocationBps) =>
+          !trials.some((trial) => trial.allocationBps === allocationBps),
       );
+      const refineBudget = splitTrialBudget(
+        refineAllocations,
+        consumedTemplateTrials(trials, options.template.id),
+        options.run.budgets.maxTrialsPerTemplate,
+      );
+      const refineResults = await evaluateAllocationBatch({
+        run: options.run,
+        allocations: refineBudget.runnable,
+        evaluate,
+        algorithm: "grid",
+        stopReason: fallbackReason,
+      });
+      if (!refineResults)
+        return {
+          bestPlan,
+          bestAllocationBps,
+          bestAllocation,
+          trials,
+          rejectedCandidates,
+        };
+      for (const evaluated of refineResults) record(evaluated);
+      for (const allocationBps of refineBudget.pruned) {
+        trials.push(
+          prunedTrial(
+            options.template,
+            allocationBps,
+            options.run.budgets.maxTrialsPerTemplate,
+            "grid",
+          ),
+        );
+      }
     }
   }
 
   return {
     bestPlan,
     bestAllocationBps,
+    bestAllocation,
     trials,
     rejectedCandidates,
   };
@@ -512,6 +912,7 @@ export async function optimizeRouteAllocations(options: {
   let bestPlan: FameQuotedRoutePlan | null = null;
   let bestTemplateId: string | null = null;
   let bestAllocationBps: number | null = null;
+  let bestAllocation: FameOptimizerAllocation = null;
   let baselinePlan: FameQuotedRoutePlan | null = null;
   let baselineTemplateId: string | null = null;
   let baselineAllocationBps: number | null = null;
@@ -545,6 +946,35 @@ export async function optimizeRouteAllocations(options: {
   }
 
   const scheduledTemplates: FameOptimizerRouteTemplate[] = [];
+
+  if (!optimizerTimedOut(run)) {
+    const baselineResults = await settleUntilDeadline(run, [
+      evaluateBaseline({
+        templates: baselineTemplates,
+        amountIn: options.amountIn,
+        feePpm: options.feePpm,
+        slippageBps: options.slippageBps,
+        adapter,
+        run,
+      }),
+    ]);
+    const baseline = baselineResults?.[0];
+    if (baseline) {
+      baselinePlan = baseline.plan;
+      baselineTemplateId = baseline.templateId;
+      baselineAllocationBps = null;
+      rejectedCandidates.push(...baseline.rejectedCandidates);
+      if (baselinePlan) {
+        bestPlan = baselinePlan;
+        bestTemplateId = baselineTemplateId;
+        bestAllocationBps = baselineAllocationBps;
+        bestAllocation = baselineAllocationBps;
+      }
+    }
+  } else {
+    markOptimizerFallback(run, "timeout");
+  }
+
   if (!optimizerTimedOut(run)) {
     for (const template of splitTemplates) {
       try {
@@ -554,6 +984,8 @@ export async function optimizeRouteAllocations(options: {
         trials.push({
           templateId: template.id,
           allocationBps: null,
+          algorithm: "grid",
+          stopReason: "quote_budget",
           status: "budget_exhausted",
           reason: `Template budget ${run.budgets.maxTemplates.toString()} reached.`,
           poolIds: [],
@@ -591,38 +1023,12 @@ export async function optimizeRouteAllocations(options: {
         bestPlan = result.bestPlan;
         bestTemplateId = template.id;
         bestAllocationBps = result.bestAllocationBps;
+        bestAllocation = result.bestAllocation;
       }
     }
   }
 
   if (optimizerTimedOut(run)) {
-    markOptimizerFallback(run, "timeout");
-  }
-
-  if (!optimizerTimedOut(run)) {
-    const baselineResults = await settleUntilDeadline(run, [
-      evaluateBaseline({
-        templates: baselineTemplates,
-        amountIn: options.amountIn,
-        feePpm: options.feePpm,
-        slippageBps: options.slippageBps,
-        adapter,
-        run,
-      }),
-    ]);
-    const baseline = baselineResults?.[0];
-    if (baseline) {
-      baselinePlan = baseline.plan;
-      baselineTemplateId = baseline.templateId;
-      baselineAllocationBps = null;
-      rejectedCandidates.push(...baseline.rejectedCandidates);
-      if (baselinePlan && betterPlan(baselinePlan, bestPlan)) {
-        bestPlan = baselinePlan;
-        bestTemplateId = baselineTemplateId;
-        bestAllocationBps = baselineAllocationBps;
-      }
-    }
-  } else {
     markOptimizerFallback(run, "timeout");
   }
 
@@ -654,15 +1060,19 @@ export async function optimizeRouteAllocations(options: {
     bestPlan = baselinePlan ?? bestPlan;
     bestTemplateId = baselineTemplateId ?? bestTemplateId;
     bestAllocationBps = baselineAllocationBps;
+    bestAllocation = baselineAllocationBps;
   }
 
   if (!optimizerTimedOut(run) && run.stats.budgetExhaustions === 0) {
     const validationResults = await settleUntilDeadline(run, [
       evaluateAllocationTrial({
         template:
-          templateSet.templates.find((template) => template.id === bestTemplateId) ??
-          templateSet.templates[0],
-        allocationBps: bestAllocationBps,
+          templateSet.templates.find(
+            (template) => template.id === bestTemplateId,
+          ) ?? templateSet.templates[0],
+        allocation: bestAllocation,
+        algorithm: "grid",
+        stopReason: "grid_complete",
         amountIn: options.amountIn,
         feePpm: options.feePpm,
         slippageBps: options.slippageBps,

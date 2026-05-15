@@ -36,6 +36,29 @@ interface QuoteCallBudget {
   exhausted: boolean;
 }
 
+function warningPriority(rejection: FameCandidateRejection): number {
+  return rejection.reason === "adapter_failure" ? 0 : 1;
+}
+
+function warningMessages(
+  rejectedCandidates: readonly FameCandidateRejection[],
+): string[] {
+  return rejectedCandidates
+    .filter(
+      (rejection) =>
+        rejection.reason === "adapter_failure" ||
+        rejection.reason === "no_quote_evidence",
+    )
+    .slice()
+    .sort(
+      (left, right) =>
+        warningPriority(left) - warningPriority(right) ||
+        left.candidateId.localeCompare(right.candidateId),
+    )
+    .slice(0, 3)
+    .map((rejection) => rejection.message);
+}
+
 function marketImpactSummary(
   amountIn: bigint,
   grossAmountOut: bigint,
@@ -274,19 +297,11 @@ export async function rankRouteCandidatesAsync(options: {
   });
 
   const selected = plans[0];
-  const warningCandidates = rejectedCandidates.filter(
-    (rejection) =>
-      rejection.reason === "adapter_failure" ||
-      rejection.reason === "no_quote_evidence",
-  );
-
   return {
     status: "selected",
     plan: {
       ...selected,
-      warnings: warningCandidates
-        .slice(0, 3)
-        .map((rejection) => rejection.message),
+      warnings: warningMessages(rejectedCandidates),
     },
     rejectedCandidates,
   };
