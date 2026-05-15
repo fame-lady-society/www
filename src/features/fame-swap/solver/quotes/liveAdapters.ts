@@ -14,6 +14,8 @@ import {
   concentratedLiquidityPriceImpact,
   constantProductPriceImpact,
 } from "./routeMath";
+import { createCachedLiveQuoteClient } from "../optimizer/quoteRunAdapter";
+import type { FameOptimizerRunContext } from "../optimizer/types";
 
 type FameBlockQuoteContext = Extract<
   FameQuoteContext,
@@ -36,6 +38,7 @@ export interface FameLiveQuoteClient {
 export interface FameLiveQuoteAdapterOptions {
   client: FameLiveQuoteClient;
   chainId: number;
+  optimizerRunContext?: FameOptimizerRunContext;
   blockNumber?: bigint;
   contextSource?: FameBlockQuoteContext["source"];
   forkUrlLabel?: string;
@@ -612,6 +615,59 @@ function readLiveContract(
   );
 }
 
+function stableReadValue(value: unknown): string {
+  if (typeof value === "bigint") return value.toString();
+  if (Array.isArray(value)) return `[${value.map(stableReadValue).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => `${key}:${stableReadValue(entry)}`)
+      .join(",")}}`;
+  }
+  return String(value);
+}
+
+function liveReadCacheKey(request: ReadContractRequest): string {
+  return [
+    request.blockNumber?.toString() ?? "latest",
+    request.address.toLowerCase(),
+    request.functionName,
+    stableReadValue(request.args ?? []),
+  ].join("|");
+}
+
+function createRequestScopedLiveQuoteClient(
+  client: FameLiveQuoteClient,
+): FameLiveQuoteClient {
+  const cache = new Map<string, unknown>();
+  const inFlight = new Map<string, Promise<unknown>>();
+
+  return {
+    getBlockNumber: client.getBlockNumber,
+    readContract(request) {
+      const key = liveReadCacheKey(request);
+      if (cache.has(key)) return Promise.resolve(cache.get(key));
+
+      const existing = inFlight.get(key);
+      if (existing) return existing;
+
+      const promise = client
+        .readContract(request)
+        .then((result) => {
+          cache.set(key, result);
+          inFlight.delete(key);
+          return result;
+        })
+        .catch((error) => {
+          inFlight.delete(key);
+          throw error;
+        });
+      inFlight.set(key, promise);
+      return promise;
+    },
+  };
+}
+
 async function quoteFromPoolGetAmountOut(
   request: FameEdgeQuoteRequest,
   client: FameLiveQuoteClient,
@@ -1171,6 +1227,41 @@ async function quoteFromUniswapV4Quoter(
   };
 }
 
+function quoteFromNativeWrap(
+  request: FameEdgeQuoteRequest,
+  context: FameBlockQuoteContext,
+): FameEdgeQuoteResult {
+  const source = `native WETH wrap/unwrap at ${context.source} block ${context.blockNumber.toString()}`;
+  return {
+    status: "quoted",
+    amountIn: request.amountIn,
+    amountOut: request.amountIn,
+    capacityIn: null,
+    fee: request.edge.fee,
+    evidence: source,
+    context,
+    protocolEvidence: {
+      quote: availableEvidence(source, request.amountIn),
+      prePrice: notApplicableEvidence(
+        source,
+        "Native wrap is a 1:1 token operation, not a priced pool swap.",
+      ),
+      postPrice: notApplicableEvidence(
+        source,
+        "Native wrap is a 1:1 token operation, not a priced pool swap.",
+      ),
+      marketImpact: notApplicableEvidence(
+        source,
+        "Native wrap has no market impact.",
+      ),
+      activeLiquidity: notApplicableEvidence(
+        source,
+        "Native wrap uses canonical WETH deposit/withdraw, not pool liquidity.",
+      ),
+    },
+  };
+}
+
 async function quoteLiveEdge(
   request: FameEdgeQuoteRequest,
   client: FameLiveQuoteClient,
@@ -1184,6 +1275,10 @@ async function quoteLiveEdge(
   },
 ): Promise<FameEdgeQuoteResult> {
   try {
+    if (request.edge.pool.venue === "native-wrap") {
+      return quoteFromNativeWrap(request, context);
+    }
+
     if (request.edge.pool.venue === "solidly") {
       return await quoteFromPoolGetAmountOut(
         request,
@@ -1247,6 +1342,13 @@ export async function createLiveLiquidityQuoteAdapter(
   options: FameLiveQuoteAdapterOptions,
 ): Promise<FameAsyncQuoteAdapter> {
   const readTimeoutMs = options.readTimeoutMs ?? DEFAULT_READ_TIMEOUT_MS;
+  const scopedClient = createRequestScopedLiveQuoteClient(options.client);
+  const client = options.optimizerRunContext
+    ? createCachedLiveQuoteClient({
+        client: scopedClient,
+        run: options.optimizerRunContext,
+      })
+    : scopedClient;
   const quoterAddresses = {
     slipstream: options.slipstreamQuoterAddress ?? BASE_SLIPSTREAM_QUOTER_V2,
     slipstream2: options.slipstream2QuoterAddress ?? BASE_SLIPSTREAM2_QUOTER,
@@ -1257,9 +1359,9 @@ export async function createLiveLiquidityQuoteAdapter(
   try {
     blockNumber =
       options.blockNumber ??
-      (options.client.getBlockNumber
+      (client.getBlockNumber
         ? await withTimeout(
-            options.client.getBlockNumber(),
+            client.getBlockNumber(),
             readTimeoutMs,
             `getBlockNumber timed out after ${readTimeoutMs}ms`,
           )
@@ -1301,7 +1403,7 @@ export async function createLiveLiquidityQuoteAdapter(
     quoteEdge(request) {
       return quoteLiveEdge(
         request,
-        options.client,
+        client,
         quoteContext,
         readTimeoutMs,
         quoterAddresses,

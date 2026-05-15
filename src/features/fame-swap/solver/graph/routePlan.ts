@@ -36,6 +36,7 @@ export function emptyCapabilities(
   return {
     nativeEth: false,
     weth: false,
+    nativeWrap: false,
     permit2UniversalRouter: false,
     v4Hooks: false,
     v4HookAddress: false,

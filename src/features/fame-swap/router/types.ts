@@ -11,6 +11,7 @@ export const venueFamilyOrdinals = {
   Slipstream2: 3,
   UniswapV3: 4,
   UniswapV4: 5,
+  NativeWrap: 6,
 } as const;
 
 export type VenueFamilyName = keyof typeof venueFamilyOrdinals;
@@ -77,6 +78,7 @@ export interface JsonFameRoute {
 export interface FameRouteCapabilities {
   nativeEth: boolean;
   weth: boolean;
+  nativeWrap: boolean;
   permit2UniversalRouter: boolean;
   v4Hooks: boolean;
   v4HookAddress: boolean;
@@ -193,7 +195,8 @@ export type FamePoolVenue =
   | "aerodrome-slipstream"
   | "aerodrome-slipstream2"
   | "uniswap-v3"
-  | "uniswap-v4";
+  | "uniswap-v4"
+  | "native-wrap";
 
 export interface FamePoolBase {
   id: string;
@@ -245,12 +248,18 @@ export interface FameUniswapV4PoolConfig extends FamePoolBase {
   hookData?: Hex;
 }
 
+export interface FameNativeWrapPoolConfig extends FamePoolBase {
+  venue: "native-wrap";
+  weth: Address;
+}
+
 export type FamePoolConfig =
   | FameSolidlyPoolConfig
   | FameUniswapV2PoolConfig
   | FameSlipstreamPoolConfig
   | FameUniswapV3PoolConfig
-  | FameUniswapV4PoolConfig;
+  | FameUniswapV4PoolConfig
+  | FameNativeWrapPoolConfig;
 
 export interface FamePoolUniverseFile {
   schemaVersion: typeof FAME_SWAP_SCHEMA_VERSION;

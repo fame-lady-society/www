@@ -22,6 +22,18 @@ Ready rows include a quote context:
 
 Recorded and live quote outputs are exact-input leg quotes. Venue fees are already included in adapter outputs; the FLS router fee is calculated and emitted separately.
 
+## Allocation Optimizer Evidence
+
+Ready rows include an `optimizer` object when the async solver path runs. The object is operator evidence only; `/api/fame/swap/quote` does not serialize raw optimizer trials.
+
+- `status` is `selected` when the optimizer selected the returned route and `fallback` when route-lab returned a legacy-compatible fallback with optimizer diagnostics attached.
+- `selectedAllocationBps`, `selectedTemplateId`, and `selectedCandidateId` name the allocation that won, when one is executable under the current flat route model.
+- `allocationTrials` records selected, rejected, quote-failed, pruned, budget-exhausted, unsupported, and ineligible allocation points with display-safe reasons.
+- `quotePlanStats` separates logical quote requests from unique exact quote reads, state reads, cache hits, and underlying RPC reads.
+- `templateEligibility` is where 3+ pool groups, segment-level expectations, disabled pools, Aerodrome V2/migrated Slipstream gating, and NativeWrap-deferred native/WETH routes show up before they are executable.
+
+The first optimizer milestone executes two-branch direct splits and same-intermediate split-then-merge templates. It classifies N-way and segment-level opportunities but does not materialize them as selected routes.
+
 ## Price Impact
 
 Route lab reports `computablePriceImpactLegs` and `maxLegMarketImpactBps`.

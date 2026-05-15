@@ -122,6 +122,11 @@ const POOL_DISPLAY_METADATA = {
     poolTypeLabel: "PoolManager pool",
     pairLabel: "USDC/ETH",
   },
+  "native-wrap-weth": {
+    venueLabel: "Native WETH",
+    poolTypeLabel: "Wrap/unwrap",
+    pairLabel: "ETH/WETH",
+  },
 } as const satisfies Record<string, ReviewedFamePoolDisplayMetadata>;
 
 function displayNameForMetadata(
@@ -150,6 +155,7 @@ function venueFallbackLabel(venue: VenueFamilyName): string {
   if (venue === "UniswapV2") return "Uniswap v2";
   if (venue === "UniswapV3") return "Uniswap v3";
   if (venue === "UniswapV4") return "Uniswap v4";
+  if (venue === "NativeWrap") return "Native WETH";
   if (venue === "Solidly") return "Solidly";
   if (venue === "Slipstream" || venue === "Slipstream2") {
     return "Aerodrome Slipstream";

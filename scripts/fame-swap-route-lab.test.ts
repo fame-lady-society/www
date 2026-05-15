@@ -10,8 +10,8 @@ import { FAME_ROUTE_CORPUS } from "../src/features/fame-swap/solver/routeCorpus"
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 
 describe("FAME route lab", () => {
-  it("replays the full recorded-state corpus with executable quote evidence", () => {
-    const rows = runSnapshotRouteLab();
+  it("replays the full recorded-state corpus with executable quote evidence", async () => {
+    const rows = await runSnapshotRouteLab();
 
     assert.equal(rows.length, FAME_ROUTE_CORPUS.length);
     for (const row of rows) {
@@ -27,6 +27,11 @@ describe("FAME route lab", () => {
       assert.equal(row.feeBreakdown.venueFeesIncluded, true, row.id);
       assert.ok((row.feeBreakdown.computablePriceImpactLegs ?? 0) > 0, row.id);
       assert.ok(row.suggestedContractTodo?.includes(row.id), row.id);
+      assert.ok(row.optimizer, row.id);
+      assert.ok(
+        (row.optimizer?.quotePlanStats.logicalQuoteRequests as number) > 0,
+        row.id,
+      );
       assert.ok(row.edgeMatrix.length > 0, row.id);
       assert.ok(
         row.edgeMatrix.some((edge) => edge.status === "selected"),
@@ -44,8 +49,8 @@ describe("FAME route lab", () => {
     }
   });
 
-  it("includes reviewed connector statuses in route-lab JSON rows", () => {
-    const rows = runSnapshotRouteLab();
+  it("includes reviewed connector statuses in route-lab JSON rows", async () => {
+    const rows = await runSnapshotRouteLab();
 
     for (const row of rows) {
       assert.ok(
@@ -91,10 +96,10 @@ describe("FAME route lab", () => {
     );
   });
 
-  it("surfaces candidate generation budget diagnostics in JSON and markdown", () => {
+  it("surfaces candidate generation budget diagnostics in JSON and markdown", async () => {
     const [entry] = FAME_ROUTE_CORPUS;
     assert.ok(entry);
-    const rows = runSnapshotRouteLab([entry], {
+    const rows = await runSnapshotRouteLab([entry], {
       candidateBudgets: {
         maxCandidates: 1,
         maxSplitCandidates: 0,
@@ -115,8 +120,8 @@ describe("FAME route lab", () => {
     assert.match(markdown, /budget/);
   });
 
-  it("keeps deterministic cap-profile failures explicit and non-executable", () => {
-    const rows = runRouteLab();
+  it("keeps deterministic cap-profile failures explicit and non-executable", async () => {
+    const rows = await runRouteLab();
     const rowsById = new Map(rows.map((row) => [row.id, row]));
 
     for (const entry of FAME_ROUTE_CORPUS) {
@@ -134,10 +139,11 @@ describe("FAME route lab", () => {
     }
   });
 
-  it("renders route-lab markdown without executable payloads", () => {
-    const markdown = formatRouteLabMarkdown(runSnapshotRouteLab());
+  it("renders route-lab markdown without executable payloads", async () => {
+    const markdown = formatRouteLabMarkdown(await runSnapshotRouteLab());
 
     assert.match(markdown, /# FAME Swap Route Lab/);
+    assert.match(markdown, /### Optimizer/);
     assert.match(markdown, /### Edge Matrix/);
     assert.match(markdown, /### Protocol Coverage/);
     assert.match(markdown, /WETH->USDC/);
@@ -179,6 +185,7 @@ describe("FAME route lab", () => {
             detail: "Request body: secret\nhttps://example.invalid/secret",
           },
         ],
+        optimizer: null,
         edgeMatrix: [
           {
             chainId: 8453,

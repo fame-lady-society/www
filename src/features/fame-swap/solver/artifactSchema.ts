@@ -41,6 +41,7 @@ const venueFamilyNames = [
   "Slipstream2",
   "UniswapV3",
   "UniswapV4",
+  "NativeWrap",
 ] as const satisfies readonly VenueFamilyName[];
 
 const amountModeNames = [
@@ -56,6 +57,7 @@ const poolVenues = [
   "aerodrome-slipstream2",
   "uniswap-v3",
   "uniswap-v4",
+  "native-wrap",
 ] as const satisfies readonly FamePoolConfig["venue"][];
 
 const priceImpactMethods = [
@@ -357,6 +359,13 @@ function parseRouteCapabilities(
       `${path}.nativeEth`,
     ),
     weth: parseBoolean(getField(record, "weth", path), `${path}.weth`),
+    nativeWrap:
+      getOptionalField(record, "nativeWrap") === undefined
+        ? false
+        : parseBoolean(
+            getOptionalField(record, "nativeWrap"),
+            `${path}.nativeWrap`,
+          ),
     permit2UniversalRouter: parseBoolean(
       getField(record, "permit2UniversalRouter", path),
       `${path}.permit2UniversalRouter`,
@@ -853,6 +862,15 @@ function parsePoolConfig(value: unknown, path: string): FamePoolConfig {
         ...(hookData === undefined
           ? {}
           : { hookData: parseHex(hookData, `${path}.hookData`) }),
+      };
+    }
+    case "native-wrap": {
+      return {
+        id,
+        venue,
+        router,
+        ...baseFields,
+        weth: parseAddress(getField(record, "weth", path), `${path}.weth`),
       };
     }
   }

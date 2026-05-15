@@ -8,6 +8,7 @@ import {
   quoteFameSwap,
   quoteFameSwapAsync,
 } from "@/features/fame-swap/solver/quote";
+import { DEFAULT_FAME_OPTIMIZER_BUDGETS } from "@/features/fame-swap/solver/optimizer/runContext";
 import { serializeFameSwapQuoteResponse } from "@/features/fame-swap/solver/quoteWire";
 import {
   createLiveLiquidityQuoteAdapter,
@@ -33,6 +34,7 @@ const MAX_JSON_BODY_BYTES = 4_096;
 const MAX_UINT256 = (1n << 256n) - 1n;
 const QUOTE_RPC_TIMEOUT_MS = 8_000;
 const QUOTE_REQUEST_TIMEOUT_MS = 15_000;
+const QUOTE_RESPONSE_CUSHION_MS = 1_500;
 const READINESS_CACHE_TTL_MS = 5_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 90;
@@ -218,6 +220,32 @@ async function withTimeout<T>(
   }
 }
 
+function remainingQuoteTimeMs(startedAtMs: number): number {
+  return Math.max(
+    0,
+    QUOTE_REQUEST_TIMEOUT_MS - (Date.now() - startedAtMs) -
+      QUOTE_RESPONSE_CUSHION_MS,
+  );
+}
+
+function optimizerBudgetsForQuoteRequest(
+  startedAtMs: number,
+): FameSwapQuoteRequest["optimizerBudgets"] {
+  return {
+    timeoutMs: Math.min(
+      DEFAULT_FAME_OPTIMIZER_BUDGETS.timeoutMs,
+      remainingQuoteTimeMs(startedAtMs),
+    ),
+  };
+}
+
+function readTimeoutForQuoteRequest(startedAtMs: number): number {
+  return Math.max(
+    250,
+    Math.min(QUOTE_RPC_TIMEOUT_MS, remainingQuoteTimeMs(startedAtMs)),
+  );
+}
+
 async function readinessForQuote(routerAddress: Address | null) {
   const config = {
     ...getFameSwapConfig(),
@@ -249,40 +277,48 @@ async function readinessForQuote(routerAddress: Address | null) {
   });
   const reader: RouterPolicyReader = {
     read: async (address): Promise<RouterPolicySnapshot> => {
-      const feePpm = await client.readContract({
+      const feePpmPromise = client.readContract({
         address,
         abi: fameRouterAbi,
         functionName: "feePpm",
       });
+      const requiredFamilyOrdinals = [
+        ...new Set(
+          FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(
+            (target) => target.familyOrdinal,
+          ),
+        ),
+      ];
 
-      const familyResults = await Promise.all(
-        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(async (target) => {
+      const familyResultPromises = requiredFamilyOrdinals.map(
+        async (familyOrdinal) => {
           const enabled = await client.readContract({
             address,
             abi: fameRouterAbi,
             functionName: "venueFamilyEnabled",
-            args: [target.familyOrdinal],
+            args: [familyOrdinal],
           });
-          return [target.familyOrdinal, enabled] as const;
-        }),
+          return [familyOrdinal, enabled] as const;
+        },
       );
 
-      const targetResults = await Promise.all(
-        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(async (target) => {
-          const enabled = await client.readContract({
-            address,
-            abi: fameRouterAbi,
-            functionName: "venueTargetEnabled",
-            args: [target.familyOrdinal, target.target],
-          });
-          return [
-            routerPolicyTargetKey(target.familyOrdinal, target.target),
-            enabled,
-          ] as const;
-        }),
-      );
+      const targetResultPromises =
+        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(
+          async (target) => {
+            const enabled = await client.readContract({
+              address,
+              abi: fameRouterAbi,
+              functionName: "venueTargetEnabled",
+              args: [target.familyOrdinal, target.target],
+            });
+            return [
+              routerPolicyTargetKey(target.familyOrdinal, target.target),
+              enabled,
+            ] as const;
+          },
+        );
 
-      const hookDataResults = await Promise.all(
+      const hookDataResultPromises =
         FAME_SWAP_ARTIFACT_MANIFEST.requiredV4HookDataKeys.map(async (key) => {
           const enabled = await client.readContract({
             address,
@@ -291,14 +327,35 @@ async function readinessForQuote(routerAddress: Address | null) {
             args: [key],
           });
           return [key.toLowerCase(), enabled] as const;
-        }),
+        });
+
+      const [feePpm, familyResults, targetResults, hookDataResults] =
+        await Promise.all([
+          feePpmPromise,
+          Promise.all(familyResultPromises),
+          Promise.all(targetResultPromises),
+          Promise.all(hookDataResultPromises),
+        ]);
+
+      const venueFamilies = new Map<number, boolean>();
+      for (const [familyOrdinal, enabled] of familyResults) {
+        if (!venueFamilies.has(familyOrdinal)) {
+          venueFamilies.set(familyOrdinal, Boolean(enabled));
+        }
+      }
+
+      const venueTargets = new Map<string, boolean>(
+        targetResults.map(([key, enabled]) => [key, Boolean(enabled)]),
+      );
+      const v4HookDataKeys = new Map<string, boolean>(
+        hookDataResults.map(([key, enabled]) => [key, Boolean(enabled)]),
       );
 
       return {
         feePpm: typeof feePpm === "bigint" ? feePpm : BigInt(feePpm),
-        venueFamilies: new Map(familyResults),
-        venueTargets: new Map(targetResults),
-        v4HookDataKeys: new Map(hookDataResults),
+        venueFamilies,
+        venueTargets,
+        v4HookDataKeys,
       };
     },
   };
@@ -337,6 +394,7 @@ export async function handleFameSwapQuotePost(
   request: NextRequest,
   deps: FameSwapQuotePostDependencies = {},
 ): Promise<Response> {
+  const requestStartedAtMs = Date.now();
   if (bodyTooLarge(request)) {
     return json({ error: "Quote request body is too large." }, { status: 413 });
   }
@@ -397,39 +455,58 @@ export async function handleFameSwapQuotePost(
   const quote = await withTimeout(
     (async (): Promise<FameSwapQuote> => {
       const resolveReadiness = deps.readinessForQuote ?? readinessForQuote;
-      const readiness = await resolveReadiness(routerAddress);
+      const readinessPromise = Promise.resolve(resolveReadiness(routerAddress));
+      const quoteClient = deps.quoteForRequest ? null : publicClientForQuote();
+      const adapterPromise = quoteClient
+        ? createLiveLiquidityQuoteAdapter({
+            client: {
+              getBlockNumber: () => quoteClient.getBlockNumber(),
+              readContract: (quoteRequest) =>
+                quoteClient.readContract(
+                  quoteRequest as Parameters<
+                    typeof quoteClient.readContract
+                  >[0],
+                ) as Promise<unknown>,
+            },
+            chainId: base.id,
+            readTimeoutMs: readTimeoutForQuoteRequest(requestStartedAtMs),
+          }).catch((error) =>
+            unavailableLiveAsyncQuoteAdapter(
+              `Live quote adapter setup failed: ${displaySafeErrorMessage(
+                error,
+              )}`,
+            ),
+          )
+        : Promise.resolve(
+            unavailableLiveAsyncQuoteAdapter(
+              "Base RPC is not configured for live liquidity quotes.",
+            ),
+          );
+      const readiness = await readinessPromise;
       if (deps.quoteForRequest) {
         return await deps.quoteForRequest({
           ...quoteRequest,
+          optimizerBudgets: optimizerBudgetsForQuoteRequest(
+            requestStartedAtMs,
+          ),
           readiness,
         });
       }
 
-      const quoteClient =
-        readiness.status === "ready" ? publicClientForQuote() : null;
       return readiness.status === "ready"
         ? quoteFameSwapAsync({
             ...quoteRequest,
+            optimizerBudgets: optimizerBudgetsForQuoteRequest(
+              requestStartedAtMs,
+            ),
             readiness,
-            adapter: quoteClient
-              ? await createLiveLiquidityQuoteAdapter({
-                  client: {
-                    getBlockNumber: () => quoteClient.getBlockNumber(),
-                    readContract: (quoteRequest) =>
-                      quoteClient.readContract(
-                        quoteRequest as Parameters<
-                          typeof quoteClient.readContract
-                        >[0],
-                      ) as Promise<unknown>,
-                  },
-                  chainId: base.id,
-                })
-              : unavailableLiveAsyncQuoteAdapter(
-                  "Base RPC is not configured for live liquidity quotes.",
-                ),
+            adapter: await adapterPromise,
           })
         : quoteFameSwap({
             ...quoteRequest,
+            optimizerBudgets: optimizerBudgetsForQuoteRequest(
+              requestStartedAtMs,
+            ),
             readiness,
           });
     })(),

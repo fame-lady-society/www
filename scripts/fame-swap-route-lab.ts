@@ -13,7 +13,6 @@ import { hashFameRoute } from "../src/features/fame-swap/router/encodeRoute";
 import { erc20ApprovalAbi } from "../src/features/fame-swap/router/erc20Abi";
 import {
   quoteFameSwapAsync,
-  quoteWithReadyReadiness,
 } from "../src/features/fame-swap/solver/quote";
 import {
   routeCandidatesForPair,
@@ -37,6 +36,7 @@ import {
 } from "../src/features/fame-swap/solver/quotes/liveAdapters";
 import { createDeterministicQuoteAdapter } from "../src/features/fame-swap/solver/quotes/deterministicAdapter";
 import { createSnapshotQuoteAdapter } from "../src/features/fame-swap/solver/quotes/snapshotAdapter";
+import { toAsyncQuoteAdapter } from "../src/features/fame-swap/solver/optimizer/quoteRunAdapter";
 import {
   corpusTokenLabel,
   FAME_ROUTE_CORPUS,
@@ -46,6 +46,10 @@ import type {
   FameSwapExecutableQuote,
   FameSwapQuote,
 } from "../src/features/fame-swap/solver/types";
+import type {
+  FameAllocationTrialEvidence,
+  FameOptimizerEvidence,
+} from "../src/features/fame-swap/solver/optimizer/types";
 import {
   applySlippageToAmount,
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
@@ -83,10 +87,37 @@ export interface FameRouteLabRow {
     reason: string;
     detail: string;
   }>;
+  optimizer: FameRouteLabOptimizerSummary | null;
   edgeMatrix: FameRouteEdgeMatrixRow[];
   protocolCoverage: FameRouteProtocolCoverageRow[];
   simulation: FameRouteLabSimulation;
   suggestedContractTodo: string | null;
+}
+
+export interface FameRouteLabOptimizerSummary {
+  status: FameOptimizerEvidence["status"];
+  selectedAllocationBps: number | null;
+  selectedCandidateId: string | null;
+  selectedTemplateId: string | null;
+  fallbackReason: string | null;
+  trialStatusCounts: Record<string, number>;
+  quotePlanStats: Record<string, string | number | boolean | null>;
+  allocationTrials: Array<{
+    templateId: string;
+    allocationBps: number | null;
+    status: string;
+    reason: string;
+    candidateId?: string;
+    poolIds: string[];
+    protectedAmountOut?: string;
+    winningMarginBps?: number | null;
+  }>;
+  templateEligibility: Array<{
+    templateId: string;
+    status: string;
+    reason: string;
+    poolIds: string[];
+  }>;
 }
 
 export type FameRouteLabSimulation =
@@ -115,12 +146,13 @@ interface RouteLabOptions {
   candidateBudgets?: Partial<FameRouteCandidateBudgets>;
 }
 
-export function runSnapshotRouteLab(
+export async function runSnapshotRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: RouteLabOptions = {},
-): FameRouteLabRow[] {
+): Promise<FameRouteLabRow[]> {
   const adapter = createSnapshotQuoteAdapter();
-  return corpus.map((entry) => {
+  const rows: FameRouteLabRow[] = [];
+  for (const entry of corpus) {
     const candidateSet = routeCandidatesForPair(
       entry.tokenIn,
       entry.tokenOut,
@@ -129,14 +161,23 @@ export function runSnapshotRouteLab(
         budgets: options.candidateBudgets,
       },
     );
-    const quote = quoteWithReadyReadiness({
+    const quote = await quoteFameSwapAsync({
       tokenIn: token(entry.tokenIn),
       tokenOut: token(entry.tokenOut),
       amountIn: entry.amountIn,
       recipient: RECIPIENT,
-      routerAddress: ROUTER_ADDRESS,
+      config: {
+        ...getFameSwapConfig(),
+        routerAddress: ROUTER_ADDRESS,
+        defaultSlippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      },
+      readiness: {
+        status: "ready",
+        routerAddress: ROUTER_ADDRESS,
+        feePpm: 2_222n,
+      },
       now: new Date("2026-05-13T00:00:00Z"),
-      adapter,
+      adapter: toAsyncQuoteAdapter(adapter),
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
     const simulation: FameRouteLabSimulation = {
@@ -144,7 +185,7 @@ export function runSnapshotRouteLab(
       message: "Recorded quote replay does not run live route simulation.",
     };
 
-    return {
+    rows.push({
       mode: "recorded",
       id: entry.id,
       pair: pairLabel(entry),
@@ -183,12 +224,14 @@ export function runSnapshotRouteLab(
       candidateGenerationDiagnostics: candidateGenerationDiagnostics(
         candidateSet.rejected,
       ),
+      optimizer: optimizerSummary(quote),
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
-    };
-  });
+    });
+  }
+  return rows;
 }
 
 function quoteContextLabel(quote: FameSwapQuote): string | null {
@@ -212,9 +255,62 @@ function routeEdgeMatrix(
     candidateSet,
     selectedCandidateId:
       quote.status === "ready" ? quote.routeArtifactId : null,
+    selectedLegQuotes:
+      quote.status === "ready" ? quote.feeBreakdown.legs : undefined,
     rejectedCandidates:
       "rejectedCandidates" in quote ? quote.rejectedCandidates : [],
   });
+}
+
+function optimizerTrialSummary(trial: FameAllocationTrialEvidence) {
+  return {
+    templateId: trial.templateId,
+    allocationBps: trial.allocationBps,
+    status: trial.status,
+    reason: displaySafeDiagnosticMessage(trial.reason),
+    ...(trial.candidateId ? { candidateId: trial.candidateId } : {}),
+    poolIds: trial.poolIds,
+    ...(trial.protectedAmountOut === undefined
+      ? {}
+      : { protectedAmountOut: trial.protectedAmountOut.toString() }),
+    ...(trial.winningMarginBps === undefined
+      ? {}
+      : { winningMarginBps: trial.winningMarginBps }),
+  };
+}
+
+function optimizerSummary(quote: FameSwapQuote): FameRouteLabOptimizerSummary | null {
+  if (quote.status !== "ready" || !quote.optimizerEvidence) return null;
+  const evidence = quote.optimizerEvidence;
+  return {
+    status: evidence.status,
+    selectedAllocationBps: evidence.selectedAllocationBps,
+    selectedCandidateId: evidence.selectedCandidateId,
+    selectedTemplateId: evidence.selectedTemplateId,
+    fallbackReason: evidence.fallbackReason,
+    trialStatusCounts: evidence.trialStatusCounts,
+    quotePlanStats: {
+      logicalQuoteRequests: evidence.quotePlanStats.logicalQuoteRequests,
+      uniqueExactQuoteReads: evidence.quotePlanStats.uniqueExactQuoteReads,
+      exactQuoteCacheHits: evidence.quotePlanStats.exactQuoteCacheHits,
+      stateReadRequests: evidence.quotePlanStats.stateReadRequests,
+      uniqueStateReads: evidence.quotePlanStats.uniqueStateReads,
+      stateReadCacheHits: evidence.quotePlanStats.stateReadCacheHits,
+      underlyingRpcReads: evidence.quotePlanStats.underlyingRpcReads,
+      allocationTrials: evidence.quotePlanStats.allocationTrials,
+      templatesConsidered: evidence.quotePlanStats.templatesConsidered,
+      budgetExhaustions: evidence.quotePlanStats.budgetExhaustions,
+      timeout: evidence.quotePlanStats.timeout,
+      fallbackReason: evidence.quotePlanStats.fallbackReason,
+    },
+    allocationTrials: evidence.allocationTrials.map(optimizerTrialSummary),
+    templateEligibility: evidence.templateEligibility.map((entry) => ({
+      templateId: entry.templateId,
+      status: entry.status,
+      reason: displaySafeDiagnosticMessage(entry.reason),
+      poolIds: entry.poolIds,
+    })),
+  };
 }
 
 function routeProtocolCoverage(
@@ -476,12 +572,13 @@ function suggestedTodo(
   return null;
 }
 
-export function runRouteLab(
+export async function runRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: RouteLabOptions = {},
-): FameRouteLabRow[] {
+): Promise<FameRouteLabRow[]> {
   const adapter = createDeterministicQuoteAdapter();
-  return corpus.map((entry) => {
+  const rows: FameRouteLabRow[] = [];
+  for (const entry of corpus) {
     const candidateSet = routeCandidatesForPair(
       entry.tokenIn,
       entry.tokenOut,
@@ -490,14 +587,24 @@ export function runRouteLab(
         budgets: options.candidateBudgets,
       },
     );
-    const quote = quoteWithReadyReadiness({
+    const quote = await quoteFameSwapAsync({
       tokenIn: token(entry.tokenIn),
       tokenOut: token(entry.tokenOut),
       amountIn: entry.amountIn,
       recipient: RECIPIENT,
-      routerAddress: ROUTER_ADDRESS,
+      config: {
+        ...getFameSwapConfig(),
+        routerAddress: ROUTER_ADDRESS,
+        defaultSlippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      },
+      readiness: {
+        status: "ready",
+        routerAddress: ROUTER_ADDRESS,
+        feePpm: 2_222n,
+      },
+      optimizerMode: "disabled",
       now: new Date("2026-05-13T00:00:00Z"),
-      adapter,
+      adapter: toAsyncQuoteAdapter(adapter),
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
     const simulation: FameRouteLabSimulation = {
@@ -505,7 +612,7 @@ export function runRouteLab(
       message: "Deterministic route lab does not run live route simulation.",
     };
 
-    return {
+    rows.push({
       mode: "deterministic",
       id: entry.id,
       pair: pairLabel(entry),
@@ -544,12 +651,14 @@ export function runRouteLab(
       candidateGenerationDiagnostics: candidateGenerationDiagnostics(
         candidateSet.rejected,
       ),
+      optimizer: optimizerSummary(quote),
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
-    };
-  });
+    });
+  }
+  return rows;
 }
 
 export async function runLiveRouteLab(
@@ -658,6 +767,7 @@ export async function runLiveRouteLab(
       candidateGenerationDiagnostics: candidateGenerationDiagnostics(
         candidateSet.rejected,
       ),
+      optimizer: optimizerSummary(quote),
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -696,6 +806,7 @@ export function formatRouteLabMarkdown(
       }`,
       `- Rejections: ${row.rejectedCandidates.length}`,
       `- Candidate generation diagnostics: ${row.candidateGenerationDiagnostics.length}`,
+      `- Optimizer: ${optimizerSummaryLine(row.optimizer)}`,
       `- Edge matrix: ${edgeMatrixSummary(row.edgeMatrix)}`,
       `- Protocol coverage: ${protocolCoverageSummary(row.protocolCoverage)}`,
       `- Simulation: ${
@@ -709,6 +820,7 @@ export function formatRouteLabMarkdown(
       ...formatCandidateGenerationDiagnosticsMarkdown(
         row.candidateGenerationDiagnostics,
       ),
+      ...formatOptimizerMarkdown(row.optimizer),
       ...formatEdgeMatrixMarkdown(row.edgeMatrix),
       ...formatProtocolCoverageMarkdown(row.protocolCoverage),
       row.suggestedContractTodo
@@ -721,6 +833,57 @@ export function formatRouteLabMarkdown(
         : "",
     ]),
   ].join("\n");
+}
+
+function optimizerSummaryLine(
+  optimizer: FameRouteLabRow["optimizer"],
+): string {
+  if (!optimizer) return "not run";
+  return [
+    optimizer.status,
+    `allocation ${optimizer.selectedAllocationBps ?? "n/a"}`,
+    `trials ${optimizer.quotePlanStats.allocationTrials}`,
+    `cache hits ${optimizer.quotePlanStats.exactQuoteCacheHits}`,
+    optimizer.fallbackReason ? `fallback ${optimizer.fallbackReason}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatOptimizerMarkdown(
+  optimizer: FameRouteLabRow["optimizer"],
+): string[] {
+  if (!optimizer) return [];
+  const trialRows = optimizer.allocationTrials.slice(0, 12);
+  return [
+    "### Optimizer",
+    "",
+    `- Status: ${optimizer.status}`,
+    `- Selected template: ${optimizer.selectedTemplateId ?? "n/a"}`,
+    `- Selected allocation bps: ${optimizer.selectedAllocationBps ?? "n/a"}`,
+    `- Selected candidate: ${optimizer.selectedCandidateId ?? "n/a"}`,
+    `- Fallback reason: ${optimizer.fallbackReason ?? "n/a"}`,
+    `- Trial statuses: ${Object.entries(optimizer.trialStatusCounts)
+      .map(([status, count]) => `${status} ${count}`)
+      .join(", ")}`,
+    `- Quote plan stats: logical ${optimizer.quotePlanStats.logicalQuoteRequests}, unique exact ${optimizer.quotePlanStats.uniqueExactQuoteReads}, exact cache hits ${optimizer.quotePlanStats.exactQuoteCacheHits}, unique state ${optimizer.quotePlanStats.uniqueStateReads}, state cache hits ${optimizer.quotePlanStats.stateReadCacheHits}, rpc ${optimizer.quotePlanStats.underlyingRpcReads}`,
+    "",
+    "| Allocation | Status | Pools | Protected | Reason |",
+    "| --- | --- | --- | --- | --- |",
+    ...trialRows.map((trial) => {
+      const line = [
+        trial.allocationBps === null ? "n/a" : trial.allocationBps.toString(),
+        trial.status,
+        trial.poolIds.join(", ") || "none",
+        trial.protectedAmountOut ?? "n/a",
+        displaySafeDiagnosticMessage(trial.reason),
+      ]
+        .map(markdownCell)
+        .join(" | ");
+      return `| ${line} |`;
+    }),
+    "",
+  ];
 }
 
 function formatCandidateGenerationDiagnosticsMarkdown(
@@ -845,8 +1008,8 @@ if (shouldRunCli()) {
           simulate: process.argv.includes("--simulate"),
         })
       : process.argv.includes("--deterministic")
-        ? runRouteLab()
-        : runSnapshotRouteLab();
+        ? await runRouteLab()
+        : await runSnapshotRouteLab();
     if (process.argv.includes("--markdown")) {
       console.log(formatRouteLabMarkdown(rows));
     } else {

@@ -11,6 +11,7 @@ import type { FameSwapToken } from "../tokens";
 import { supportedDirections } from "./artifacts";
 import type {
   FameSwapNotLiveReadyQuote,
+  FameSwapOptimizerSummary,
   FameSwapQuote,
   FameSwapQuoteStatus,
   FameSwapRouteDisplayLeg,
@@ -96,8 +97,77 @@ function booleanFrom(value: unknown, fallback = false): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
 function addressFrom(value: unknown, fallback: Address | null): Address | null {
   return typeof value === "string" && isAddress(value) ? value : fallback;
+}
+
+function parseOptimizerSummary(
+  value: unknown,
+): FameSwapOptimizerSummary | undefined {
+  const raw = asRecord(value);
+  if (
+    raw.mode !== "disabled" &&
+    raw.mode !== "shadow" &&
+    raw.mode !== "select"
+  ) {
+    return undefined;
+  }
+  if (
+    raw.status !== "not_run" &&
+    raw.status !== "selected" &&
+    raw.status !== "fallback"
+  ) {
+    return undefined;
+  }
+  const stats = asRecord(raw.runStats);
+  const counts = asRecord(raw.trialStatusCounts);
+  const fallbackReason = stringOrNull(raw.fallbackReason);
+
+  return {
+    mode: raw.mode,
+    status: raw.status,
+    selectedTemplateId: stringOrNull(raw.selectedTemplateId),
+    selectedAllocationBps:
+      typeof raw.selectedAllocationBps === "number"
+        ? numberFrom(raw.selectedAllocationBps)
+        : null,
+    selectedCandidateId: stringOrNull(raw.selectedCandidateId),
+    winningMarginBps:
+      typeof raw.winningMarginBps === "number"
+        ? numberFrom(raw.winningMarginBps)
+        : null,
+    trialStatusCounts: {
+      selected: numberFrom(counts.selected),
+      rejected: numberFrom(counts.rejected),
+      pruned: numberFrom(counts.pruned),
+      budget_exhausted: numberFrom(counts.budget_exhausted),
+      quote_failed: numberFrom(counts.quote_failed),
+      unsupported_shape: numberFrom(counts.unsupported_shape),
+      ineligible: numberFrom(counts.ineligible),
+    },
+    fallbackReason:
+      fallbackReason === "no_templates" ||
+      fallbackReason === "no_safe_route" ||
+      fallbackReason === "budget_exhausted" ||
+      fallbackReason === "timeout" ||
+      fallbackReason === "validation_failed" ||
+      fallbackReason === "materialization_failed"
+        ? fallbackReason
+        : null,
+    runStats: {
+      logicalQuoteRequests: numberFrom(stats.logicalQuoteRequests),
+      uniqueExactQuoteReads: numberFrom(stats.uniqueExactQuoteReads),
+      exactQuoteCacheHits: numberFrom(stats.exactQuoteCacheHits),
+      trials: numberFrom(stats.trials),
+      templatesConsidered: numberFrom(stats.templatesConsidered),
+      budgetExhaustions: numberFrom(stats.budgetExhaustions),
+      timeout: booleanFrom(stats.timeout),
+    },
+  };
 }
 
 function parseQuoteContext(value: unknown): FameQuoteContext | undefined {
@@ -231,6 +301,7 @@ function parseCapabilities(value: unknown): FameRouteCapabilities {
   return {
     nativeEth: booleanFrom(raw.nativeEth),
     weth: booleanFrom(raw.weth),
+    nativeWrap: booleanFrom(raw.nativeWrap),
     permit2UniversalRouter: booleanFrom(raw.permit2UniversalRouter),
     v4Hooks: booleanFrom(raw.v4Hooks),
     v4HookAddress: booleanFrom(raw.v4HookAddress),
@@ -338,6 +409,7 @@ export function serializeFameSwapQuoteResponse(
         routeHash: quote.materializedRouteHash,
         poolIds: quote.poolIds,
         warnings: quote.warnings,
+        optimizerSummary: quote.optimizerSummary,
         rejectedCandidates: quote.rejectedCandidates,
         approval: requests.approval,
         swap: requests.swap,
@@ -430,6 +502,7 @@ export function deserializeFameSwapQuoteResponse(
         ),
         expiresAt: new Date(String(raw.expiresAt ?? Date.now())),
         warnings: Array.isArray(raw.warnings) ? raw.warnings.map(String) : [],
+        optimizerSummary: parseOptimizerSummary(raw.optimizerSummary),
         message,
         diagnosticsVisibleByDefault: booleanFrom(
           raw.diagnosticsVisibleByDefault,

@@ -9,6 +9,13 @@ import type {
 import type { FameCandidateRejection } from "./quotes/adapters";
 import type { FameQuoteContext } from "./quotes/quoteContext";
 import type { FameRouteFeeBreakdown } from "./quotes/rankRoutes";
+import type {
+  FameOptimizerBudgets,
+  FameOptimizerEvidence,
+  FameOptimizerFailureReason,
+  FameOptimizerMode,
+  FameOptimizerQuotePlanStats,
+} from "./optimizer/types";
 
 export type FameSwapQuoteStatus =
   | "ready"
@@ -57,6 +64,8 @@ export interface FameSwapQuoteRequest {
   recipient: Address | null;
   config: FameSwapConfig;
   readiness?: FameSwapReadiness;
+  optimizerMode?: FameOptimizerMode;
+  optimizerBudgets?: Partial<FameOptimizerBudgets>;
   now?: Date;
   deadlineSeconds?: bigint;
 }
@@ -85,6 +94,26 @@ export interface FameSwapQuoteBase {
   diagnosticsVisibleByDefault: boolean;
 }
 
+export interface FameSwapOptimizerSummary {
+  mode: FameOptimizerMode;
+  status: FameOptimizerEvidence["status"];
+  selectedTemplateId: string | null;
+  selectedAllocationBps: number | null;
+  selectedCandidateId: string | null;
+  winningMarginBps: number | null;
+  trialStatusCounts: FameOptimizerEvidence["trialStatusCounts"];
+  fallbackReason: FameOptimizerFailureReason | null;
+  runStats: Pick<
+    FameOptimizerQuotePlanStats,
+    | "logicalQuoteRequests"
+    | "uniqueExactQuoteReads"
+    | "exactQuoteCacheHits"
+    | "templatesConsidered"
+    | "budgetExhaustions"
+    | "timeout"
+  > & { trials: number };
+}
+
 export interface FameSwapExecutableQuote extends FameSwapQuoteBase {
   status: "ready";
   routerAddress: Address;
@@ -109,6 +138,8 @@ export interface FameSwapExecutableQuote extends FameSwapQuoteBase {
   slippageBps: number;
   expiresAt: Date;
   warnings: string[];
+  optimizerSummary?: FameSwapOptimizerSummary;
+  optimizerEvidence?: FameOptimizerEvidence;
 }
 
 export interface FameSwapUnsupportedQuote extends FameSwapQuoteBase {

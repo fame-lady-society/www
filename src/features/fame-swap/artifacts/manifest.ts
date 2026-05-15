@@ -66,6 +66,11 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
       familyOrdinal: 5,
       target: "0x6fF5693b99212Da76ad316178A184AB56D299b43",
     },
+    {
+      family: "NativeWrap",
+      familyOrdinal: 6,
+      target: "0x4200000000000000000000000000000000000006",
+    },
   ],
   requiredV4HookDataKeys: [] as readonly Hex[],
 } as const;

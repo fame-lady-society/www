@@ -63,11 +63,8 @@ function usesNativeEth(legs: readonly FameRouteCandidateLeg[]): boolean {
   );
 }
 
-function touchesWethAddress(legs: readonly FameRouteCandidateLeg[]): boolean {
-  return legs.some(
-    (leg) =>
-      sameAddress(leg.edge.tokenIn, WETH) || sameAddress(leg.edge.tokenOut, WETH),
-  );
+function usesNativeWrap(legs: readonly FameRouteCandidateLeg[]): boolean {
+  return legs.some((leg) => leg.edge.venue === "NativeWrap");
 }
 
 function usesPermit2(legs: readonly FameRouteCandidateLeg[]): boolean {
@@ -99,6 +96,7 @@ function capabilitiesFor(
   return emptyCapabilities({
     nativeEth: usesNativeEth(legs),
     weth: usesWeth(legs),
+    nativeWrap: usesNativeWrap(legs),
     permit2UniversalRouter: usesPermit2(legs),
     v4Hooks: usesV4Hooks(legs),
     v4HookAddress: usesV4Hooks(legs),
@@ -436,11 +434,6 @@ export function routeCandidatesForPair(
     budgets,
     budgetState,
   );
-  if (isNativeEthAddress(tokenIn) || isNativeEthAddress(tokenOut)) {
-    candidates = candidates.filter(
-      (candidate) => !touchesWethAddress(candidate.legs),
-    );
-  }
 
   if (candidates.length === 0) {
     rejected.push({

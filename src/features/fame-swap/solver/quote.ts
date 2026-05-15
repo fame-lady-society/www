@@ -10,6 +10,7 @@ import type {
   FameAsyncQuoteAdapter,
   FameQuoteAdapter,
 } from "./quotes/adapters";
+import type { FameOptimizerMode } from "./optimizer/types";
 import { routeCandidatesForPair } from "./graph/candidates";
 import {
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
@@ -29,6 +30,14 @@ type ReadyReadiness = Extract<FameSwapReadiness, { status: "ready" }>;
 
 export const FAME_SWAP_PREVIEW_RECIPIENT =
   "0x0000000000000000000000000000000000000001" as Address;
+
+export function fameSwapOptimizerMode(
+  raw = process.env.FAME_SWAP_OPTIMIZER_MODE,
+): FameOptimizerMode {
+  return raw === "disabled" || raw === "shadow" || raw === "select"
+    ? raw
+    : "select";
+}
 
 type PreparedQuoteRequest =
   | {
@@ -217,6 +226,8 @@ function quoteFromSolverResult(
     slippageBps: prepared.slippageBps,
     expiresAt: new Date(Number(prepared.deadline) * 1000),
     warnings: solved.warnings,
+    optimizerSummary: solved.optimizerSummary,
+    optimizerEvidence: solved.optimizerEvidence,
     message: "FAME router route is ready for live wallet simulation.",
     diagnosticsVisibleByDefault: false,
   };
@@ -259,6 +270,8 @@ export async function quoteFameSwapAsync(
     feePpm: prepared.readiness.feePpm,
     slippageBps: prepared.slippageBps,
     adapter: request.adapter,
+    optimizerMode: request.optimizerMode ?? fameSwapOptimizerMode(),
+    optimizerBudgets: request.optimizerBudgets,
   });
 
   return quoteFromSolverResult(request, prepared, solved);

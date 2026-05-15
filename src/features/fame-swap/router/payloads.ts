@@ -165,5 +165,7 @@ export function materializeLegPayload(
         leg.amount,
         leg.minAmountOut,
       );
+    case "NativeWrap":
+      return leg.data;
   }
 }

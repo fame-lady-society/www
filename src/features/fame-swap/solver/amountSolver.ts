@@ -8,12 +8,19 @@ import {
 } from "../router/types";
 import { tokenForAddress, type FameSwapToken } from "../tokens";
 import { routeCandidatesForPair } from "./graph/candidates";
-import type { FameSwapRouteDisplayLeg } from "./types";
+import type { FameSwapOptimizerSummary, FameSwapRouteDisplayLeg } from "./types";
 import type {
   FameAsyncQuoteAdapter,
   FameCandidateRejection,
   FameQuoteAdapter,
 } from "./quotes/adapters";
+import { optimizeRouteAllocations } from "./optimizer/search";
+import { optimizerSummaryFromEvidence } from "./optimizer/summary";
+import type {
+  FameOptimizerBudgets,
+  FameOptimizerEvidence,
+  FameOptimizerMode,
+} from "./optimizer/types";
 import { rankRouteCandidatesAsync } from "./quotes/asyncRankRoutes";
 import {
   rankRouteCandidates,
@@ -31,6 +38,8 @@ export type FameAmountSolverResult =
       capabilities: FameRouteCapabilities;
       routeDisplay: FameSwapRouteDisplayLeg[];
       plan: FameQuotedRoutePlan;
+      optimizerSummary?: FameSwapOptimizerSummary;
+      optimizerEvidence?: FameOptimizerEvidence;
       warnings: string[];
       rejectedCandidates: FameCandidateRejection[];
     }
@@ -55,6 +64,8 @@ export interface FameAmountSolverRequest {
 export interface FameAsyncAmountSolverRequest
   extends Omit<FameAmountSolverRequest, "adapter"> {
   adapter: FameAsyncQuoteAdapter;
+  optimizerMode?: FameOptimizerMode;
+  optimizerBudgets?: Partial<FameOptimizerBudgets>;
 }
 
 function routeDisplay(plan: FameQuotedRoutePlan): FameSwapRouteDisplayLeg[] {
@@ -94,6 +105,32 @@ function buildRoute(
     deadline: request.deadline,
     legs,
   } satisfies FameRoute;
+}
+
+function readyResult(
+  request: Omit<FameAmountSolverRequest, "adapter">,
+  plan: FameQuotedRoutePlan,
+  rejectedCandidates: FameCandidateRejection[],
+  optimizerEvidence?: FameOptimizerEvidence,
+): Extract<FameAmountSolverResult, { status: "ready" }> {
+  const route = buildRoute(request, plan);
+  const routeHash = hashFameRoute(route);
+
+  return {
+    status: "ready",
+    routeArtifactId: plan.candidate.id,
+    route,
+    abiEncodedRoute: encodeFameRoute(route),
+    routeHash,
+    poolIds: plan.candidate.legs.map((leg) => leg.edge.poolId),
+    capabilities: plan.candidate.capabilities,
+    routeDisplay: routeDisplay(plan),
+    plan,
+    optimizerSummary: optimizerSummaryFromEvidence(optimizerEvidence),
+    optimizerEvidence,
+    warnings: plan.warnings,
+    rejectedCandidates,
+  };
 }
 
 export function solveFameSwapAmount(
@@ -155,22 +192,7 @@ export function solveFameSwapAmount(
     };
   }
 
-  const route = buildRoute(request, ranked.plan);
-  const routeHash = hashFameRoute(route);
-
-  return {
-    status: "ready",
-    routeArtifactId: ranked.plan.candidate.id,
-    route,
-    abiEncodedRoute: encodeFameRoute(route),
-    routeHash,
-    poolIds: ranked.plan.candidate.legs.map((leg) => leg.edge.poolId),
-    capabilities: ranked.plan.candidate.capabilities,
-    routeDisplay: routeDisplay(ranked.plan),
-    plan: ranked.plan,
-    warnings: ranked.plan.warnings,
-    rejectedCandidates: ranked.rejectedCandidates,
-  };
+  return readyResult(request, ranked.plan, ranked.rejectedCandidates);
 }
 
 export async function solveFameSwapAmountAsync(
@@ -197,39 +219,74 @@ export async function solveFameSwapAmountAsync(
     };
   }
 
-  const ranked = await rankRouteCandidatesAsync({
-    candidates: candidateSet.candidates,
+  async function legacyResult(
+    optimizerEvidence?: FameOptimizerEvidence,
+  ): Promise<FameAmountSolverResult> {
+    const ranked = await rankRouteCandidatesAsync({
+      candidates: candidateSet.candidates,
+      amountIn: request.amountIn,
+      feePpm: request.feePpm,
+      slippageBps: request.slippageBps,
+      adapter: request.adapter,
+    });
+
+    if (ranked.status !== "selected") {
+      return {
+        status: ranked.status,
+        rejectedCandidates: ranked.rejectedCandidates,
+        message:
+          ranked.status === "quote_adapter_failure"
+            ? "FAME route quote adapters could not produce usable quote evidence."
+            : "No safe FAME route was found for this amount.",
+      };
+    }
+
+    return readyResult(
+      request,
+      ranked.plan,
+      ranked.rejectedCandidates,
+      optimizerEvidence,
+    );
+  }
+
+  const optimizerMode = request.optimizerMode ?? "select";
+  if (optimizerMode === "disabled") {
+    return legacyResult();
+  }
+
+  const optimized = await optimizeRouteAllocations({
+    tokenIn: request.tokenIn.address,
+    tokenOut: request.tokenOut.address,
     amountIn: request.amountIn,
     feePpm: request.feePpm,
     slippageBps: request.slippageBps,
     adapter: request.adapter,
+    mode: optimizerMode,
+    budgets: request.optimizerBudgets,
   });
 
-  if (ranked.status !== "selected") {
+  if (optimizerMode === "shadow") {
+    return legacyResult(optimized.evidence);
+  }
+
+  if (optimized.status === "selected") {
+    return readyResult(
+      request,
+      optimized.plan,
+      optimized.rejectedCandidates,
+      optimized.evidence,
+    );
+  }
+
+  if (optimized.reason === "timeout") {
     return {
-      status: ranked.status,
-      rejectedCandidates: ranked.rejectedCandidates,
+      status: "quote_adapter_failure",
+      rejectedCandidates: optimized.rejectedCandidates,
       message:
-        ranked.status === "quote_adapter_failure"
-          ? "FAME route quote adapters could not produce usable quote evidence."
-          : "No safe FAME route was found for this amount.",
+        "FAME optimizer timed out before completing a safe route quote.",
     };
   }
 
-  const route = buildRoute(request, ranked.plan);
-  const routeHash = hashFameRoute(route);
-
-  return {
-    status: "ready",
-    routeArtifactId: ranked.plan.candidate.id,
-    route,
-    abiEncodedRoute: encodeFameRoute(route),
-    routeHash,
-    poolIds: ranked.plan.candidate.legs.map((leg) => leg.edge.poolId),
-    capabilities: ranked.plan.candidate.capabilities,
-    routeDisplay: routeDisplay(ranked.plan),
-    plan: ranked.plan,
-    warnings: ranked.plan.warnings,
-    rejectedCandidates: ranked.rejectedCandidates,
-  };
+  const fallback = await legacyResult(optimized.evidence);
+  return fallback;
 }

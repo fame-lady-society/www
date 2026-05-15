@@ -248,7 +248,7 @@ describe("FAME route candidate graph", () => {
     );
   });
 
-  it("keeps native ETH routes distinct from WETH routes", () => {
+  it("includes native ETH routes through both native pools and WETH wrap", () => {
     const { candidates } = routeCandidatesForPair(NATIVE_ETH, FAME);
 
     assert.ok(
@@ -257,28 +257,37 @@ describe("FAME route candidate graph", () => {
       ),
     );
     assert.ok(
-      candidates.every((candidate) =>
-        candidate.legs.every(
-          (leg) =>
-            leg.edge.tokenIn.toLowerCase() !== WETH.toLowerCase() &&
-            leg.edge.tokenOut.toLowerCase() !== WETH.toLowerCase(),
-        ),
+      candidates.some((candidate) =>
+        poolPath(candidate).includes("native-wrap-weth"),
       ),
     );
+    const wrapCandidate = candidates.find((candidate) =>
+      poolPath(candidate).includes("native-wrap-weth"),
+    );
+    assert.equal(wrapCandidate?.capabilities.nativeWrap, true);
+    assert.equal(wrapCandidate?.capabilities.weth, true);
   });
 
-  it("keeps FAME to native ETH routes distinct from WETH connector routes", () => {
+  it("includes FAME to native ETH unwrap connector routes", () => {
     const { candidates } = routeCandidatesForPair(FAME, NATIVE_ETH);
 
     assert.ok(
-      candidates.every((candidate) =>
-        candidate.legs.every(
-          (leg) =>
-            leg.edge.tokenIn.toLowerCase() !== WETH.toLowerCase() &&
-            leg.edge.tokenOut.toLowerCase() !== WETH.toLowerCase(),
-        ),
+      candidates.some((candidate) =>
+        poolPath(candidate).includes("uniswap-v4-zora-eth"),
       ),
     );
+    assert.ok(
+      candidates.some(
+        (candidate) =>
+          candidate.kind === "split_merge" &&
+          poolPath(candidate).includes("native-wrap-weth"),
+      ),
+    );
+    const unwrapCandidate = candidates.find((candidate) =>
+      poolPath(candidate).includes("native-wrap-weth"),
+    );
+    assert.equal(unwrapCandidate?.capabilities.nativeWrap, true);
+    assert.equal(unwrapCandidate?.capabilities.nativeEth, true);
   });
 
   it("respects the candidate count budget exactly", () => {

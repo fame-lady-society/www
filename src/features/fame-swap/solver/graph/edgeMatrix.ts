@@ -349,6 +349,7 @@ function disabledReasonForEdge(edge: FamePoolEdge): string {
 export function buildFameRouteEdgeMatrix(options: {
   candidateSet: FameRouteCandidateSet;
   selectedCandidateId?: string | null;
+  selectedLegQuotes?: readonly FameLegQuote[];
   rejectedCandidates?: readonly FameCandidateRejection[];
   diagnosticEdges?: readonly FamePoolEdge[];
   connectorProbes?: readonly ConnectorProbe[];
@@ -420,6 +421,29 @@ export function buildFameRouteEdgeMatrix(options: {
         }),
       );
     }
+  }
+
+  for (const leg of options.selectedLegQuotes ?? []) {
+    const edge = diagnosticEdges.find(
+      (candidateEdge) =>
+        candidateEdge.poolId === leg.poolId &&
+        sameAddress(candidateEdge.tokenIn, leg.tokenIn) &&
+        sameAddress(candidateEdge.tokenOut, leg.tokenOut),
+    );
+    if (!edge) continue;
+    upsertRow(
+      rows,
+      rowForEdge({
+        edge,
+        chainId,
+        status: "selected",
+        reasonCategory: "selected_edge",
+        reason: "Edge is part of the selected ready route.",
+        candidateIds: options.selectedCandidateId
+          ? [options.selectedCandidateId]
+          : [],
+      }),
+    );
   }
 
   for (const probe of connectorProbes) {

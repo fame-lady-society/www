@@ -14,7 +14,7 @@ config({
 type SupportedChainId = typeof sepolia.id | typeof baseSepolia.id | typeof mainnet.id | typeof base.id;
 
 const fameRouterAddress = {
-  [base.id]: "0x13e0075EC96601AA90240d9e6D900C91AF764bBB",
+  [base.id]: "0xAdefa5860389E8936ebf2977e1Fb4a365aA39636",
 } as const satisfies Partial<Record<SupportedChainId, `0x${string}`>>;
 
 export default defineConfig({

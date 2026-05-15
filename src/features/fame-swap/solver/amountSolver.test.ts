@@ -3,9 +3,17 @@ import { describe, it } from "node:test";
 import { decodeAbiParameters } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
-import { solveFameSwapAmount } from "./amountSolver";
+import {
+  solveFameSwapAmount,
+  solveFameSwapAmountAsync,
+} from "./amountSolver";
 import type { FameQuoteAdapter } from "./quotes/adapters";
 import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
+import { toAsyncQuoteAdapter } from "./optimizer/quoteRunAdapter";
+import {
+  FAME_OPTIMIZER_EXPECTED_NON_STATIC_SPLIT_BPS,
+  FAME_OPTIMIZER_NON_STATIC_WETH_SPLIT_AMOUNT_IN,
+} from "./optimizer/fixtures";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import { universalRouterV4PayloadAbi } from "../router/payloads";
 
@@ -70,6 +78,49 @@ describe("FAME amount-aware solver", () => {
       if (v4Leg.amountMode === "All") {
         assert.equal(payload.amountIn, 0n);
       }
+    }
+  });
+
+  it("materializes native WETH wrap legs with empty payload and zero leg minimum", () => {
+    const adapter: FameQuoteAdapter = {
+      quoteEdge(request) {
+        const favorsWethFame =
+          request.edge.tokenIn.toLowerCase() === WETH.toLowerCase() &&
+          request.edge.tokenOut.toLowerCase() === FAME.toLowerCase();
+
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: favorsWethFame ? request.amountIn * 1_000_000n : request.amountIn,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test native wrap route quote evidence",
+        };
+      },
+    };
+    const result = solveFameSwapAmount({
+      tokenIn: token(NATIVE_ETH),
+      tokenOut: token(FAME),
+      amountIn: 500_000_000_000_000n,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter,
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      const wrapLeg = result.route.legs[0];
+      assert.equal(wrapLeg?.venue, "NativeWrap");
+      assert.equal(wrapLeg?.venueOrdinal, 6);
+      assert.equal(wrapLeg?.target, WETH);
+      assert.equal(wrapLeg?.data, "0x");
+      assert.equal(wrapLeg?.amount, result.route.amountIn);
+      assert.equal(wrapLeg?.minAmountOut, 0n);
+      assert.equal(result.capabilities.nativeWrap, true);
+      assert.equal(result.poolIds[0], "native-wrap-weth");
     }
   });
 
@@ -159,6 +210,84 @@ describe("FAME amount-aware solver", () => {
     assert.equal(result.status, "quote_adapter_failure");
     if (result.status === "quote_adapter_failure") {
       assert.equal(result.rejectedCandidates[0]?.reason, "no_quote_evidence");
+    }
+  });
+
+  it("async select mode materializes an optimized non-static split", async () => {
+    const result = await solveFameSwapAmountAsync({
+      tokenIn: token(WETH),
+      tokenOut: token(FAME),
+      amountIn: FAME_OPTIMIZER_NON_STATIC_WETH_SPLIT_AMOUNT_IN,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: toAsyncQuoteAdapter(createDeterministicQuoteAdapter()),
+      optimizerMode: "select",
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.equal(result.plan.candidate.kind, "split");
+      assert.equal(
+        result.optimizerEvidence?.selectedAllocationBps,
+        FAME_OPTIMIZER_EXPECTED_NON_STATIC_SPLIT_BPS,
+      );
+      assert.equal(
+        result.routeDisplay[0]?.allocationBps,
+        FAME_OPTIMIZER_EXPECTED_NON_STATIC_SPLIT_BPS,
+      );
+      assert.equal(result.route.legs[0]?.amount, 500_000_000_000_000n);
+      assert.equal(result.route.legs[1]?.amount, 0n);
+    }
+  });
+
+  it("async select mode fails bounded when the optimizer times out before a safe quote", async () => {
+    const result = await solveFameSwapAmountAsync({
+      tokenIn: token(WETH),
+      tokenOut: token(FAME),
+      amountIn: FAME_OPTIMIZER_NON_STATIC_WETH_SPLIT_AMOUNT_IN,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: toAsyncQuoteAdapter(createDeterministicQuoteAdapter()),
+      optimizerMode: "select",
+      optimizerBudgets: {
+        timeoutMs: 0,
+      },
+    });
+
+    assert.equal(result.status, "quote_adapter_failure");
+    if (result.status === "quote_adapter_failure") {
+      assert.match(result.message, /timed out/);
+    }
+  });
+
+  it("async shadow mode records optimizer evidence but returns legacy route selection", async () => {
+    const result = await solveFameSwapAmountAsync({
+      tokenIn: token(WETH),
+      tokenOut: token(FAME),
+      amountIn: FAME_OPTIMIZER_NON_STATIC_WETH_SPLIT_AMOUNT_IN,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: toAsyncQuoteAdapter(createDeterministicQuoteAdapter()),
+      optimizerMode: "shadow",
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.equal(result.plan.candidate.kind, "split");
+      assert.equal(result.routeDisplay[0]?.allocationBps, 5_000);
+      assert.equal(
+        result.optimizerEvidence?.selectedAllocationBps,
+        FAME_OPTIMIZER_EXPECTED_NON_STATIC_SPLIT_BPS,
+      );
     }
   });
 });

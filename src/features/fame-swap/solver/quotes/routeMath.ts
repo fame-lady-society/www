@@ -50,7 +50,7 @@ export function spendAmount(
   const leg = candidate.legs[legIndex];
   if (leg.amountMode === "All") return balanceOf(balances, leg.edge.tokenIn);
   if (leg.allocationBps !== null) {
-    return (amountIn * BigInt(leg.allocationBps)) / 10_000n;
+    return (balanceOf(balances, leg.edge.tokenIn) * BigInt(leg.allocationBps)) / 10_000n;
   }
   return legIndex === 0 ? amountIn : balanceOf(balances, leg.edge.tokenIn);
 }

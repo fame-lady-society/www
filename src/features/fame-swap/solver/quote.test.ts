@@ -141,6 +141,7 @@ async function quoteBoth(
     async: await quoteFameSwapAsync({
       ...request,
       adapter: asyncAdapter(adapter),
+      optimizerMode: "disabled",
     }),
   };
 }

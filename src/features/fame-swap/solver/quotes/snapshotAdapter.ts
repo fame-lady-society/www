@@ -294,6 +294,41 @@ function quoteFromReserves(
   };
 }
 
+function quoteFromNativeWrap(
+  request: FameEdgeQuoteRequest,
+  context: FameQuoteContext,
+): FameEdgeQuoteResult {
+  const source = "native WETH wrap/unwrap identity quote";
+  return {
+    status: "quoted",
+    amountIn: request.amountIn,
+    amountOut: request.amountIn,
+    capacityIn: null,
+    fee: request.edge.fee,
+    evidence: source,
+    context,
+    protocolEvidence: {
+      quote: availableEvidence(source, request.amountIn),
+      prePrice: notApplicableEvidence(
+        source,
+        "Native wrap is a 1:1 token operation, not a priced pool swap.",
+      ),
+      postPrice: notApplicableEvidence(
+        source,
+        "Native wrap is a 1:1 token operation, not a priced pool swap.",
+      ),
+      marketImpact: notApplicableEvidence(
+        source,
+        "Native wrap has no market impact.",
+      ),
+      activeLiquidity: notApplicableEvidence(
+        source,
+        "Native wrap uses canonical WETH deposit/withdraw, not pool liquidity.",
+      ),
+    },
+  };
+}
+
 export function createSnapshotQuoteAdapter(
   snapshot: FamePoolStateSnapshotFile = poolStateSnapshotFile,
 ): FameQuoteAdapter {
@@ -321,6 +356,10 @@ export function createSnapshotQuoteAdapter(
           reason: "adapter_failure",
           message: issue,
         };
+      }
+
+      if (request.edge.venue === "NativeWrap") {
+        return quoteFromNativeWrap(request, context);
       }
 
       const tableEntry = quotesByKey.get(

@@ -93,6 +93,7 @@ describe("/api/fame/swap/quote", () => {
     const fixedNow = new Date("2026-05-14T00:00:00Z");
     let capturedDeadlineSeconds: bigint | undefined;
     let capturedSlippageBps: number | undefined;
+    let capturedOptimizerTimeoutMs: number | undefined;
 
     const response = await handleFameSwapQuotePost(
       request({
@@ -112,6 +113,7 @@ describe("/api/fame/swap/quote", () => {
         quoteForRequest: (quoteRequest) => {
           capturedDeadlineSeconds = quoteRequest.deadlineSeconds;
           capturedSlippageBps = quoteRequest.config.defaultSlippageBps;
+          capturedOptimizerTimeoutMs = quoteRequest.optimizerBudgets?.timeoutMs;
           const quote = quoteFameSwap({
             ...quoteRequest,
             now: fixedNow,
@@ -128,6 +130,8 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(response.status, 200);
     assert.equal(capturedDeadlineSeconds, 420n);
     assert.equal(capturedSlippageBps, 321);
+    assert.equal(typeof capturedOptimizerTimeoutMs, "number");
+    assert.ok(capturedOptimizerTimeoutMs! <= 9_500);
     assert.equal(json.status, "ready");
     assert.equal(json.tokenIn.address, USDC);
     assert.equal(json.tokenOut.address, FAME);

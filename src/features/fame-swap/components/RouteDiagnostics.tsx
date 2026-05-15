@@ -80,6 +80,28 @@ export const RouteDiagnostics: FC<RouteDiagnosticsProps> = ({
                   Quote context: {quoteContextLabel(quote)}
                 </Typography>
               ) : null}
+              {quote.optimizerSummary ? (
+                <Typography variant="caption" color="text.secondary">
+                  Optimizer: {quote.optimizerSummary.status} (
+                  {quote.optimizerSummary.mode}
+                  {quote.optimizerSummary.selectedAllocationBps === null
+                    ? ""
+                    : `, ${quote.optimizerSummary.selectedAllocationBps} bps`}
+                  {quote.optimizerSummary.winningMarginBps === null
+                    ? ""
+                    : `, +${(quote.optimizerSummary.winningMarginBps / 100).toFixed(2)}%`}
+                  )
+                </Typography>
+              ) : null}
+              {quote.optimizerSummary?.runStats.budgetExhaustions ? (
+                <Typography variant="caption" color="text.secondary">
+                  Optimizer budget:{" "}
+                  {quote.optimizerSummary.runStats.budgetExhaustions}{" "}
+                  exhausted after{" "}
+                  {quote.optimizerSummary.runStats.templatesConsidered}{" "}
+                  templates
+                </Typography>
+              ) : null}
               {quote.feeBreakdown.marketImpact.computableLegs > 0 ? (
                 <Typography variant="caption" color="text.secondary">
                   Market impact: max{" "}

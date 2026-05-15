@@ -68,7 +68,7 @@ function marketImpactSummary(
   };
 }
 
-function quoteCandidate(
+export function quoteRouteCandidate(
   candidate: FameRouteCandidate,
   amountIn: bigint,
   feePpm: bigint,
@@ -195,7 +195,7 @@ export function rankRouteCandidates(options: {
   const rejectedCandidates: FameCandidateRejection[] = [];
 
   for (const candidate of options.candidates) {
-    const result = quoteCandidate(
+    const result = quoteRouteCandidate(
       candidate,
       options.amountIn,
       options.feePpm,

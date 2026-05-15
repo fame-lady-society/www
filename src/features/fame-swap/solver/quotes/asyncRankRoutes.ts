@@ -48,7 +48,7 @@ function marketImpactSummary(
   };
 }
 
-async function quoteCandidate(
+export async function quoteRouteCandidateAsync(
   candidate: FameRouteCandidate,
   amountIn: bigint,
   feePpm: bigint,
@@ -222,7 +222,7 @@ export async function rankRouteCandidatesAsync(options: {
       const candidate = options.candidates[index];
       if (!candidate) return;
 
-      results[index] = await quoteCandidate(
+      results[index] = await quoteRouteCandidateAsync(
         candidate,
         options.amountIn,
         options.feePpm,

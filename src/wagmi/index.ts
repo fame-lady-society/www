@@ -4360,7 +4360,7 @@ export const fameMirrorAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const fameRouterAbi = [
   {
@@ -5016,14 +5016,14 @@ export const fameRouterAbi = [
 ] as const
 
 /**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const fameRouterAddress = {
-  8453: '0x13e0075EC96601AA90240d9e6D900C91AF764bBB',
+  8453: '0xAdefa5860389E8936ebf2977e1Fb4a365aA39636',
 } as const
 
 /**
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const fameRouterConfig = {
   address: fameRouterAddress,
@@ -15680,7 +15680,7 @@ export const useWatchFameMirrorTransferEvent =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouter = /*#__PURE__*/ createUseReadContract({
   abi: fameRouterAbi,
@@ -15690,7 +15690,7 @@ export const useReadFameRouter = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"DEFAULT_FEE_RECIPIENT"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterDefaultFeeRecipient =
   /*#__PURE__*/ createUseReadContract({
@@ -15702,7 +15702,7 @@ export const useReadFameRouterDefaultFeeRecipient =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"feePpm"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterFeePpm = /*#__PURE__*/ createUseReadContract({
   abi: fameRouterAbi,
@@ -15713,7 +15713,7 @@ export const useReadFameRouterFeePpm = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"feeRecipient"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterFeeRecipient =
   /*#__PURE__*/ createUseReadContract({
@@ -15725,7 +15725,7 @@ export const useReadFameRouterFeeRecipient =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"hashRoute"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterHashRoute = /*#__PURE__*/ createUseReadContract({
   abi: fameRouterAbi,
@@ -15736,7 +15736,7 @@ export const useReadFameRouterHashRoute = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"owner"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterOwner = /*#__PURE__*/ createUseReadContract({
   abi: fameRouterAbi,
@@ -15747,7 +15747,7 @@ export const useReadFameRouterOwner = /*#__PURE__*/ createUseReadContract({
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterOwnershipHandoverExpiresAt =
   /*#__PURE__*/ createUseReadContract({
@@ -15759,7 +15759,7 @@ export const useReadFameRouterOwnershipHandoverExpiresAt =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"v4HookDataHashEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterV4HookDataHashEnabled =
   /*#__PURE__*/ createUseReadContract({
@@ -15771,7 +15771,7 @@ export const useReadFameRouterV4HookDataHashEnabled =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"venueFamilyEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterVenueFamilyEnabled =
   /*#__PURE__*/ createUseReadContract({
@@ -15783,7 +15783,7 @@ export const useReadFameRouterVenueFamilyEnabled =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"venueTargetEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useReadFameRouterVenueTargetEnabled =
   /*#__PURE__*/ createUseReadContract({
@@ -15795,7 +15795,7 @@ export const useReadFameRouterVenueTargetEnabled =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouter = /*#__PURE__*/ createUseWriteContract({
   abi: fameRouterAbi,
@@ -15805,7 +15805,7 @@ export const useWriteFameRouter = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterCancelOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15817,7 +15817,7 @@ export const useWriteFameRouterCancelOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterCompleteOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15829,7 +15829,7 @@ export const useWriteFameRouterCompleteOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"executeRoute"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterExecuteRoute =
   /*#__PURE__*/ createUseWriteContract({
@@ -15841,7 +15841,7 @@ export const useWriteFameRouterExecuteRoute =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterRenounceOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -15853,7 +15853,7 @@ export const useWriteFameRouterRenounceOwnership =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterRequestOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
@@ -15865,7 +15865,7 @@ export const useWriteFameRouterRequestOwnershipHandover =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"rescue"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterRescue = /*#__PURE__*/ createUseWriteContract({
   abi: fameRouterAbi,
@@ -15876,7 +15876,7 @@ export const useWriteFameRouterRescue = /*#__PURE__*/ createUseWriteContract({
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeePpm"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterSetFeePpm = /*#__PURE__*/ createUseWriteContract(
   { abi: fameRouterAbi, address: fameRouterAddress, functionName: 'setFeePpm' },
@@ -15885,7 +15885,7 @@ export const useWriteFameRouterSetFeePpm = /*#__PURE__*/ createUseWriteContract(
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeeRecipient"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterSetFeeRecipient =
   /*#__PURE__*/ createUseWriteContract({
@@ -15897,7 +15897,7 @@ export const useWriteFameRouterSetFeeRecipient =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setV4HookDataHashEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterSetV4HookDataHashEnabled =
   /*#__PURE__*/ createUseWriteContract({
@@ -15909,7 +15909,7 @@ export const useWriteFameRouterSetV4HookDataHashEnabled =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueFamilyEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterSetVenueFamilyEnabled =
   /*#__PURE__*/ createUseWriteContract({
@@ -15921,7 +15921,7 @@ export const useWriteFameRouterSetVenueFamilyEnabled =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueTargetEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterSetVenueTargetEnabled =
   /*#__PURE__*/ createUseWriteContract({
@@ -15933,7 +15933,7 @@ export const useWriteFameRouterSetVenueTargetEnabled =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWriteFameRouterTransferOwnership =
   /*#__PURE__*/ createUseWriteContract({
@@ -15945,7 +15945,7 @@ export const useWriteFameRouterTransferOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouter = /*#__PURE__*/ createUseSimulateContract({
   abi: fameRouterAbi,
@@ -15955,7 +15955,7 @@ export const useSimulateFameRouter = /*#__PURE__*/ createUseSimulateContract({
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterCancelOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15967,7 +15967,7 @@ export const useSimulateFameRouterCancelOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"completeOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterCompleteOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15979,7 +15979,7 @@ export const useSimulateFameRouterCompleteOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"executeRoute"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterExecuteRoute =
   /*#__PURE__*/ createUseSimulateContract({
@@ -15991,7 +15991,7 @@ export const useSimulateFameRouterExecuteRoute =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"renounceOwnership"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterRenounceOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16003,7 +16003,7 @@ export const useSimulateFameRouterRenounceOwnership =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"requestOwnershipHandover"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterRequestOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16015,7 +16015,7 @@ export const useSimulateFameRouterRequestOwnershipHandover =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"rescue"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterRescue =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16027,7 +16027,7 @@ export const useSimulateFameRouterRescue =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeePpm"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterSetFeePpm =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16039,7 +16039,7 @@ export const useSimulateFameRouterSetFeePpm =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setFeeRecipient"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterSetFeeRecipient =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16051,7 +16051,7 @@ export const useSimulateFameRouterSetFeeRecipient =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setV4HookDataHashEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterSetV4HookDataHashEnabled =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16063,7 +16063,7 @@ export const useSimulateFameRouterSetV4HookDataHashEnabled =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueFamilyEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterSetVenueFamilyEnabled =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16075,7 +16075,7 @@ export const useSimulateFameRouterSetVenueFamilyEnabled =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"setVenueTargetEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterSetVenueTargetEnabled =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16087,7 +16087,7 @@ export const useSimulateFameRouterSetVenueTargetEnabled =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameRouterAbi}__ and `functionName` set to `"transferOwnership"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useSimulateFameRouterTransferOwnership =
   /*#__PURE__*/ createUseSimulateContract({
@@ -16099,7 +16099,7 @@ export const useSimulateFameRouterTransferOwnership =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16110,7 +16110,7 @@ export const useWatchFameRouterEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"FeePpmUpdated"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterFeePpmUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16122,7 +16122,7 @@ export const useWatchFameRouterFeePpmUpdatedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterFeeRecipientUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16134,7 +16134,7 @@ export const useWatchFameRouterFeeRecipientUpdatedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterOwnershipHandoverCanceledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16146,7 +16146,7 @@ export const useWatchFameRouterOwnershipHandoverCanceledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterOwnershipHandoverRequestedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16158,7 +16158,7 @@ export const useWatchFameRouterOwnershipHandoverRequestedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"OwnershipTransferred"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterOwnershipTransferredEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16170,7 +16170,7 @@ export const useWatchFameRouterOwnershipTransferredEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"Rescue"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterRescueEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16182,7 +16182,7 @@ export const useWatchFameRouterRescueEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"RouteExecuted"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterRouteExecutedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16194,7 +16194,7 @@ export const useWatchFameRouterRouteExecutedEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"V4HookDataHashEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterV4HookDataHashEnabledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16206,7 +16206,7 @@ export const useWatchFameRouterV4HookDataHashEnabledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"VenueFamilyEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterVenueFamilyEnabledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -16218,7 +16218,7 @@ export const useWatchFameRouterVenueFamilyEnabledEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameRouterAbi}__ and `eventName` set to `"VenueTargetEnabled"`
  *
- * [__View Contract on Base Basescan__](https://basescan.org/address/0x13e0075EC96601AA90240d9e6D900C91AF764bBB)
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xAdefa5860389E8936ebf2977e1Fb4a365aA39636)
  */
 export const useWatchFameRouterVenueTargetEnabledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({

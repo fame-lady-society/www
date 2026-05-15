@@ -65,6 +65,16 @@ describe("FAME pool universe", () => {
           edge.poolId === "aerodrome-v2-usdc-weth" && !edge.manifestReady,
       ),
     );
+    assert.ok(
+      famePoolEdgesForPair(NATIVE_ETH, WETH).some(
+        (edge) => edge.poolId === "native-wrap-weth" && edge.manifestReady,
+      ),
+    );
+    assert.ok(
+      famePoolEdgesForPair(WETH, NATIVE_ETH).some(
+        (edge) => edge.poolId === "native-wrap-weth" && edge.manifestReady,
+      ),
+    );
 
     const wethToFame = famePoolEdgesForPair(WETH, FAME).map(
       (edge) => edge.poolId,
@@ -88,6 +98,9 @@ describe("FAME pool universe", () => {
       nativeEdges.some((edge) => edge.poolId === "uniswap-v4-zora-eth"),
     );
     assert.ok(
+      nativeEdges.some((edge) => edge.poolId === "native-wrap-weth"),
+    );
+    assert.ok(
       !nativeEdges.some(
         (edge) => edge.tokenIn.toLowerCase() === WETH.toLowerCase(),
       ),
@@ -98,7 +111,7 @@ describe("FAME pool universe", () => {
     for (const edge of famePoolUniverse().edges) {
       assert.equal(edge.fee.status, "available", edge.poolId);
       if (edge.fee.status === "available") {
-        assert.ok(edge.fee.feeBps > 0, edge.poolId);
+        assert.ok(edge.fee.feeBps >= 0, edge.poolId);
         assert.match(edge.fee.label, /%$/);
       }
     }

@@ -26,6 +26,39 @@ function token(address: typeof FAME | typeof USDC | typeof NATIVE_ETH) {
 }
 
 describe("FAME live liquidity quote adapter", () => {
+  it("quotes native WETH wrap legs without pool RPC reads", async () => {
+    const edge = famePoolEdges().find(
+      (candidate) =>
+        candidate.poolId === "native-wrap-weth" &&
+        candidate.tokenIn.toLowerCase() === NATIVE_ETH.toLowerCase(),
+    );
+    assert.ok(edge);
+    let reads = 0;
+    const adapter = await createLiveLiquidityQuoteAdapter({
+      client: {
+        async readContract() {
+          reads += 1;
+          throw new Error("native wrap should not read pool state");
+        },
+      },
+      chainId: 8453,
+      blockNumber: 45_884_844n,
+    });
+
+    const quote = await adapter.quoteEdge({
+      edge,
+      amountIn: 123n,
+    });
+
+    assert.equal(quote.status, "quoted");
+    if (quote.status === "quoted") {
+      assert.equal(quote.amountOut, 123n);
+      assert.equal(quote.fee.status, "available");
+      assert.equal(quote.protocolEvidence?.marketImpact.status, "not_applicable");
+    }
+    assert.equal(reads, 0);
+  });
+
   it("quotes a $5 USDC route from liquidity evidence without hard capacity caps", async () => {
     const client: FameLiveQuoteClient = {
       async readContract(request) {
@@ -213,6 +246,48 @@ describe("FAME live liquidity quote adapter", () => {
       assert.equal(quote.priceImpact?.method, "constant-product-reserves");
       assert.notEqual(quote.priceImpact.postSwapPriceX18, null);
     }
+  });
+
+  it("reuses request-scoped live state reads across quote amounts", async () => {
+    const edge = famePoolEdges().find(
+      (candidate) => candidate.poolId === "scale-equalizer-weth-fame",
+    );
+    assert.ok(edge);
+    if (edge.pool.venue !== "solidly" || edge.pool.stable) {
+      throw new Error("Expected volatile Solidly edge.");
+    }
+    const pool = edge.pool;
+    let reserveReads = 0;
+    let quoteReads = 0;
+
+    const adapter = await createLiveLiquidityQuoteAdapter({
+      client: {
+        async readContract(request) {
+          assert.equal(request.address, pool.pool);
+          if (request.functionName === "getAmountOut") {
+            quoteReads += 1;
+            const amountIn = request.args?.[0];
+            assert.equal(typeof amountIn, "bigint");
+            return (amountIn as bigint) * 2n;
+          }
+          if (request.functionName === "getReserves") {
+            reserveReads += 1;
+            return [1_000_000n, 10_000_000n, 0];
+          }
+          throw new Error(`Unexpected read ${request.functionName}.`);
+        },
+      },
+      chainId: 8453,
+      blockNumber: 45_884_844n,
+    });
+
+    const first = await adapter.quoteEdge({ edge, amountIn: 12_345n });
+    const second = await adapter.quoteEdge({ edge, amountIn: 67_890n });
+
+    assert.equal(first.status, "quoted");
+    assert.equal(second.status, "quoted");
+    assert.equal(quoteReads, 2);
+    assert.equal(reserveReads, 1);
   });
 
   it("does not invent reserve impact for stable Solidly legs", async () => {

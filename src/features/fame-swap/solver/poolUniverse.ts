@@ -8,6 +8,7 @@ import {
   type VenueFamilyName,
   type VenueFamilyOrdinal,
 } from "../router/types";
+import { WETH } from "../tokens";
 import { poolUniverseFile } from "./artifacts";
 
 export type FamePoolFeeDescriptor =
@@ -41,6 +42,15 @@ export interface FamePoolUniverse {
   edges: readonly FamePoolEdge[];
 }
 
+export const NATIVE_WRAP_POOL_ID = "native-wrap-weth";
+
+const NATIVE_WRAP_POOL = {
+  id: NATIVE_WRAP_POOL_ID,
+  venue: "native-wrap",
+  router: WETH,
+  weth: WETH,
+} as const satisfies FamePoolConfig;
+
 const venueFamilies = {
   solidly: "Solidly",
   "uniswap-v2": "UniswapV2",
@@ -48,6 +58,7 @@ const venueFamilies = {
   "aerodrome-slipstream2": "Slipstream2",
   "uniswap-v3": "UniswapV3",
   "uniswap-v4": "UniswapV4",
+  "native-wrap": "NativeWrap",
 } as const satisfies Record<FamePoolConfig["venue"], VenueFamilyName>;
 
 function normalizedAddress(address: Address): string {
@@ -59,6 +70,7 @@ function sameAddress(left: Address, right: Address): boolean {
 }
 
 function feeLabel(feeBps: number): string {
+  if (feeBps === 0) return "0%";
   const percent = feeBps / 100;
   const decimals = percent < 0.01 ? 4 : percent < 0.1 ? 3 : 2;
   return `${percent.toFixed(decimals)}%`;
@@ -67,6 +79,15 @@ function feeLabel(feeBps: number): string {
 export function feeDescriptorForPool(
   pool: FamePoolConfig,
 ): FamePoolFeeDescriptor {
+  if (pool.venue === "native-wrap") {
+    return {
+      status: "available",
+      feeBps: 0,
+      label: "0%",
+      source: "pool-metadata",
+    };
+  }
+
   if ("feeBps" in pool && Number.isFinite(pool.feeBps)) {
     return {
       status: "available",
@@ -92,6 +113,10 @@ export function feeDescriptorForPool(
 }
 
 function poolTokens(pool: FamePoolConfig): readonly [Address, Address] {
+  if (pool.venue === "native-wrap") {
+    return [NATIVE_ETH_ADDRESS, pool.weth];
+  }
+
   if (pool.venue === "uniswap-v4") {
     return [pool.currency0, pool.currency1];
   }
@@ -124,6 +149,7 @@ function buildEdge(
 ): FamePoolEdge {
   const venue = venueFamilies[pool.venue];
   const venueOrdinal = venueFamilyOrdinals[venue];
+  const target = pool.venue === "native-wrap" ? pool.weth : pool.router;
 
   return {
     id: `${pool.id}:${normalizedAddress(tokenIn)}:${normalizedAddress(tokenOut)}`,
@@ -133,9 +159,9 @@ function buildEdge(
     tokenOut,
     venue,
     venueOrdinal,
-    target: pool.router,
+    target,
     fee: feeDescriptorForPool(pool),
-    manifestReady: manifestReady(pool, venueOrdinal, pool.router),
+    manifestReady: manifestReady(pool, venueOrdinal, target),
   };
 }
 
@@ -150,12 +176,15 @@ export function famePoolUniverse(): FamePoolUniverse {
   return {
     file: poolUniverseFile,
     pools: poolUniverseFile.pools,
-    edges: buildEdges(poolUniverseFile.pools),
+    edges: buildEdges([...poolUniverseFile.pools, NATIVE_WRAP_POOL]),
   };
 }
 
 export function famePoolById(id: string): FamePoolConfig | undefined {
-  return poolUniverseFile.pools.find((pool) => pool.id === id);
+  return (
+    poolUniverseFile.pools.find((pool) => pool.id === id) ??
+    (id === NATIVE_WRAP_POOL_ID ? NATIVE_WRAP_POOL : undefined)
+  );
 }
 
 export function famePoolEdges(): readonly FamePoolEdge[] {

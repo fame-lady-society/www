@@ -8,6 +8,7 @@ Use targeted follow-ups:
 - Route-capacity metadata for a known pool.
 - Generated route artifact for a concrete existing-pool route.
 - Split or split-then-merge fork example.
+- Optimized allocation regression for a route-lab case where `optimizer.selectedAllocationBps` materially changes the pool set or branch amounts.
 - Failing-route regression fixture for a specific amount.
 
 Do not create a generic route promotion pipeline. Keep each todo tied to exact route-lab evidence and contract-repo acceptance criteria.
@@ -21,6 +22,7 @@ Do not create a generic route promotion pipeline. Keep each todo tied to exact r
 - The formerly large closed buckets now quote as `ready` from recorded and live liquidity evidence. They should become amount-sweep or fork-proof follow-ups, not failure regressions.
 - V4 routes are live-selected in current Doppler route-lab runs. V4 after-price is still not emitted by the current Base V4 quoter shape, so require route-level or one-pool simulation evidence; do not backfill unverifiable post-swap prices.
 - Slipstream2 is enabled for the Base Gauge Caps deployment through the dedicated live quoter path. Unknown Slipstream2 deployments still fail closed and should not be included in launch-ready route evidence without separate validation.
+- Route-lab now emits optimizer trial/status evidence. Use selected allocation bps, branch pool ids, and quote-plan stats when creating contract-side split examples; do not promote pruned, ineligible, or unsupported-shape trials as executable routes.
 
 ## Current Route-Lab Todo Candidates
 

@@ -102,6 +102,77 @@ describe("FAME swap quote wire contract", () => {
     }
   });
 
+  it("does not serialize raw optimizer evidence on ready public responses", () => {
+    const { tokenIn, tokenOut, quote } = readyWireResponse();
+    const wire = serializeFameSwapQuoteResponse({
+      ...quote,
+      optimizerSummary: {
+        mode: "select",
+        status: "selected",
+        selectedTemplateId: "public-template",
+        selectedAllocationBps: 6_250,
+        selectedCandidateId: "public-candidate",
+        winningMarginBps: 12,
+        trialStatusCounts: {
+          selected: 1,
+          rejected: 2,
+          pruned: 0,
+          budget_exhausted: 0,
+          quote_failed: 0,
+          unsupported_shape: 0,
+          ineligible: 0,
+        },
+        fallbackReason: null,
+        runStats: {
+          logicalQuoteRequests: 5,
+          uniqueExactQuoteReads: 3,
+          exactQuoteCacheHits: 2,
+          trials: 4,
+          templatesConsidered: 2,
+          budgetExhaustions: 0,
+          timeout: false,
+        },
+      },
+      optimizerEvidence: {
+        allocationTrials: [
+          {
+            templateId: "secret-template",
+            allocationBps: 6_250,
+            status: "selected",
+            reason: "raw optimizer trial",
+            poolIds: ["secret-pool"],
+          },
+        ],
+        quotePlanStats: {
+          logicalQuoteRequests: 1,
+        },
+      } as never,
+    });
+
+    assert.doesNotMatch(
+      JSON.stringify(wire),
+      /optimizerEvidence|allocationTrials|quotePlanStats|secret-template|secret-pool/,
+    );
+
+    assert.equal(
+      (wire.optimizerSummary as { selectedAllocationBps?: number })
+        .selectedAllocationBps,
+      6_250,
+    );
+
+    const parsed = deserializeFameSwapQuoteResponse(wire, {
+      tokenIn,
+      tokenOut,
+      amountIn: quote.requestedAmountIn,
+      config: config(),
+    });
+    assert.equal(parsed.status, "ready");
+    if (parsed.status === "ready") {
+      assert.equal(parsed.optimizerSummary?.status, "selected");
+      assert.equal(parsed.optimizerSummary?.selectedAllocationBps, 6_250);
+    }
+  });
+
   it("fails closed when a ready response route hash does not match the decoded route", () => {
     const { tokenIn, tokenOut, quote, wire } = readyWireResponse();
     const parsed = deserializeFameSwapQuoteResponse(

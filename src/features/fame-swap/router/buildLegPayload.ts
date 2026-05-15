@@ -212,6 +212,8 @@ function payloadForLeg(input: BuildFameRouteLegInput): Hex {
       );
     case "UniswapV4":
       return encodeUniversalRouterV4Payload(input);
+    case "NativeWrap":
+      return "0x";
   }
 }
 
@@ -226,7 +228,7 @@ export function buildFameRouteLeg(
     amountMode: input.amountMode,
     amountModeOrdinal: amountModeOrdinals[input.amountMode],
     amount: input.amountMode === "All" ? 0n : input.amount,
-    minAmountOut: input.minAmountOut,
+    minAmountOut: input.edge.venue === "NativeWrap" ? 0n : input.minAmountOut,
     target: input.edge.target,
     data: payloadForLeg(input),
   };

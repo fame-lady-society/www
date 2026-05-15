@@ -90,6 +90,18 @@ export function createDeterministicQuoteAdapter(
   return {
     quoteContext,
     quoteEdge(request: FameEdgeQuoteRequest): FameEdgeQuoteResult {
+      if (request.edge.venue === "NativeWrap") {
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "native WETH wrap/unwrap identity quote",
+          context: request.context ?? quoteContext,
+        };
+      }
+
       const entry = profileByKey.get(
         key(request.edge.poolId, request.edge.tokenIn, request.edge.tokenOut),
       );
