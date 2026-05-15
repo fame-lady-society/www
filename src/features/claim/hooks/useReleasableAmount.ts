@@ -33,23 +33,6 @@ export function useReleasableAmount() {
     vestingScheduleIdIsLoading ||
     (computeReleasableAmountIsLoading && !isRefetchingReleasableAmount);
 
-  // Update releasable amount every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!vestingScheduleId) return;
-      if (computeReleasableAmountIsError) {
-        clearInterval(interval);
-        return;
-      }
-      refetchReleasableAmount();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [
-    computeReleasableAmountIsError,
-    refetchReleasableAmount,
-    vestingScheduleId,
-  ]);
-
   return {
     isLoading,
     releasableAmount,
