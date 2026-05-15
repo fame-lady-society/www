@@ -3,8 +3,7 @@ import { FameSwapPage } from "@/features/fame-swap/components/FameSwapPage";
 
 export const metadata: Metadata = {
   title: "FAME swap",
-  description:
-    "Live FAME router swap routing and simulation for Base.",
+  description: "In-house FAME swap routing on Base.",
 };
 
 export default function Page() {
