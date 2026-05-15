@@ -9,6 +9,21 @@ BASE_RPC_URL=<base-rpc-url> \
 bun run fame-swap:fork-smoke
 ```
 
+## Current-Route Release Gate
+
+Before enabling app routing against a newly deployed FameRouter, run the production current-route gate against the deployed Base router address:
+
+```bash
+NEXT_PUBLIC_FAME_ROUTER_ADDRESS=0xAdefa5860389E8936ebf2977e1Fb4a365aA39636 \
+doppler run -- bun run fame-swap:release-gate
+```
+
+`fame-swap:release-gate` reuses the production quote resolver and materialization path. It sets `FAME_SWAP_USE_CONFIGURED_ROUTER=1`, `FAME_SWAP_FORK_CASES=all`, and `FAME_SWAP_FORK_BLOCK=latest`, then simulates each corpus route through the exact `executeRoute` calldata on a current Base fork. Each route is quoted with live liquidity, near-term deadlines, quote-derived per-leg minimums, and a final slippage-protected minimum computed from a probe simulation.
+
+Treat any nonzero exit as a release stop. The output names the failing corpus case, route artifact, route hash, selected pools, quote context, and simulation step so the operator can decide whether to retry due to RPC/fork instability or disable the affected route family.
+
+Run the command through Doppler or an equivalent secret manager. Do not print RPC URLs, private keys, or API keys; the fork harness proxies the upstream RPC through a loopback URL before passing it to Anvil.
+
 Verified pinned archive run on 2026-05-14:
 
 ```bash
@@ -75,6 +90,8 @@ When secrets are managed by Doppler, run the same command inside a minimal confi
 `NEXT_PUBLIC_FAME_ROUTER_ADDRESS` or `FAME_ROUTER_ADDRESS` is optional. When neither is set, the script deploys the sibling `../fame-contracts` `DeployFameRouter.s.sol` script into the local fork with the public anvil account, then validates and simulates against that local router.
 
 `fame-swap:fork-smoke` defaults to representative release route families: `usdc-fame-five-dollars`, `fame-usdc-fixture`, `weth-fame-small-direct`, `fame-weth-fixture`, `eth-fame-fixture`, and `fame-eth-fixture`. Set `FAME_SWAP_FORK_CASES=all` for the full corpus, or a comma-separated case list for targeted route and pool stress checks.
+
+`fame-swap:release-gate` always uses the full corpus against the configured router and latest fork state. Use the plain `fame-swap:fork-smoke` command for deterministic pinned-block fixture checks or local router deployment tests.
 
 ## Artifact Sync
 
