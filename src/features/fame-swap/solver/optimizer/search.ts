@@ -1,4 +1,7 @@
-import type { FameAsyncQuoteAdapter } from "../quotes/adapters";
+import type {
+  FameAsyncQuoteAdapter,
+  FameQuoteAdapter,
+} from "../quotes/adapters";
 import type { FameRouteCandidate } from "../graph/routePlan";
 import { rankRouteCandidatesAsync } from "../quotes/asyncRankRoutes";
 import type { FameQuotedRoutePlan } from "../quotes/rankRoutes";
@@ -254,7 +257,7 @@ function splitTrialBudget(
 async function settleUntilDeadline<T>(
   run: ReturnType<typeof createFameOptimizerRunContext>,
   promises: readonly Promise<T>[],
-): Promise<T[] | null> {
+): Promise<Awaited<T>[] | null> {
   if (promises.length === 0) return [];
   if (optimizerTimedOut(run)) {
     markOptimizerFallback(run, "timeout");
@@ -274,7 +277,7 @@ async function settleUntilDeadline<T>(
       }),
     ]);
     if (!raced) return null;
-    return raced.filter((value): value is T => value !== null);
+    return raced.filter((value): value is Awaited<T> => value !== null);
   } finally {
     if (timeout) clearTimeout(timeout);
   }
@@ -486,7 +489,7 @@ export async function optimizeRouteAllocations(options: {
   amountIn: bigint;
   feePpm: bigint;
   slippageBps: number;
-  adapter: FameAsyncQuoteAdapter;
+  adapter: FameQuoteAdapter | FameAsyncQuoteAdapter;
   mode?: FameOptimizerMode;
   budgets?: Partial<FameOptimizerBudgets>;
 }): Promise<FameRouteOptimizerResult> {
