@@ -178,7 +178,7 @@ function allocationVector(
   if (template.branches.length !== 2) {
     throw new Error(`${template.id} requires an allocation vector.`);
   }
-  const bps = allocation ?? 10_000;
+  const bps = typeof allocation === "number" ? allocation : 10_000;
   if (!Number.isInteger(bps) || bps < 0 || bps > 10_000) {
     throw new Error(
       `${template.id} allocation bps must be between 0 and 10000.`,
