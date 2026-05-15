@@ -88,6 +88,7 @@
     "next-auth": "^4.5.0",
     "next-video": "^1.1.1",
     "opensea-js": "^8.0.6",
+    "ox": "^0.14.21",
     "pino-pretty": "^10.3.1",
     "porto": "^0.2.37",
     "react": "^18",
@@ -111,7 +112,7 @@
     "twitter-api-v2": "^1.29.0",
     "use-local-storage": "^2.3.6",
     "uuid": "^8.3.2",
-    "viem": "^2.43.2",
+    "viem": "^2.49.2",
     "wagmi": "^3.1.0"
   },
   "devDependencies": {

@@ -17,10 +17,9 @@ import {
   getDefaultConfig,
   getDefaultConnectors,
 } from "connectkit";
+import { Attribution } from "ox/erc8021";
 import { Chain, Transport } from "viem";
-import {
-  chains as defaultChains,
-} from "./wagmiConfig";
+import { chains as defaultChains } from "./wagmiConfig";
 import {
   clearAuthSession,
   setAuthSession,
@@ -28,6 +27,9 @@ import {
 } from "@/utils/authToken";
 
 const SIWE_API_PATH = "/siwe";
+const BASE_BUILDER_DATA_SUFFIX = Attribution.toDataSuffix({
+  codes: ["bc_4pvfg2zb"],
+});
 
 export const defaultConfig = {
   // ...mainnetSepolia,
@@ -131,13 +133,17 @@ export const Web3Provider: FC<
               walletConnectProjectId: defaultConfig.walletConnectProjectId,
             }),
           ];
+    const config = getDefaultConfig({
+      ...defaultConfig,
+      multiInjectedProviderDiscovery: typeof window !== "undefined",
+      ...(chains && chains.length && { chains }),
+      ...(transports && { transports }),
+      connectors,
+    });
+
     return createConfig(
-      getDefaultConfig({
-        ...defaultConfig,
-        multiInjectedProviderDiscovery: typeof window !== "undefined",
-        ...(chains && chains.length && { chains }),
-        ...(transports && { transports }),
-        connectors,
+      Object.assign(config, {
+        dataSuffix: BASE_BUILDER_DATA_SUFFIX,
       }),
     );
   }, [chains, transports]);
