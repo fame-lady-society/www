@@ -1,11 +1,8 @@
 "use client";
 import { createContext, useState, useCallback, useContext } from "react";
-import { base, sepolia } from "viem/chains";
 
 export type FameusContextType = {
   address: `0x${string}`;
-  network: "mainnet" | "sepolia";
-  chain: typeof base | typeof sepolia;
   toUnwrapSelectedTokenIds: bigint[];
   addToUnwrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
   removeFromUnwrapSelectedTokenIds: (...tokenIds: bigint[]) => void;
@@ -14,8 +11,6 @@ export type FameusContextType = {
 
 export const FameusContext = createContext<FameusContextType>({
   address: "0x0",
-  network: "mainnet",
-  chain: base,
   toUnwrapSelectedTokenIds: [],
   addToUnwrapSelectedTokenIds: () => {},
   removeFromUnwrapSelectedTokenIds: () => {},
@@ -25,11 +20,9 @@ export const FameusContext = createContext<FameusContextType>({
 export const FameusProvider = ({
   children,
   address,
-  network,
 }: {
   children: React.ReactNode;
   address: `0x${string}`;
-  network: "mainnet" | "sepolia";
 }) => {
   const [toUnwrapSelectedTokenIds, setToUnwrapSelectedTokenIds] = useState<
     bigint[]
@@ -53,8 +46,6 @@ export const FameusProvider = ({
       value={{
         toUnwrapSelectedTokenIds,
         address,
-        network,
-        chain: network === "mainnet" ? base : sepolia,
         addToUnwrapSelectedTokenIds,
         removeFromUnwrapSelectedTokenIds,
         resetUnwrapSelectedTokenIds: () => setToUnwrapSelectedTokenIds([]),

@@ -17,7 +17,7 @@ export default async function Home(
   const tokenIds = await fetchBaseGovSchwingNftsData({ owner: params.address });
 
   return (
-    <FameusProvider address={params.address} network="mainnet">
+    <FameusProvider address={params.address}>
       <UnWrapTokens tokenIds={tokenIds} />
 
       <RedirectWhenConnected pathPrefix="fameus" pathPostfix="unwrap" />
