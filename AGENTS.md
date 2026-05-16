@@ -2,7 +2,7 @@
 
 ## Overview
 
-- `fls` is a Next.js 14 / React 18 web app that powers multiple Fame Lady Society web experiences such as NFT wrapping, customization portals, and presale flows.
+- `fls` is a Next.js 15 / React 19 web app that powers multiple Fame Lady Society web experiences such as NFT wrapping, customization portals, and presale flows.
 - The UI is written in TypeScript with TailwindCSS, Emotion, MUI, React Query, Redux Toolkit, wagmi, and viem for blockchain interactions.
 - Deprecated: legacy GraphQL data integrations via `@graphprotocol/client` remain in the tree but the upstream subgraphs are offline and will be removed.
 - The app integrates with Ethereum mainnet, Base, and Sepolia contracts plus Farcaster frames, Irys uploads, and IPFS-backed metadata services.
