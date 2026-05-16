@@ -16,13 +16,14 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 
-export default function EditProfilePage({
-  params,
-}: {
-  params: { network: string; identifier: string };
-}) {
+export default function EditProfilePage(
+  props: {
+    params: Promise<{ network: string; identifier: string }>;
+  }
+) {
+  const params = use(props.params);
   const router = useRouter();
   const { network, identifier } = params;
   const resolvedNetwork = resolveNetwork(network);

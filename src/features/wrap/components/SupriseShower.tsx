@@ -26,12 +26,12 @@ function createRandomCurve(): (T: number) => Point {
 
 type Props = {
   count: number;
-  children: React.ReactElement;
+  children: React.ReactElement<{ style?: React.CSSProperties }>;
 };
 
 const SurpriseShower: FC<Props> = ({ count, children }) => {
   const [animatedChildren, setAnimatedChildren] = useState<JSX.Element[]>([]);
-  const frameRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const curves = Array.from({ length: count }, () => createRandomCurve());

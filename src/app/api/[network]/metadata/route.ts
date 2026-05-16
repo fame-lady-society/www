@@ -113,10 +113,8 @@ async function getBackendIrysUploader() {
   });
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { network: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ network: string }> }) {
+  const params = await props.params;
   const session = getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -218,10 +216,8 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { network: string } },
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ network: string }> }) {
+  const params = await props.params;
   const session = getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

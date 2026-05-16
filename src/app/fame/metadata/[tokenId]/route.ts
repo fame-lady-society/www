@@ -5,7 +5,8 @@ interface Params {
   tokenId: string;
 }
 
-export async function GET(req: NextRequest, { params }: { params: Params }) {
+export async function GET(req: NextRequest, props: { params: Promise<Params> }) {
+  const params = await props.params;
   let { tokenId } = params;
   // check if tokenId ends in ".json"
   if (tokenId.endsWith(".json")) {

@@ -9,12 +9,11 @@ import { IMetadata } from "@/utils/metadata";
 
 export async function GET(
   request: NextRequest,
-  {
-    params,
-  }: {
-    params: { tokenId: string };
-  },
+  props: {
+    params: Promise<{ tokenId: string }>;
+  }
 ) {
+  const params = await props.params;
   const { tokenId } = params;
 
   if (!tokenId) {

@@ -2,7 +2,8 @@ import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "../ChainSelector";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 
-export default function Home({ params }: { params: { network: string } }) {
+export default async function Home(props: { params: Promise<{ network: string }> }) {
+  const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
   let toChain: 11155111 | 8453 | undefined;

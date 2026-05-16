@@ -245,8 +245,9 @@ function CircuitBorderSvg(props: {
 
 export async function GET(
   req: Request,
-  { params }: { params: { tokenId: string; network: string } },
+  props: { params: Promise<{ tokenId: string; network: string }> }
 ): Promise<Response> {
+  const params = await props.params;
   const config = resolveNetwork(params.network);
   if (!config) {
     return new Response("Not Found", { status: 404 });
@@ -302,7 +303,7 @@ export async function GET(
   const portraitUrl = await resolveBoundPfpImageUrl(primaryTokenId);
   const canonicalDefaultName = `Fame Lady #${primaryTokenId.toString()}`;
   const tokenIdText = `#${primaryTokenId.toString()}`;
-  
+
   const boundTokenName = await resolveBoundTokenName(
     viemClient,
     chainId,

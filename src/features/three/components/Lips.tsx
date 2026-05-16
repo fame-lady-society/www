@@ -1,25 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  extend,
-  Canvas as ThreeCanvas,
-  useFrame,
-  useThree,
-} from "@react-three/fiber";
+import { useRef } from "react";
 import { useSpring, animated } from "@react-spring/three";
-import {
-  Image as Image_,
-  SpotLight,
-  Environment,
-  Plane,
-  useTexture,
-  MeshReflectorMaterial,
-} from "@react-three/drei";
+import { Plane, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { useRelativeOrientationSensor } from "../hooks/useDeviceMotion";
-extend({
-  ThreeCanvas,
-  Image_,
-});
 
 // const AnimatedPlane = animated(Plane);
 
@@ -40,23 +22,22 @@ extend({
 // };
 
 function lookingAt(obj: THREE.Object3D) {
-  var direction = new THREE.Vector3(0, 0, 3);
+  const direction = new THREE.Vector3(0, 0, 3);
   direction.applyMatrix4(obj.matrix);
   return direction;
 }
 
 export const Lips = () => {
-  const { viewport } = useThree();
-  const { rotation, position } = useSpring({
-    from: { rotation: [0, 0, 0], position: [0, 0, 0] },
+  const { rotationY, positionZ } = useSpring({
+    from: { rotationY: 0, positionZ: 0 },
     to: async (next) => {
-      await next({ rotation: [0, -Math.PI / 4, 0] });
+      await next({ rotationY: -Math.PI / 4 });
       await new Promise((r) => setTimeout(r, 1000));
-      await next({ rotation: [0, Math.PI / 4, 0] });
+      await next({ rotationY: Math.PI / 4 });
       await new Promise((r) => setTimeout(r, 1000));
-      await next({ rotation: [0, 0, 0] });
+      await next({ rotationY: 0 });
       await new Promise((r) => setTimeout(r, 1000));
-      await next({ position: [0, 0, 5] });
+      await next({ positionZ: 5 });
     },
   });
   const imageRef = useRef<THREE.Group>(null);
@@ -67,8 +48,8 @@ export const Lips = () => {
       {/* <color attach="background" args={["#000000"]} /> */}
       <animated.group
         ref={imageRef}
-        position={position as any}
-        rotation={rotation as any}
+        position-z={positionZ}
+        rotation-y={rotationY}
       >
         <Plane
           args={[1, 1]}

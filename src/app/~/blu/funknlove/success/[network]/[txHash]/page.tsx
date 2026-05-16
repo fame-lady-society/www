@@ -3,7 +3,7 @@ import { useTransactionReceipt } from "wagmi";
 import { mainnet, sepolia } from "viem/chains";
 import { parseEventLogs, zeroAddress } from "viem";
 import { funknloveAbi } from "@/wagmi";
-import { useMemo } from "react";
+import { useMemo, use } from "react";
 import NextImage from "next/image";
 import { WrappedLink } from "@/components/WrappedLink";
 
@@ -11,11 +11,12 @@ const bronzeUrl = "/~/blu/funknlove/bronzefnl.png";
 const silverUrl = "/~/blu/funknlove/silverfnl.png";
 const goldUrl = "/~/blu/funknlove/goldfnl.png";
 
-export default function Page({
-  params,
-}: {
-  params: { txHash: string; network: string };
-}) {
+export default function Page(
+  props: {
+    params: Promise<{ txHash: string; network: string }>;
+  }
+) {
+  const params = use(props.params);
   const { txHash, network } = params;
   const chainId = network === "mainnet" ? mainnet.id : sepolia.id;
   const etherscanUrl = `https://${chainId === mainnet.id ? "etherscan.io" : "sepolia.etherscan.io"}/tx/${txHash}`;
@@ -36,18 +37,21 @@ export default function Page({
       logs: tx.logs,
     });
     // Only mint events are relevant
-    let batchLogs: any[] = logs.filter(
-      (log) => log.eventName === "TransferBatch",
-    );
-    batchLogs = batchLogs.filter((log) => log.args.from === zeroAddress);
-    let singleLogs: any[] = logs.filter(
-      (log) => log.eventName === "TransferSingle",
-    );
-    singleLogs = singleLogs.filter((log) => log.args.from === zeroAddress);
-    const allTokenIds = [
-      ...batchLogs.map((log) => log.args.ids).flat(),
-      ...singleLogs.map((log) => log.args.id),
-    ];
+    const batchTokenIds = logs.flatMap((log) => {
+      if (log.eventName !== "TransferBatch" || log.args.from !== zeroAddress) {
+        return [];
+      }
+
+      return [...log.args.ids];
+    });
+    const singleTokenIds = logs.flatMap((log) => {
+      if (log.eventName !== "TransferSingle" || log.args.from !== zeroAddress) {
+        return [];
+      }
+
+      return [log.args.id];
+    });
+    const allTokenIds = [...batchTokenIds, ...singleTokenIds];
     const bronzeTokenIds = allTokenIds.filter((id) => id === 0n);
     const silverTokenIds = allTokenIds.filter((id) => id === 1n);
     const goldTokenIds = allTokenIds.filter((id) => id === 2n);
