@@ -3,8 +3,6 @@ import { Canvas as ThreeCanvas } from "@react-three/fiber";
 import { PropsWithChildren } from "react";
 import { FrameLimiter } from "./FrameLimiter";
 
-// TODO(next15-followup): Smoke-test the React 19 rendering-stack upgrades
-// (React Spring, R3F, drei, postprocessing, and Three) in the canvas flows before PR.
 export const FullscreenCanvas = forwardRef<
   HTMLCanvasElement,
   PropsWithChildren<{

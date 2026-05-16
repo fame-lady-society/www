@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function Page(
   props: {
-    params: Promise<{ tokenId: string; network: string }>;
+    params: Promise<{ tokenId: string }>;
   }
 ) {
   const params = await props.params;

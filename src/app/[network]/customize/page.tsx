@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 export default async function Page(
   props: {
-    params: Promise<{ tokenId: string; network: string }>;
+    params: Promise<{ network: string }>;
   }
 ) {
   const params = await props.params;
-  const { tokenId, network } = params;
+  const { network } = params;
   switch (network) {
     case "sepolia": {
       return <Customize prefix="/sepolia/customize" network="sepolia" />;

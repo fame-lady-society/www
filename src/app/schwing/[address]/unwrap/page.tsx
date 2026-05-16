@@ -6,10 +6,7 @@ import { FameusProvider } from "./context";
 
 export default async function Home(
   props: {
-    // TODO(next15-followup): This route only has an [address] segment. Tighten this
-    // and the related alias routes that still type nonexistent params:
-    // /~/page, /[network]/customize, /customize/[tokenId], and /schwing/[address]/wrap.
-    params: Promise<{ address: string; network: string }>;
+    params: Promise<{ address: string }>;
   }
 ) {
   const params = await props.params;
@@ -20,10 +17,7 @@ export default async function Home(
   const tokenIds = await fetchBaseGovSchwingNftsData({ owner: params.address });
 
   return (
-    <FameusProvider
-      address={params.address}
-      network={params.network as "sepolia" | "mainnet"}
-    >
+    <FameusProvider address={params.address} network="mainnet">
       <UnWrapTokens tokenIds={tokenIds} />
 
       <RedirectWhenConnected pathPrefix="fameus" pathPostfix="unwrap" />

@@ -4,7 +4,7 @@ import { InfoTooltip } from "@/components/InfoToolTip";
 
 export default async function Home(
   props: {
-    params: Promise<{ address: string; network: string }>;
+    params: Promise<{ address: string }>;
     children: React.ReactNode;
   }
 ) {
