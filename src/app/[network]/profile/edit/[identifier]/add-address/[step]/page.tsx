@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
@@ -30,11 +30,12 @@ function isValidStep(step: string): step is WizardStep {
   return VALID_STEPS.includes(step as WizardStep);
 }
 
-export default function AddAddressWizardPage({
-  params,
-}: {
-  params: { network: string; identifier: string; step: string };
-}) {
+export default function AddAddressWizardPage(
+  props: {
+    params: Promise<{ network: string; identifier: string; step: string }>;
+  }
+) {
+  const params = use(props.params);
   const router = useRouter();
   const { network, identifier, step } = params;
   const resolvedNetwork = resolveNetwork(network);
@@ -124,7 +125,7 @@ export default function AddAddressWizardPage({
   // Determine if connected wallet is the target address for signing
   const isTargetAddress = connectedAddress && isSessionForCurrentIdentity && session && 
     connectedAddress.toLowerCase() === session.targetAddress.toLowerCase();
-  
+
   // Target wallet is only needed for the 'sign' step
   // Redirect target wallet users to the sign step if they try to access start
   if (isTargetAddress && step === "start") {

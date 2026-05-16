@@ -2,11 +2,12 @@ import { isAddress } from "viem";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export default async function Home({
-  params,
-}: {
-  params: { address: string; network: string };
-}) {
+export default async function Home(
+  props: {
+    params: Promise<{ address: string; network: string }>;
+  }
+) {
+  const params = await props.params;
   if (!isAddress(params.address)) {
     throw new Error("Invalid address");
   }

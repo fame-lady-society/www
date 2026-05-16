@@ -1,7 +1,6 @@
-import { FC, forwardRef } from "react";
+import { forwardRef } from "react";
 import { Canvas as ThreeCanvas } from "@react-three/fiber";
 import { PropsWithChildren } from "react";
-import { WebGL1Renderer } from "three";
 import { FrameLimiter } from "./FrameLimiter";
 
 export const FullscreenCanvas = forwardRef<
@@ -26,8 +25,9 @@ export const FullscreenCanvas = forwardRef<
       frameloop="demand"
       camera={{ position: [0, 0.5, 6], fov: 35 }}
       onCreated={({ gl }) => {
-        if (gl instanceof WebGL1Renderer) {
-          gl.context.getExtension("OES_standard_derivatives");
+        const context = gl.getContext();
+        if (context instanceof WebGLRenderingContext) {
+          context.getExtension("OES_standard_derivatives");
         }
       }}
     >

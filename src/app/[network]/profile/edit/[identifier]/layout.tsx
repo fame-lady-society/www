@@ -12,13 +12,18 @@ import {
 } from "@/features/naming/utils/networkUtils";
 import { normalize } from "viem/ens";
 
-export default function EditProfileLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: { network: string; identifier: string };
-}) {
+export default async function EditProfileLayout(
+  props: {
+    children: ReactNode;
+    params: Promise<{ network: string; identifier: string }>;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const { network, identifier } = params;
   const resolvedNetwork = resolveNetwork(network);
   const name = parseIdentifier(identifier);

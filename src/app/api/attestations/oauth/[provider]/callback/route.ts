@@ -93,10 +93,8 @@ function buildSubtag({
   return bytesToHex(digest);
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { provider: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ provider: string }> }) {
+  const params = await props.params;
   const session = getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -114,7 +112,7 @@ export async function GET(
     return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
   }
 
-  const stateSessionCookieValue = cookies().get(`state-${provider}`)?.value;
+  const stateSessionCookieValue = (await cookies()).get(`state-${provider}`)?.value;
   if (!stateSessionCookieValue) {
     return NextResponse.json({ error: "Missing state" }, { status: 400 });
   }

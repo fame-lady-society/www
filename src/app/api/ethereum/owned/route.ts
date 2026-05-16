@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const hodlers: { owners: Record<`0x${string}`, number[]> } = await fetch(
       url,
+      { next: { revalidate: 300 } },
     ).then((res) => res.json());
 
     const ownedTokens =

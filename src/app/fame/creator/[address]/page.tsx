@@ -5,11 +5,12 @@ import { getArtPoolRange, getDN404Storage, getFamePools } from "@/service/fame";
 import { CreatorPortal } from "./CreatorPortal";
 import { ChainSelector } from "../ChainSelector";
 
-export default async function CreatorAddressPage({
-  params,
-}: {
-  params: { address: string };
-}) {
+export default async function CreatorAddressPage(
+  props: {
+    params: Promise<{ address: string }>;
+  }
+) {
+  const params = await props.params;
   if (!isAddress(params.address)) {
     throw new Error("Invalid address");
   }

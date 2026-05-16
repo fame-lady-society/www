@@ -5,13 +5,14 @@ import {
 } from "@/features/naming/utils/networkUtils";
 import { normalize } from "viem/ens";
 
-export default function PublicProfilePage({
-  params,
-}: {
-  params: { identifier: string };
-}) {
+export default async function PublicProfilePage(
+  props: {
+    params: Promise<{ identifier: string }>;
+  }
+) {
+  const params = await props.params;
   const { identifier } = params;
   const name = parseIdentifier(identifier);
-  
+
   redirect(`/~/${encodeIdentifier(normalize(name))}`, RedirectType.replace);
 }

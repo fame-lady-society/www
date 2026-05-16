@@ -24,11 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home({
-  params,
-}: {
-  params: { address: string; network: string };
-}) {
+export default async function Home(
+  props: {
+    params: Promise<{ address: string; network: string }>;
+  }
+) {
+  const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "mainnet";
   switch (network) {

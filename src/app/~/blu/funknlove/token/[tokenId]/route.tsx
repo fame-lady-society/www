@@ -29,10 +29,8 @@ const getMetadata = (tokenId: string | number): IMetadata => {
   };
 };
 
-export async function GET(
-  _: NextRequest,
-  { params }: { params: { tokenId: string } },
-) {
+export async function GET(_: NextRequest, props: { params: Promise<{ tokenId: string }> }) {
+  const params = await props.params;
   const tokenId = params.tokenId;
   const metadata = getMetadata(tokenId);
   return NextResponse.json(metadata);

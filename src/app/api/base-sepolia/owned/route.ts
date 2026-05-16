@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const hodlers: { owners: Record<`0x${string}`, number[]> } = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/owners/base-sepolia`,
+      { next: { revalidate: 300 } },
     ).then((res) => res.json());
 
     const ownedTokens =

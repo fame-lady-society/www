@@ -29,10 +29,8 @@ function normalizeReturnTo(request: NextRequest, returnTo?: string | null): stri
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { provider: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ provider: string }> }) {
+  const params = await props.params;
   const session = getSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -5,7 +5,8 @@ import { PleaseConnectYourWallet } from "./PleaseConnectYourWallet";
 
 const videoWipeUrl = "/videos/wipe-2.mp4";
 
-export default function Home({ params }: { params: { network: string } }) {
+export default async function Home(props: { params: Promise<{ network: string }> }) {
+  const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
   let toChain: 8543 | 8453 | undefined;

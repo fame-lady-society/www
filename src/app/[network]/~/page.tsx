@@ -3,7 +3,8 @@ import { AppMain } from "@/layouts/AppMain";
 import { ProfileList } from "@/features/naming/components/ProfileList";
 import Container from "@mui/material/Container";
 
-export default function NamingPage({ params }: { params: { network: string } }) {
+export default async function NamingPage(props: { params: Promise<{ network: string }> }) {
+  const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "mainnet" | "base-sepolia";
 

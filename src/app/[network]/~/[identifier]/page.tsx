@@ -12,15 +12,16 @@ import {
 } from "@/features/naming/utils/networkUtils";
 import { normalize } from "viem/ens";
 
-export default function PublicProfilePage({
-  params,
-}: {
-  params: { network: string; identifier: string };
-}) {
+export default async function PublicProfilePage(
+  props: {
+    params: Promise<{ network: string; identifier: string }>;
+  }
+) {
+  const params = await props.params;
   const { network, identifier } = params;
   const resolvedNetwork = resolveNetwork(network);
   const name = parseIdentifier(identifier);
-  
+
   if (!resolvedNetwork) {
     redirect(`/mainnet/~/${encodeIdentifier(normalize(name))}`, RedirectType.replace);
   }

@@ -6,11 +6,12 @@ import Link from "next/link";
 import Button from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-export default function ClaimNamePage({
-  params,
-}: {
-  params: { network: string };
-}) {
+export default async function ClaimNamePage(
+  props: {
+    params: Promise<{ network: string }>;
+  }
+) {
+  const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "mainnet" | "base-sepolia";
 

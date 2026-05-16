@@ -53,8 +53,9 @@ function parseTokenId(value: string): number | null {
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { tokenId: string; network: string } },
+  props: { params: Promise<{ tokenId: string; network: string }> }
 ) {
+  const params = await props.params;
   const config = resolveNetwork(params.network);
   if (!config) {
     return new NextResponse("Not Found", { status: 404 });

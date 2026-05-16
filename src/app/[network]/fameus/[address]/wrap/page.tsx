@@ -9,11 +9,12 @@ import { FameusProvider } from "./context";
 import { InfoTooltip } from "@/components/InfoToolTip";
 import { TabBar } from "../TabBar";
 
-export default async function Home({
-  params,
-}: {
-  params: { address: string; network: string };
-}) {
+export default async function Home(
+  props: {
+    params: Promise<{ address: string; network: string }>;
+  }
+) {
+  const params = await props.params;
   if (!isAddress(params.address)) {
     throw new Error("Invalid address");
   }

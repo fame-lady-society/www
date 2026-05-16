@@ -31,10 +31,8 @@ async function fetchMetadata({
     });
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { tokenId: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ tokenId: string }> }) {
+  const params = await props.params;
   const kv = createKvClient({
     token: process.env.KV_REST_API_TOKEN,
     url: process.env.KV_REST_API_URL,

@@ -13,13 +13,17 @@ export type CloseReason = "backdropClick" | "escapeKeyDown" | "ctaClick";
 
 const logoUrl = "/images/fame/gold-leaf-square.png";
 
+type ClickableChildProps = {
+  onClick?: React.MouseEventHandler<HTMLElement>;
+};
+
 interface FadeProps {
-  children: React.ReactElement;
+  children: React.ReactElement<ClickableChildProps>;
   in?: boolean;
-  onClick?: any;
-  onEnter?: (node: HTMLElement, isAppearing: boolean) => void;
-  onExited?: (node: HTMLElement, isAppearing: boolean) => void;
-  ownerState?: any;
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  onEnter?: (node: HTMLElement | null, isAppearing: boolean) => void;
+  onExited?: (node: HTMLElement | null, isAppearing: boolean) => void;
+  ownerState?: unknown;
 }
 
 const Fade = forwardRef<HTMLDivElement, FadeProps>(function Fade(props, ref) {
@@ -37,12 +41,12 @@ const Fade = forwardRef<HTMLDivElement, FadeProps>(function Fade(props, ref) {
     to: { opacity: open ? 1 : 0 },
     onStart: () => {
       if (open && onEnter) {
-        onEnter(null as any, true);
+        onEnter(null, true);
       }
     },
     onRest: () => {
       if (!open && onExited) {
-        onExited(null as any, true);
+        onExited(null, true);
       }
     },
   });

@@ -1,5 +1,5 @@
 import { Sphere, Cone } from "@react-three/drei";
-import { GroupProps, useFrame } from "@react-three/fiber";
+import { ThreeElements, useFrame } from "@react-three/fiber";
 import { FC, useMemo, useRef } from "react";
 import { ComponentPropsWithoutRef } from "react";
 import * as THREE from "three";
@@ -56,11 +56,11 @@ const useSpikePositionsAndRotations = (): ComponentPropsWithoutRef<
   }, []);
 };
 export const SpikedBall: FC<
-  GroupProps & {
+  ThreeElements["group"] & {
     autoSpin?: boolean;
   }
 > = ({ autoSpin = false, ...groupProps }) => {
-  const spinRef = useRef<THREE.Group>();
+  const spinRef = useRef<THREE.Group>(null);
   const spikePositionsAndRotations = useSpikePositionsAndRotations();
 
   useFrame(() => {
@@ -72,7 +72,7 @@ export const SpikedBall: FC<
   return (
     <>
       <group {...groupProps}>
-        <group ref={spinRef as any}>
+        <group ref={spinRef}>
           <Select enabled layers={1}>
             {spikePositionsAndRotations.map((spike, index) => (
               <Cone

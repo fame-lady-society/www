@@ -8,12 +8,13 @@ export const metadata: Metadata = {
   description: "Customize your Fame Lady.",
 };
 
-export default async function Page({
-  params,
-}: {
-  params: { tokenId: string; network: string };
-}) {
-  const { tokenId, network } = params;
+export default async function Page(
+  props: {
+    params: Promise<{ network: string }>;
+  }
+) {
+  const params = await props.params;
+  const { network } = params;
   switch (network) {
     case "sepolia": {
       return <Customize prefix="/sepolia/customize" network="sepolia" />;
