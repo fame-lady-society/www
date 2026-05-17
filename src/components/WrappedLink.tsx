@@ -1,10 +1,18 @@
 "use client";
 import { forwardRef } from "react";
-import NextLink from "next/link";
-import MuiLink, { LinkProps } from "@mui/material/Link";
+import NextLink, { type LinkProps as NextLinkProps } from "next/link";
+import MuiLink, { type LinkProps as MuiLinkProps } from "@mui/material/Link";
 
-export const WrappedLink = forwardRef((props: LinkProps, ref: any) => {
-  const { href } = props;
-  return <MuiLink ref={ref} href={href!} {...props} component={NextLink} />;
-});
+type WrappedLinkProps = Omit<
+  MuiLinkProps<typeof NextLink>,
+  "component" | "href"
+> & {
+  href: NextLinkProps["href"];
+};
+
+export const WrappedLink = forwardRef<HTMLAnchorElement, WrappedLinkProps>(
+  function WrappedLink({ href, ...props }, ref) {
+    return <MuiLink component={NextLink} ref={ref} href={href} {...props} />;
+  },
+);
 WrappedLink.displayName = "WrappedLink";

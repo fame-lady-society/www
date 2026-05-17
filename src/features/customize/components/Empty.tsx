@@ -52,22 +52,26 @@ export const Empty: FC<{}> = ({}) => {
       >
         {!isConnected && <NotConnected />}
         {!isSignedIn && <NotSignedIn />}
-        <WrappedLink href="https://opensea.io/collection/fameladysociety">
-          <Box
-            component="div"
-            display="flex"
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="center"
-            gap={2}
-          >
+        <Box
+          component="div"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          justifyContent="center"
+          gap={2}
+        >
+          <WrappedLink href="https://opensea.io/collection/fameladysociety">
             <OpenSeaIcon />
-            <Typography component="span" color="text.primary">
-              Go get a Fame Lady using the{" "}
-              <WrappedLink href="/save-a-lady">save a lady</WrappedLink> tool
-            </Typography>
-          </Box>
-        </WrappedLink>
+          </WrappedLink>
+          <Typography component="span" color="text.primary">
+            Go get a Fame Lady on{" "}
+            <WrappedLink href="https://opensea.io/collection/fameladysociety">
+              OpenSea
+            </WrappedLink>{" "}
+            using the <WrappedLink href="/save-a-lady">save a lady</WrappedLink>{" "}
+            tool
+          </Typography>
+        </Box>
         <Box
           component="div"
           display="flex"

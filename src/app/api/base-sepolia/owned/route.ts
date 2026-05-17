@@ -1,7 +1,7 @@
 import * as sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
-import { baseSepolia } from "viem/chains";
 
+import { fetchOwnedTokenIds } from "@/app/api/ownedTokenIds";
 import { getSession } from "@/app/siwe/session-utils";
 
 export async function GET(request: NextRequest) {
@@ -11,13 +11,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const hodlers: { owners: Record<`0x${string}`, number[]> } = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/owners/base-sepolia`,
-      { next: { revalidate: 300 } },
-    ).then((res) => res.json());
-
-    const ownedTokens =
-      hodlers.owners?.[session.address.toLowerCase() as `0x${string}`] ?? [];
+    const ownedTokens = await fetchOwnedTokenIds(
+      request,
+      "base-sepolia",
+      session.address,
+    );
 
     return NextResponse.json(ownedTokens);
   } catch (error) {

@@ -2,9 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
 import { withAuthHeaders } from "@/utils/authToken";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { mainnet , sepolia, baseSepolia } from "viem/chains";
+import { readOwnedTokenIds } from "@/utils/ownedTokens";
+import { baseSepolia, mainnet, sepolia } from "viem/chains";
 
-function chainIdToChainName(chainId: typeof mainnet.id | typeof sepolia.id | typeof baseSepolia.id): string {
+function chainIdToChainName(
+  chainId: typeof mainnet.id | typeof sepolia.id | typeof baseSepolia.id,
+): string {
   switch (chainId) {
     case mainnet.id:
       return "ethereum";
@@ -17,22 +20,27 @@ function chainIdToChainName(chainId: typeof mainnet.id | typeof sepolia.id | typ
   }
 }
 
-export function useLadies({chainId}: { chainId: typeof mainnet.id | typeof sepolia.id | typeof baseSepolia.id }) {
+export function useLadies({
+  chainId,
+}: {
+  chainId: typeof mainnet.id | typeof sepolia.id | typeof baseSepolia.id;
+}) {
   const { address } = useAccount();
   const authSession = useAuthSession();
   const query = useQuery({
     queryKey: ["ladies", chainId, address, authSession?.token],
     queryFn: async () => {
       if (!address) return [];
-      const ownedTokens = await fetch(`/api/${chainIdToChainName(chainId)}/owned`, {
-        headers: withAuthHeaders(undefined, authSession?.token ? authSession : null),
-      })
-        .then((res) => res.json() as Promise<number[]>)
-        .catch(() => [] as number[]);
+      const response = await fetch(`/api/${chainIdToChainName(chainId)}/owned`, {
+        headers: withAuthHeaders(
+          undefined,
+          authSession?.token ? authSession : null,
+        ),
+      });
 
-      return ownedTokens;
+      return readOwnedTokenIds(response);
     },
-    enabled: !!address,
+    enabled: !!address && !!authSession?.token,
   });
 
   return query;
