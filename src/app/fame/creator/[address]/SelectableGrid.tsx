@@ -5,6 +5,11 @@ import { readContract } from "viem/actions";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { base } from "viem/chains";
 import { creatorArtistMagicAbi } from "@/wagmi";
+import {
+  FAME_METADATA_FALLBACK_IMAGE,
+  fameMetadataFetchUrls,
+  imageFromFameMetadata,
+} from "@/service/fameMetadata";
 
 export const SelectableGrid = ({
   tokenIds,
@@ -25,20 +30,39 @@ export const SelectableGrid = ({
 }) => {
   const client = useClient();
   const [images, setImages] = useState<Record<number, string>>({});
+  const fetchMetadataImage = useCallback(async (uri: string) => {
+    let lastError: unknown = null;
+    for (const fetchUrl of fameMetadataFetchUrls(uri)) {
+      try {
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Metadata request failed with ${response.status} ${response.statusText}`,
+          );
+        }
+
+        return imageFromFameMetadata(await response.json());
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Failed to fetch metadata image");
+  }, []);
   const fetchImage = useCallback(
     async (tokenId: bigint) => {
-      const tokenIdIndex = Number(tokenId);
       if (!client) throw new Error("Client not available");
-      const response = await readContract(client, {
+      const uri = await readContract(client, {
         address: creatorArtistMagicAddress(base.id),
         abi: creatorArtistMagicAbi,
         functionName: "tokenURI",
         args: [tokenId],
-      }).then((uri) => fetch(uri));
-      const { image } = await response.json();
-      return image;
+      });
+      return fetchMetadataImage(uri);
     },
-    [client],
+    [client, fetchMetadataImage],
   );
 
   useEffect(() => {
@@ -52,7 +76,16 @@ export const SelectableGrid = ({
         (tokenId) => !poolIds.has(Number(tokenId)),
       );
       const imagePromises = idsToFetch.map(async (tokenId) => {
-        const image = await fetchImage(tokenId);
+        let image: string;
+        try {
+          image = await fetchImage(tokenId);
+        } catch (error) {
+          console.warn(
+            `Failed to fetch metadata for token ${tokenId.toString()}:`,
+            error,
+          );
+          image = FAME_METADATA_FALLBACK_IMAGE;
+        }
         return { tokenId: Number(tokenId), image };
       });
       const results = await Promise.all(imagePromises);
@@ -66,10 +99,10 @@ export const SelectableGrid = ({
     setImages((prev) => {
       const updatedImages = { ...prev };
       burnPool?.forEach(({ tokenId, uri }) => {
-        updatedImages[Number(tokenId)] = uri;
+        updatedImages[Number(tokenId)] = uri || FAME_METADATA_FALLBACK_IMAGE;
       });
       mintPool?.forEach(({ tokenId, uri }) => {
-        updatedImages[Number(tokenId)] = uri;
+        updatedImages[Number(tokenId)] = uri || FAME_METADATA_FALLBACK_IMAGE;
       });
       return updatedImages;
     });
@@ -81,7 +114,7 @@ export const SelectableGrid = ({
         <SelectableToken
           key={tokenId.toString()}
           tokenId={tokenId}
-          imageUrl={images[Number(tokenId)] || ""}
+          imageUrl={images[Number(tokenId)] || FAME_METADATA_FALLBACK_IMAGE}
           onTokenSelected={onTokenSelected}
           onTokenUnselected={onTokenUnselected}
           isSelected={selectedTokenIds.includes(tokenId)}
