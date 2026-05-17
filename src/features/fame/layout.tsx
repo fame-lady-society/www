@@ -33,7 +33,6 @@ import {
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import CardActionArea from "@mui/material/CardActionArea";
 import { fameFromNetwork, fameSaleAddress } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/presale/components/FameFAQ";
 import {
@@ -218,6 +217,8 @@ const Content: FC<{
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const imageWidth = isSmallScreen ? 200 : 400;
   const imageHeight = Math.floor(imageWidth * 2);
+  const fameTokenAddress = fameFromNetwork(8453);
+  const fameNftAddress = "0xbb5ed04dd7b207592429eb8d599d103ccad646c4";
   const eyesRef = useRef<HTMLImageElement>(null);
   const eyesContainer = useParallax<HTMLDivElement>({
     onProgressChange: (progress) => {
@@ -229,7 +230,11 @@ const Content: FC<{
   });
 
   return (
-    <Grid2 container spacing={2} sx={{ mt: 4, mx: 4, pt: 2 }}>
+    <Grid2
+      container
+      spacing={2}
+      sx={{ mt: 4, mx: 4, pt: 2, color: "text.primary" }}
+    >
       <Grid2
         xs={12}
         display="flex"
@@ -413,208 +418,196 @@ const Content: FC<{
       </Grid2>
       <Grid2 xs={12} marginBottom={4}>
         <Box
-          component="div"
+          component="section"
           sx={{
             position: "relative",
             left: "50%",
             width: "100vw",
-            backgroundColor: "white",
             transform: "translateX(-50%)",
-            zIndex: 1, // Ensure it's above other content
+            zIndex: 1,
+            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+            py: { xs: 3, md: 4 },
           }}
         >
-          <Grid2
-            container
-            justifyContent="flex-start"
-            alignItems="center"
-            spacing="4"
-            color="black"
+          <Box
+            component="div"
+            sx={{
+              maxWidth: 1120,
+              mx: "auto",
+              px: { xs: 2, sm: 4 },
+              display: "grid",
+              gap: 3,
+            }}
           >
-            <Grid2 xs={4} sm={2} px={2}>
+            <Box
+              component="div"
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "120px minmax(0, 1fr)" },
+                columnGap: 3,
+                rowGap: 1.5,
+                alignItems: "center",
+              }}
+            >
               <Typography
-                variant="h5"
-                textAlign="start"
-                fontSize={isSmallScreen ? "16px" : "24px"}
+                variant="overline"
+                color="text.secondary"
+                fontWeight={700}
               >
                 chain
               </Typography>
-            </Grid2>
-            <Grid2 xs={8} sm={10} px={2}>
               <Typography
-                variant="h5"
-                mt={0.05}
-                fontSize={isSmallScreen ? "16px" : "24px"}
+                variant="body1"
+                fontWeight={700}
+                textTransform="uppercase"
               >
                 base
               </Typography>
-            </Grid2>
 
-            <Grid2 xs={12} sm={2} px={2}>
               <Typography
-                variant="h5"
-                textAlign="start"
-                fontSize={isSmallScreen ? "16px" : "24px"}
+                variant="overline"
+                color="text.secondary"
+                fontWeight={700}
               >
                 erc20
               </Typography>
-            </Grid2>
-            <Grid2 xs={12} sm={10} pl={1}>
-              <CopyToClipboard text={fameFromNetwork(8453)}>
+              <CopyToClipboard text={fameTokenAddress}>
                 {(handleClick) => (
                   <CopyButton
+                    sx={{
+                      p: 0,
+                      minWidth: 0,
+                      color: "text.primary",
+                      "&:hover": { backgroundColor: "transparent" },
+                    }}
                     endIcon={
                       <ContentCopyIcon
                         sx={{
-                          color: "black",
+                          color: "primary.main",
+                          fontSize: 18,
                         }}
                       />
                     }
                     onClick={handleClick}
                   >
                     <Typography
-                      variant="h5"
-                      mt={0.05}
-                      color="black"
-                      fontSize={isSmallScreen ? "16px" : "24px"}
+                      component="span"
+                      fontFamily="monospace"
+                      fontSize={isSmallScreen ? "0.8rem" : "1rem"}
+                      sx={{ overflowWrap: "anywhere" }}
                     >
-                      {fameFromNetwork(8453)}
+                      {fameTokenAddress}
                     </Typography>
                   </CopyButton>
                 )}
               </CopyToClipboard>
-            </Grid2>
-            <Grid2 xs={12} sm={2} px={2}>
+
               <Typography
-                variant="h5"
-                textAlign="start"
-                fontSize={isSmallScreen ? "16px" : "24px"}
+                variant="overline"
+                color="text.secondary"
+                fontWeight={700}
               >
                 erc721
               </Typography>
-            </Grid2>
-            <Grid2 xs={12} sm={10} pl={1}>
-              <CopyToClipboard
-                text={"0xbb5ed04dd7b207592429eb8d599d103ccad646c4"}
-              >
+              <CopyToClipboard text={fameNftAddress}>
                 {(handleClick) => (
                   <CopyButton
+                    sx={{
+                      p: 0,
+                      minWidth: 0,
+                      color: "text.primary",
+                      "&:hover": { backgroundColor: "transparent" },
+                    }}
                     endIcon={
                       <ContentCopyIcon
                         sx={{
-                          color: "black",
+                          color: "primary.main",
+                          fontSize: 18,
                         }}
                       />
                     }
                     onClick={handleClick}
                   >
                     <Typography
-                      variant="h5"
-                      mt={0.05}
-                      color="black"
-                      fontSize={isSmallScreen ? "16px" : "24px"}
+                      component="span"
+                      fontFamily="monospace"
+                      fontSize={isSmallScreen ? "0.8rem" : "1rem"}
+                      sx={{ overflowWrap: "anywhere" }}
                     >
-                      0xbb5ed04dd7b207592429eb8d599d103ccad646c4
+                      {fameNftAddress}
                     </Typography>
                   </CopyButton>
                 )}
               </CopyToClipboard>
-            </Grid2>
-            <Grid2 xs={12} p={4}>
-              <Card
-                variant="outlined"
+            </Box>
+
+            <Box
+              component="nav"
+              aria-label="FAME resources"
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "baseline",
+                justifyContent: "center",
+                gap: { xs: 2, sm: 4 },
+                pt: 2,
+                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <Box
+                component="span"
                 sx={{
-                  borderColor: "primary.main",
-                  borderWidth: 2,
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  gap: 1,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                <CardActionArea href="/fame/swap" aria-label="Open FAME swap">
-                  <CardContent
-                    sx={{
-                      minHeight: "180px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <Typography
-                      variant={isTinyScreen ? "h5" : "h4"}
-                      textAlign="center"
-                      textTransform="uppercase"
-                      fontWeight={700}
-                    >
-                      Swap FAME
-                    </Typography>
-                    <Typography
-                      variant={isTinyScreen ? "body2" : "h6"}
-                      textAlign="center"
-                      color="text.secondary"
-                    >
-                      using FAME preferred pools
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid2>
-            <Grid2 xs={12} sm={4} p={4}>
-              <Card>
-                <CardActionArea
-                  href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
-                  target="_blank"
-                  rel="noreferrer noopener"
+                <WrappedLink
+                  href="/fame/swap"
+                  underline="hover"
+                  sx={{
+                    fontWeight: 800,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
                 >
-                  <CardContent
-                    sx={{
-                      height: "220px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      variant={isTinyScreen ? "body1" : "h5"}
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        width: "100%",
-                      }}
-                    >
-                      dexscreener
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid2>
-
-            <Grid2 xs={12} sm={4} p={4}>
-              <Card>
-                <CardActionArea
-                  href="https://opensea.io/collection/fameladysociety"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  <CardContent
-                    sx={{
-                      height: "220px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography
-                      variant={isTinyScreen ? "body1" : "h5"}
-                      textAlign="center"
-                      textTransform="uppercase"
-                      sx={{
-                        width: "100%",
-                      }}
-                    >
-                      opensea
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid2>
-          </Grid2>
+                  Swap FAME
+                </WrappedLink>
+                <Typography variant="body2" color="text.secondary">
+                  using preferred pools
+                </Typography>
+              </Box>
+              <WrappedLink
+                href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
+                target="_blank"
+                rel="noreferrer noopener"
+                underline="hover"
+                sx={{
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Dexscreener
+              </WrappedLink>
+              <WrappedLink
+                href="https://opensea.io/collection/fameladysociety"
+                target="_blank"
+                rel="noreferrer noopener"
+                underline="hover"
+                sx={{
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                OpenSea
+              </WrappedLink>
+            </Box>
+          </Box>
         </Box>
       </Grid2>
       {burnPool.length > 0 && (
