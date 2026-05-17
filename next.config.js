@@ -12,11 +12,10 @@ module.exports = {
         ? `https://${process.env.VERCEL_URL}`
         : "https://www.fameladysociety.com"),
   },
-  webpack: (config) => {
-    config.externals.push("pino-pretty", "lokijs", "encoding");
-    return config;
-  },
+  serverExternalPackages: ["pino-pretty", "lokijs", "encoding"],
   images: {
+    minimumCacheTTL: 60,
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         hostname:

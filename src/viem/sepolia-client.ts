@@ -6,10 +6,16 @@ import {
 import { createPublicClient, http, fallback, createWalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
+import { parseRpcUrls } from "./rpcUrls";
+
+const sepoliaRpcUrls = parseRpcUrls(
+  process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON,
+  "NEXT_PUBLIC_SEPOLIA_RPC_JSON",
+);
 
 export const client = createPublicClient({
   transport: fallback([
-    ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+    ...sepoliaRpcUrls.map((rpc) =>
       http(rpc, {
         batch: true,
         fetchOptions: {
@@ -44,7 +50,7 @@ export const client = createPublicClient({
 
 export const walletClient = createWalletClient({
   transport: fallback([
-    ...JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
+    ...sepoliaRpcUrls.map((rpc) =>
       http(rpc, {
         batch: true,
         fetchOptions: {

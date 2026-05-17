@@ -3,16 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 import { sdk } from "@farcaster/miniapp-sdk";
-import { SIWESession, useSIWE } from "connectkit";
-import { StatusState } from "connectkit/build/siwe/SIWEContext";
+import { type SIWESession, useSIWE } from "connectkit";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+type StatusState = "ready" | "loading" | "success" | "rejected" | "error";
 
 type HookProps = {
   isSignedIn: boolean;
   data?: SIWESession;
   status: StatusState;
-  error?: Error | any;
+  error?: unknown;
   isRejected: boolean;
   isError: boolean;
   isLoading: boolean;
