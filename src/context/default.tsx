@@ -2,6 +2,7 @@
 import { FC, PropsWithChildren, useEffect, useMemo } from "react";
 import * as Sentry from "@sentry/nextjs";
 import CssBaseline from "@mui/material/CssBaseline";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createAppTheme } from "@/theme";
@@ -49,7 +50,9 @@ export const DefaultProvider: FC<
   sepolia,
   baseSepolia,
 }) => {
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)", {
+    defaultMatches: true,
+  });
   const theme = useMemo(
     () => createAppTheme(prefersDarkMode ? "dark" : "light"),
     [prefersDarkMode],
@@ -133,6 +136,19 @@ export const DefaultProvider: FC<
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <GlobalStyles
+        styles={(theme) => ({
+          html: {
+            backgroundColor: `${theme.palette.background.default} !important`,
+            color: `${theme.palette.text.primary} !important`,
+            colorScheme: theme.palette.mode,
+          },
+          body: {
+            backgroundColor: `${theme.palette.background.default} !important`,
+            color: `${theme.palette.text.primary} !important`,
+          },
+        })}
+      />
       <Web3Provider siwe={siwe} chains={chains} transports={transports}>
         <NotificationsProvider>
           <Config>{children}</Config>
