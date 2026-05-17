@@ -2,10 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
-import { sdk } from "@farcaster/miniapp-sdk";
 import { type SIWESession, useSIWE } from "connectkit";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+type MiniAppContext = unknown;
+type FarcasterMiniAppSdk = {
+  actions: {
+    ready: () => Promise<void>;
+  };
+  context: Promise<MiniAppContext>;
+  isInMiniApp: () => Promise<boolean>;
+};
 
 type StatusState = "ready" | "loading" | "success" | "rejected" | "error";
 
@@ -33,9 +41,8 @@ export function useAccount() {
   } = useConnection();
   const [isMiniApp, setIsMiniApp] = useState(false);
   const { isSignedIn, signIn: signInSIWE } = useSIWE() as HookProps;
-  const [miniAppContext, setMiniAppContext] = useState<Awaited<
-    Awaited<(typeof sdk)["context"]>
-  > | null>(null);
+  const [miniAppContext, setMiniAppContext] =
+    useState<MiniAppContext | null>(null);
 
   const signIn = useCallback(async () => {
     if (isSignedIn) return true;
@@ -46,17 +53,24 @@ export function useAccount() {
   useEffect(() => {
     let cancelled = false;
     const loadMiniApp = async () => {
-      if (typeof window === "undefined") return;
+      try {
+        const { sdk }: { sdk: FarcasterMiniAppSdk } = await import(
+          "@farcaster/miniapp-sdk"
+        );
+        const isInMiniApp = await sdk.isInMiniApp();
+        if (cancelled || !isInMiniApp) return;
 
-      if (cancelled) return;
-      sdk.actions.ready().then(() => {
+        await sdk.actions.ready();
         if (cancelled) return;
+
         setIsMiniApp(true);
-        sdk.context.then((context) => {
-          if (cancelled) return;
-          setMiniAppContext(context);
-        });
-      });
+        const context = await sdk.context;
+        if (cancelled) return;
+
+        setMiniAppContext(context);
+      } catch {
+        if (cancelled) return;
+      }
     };
     loadMiniApp();
     return () => {

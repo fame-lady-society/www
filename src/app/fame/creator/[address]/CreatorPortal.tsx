@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useHasCreatorRole } from "./useHasCreatorRole";
@@ -30,11 +30,12 @@ export function CreatorPortal({
   const roles = useHasCreatorRole(address);
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | null>(null);
 
-  // Redirect if not connected or not the correct address
-  if (!connectedAddress || connectedAddress !== address) {
-    router.push("/fame/creator");
-    return null;
-  }
+  useEffect(() => {
+    // Redirect if not connected or not the correct address
+    if (!connectedAddress || connectedAddress !== address) {
+      router.push("/fame/creator");
+    }
+  }, [connectedAddress, address, router]);
 
   // Redirect if user has no relevant roles
   const hasAnyRole = !!(

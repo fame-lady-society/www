@@ -39,6 +39,12 @@ module.exports = {
         hostname: "gateway.irys.xyz",
       },
       {
+        hostname: "arweave.net",
+      },
+      {
+        hostname: "**.arweave.net",
+      },
+      {
         hostname: "onchaingas.vercel.app",
       },
       {

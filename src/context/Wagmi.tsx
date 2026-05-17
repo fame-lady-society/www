@@ -7,10 +7,10 @@ import {
   createConfig,
   cookieStorage,
   createStorage,
+  type CreateConnectorFn,
 } from "wagmi";
-import { farcasterMiniApp as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FC, PropsWithChildren, useMemo } from "react";
+import { FC, PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { SiweMessage } from "siwe";
 import {
   ConnectKitProvider,
@@ -110,6 +110,10 @@ const siweConfig = {
 
 const queryClient = new QueryClient();
 
+type MiniAppConnectorModule = {
+  farcasterMiniApp: () => CreateConnectorFn;
+};
+
 export const Web3Provider: FC<
   PropsWithChildren<{
     siwe?: boolean;
@@ -117,12 +121,38 @@ export const Web3Provider: FC<
     chains: readonly [Chain, ...Chain[]];
   }>
 > = ({ children, siwe = false, transports, chains }) => {
+  const [miniAppConnector, setMiniAppConnector] =
+    useState<CreateConnectorFn | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadMiniAppConnector = async () => {
+      try {
+        const { farcasterMiniApp }: MiniAppConnectorModule = await import(
+          "@farcaster/miniapp-wagmi-connector"
+        );
+        const connector = farcasterMiniApp();
+        if (cancelled) return;
+
+        setMiniAppConnector(() => connector);
+      } catch {
+        if (cancelled) return;
+      }
+    };
+
+    loadMiniAppConnector();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const config = useMemo(() => {
     const connectors =
       typeof window === "undefined"
         ? []
         : [
-            miniAppConnector(),
+            ...(miniAppConnector ? [miniAppConnector] : []),
             ...getDefaultConnectors({
               app: {
                 name: defaultConfig.appName,
@@ -146,7 +176,7 @@ export const Web3Provider: FC<
         dataSuffix: BASE_BUILDER_DATA_SUFFIX,
       }),
     );
-  }, [chains, transports]);
+  }, [chains, transports, miniAppConnector]);
   // const initialState = cookieToInitialState(config, headers().get("cookie"));
   return (
     <WagmiProvider config={config}>

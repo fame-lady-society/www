@@ -12,7 +12,11 @@ import {
   creatorArtistMagicAddress,
   fameFromNetwork,
 } from "@/features/fame/contract";
-import { IMetadata } from "@/utils/metadata";
+import {
+  FAME_METADATA_FALLBACK_IMAGE,
+  fameMetadataFetchUrls,
+  imageFromFameMetadata,
+} from "./fameMetadata";
 
 export async function getArtPoolRange() {
   const [startIndex, endIndex, nextIndex] = await Promise.all([
@@ -93,30 +97,47 @@ export async function getFamePools() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      return await fetch(url, { signal: controller.signal });
+    } finally {
       clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
     }
+  };
+
+  const fetchMetadataImage = async (uri: string): Promise<string> => {
+    let lastError: unknown = null;
+    for (const fetchUrl of fameMetadataFetchUrls(uri)) {
+      try {
+        const response = await fetchWithTimeout(fetchUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Metadata request failed with ${response.status} ${response.statusText}`,
+          );
+        }
+
+        return imageFromFameMetadata(await response.json());
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Failed to fetch metadata image");
   };
 
   return {
     burnPool: await Promise.all(
       uris.map(async ({ uri, tokenId }) => {
         try {
-          const response = await fetchWithTimeout(uri);
-          const metadata: IMetadata = await response.json();
           return {
             tokenId,
-            image: metadata.image,
+            image: await fetchMetadataImage(uri),
           };
         } catch (error) {
           console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
           return {
             tokenId,
-            image: "",
+            image: FAME_METADATA_FALLBACK_IMAGE,
           };
         }
       }),
@@ -124,17 +145,15 @@ export async function getFamePools() {
     mintPool: await Promise.all(
       mintPoolUris.map(async ({ uri, tokenId }) => {
         try {
-          const response = await fetchWithTimeout(uri);
-          const metadata: IMetadata = await response.json();
           return {
             tokenId,
-            image: metadata.image,
+            image: await fetchMetadataImage(uri),
           };
         } catch (error) {
           console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
           return {
             tokenId,
-            image: "",
+            image: FAME_METADATA_FALLBACK_IMAGE,
           };
         }
       }),

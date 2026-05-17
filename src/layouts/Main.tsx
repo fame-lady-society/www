@@ -36,6 +36,8 @@ export const Main: FC<
         component="main"
         sx={{
           backgroundColor: "background.default",
+          color: "text.primary",
+          minHeight: "100vh",
         }}
       >
         <AppBar
