@@ -8,26 +8,35 @@ import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SelectPage } from "@/features/customize/SelectPage";
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { useAccount } from "@/hooks/useAccount";
 import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
 import { useRouter } from "next/navigation";
 import { useLadies } from "@/features/customize/hooks/useLadies";
-import {  mainnet, sepolia } from "viem/chains";
+import { mainnet, sepolia } from "viem/chains";
 
-const Content: FC<{  network: "mainnet" | "sepolia", prefix?: string }> = ({
+const Content: FC<{ network: "mainnet" | "sepolia"; prefix?: string }> = ({
   prefix = "",
   network,
 }) => {
   const { replace } = useRouter();
   const { chain } = useAccount();
-  if (chain && chain?.name.toLowerCase() !== network) {
-    const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
-    replace(`/${name}/customize`);
-  }
 
-  const { isLoading, data } = useLadies({ chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id  });
-  const tokens = useMemo(() => data?.map((tokenId) => ({ tokenId, url: `${prefix}/${tokenId}` })) ?? [], [data, prefix]);
+  useEffect(() => {
+    if (chain && chain?.name.toLowerCase() !== network) {
+      const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
+      replace(`/${name}/customize`);
+    }
+  }, [chain, replace, network]);
+
+  const { isLoading, data } = useLadies({
+    chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id,
+  });
+  const tokens = useMemo(
+    () =>
+      data?.map((tokenId) => ({ tokenId, url: `${prefix}/${tokenId}` })) ?? [],
+    [data, prefix],
+  );
 
   if (chain && ![1, 11155111].includes(chain?.id)) {
     return <UnsupportedNetwork />;
