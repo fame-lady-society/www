@@ -8,6 +8,20 @@ import {
   baseSepolia,
 } from "wagmi/chains";
 import { Chain, Transport } from "viem";
+import { parseRpcUrls } from "@/viem/rpcUrls";
+
+const sepoliaRpcUrls = parseRpcUrls(
+  process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON,
+  "NEXT_PUBLIC_SEPOLIA_RPC_JSON",
+);
+const baseSepoliaRpcUrls = parseRpcUrls(
+  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON,
+  "NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON",
+);
+const polygonAmoyRpcUrls = parseRpcUrls(
+  process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON,
+  "NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON",
+);
 
 export const mainnetSepolia = {
   chains: [mainnet, sepolia],
@@ -21,9 +35,7 @@ export const mainnetSepolia = {
       retryDelay: 100,
     }),
     [sepolia.id]: fallback(
-      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
-        http(rpc, { batch: true }),
-      ),
+      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
   },
 } as const;
@@ -32,9 +44,7 @@ export const sepoliaOnly = {
   chains: [sepolia],
   transports: {
     [sepolia.id]: fallback(
-      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
-        http(rpc, { batch: true }),
-      ),
+      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
   },
 } as const;
@@ -48,9 +58,7 @@ export const baseSepoliaOnly = {
       }),
     ]),
     [sepolia.id]: fallback(
-      JSON.parse(process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON!).map((rpc) =>
-        http(rpc, { batch: true }),
-      ),
+      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
   },
 } as const;
@@ -59,9 +67,7 @@ export const baseSepoliaChainOnly = {
   chains: [baseSepolia],
   transports: {
     [baseSepolia.id]: fallback(
-      JSON.parse(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON!).map((rpc) =>
-        http(rpc, { batch: true }),
-      ),
+      baseSepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
   },
 } as const;
@@ -84,9 +90,7 @@ export const polygonAmoyOnly = {
   chains: [polygonAmoy],
   transports: {
     [polygonAmoy.id]: fallback(
-      JSON.parse(process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON!).map((rpc) =>
-        http(rpc, { batch: true }),
-      ),
+      polygonAmoyRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
   },
 } as const;
@@ -108,4 +112,3 @@ export const chains: readonly [Chain, ...Chain[]] = [
   mainnet,
   baseSepolia,
 ] as const;
-

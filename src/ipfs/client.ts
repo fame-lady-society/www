@@ -46,9 +46,12 @@ export async function fetchBuffer({
 
 export async function upload(data: Buffer | string): Promise<string> {
   const formData = new FormData();
+  const blobPart: BlobPart =
+    typeof data === "string" ? data : new Uint8Array(data);
+
   formData.append(
     "file",
-    new Blob([data], { type: "application/octet-stream" }),
+    new Blob([blobPart], { type: "application/octet-stream" }),
   );
   const response = await fetch(`https://ipfs.infura.io:5001/api/v0/add`, {
     method: "POST",
