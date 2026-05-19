@@ -4,7 +4,7 @@ import type {
   FameLegQuote,
   FameQuoteAdapter,
 } from "./adapters";
-import type { FameQuoteContext } from "./quoteContext";
+import { quoteContextLabel, type FameQuoteContext } from "./quoteContext";
 import {
   addBalance,
   balanceOf,
@@ -89,6 +89,23 @@ function marketImpactSummary(
     maxLegMarketImpactBps: maxLegMarketImpactBps(legQuotes),
     computableLegs: legQuotes.filter((quote) => quote.priceImpact).length,
   };
+}
+
+export function routeQuoteContextForLegs(
+  explicitContext: FameQuoteContext | undefined,
+  legQuotes: readonly FameLegQuote[],
+): FameQuoteContext | undefined {
+  if (explicitContext) return explicitContext;
+  const [firstContext] = legQuotes.map((quote) => quote.quoteContext);
+  if (!firstContext) return undefined;
+  const firstLabel = quoteContextLabel(firstContext);
+  return legQuotes.every(
+    (quote) =>
+      quote.quoteContext &&
+      quoteContextLabel(quote.quoteContext) === firstLabel,
+  )
+    ? firstContext
+    : undefined;
 }
 
 export function quoteRouteCandidate(
@@ -188,7 +205,7 @@ export function quoteRouteCandidate(
 
   return {
     candidate,
-    quoteContext,
+    quoteContext: routeQuoteContextForLegs(quoteContext, legQuotes),
     legQuotes,
     grossAmountOut,
     routerFeeAmount,

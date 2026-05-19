@@ -12,6 +12,7 @@ import type {
   FameRouteMarketImpactSummary,
   FameRouteRankingResult,
 } from "./rankRoutes";
+import { routeQuoteContextForLegs } from "./rankRoutes";
 import {
   addBalance,
   balanceOf,
@@ -189,7 +190,7 @@ export async function quoteRouteCandidateAsync(
 
   return {
     candidate,
-    quoteContext,
+    quoteContext: routeQuoteContextForLegs(quoteContext, legQuotes),
     legQuotes,
     grossAmountOut,
     routerFeeAmount,

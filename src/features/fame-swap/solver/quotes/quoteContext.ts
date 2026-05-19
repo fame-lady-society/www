@@ -16,6 +16,19 @@ export type FameQuoteContext =
       pinnedBaseBlock: number;
     }
   | {
+      source: "indexed";
+      chainId: number;
+      currentBlock: number;
+      sourceRegistryId: string;
+      effectiveMaxFreshnessBlocks: number;
+      statusCounts: {
+        fresh: number;
+        stale: number;
+        unknown: number;
+        unsupported: number;
+      };
+    }
+  | {
       source: "deterministic_test";
       profileId: string;
     };
@@ -28,6 +41,8 @@ export function quoteContextLabel(context: FameQuoteContext): string {
       return `fork:${context.chainId}:${context.blockNumber.toString()}`;
     case "snapshot":
       return `recorded:${context.snapshotId}:${context.pinnedBaseBlock}`;
+    case "indexed":
+      return `indexed:${context.chainId}:${context.currentBlock}:${context.sourceRegistryId}`;
     case "deterministic_test":
       return `deterministic-test:${context.profileId}`;
   }

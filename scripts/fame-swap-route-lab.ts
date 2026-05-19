@@ -34,7 +34,17 @@ import {
 } from "../src/features/fame-swap/solver/quotes/liveAdapters";
 import { createDeterministicQuoteAdapter } from "../src/features/fame-swap/solver/quotes/deterministicAdapter";
 import { createSnapshotQuoteAdapter } from "../src/features/fame-swap/solver/quotes/snapshotAdapter";
+import {
+  createIndexedPoolStateClient,
+  type FameIndexedPoolStateClient,
+  type FameIndexedPoolStateBatchResponse,
+} from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
+import { createIndexedReserveQuoteAdapter } from "../src/features/fame-swap/solver/quotes/indexedReserveAdapter";
 import { toAsyncQuoteAdapter } from "../src/features/fame-swap/solver/optimizer/quoteRunAdapter";
+import {
+  famePoolStateRegistryPoolIdsForPair,
+  famePoolStateRegistrySourceId,
+} from "../src/features/fame-swap/solver/poolStateRegistry";
 import {
   corpusTokenLabel,
   FAME_ROUTE_CORPUS,
@@ -60,7 +70,7 @@ const RECIPIENT =
   "0x0000000000000000000000000000000000000abc" as const satisfies Address;
 
 export interface FameRouteLabRow {
-  mode: "deterministic" | "recorded" | "live";
+  mode: "deterministic" | "recorded" | "indexed" | "live";
   id: string;
   pair: string;
   amountIn: string;
@@ -86,10 +96,23 @@ export interface FameRouteLabRow {
     detail: string;
   }>;
   optimizer: FameRouteLabOptimizerSummary | null;
+  indexedPoolState: FameRouteLabIndexedPoolStateSummary | null;
   edgeMatrix: FameRouteEdgeMatrixRow[];
   protocolCoverage: FameRouteProtocolCoverageRow[];
   simulation: FameRouteLabSimulation;
   suggestedContractTodo: string | null;
+}
+
+export interface FameRouteLabIndexedPoolStateSummary {
+  sourceRegistryId: string;
+  currentBlock: number;
+  effectiveMaxFreshnessBlocks: number;
+  statusCounts: {
+    fresh: number;
+    stale: number;
+    unknown: number;
+    unsupported: number;
+  };
 }
 
 export interface FameRouteLabOptimizerSummary {
@@ -148,6 +171,13 @@ interface RouteLabClient {
 
 interface RouteLabOptions {
   candidateBudgets?: Partial<FameRouteCandidateBudgets>;
+}
+
+interface IndexedRouteLabOptions extends RouteLabOptions {
+  poolStateClient: FameIndexedPoolStateClient;
+  fallbackAdapter?: Awaited<ReturnType<typeof createLiveLiquidityQuoteAdapter>>;
+  currentBlock?: number;
+  maxFreshnessBlocks?: number;
 }
 
 export async function runSnapshotRouteLab(
@@ -229,6 +259,133 @@ export async function runSnapshotRouteLab(
         candidateSet.rejected,
       ),
       optimizer: optimizerSummary(quote),
+      indexedPoolState: null,
+      edgeMatrix,
+      protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
+      simulation,
+      suggestedContractTodo: suggestedTodo(entry, quote),
+    });
+  }
+  return rows;
+}
+
+function currentBlockForIndexedState(
+  adapter: Awaited<ReturnType<typeof createLiveLiquidityQuoteAdapter>>,
+): number | null {
+  const context = adapter.quoteContext;
+  if (
+    context &&
+    (context.source === "live" || context.source === "fork") &&
+    context.blockNumber <= BigInt(Number.MAX_SAFE_INTEGER)
+  ) {
+    return Number(context.blockNumber);
+  }
+  return null;
+}
+
+export async function runIndexedRouteLab(
+  corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
+  options: IndexedRouteLabOptions,
+): Promise<FameRouteLabRow[]> {
+  const fallbackAdapter =
+    options.fallbackAdapter ??
+    toAsyncQuoteAdapter(createSnapshotQuoteAdapter());
+  const currentBlock =
+    options.currentBlock ?? currentBlockForIndexedState(fallbackAdapter);
+  if (currentBlock === null) {
+    throw new Error(
+      "Indexed route lab requires currentBlock, FAME_POOL_STATE_CURRENT_BLOCK, or BASE_RPC_URL so freshness is checked against a live Base block.",
+    );
+  }
+  const expectedSourceRegistryId = famePoolStateRegistrySourceId();
+  const rows: FameRouteLabRow[] = [];
+  for (const entry of corpus) {
+    const candidateSet = routeCandidatesForPair(
+      entry.tokenIn,
+      entry.tokenOut,
+      undefined,
+      {
+        budgets: options.candidateBudgets,
+      },
+    );
+    const indexedState = await options.poolStateClient.fetchPoolStates({
+      currentBlock,
+      maxFreshnessBlocks: options.maxFreshnessBlocks,
+      poolIds: famePoolStateRegistryPoolIdsForPair(
+        entry.tokenIn,
+        entry.tokenOut,
+      ),
+    });
+    const adapter = createIndexedReserveQuoteAdapter({
+      indexedState,
+      fallback: fallbackAdapter,
+      expectedSourceRegistryId,
+    });
+    const quote = await quoteFameSwapAsync({
+      tokenIn: token(entry.tokenIn),
+      tokenOut: token(entry.tokenOut),
+      amountIn: entry.amountIn,
+      recipient: RECIPIENT,
+      config: {
+        ...getFameSwapConfig(),
+        routerAddress: ROUTER_ADDRESS,
+        defaultSlippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      },
+      readiness: {
+        status: "ready",
+        routerAddress: ROUTER_ADDRESS,
+        feePpm: 2_222n,
+      },
+      now: new Date("2026-05-13T00:00:00Z"),
+      adapter,
+    });
+    const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
+    const simulation: FameRouteLabSimulation = {
+      status: "not_requested",
+      message: "Indexed route lab does not run live route simulation.",
+    };
+
+    rows.push({
+      mode: "indexed",
+      id: entry.id,
+      pair: pairLabel(entry),
+      amountIn: entry.amountIn.toString(),
+      expectedStatus: expectedStatusFor(entry, "indexed"),
+      status: quote.status,
+      message: displaySafeDiagnosticMessage(quote.message),
+      selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      quoteContext: quoteContextLabel(quote),
+      feeBreakdown:
+        quote.status === "ready"
+          ? {
+              routerFeeAmount: quote.routerFeeAmount.toString(),
+              routerFeePpm: quote.feeBreakdown.routerFeePpm.toString(),
+              venueFeesIncluded: quote.feeBreakdown.venueFeesIncluded,
+              maxLegMarketImpactBps:
+                quote.feeBreakdown.marketImpact.maxLegMarketImpactBps,
+              computablePriceImpactLegs:
+                quote.feeBreakdown.marketImpact.computableLegs,
+            }
+          : {
+              routerFeeAmount: null,
+              routerFeePpm: null,
+              venueFeesIncluded: null,
+              maxLegMarketImpactBps: null,
+              computablePriceImpactLegs: null,
+            },
+      rejectedCandidates:
+        "rejectedCandidates" in quote
+          ? quote.rejectedCandidates.map((candidate) => ({
+              candidateId: candidate.candidateId,
+              reason: candidate.reason,
+              message: displaySafeDiagnosticMessage(candidate.message),
+            }))
+          : [],
+      candidateGenerationDiagnostics: candidateGenerationDiagnostics(
+        candidateSet.rejected,
+      ),
+      optimizer: optimizerSummary(quote),
+      indexedPoolState: indexedPoolStateSummary(indexedState),
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -246,6 +403,8 @@ function quoteContextLabel(quote: FameSwapQuote): string | null {
       return `${quote.quoteContext.source}:${quote.quoteContext.chainId}:${quote.quoteContext.blockNumber.toString()}`;
     case "snapshot":
       return `recorded:${quote.quoteContext.snapshotId}:${quote.quoteContext.pinnedBaseBlock}`;
+    case "indexed":
+      return `indexed:${quote.quoteContext.chainId}:${quote.quoteContext.currentBlock}:fresh ${quote.quoteContext.statusCounts.fresh}, stale ${quote.quoteContext.statusCounts.stale}, unknown ${quote.quoteContext.statusCounts.unknown}, unsupported ${quote.quoteContext.statusCounts.unsupported}`;
     case "deterministic_test":
       return `deterministic-test:${quote.quoteContext.profileId}`;
   }
@@ -349,6 +508,29 @@ function candidateGenerationDiagnostics(
     reason: diagnostic.reason,
     detail: displaySafeDiagnosticMessage(diagnostic.detail),
   }));
+}
+
+function indexedPoolStateSummary(
+  indexedState: FameIndexedPoolStateBatchResponse,
+): FameRouteLabIndexedPoolStateSummary {
+  const statusCounts = indexedState.pools.reduce(
+    (counts, pool) => ({
+      ...counts,
+      [pool.status]: counts[pool.status] + 1,
+    }),
+    {
+      fresh: 0,
+      stale: 0,
+      unknown: 0,
+      unsupported: 0,
+    },
+  );
+  return {
+    sourceRegistryId: indexedState.sourceRegistryId,
+    currentBlock: indexedState.currentBlock,
+    effectiveMaxFreshnessBlocks: indexedState.effectiveMaxFreshnessBlocks,
+    statusCounts,
+  };
 }
 
 function token(address: Address) {
@@ -666,6 +848,7 @@ export async function runRouteLab(
         candidateSet.rejected,
       ),
       optimizer: optimizerSummary(quote),
+      indexedPoolState: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -782,6 +965,7 @@ export async function runLiveRouteLab(
         candidateSet.rejected,
       ),
       optimizer: optimizerSummary(quote),
+      indexedPoolState: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -821,6 +1005,7 @@ export function formatRouteLabMarkdown(
       `- Rejections: ${row.rejectedCandidates.length}`,
       `- Candidate generation diagnostics: ${row.candidateGenerationDiagnostics.length}`,
       `- Optimizer: ${optimizerSummaryLine(row.optimizer)}`,
+      `- Indexed pool state: ${indexedPoolStateSummaryLine(row.indexedPoolState)}`,
       `- Edge matrix: ${edgeMatrixSummary(row.edgeMatrix)}`,
       `- Protocol coverage: ${protocolCoverageSummary(row.protocolCoverage)}`,
       `- Simulation: ${
@@ -866,6 +1051,19 @@ function optimizerSummaryLine(optimizer: FameRouteLabRow["optimizer"]): string {
   ]
     .filter(Boolean)
     .join(", ");
+}
+
+function indexedPoolStateSummaryLine(
+  indexed: FameRouteLabRow["indexedPoolState"],
+): string {
+  if (!indexed) return "not used";
+  return [
+    `fresh ${indexed.statusCounts.fresh}`,
+    `stale ${indexed.statusCounts.stale}`,
+    `unknown ${indexed.statusCounts.unknown}`,
+    `unsupported ${indexed.statusCounts.unsupported}`,
+    `max freshness ${indexed.effectiveMaxFreshnessBlocks}`,
+  ].join(", ");
 }
 
 function formatOptimizerMarkdown(
@@ -1029,15 +1227,71 @@ function shouldRunCli(): boolean {
   return process.argv[1]?.endsWith("fame-swap-route-lab.ts") ?? false;
 }
 
+function routeLabIndexedPoolStateClientFromEnv(): FameIndexedPoolStateClient {
+  const endpointUrl = process.env.FAME_POOL_STATE_API_URL;
+  const serviceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+  if (!endpointUrl || !serviceToken) {
+    throw new Error(
+      "Indexed route lab requires FAME_POOL_STATE_API_URL and FAME_POOL_STATE_SERVICE_TOKEN.",
+    );
+  }
+  return createIndexedPoolStateClient({
+    endpointUrl,
+    serviceToken,
+    timeoutMs: optionalSafeIntegerEnv("FAME_POOL_STATE_TIMEOUT_MS"),
+  });
+}
+
+function optionalSafeIntegerEnv(name: string): number | undefined {
+  const value = process.env[name];
+  if (!value || value.trim().length === 0) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+async function routeLabIndexedCurrentBlockFromEnv(): Promise<number> {
+  const explicitCurrentBlock = optionalSafeIntegerEnv(
+    "FAME_POOL_STATE_CURRENT_BLOCK",
+  );
+  if (explicitCurrentBlock !== undefined) return explicitCurrentBlock;
+
+  const rpcUrl = process.env.BASE_RPC_URL;
+  if (!rpcUrl) {
+    throw new Error(
+      "Indexed route lab requires FAME_POOL_STATE_CURRENT_BLOCK or BASE_RPC_URL so freshness is checked against a live Base block.",
+    );
+  }
+
+  const client = createPublicClient({
+    chain: base,
+    transport: http(rpcUrl),
+  });
+  const blockNumber = await client.getBlockNumber();
+  if (blockNumber > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error(
+      "Indexed route lab current Base block exceeds safe integer range.",
+    );
+  }
+  return Number(blockNumber);
+}
+
 if (shouldRunCli()) {
   const run = async () => {
     const rows = process.argv.includes("--live")
       ? await runLiveRouteLab(undefined, {
           simulate: process.argv.includes("--simulate"),
         })
-      : process.argv.includes("--deterministic")
-        ? await runRouteLab()
-        : await runSnapshotRouteLab();
+      : process.argv.includes("--indexed")
+        ? await runIndexedRouteLab(undefined, {
+            poolStateClient: routeLabIndexedPoolStateClientFromEnv(),
+            currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
+            maxFreshnessBlocks: optionalSafeIntegerEnv(
+              "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
+            ),
+          })
+        : process.argv.includes("--deterministic")
+          ? await runRouteLab()
+          : await runSnapshotRouteLab();
     if (process.argv.includes("--markdown")) {
       console.log(formatRouteLabMarkdown(rows));
     } else {

@@ -11,8 +11,9 @@ import {
   DEFAULT_MAX_ASYNC_ROUTE_QUOTE_CALLS,
   rankRouteCandidatesAsync,
 } from "./asyncRankRoutes";
-import { rankRouteCandidates } from "./rankRoutes";
+import { quoteRouteCandidate, rankRouteCandidates } from "./rankRoutes";
 import type { FameAsyncQuoteAdapter, FameQuoteAdapter } from "./adapters";
+import type { FameQuoteContext } from "./quoteContext";
 
 const feePpm = 2_222n;
 const slippageBps = 100;
@@ -211,6 +212,80 @@ describe("FAME route ranking", () => {
         [...preferredPools],
       );
     }
+  });
+
+  it("only reports route-level context when all legs share one context", () => {
+    const candidate = usdcToFameCandidates().find(
+      (entry) => entry.legs.length > 1,
+    );
+    assert.ok(candidate);
+    const indexedContext: FameQuoteContext = {
+      source: "indexed",
+      chainId: 8453,
+      currentBlock: 125,
+      sourceRegistryId: "unit-registry",
+      effectiveMaxFreshnessBlocks: 120,
+      statusCounts: {
+        fresh: 1,
+        stale: 0,
+        unknown: 0,
+        unsupported: 0,
+      },
+    };
+    const liveContext: FameQuoteContext = {
+      source: "live",
+      chainId: 8453,
+      blockNumber: 125n,
+    };
+    let quoteCount = 0;
+    const adapter: FameQuoteAdapter = {
+      quoteEdge(request) {
+        quoteCount += 1;
+        return {
+          status: "quoted",
+          amountIn: request.amountIn,
+          amountOut: request.amountIn * 2n,
+          capacityIn: null,
+          fee: request.edge.fee,
+          evidence: "unit test mixed quote contexts",
+          context: quoteCount === 1 ? indexedContext : liveContext,
+        };
+      },
+    };
+
+    const mixed = quoteRouteCandidate(
+      candidate,
+      1_000_000n,
+      feePpm,
+      slippageBps,
+      adapter,
+    );
+
+    assert.ok("candidate" in mixed);
+    assert.equal(mixed.quoteContext, undefined);
+
+    const allIndexed = quoteRouteCandidate(
+      candidate,
+      1_000_000n,
+      feePpm,
+      slippageBps,
+      {
+        quoteEdge(request) {
+          return {
+            status: "quoted",
+            amountIn: request.amountIn,
+            amountOut: request.amountIn * 2n,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit test all-indexed quote contexts",
+            context: indexedContext,
+          };
+        },
+      },
+    );
+
+    assert.ok("candidate" in allIndexed);
+    assert.equal(allIndexed.quoteContext, indexedContext);
   });
 
   it("async ranking preserves route-local All balances and quote context", async () => {

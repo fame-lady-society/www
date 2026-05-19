@@ -188,6 +188,25 @@ function parseQuoteContext(value: unknown): FameQuoteContext | undefined {
     };
   }
 
+  if (raw.source === "indexed") {
+    const statusCounts = asRecord(raw.statusCounts);
+    return {
+      source: "indexed",
+      chainId: numberFrom(raw.chainId),
+      currentBlock: numberFrom(raw.currentBlock),
+      sourceRegistryId: String(raw.sourceRegistryId ?? ""),
+      effectiveMaxFreshnessBlocks: numberFrom(
+        raw.effectiveMaxFreshnessBlocks,
+      ),
+      statusCounts: {
+        fresh: numberFrom(statusCounts.fresh),
+        stale: numberFrom(statusCounts.stale),
+        unknown: numberFrom(statusCounts.unknown),
+        unsupported: numberFrom(statusCounts.unsupported),
+      },
+    };
+  }
+
   if (raw.source === "deterministic_test") {
     return {
       source: "deterministic_test",

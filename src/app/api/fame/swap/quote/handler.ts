@@ -9,7 +9,17 @@ import {
   quoteFameSwapAsync,
 } from "@/features/fame-swap/solver/quote";
 import { DEFAULT_FAME_OPTIMIZER_BUDGETS } from "@/features/fame-swap/solver/optimizer/runContext";
+import {
+  famePoolStateRegistryPoolIdsForPair,
+  famePoolStateRegistrySourceId,
+} from "@/features/fame-swap/solver/poolStateRegistry";
 import { serializeFameSwapQuoteResponse } from "@/features/fame-swap/solver/quoteWire";
+import type { FameAsyncQuoteAdapter } from "@/features/fame-swap/solver/quotes/adapters";
+import {
+  createIndexedPoolStateClient,
+  type FameIndexedPoolStateClient,
+} from "@/features/fame-swap/solver/quotes/indexedPoolStateClient";
+import { createIndexedReserveQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedReserveAdapter";
 import {
   createLiveLiquidityQuoteAdapter,
   unavailableLiveAsyncQuoteAdapter,
@@ -56,6 +66,10 @@ interface FameSwapQuotePostDependencies {
   quoteForRequest?: (
     request: FameSwapQuoteRequest & { readiness: FameSwapReadiness },
   ) => FameSwapQuote | Promise<FameSwapQuote>;
+  quoteAdapterForRequest?: (
+    request: FameSwapQuoteRequest & { readiness: FameSwapReadiness },
+  ) => FameAsyncQuoteAdapter | Promise<FameAsyncQuoteAdapter>;
+  indexedPoolStateClient?: FameIndexedPoolStateClient | null;
 }
 
 const readinessCache = new Map<
@@ -223,7 +237,8 @@ async function withTimeout<T>(
 function remainingQuoteTimeMs(startedAtMs: number): number {
   return Math.max(
     0,
-    QUOTE_REQUEST_TIMEOUT_MS - (Date.now() - startedAtMs) -
+    QUOTE_REQUEST_TIMEOUT_MS -
+      (Date.now() - startedAtMs) -
       QUOTE_RESPONSE_CUSHION_MS,
   );
 }
@@ -244,6 +259,143 @@ function readTimeoutForQuoteRequest(startedAtMs: number): number {
     250,
     Math.min(QUOTE_RPC_TIMEOUT_MS, remainingQuoteTimeMs(startedAtMs)),
   );
+}
+
+function optionalServerEnv(name: string): string | undefined {
+  const value = process.env[name];
+  return value && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function optionalServerIntegerEnv(name: string): number | undefined {
+  const value = optionalServerEnv(name);
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function indexedPoolStateClientFromEnv(): FameIndexedPoolStateClient | null {
+  const endpointUrl = optionalServerEnv("FAME_POOL_STATE_API_URL");
+  const serviceToken = optionalServerEnv("FAME_POOL_STATE_SERVICE_TOKEN");
+  if (!endpointUrl || !serviceToken) return null;
+  return createIndexedPoolStateClient({
+    endpointUrl,
+    serviceToken,
+    timeoutMs: optionalServerIntegerEnv("FAME_POOL_STATE_TIMEOUT_MS"),
+  });
+}
+
+function indexedPoolStateFailureReason(error: unknown): {
+  reason: string;
+  httpStatus?: number;
+} {
+  const message = error instanceof Error ? error.message : String(error);
+  const statusMatch = /status\s+(\d{3})/i.exec(message);
+  if (statusMatch) {
+    return {
+      reason: "http_error",
+      httpStatus: Number(statusMatch[1]),
+    };
+  }
+  if (
+    (error instanceof Error && error.name === "AbortError") ||
+    /timeout|timed out|aborted/i.test(message)
+  ) {
+    return { reason: "timeout" };
+  }
+  if (/response invalid|invalid at|invalid response/i.test(message)) {
+    return { reason: "invalid_response" };
+  }
+  return { reason: "request_failed" };
+}
+
+function logIndexedPoolStateHelperUnavailable(options: {
+  reason: string;
+  httpStatus?: number;
+  currentBlock?: number;
+  poolCount?: number;
+  expectedSourceRegistryId?: string;
+  actualSourceRegistryId?: string;
+}): void {
+  console.warn(
+    JSON.stringify({
+      event: "fame-pool-state-helper-unavailable",
+      reason: options.reason,
+      ...(options.httpStatus === undefined
+        ? {}
+        : { httpStatus: options.httpStatus }),
+      ...(options.currentBlock === undefined
+        ? {}
+        : { currentBlock: options.currentBlock }),
+      ...(options.poolCount === undefined
+        ? {}
+        : { poolCount: options.poolCount }),
+      ...(options.expectedSourceRegistryId === undefined
+        ? {}
+        : { expectedSourceRegistryId: options.expectedSourceRegistryId }),
+      ...(options.actualSourceRegistryId === undefined
+        ? {}
+        : { actualSourceRegistryId: options.actualSourceRegistryId }),
+    }),
+  );
+}
+
+async function maybeWrapIndexedQuoteAdapter(options: {
+  adapter: FameAsyncQuoteAdapter;
+  tokenIn: Address;
+  tokenOut: Address;
+  poolStateClient: FameIndexedPoolStateClient | null;
+}): Promise<FameAsyncQuoteAdapter> {
+  const context = options.adapter.quoteContext;
+  if (
+    !options.poolStateClient ||
+    !context ||
+    (context.source !== "live" && context.source !== "fork")
+  ) {
+    return options.adapter;
+  }
+  if (context.blockNumber > BigInt(Number.MAX_SAFE_INTEGER)) {
+    return options.adapter;
+  }
+
+  const poolIds = famePoolStateRegistryPoolIdsForPair(
+    options.tokenIn,
+    options.tokenOut,
+  );
+  if (poolIds.length === 0) return options.adapter;
+
+  try {
+    const currentBlock = Number(context.blockNumber);
+    const expectedSourceRegistryId = famePoolStateRegistrySourceId();
+    const indexedState = await options.poolStateClient.fetchPoolStates({
+      currentBlock,
+      maxFreshnessBlocks: optionalServerIntegerEnv(
+        "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
+      ),
+      poolIds,
+    });
+    if (indexedState.sourceRegistryId !== expectedSourceRegistryId) {
+      logIndexedPoolStateHelperUnavailable({
+        reason: "source_registry_mismatch",
+        currentBlock,
+        poolCount: poolIds.length,
+        expectedSourceRegistryId,
+        actualSourceRegistryId: indexedState.sourceRegistryId,
+      });
+      return options.adapter;
+    }
+    return createIndexedReserveQuoteAdapter({
+      indexedState,
+      fallback: options.adapter,
+      expectedSourceRegistryId,
+    });
+  } catch (error) {
+    logIndexedPoolStateHelperUnavailable({
+      ...indexedPoolStateFailureReason(error),
+      currentBlock: Number(context.blockNumber),
+      poolCount: poolIds.length,
+    });
+    return options.adapter;
+  }
 }
 
 async function readinessForQuote(routerAddress: Address | null) {
@@ -303,20 +455,18 @@ async function readinessForQuote(routerAddress: Address | null) {
       );
 
       const targetResultPromises =
-        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(
-          async (target) => {
-            const enabled = await client.readContract({
-              address,
-              abi: fameRouterAbi,
-              functionName: "venueTargetEnabled",
-              args: [target.familyOrdinal, target.target],
-            });
-            return [
-              routerPolicyTargetKey(target.familyOrdinal, target.target),
-              enabled,
-            ] as const;
-          },
-        );
+        FAME_SWAP_ARTIFACT_MANIFEST.requiredVenueTargets.map(async (target) => {
+          const enabled = await client.readContract({
+            address,
+            abi: fameRouterAbi,
+            functionName: "venueTargetEnabled",
+            args: [target.familyOrdinal, target.target],
+          });
+          return [
+            routerPolicyTargetKey(target.familyOrdinal, target.target),
+            enabled,
+          ] as const;
+        });
 
       const hookDataResultPromises =
         FAME_SWAP_ARTIFACT_MANIFEST.requiredV4HookDataKeys.map(async (key) => {
@@ -456,39 +606,53 @@ export async function handleFameSwapQuotePost(
     (async (): Promise<FameSwapQuote> => {
       const resolveReadiness = deps.readinessForQuote ?? readinessForQuote;
       const readinessPromise = Promise.resolve(resolveReadiness(routerAddress));
-      const quoteClient = deps.quoteForRequest ? null : publicClientForQuote();
-      const adapterPromise = quoteClient
-        ? createLiveLiquidityQuoteAdapter({
-            client: {
-              getBlockNumber: () => quoteClient.getBlockNumber(),
-              readContract: (quoteRequest) =>
-                quoteClient.readContract(
-                  quoteRequest as Parameters<
-                    typeof quoteClient.readContract
-                  >[0],
-                ) as Promise<unknown>,
-            },
-            chainId: base.id,
-            readTimeoutMs: readTimeoutForQuoteRequest(requestStartedAtMs),
-          }).catch((error) =>
-            unavailableLiveAsyncQuoteAdapter(
-              `Live quote adapter setup failed: ${displaySafeErrorMessage(
-                error,
-              )}`,
-            ),
+      const quoteClient =
+        deps.quoteForRequest || deps.quoteAdapterForRequest
+          ? null
+          : publicClientForQuote();
+      const indexedPoolStateClient =
+        deps.indexedPoolStateClient === undefined
+          ? indexedPoolStateClientFromEnv()
+          : deps.indexedPoolStateClient;
+      const adapterPromise = deps.quoteAdapterForRequest
+        ? readinessPromise.then((readiness) =>
+            deps.quoteAdapterForRequest!({
+              ...quoteRequest,
+              optimizerBudgets:
+                optimizerBudgetsForQuoteRequest(requestStartedAtMs),
+              readiness,
+            }),
           )
-        : Promise.resolve(
-            unavailableLiveAsyncQuoteAdapter(
-              "Base RPC is not configured for live liquidity quotes.",
-            ),
-          );
+        : quoteClient
+          ? createLiveLiquidityQuoteAdapter({
+              client: {
+                getBlockNumber: () => quoteClient.getBlockNumber(),
+                readContract: (quoteRequest) =>
+                  quoteClient.readContract(
+                    quoteRequest as Parameters<
+                      typeof quoteClient.readContract
+                    >[0],
+                  ) as Promise<unknown>,
+              },
+              chainId: base.id,
+              readTimeoutMs: readTimeoutForQuoteRequest(requestStartedAtMs),
+            }).catch((error) =>
+              unavailableLiveAsyncQuoteAdapter(
+                `Live quote adapter setup failed: ${displaySafeErrorMessage(
+                  error,
+                )}`,
+              ),
+            )
+          : Promise.resolve(
+              unavailableLiveAsyncQuoteAdapter(
+                "Base RPC is not configured for live liquidity quotes.",
+              ),
+            );
       const readiness = await readinessPromise;
       if (deps.quoteForRequest) {
         return await deps.quoteForRequest({
           ...quoteRequest,
-          optimizerBudgets: optimizerBudgetsForQuoteRequest(
-            requestStartedAtMs,
-          ),
+          optimizerBudgets: optimizerBudgetsForQuoteRequest(requestStartedAtMs),
           readiness,
         });
       }
@@ -496,17 +660,20 @@ export async function handleFameSwapQuotePost(
       return readiness.status === "ready"
         ? quoteFameSwapAsync({
             ...quoteRequest,
-            optimizerBudgets: optimizerBudgetsForQuoteRequest(
-              requestStartedAtMs,
-            ),
+            optimizerBudgets:
+              optimizerBudgetsForQuoteRequest(requestStartedAtMs),
             readiness,
-            adapter: await adapterPromise,
+            adapter: await maybeWrapIndexedQuoteAdapter({
+              adapter: await adapterPromise,
+              tokenIn: tokenIn.address,
+              tokenOut: tokenOut.address,
+              poolStateClient: indexedPoolStateClient,
+            }),
           })
         : quoteFameSwap({
             ...quoteRequest,
-            optimizerBudgets: optimizerBudgetsForQuoteRequest(
-              requestStartedAtMs,
-            ),
+            optimizerBudgets:
+              optimizerBudgetsForQuoteRequest(requestStartedAtMs),
             readiness,
           });
     })(),

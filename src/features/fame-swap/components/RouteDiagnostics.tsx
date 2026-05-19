@@ -26,6 +26,9 @@ function quoteContextLabel(quote: FameSwapQuote): string | null {
   if (quote.quoteContext.source === "snapshot") {
     return `recorded state ${quote.quoteContext.snapshotId}`;
   }
+  if (quote.quoteContext.source === "indexed") {
+    return `indexed state block ${quote.quoteContext.currentBlock.toString()}`;
+  }
   return `deterministic ${quote.quoteContext.profileId}`;
 }
 
