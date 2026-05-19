@@ -1,4 +1,5 @@
 import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 
 interface IProps {
   handleClose: () => void;
@@ -14,6 +15,7 @@ export const HomeMenu: FC<PropsWithChildren<IProps>> = ({
   children,
 }) => {
   const open = Boolean(anchorEl);
+  const theme = useTheme();
   const [position, setPosition] = useState({ left: MENU_MARGIN, top: 64 });
 
   useEffect(() => {
@@ -70,9 +72,11 @@ export const HomeMenu: FC<PropsWithChildren<IProps>> = ({
     >
       <div className="absolute inset-0 bg-black/30" />
       <div
-        className="fixed rounded bg-white py-2 shadow-xl"
+        className="fixed rounded py-2 shadow-xl"
         onClick={(event) => event.stopPropagation()}
         style={{
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
           left: position.left,
           maxWidth: `calc(100vw - ${MENU_MARGIN * 2}px)`,
           top: position.top,
