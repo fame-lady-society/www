@@ -173,6 +173,52 @@ describe("FAME swap quote wire contract", () => {
     }
   });
 
+  it("round-trips indexed quote context without protocol evidence", () => {
+    const { tokenIn, tokenOut, quote } = readyWireResponse();
+    const wire = serializeFameSwapQuoteResponse({
+      ...quote,
+      quoteContext: {
+        source: "indexed",
+        chainId: 8453,
+        currentBlock: 125,
+        sourceRegistryId: "unit-registry",
+        effectiveMaxFreshnessBlocks: 120,
+        statusCounts: {
+          fresh: 1,
+          stale: 2,
+          unknown: 3,
+          unsupported: 4,
+        },
+      },
+    });
+
+    assert.doesNotMatch(JSON.stringify(wire), /protocolEvidence|serviceToken/);
+
+    const parsed = deserializeFameSwapQuoteResponse(wire, {
+      tokenIn,
+      tokenOut,
+      amountIn: quote.requestedAmountIn,
+      config: config(),
+    });
+
+    assert.equal(parsed.status, "ready");
+    if (parsed.status === "ready") {
+      assert.deepEqual(parsed.quoteContext, {
+        source: "indexed",
+        chainId: 8453,
+        currentBlock: 125,
+        sourceRegistryId: "unit-registry",
+        effectiveMaxFreshnessBlocks: 120,
+        statusCounts: {
+          fresh: 1,
+          stale: 2,
+          unknown: 3,
+          unsupported: 4,
+        },
+      });
+    }
+  });
+
   it("fails closed when a ready response route hash does not match the decoded route", () => {
     const { tokenIn, tokenOut, quote, wire } = readyWireResponse();
     const parsed = deserializeFameSwapQuoteResponse(

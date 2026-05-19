@@ -6,8 +6,10 @@ import {
   quoteFameSwap,
 } from "../../../../../features/fame-swap/solver/quote";
 import { createDeterministicQuoteAdapter } from "../../../../../features/fame-swap/solver/quotes/deterministicAdapter";
-import { FAME, USDC } from "../../../../../features/fame-swap/tokens";
+import { createSnapshotQuoteAdapter } from "../../../../../features/fame-swap/solver/quotes/snapshotAdapter";
+import { FAME, USDC, WETH } from "../../../../../features/fame-swap/tokens";
 import { publicFeeBreakdown } from "../../../../../features/fame-swap/solver/quoteWire";
+import { famePoolStateRegistrySourceId } from "../../../../../features/fame-swap/solver/poolStateRegistry";
 import { handleFameSwapQuotePost } from "./handler";
 import { POST } from "./route";
 
@@ -16,6 +18,40 @@ function request(body: unknown): NextRequest {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+function parseWarnEvent(value: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function assertWarnLog(): {
+  raw: string[];
+  events: Record<string, unknown>[];
+  restore(): void;
+} {
+  const originalWarn = console.warn;
+  const raw: string[] = [];
+  const events: Record<string, unknown>[] = [];
+  console.warn = (...values: unknown[]) => {
+    const line = values.map((value) => String(value)).join(" ");
+    raw.push(line);
+    const event = parseWarnEvent(line);
+    if (event) events.push(event);
+  };
+  return {
+    raw,
+    events,
+    restore() {
+      console.warn = originalWarn;
+    },
+  };
 }
 
 describe("/api/fame/swap/quote", () => {
@@ -227,6 +263,219 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(json.route.recipient, FAME_SWAP_PREVIEW_RECIPIENT);
     assert.equal(json.approval.kind, "approval");
     assert.equal(json.swap.kind, "swap");
+  });
+
+  it("wraps server quotes with indexed pool-state when configured", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const requestedPoolIds: string[][] = [];
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: WETH,
+        tokenOut: FAME,
+        amountIn: "100000000000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = snapshot.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
+          },
+        }),
+        indexedPoolStateClient: {
+          async fetchPoolStates(indexedRequest) {
+            requestedPoolIds.push([...indexedRequest.poolIds]);
+            return {
+              sourceRegistryId: famePoolStateRegistrySourceId(),
+              currentBlock: indexedRequest.currentBlock,
+              producerMaxFreshnessBlocks: 120,
+              effectiveMaxFreshnessBlocks: 120,
+              pools: indexedRequest.poolIds.map((poolId) =>
+                poolId === "uniswap-v2-fame-direct" ||
+                poolId === "scale-equalizer-weth-fame"
+                  ? {
+                      status: "fresh" as const,
+                      poolId,
+                      chainId: 8453,
+                      poolAddress:
+                        poolId === "uniswap-v2-fame-direct"
+                          ? "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c"
+                          : "0x0db3a3228520fc31162c24f1b47177255cc1b82e",
+                      token0: WETH,
+                      token1: FAME,
+                      reserve0: "1000000000000000000",
+                      reserve1: "1000000000000000000000000000000000000",
+                      k: "1000000000000000000000000000000000000000000000000000000",
+                      observedThroughBlock: 124,
+                      lastReserveChangeBlock: 123,
+                      source: "sync-event" as const,
+                      quoteModel: "constant-product-reserves" as const,
+                      maxFreshnessBlocks: 120,
+                    }
+                  : {
+                      status: "unknown" as const,
+                      requested: { poolId },
+                      reason: "unit-test",
+                    },
+              ),
+            };
+          },
+        },
+      },
+    );
+    const json = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(json.status, "ready");
+    assert.equal(json.quoteContext.source, "indexed");
+    assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
+    assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
+  });
+
+  it("falls back live and logs when indexed pool-state helper fails", async () => {
+    const warnLog = assertWarnLog();
+    const snapshot = createSnapshotQuoteAdapter();
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              const quote = snapshot.quoteEdge(edgeRequest);
+              return quote.status === "quoted"
+                ? {
+                    ...quote,
+                    context: {
+                      source: "live" as const,
+                      chainId: 8453,
+                      blockNumber: 125n,
+                    },
+                  }
+                : quote;
+            },
+          }),
+          indexedPoolStateClient: {
+            async fetchPoolStates() {
+              throw new Error(
+                "FAME indexed pool-state request failed with status 503. https://unit.example/token",
+              );
+            },
+          },
+        },
+      );
+      const json = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(json.status, "ready");
+      assert.equal(json.quoteContext.source, "live");
+      assert.equal(
+        warnLog.events[0]?.event,
+        "fame-pool-state-helper-unavailable",
+      );
+      assert.equal(warnLog.events[0]?.reason, "http_error");
+      assert.equal(warnLog.events[0]?.httpStatus, 503);
+      assert.equal(warnLog.events[0]?.currentBlock, 125);
+      assert.equal(typeof warnLog.events[0]?.poolCount, "number");
+      assert.doesNotMatch(warnLog.raw.join("\n"), /unit\.example|token/);
+    } finally {
+      warnLog.restore();
+    }
+  });
+
+  it("falls back live and logs when helper registry provenance does not match", async () => {
+    const warnLog = assertWarnLog();
+    const snapshot = createSnapshotQuoteAdapter();
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              const quote = snapshot.quoteEdge(edgeRequest);
+              return quote.status === "quoted"
+                ? {
+                    ...quote,
+                    context: {
+                      source: "live" as const,
+                      chainId: 8453,
+                      blockNumber: 125n,
+                    },
+                  }
+                : quote;
+            },
+          }),
+          indexedPoolStateClient: {
+            async fetchPoolStates(indexedRequest) {
+              return {
+                sourceRegistryId: "other-registry",
+                currentBlock: indexedRequest.currentBlock,
+                producerMaxFreshnessBlocks: 120,
+                effectiveMaxFreshnessBlocks: 120,
+                pools: [],
+              };
+            },
+          },
+        },
+      );
+      const json = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(json.status, "ready");
+      assert.equal(json.quoteContext.source, "live");
+      assert.equal(warnLog.events[0]?.reason, "source_registry_mismatch");
+      assert.equal(warnLog.events[0]?.actualSourceRegistryId, "other-registry");
+    } finally {
+      warnLog.restore();
+    }
   });
 
   it("rejects arbitrary router address overrides", async () => {

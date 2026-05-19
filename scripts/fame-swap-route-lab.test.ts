@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   formatRouteLabMarkdown,
+  runIndexedRouteLab,
   runRouteLab,
   runSnapshotRouteLab,
   type FameRouteLabRow,
 } from "./fame-swap-route-lab";
+import { famePoolStateRegistrySourceId } from "../src/features/fame-swap/solver/poolStateRegistry";
 import { FAME_ROUTE_CORPUS } from "../src/features/fame-swap/solver/routeCorpus";
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 
@@ -149,6 +151,78 @@ describe("FAME route lab", () => {
     }
   });
 
+  it("shows indexed pool-state counts and context in indexed mode", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "weth-fame-small-direct",
+    );
+    assert.ok(entry);
+    const rows = await runIndexedRouteLab([entry], {
+      currentBlock: 125,
+      poolStateClient: {
+        async fetchPoolStates(request) {
+          return {
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            currentBlock: request.currentBlock,
+            producerMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 120,
+            pools: request.poolIds.map((poolId) =>
+              poolId === "scale-equalizer-weth-fame" ||
+              poolId === "uniswap-v2-fame-direct"
+                ? {
+                    status: "fresh" as const,
+                    poolId,
+                    chainId: 8453,
+                    poolAddress:
+                      poolId === "scale-equalizer-weth-fame"
+                        ? "0x0db3a3228520fc31162c24f1b47177255cc1b82e"
+                        : "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
+                    token0: WETH,
+                    token1: FAME,
+                    reserve0: "1000000000000000000",
+                    reserve1: "1000000000000000000000000000000000000",
+                    k: "1000000000000000000000000000000000000000000000000000000",
+                    observedThroughBlock: 124,
+                    lastReserveChangeBlock: 123,
+                    source: "sync-event" as const,
+                    quoteModel: "constant-product-reserves" as const,
+                    maxFreshnessBlocks: 120,
+                  }
+                : {
+                    status: "unknown" as const,
+                    requested: { poolId },
+                    reason: "unit-test",
+                  },
+            ),
+          };
+        },
+      },
+    });
+    const row = rows[0];
+    assert.ok(row);
+
+    assert.equal(row.mode, "indexed");
+    assert.ok((row.indexedPoolState?.statusCounts.fresh ?? 0) > 0);
+    assert.match(row.quoteContext ?? "", /^indexed:8453:125:/);
+  });
+
+  it("fails indexed mode clearly without a current block source", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "weth-fame-small-direct",
+    );
+    assert.ok(entry);
+
+    await assert.rejects(
+      runIndexedRouteLab([entry], {
+        poolStateClient: {
+          async fetchPoolStates() {
+            throw new Error("should not fetch without current block");
+          },
+        },
+      }),
+      /currentBlock|FAME_POOL_STATE_CURRENT_BLOCK|BASE_RPC_URL/,
+    );
+  });
+
   it("renders route-lab markdown without executable payloads", async () => {
     const markdown = formatRouteLabMarkdown(await runSnapshotRouteLab());
 
@@ -198,6 +272,7 @@ describe("FAME route lab", () => {
           },
         ],
         optimizer: null,
+        indexedPoolState: null,
         edgeMatrix: [
           {
             chainId: 8453,

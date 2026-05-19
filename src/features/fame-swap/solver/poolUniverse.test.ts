@@ -13,6 +13,7 @@ import {
   famePoolUniverse,
   isNativeEthAddress,
 } from "./poolUniverse";
+import { famePoolStateRegistry } from "./poolStateRegistry";
 
 describe("FAME pool universe", () => {
   it("matches the pinned pool artifact manifest", () => {
@@ -48,6 +49,18 @@ describe("FAME pool universe", () => {
           `${route.id} uses ${poolId} without reviewed fee metadata`,
         );
       }
+    }
+  });
+
+  it("has reviewed fee metadata for every quote-model pool-state entry", () => {
+    for (const entry of famePoolStateRegistry().pools) {
+      if (entry.capability !== "quote-model") continue;
+
+      assert.equal(
+        entry.fee.status,
+        "available",
+        `${entry.id} cannot be indexed as quote-model-capable without reviewed fee metadata`,
+      );
     }
   });
 

@@ -23,6 +23,14 @@ export type {
   FameSnapshotReserveState,
 } from "./snapshotTypes";
 
+export interface FameReserveReplayState {
+  poolId: string;
+  token0: Address;
+  token1: Address;
+  reserve0: string;
+  reserve1: string;
+}
+
 export const poolStateSnapshotFile =
   parsedFameSwapArtifactFiles().poolStateSnapshot;
 
@@ -205,7 +213,7 @@ function quoteFromTable(
 
 function directedReserves(
   request: FameEdgeQuoteRequest,
-  reserve: FameSnapshotReserveState,
+  reserve: FameReserveReplayState,
 ): readonly [bigint, bigint] | null {
   const reserve0 = BigInt(reserve.reserve0);
   const reserve1 = BigInt(reserve.reserve1);
@@ -218,11 +226,13 @@ function directedReserves(
   return null;
 }
 
-function quoteFromReserves(
-  request: FameEdgeQuoteRequest,
-  reserve: FameSnapshotReserveState,
-  context: FameQuoteContext,
-): FameEdgeQuoteResult {
+export function quoteFromReserveReplay(options: {
+  request: FameEdgeQuoteRequest;
+  reserve: FameReserveReplayState;
+  context: FameQuoteContext;
+  source: string;
+}): FameEdgeQuoteResult {
+  const { request, reserve, context, source } = options;
   const reserveReplaySupported =
     request.edge.pool.venue === "uniswap-v2" ||
     (request.edge.pool.venue === "solidly" &&
@@ -267,7 +277,6 @@ function quoteFromReserves(
     };
   }
 
-  const source = `recorded reserves ${reserve.source} for ${reserve.poolId}`;
   const priceImpact = constantProductPriceImpact({
     amountIn: request.amountIn,
     amountOut,
@@ -294,6 +303,19 @@ function quoteFromReserves(
       ),
     }),
   };
+}
+
+function quoteFromReserves(
+  request: FameEdgeQuoteRequest,
+  reserve: FameSnapshotReserveState,
+  context: FameQuoteContext,
+): FameEdgeQuoteResult {
+  return quoteFromReserveReplay({
+    request,
+    reserve,
+    context,
+    source: `recorded reserves ${reserve.source} for ${reserve.poolId}`,
+  });
 }
 
 function quoteFromNativeWrap(
