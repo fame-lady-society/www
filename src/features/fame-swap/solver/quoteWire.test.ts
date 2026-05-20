@@ -9,8 +9,11 @@ import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "./slippage";
 import {
   deserializeFameSwapQuoteResponse,
   FAME_SWAP_QUOTE_WIRE_STATUSES,
+  type SerializeQuoteResponseOptions,
   serializeFameSwapQuoteResponse,
 } from "./quoteWire";
+import type { FameOptimizerEvidence } from "./optimizer/types";
+import type { FameSwapOptimizerSummary } from "./types";
 import { FAME, USDC, tokenForAddress } from "../tokens";
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
@@ -32,7 +35,69 @@ function config(): FameSwapConfig {
   };
 }
 
-function readyWireResponse() {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function optimizerEvidenceFixture(): FameOptimizerEvidence {
+  return {
+    mode: "select",
+    status: "selected",
+    selectedTemplateId: "secret-template",
+    selectedAllocationBps: 6_250,
+    selectedAllocationVectorBps: null,
+    selectedAlgorithm: "grid",
+    selectedStopReason: "grid_complete",
+    selectedCandidateId: "secret-candidate",
+    objective: {
+      baselineProtectedAmountOut: 1_000n,
+      selectedProtectedAmountOut: 1_012n,
+      winningMarginAmount: 12n,
+      winningMarginBps: 12,
+    },
+    trialStatusCounts: {
+      selected: 1,
+      rejected: 2,
+      pruned: 0,
+      budget_exhausted: 0,
+      quote_failed: 0,
+      unsupported_shape: 0,
+      ineligible: 0,
+    },
+    allocationTrials: [
+      {
+        templateId: "secret-template",
+        allocationBps: 6_250,
+        algorithm: "grid",
+        stopReason: "grid_complete",
+        status: "selected",
+        reason: "raw optimizer trial",
+        candidateId: "secret-candidate",
+        poolIds: ["secret-pool"],
+      },
+    ],
+    templateEligibility: [],
+    quotePlanStats: {
+      logicalQuoteRequests: 1,
+      uniqueExactQuoteReads: 1,
+      exactQuoteCacheHits: 0,
+      inFlightExactQuoteCoalesces: 0,
+      stateReadRequests: 0,
+      uniqueStateReads: 0,
+      stateReadCacheHits: 0,
+      inFlightStateReadCoalesces: 0,
+      underlyingRpcReads: 0,
+      allocationTrials: 1,
+      templatesConsidered: 1,
+      budgetExhaustions: 0,
+      timeout: false,
+      fallbackReason: null,
+    },
+    fallbackReason: null,
+  };
+}
+
+function readyWireResponse(options: SerializeQuoteResponseOptions = {}) {
   const tokenIn = tokenForAddress(USDC);
   const tokenOut = tokenForAddress(FAME);
   assert.ok(tokenIn);
@@ -55,7 +120,7 @@ function readyWireResponse() {
     tokenIn,
     tokenOut,
     quote,
-    wire: serializeFameSwapQuoteResponse(quote),
+    wire: serializeFameSwapQuoteResponse(quote, options),
   };
 }
 
@@ -82,6 +147,12 @@ describe("FAME swap quote wire contract", () => {
     assert.equal(typeof wire.requestedAmountIn, "string");
     assert.equal(typeof wire.routerFeeAmount, "string");
     assert.equal(typeof wire.expiresAt, "string");
+    assert.equal("approval" in wire, false);
+    assert.equal("swap" in wire, false);
+    assert.equal("rejectedCandidates" in wire, false);
+    assert.equal("optimizerSummary" in wire, false);
+    assert.equal("warnings" in wire, false);
+    assert.equal("debug" in wire, false);
     assert.doesNotMatch(
       JSON.stringify(wire),
       /protocolEvidence|activeLiquidity/,
@@ -99,68 +170,77 @@ describe("FAME swap quote wire contract", () => {
       assert.equal(parsed.materializedRouteHash, quote.materializedRouteHash);
       assert.equal(parsed.fixtureRouteHash, quote.fixtureRouteHash);
       assert.equal(parsed.feeBreakdown.legs[0]?.amountIn > 0n, true);
+      assert.deepEqual(parsed.rejectedCandidates, []);
+      assert.equal(parsed.optimizerSummary, undefined);
     }
   });
 
-  it("does not serialize raw optimizer evidence on ready public responses", () => {
+  it("keeps ready response diagnostics behind explicit debug opt-in", () => {
     const { tokenIn, tokenOut, quote } = readyWireResponse();
-    const wire = serializeFameSwapQuoteResponse({
-      ...quote,
-      optimizerSummary: {
-        mode: "select",
-        status: "selected",
-        selectedTemplateId: "public-template",
-        selectedAllocationBps: 6_250,
-        selectedCandidateId: "public-candidate",
-        winningMarginBps: 12,
-        trialStatusCounts: {
-          selected: 1,
-          rejected: 2,
-          pruned: 0,
-          budget_exhausted: 0,
-          quote_failed: 0,
-          unsupported_shape: 0,
-          ineligible: 0,
-        },
-        fallbackReason: null,
-        runStats: {
-          logicalQuoteRequests: 5,
-          uniqueExactQuoteReads: 3,
-          exactQuoteCacheHits: 2,
-          trials: 4,
-          templatesConsidered: 2,
-          budgetExhaustions: 0,
-          timeout: false,
-        },
+    const optimizerSummary: FameSwapOptimizerSummary = {
+      mode: "select",
+      status: "selected",
+      selectedTemplateId: "public-template",
+      selectedAllocationBps: 6_250,
+      selectedCandidateId: "public-candidate",
+      winningMarginBps: 12,
+      trialStatusCounts: {
+        selected: 1,
+        rejected: 2,
+        pruned: 0,
+        budget_exhausted: 0,
+        quote_failed: 0,
+        unsupported_shape: 0,
+        ineligible: 0,
       },
-      optimizerEvidence: {
-        allocationTrials: [
-          {
-            templateId: "secret-template",
-            allocationBps: 6_250,
-            status: "selected",
-            reason: "raw optimizer trial",
-            poolIds: ["secret-pool"],
-          },
-        ],
-        quotePlanStats: {
-          logicalQuoteRequests: 1,
-        },
-      } as never,
+      fallbackReason: null,
+      runStats: {
+        logicalQuoteRequests: 5,
+        uniqueExactQuoteReads: 3,
+        exactQuoteCacheHits: 2,
+        trials: 4,
+        templatesConsidered: 2,
+        budgetExhaustions: 0,
+        timeout: false,
+      },
+    };
+    const sourceQuote = {
+      ...quote,
+      warnings: ["debug quote warning"],
+      optimizerSummary,
+      optimizerEvidence: optimizerEvidenceFixture(),
+    };
+    const wire = serializeFameSwapQuoteResponse(sourceQuote);
+    const debugWire = serializeFameSwapQuoteResponse(sourceQuote, {
+      includeDebug: true,
     });
 
     assert.doesNotMatch(
       JSON.stringify(wire),
-      /optimizerEvidence|allocationTrials|quotePlanStats|secret-template|secret-pool/,
+      /optimizerEvidence|optimizerSummary|allocationTrials|quotePlanStats|secret-template|secret-pool|rejectedCandidates/,
     );
+    assert.equal("warnings" in wire, false);
+    assert.equal("debug" in wire, false);
 
-    assert.equal(
-      (wire.optimizerSummary as { selectedAllocationBps?: number })
-        .selectedAllocationBps,
-      6_250,
+    const readyDebug = debugWire.debug;
+    assert.ok(isRecord(readyDebug));
+    assert.ok(isRecord(readyDebug.optimizerSummary));
+    assert.ok(isRecord(readyDebug.approval));
+    assert.ok(isRecord(readyDebug.swap));
+    assert.deepEqual(readyDebug.warnings, ["debug quote warning"]);
+    assert.equal(readyDebug.optimizerSummary.selectedAllocationBps, 6_250);
+    assert.equal(readyDebug.approval.kind, "approval");
+    assert.equal(readyDebug.swap.kind, "swap");
+    assert.doesNotMatch(
+      JSON.stringify(debugWire),
+      /optimizerEvidence|allocationTrials|quotePlanStats|secret-template|secret-pool|protocolEvidence|activeLiquidity/,
     );
+    const compactBytes = JSON.stringify(wire).length;
+    const debugBytes = JSON.stringify(debugWire).length;
+    assert.ok(compactBytes < 10_000);
+    assert.ok(debugBytes > compactBytes * 3);
 
-    const parsed = deserializeFameSwapQuoteResponse(wire, {
+    const parsed = deserializeFameSwapQuoteResponse(debugWire, {
       tokenIn,
       tokenOut,
       amountIn: quote.requestedAmountIn,
@@ -170,6 +250,7 @@ describe("FAME swap quote wire contract", () => {
     if (parsed.status === "ready") {
       assert.equal(parsed.optimizerSummary?.status, "selected");
       assert.equal(parsed.optimizerSummary?.selectedAllocationBps, 6_250);
+      assert.deepEqual(parsed.warnings, ["debug quote warning"]);
     }
   });
 
@@ -277,6 +358,7 @@ describe("FAME swap quote wire contract", () => {
 
     assert.equal(wire.status, "not_live_ready");
     assert.equal(wire.requestedAmountIn, "5000000");
+    assert.equal("debug" in wire, false);
     assert.equal("approval" in wire, false);
     assert.equal("swap" in wire, false);
     assert.equal("route" in wire, false);
@@ -284,5 +366,51 @@ describe("FAME swap quote wire contract", () => {
       (wire.readiness as { reason?: string } | undefined)?.reason,
       "missing_router",
     );
+  });
+
+  it("keeps non-ready rejected candidates in debug responses only", () => {
+    const tokenIn = tokenForAddress(USDC);
+    const tokenOut = tokenForAddress(FAME);
+    assert.ok(tokenIn);
+    assert.ok(tokenOut);
+    const quote = {
+      status: "quote_adapter_failure" as const,
+      tokenIn,
+      tokenOut,
+      requestedAmountIn: 5_000_000n,
+      rejectedCandidates: [
+        {
+          candidateId: "api-runner",
+          reason: "adapter_failure" as const,
+          message: "Base RPC is not configured for live liquidity quotes.",
+        },
+      ],
+      message: "Base RPC is not configured for live liquidity quotes.",
+      diagnosticsVisibleByDefault: true,
+    };
+    const wire = serializeFameSwapQuoteResponse(quote);
+    const debugWire = serializeFameSwapQuoteResponse(quote, {
+      includeDebug: true,
+    });
+
+    assert.equal("rejectedCandidates" in wire, false);
+    assert.equal("debug" in wire, false);
+    const debug = debugWire.debug;
+    assert.ok(isRecord(debug));
+    assert.ok(Array.isArray(debug.rejectedCandidates));
+    const [firstRejection] = debug.rejectedCandidates;
+    assert.ok(isRecord(firstRejection));
+    assert.equal(firstRejection.candidateId, "api-runner");
+
+    const parsed = deserializeFameSwapQuoteResponse(debugWire, {
+      tokenIn,
+      tokenOut,
+      amountIn: quote.requestedAmountIn,
+      config: config(),
+    });
+    assert.equal(parsed.status, "quote_adapter_failure");
+    if (parsed.status === "quote_adapter_failure") {
+      assert.equal(parsed.rejectedCandidates[0]?.candidateId, "api-runner");
+    }
   });
 });

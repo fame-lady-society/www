@@ -17,6 +17,7 @@ import { serializeFameSwapQuoteResponse } from "@/features/fame-swap/solver/quot
 import type { FameAsyncQuoteAdapter } from "@/features/fame-swap/solver/quotes/adapters";
 import {
   createIndexedPoolStateClient,
+  type FameIndexedPoolStateBatchResponse,
   type FameIndexedPoolStateClient,
 } from "@/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { createIndexedReserveQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedReserveAdapter";
@@ -57,6 +58,7 @@ interface ParsedQuoteBody {
   routerAddress?: Address;
   slippageBps?: number;
   deadlineMinutes?: number;
+  includeDebug: boolean;
 }
 
 interface FameSwapQuotePostDependencies {
@@ -70,6 +72,38 @@ interface FameSwapQuotePostDependencies {
     request: FameSwapQuoteRequest & { readiness: FameSwapReadiness },
   ) => FameAsyncQuoteAdapter | Promise<FameAsyncQuoteAdapter>;
   indexedPoolStateClient?: FameIndexedPoolStateClient | null;
+}
+
+type IndexedPoolStateHelperReason =
+  | "not_configured"
+  | "adapter_context_unavailable"
+  | "unsupported_adapter_context"
+  | "unsafe_block_number"
+  | "no_registered_pools"
+  | "wrapped"
+  | "source_registry_mismatch"
+  | "http_error"
+  | "timeout"
+  | "invalid_response"
+  | "request_failed";
+
+interface IndexedPoolStateHelperDebug {
+  configured: boolean;
+  attempted: boolean;
+  reason: IndexedPoolStateHelperReason;
+  currentBlock?: number;
+  poolCount?: number;
+  sourceRegistryMatched?: boolean;
+  httpStatus?: number;
+  statusCounts?: Record<
+    FameIndexedPoolStateBatchResponse["pools"][number]["status"],
+    number
+  >;
+}
+
+interface IndexedQuoteAdapterResult {
+  adapter: FameAsyncQuoteAdapter;
+  debug: IndexedPoolStateHelperDebug;
 }
 
 const readinessCache = new Map<
@@ -190,6 +224,7 @@ function parseQuoteBody(value: unknown): ParsedQuoteBody | string {
       Number.isFinite(body.deadlineMinutes)
         ? body.deadlineMinutes
         : undefined,
+    includeDebug: body.includeDebug === true,
   };
 }
 
@@ -285,7 +320,7 @@ function indexedPoolStateClientFromEnv(): FameIndexedPoolStateClient | null {
 }
 
 function indexedPoolStateFailureReason(error: unknown): {
-  reason: string;
+  reason: IndexedPoolStateHelperReason;
   httpStatus?: number;
 } {
   const message = error instanceof Error ? error.message : String(error);
@@ -339,32 +374,88 @@ function logIndexedPoolStateHelperUnavailable(options: {
   );
 }
 
+function indexedPoolStateStatusCounts(
+  indexedState: FameIndexedPoolStateBatchResponse,
+): IndexedPoolStateHelperDebug["statusCounts"] {
+  return indexedState.pools.reduce(
+    (counts, pool) => ({
+      ...counts,
+      [pool.status]: counts[pool.status] + 1,
+    }),
+    {
+      fresh: 0,
+      stale: 0,
+      unknown: 0,
+      unsupported: 0,
+    },
+  );
+}
+
 async function maybeWrapIndexedQuoteAdapter(options: {
   adapter: FameAsyncQuoteAdapter;
   tokenIn: Address;
   tokenOut: Address;
   poolStateClient: FameIndexedPoolStateClient | null;
-}): Promise<FameAsyncQuoteAdapter> {
+}): Promise<IndexedQuoteAdapterResult> {
   const context = options.adapter.quoteContext;
-  if (
-    !options.poolStateClient ||
-    !context ||
-    (context.source !== "live" && context.source !== "fork")
-  ) {
-    return options.adapter;
+  if (!options.poolStateClient) {
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: false,
+        attempted: false,
+        reason: "not_configured",
+      },
+    };
+  }
+  if (!context) {
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: true,
+        attempted: false,
+        reason: "adapter_context_unavailable",
+      },
+    };
+  }
+  if (context.source !== "live" && context.source !== "fork") {
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: true,
+        attempted: false,
+        reason: "unsupported_adapter_context",
+      },
+    };
   }
   if (context.blockNumber > BigInt(Number.MAX_SAFE_INTEGER)) {
-    return options.adapter;
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: true,
+        attempted: false,
+        reason: "unsafe_block_number",
+      },
+    };
   }
 
   const poolIds = famePoolStateRegistryPoolIdsForPair(
     options.tokenIn,
     options.tokenOut,
   );
-  if (poolIds.length === 0) return options.adapter;
+  if (poolIds.length === 0) {
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: true,
+        attempted: false,
+        reason: "no_registered_pools",
+      },
+    };
+  }
 
+  const currentBlock = Number(context.blockNumber);
   try {
-    const currentBlock = Number(context.blockNumber);
     const expectedSourceRegistryId = famePoolStateRegistrySourceId();
     const indexedState = await options.poolStateClient.fetchPoolStates({
       currentBlock,
@@ -381,20 +472,55 @@ async function maybeWrapIndexedQuoteAdapter(options: {
         expectedSourceRegistryId,
         actualSourceRegistryId: indexedState.sourceRegistryId,
       });
-      return options.adapter;
+      return {
+        adapter: options.adapter,
+        debug: {
+          configured: true,
+          attempted: true,
+          reason: "source_registry_mismatch",
+          currentBlock,
+          poolCount: poolIds.length,
+          sourceRegistryMatched: false,
+          statusCounts: indexedPoolStateStatusCounts(indexedState),
+        },
+      };
     }
-    return createIndexedReserveQuoteAdapter({
-      indexedState,
-      fallback: options.adapter,
-      expectedSourceRegistryId,
-    });
+    return {
+      adapter: createIndexedReserveQuoteAdapter({
+        indexedState,
+        fallback: options.adapter,
+        expectedSourceRegistryId,
+      }),
+      debug: {
+        configured: true,
+        attempted: true,
+        reason: "wrapped",
+        currentBlock,
+        poolCount: poolIds.length,
+        sourceRegistryMatched: true,
+        statusCounts: indexedPoolStateStatusCounts(indexedState),
+      },
+    };
   } catch (error) {
+    const failure = indexedPoolStateFailureReason(error);
     logIndexedPoolStateHelperUnavailable({
-      ...indexedPoolStateFailureReason(error),
-      currentBlock: Number(context.blockNumber),
+      ...failure,
+      currentBlock,
       poolCount: poolIds.length,
     });
-    return options.adapter;
+    return {
+      adapter: options.adapter,
+      debug: {
+        configured: true,
+        attempted: true,
+        reason: failure.reason,
+        currentBlock,
+        poolCount: poolIds.length,
+        ...(failure.httpStatus === undefined
+          ? {}
+          : { httpStatus: failure.httpStatus }),
+      },
+    };
   }
 }
 
@@ -602,6 +728,7 @@ export async function handleFameSwapQuotePost(
         : undefined,
   };
 
+  let indexedPoolStateDebug: IndexedPoolStateHelperDebug | undefined;
   const quote = await withTimeout(
     (async (): Promise<FameSwapQuote> => {
       const resolveReadiness = deps.readinessForQuote ?? readinessForQuote;
@@ -657,25 +784,28 @@ export async function handleFameSwapQuotePost(
         });
       }
 
-      return readiness.status === "ready"
-        ? quoteFameSwapAsync({
-            ...quoteRequest,
-            optimizerBudgets:
-              optimizerBudgetsForQuoteRequest(requestStartedAtMs),
-            readiness,
-            adapter: await maybeWrapIndexedQuoteAdapter({
-              adapter: await adapterPromise,
-              tokenIn: tokenIn.address,
-              tokenOut: tokenOut.address,
-              poolStateClient: indexedPoolStateClient,
-            }),
-          })
-        : quoteFameSwap({
-            ...quoteRequest,
-            optimizerBudgets:
-              optimizerBudgetsForQuoteRequest(requestStartedAtMs),
-            readiness,
-          });
+      if (readiness.status === "ready") {
+        const indexedAdapter = await maybeWrapIndexedQuoteAdapter({
+          adapter: await adapterPromise,
+          tokenIn: tokenIn.address,
+          tokenOut: tokenOut.address,
+          poolStateClient: indexedPoolStateClient,
+        });
+        indexedPoolStateDebug = indexedAdapter.debug;
+        const quote = await quoteFameSwapAsync({
+          ...quoteRequest,
+          optimizerBudgets: optimizerBudgetsForQuoteRequest(requestStartedAtMs),
+          readiness,
+          adapter: indexedAdapter.adapter,
+        });
+        return quote;
+      }
+
+      return quoteFameSwap({
+        ...quoteRequest,
+        optimizerBudgets: optimizerBudgetsForQuoteRequest(requestStartedAtMs),
+        readiness,
+      });
     })(),
     QUOTE_REQUEST_TIMEOUT_MS,
     `FAME quote request timed out after ${QUOTE_REQUEST_TIMEOUT_MS}ms`,
@@ -698,5 +828,14 @@ export async function handleFameSwapQuotePost(
     };
   });
 
-  return json(serializeFameSwapQuoteResponse(quote));
+  return json(
+    serializeFameSwapQuoteResponse(quote, {
+      includeDebug: parsedBody.includeDebug,
+      debug: indexedPoolStateDebug
+        ? {
+            indexedPoolState: indexedPoolStateDebug,
+          }
+        : undefined,
+    }),
+  );
 }

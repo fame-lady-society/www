@@ -27,6 +27,11 @@ export interface DeserializeQuoteInput {
   config: FameSwapConfig;
 }
 
+export interface SerializeQuoteResponseOptions {
+  includeDebug?: boolean;
+  debug?: Record<string, unknown>;
+}
+
 type JsonSafe =
   | null
   | string
@@ -87,6 +92,10 @@ function bigintFrom(value: unknown, fallback = 0n): bigint {
   }
   if (typeof value === "string" && /^[0-9]+$/.test(value)) return BigInt(value);
   return fallback;
+}
+
+function stringArrayFrom(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
 }
 
 function numberFrom(value: unknown, fallback = 0): number {
@@ -396,19 +405,52 @@ export function publicFeeBreakdown(
   };
 }
 
+function quoteBaseFields(quote: FameSwapQuote): Record<string, unknown> {
+  return {
+    status: quote.status,
+    tokenIn: quote.tokenIn,
+    tokenOut: quote.tokenOut,
+    requestedAmountIn: quote.requestedAmountIn,
+    message: quote.message,
+    diagnosticsVisibleByDefault: quote.diagnosticsVisibleByDefault,
+  };
+}
+
+function quoteDebugFields(quote: FameSwapQuote): Record<string, unknown> {
+  const debug: Record<string, unknown> = {};
+
+  if ("rejectedCandidates" in quote) {
+    debug.rejectedCandidates = quote.rejectedCandidates;
+  }
+
+  if (quote.status === "ready") {
+    const requests = fameSwapTransactionRequests(quote);
+    debug.approval = requests.approval;
+    debug.swap = requests.swap;
+    debug.optimizerSummary = quote.optimizerSummary;
+    debug.warnings = quote.warnings;
+  }
+
+  return debug;
+}
+
+function optionalDebugFields(
+  quote: FameSwapQuote,
+  options: SerializeQuoteResponseOptions,
+): { debug?: Record<string, unknown> } {
+  return options.includeDebug === true
+    ? { debug: { ...quoteDebugFields(quote), ...(options.debug ?? {}) } }
+    : {};
+}
+
 export function serializeFameSwapQuoteResponse(
   quote: FameSwapQuote,
+  options: SerializeQuoteResponseOptions = {},
 ): Record<string, JsonSafe> {
   switch (quote.status) {
     case "ready": {
-      const requests = fameSwapTransactionRequests(quote);
       return toJsonSafe({
-        status: quote.status,
-        tokenIn: quote.tokenIn,
-        tokenOut: quote.tokenOut,
-        requestedAmountIn: quote.requestedAmountIn,
-        message: quote.message,
-        diagnosticsVisibleByDefault: quote.diagnosticsVisibleByDefault,
+        ...quoteBaseFields(quote),
         routeArtifactId: quote.routeArtifactId,
         routeSource: quote.routeSource,
         routerAddress: quote.routerAddress,
@@ -427,22 +469,42 @@ export function serializeFameSwapQuoteResponse(
         materializedRouteHash: quote.materializedRouteHash,
         routeHash: quote.materializedRouteHash,
         poolIds: quote.poolIds,
-        warnings: quote.warnings,
-        optimizerSummary: quote.optimizerSummary,
-        rejectedCandidates: quote.rejectedCandidates,
-        approval: requests.approval,
-        swap: requests.swap,
         route: quote.route,
         routeDisplay: quote.routeDisplay,
+        ...optionalDebugFields(quote, options),
       }) as Record<string, JsonSafe>;
     }
     case "unsupported":
+      return toJsonSafe({
+        ...quoteBaseFields(quote),
+        availableDirections: quote.availableDirections,
+        ...optionalDebugFields(quote, options),
+      }) as Record<string, JsonSafe>;
     case "stale_artifact":
+      return toJsonSafe({
+        ...quoteBaseFields(quote),
+        reason: quote.reason,
+        ...optionalDebugFields(quote, options),
+      }) as Record<string, JsonSafe>;
     case "not_live_ready":
+      return toJsonSafe({
+        ...quoteBaseFields(quote),
+        routeArtifactId: quote.routeArtifactId,
+        readiness: quote.readiness,
+        ...optionalDebugFields(quote, options),
+      }) as Record<string, JsonSafe>;
     case "no_safe_route":
     case "quote_adapter_failure":
+      return toJsonSafe({
+        ...quoteBaseFields(quote),
+        ...optionalDebugFields(quote, options),
+      }) as Record<string, JsonSafe>;
     case "simulation_failure":
-      return toJsonSafe(quote) as Record<string, JsonSafe>;
+      return toJsonSafe({
+        ...quoteBaseFields(quote),
+        reason: quote.reason,
+        ...optionalDebugFields(quote, options),
+      }) as Record<string, JsonSafe>;
     default:
       return assertNever(quote);
   }
@@ -453,6 +515,7 @@ export function deserializeFameSwapQuoteResponse(
   input: DeserializeQuoteInput,
 ): FameSwapQuote {
   const raw = asRecord(data);
+  const debug = asRecord(raw.debug);
   const status = raw.status;
   const message = String(raw.message ?? "FAME quote unavailable.");
   const requestedAmountIn = bigintFrom(raw.requestedAmountIn, input.amountIn);
@@ -514,14 +577,18 @@ export function deserializeFameSwapQuoteResponse(
         routeDisplay: Array.isArray(raw.routeDisplay)
           ? (raw.routeDisplay as FameSwapRouteDisplayLeg[])
           : [],
-        rejectedCandidates: parseRejections(raw.rejectedCandidates),
+        rejectedCandidates: parseRejections(
+          raw.rejectedCandidates ?? debug.rejectedCandidates,
+        ),
         slippageBps: numberFrom(
           raw.slippageBps,
           input.config.defaultSlippageBps,
         ),
         expiresAt: new Date(String(raw.expiresAt ?? Date.now())),
-        warnings: Array.isArray(raw.warnings) ? raw.warnings.map(String) : [],
-        optimizerSummary: parseOptimizerSummary(raw.optimizerSummary),
+        warnings: stringArrayFrom(raw.warnings ?? debug.warnings),
+        optimizerSummary: parseOptimizerSummary(
+          raw.optimizerSummary ?? debug.optimizerSummary,
+        ),
         message,
         diagnosticsVisibleByDefault: booleanFrom(
           raw.diagnosticsVisibleByDefault,
@@ -585,7 +652,9 @@ export function deserializeFameSwapQuoteResponse(
       tokenIn: input.tokenIn,
       tokenOut: input.tokenOut,
       requestedAmountIn,
-      rejectedCandidates: parseRejections(raw.rejectedCandidates),
+      rejectedCandidates: parseRejections(
+        raw.rejectedCandidates ?? debug.rejectedCandidates,
+      ),
       message,
       diagnosticsVisibleByDefault: booleanFrom(
         raw.diagnosticsVisibleByDefault,
@@ -601,7 +670,9 @@ export function deserializeFameSwapQuoteResponse(
       tokenOut: input.tokenOut,
       requestedAmountIn,
       reason: String(raw.reason ?? message),
-      rejectedCandidates: parseRejections(raw.rejectedCandidates),
+      rejectedCandidates: parseRejections(
+        raw.rejectedCandidates ?? debug.rejectedCandidates,
+      ),
       message,
       diagnosticsVisibleByDefault: booleanFrom(
         raw.diagnosticsVisibleByDefault,
@@ -615,7 +686,9 @@ export function deserializeFameSwapQuoteResponse(
     tokenIn: input.tokenIn,
     tokenOut: input.tokenOut,
     requestedAmountIn,
-    rejectedCandidates: parseRejections(raw.rejectedCandidates),
+    rejectedCandidates: parseRejections(
+      raw.rejectedCandidates ?? debug.rejectedCandidates,
+    ),
     message,
     diagnosticsVisibleByDefault: booleanFrom(
       raw.diagnosticsVisibleByDefault,
