@@ -156,19 +156,44 @@ describe("FAME route lab", () => {
       (candidate) => candidate.id === "weth-fame-small-direct",
     );
     assert.ok(entry);
+    const requestedStateSurfaces: Array<readonly string[] | undefined> = [];
     const rows = await runIndexedRouteLab([entry], {
       currentBlock: 125,
       poolStateClient: {
         async fetchPoolStates(request) {
+          requestedStateSurfaces.push(request.stateSurfaces);
           return {
             sourceRegistryId: famePoolStateRegistrySourceId(),
             currentBlock: request.currentBlock,
             producerMaxFreshnessBlocks: 120,
             effectiveMaxFreshnessBlocks: 120,
             pools: request.poolIds.map((poolId) =>
-              poolId === "scale-equalizer-weth-fame" ||
-              poolId === "uniswap-v2-fame-direct"
+              poolId === "uniswap-v3-usdc-weth-5bps"
                 ? {
+                    status: "fresh" as const,
+                    stateKind: "cl-head-snapshot" as const,
+                    poolId,
+                    chainId: 8453,
+                    poolAddress: "0xd0b53d9277642d899df5c87a3966a349a798f224",
+                    poolKey: null,
+                    token0: WETH,
+                    token1: USDC,
+                    venueFamily: "UniswapV3",
+                    feeBps: 5,
+                    feeLabel: "5 bps",
+                    tickSpacing: 10,
+                    stateViewAddress: null,
+                    sqrtPriceX96: "79228162514264337593543950336",
+                    tick: 0,
+                    liquidity: "1000000",
+                    observedThroughBlock: 124,
+                    source: "pool-slot0-liquidity" as const,
+                    sourceRegistryId: famePoolStateRegistrySourceId(),
+                    maxFreshnessBlocks: 120,
+                  }
+                : poolId === "scale-equalizer-weth-fame" ||
+                    poolId === "uniswap-v2-fame-direct"
+                  ? {
                     status: "fresh" as const,
                     poolId,
                     chainId: 8453,
@@ -187,7 +212,7 @@ describe("FAME route lab", () => {
                     quoteModel: "constant-product-reserves" as const,
                     maxFreshnessBlocks: 120,
                   }
-                : {
+                  : {
                     status: "unknown" as const,
                     requested: { poolId },
                     reason: "unit-test",
@@ -202,7 +227,20 @@ describe("FAME route lab", () => {
 
     assert.equal(row.mode, "indexed");
     assert.ok((row.indexedPoolState?.statusCounts.fresh ?? 0) > 0);
+    assert.deepEqual(requestedStateSurfaces[0], ["cl-head-snapshot"]);
+    assert.equal(
+      row.indexedPoolState?.stateSurfaceCounts.constantProductReserves.fresh,
+      2,
+    );
+    assert.equal(
+      row.indexedPoolState?.stateSurfaceCounts.clHeadSnapshots.fresh,
+      1,
+    );
     assert.match(row.quoteContext ?? "", /^indexed:8453:125:/);
+
+    const markdown = formatRouteLabMarkdown(rows);
+    assert.match(markdown, /CL head fresh 1/);
+    assert.doesNotMatch(markdown, /boundary/i);
   });
 
   it("fails indexed mode clearly without a current block source", async () => {

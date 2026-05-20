@@ -6,7 +6,7 @@ The route lab runs amount buckets through the shared FAME swap solver without Re
 
 - Recorded mode is the default: `bun scripts/fame-swap-route-lab.ts`. It replays the recorded-state artifact `base-v1-pool-state-snapshot.json`, captured from read-only Base quote calls and pool state at `base-v1-live-45964183`.
 - Deterministic mode is explicit: `bun scripts/fame-swap-route-lab.ts --deterministic`. It uses the pinned test-only deterministic capacity profile to prove old cap failures and pure solver behavior.
-- Indexed mode: `BASE_RPC_URL=... FAME_POOL_STATE_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --indexed`. It asks the `society-bots` pool-state API for the current reviewed candidate pools, replays fresh V2-style reserves locally, and falls back to recorded quote evidence for stale, unknown, or unsupported pools. Freshness is checked against a live Base block from server-only `BASE_RPC_URL`, or an explicit `FAME_POOL_STATE_CURRENT_BLOCK`; indexed mode no longer falls back to the pinned artifact block.
+- Indexed mode: `BASE_RPC_URL=... FAME_POOL_STATE_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --indexed`. It asks the `society-bots` pool-state API for the current reviewed candidate pools, including CL head snapshots, replays fresh V2-style reserves locally, and falls back to recorded quote evidence for stale, unknown, unsupported, or non-replayable state. Freshness is checked against a live Base block from server-only `BASE_RPC_URL`, or an explicit `FAME_POOL_STATE_CURRENT_BLOCK`; indexed mode no longer falls back to the pinned artifact block.
 - Live mode: `doppler run -- bun scripts/fame-swap-route-lab.ts --live`. It reads Base RPC liquidity through the live adapters and records a live block quote context. Server/operator runs prefer `BASE_RPC_URL`; `NEXT_PUBLIC_BASE_RPC_URL_1` is only a fallback for browser-safe or local endpoints.
 - Live simulation: add `--simulate` and set `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT`. ERC20 routes simulate approval plus swap as one bundle, derive a slippage-protected minimum from the probe result, then simulate the protected route; native routes do the same with direct router calls. This is the initiating-account path for below-balance and route-execution checks. Default JSON and Markdown use a shortened account label.
 - Markdown output: add `--markdown` to any mode.
@@ -19,11 +19,11 @@ Ready rows include a quote context:
 
 - `deterministic-test:<profile>` for test-only cap profiles.
 - `recorded:<captureId>:<pinnedBaseBlock>` for deterministic recorded-state replay.
-- `indexed:8453:<block>:fresh <n>, stale <n>, unknown <n>, unsupported <n>` when fresh indexed pool state supplied at least one selected quote-model leg.
+- `indexed:8453:<block>:fresh <n>, stale <n>, unknown <n>, unsupported <n>` when fresh indexed pool state supplied at least one selected quote-model leg. The Markdown `Indexed pool state` line also separates reserve-replay rows from CL head snapshot rows.
 - `live:8453:<block>` for read-only Base liquidity quotes.
 
 Recorded and live quote outputs are exact-input leg quotes. Venue fees are already included in adapter outputs; the FLS router fee is calculated and emitted separately.
-Indexed quote outputs use the same reserve replay math as recorded snapshots for quote-model pools. Freshness is based on `observedThroughBlock`; `lastReserveChangeBlock` is diagnostic only because quiet pools can remain fresh without a recent Sync event.
+Indexed quote outputs use the same reserve replay math as recorded snapshots for quote-model pools. Freshness is based on `observedThroughBlock`; `lastReserveChangeBlock` is diagnostic only because quiet pools can remain fresh without a recent Sync event. CL head snapshots are complete head-state rows for identity, fee metadata, tick spacing, state-view address where relevant, `sqrtPriceX96`, current tick, active liquidity, source, and provenance. They intentionally do not include tick-boundary warnings; clients should continue using live CL reads when they need quote math or when indexed state is stale, unknown, unsupported, malformed, or otherwise not replayable.
 
 Server-only helper env for route lab and quote API:
 

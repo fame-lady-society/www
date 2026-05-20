@@ -79,7 +79,9 @@ function isIndexedReservePoolState(
 ): state is FameIndexedReservePoolState {
   return (
     state !== undefined &&
-    (state.status === "fresh" || state.status === "stale")
+    (state.status === "fresh" || state.status === "stale") &&
+    "quoteModel" in state &&
+    state.quoteModel === "constant-product-reserves"
   );
 }
 

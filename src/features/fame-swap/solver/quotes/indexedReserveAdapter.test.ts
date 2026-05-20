@@ -20,6 +20,10 @@ type IndexedReserveEntry = Extract<
   FameIndexedPoolStateBatchResponse["pools"][number],
   { quoteModel: "constant-product-reserves" }
 >;
+type IndexedClHeadEntry = Extract<
+  FameIndexedPoolStateBatchResponse["pools"][number],
+  { stateKind: "cl-head-snapshot" }
+>;
 
 function indexedState(
   overrides: Partial<IndexedReserveEntry> = {},
@@ -39,6 +43,42 @@ function indexedState(
     lastReserveChangeBlock: 123,
     source: "sync-event",
     quoteModel: "constant-product-reserves",
+    maxFreshnessBlocks: 120,
+    ...overrides,
+  };
+  return {
+    sourceRegistryId: "unit-registry",
+    currentBlock: 125,
+    producerMaxFreshnessBlocks: 120,
+    effectiveMaxFreshnessBlocks: 120,
+    pools: [pool],
+  };
+}
+
+function indexedClHeadState(
+  overrides: Partial<IndexedClHeadEntry> = {},
+): FameIndexedPoolStateBatchResponse {
+  const pool: IndexedClHeadEntry = {
+    status: "fresh",
+    stateKind: "cl-head-snapshot",
+    poolId: "uniswap-v2-fame-direct",
+    chainId: 8453,
+    poolAddress:
+      "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c" as const satisfies Address,
+    poolKey: null,
+    token0: WETH,
+    token1: FAME,
+    venueFamily: "UniswapV3",
+    feeBps: 5,
+    feeLabel: "5 bps",
+    tickSpacing: 10,
+    stateViewAddress: null,
+    sqrtPriceX96: "79228162514264337593543950336",
+    tick: 0,
+    liquidity: "1000000",
+    observedThroughBlock: 124,
+    source: "pool-slot0-liquidity",
+    sourceRegistryId: "unit-registry",
     maxFreshnessBlocks: 120,
     ...overrides,
   };
@@ -134,6 +174,21 @@ describe("FAME indexed reserve adapter", () => {
     const fallback = { calls: 0 };
     const indexed = createIndexedReserveQuoteAdapter({
       indexedState: indexedState({ status: "stale" }),
+      fallback: fallbackAdapter(fallback),
+    });
+
+    const quote = await indexed.quoteEdge({ edge, amountIn: 1n });
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+    if (quote.status === "quoted") assert.equal(quote.amountOut, 42n);
+  });
+
+  it("delegates fresh CL head snapshots to the fallback adapter", async () => {
+    const edge = wethFameDirectEdge();
+    const fallback = { calls: 0 };
+    const indexed = createIndexedReserveQuoteAdapter({
+      indexedState: indexedClHeadState(),
       fallback: fallbackAdapter(fallback),
     });
 

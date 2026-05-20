@@ -371,6 +371,7 @@ async function maybeWrapIndexedQuoteAdapter(options: {
       maxFreshnessBlocks: optionalServerIntegerEnv(
         "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
       ),
+      stateSurfaces: ["cl-head-snapshot"],
       poolIds,
     });
     if (indexedState.sourceRegistryId !== expectedSourceRegistryId) {

@@ -18,7 +18,7 @@ import {
   type FamePoolFeeDescriptor,
 } from "./poolUniverse";
 
-export const FAME_POOL_STATE_REGISTRY_SCHEMA_VERSION = 1;
+export const FAME_POOL_STATE_REGISTRY_SCHEMA_VERSION = 2;
 
 export const QUOTE_MODEL_CAPABLE_FAME_POOL_IDS = [
   "aerodrome-v2-usdc-weth",
@@ -30,8 +30,14 @@ export const QUOTE_MODEL_CAPABLE_FAME_POOL_IDS = [
   "uniswap-v2-usdc-weth",
 ] as const;
 
-export type FamePoolStateCapability = "quote-model" | "tracked-only";
+export type FamePoolStateCapability =
+  | "market-state"
+  | "quote-model"
+  | "tracked-only";
 export type FamePoolStateQuoteModel = "constant-product-reserves";
+export type FamePoolStateSurface =
+  | "cl-head-snapshot"
+  | "constant-product-reserves";
 export type FamePoolStateUnsupportedReason =
   | "concentrated-liquidity"
   | "missing-fee-metadata"
@@ -66,7 +72,10 @@ export interface FamePoolStateRegistryEntry {
   token1: Address;
   stable: boolean | null;
   fee: FamePoolFeeDescriptor;
+  tickSpacing: number | null;
+  stateViewAddress: Address | null;
   capability: FamePoolStateCapability;
+  stateSurface: FamePoolStateSurface | null;
   quoteModel: FamePoolStateQuoteModel | null;
   unsupportedReason: FamePoolStateUnsupportedReason | null;
 }
@@ -139,7 +148,11 @@ export function famePoolStateRegistrySourceId(
 function unsupportedReasonForPool(
   pool: FamePoolConfig,
   fee: FamePoolFeeDescriptor,
+  stateSurface: FamePoolStateSurface | null,
 ): FamePoolStateUnsupportedReason | null {
+  if (stateSurface !== null) {
+    return null;
+  }
   if (pool.venue === "uniswap-v2") {
     return fee.status === "available" ? null : "missing-fee-metadata";
   }
@@ -147,16 +160,47 @@ function unsupportedReasonForPool(
     if (pool.stable) return "stable-pool";
     return fee.status === "available" ? null : "missing-fee-metadata";
   }
-  if (
+  if (isConcentratedLiquidityPool(pool)) {
+    return fee.status === "available"
+      ? "unsupported-venue"
+      : "missing-fee-metadata";
+  }
+  if (pool.venue === "native-wrap") return "native-wrap";
+  return "unsupported-venue";
+}
+
+function isConcentratedLiquidityPool(pool: FamePoolConfig): boolean {
+  return (
     pool.venue === "aerodrome-slipstream" ||
     pool.venue === "aerodrome-slipstream2" ||
     pool.venue === "uniswap-v3" ||
     pool.venue === "uniswap-v4"
-  ) {
-    return "concentrated-liquidity";
+  );
+}
+
+function stateSurfaceForPool(
+  pool: FamePoolConfig,
+  fee: FamePoolFeeDescriptor,
+): FamePoolStateSurface | null {
+  if (pool.venue === "uniswap-v2") {
+    return fee.status === "available" ? "constant-product-reserves" : null;
   }
-  if (pool.venue === "native-wrap") return "native-wrap";
-  return "unsupported-venue";
+  if (pool.venue === "solidly" || pool.venue === "aerodrome-v2") {
+    if (pool.stable) return null;
+    return fee.status === "available" ? "constant-product-reserves" : null;
+  }
+  if (isConcentratedLiquidityPool(pool) && fee.status === "available") {
+    return "cl-head-snapshot";
+  }
+  return null;
+}
+
+function capabilityForStateSurface(
+  stateSurface: FamePoolStateSurface | null,
+): FamePoolStateCapability {
+  if (stateSurface === "constant-product-reserves") return "quote-model";
+  if (stateSurface === "cl-head-snapshot") return "market-state";
+  return "tracked-only";
 }
 
 function stableFlag(pool: FamePoolConfig): boolean | null {
@@ -174,6 +218,14 @@ function poolKey(pool: FamePoolConfig): Hex | null {
   return "poolId" in pool ? pool.poolId : null;
 }
 
+function tickSpacing(pool: FamePoolConfig): number | null {
+  return "tickSpacing" in pool ? pool.tickSpacing : null;
+}
+
+function stateViewAddress(pool: FamePoolConfig): Address | null {
+  return pool.venue === "uniswap-v4" ? pool.stateView : null;
+}
+
 function token0(pool: FamePoolConfig): Address {
   if (pool.venue === "uniswap-v4") return pool.currency0;
   if (pool.venue === "native-wrap") return NATIVE_ETH;
@@ -188,9 +240,9 @@ function token1(pool: FamePoolConfig): Address {
 
 function registryEntry(pool: FamePoolConfig): FamePoolStateRegistryEntry {
   const fee = feeDescriptorForPool(pool);
-  const unsupportedReason = unsupportedReasonForPool(pool, fee);
-  const capability: FamePoolStateCapability =
-    unsupportedReason === null ? "quote-model" : "tracked-only";
+  const stateSurface = stateSurfaceForPool(pool, fee);
+  const capability = capabilityForStateSurface(stateSurface);
+  const unsupportedReason = unsupportedReasonForPool(pool, fee, stateSurface);
 
   return {
     id: pool.id,
@@ -204,7 +256,10 @@ function registryEntry(pool: FamePoolConfig): FamePoolStateRegistryEntry {
     token1: token1(pool),
     stable: stableFlag(pool),
     fee,
+    tickSpacing: tickSpacing(pool),
+    stateViewAddress: stateViewAddress(pool),
     capability,
+    stateSurface,
     quoteModel:
       capability === "quote-model" ? "constant-product-reserves" : null,
     unsupportedReason,

@@ -24,6 +24,17 @@ describe("FAME pool-state registry", () => {
       "uniswap-v2-fame-direct",
       "uniswap-v2-usdc-weth",
     ]);
+    assert.equal(
+      registry.pools
+        .filter((pool) => pool.capability === "quote-model")
+        .every(
+          (pool) =>
+            pool.stateSurface === "constant-product-reserves" &&
+            pool.quoteModel === "constant-product-reserves" &&
+            pool.unsupportedReason === null,
+        ),
+      true,
+    );
   });
 
   it("keeps tracked-only pools visible instead of dropping unsupported math", () => {
@@ -46,11 +57,57 @@ describe("FAME pool-state registry", () => {
           pool.unsupportedReason === "native-wrap",
       ),
     );
-    assert.ok(
-      trackedOnly.some((pool) => pool.venue === "aerodrome-slipstream"),
+    assert.equal(
+      trackedOnly.every(
+        (pool) => pool.stateSurface === null && pool.unsupportedReason !== null,
+      ),
+      true,
     );
-    assert.ok(trackedOnly.some((pool) => pool.venue === "uniswap-v3"));
-    assert.ok(trackedOnly.some((pool) => pool.venue === "uniswap-v4"));
+  });
+
+  it("marks reviewed concentrated-liquidity pools as head-snapshot market state", () => {
+    const registry = famePoolStateRegistry();
+    const marketState = registry.pools.filter(
+      (pool) => pool.capability === "market-state",
+    );
+
+    assert.ok(
+      marketState.some(
+        (pool) =>
+          pool.venue === "aerodrome-slipstream" &&
+          pool.stateSurface === "cl-head-snapshot" &&
+          pool.poolAddress !== null &&
+          pool.tickSpacing !== null,
+      ),
+    );
+    assert.equal(
+      marketState
+        .filter((pool) => pool.venue === "aerodrome-slipstream2")
+        .every(
+          (pool) =>
+            pool.stateSurface === "cl-head-snapshot" &&
+            pool.poolAddress !== null &&
+            pool.tickSpacing !== null,
+        ),
+      true,
+    );
+    assert.ok(
+      marketState.some(
+        (pool) =>
+          pool.venue === "uniswap-v3" &&
+          pool.stateSurface === "cl-head-snapshot" &&
+          pool.poolAddress !== null &&
+          pool.tickSpacing !== null,
+      ),
+    );
+
+    const uniswapV4 = marketState.find((pool) => pool.venue === "uniswap-v4");
+    assert.ok(uniswapV4);
+    assert.equal(uniswapV4.stateSurface, "cl-head-snapshot");
+    assert.equal(uniswapV4.poolAddress, null);
+    assert.ok(uniswapV4.poolKey);
+    assert.ok(uniswapV4.stateViewAddress);
+    assert.ok(uniswapV4.tickSpacing);
   });
 
   it("omits direct SPX/FAME and cbBTC/FAME until authoritative metadata exists", () => {

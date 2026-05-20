@@ -268,6 +268,7 @@ describe("/api/fame/swap/quote", () => {
   it("wraps server quotes with indexed pool-state when configured", async () => {
     const snapshot = createSnapshotQuoteAdapter();
     const requestedPoolIds: string[][] = [];
+    const requestedStateSurfaces: Array<readonly string[] | undefined> = [];
     const response = await handleFameSwapQuotePost(
       request({
         tokenIn: WETH,
@@ -304,6 +305,7 @@ describe("/api/fame/swap/quote", () => {
         indexedPoolStateClient: {
           async fetchPoolStates(indexedRequest) {
             requestedPoolIds.push([...indexedRequest.poolIds]);
+            requestedStateSurfaces.push(indexedRequest.stateSurfaces);
             return {
               sourceRegistryId: famePoolStateRegistrySourceId(),
               currentBlock: indexedRequest.currentBlock,
@@ -348,6 +350,7 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(json.status, "ready");
     assert.equal(json.quoteContext.source, "indexed");
     assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
+    assert.deepEqual(requestedStateSurfaces[0], ["cl-head-snapshot"]);
     assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
   });
 

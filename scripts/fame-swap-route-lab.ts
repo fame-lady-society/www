@@ -113,6 +113,16 @@ export interface FameRouteLabIndexedPoolStateSummary {
     unknown: number;
     unsupported: number;
   };
+  stateSurfaceCounts: {
+    constantProductReserves: {
+      fresh: number;
+      stale: number;
+    };
+    clHeadSnapshots: {
+      fresh: number;
+      stale: number;
+    };
+  };
 }
 
 export interface FameRouteLabOptimizerSummary {
@@ -311,6 +321,7 @@ export async function runIndexedRouteLab(
     const indexedState = await options.poolStateClient.fetchPoolStates({
       currentBlock,
       maxFreshnessBlocks: options.maxFreshnessBlocks,
+      stateSurfaces: ["cl-head-snapshot"],
       poolIds: famePoolStateRegistryPoolIdsForPair(
         entry.tokenIn,
         entry.tokenOut,
@@ -513,23 +524,41 @@ function candidateGenerationDiagnostics(
 function indexedPoolStateSummary(
   indexedState: FameIndexedPoolStateBatchResponse,
 ): FameRouteLabIndexedPoolStateSummary {
-  const statusCounts = indexedState.pools.reduce(
-    (counts, pool) => ({
-      ...counts,
-      [pool.status]: counts[pool.status] + 1,
-    }),
-    {
+  const statusCounts = {
+    fresh: 0,
+    stale: 0,
+    unknown: 0,
+    unsupported: 0,
+  };
+  const stateSurfaceCounts = {
+    constantProductReserves: {
       fresh: 0,
       stale: 0,
-      unknown: 0,
-      unsupported: 0,
     },
-  );
+    clHeadSnapshots: {
+      fresh: 0,
+      stale: 0,
+    },
+  };
+  for (const pool of indexedState.pools) {
+    statusCounts[pool.status] += 1;
+    if (pool.status !== "fresh" && pool.status !== "stale") continue;
+    if (
+      "quoteModel" in pool &&
+      pool.quoteModel === "constant-product-reserves"
+    ) {
+      stateSurfaceCounts.constantProductReserves[pool.status] += 1;
+    }
+    if ("stateKind" in pool && pool.stateKind === "cl-head-snapshot") {
+      stateSurfaceCounts.clHeadSnapshots[pool.status] += 1;
+    }
+  }
   return {
     sourceRegistryId: indexedState.sourceRegistryId,
     currentBlock: indexedState.currentBlock,
     effectiveMaxFreshnessBlocks: indexedState.effectiveMaxFreshnessBlocks,
     statusCounts,
+    stateSurfaceCounts,
   };
 }
 
@@ -1062,6 +1091,10 @@ function indexedPoolStateSummaryLine(
     `stale ${indexed.statusCounts.stale}`,
     `unknown ${indexed.statusCounts.unknown}`,
     `unsupported ${indexed.statusCounts.unsupported}`,
+    `reserve replay fresh ${indexed.stateSurfaceCounts.constantProductReserves.fresh}`,
+    `reserve replay stale ${indexed.stateSurfaceCounts.constantProductReserves.stale}`,
+    `CL head fresh ${indexed.stateSurfaceCounts.clHeadSnapshots.fresh}`,
+    `CL head stale ${indexed.stateSurfaceCounts.clHeadSnapshots.stale}`,
     `max freshness ${indexed.effectiveMaxFreshnessBlocks}`,
   ].join(", ");
 }

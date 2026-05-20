@@ -29,6 +29,7 @@ describe("FAME indexed pool-state client", () => {
       currentBlock: 125,
       maxFreshnessBlocks: 10,
       poolIds: ["uniswap-v2-fame-direct"],
+      stateSurfaces: ["cl-head-snapshot"],
     });
 
     assert.equal(response.effectiveMaxFreshnessBlocks, 10);
@@ -36,11 +37,12 @@ describe("FAME indexed pool-state client", () => {
     assert.deepEqual(await requests[0]?.json(), {
       currentBlock: 125,
       maxFreshnessBlocks: 10,
+      stateSurfaces: ["cl-head-snapshot"],
       pools: [{ poolId: "uniswap-v2-fame-direct" }],
     });
   });
 
-  it("parses fresh, stale, unsupported, and unknown entries", () => {
+  it("parses fresh, stale, CL head, unsupported, and unknown entries", () => {
     const parsed = parseIndexedPoolStateResponse({
       sourceRegistryId: "unit",
       currentBlock: 125,
@@ -80,6 +82,28 @@ describe("FAME indexed pool-state client", () => {
           maxFreshnessBlocks: 120,
         },
         {
+          status: "fresh",
+          stateKind: "cl-head-snapshot",
+          poolId: "uniswap-v3-usdc-weth-5bps",
+          chainId: 8453,
+          poolAddress: "0xd0b53d9277642d899df5c87a3966a349a798f224",
+          poolKey: null,
+          token0: "0x4200000000000000000000000000000000000006",
+          token1: "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913",
+          venueFamily: "UniswapV3",
+          feeBps: 5,
+          feeLabel: "5 bps",
+          tickSpacing: 10,
+          stateViewAddress: null,
+          sqrtPriceX96: "79228162514264337593543950336",
+          tick: 0,
+          liquidity: "1000000",
+          observedThroughBlock: 124,
+          source: "pool-slot0-liquidity",
+          sourceRegistryId: "unit",
+          maxFreshnessBlocks: 120,
+        },
+        {
           status: "unsupported",
           poolId: "uniswap-v4-usdc-eth",
           chainId: 8453,
@@ -96,7 +120,72 @@ describe("FAME indexed pool-state client", () => {
 
     assert.deepEqual(
       parsed.pools.map((pool) => pool.status),
-      ["fresh", "stale", "unsupported", "unknown"],
+      ["fresh", "stale", "fresh", "unsupported", "unknown"],
+    );
+    const clHead = parsed.pools[2];
+    if (!("stateKind" in clHead)) {
+      assert.fail("Expected a CL head entry.");
+    }
+    assert.equal(clHead.stateKind, "cl-head-snapshot");
+    assert.equal(clHead.venueFamily, "UniswapV3");
+    assert.equal(clHead.tickSpacing, 10);
+    assert.equal(clHead.tick, 0);
+  });
+
+  it("rejects malformed CL head contract fields", () => {
+    const clHeadEntry = {
+      status: "fresh",
+      stateKind: "cl-head-snapshot",
+      poolId: "uniswap-v3-usdc-weth-5bps",
+      chainId: 8453,
+      poolAddress: "0xd0b53d9277642d899df5c87a3966a349a798f224",
+      poolKey: null,
+      token0: "0x4200000000000000000000000000000000000006",
+      token1: "0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913",
+      venueFamily: "UniswapV3",
+      feeBps: 5,
+      feeLabel: "5 bps",
+      tickSpacing: 10,
+      stateViewAddress: null,
+      sqrtPriceX96: "79228162514264337593543950336",
+      tick: 0,
+      liquidity: "1000000",
+      observedThroughBlock: 124,
+      source: "pool-slot0-liquidity",
+      sourceRegistryId: "unit",
+      maxFreshnessBlocks: 120,
+    };
+    const response = {
+      sourceRegistryId: "unit",
+      currentBlock: 125,
+      producerMaxFreshnessBlocks: 120,
+      effectiveMaxFreshnessBlocks: 120,
+      pools: [clHeadEntry],
+    };
+
+    assert.throws(
+      () =>
+        parseIndexedPoolStateResponse({
+          ...response,
+          pools: [{ ...clHeadEntry, venueFamily: "uniswap-v3" }],
+        }),
+      /venueFamily/,
+    );
+    assert.throws(
+      () =>
+        parseIndexedPoolStateResponse({
+          ...response,
+          pools: [{ ...clHeadEntry, tickSpacing: 10.5 }],
+        }),
+      /tickSpacing/,
+    );
+    assert.throws(
+      () =>
+        parseIndexedPoolStateResponse({
+          ...response,
+          currentBlock: 125.5,
+        }),
+      /currentBlock/,
     );
   });
 

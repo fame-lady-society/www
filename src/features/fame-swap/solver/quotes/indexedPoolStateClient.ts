@@ -1,10 +1,20 @@
-import { isAddress, type Address } from "viem";
+import { isAddress, isHex, type Address, type Hex } from "viem";
 
 export type FameIndexedPoolStateStatus =
   | "fresh"
   | "stale"
   | "unknown"
   | "unsupported";
+export type FameIndexedPoolStateRequestSurface = "cl-head-snapshot";
+export type FameIndexedPoolStateVenueFamily =
+  | "AerodromeV2"
+  | "NativeWrap"
+  | "Slipstream"
+  | "Slipstream2"
+  | "Solidly"
+  | "UniswapV2"
+  | "UniswapV3"
+  | "UniswapV4";
 
 export type FameIndexedPoolStateEntry =
   | {
@@ -21,6 +31,28 @@ export type FameIndexedPoolStateEntry =
       lastReserveChangeBlock: number;
       source: "sync-event" | "getReserves";
       quoteModel: "constant-product-reserves";
+      maxFreshnessBlocks: number;
+    }
+  | {
+      status: "fresh" | "stale";
+      stateKind: "cl-head-snapshot";
+      poolId: string;
+      chainId: number;
+      poolAddress: Address | null;
+      poolKey: Hex | null;
+      token0: Address;
+      token1: Address;
+      venueFamily: FameIndexedPoolStateVenueFamily;
+      feeBps: number;
+      feeLabel: string;
+      tickSpacing: number;
+      stateViewAddress: Address | null;
+      sqrtPriceX96: string;
+      tick: number;
+      liquidity: string;
+      observedThroughBlock: number;
+      source: "pool-slot0-liquidity" | "v4-state-view";
+      sourceRegistryId: string;
       maxFreshnessBlocks: number;
     }
   | {
@@ -53,6 +85,7 @@ export interface FameIndexedPoolStateClient {
     currentBlock: number;
     poolIds: readonly string[];
     maxFreshnessBlocks?: number;
+    stateSurfaces?: readonly FameIndexedPoolStateRequestSurface[];
   }): Promise<FameIndexedPoolStateBatchResponse>;
 }
 
@@ -86,6 +119,25 @@ function numberField(record: Record<string, unknown>, key: string): number {
   return value;
 }
 
+function integerField(record: Record<string, unknown>, key: string): number {
+  const value = record[key];
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+    throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+  return value;
+}
+
+function nonNegativeIntegerField(
+  record: Record<string, unknown>,
+  key: string,
+): number {
+  const value = integerField(record, key);
+  if (value < 0) {
+    throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+  return value;
+}
+
 function addressField(record: Record<string, unknown>, key: string): Address {
   const value = stringField(record, key);
   if (!isAddress(value, { strict: false })) {
@@ -101,6 +153,49 @@ function nullableAddressField(
   return record[key] === null ? null : addressField(record, key);
 }
 
+function nullableHexField(
+  record: Record<string, unknown>,
+  key: string,
+): Hex | null {
+  const value = record[key];
+  if (value === null) return null;
+  if (typeof value !== "string" || !isHex(value, { strict: true })) {
+    throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+  return value;
+}
+
+function clHeadSourceField(
+  record: Record<string, unknown>,
+  key: string,
+): "pool-slot0-liquidity" | "v4-state-view" {
+  const value = stringField(record, key);
+  if (value !== "pool-slot0-liquidity" && value !== "v4-state-view") {
+    throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+  return value;
+}
+
+function venueFamilyField(
+  record: Record<string, unknown>,
+  key: string,
+): FameIndexedPoolStateVenueFamily {
+  const value = stringField(record, key);
+  switch (value) {
+    case "AerodromeV2":
+    case "NativeWrap":
+    case "Slipstream":
+    case "Slipstream2":
+    case "Solidly":
+    case "UniswapV2":
+    case "UniswapV3":
+    case "UniswapV4":
+      return value;
+    default:
+      throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+}
+
 function parseRequestKey(value: unknown, path: string): {
   poolId?: string;
   chainId?: number;
@@ -111,8 +206,8 @@ function parseRequestKey(value: unknown, path: string): {
     return { poolId: record.poolId };
   }
   return {
-    ...(typeof record.chainId === "number"
-      ? { chainId: record.chainId }
+    ...(record.chainId !== undefined
+      ? { chainId: nonNegativeIntegerField(record, "chainId") }
       : {}),
     ...(typeof record.poolAddress === "string" &&
     isAddress(record.poolAddress, { strict: false })
@@ -125,6 +220,36 @@ function parseEntry(value: unknown, path: string): FameIndexedPoolStateEntry {
   const record = asRecord(value, path);
   const status = stringField(record, "status");
   if (status === "fresh" || status === "stale") {
+    if (record.stateKind === "cl-head-snapshot") {
+      return {
+        status,
+        stateKind: "cl-head-snapshot",
+        poolId: stringField(record, "poolId"),
+        chainId: nonNegativeIntegerField(record, "chainId"),
+        poolAddress: nullableAddressField(record, "poolAddress"),
+        poolKey: nullableHexField(record, "poolKey"),
+        token0: addressField(record, "token0"),
+        token1: addressField(record, "token1"),
+        venueFamily: venueFamilyField(record, "venueFamily"),
+        feeBps: numberField(record, "feeBps"),
+        feeLabel: stringField(record, "feeLabel"),
+        tickSpacing: nonNegativeIntegerField(record, "tickSpacing"),
+        stateViewAddress: nullableAddressField(record, "stateViewAddress"),
+        sqrtPriceX96: stringField(record, "sqrtPriceX96"),
+        tick: integerField(record, "tick"),
+        liquidity: stringField(record, "liquidity"),
+        observedThroughBlock: nonNegativeIntegerField(
+          record,
+          "observedThroughBlock",
+        ),
+        source: clHeadSourceField(record, "source"),
+        sourceRegistryId: stringField(record, "sourceRegistryId"),
+        maxFreshnessBlocks: nonNegativeIntegerField(
+          record,
+          "maxFreshnessBlocks",
+        ),
+      };
+    }
     const source = stringField(record, "source");
     if (source !== "sync-event" && source !== "getReserves") {
       throw new Error("FAME indexed pool-state response invalid at source.");
@@ -136,25 +261,31 @@ function parseEntry(value: unknown, path: string): FameIndexedPoolStateEntry {
     return {
       status,
       poolId: stringField(record, "poolId"),
-      chainId: numberField(record, "chainId"),
+      chainId: nonNegativeIntegerField(record, "chainId"),
       poolAddress: addressField(record, "poolAddress"),
       token0: addressField(record, "token0"),
       token1: addressField(record, "token1"),
       reserve0: stringField(record, "reserve0"),
       reserve1: stringField(record, "reserve1"),
       k: stringField(record, "k"),
-      observedThroughBlock: numberField(record, "observedThroughBlock"),
-      lastReserveChangeBlock: numberField(record, "lastReserveChangeBlock"),
+      observedThroughBlock: nonNegativeIntegerField(
+        record,
+        "observedThroughBlock",
+      ),
+      lastReserveChangeBlock: nonNegativeIntegerField(
+        record,
+        "lastReserveChangeBlock",
+      ),
       source,
       quoteModel,
-      maxFreshnessBlocks: numberField(record, "maxFreshnessBlocks"),
+      maxFreshnessBlocks: nonNegativeIntegerField(record, "maxFreshnessBlocks"),
     };
   }
   if (status === "unsupported") {
     return {
       status,
       poolId: stringField(record, "poolId"),
-      chainId: numberField(record, "chainId"),
+      chainId: nonNegativeIntegerField(record, "chainId"),
       poolAddress: nullableAddressField(record, "poolAddress"),
       unsupportedReason: stringField(record, "unsupportedReason"),
     };
@@ -179,12 +310,12 @@ export function parseIndexedPoolStateResponse(
   }
   return {
     sourceRegistryId: stringField(record, "sourceRegistryId"),
-    currentBlock: numberField(record, "currentBlock"),
-    producerMaxFreshnessBlocks: numberField(
+    currentBlock: nonNegativeIntegerField(record, "currentBlock"),
+    producerMaxFreshnessBlocks: nonNegativeIntegerField(
       record,
       "producerMaxFreshnessBlocks",
     ),
-    effectiveMaxFreshnessBlocks: numberField(
+    effectiveMaxFreshnessBlocks: nonNegativeIntegerField(
       record,
       "effectiveMaxFreshnessBlocks",
     ),
@@ -212,6 +343,7 @@ export function createIndexedPoolStateClient(
           body: JSON.stringify({
             currentBlock: request.currentBlock,
             maxFreshnessBlocks: request.maxFreshnessBlocks,
+            stateSurfaces: request.stateSurfaces,
             pools: request.poolIds.map((poolId) => ({ poolId })),
           }),
           signal: controller.signal,
