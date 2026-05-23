@@ -20,6 +20,7 @@ import {
   type FameIndexedPoolStateBatchResponse,
   type FameIndexedPoolStateClient,
 } from "@/features/fame-swap/solver/quotes/indexedPoolStateClient";
+import { createIndexedClReplayQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedClReplayAdapter";
 import { createIndexedReserveQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedReserveAdapter";
 import {
   createLiveLiquidityQuoteAdapter,
@@ -462,6 +463,7 @@ async function maybeWrapIndexedQuoteAdapter(options: {
       maxFreshnessBlocks: optionalServerIntegerEnv(
         "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
       ),
+      stateSurfaces: ["cl-replay-v1"],
       poolIds,
     });
     if (indexedState.sourceRegistryId !== expectedSourceRegistryId) {
@@ -485,11 +487,17 @@ async function maybeWrapIndexedQuoteAdapter(options: {
         },
       };
     }
+    const reserveAdapter = createIndexedReserveQuoteAdapter({
+      indexedState,
+      fallback: options.adapter,
+      expectedSourceRegistryId,
+    });
     return {
-      adapter: createIndexedReserveQuoteAdapter({
+      adapter: createIndexedClReplayQuoteAdapter({
         indexedState,
-        fallback: options.adapter,
+        fallback: reserveAdapter,
         expectedSourceRegistryId,
+        mode: "shadow",
       }),
       debug: {
         configured: true,

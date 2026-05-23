@@ -40,6 +40,7 @@ import {
   type FameIndexedPoolStateBatchResponse,
 } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { createIndexedReserveQuoteAdapter } from "../src/features/fame-swap/solver/quotes/indexedReserveAdapter";
+import { createIndexedClReplayQuoteAdapter } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
 import { toAsyncQuoteAdapter } from "../src/features/fame-swap/solver/optimizer/quoteRunAdapter";
 import {
   famePoolStateRegistryPoolIdsForPair,
@@ -113,6 +114,14 @@ export interface FameRouteLabIndexedPoolStateSummary {
     unknown: number;
     unsupported: number;
   };
+  clReplay: Array<{
+    poolId: string;
+    status: "fresh" | "stale";
+    observedThroughBlock: number;
+    stateHash: string;
+    bitmapWordCount: number;
+    initializedTickCount: number;
+  }>;
 }
 
 export interface FameRouteLabOptimizerSummary {
@@ -311,15 +320,22 @@ export async function runIndexedRouteLab(
     const indexedState = await options.poolStateClient.fetchPoolStates({
       currentBlock,
       maxFreshnessBlocks: options.maxFreshnessBlocks,
+      stateSurfaces: ["cl-replay-v1"],
       poolIds: famePoolStateRegistryPoolIdsForPair(
         entry.tokenIn,
         entry.tokenOut,
       ),
     });
-    const adapter = createIndexedReserveQuoteAdapter({
+    const reserveAdapter = createIndexedReserveQuoteAdapter({
       indexedState,
       fallback: fallbackAdapter,
       expectedSourceRegistryId,
+    });
+    const adapter = createIndexedClReplayQuoteAdapter({
+      indexedState,
+      fallback: reserveAdapter,
+      expectedSourceRegistryId,
+      mode: "shadow",
     });
     const quote = await quoteFameSwapAsync({
       tokenIn: token(entry.tokenIn),
@@ -530,6 +546,24 @@ function indexedPoolStateSummary(
     currentBlock: indexedState.currentBlock,
     effectiveMaxFreshnessBlocks: indexedState.effectiveMaxFreshnessBlocks,
     statusCounts,
+    clReplay: indexedState.pools
+      .filter(
+        (pool): pool is Extract<
+          FameIndexedPoolStateBatchResponse["pools"][number],
+          { stateKind: "cl-replay-v1" }
+        > =>
+          (pool.status === "fresh" || pool.status === "stale") &&
+          "stateKind" in pool &&
+          pool.stateKind === "cl-replay-v1",
+      )
+      .map((pool) => ({
+        poolId: pool.poolId,
+        status: pool.status,
+        observedThroughBlock: pool.observedThroughBlock,
+        stateHash: pool.stateHash,
+        bitmapWordCount: pool.bitmapWordCount,
+        initializedTickCount: pool.initializedTickCount,
+      })),
   };
 }
 
@@ -1063,7 +1097,17 @@ function indexedPoolStateSummaryLine(
     `unknown ${indexed.statusCounts.unknown}`,
     `unsupported ${indexed.statusCounts.unsupported}`,
     `max freshness ${indexed.effectiveMaxFreshnessBlocks}`,
-  ].join(", ");
+    indexed.clReplay.length > 0
+      ? `cl replay ${indexed.clReplay
+          .map(
+            (entry) =>
+              `${entry.poolId} ${entry.status} block ${entry.observedThroughBlock.toString()} ticks ${entry.initializedTickCount.toString()} hash ${entry.stateHash.slice(0, 10)}`,
+          )
+          .join("; ")}`
+      : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(", ");
 }
 
 function formatOptimizerMarkdown(

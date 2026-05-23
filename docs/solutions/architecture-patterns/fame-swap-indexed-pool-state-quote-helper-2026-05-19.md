@@ -9,11 +9,13 @@ severity: high
 applies_when:
   - Adding an indexed liquidity-state helper to a quote API that must remain correct under stale or mismatched data.
   - Replaying reviewed constant-product reserves locally while preserving live quote fallback behavior.
+  - Introducing one replayable concentrated-liquidity pool while live quotes remain authoritative.
   - Debugging why a helper API authenticates successfully but selected quote context is still live or recorded.
 related_components:
   - quote API
   - pool-state registry
   - indexed reserve adapter
+  - indexed CL replay adapter
   - route lab
   - testing framework
   - society-bots
@@ -27,6 +29,8 @@ tags: [fame-swap, pool-state, indexed-quoter, quote-api, live-fallback, provenan
 FAME swap quoting had already moved away from deterministic caps toward live and recorded quote evidence. Earlier sessions added live adapters, recorded Base route-lab replay, constant-product reserve replay for vetted pool classes, quote API hardening, bounded candidate work, and route-lab evidence. Those sessions also found that backend quote optimization needs a state boundary below the adapter layer: TanStack can cache app queries, but it does not coalesce backend `readContract` calls inside a quote run (session history).
 
 Commit `8205fb1 feat(fame): add indexed pool-state quoting` added that first indexed boundary. `www` can now call the `society-bots` FAME pool-state helper, request reviewed pool rows for the current quote block, replay fresh constant-product reserves locally, and fall back when indexed state is not trustworthy.
+
+The next vertical slice keeps the same boundary but makes `slipstream-usdc-weth-100` the first replayable concentrated-liquidity candidate. `society-bots` publishes raw `cl-replay-v1` state for that one pool: slot0, active liquidity, dynamic fee, block identity, initialized tick bitmap words, initialized tick liquidity rows, chunk counts, and state hash. `www` owns the Slipstream math and still serves the live quoter while shadow parity is being proven.
 
 The important learning is operational as much as architectural: helper reachability is not proof of indexed quoting. A helper can return `200` with valid auth while `www` still selects live or recorded quote context because rows are stale, observed ahead of `www`'s current block, unsupported, malformed, or from a mismatched registry.
 
@@ -47,6 +51,7 @@ The quote API builds a live or fork adapter first, then wraps that adapter only 
 
 - `currentBlock` from the live/fork quote context
 - reviewed pool ids for the requested pair
+- explicit replay-state opt-in through `stateSurfaces: ["cl-replay-v1"]` when shadow CL replay evidence is wanted
 - optional max freshness
 
 This keeps freshness checks tied to the same block context that produced the quote.
@@ -54,6 +59,10 @@ This keeps freshness checks tied to the same block context that produced the quo
 Validate provenance before trusting helper rows. `src/features/fame-swap/solver/poolStateRegistry.ts` derives the local registry and `sourceRegistryId` from generated `www` route/pool artifacts. `src/app/api/fame/swap/quote/handler.ts` falls back when the helper response `sourceRegistryId` differs, and `src/features/fame-swap/solver/quotes/indexedReserveAdapter.ts` also requires address-backed pools to match the returned `poolAddress` before replaying reserves.
 
 Replay only fresh, model-compatible rows. `src/features/fame-swap/solver/quotes/indexedPoolStateClient.ts` parses the helper wire response; `indexedReserveAdapter.ts` replays rows with `status: "fresh"` and `quoteModel: "constant-product-reserves"`. Stale, unknown, unsupported, malformed, mismatched, or exceptioning rows delegate to the fallback adapter.
+
+For CL replay, parse and validate `stateKind: "cl-replay-v1"` as a distinct state surface. The indexed CL replay adapter accepts only fresh `slipstream-usdc-weth-100` state with matching registry provenance, pool address, token order, dynamic fee, and complete tick records. Missing state, stale or future-block state, malformed decimals or bitmap words, unsupported pools, token-direction mismatch, outside-range replay, replay exceptions, and parity mismatches all keep the request on the live fallback path.
+
+Keep the ownership line crisp. `society-bots` indexes replayable market state; it does not quote, rank routes, apply slippage, or decide public readiness. `www` owns local CL math, route attribution, shadow/live comparison, and promotion criteria. A shared CL math package is a follow-up after one concrete engine proves exact parity.
 
 Quote attribution must be per selected leg, not per adapter. `src/features/fame-swap/solver/quotes/rankRoutes.ts` now reports route-level indexed context only when all selected legs share the same indexed context. Mixed indexed/live fallback routes should not claim a fully indexed quote. `src/features/fame-swap/solver/quoteWire.ts` preserves the public indexed context fields without leaking helper credentials or protocol evidence.
 
@@ -64,6 +73,8 @@ Keep helper failure visible without breaking fallback. The API logs a sanitized 
 This pattern lets `www` reduce hot-path reserve reads while keeping the public quote API correct. The indexed helper can speed up constant-product reserve replay, but the executable quote boundary still needs to reject stale or mismatched state.
 
 The fallback behavior is intentionally quiet from the user perspective: a quote can remain `ready` even when the helper was unavailable. That is correct for UX and safety, but it makes diagnosis easy to misread. Debug `quoteContext.source` and indexed status counts, not just helper reachability.
+
+For concentrated liquidity, saving ticks is what turns an indexed head snapshot into locally replayable state. Slot0 plus current liquidity can explain the current price, but an exact-input swap may cross initialized ticks. Once the full bitmap and tick liquidity deltas are available at the same block, `www` can locally reproduce the same state transition that the Slipstream quoter would execute in an `eth_call`. Until exact same-block parity is proven, this is diagnostic/shadow evidence only.
 
 The Doppler smoke test made this concrete:
 
@@ -116,6 +127,16 @@ FAME_POOL_STATE_TIMEOUT_MS=5000 \
 bun scripts/fame-swap-route-lab.ts --indexed --markdown
 ```
 
+Run same-block Slipstream CL replay parity:
+
+```bash
+BASE_RPC_URL=https://... \
+FAME_POOL_STATE_API_URL=https://.../fame/pool-state \
+FAME_POOL_STATE_SERVICE_TOKEN=... \
+FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS=120 \
+bun scripts/fame-swap-cl-replay-parity.ts
+```
+
 Expected proof is not "the helper returned 200." Expected proof is selected quote attribution:
 
 ```json
@@ -163,6 +184,10 @@ Regression coverage should include:
 - all-indexed selected routes report indexed context
 - mixed indexed/live routes do not report route-level indexed context
 - indexed route-lab requires a real current block source
+- indexed route-lab requests `cl-replay-v1` and reports the replay snapshot summary without claiming served CL quotes are indexed
+- CL replay parser preserves bitmap and tick data exactly
+- CL replay adapter serves fallback in shadow mode and local quotes only under explicit local mode
+- CL replay parity harness rejects any non-identical `amountOut`, even when rounded bps drift is zero
 - stale rows parse at the client boundary and fall back at quote replay
 - quote wire tests preserve all indexed context fields
 
@@ -172,4 +197,4 @@ Regression coverage should include:
 - `docs/plans/2026-05-17-001-feat-society-bots-fame-pool-state-plan.md` is the implementation plan for the cross-repo pool-state helper.
 - `docs/brainstorms/2026-05-17-society-bots-fame-pool-liquidity-modeling-requirements.md` captures the requirements that led to this slice.
 - `docs/fame-swap-route-lab.md` documents operational route-lab modes, including indexed mode.
-- `src/app/api/fame/swap/quote/route.test.ts`, `src/features/fame-swap/solver/quotes/indexedReserveAdapter.test.ts`, `src/features/fame-swap/solver/quotes/indexedPoolStateClient.test.ts`, and `src/features/fame-swap/solver/quoteWire.test.ts` are the most useful regression tests for this pattern.
+- `src/app/api/fame/swap/quote/route.test.ts`, `src/features/fame-swap/solver/quotes/indexedReserveAdapter.test.ts`, `src/features/fame-swap/solver/quotes/indexedClReplayAdapter.test.ts`, `src/features/fame-swap/solver/quotes/indexedPoolStateClient.test.ts`, `scripts/fame-swap-route-lab.test.ts`, `scripts/fame-swap-cl-replay-parity.test.ts`, and `src/features/fame-swap/solver/quoteWire.test.ts` are the most useful regression tests for this pattern.

@@ -156,18 +156,81 @@ describe("FAME route lab", () => {
       (candidate) => candidate.id === "weth-fame-small-direct",
     );
     assert.ok(entry);
+    const requestedStateSurfaces: unknown[] = [];
     const rows = await runIndexedRouteLab([entry], {
       currentBlock: 125,
       poolStateClient: {
         async fetchPoolStates(request) {
+          requestedStateSurfaces.push(request.stateSurfaces);
           return {
             sourceRegistryId: famePoolStateRegistrySourceId(),
             currentBlock: request.currentBlock,
             producerMaxFreshnessBlocks: 120,
             effectiveMaxFreshnessBlocks: 120,
             pools: request.poolIds.map((poolId) =>
-              poolId === "scale-equalizer-weth-fame" ||
-              poolId === "uniswap-v2-fame-direct"
+              poolId === "slipstream-usdc-weth-100"
+                ? {
+                    status: "fresh" as const,
+                    stateKind: "cl-replay-v1" as const,
+                    poolId,
+                    chainId: 8453,
+                    poolAddress:
+                      "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+                    token0: WETH,
+                    token1: USDC,
+                    venueFamily: "Slipstream" as const,
+                    tickSpacing: 100,
+                    sqrtPriceX96: "79228162514264337593543950336",
+                    tick: 0,
+                    liquidity: "1000000000000000000",
+                    fee: "100",
+                    feeSource: "pool-fee" as const,
+                    observedThroughBlock: 124,
+                    blockHash:
+                      "0x1111111111111111111111111111111111111111111111111111111111111111",
+                    parentHash:
+                      "0x2222222222222222222222222222222222222222222222222222222222222222",
+                    snapshotId: "unit-cl-replay",
+                    stateHash:
+                      "0x3333333333333333333333333333333333333333333333333333333333333333",
+                    source: "slipstream-pool-state" as const,
+                    sourceRegistryId: famePoolStateRegistrySourceId(),
+                    maxFreshnessBlocks: 120,
+                    bitmapWordCount: 2,
+                    initializedTickCount: 2,
+                    bitmapChunkCount: 1,
+                    tickChunkCount: 1,
+                    minWordPosition: -1,
+                    maxWordPosition: 0,
+                    minTick: -100,
+                    maxTick: 100,
+                    bitmapWords: [
+                      {
+                        wordPosition: -1,
+                        bitmap:
+                          "0x8000000000000000000000000000000000000000000000000000000000000000",
+                      },
+                      {
+                        wordPosition: 0,
+                        bitmap:
+                          "0x0000000000000000000000000000000000000000000000000000000000000002",
+                      },
+                    ],
+                    initializedTicks: [
+                      {
+                        tick: -100,
+                        liquidityGross: "1000",
+                        liquidityNet: "-1000",
+                      },
+                      {
+                        tick: 100,
+                        liquidityGross: "1000",
+                        liquidityNet: "1000",
+                      },
+                    ],
+                  }
+                : poolId === "scale-equalizer-weth-fame" ||
+                    poolId === "uniswap-v2-fame-direct"
                 ? {
                     status: "fresh" as const,
                     poolId,
@@ -203,6 +266,12 @@ describe("FAME route lab", () => {
     assert.equal(row.mode, "indexed");
     assert.ok((row.indexedPoolState?.statusCounts.fresh ?? 0) > 0);
     assert.match(row.quoteContext ?? "", /^indexed:8453:125:/);
+    assert.equal(row.indexedPoolState?.clReplay[0]?.poolId, "slipstream-usdc-weth-100");
+    assert.equal(row.indexedPoolState?.clReplay[0]?.initializedTickCount, 2);
+    assert.deepEqual(requestedStateSurfaces[0], ["cl-replay-v1"]);
+
+    const markdown = formatRouteLabMarkdown(rows);
+    assert.match(markdown, /cl replay slipstream-usdc-weth-100 fresh block 124 ticks 2/);
   });
 
   it("fails indexed mode clearly without a current block source", async () => {

@@ -373,6 +373,7 @@ describe("/api/fame/swap/quote", () => {
   it("wraps server quotes with indexed pool-state when configured", async () => {
     const snapshot = createSnapshotQuoteAdapter();
     const requestedPoolIds: string[][] = [];
+    const requestedStateSurfaces: unknown[] = [];
     const response = await handleFameSwapQuotePost(
       request({
         tokenIn: WETH,
@@ -410,6 +411,7 @@ describe("/api/fame/swap/quote", () => {
         indexedPoolStateClient: {
           async fetchPoolStates(indexedRequest) {
             requestedPoolIds.push([...indexedRequest.poolIds]);
+            requestedStateSurfaces.push(indexedRequest.stateSurfaces);
             return {
               sourceRegistryId: famePoolStateRegistrySourceId(),
               currentBlock: indexedRequest.currentBlock,
@@ -466,6 +468,7 @@ describe("/api/fame/swap/quote", () => {
     assert.ok(isRecord(indexedPoolState.statusCounts));
     assert.equal(indexedPoolState.statusCounts.fresh, 2);
     assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
+    assert.deepEqual(requestedStateSurfaces[0], ["cl-replay-v1"]);
     assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
   });
 

@@ -6,7 +6,7 @@ The route lab runs amount buckets through the shared FAME swap solver without Re
 
 - Recorded mode is the default: `bun scripts/fame-swap-route-lab.ts`. It replays the recorded-state artifact `base-v1-pool-state-snapshot.json`, captured from read-only Base quote calls and pool state at `base-v1-live-45964183`.
 - Deterministic mode is explicit: `bun scripts/fame-swap-route-lab.ts --deterministic`. It uses the pinned test-only deterministic capacity profile to prove old cap failures and pure solver behavior.
-- Indexed mode: `BASE_RPC_URL=... FAME_POOL_STATE_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --indexed`. It asks the `society-bots` pool-state API for the current reviewed candidate pools, replays fresh V2-style reserves locally, and falls back to recorded quote evidence for stale, unknown, or unsupported pools. Freshness is checked against a live Base block from server-only `BASE_RPC_URL`, or an explicit `FAME_POOL_STATE_CURRENT_BLOCK`; indexed mode no longer falls back to the pinned artifact block.
+- Indexed mode: `BASE_RPC_URL=... FAME_POOL_STATE_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --indexed`. It asks the `society-bots` pool-state API for the current reviewed candidate pools, replays fresh V2-style reserves locally, requests `cl-replay-v1` for `slipstream-usdc-weth-100`, and runs Slipstream CL replay in shadow mode before falling back to the normal quote source. Freshness is checked against a live Base block from server-only `BASE_RPC_URL`, or an explicit `FAME_POOL_STATE_CURRENT_BLOCK`; indexed mode no longer falls back to the pinned artifact block.
 - Live mode: `doppler run -- bun scripts/fame-swap-route-lab.ts --live`. It reads Base RPC liquidity through the live adapters and records a live block quote context. Server/operator runs prefer `BASE_RPC_URL`; `NEXT_PUBLIC_BASE_RPC_URL_1` is only a fallback for browser-safe or local endpoints.
 - Live simulation: add `--simulate` and set `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT`. ERC20 routes simulate approval plus swap as one bundle, derive a slippage-protected minimum from the probe result, then simulate the protected route; native routes do the same with direct router calls. This is the initiating-account path for below-balance and route-execution checks. Default JSON and Markdown use a shortened account label.
 - Markdown output: add `--markdown` to any mode.
@@ -25,6 +25,8 @@ Ready rows include a quote context:
 Recorded and live quote outputs are exact-input leg quotes. Venue fees are already included in adapter outputs; the FLS router fee is calculated and emitted separately.
 Indexed quote outputs use the same reserve replay math as recorded snapshots for quote-model pools. Freshness is based on `observedThroughBlock`; `lastReserveChangeBlock` is diagnostic only because quiet pools can remain fresh without a recent Sync event.
 
+`cl-replay-v1` output is deliberately separate from reserve replay. Route lab requests the complete Slipstream replay snapshot and reports snapshot freshness, observed block, state hash, bitmap word count, and initialized tick count in the indexed-pool-state summary. While shadow mode is active, selected CL legs still attribute to the live or recorded fallback quote source; a successful local replay is not public quote authority.
+
 Server-only helper env for route lab and quote API:
 
 - `FAME_POOL_STATE_API_URL`
@@ -34,6 +36,22 @@ Server-only helper env for route lab and quote API:
 - Route-lab-only override `FAME_POOL_STATE_CURRENT_BLOCK`
 
 Do not create `NEXT_PUBLIC_` variants for pool-state helper URL or token.
+
+## Slipstream CL Replay Parity
+
+`slipstream-usdc-weth-100` has a focused parity harness for the first replayable concentrated-liquidity proof:
+
+```bash
+BASE_RPC_URL=https://... \
+FAME_POOL_STATE_API_URL=https://.../fame/pool-state \
+FAME_POOL_STATE_SERVICE_TOKEN=... \
+FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS=120 \
+bun scripts/fame-swap-cl-replay-parity.ts
+```
+
+The harness fetches fresh `cl-replay-v1` state, builds a live Slipstream quoter adapter pinned to the snapshot block, and compares local replay against live quotes for representative WETH -> USDC and USDC -> WETH exact-input amounts. Promotion requires exact `amountOut` equality, not a rounded bps tolerance. A mismatch means state capture, dynamic fee units, tick crossing, rounding, or block consistency needs investigation.
+
+Expected output includes the snapshot id, observed block, state hash, bitmap word count, initialized tick count, and one local/live/drift line per amount. Missing, stale, incomplete, malformed, outside-range, or mismatched state should be treated as live-fallback evidence, not as an indexed CL quote.
 
 ## Allocation Optimizer Evidence
 
@@ -119,6 +137,7 @@ Recent verified runs:
 - FAME -> USDC and representative WETH -> FAME live buckets now select the reviewed `slipstream-usdc-weth-100` connector. Native ETH buckets select `uniswap-v4-usdc-eth` without adding an ETH/WETH wrap or unwrap leg.
 - Solidly FAME -> USDC routes now report one computable market-impact leg for the volatile FAME/frxUSD hop; the stable USDC/frxUSD hop remains quoted but non-computable for market impact.
 - Representative larger USDC, WETH, and native ETH buckets now quote from liquidity evidence instead of deterministic capacity caps.
+- CL replay promotion evidence is separate from these historical route-lab runs. Attach the latest indexed route-lab plus `fame-swap-cl-replay-parity` output before treating `slipstream-usdc-weth-100` as locally replayable in the hot path.
 
 ## Contract Follow-Ups
 
