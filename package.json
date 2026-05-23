@@ -14,6 +14,7 @@
     "fame-swap:fork:wsl": "FAME_SWAP_ANVIL_BIND_HOST=0.0.0.0 bun scripts/fame-swap-fork.ts",
     "fame-swap:fork-smoke": "bun scripts/fame-swap-fork-smoke.ts",
     "fame-swap:route-lab": "bun scripts/fame-swap-route-lab.ts",
+    "fame-swap:cl-replay-parity": "bun scripts/fame-swap-cl-replay-parity.ts",
     "fame-swap:local-dev": "bun scripts/fame-swap-local-dev.ts",
     "fame-swap:local-dev:wsl": "FAME_SWAP_ANVIL_BIND_HOST=0.0.0.0 bun scripts/fame-swap-local-dev.ts"
   },

@@ -191,6 +191,17 @@ describe("useFameSwapQuote", () => {
       assert.ok(request);
 
       assert.equal(parsed.status, "ready");
+      if (parsed.status === "ready") {
+        assert.equal(parsed.approval?.spender, routerAddress);
+        assert.equal(parsed.approval?.amount, sourceQuote.route.amountIn);
+        assert.equal(
+          parsed.materializedRouteHash,
+          sourceQuote.materializedRouteHash,
+        );
+        assert.equal(parsed.callValue, sourceQuote.callValue);
+        assert.deepEqual(parsed.rejectedCandidates, []);
+        assert.equal(parsed.optimizerSummary, undefined);
+      }
       assert.equal(request.url, "/api/fame/swap/quote");
       assert.equal(request.init?.method, "POST");
       assert.equal(request.init?.signal, signal);
@@ -201,6 +212,7 @@ describe("useFameSwapQuote", () => {
       assert.equal(body.recipient, recipient);
       assert.equal(body.slippageBps, 175);
       assert.equal(body.deadlineMinutes, 17);
+      assert.equal("includeDebug" in body, false);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -328,7 +340,7 @@ describe("useFameSwapQuote", () => {
     }
   });
 
-  it("rebuilds a ready API quote into the shared executable quote shape", () => {
+  it("rebuilds a compact ready API quote into the shared executable quote shape", () => {
     const tokenIn = tokenForAddress(USDC);
     const tokenOut = tokenForAddress(FAME);
     assert.ok(tokenIn);
@@ -367,8 +379,6 @@ describe("useFameSwapQuote", () => {
       expiresAt: sourceQuote.expiresAt.toISOString(),
       routeHash: sourceQuote.materializedRouteHash,
       poolIds: sourceQuote.poolIds,
-      warnings: sourceQuote.warnings,
-      rejectedCandidates: sourceQuote.rejectedCandidates,
       route: sourceQuote.route,
       routeDisplay: sourceQuote.routeDisplay,
     });
@@ -391,6 +401,78 @@ describe("useFameSwapQuote", () => {
       assert.equal(parsed.feePpm, sourceQuote.feePpm);
       assert.equal(parsed.capabilities.splitThenMerge, true);
       assert.equal(parsed.feeBreakdown.legs[0]?.amountIn > 0n, true);
+      assert.deepEqual(parsed.rejectedCandidates, []);
+      assert.equal(parsed.optimizerSummary, undefined);
+    }
+  });
+
+  it("rebuilds optional debug fields when a developer quote response includes them", () => {
+    const tokenIn = tokenForAddress(USDC);
+    const tokenOut = tokenForAddress(FAME);
+    assert.ok(tokenIn);
+    assert.ok(tokenOut);
+    const artifact = routeArtifactById("solver-usdc-split-frxusd-merge-fame");
+    assert.ok(artifact);
+    const sourceQuote = quoteWithReadyReadiness({
+      tokenIn,
+      tokenOut,
+      amountIn: BigInt(artifact.route.amountIn),
+      recipient,
+      routerAddress,
+      now: new Date("2026-05-13T00:00:00Z"),
+      adapter: createDeterministicQuoteAdapter(),
+    });
+    assert.equal(sourceQuote.status, "ready");
+    if (sourceQuote.status !== "ready") return;
+
+    const apiResponse = jsonRoundTrip(
+      serializeFameSwapQuoteResponse(
+        {
+          ...sourceQuote,
+          optimizerSummary: {
+            mode: "select",
+            status: "selected",
+            selectedTemplateId: "debug-template",
+            selectedAllocationBps: 5_000,
+            selectedCandidateId: "debug-candidate",
+            winningMarginBps: 25,
+            trialStatusCounts: {
+              selected: 1,
+              rejected: 1,
+              pruned: 0,
+              budget_exhausted: 0,
+              quote_failed: 0,
+              unsupported_shape: 0,
+              ineligible: 0,
+            },
+            fallbackReason: null,
+            runStats: {
+              logicalQuoteRequests: 2,
+              uniqueExactQuoteReads: 1,
+              exactQuoteCacheHits: 1,
+              trials: 2,
+              templatesConsidered: 1,
+              budgetExhaustions: 0,
+              timeout: false,
+            },
+          },
+        },
+        { includeDebug: true },
+      ),
+    );
+
+    const parsed = deserializeFameSwapQuoteResponse(apiResponse, {
+      tokenIn,
+      tokenOut,
+      amountIn: sourceQuote.requestedAmountIn,
+      config: config(),
+    });
+
+    assert.equal(parsed.status, "ready");
+    if (parsed.status === "ready") {
+      assert.equal(parsed.optimizerSummary?.selectedTemplateId, "debug-template");
+      assert.equal(parsed.optimizerSummary?.selectedAllocationBps, 5_000);
+      assert.ok(parsed.rejectedCandidates.length > 0);
     }
   });
 
@@ -404,13 +486,6 @@ describe("useFameSwapQuote", () => {
       {
         status: "quote_adapter_failure",
         message: "Base RPC is not configured for live liquidity quotes.",
-        rejectedCandidates: [
-          {
-            candidateId: "api-runner",
-            reason: "adapter_failure",
-            message: "Base RPC is not configured for live liquidity quotes.",
-          },
-        ],
       },
       {
         tokenIn,
@@ -423,5 +498,8 @@ describe("useFameSwapQuote", () => {
     assert.equal(parsed.status, "quote_adapter_failure");
     assert.equal("route" in parsed, false);
     assert.equal("approval" in parsed, false);
+    if (parsed.status === "quote_adapter_failure") {
+      assert.deepEqual(parsed.rejectedCandidates, []);
+    }
   });
 });

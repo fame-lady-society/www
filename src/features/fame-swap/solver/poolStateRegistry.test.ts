@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import {
+  CL_REPLAY_CAPABLE_FAME_POOL_IDS,
   famePoolStateRegistry,
   famePoolStateRegistrySourceId,
   QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
@@ -24,12 +25,26 @@ describe("FAME pool-state registry", () => {
       "uniswap-v2-fame-direct",
       "uniswap-v2-usdc-weth",
     ]);
+    assert.ok(
+      registry.pools
+        .filter((pool) => pool.capability === "quote-model")
+        .every(
+          (pool) =>
+            pool.stateSurface === "constant-product-reserves" &&
+            pool.replaySurface === null &&
+            pool.quoteModel === "constant-product-reserves" &&
+            pool.unsupportedReason === null,
+        ),
+    );
   });
 
-  it("keeps tracked-only pools visible instead of dropping unsupported math", () => {
+  it("keeps unsupported pools visible while making reviewed CL market-state eligible", () => {
     const registry = famePoolStateRegistry();
     const trackedOnly = registry.pools.filter(
       (pool) => pool.capability === "tracked-only",
+    );
+    const marketState = registry.pools.filter(
+      (pool) => pool.capability === "market-state",
     );
 
     assert.ok(
@@ -47,10 +62,47 @@ describe("FAME pool-state registry", () => {
       ),
     );
     assert.ok(
-      trackedOnly.some((pool) => pool.venue === "aerodrome-slipstream"),
+      marketState.some(
+        (pool) =>
+          pool.venue === "aerodrome-slipstream" &&
+          pool.stateSurface === "cl-head-snapshot" &&
+          pool.tickSpacing !== null,
+      ),
     );
-    assert.ok(trackedOnly.some((pool) => pool.venue === "uniswap-v3"));
-    assert.ok(trackedOnly.some((pool) => pool.venue === "uniswap-v4"));
+    assert.ok(
+      marketState.some(
+        (pool) =>
+          pool.venue === "uniswap-v3" &&
+          pool.stateSurface === "cl-head-snapshot" &&
+          pool.tickSpacing !== null,
+      ),
+    );
+    assert.ok(
+      marketState.some(
+        (pool) =>
+          pool.venue === "uniswap-v4" &&
+          pool.stateSurface === "cl-head-snapshot" &&
+          pool.poolKey !== null &&
+          pool.stateViewAddress !== null,
+      ),
+    );
+  });
+
+  it("marks only slipstream-usdc-weth-100 as CL replay-capable", () => {
+    const registry = famePoolStateRegistry();
+    const replayIds = registry.pools
+      .filter((pool) => pool.replaySurface === "cl-replay-v1")
+      .map((pool) => pool.id);
+    const replayPool = registry.pools.find(
+      (pool) => pool.id === "slipstream-usdc-weth-100",
+    );
+
+    assert.deepEqual(replayIds, CL_REPLAY_CAPABLE_FAME_POOL_IDS);
+    assert.equal(replayPool?.capability, "market-state");
+    assert.equal(replayPool?.stateSurface, "cl-head-snapshot");
+    assert.equal(replayPool?.replaySurface, "cl-replay-v1");
+    assert.equal(replayPool?.venue, "aerodrome-slipstream");
+    assert.equal(replayPool?.tickSpacing, 100);
   });
 
   it("omits direct SPX/FAME and cbBTC/FAME until authoritative metadata exists", () => {
@@ -90,7 +142,7 @@ describe("FAME pool-state registry", () => {
   it("derives the cross-repo source registry id from authoritative artifact hashes", () => {
     assert.equal(
       famePoolStateRegistrySourceId(),
-      `${FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash}:${FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash}`,
+      `pool-state-registry-v3:${FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash}:${FAME_SWAP_ARTIFACT_MANIFEST.solverRoutesJsonHash}`,
     );
   });
 });

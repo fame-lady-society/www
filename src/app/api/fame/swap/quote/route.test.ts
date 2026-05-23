@@ -20,12 +20,14 @@ function request(body: unknown): NextRequest {
   });
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function parseWarnEvent(value: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(value);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : null;
+    return isRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -181,14 +183,64 @@ describe("/api/fame/swap/quote", () => {
     assert.match(json.fixtureRouteHash, /^0x[a-fA-F0-9]{64}$/);
     assert.match(json.materializedRouteHash, /^0x[a-fA-F0-9]{64}$/);
     assert.equal(json.routeHash, json.materializedRouteHash);
-    assert.equal(json.approval.kind, "approval");
-    assert.equal(json.approval.contract.functionName, "approve");
-    assert.equal(typeof json.approval.amount, "string");
-    assert.equal(json.swap.kind, "swap");
-    assert.equal(json.swap.fixtureRouteHash, json.fixtureRouteHash);
-    assert.equal(json.swap.materializedRouteHash, json.materializedRouteHash);
-    assert.equal(json.swap.contract.functionName, "executeRoute");
+    assert.equal("approval" in json, false);
+    assert.equal("swap" in json, false);
+    assert.equal("rejectedCandidates" in json, false);
+    assert.equal("optimizerSummary" in json, false);
+    assert.equal("warnings" in json, false);
+    assert.equal("debug" in json, false);
     assert.equal(typeof json.routerFeeAmount, "string");
+    assert.doesNotMatch(
+      JSON.stringify(json),
+      /protocolEvidence|activeLiquidity/,
+    );
+  });
+
+  it("serializes ready debug fields only when requested", async () => {
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: USDC,
+        tokenOut: FAME,
+        amountIn: "1000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteForRequest: (quoteRequest) =>
+          quoteFameSwap({
+            ...quoteRequest,
+            now: new Date("2026-05-14T00:00:00Z"),
+            adapter: createDeterministicQuoteAdapter(),
+          }),
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    assert.equal("approval" in json, false);
+    assert.equal("swap" in json, false);
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const approval = debug.approval;
+    const swap = debug.swap;
+    assert.ok(isRecord(approval));
+    assert.ok(isRecord(swap));
+    const approvalContract = approval.contract;
+    const swapContract = swap.contract;
+    assert.ok(isRecord(approvalContract));
+    assert.ok(isRecord(swapContract));
+    assert.equal(approval.kind, "approval");
+    assert.equal(approvalContract.functionName, "approve");
+    assert.equal(swap.kind, "swap");
+    assert.equal(swapContract.functionName, "executeRoute");
+    assert.ok(Array.isArray(debug.rejectedCandidates));
     assert.doesNotMatch(
       JSON.stringify(json),
       /protocolEvidence|activeLiquidity/,
@@ -231,6 +283,59 @@ describe("/api/fame/swap/quote", () => {
     assert.equal("approval" in json, false);
     assert.equal("swap" in json, false);
     assert.equal("route" in json, false);
+    assert.equal("rejectedCandidates" in json, false);
+    assert.equal("debug" in json, false);
+    assert.doesNotMatch(JSON.stringify(json), /executeRoute|approve|calldata/);
+  });
+
+  it("serializes non-ready rejected candidates only in debug responses", async () => {
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: USDC,
+        tokenOut: FAME,
+        amountIn: "1000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteForRequest: (quoteRequest) => ({
+          status: "quote_adapter_failure",
+          tokenIn: quoteRequest.tokenIn,
+          tokenOut: quoteRequest.tokenOut,
+          requestedAmountIn: quoteRequest.amountIn,
+          rejectedCandidates: [
+            {
+              candidateId: "api-runner",
+              reason: "adapter_failure",
+              message: "Base RPC is not configured for live liquidity quotes.",
+            },
+          ],
+          message: "Base RPC is not configured for live liquidity quotes.",
+          diagnosticsVisibleByDefault: true,
+        }),
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "quote_adapter_failure");
+    assert.equal("rejectedCandidates" in json, false);
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const rejectedCandidates = debug.rejectedCandidates;
+    assert.ok(Array.isArray(rejectedCandidates));
+    const [firstRejection] = rejectedCandidates;
+    assert.ok(isRecord(firstRejection));
+    assert.equal(firstRejection.candidateId, "api-runner");
+    assert.equal("approval" in json, false);
+    assert.equal("swap" in json, false);
+    assert.equal("route" in json, false);
     assert.doesNotMatch(JSON.stringify(json), /executeRoute|approve|calldata/);
   });
 
@@ -261,19 +366,21 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(response.status, 200);
     assert.equal(json.status, "ready");
     assert.equal(json.route.recipient, FAME_SWAP_PREVIEW_RECIPIENT);
-    assert.equal(json.approval.kind, "approval");
-    assert.equal(json.swap.kind, "swap");
+    assert.equal("approval" in json, false);
+    assert.equal("swap" in json, false);
   });
 
   it("wraps server quotes with indexed pool-state when configured", async () => {
     const snapshot = createSnapshotQuoteAdapter();
     const requestedPoolIds: string[][] = [];
+    const requestedStateSurfaces: unknown[] = [];
     const response = await handleFameSwapQuotePost(
       request({
         tokenIn: WETH,
         tokenOut: FAME,
         amountIn: "100000000000000",
         recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
       }),
       {
         readinessForQuote: async (routerAddress) => ({
@@ -304,6 +411,7 @@ describe("/api/fame/swap/quote", () => {
         indexedPoolStateClient: {
           async fetchPoolStates(indexedRequest) {
             requestedPoolIds.push([...indexedRequest.poolIds]);
+            requestedStateSurfaces.push(indexedRequest.stateSurfaces);
             return {
               sourceRegistryId: famePoolStateRegistrySourceId(),
               currentBlock: indexedRequest.currentBlock,
@@ -342,13 +450,81 @@ describe("/api/fame/swap/quote", () => {
         },
       },
     );
-    const json = await response.json();
+    const json: unknown = await response.json();
 
     assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
     assert.equal(json.status, "ready");
+    assert.ok(isRecord(json.quoteContext));
     assert.equal(json.quoteContext.source, "indexed");
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const indexedPoolState = debug.indexedPoolState;
+    assert.ok(isRecord(indexedPoolState));
+    assert.equal(indexedPoolState.configured, true);
+    assert.equal(indexedPoolState.attempted, true);
+    assert.equal(indexedPoolState.reason, "wrapped");
+    assert.equal(indexedPoolState.sourceRegistryMatched, true);
+    assert.ok(isRecord(indexedPoolState.statusCounts));
+    assert.equal(indexedPoolState.statusCounts.fresh, 2);
     assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
+    assert.deepEqual(requestedStateSurfaces[0], ["cl-replay-v1"]);
     assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
+  });
+
+  it("reports when indexed pool-state helper is not configured", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: WETH,
+        tokenOut: FAME,
+        amountIn: "100000000000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = snapshot.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
+          },
+        }),
+        indexedPoolStateClient: null,
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    assert.ok(isRecord(json.quoteContext));
+    assert.equal(json.quoteContext.source, "live");
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const indexedPoolState = debug.indexedPoolState;
+    assert.ok(isRecord(indexedPoolState));
+    assert.equal(indexedPoolState.configured, false);
+    assert.equal(indexedPoolState.attempted, false);
+    assert.equal(indexedPoolState.reason, "not_configured");
   });
 
   it("falls back live and logs when indexed pool-state helper fails", async () => {
@@ -564,14 +740,11 @@ describe("/api/fame/swap/quote", () => {
       assert.equal(json.status, "quote_adapter_failure");
       assert.equal("approval" in json, false);
       assert.equal("swap" in json, false);
-      assert.ok(Array.isArray(json.rejectedCandidates));
+      assert.equal("rejectedCandidates" in json, false);
+      assert.equal("debug" in json, false);
       assert.doesNotMatch(
         JSON.stringify(json),
         /protocolEvidence|activeLiquidity/,
-      );
-      assert.match(
-        json.rejectedCandidates[0]?.message ?? "",
-        /Base RPC is not configured/,
       );
     } finally {
       if (previousRpc === undefined) {
