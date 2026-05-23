@@ -130,8 +130,6 @@ Local math state:
 
 Must do before the next dev deploy:
 
-- Add explicit CloudWatch log retention for the pool-state indexer, API, and authorizer Lambda log groups. The current construct has a 7-day SQS failure-queue retention, but no Lambda log-group retention policy.
-- Reduce chatty INFO logs before exercising the dev stack. Keep one compact indexer summary, one compact API batch summary, and error-level replay failures; avoid logging raw tick payloads or request bodies.
 - Verify the dev indexer emits `clReplaySnapshots: 1`, `clReplayWrittenPools: 1`, `clReplayFailedPools: 0`, and no swallowed replay failures.
 - Verify the dev API returns `pool-state-registry-v3:...` and stale replay responses do not include `bitmapWords` or `initializedTicks`.
 
@@ -264,7 +262,6 @@ Regression coverage should include:
 - backend same-block rejected writes cannot publish chunks under the wrong registry
 - backend replay chunk rows have TTL while latest pointer rows remain durable
 - backend API loads heavy replay chunks only for fresh matching latest pointers
-- CDK tests assert DynamoDB TTL and Lambda CloudWatch log retention
 - backend quote endpoint tests compare compact indexed CL quotes against the live quoter at the same block before `www` uses them
 
 ## Related
