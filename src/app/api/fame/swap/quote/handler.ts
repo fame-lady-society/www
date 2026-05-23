@@ -20,7 +20,11 @@ import {
   type FameIndexedPoolStateBatchResponse,
   type FameIndexedPoolStateClient,
 } from "@/features/fame-swap/solver/quotes/indexedPoolStateClient";
-import { createIndexedClReplayQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedClReplayAdapter";
+import {
+  createIndexedClQuoteClient,
+  type FameIndexedClQuoteClient,
+} from "@/features/fame-swap/solver/quotes/indexedClQuoteClient";
+import { createIndexedClQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedClQuoteAdapter";
 import { createIndexedReserveQuoteAdapter } from "@/features/fame-swap/solver/quotes/indexedReserveAdapter";
 import {
   createLiveLiquidityQuoteAdapter,
@@ -73,6 +77,7 @@ interface FameSwapQuotePostDependencies {
     request: FameSwapQuoteRequest & { readiness: FameSwapReadiness },
   ) => FameAsyncQuoteAdapter | Promise<FameAsyncQuoteAdapter>;
   indexedPoolStateClient?: FameIndexedPoolStateClient | null;
+  indexedClQuoteClient?: FameIndexedClQuoteClient | null;
 }
 
 type IndexedPoolStateHelperReason =
@@ -309,11 +314,31 @@ function optionalServerIntegerEnv(name: string): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function indexedPoolStateClientFromEnv(): FameIndexedPoolStateClient | null {
-  const endpointUrl = optionalServerEnv("FAME_POOL_STATE_API_URL");
+function poolStateEndpointUrlFromEnv(): string | undefined {
+  return optionalServerEnv("FAME_POOL_STATE_API_URL");
+}
+
+function poolQuoteEndpointUrlFromEnv(): string | undefined {
+  return optionalServerEnv("FAME_POOL_QUOTE_API_URL");
+}
+
+function indexedPoolStateClientFromEnv(
+  endpointUrl = poolStateEndpointUrlFromEnv(),
+): FameIndexedPoolStateClient | null {
   const serviceToken = optionalServerEnv("FAME_POOL_STATE_SERVICE_TOKEN");
   if (!endpointUrl || !serviceToken) return null;
   return createIndexedPoolStateClient({
+    endpointUrl,
+    serviceToken,
+    timeoutMs: optionalServerIntegerEnv("FAME_POOL_STATE_TIMEOUT_MS"),
+  });
+}
+
+function indexedClQuoteClientFromEnv(): FameIndexedClQuoteClient | null {
+  const endpointUrl = poolQuoteEndpointUrlFromEnv();
+  const serviceToken = optionalServerEnv("FAME_POOL_STATE_SERVICE_TOKEN");
+  if (!endpointUrl || !serviceToken) return null;
+  return createIndexedClQuoteClient({
     endpointUrl,
     serviceToken,
     timeoutMs: optionalServerIntegerEnv("FAME_POOL_STATE_TIMEOUT_MS"),
@@ -397,9 +422,10 @@ async function maybeWrapIndexedQuoteAdapter(options: {
   tokenIn: Address;
   tokenOut: Address;
   poolStateClient: FameIndexedPoolStateClient | null;
+  poolQuoteClient: FameIndexedClQuoteClient | null;
 }): Promise<IndexedQuoteAdapterResult> {
   const context = options.adapter.quoteContext;
-  if (!options.poolStateClient) {
+  if (!options.poolStateClient && !options.poolQuoteClient) {
     return {
       adapter: options.adapter,
       debug: {
@@ -456,80 +482,78 @@ async function maybeWrapIndexedQuoteAdapter(options: {
   }
 
   const currentBlock = Number(context.blockNumber);
-  try {
-    const expectedSourceRegistryId = famePoolStateRegistrySourceId();
-    const indexedState = await options.poolStateClient.fetchPoolStates({
-      currentBlock,
-      maxFreshnessBlocks: optionalServerIntegerEnv(
-        "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
-      ),
-      stateSurfaces: ["cl-replay-v1"],
-      poolIds,
-    });
-    if (indexedState.sourceRegistryId !== expectedSourceRegistryId) {
-      logIndexedPoolStateHelperUnavailable({
-        reason: "source_registry_mismatch",
+  const expectedSourceRegistryId = famePoolStateRegistrySourceId();
+  const maxFreshnessBlocks = optionalServerIntegerEnv(
+    "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
+  );
+  let wrappedAdapter = options.adapter;
+  let debugReason: IndexedPoolStateHelperReason = "wrapped";
+  let sourceRegistryMatched: boolean | undefined =
+    options.poolStateClient ? undefined : true;
+  let httpStatus: number | undefined;
+  let statusCounts: IndexedPoolStateHelperDebug["statusCounts"] | undefined;
+
+  if (options.poolStateClient) {
+    try {
+      const indexedState = await options.poolStateClient.fetchPoolStates({
         currentBlock,
-        poolCount: poolIds.length,
-        expectedSourceRegistryId,
-        actualSourceRegistryId: indexedState.sourceRegistryId,
+        maxFreshnessBlocks,
+        poolIds,
       });
-      return {
-        adapter: options.adapter,
-        debug: {
-          configured: true,
-          attempted: true,
+      statusCounts = indexedPoolStateStatusCounts(indexedState);
+      if (indexedState.sourceRegistryId !== expectedSourceRegistryId) {
+        logIndexedPoolStateHelperUnavailable({
           reason: "source_registry_mismatch",
           currentBlock,
           poolCount: poolIds.length,
-          sourceRegistryMatched: false,
-          statusCounts: indexedPoolStateStatusCounts(indexedState),
-        },
-      };
+          expectedSourceRegistryId,
+          actualSourceRegistryId: indexedState.sourceRegistryId,
+        });
+        debugReason = "source_registry_mismatch";
+        sourceRegistryMatched = false;
+      } else {
+        sourceRegistryMatched = true;
+        wrappedAdapter = createIndexedReserveQuoteAdapter({
+          indexedState,
+          fallback: wrappedAdapter,
+          expectedSourceRegistryId,
+        });
+      }
+    } catch (error) {
+      const failure = indexedPoolStateFailureReason(error);
+      logIndexedPoolStateHelperUnavailable({
+        ...failure,
+        currentBlock,
+        poolCount: poolIds.length,
+      });
+      debugReason = failure.reason;
+      httpStatus = failure.httpStatus;
     }
-    const reserveAdapter = createIndexedReserveQuoteAdapter({
-      indexedState,
-      fallback: options.adapter,
+  }
+
+  if (options.poolQuoteClient) {
+    wrappedAdapter = createIndexedClQuoteAdapter({
+      quoteClient: options.poolQuoteClient,
+      fallback: wrappedAdapter,
+      currentBlock,
+      maxFreshnessBlocks,
       expectedSourceRegistryId,
     });
-    return {
-      adapter: createIndexedClReplayQuoteAdapter({
-        indexedState,
-        fallback: reserveAdapter,
-        expectedSourceRegistryId,
-        mode: "shadow",
-      }),
-      debug: {
-        configured: true,
-        attempted: true,
-        reason: "wrapped",
-        currentBlock,
-        poolCount: poolIds.length,
-        sourceRegistryMatched: true,
-        statusCounts: indexedPoolStateStatusCounts(indexedState),
-      },
-    };
-  } catch (error) {
-    const failure = indexedPoolStateFailureReason(error);
-    logIndexedPoolStateHelperUnavailable({
-      ...failure,
+  }
+
+  return {
+    adapter: wrappedAdapter,
+    debug: {
+      configured: true,
+      attempted: true,
+      reason: debugReason,
       currentBlock,
       poolCount: poolIds.length,
-    });
-    return {
-      adapter: options.adapter,
-      debug: {
-        configured: true,
-        attempted: true,
-        reason: failure.reason,
-        currentBlock,
-        poolCount: poolIds.length,
-        ...(failure.httpStatus === undefined
-          ? {}
-          : { httpStatus: failure.httpStatus }),
-      },
-    };
-  }
+      ...(sourceRegistryMatched === undefined ? {} : { sourceRegistryMatched }),
+      ...(httpStatus === undefined ? {} : { httpStatus }),
+      ...(statusCounts === undefined ? {} : { statusCounts }),
+    },
+  };
 }
 
 async function readinessForQuote(routerAddress: Address | null) {
@@ -745,10 +769,15 @@ export async function handleFameSwapQuotePost(
         deps.quoteForRequest || deps.quoteAdapterForRequest
           ? null
           : publicClientForQuote();
+      const poolStateEndpointUrl = poolStateEndpointUrlFromEnv();
       const indexedPoolStateClient =
         deps.indexedPoolStateClient === undefined
-          ? indexedPoolStateClientFromEnv()
+          ? indexedPoolStateClientFromEnv(poolStateEndpointUrl)
           : deps.indexedPoolStateClient;
+      const indexedClQuoteClient =
+        deps.indexedClQuoteClient === undefined
+          ? indexedClQuoteClientFromEnv()
+          : deps.indexedClQuoteClient;
       const adapterPromise = deps.quoteAdapterForRequest
         ? readinessPromise.then((readiness) =>
             deps.quoteAdapterForRequest!({
@@ -798,6 +827,7 @@ export async function handleFameSwapQuotePost(
           tokenIn: tokenIn.address,
           tokenOut: tokenOut.address,
           poolStateClient: indexedPoolStateClient,
+          poolQuoteClient: indexedClQuoteClient,
         });
         indexedPoolStateDebug = indexedAdapter.debug;
         const quote = await quoteFameSwapAsync({

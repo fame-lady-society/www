@@ -10,6 +10,10 @@ import { createSnapshotQuoteAdapter } from "../../../../../features/fame-swap/so
 import { FAME, USDC, WETH } from "../../../../../features/fame-swap/tokens";
 import { publicFeeBreakdown } from "../../../../../features/fame-swap/solver/quoteWire";
 import { famePoolStateRegistrySourceId } from "../../../../../features/fame-swap/solver/poolStateRegistry";
+import type {
+  FameIndexedClQuoteBatchRequest,
+  FameIndexedClQuoteBatchResponse,
+} from "../../../../../features/fame-swap/solver/quotes/indexedClQuoteClient";
 import { handleFameSwapQuotePost } from "./handler";
 import { POST } from "./route";
 
@@ -53,6 +57,49 @@ function assertWarnLog(): {
     restore() {
       console.warn = originalWarn;
     },
+  };
+}
+
+function compactClQuoteResponse(
+  indexedRequest: FameIndexedClQuoteBatchRequest,
+): FameIndexedClQuoteBatchResponse {
+  return {
+    sourceRegistryId: famePoolStateRegistrySourceId(),
+    currentBlock: indexedRequest.currentBlock,
+    producerMaxFreshnessBlocks: 120,
+    effectiveMaxFreshnessBlocks: 120,
+    quotes: indexedRequest.quotes.map((quote) => ({
+      status: "quoted",
+      quoteKind: "cl-quote-v1",
+      poolId: "slipstream-usdc-weth-100",
+      chainId: 8453,
+      poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+      token0: WETH,
+      token1: USDC,
+      tokenIn: quote.tokenIn,
+      tokenOut: quote.tokenOut,
+      venueFamily: "Slipstream",
+      tickSpacing: 100,
+      amountIn: quote.amountIn,
+      amountOut: "999900",
+      sqrtPriceX96: "79228162514264337593543950336",
+      sqrtPriceX96After: "79228162514264337593543950335",
+      tick: 0,
+      liquidity: "1000000000000000000",
+      fee: "100",
+      feeSource: "pool-fee",
+      observedThroughBlock: 124,
+      blockHash:
+        "0x1111111111111111111111111111111111111111111111111111111111111111",
+      parentHash:
+        "0x2222222222222222222222222222222222222222222222222222222222222222",
+      snapshotId: "unit-cl-quote",
+      stateHash:
+        "0x3333333333333333333333333333333333333333333333333333333333333333",
+      source: "slipstream-pool-state",
+      sourceRegistryId: famePoolStateRegistrySourceId(),
+      maxFreshnessBlocks: 120,
+    })),
   };
 }
 
@@ -448,6 +495,7 @@ describe("/api/fame/swap/quote", () => {
             };
           },
         },
+        indexedClQuoteClient: null,
       },
     );
     const json: unknown = await response.json();
@@ -468,7 +516,7 @@ describe("/api/fame/swap/quote", () => {
     assert.ok(isRecord(indexedPoolState.statusCounts));
     assert.equal(indexedPoolState.statusCounts.fresh, 2);
     assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
-    assert.deepEqual(requestedStateSurfaces[0], ["cl-replay-v1"]);
+    assert.equal(requestedStateSurfaces[0], undefined);
     assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
   });
 
@@ -509,6 +557,7 @@ describe("/api/fame/swap/quote", () => {
           },
         }),
         indexedPoolStateClient: null,
+        indexedClQuoteClient: null,
       },
     );
     const json: unknown = await response.json();
@@ -525,6 +574,76 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(indexedPoolState.configured, false);
     assert.equal(indexedPoolState.attempted, false);
     assert.equal(indexedPoolState.reason, "not_configured");
+  });
+
+  it("does not derive compact CL quotes from the pool-state endpoint env", async () => {
+    const previousPoolStateUrl = process.env.FAME_POOL_STATE_API_URL;
+    const previousPoolQuoteUrl = process.env.FAME_POOL_QUOTE_API_URL;
+    const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+    const previousFetch = globalThis.fetch;
+    let fetchCalls = 0;
+
+    process.env.FAME_POOL_STATE_API_URL =
+      "https://society.example/fame/pool-state";
+    process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+    delete process.env.FAME_POOL_QUOTE_API_URL;
+    globalThis.fetch = async () => {
+      fetchCalls += 1;
+      throw new Error("unexpected compact quote fetch");
+    };
+
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              return {
+                status: "quoted",
+                amountIn: edgeRequest.amountIn,
+                amountOut: edgeRequest.amountIn,
+                capacityIn: null,
+                fee: edgeRequest.edge.fee,
+                evidence: "fallback live quote",
+                context: {
+                  source: "live" as const,
+                  chainId: 8453,
+                  blockNumber: 125n,
+                },
+              };
+            },
+          }),
+          indexedPoolStateClient: null,
+        },
+      );
+
+      assert.equal(response.status, 200);
+      assert.equal(fetchCalls, 0);
+    } finally {
+      globalThis.fetch = previousFetch;
+      if (previousPoolStateUrl === undefined) delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousPoolStateUrl;
+      if (previousPoolQuoteUrl === undefined) delete process.env.FAME_POOL_QUOTE_API_URL;
+      else process.env.FAME_POOL_QUOTE_API_URL = previousPoolQuoteUrl;
+      if (previousServiceToken === undefined)
+        delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+    }
   });
 
   it("falls back live and logs when indexed pool-state helper fails", async () => {
@@ -571,6 +690,7 @@ describe("/api/fame/swap/quote", () => {
               );
             },
           },
+          indexedClQuoteClient: null,
         },
       );
       const json = await response.json();
@@ -587,6 +707,71 @@ describe("/api/fame/swap/quote", () => {
       assert.equal(warnLog.events[0]?.currentBlock, 125);
       assert.equal(typeof warnLog.events[0]?.poolCount, "number");
       assert.doesNotMatch(warnLog.raw.join("\n"), /unit\.example|token/);
+    } finally {
+      warnLog.restore();
+    }
+  });
+
+  it("still uses compact CL quotes when reserve pool-state fails", async () => {
+    const warnLog = assertWarnLog();
+    const quoteRequests: FameIndexedClQuoteBatchRequest[] = [];
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              return {
+                status: "quoted",
+                amountIn: edgeRequest.amountIn,
+                amountOut: 42n,
+                capacityIn: null,
+                fee: edgeRequest.edge.fee,
+                evidence: "fallback live quote",
+                context: {
+                  source: "live" as const,
+                  chainId: 8453,
+                  blockNumber: 125n,
+                },
+              };
+            },
+          }),
+          indexedPoolStateClient: {
+            async fetchPoolStates() {
+              throw new Error(
+                "FAME indexed pool-state request failed with status 503.",
+              );
+            },
+          },
+          indexedClQuoteClient: {
+            async fetchQuotes(indexedRequest) {
+              quoteRequests.push(indexedRequest);
+              return compactClQuoteResponse(indexedRequest);
+            },
+          },
+        },
+      );
+      const json = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(json.status, "ready");
+      assert.ok(quoteRequests.length > 0);
+      assert.equal(warnLog.events[0]?.reason, "http_error");
     } finally {
       warnLog.restore();
     }
@@ -640,6 +825,7 @@ describe("/api/fame/swap/quote", () => {
               };
             },
           },
+          indexedClQuoteClient: null,
         },
       );
       const json = await response.json();
