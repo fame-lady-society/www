@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import {
   CL_REPLAY_CAPABLE_FAME_POOL_IDS,
+  COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS,
+  famePoolSupportsCompactQuote,
   famePoolStateRegistry,
   famePoolStateRegistrySourceId,
   QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
@@ -103,6 +105,19 @@ describe("FAME pool-state registry", () => {
     assert.equal(replayPool?.replaySurface, "cl-replay-v1");
     assert.equal(replayPool?.venue, "aerodrome-slipstream");
     assert.equal(replayPool?.tickSpacing, 100);
+  });
+
+  it("derives compact quote-capable pools from reserve quote models plus CL replay", () => {
+    assert.deepEqual(COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS, [
+      ...QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
+      ...CL_REPLAY_CAPABLE_FAME_POOL_IDS,
+    ]);
+    assert.equal(famePoolSupportsCompactQuote("uniswap-v2-usdc-weth"), true);
+    assert.equal(
+      famePoolSupportsCompactQuote("slipstream-usdc-weth-100"),
+      true,
+    );
+    assert.equal(famePoolSupportsCompactQuote("native-wrap-weth"), false);
   });
 
   it("omits direct SPX/FAME and cbBTC/FAME until authoritative metadata exists", () => {

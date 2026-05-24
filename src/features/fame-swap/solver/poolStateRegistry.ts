@@ -34,6 +34,11 @@ export const CL_REPLAY_CAPABLE_FAME_POOL_IDS = [
   "slipstream-usdc-weth-100",
 ] as const;
 
+export const COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS = [
+  ...QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
+  ...CL_REPLAY_CAPABLE_FAME_POOL_IDS,
+] as const;
+
 export type FamePoolStateCapability =
   | "market-state"
   | "quote-model"
@@ -143,6 +148,10 @@ export function famePoolStateRegistryPoolIdsForPair(
   tokenOut: Address,
 ): string[] {
   return routePoolIdsForDirections([[tokenIn, tokenOut]]);
+}
+
+export function famePoolSupportsCompactQuote(poolId: string): boolean {
+  return COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS.some((id) => id === poolId);
 }
 
 export function famePoolStateRegistrySourceId(

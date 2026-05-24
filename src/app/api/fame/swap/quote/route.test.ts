@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
+import { isAddress, type Address } from "viem";
 import {
   FAME_SWAP_PREVIEW_RECIPIENT,
   quoteFameSwap,
@@ -11,9 +12,9 @@ import { FAME, USDC, WETH } from "../../../../../features/fame-swap/tokens";
 import { publicFeeBreakdown } from "../../../../../features/fame-swap/solver/quoteWire";
 import { famePoolStateRegistrySourceId } from "../../../../../features/fame-swap/solver/poolStateRegistry";
 import type {
-  FameIndexedClQuoteBatchRequest,
-  FameIndexedClQuoteBatchResponse,
-} from "../../../../../features/fame-swap/solver/quotes/indexedClQuoteClient";
+  FamePoolQuoteBatchRequest,
+  FamePoolQuoteBatchResponse,
+} from "../../../../../features/fame-swap/solver/quotes/indexedQuoteApiClient";
 import { handleFameSwapQuotePost } from "./handler";
 import { POST } from "./route";
 
@@ -26,6 +27,54 @@ function request(body: unknown): NextRequest {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function assertAddress(value: unknown, path: string): asserts value is Address {
+  if (typeof value !== "string" || !isAddress(value, { strict: false })) {
+    throw new Error(`Expected address at ${path}.`);
+  }
+}
+
+function quoteRequestEntryFromValue(
+  value: unknown,
+  path: string,
+): FamePoolQuoteBatchRequest["quotes"][number] {
+  assert.ok(isRecord(value), `Expected object at ${path}.`);
+  const { poolId, tokenIn, tokenOut, amountIn } = value;
+  if (typeof poolId !== "string") {
+    throw new Error(`Expected string at ${path}.poolId.`);
+  }
+  assertAddress(tokenIn, `${path}.tokenIn`);
+  assertAddress(tokenOut, `${path}.tokenOut`);
+  if (typeof amountIn !== "string") {
+    throw new Error(`Expected string at ${path}.amountIn.`);
+  }
+  return { poolId, tokenIn, tokenOut, amountIn };
+}
+
+function quoteBatchRequestFromBody(body: unknown): FamePoolQuoteBatchRequest {
+  const parsed: unknown = JSON.parse(String(body));
+  assert.ok(isRecord(parsed), "Expected quote batch request object.");
+  const { currentBlock, maxFreshnessBlocks, quotes } = parsed;
+  if (typeof currentBlock !== "number" || !Number.isSafeInteger(currentBlock)) {
+    throw new Error("Expected safe integer currentBlock.");
+  }
+  if (maxFreshnessBlocks !== undefined) {
+    if (
+      typeof maxFreshnessBlocks !== "number" ||
+      !Number.isSafeInteger(maxFreshnessBlocks)
+    ) {
+      throw new Error("Expected safe integer maxFreshnessBlocks.");
+    }
+  }
+  assert.ok(Array.isArray(quotes), "Expected quote batch request quotes.");
+  return {
+    currentBlock,
+    ...(maxFreshnessBlocks === undefined ? {} : { maxFreshnessBlocks }),
+    quotes: quotes.map((quote, index) =>
+      quoteRequestEntryFromValue(quote, `quotes[${index.toString()}]`),
+    ),
+  };
 }
 
 function parseWarnEvent(value: string): Record<string, unknown> | null {
@@ -57,49 +106,6 @@ function assertWarnLog(): {
     restore() {
       console.warn = originalWarn;
     },
-  };
-}
-
-function compactClQuoteResponse(
-  indexedRequest: FameIndexedClQuoteBatchRequest,
-): FameIndexedClQuoteBatchResponse {
-  return {
-    sourceRegistryId: famePoolStateRegistrySourceId(),
-    currentBlock: indexedRequest.currentBlock,
-    producerMaxFreshnessBlocks: 120,
-    effectiveMaxFreshnessBlocks: 120,
-    quotes: indexedRequest.quotes.map((quote) => ({
-      status: "quoted",
-      quoteKind: "cl-quote-v1",
-      poolId: "slipstream-usdc-weth-100",
-      chainId: 8453,
-      poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
-      token0: WETH,
-      token1: USDC,
-      tokenIn: quote.tokenIn,
-      tokenOut: quote.tokenOut,
-      venueFamily: "Slipstream",
-      tickSpacing: 100,
-      amountIn: quote.amountIn,
-      amountOut: "999900",
-      sqrtPriceX96: "79228162514264337593543950336",
-      sqrtPriceX96After: "79228162514264337593543950335",
-      tick: 0,
-      liquidity: "1000000000000000000",
-      fee: "100",
-      feeSource: "pool-fee",
-      observedThroughBlock: 124,
-      blockHash:
-        "0x1111111111111111111111111111111111111111111111111111111111111111",
-      parentHash:
-        "0x2222222222222222222222222222222222222222222222222222222222222222",
-      snapshotId: "unit-cl-quote",
-      stateHash:
-        "0x3333333333333333333333333333333333333333333333333333333333333333",
-      source: "slipstream-pool-state",
-      sourceRegistryId: famePoolStateRegistrySourceId(),
-      maxFreshnessBlocks: 120,
-    })),
   };
 }
 
@@ -417,110 +423,131 @@ describe("/api/fame/swap/quote", () => {
     assert.equal("swap" in json, false);
   });
 
-  it("wraps server quotes with indexed pool-state when configured", async () => {
+  it("uses FAME_POOL_API_URL-derived pool quotes and never calls pool-state in normal execution", async () => {
     const snapshot = createSnapshotQuoteAdapter();
-    const requestedPoolIds: string[][] = [];
-    const requestedStateSurfaces: unknown[] = [];
-    const response = await handleFameSwapQuotePost(
-      request({
-        tokenIn: WETH,
-        tokenOut: FAME,
-        amountIn: "100000000000000",
-        recipient: "0x0000000000000000000000000000000000000abc",
-        includeDebug: true,
-      }),
-      {
-        readinessForQuote: async (routerAddress) => ({
-          status: "ready",
-          routerAddress: routerAddress!,
-          feePpm: 2_222n,
-        }),
-        quoteAdapterForRequest: async () => ({
-          quoteContext: {
-            source: "live",
-            chainId: 8453,
-            blockNumber: 125n,
-          },
-          async quoteEdge(edgeRequest) {
-            const quote = snapshot.quoteEdge(edgeRequest);
-            return quote.status === "quoted"
-              ? {
-                  ...quote,
-                  context: {
-                    source: "live" as const,
-                    chainId: 8453,
-                    blockNumber: 125n,
-                  },
-                }
-              : quote;
-          },
-        }),
-        indexedPoolStateClient: {
-          async fetchPoolStates(indexedRequest) {
-            requestedPoolIds.push([...indexedRequest.poolIds]);
-            requestedStateSurfaces.push(indexedRequest.stateSurfaces);
-            return {
-              sourceRegistryId: famePoolStateRegistrySourceId(),
-              currentBlock: indexedRequest.currentBlock,
-              producerMaxFreshnessBlocks: 120,
-              effectiveMaxFreshnessBlocks: 120,
-              pools: indexedRequest.poolIds.map((poolId) =>
-                poolId === "uniswap-v2-fame-direct" ||
-                poolId === "scale-equalizer-weth-fame"
-                  ? {
-                      status: "fresh" as const,
-                      poolId,
-                      chainId: 8453,
-                      poolAddress:
-                        poolId === "uniswap-v2-fame-direct"
-                          ? "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c"
-                          : "0x0db3a3228520fc31162c24f1b47177255cc1b82e",
-                      token0: WETH,
-                      token1: FAME,
-                      reserve0: "1000000000000000000",
-                      reserve1: "1000000000000000000000000000000000000",
-                      k: "1000000000000000000000000000000000000000000000000000000",
-                      observedThroughBlock: 124,
-                      lastReserveChangeBlock: 123,
-                      source: "sync-event" as const,
-                      quoteModel: "constant-product-reserves" as const,
-                      maxFreshnessBlocks: 120,
-                    }
-                  : {
-                      status: "unknown" as const,
-                      requested: { poolId },
-                      reason: "unit-test",
-                    },
-              ),
-            };
-          },
-        },
-        indexedClQuoteClient: null,
-      },
-    );
-    const json: unknown = await response.json();
+    const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
+    const previousPoolStateUrl = process.env.FAME_POOL_STATE_API_URL;
+    const previousPoolQuoteUrl = process.env.FAME_POOL_QUOTE_API_URL;
+    const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+    const previousFetch = globalThis.fetch;
+    const fetchRequests: Request[] = [];
+    let poolStateFetches = 0;
 
-    assert.equal(response.status, 200);
-    assert.ok(isRecord(json));
-    assert.equal(json.status, "ready");
-    assert.ok(isRecord(json.quoteContext));
-    assert.equal(json.quoteContext.source, "indexed");
-    const debug = json.debug;
-    assert.ok(isRecord(debug));
-    const indexedPoolState = debug.indexedPoolState;
-    assert.ok(isRecord(indexedPoolState));
-    assert.equal(indexedPoolState.configured, true);
-    assert.equal(indexedPoolState.attempted, true);
-    assert.equal(indexedPoolState.reason, "wrapped");
-    assert.equal(indexedPoolState.sourceRegistryMatched, true);
-    assert.ok(isRecord(indexedPoolState.statusCounts));
-    assert.equal(indexedPoolState.statusCounts.fresh, 2);
-    assert.ok(requestedPoolIds[0]?.includes("uniswap-v2-fame-direct"));
-    assert.equal(requestedStateSurfaces[0], undefined);
-    assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
+    process.env.FAME_POOL_API_URL = "https://society.example";
+    process.env.FAME_POOL_STATE_API_URL =
+      "https://trap.example/fame/pool-state";
+    process.env.FAME_POOL_QUOTE_API_URL =
+      "https://trap.example/fame/pool-quotes";
+    process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+    globalThis.fetch = async (input, init) => {
+      const fetchRequest = new Request(input, init);
+      fetchRequests.push(fetchRequest);
+      if (fetchRequest.url.includes("/fame/pool-state")) poolStateFetches += 1;
+      const quoteRequest = quoteBatchRequestFromBody(init?.body);
+      return new Response(
+        JSON.stringify({
+          sourceRegistryId: famePoolStateRegistrySourceId(),
+          currentBlock: quoteRequest.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: quoteRequest.quotes.map((quote) => ({
+            status: "unavailable",
+            requested: quote,
+            reason: "missing-indexed-state",
+          })),
+        } satisfies FamePoolQuoteBatchResponse),
+      );
+    };
+
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              const quote = snapshot.quoteEdge(edgeRequest);
+              return quote.status === "quoted"
+                ? {
+                    ...quote,
+                    context: {
+                      source: "live" as const,
+                      chainId: 8453,
+                      blockNumber: 125n,
+                    },
+                  }
+                : quote;
+            },
+          }),
+        },
+      );
+      const json: unknown = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.ok(isRecord(json));
+      assert.equal(json.status, "ready");
+      assert.equal(poolStateFetches, 0);
+      assert.ok(fetchRequests.length > 0);
+      assert.equal(
+        fetchRequests[0]?.url,
+        "https://society.example/fame/pool-quotes",
+      );
+      assert.equal(
+        fetchRequests[0]?.headers.get("authorization"),
+        "Bearer unit-token",
+      );
+      const debug = json.debug;
+      assert.ok(isRecord(debug));
+      assert.equal("indexedPoolState" in debug, false);
+      const quoteApi = debug.quoteApi;
+      assert.ok(isRecord(quoteApi));
+      assert.equal(quoteApi.configured, true);
+      assert.equal(quoteApi.attempted, true);
+      assert.equal(quoteApi.reason, "wrapped");
+      const timing = quoteApi.timing;
+      assert.ok(isRecord(timing));
+      assert.ok(
+        typeof timing.batchRequestCount === "number" &&
+          timing.batchRequestCount > 0,
+      );
+      assert.equal(typeof timing.totalBatchDurationMs, "number");
+      assert.equal(typeof timing.maxBatchDurationMs, "number");
+      assert.equal(typeof quoteApi.poolCount, "number");
+      assert.doesNotMatch(JSON.stringify(json), /society\.example/);
+      assert.doesNotMatch(JSON.stringify(json), /unit-token|protocolEvidence/);
+    } finally {
+      globalThis.fetch = previousFetch;
+      if (previousPoolApiUrl === undefined)
+        delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
+      if (previousPoolStateUrl === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousPoolStateUrl;
+      if (previousPoolQuoteUrl === undefined)
+        delete process.env.FAME_POOL_QUOTE_API_URL;
+      else process.env.FAME_POOL_QUOTE_API_URL = previousPoolQuoteUrl;
+      if (previousServiceToken === undefined)
+        delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+    }
   });
 
-  it("reports when indexed pool-state helper is not configured", async () => {
+  it("reports when the quote API helper is not configured", async () => {
     const snapshot = createSnapshotQuoteAdapter();
     const response = await handleFameSwapQuotePost(
       request({
@@ -556,8 +583,7 @@ describe("/api/fame/swap/quote", () => {
               : quote;
           },
         }),
-        indexedPoolStateClient: null,
-        indexedClQuoteClient: null,
+        quoteApiClient: null,
       },
     );
     const json: unknown = await response.json();
@@ -569,27 +595,408 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(json.quoteContext.source, "live");
     const debug = json.debug;
     assert.ok(isRecord(debug));
-    const indexedPoolState = debug.indexedPoolState;
-    assert.ok(isRecord(indexedPoolState));
-    assert.equal(indexedPoolState.configured, false);
-    assert.equal(indexedPoolState.attempted, false);
-    assert.equal(indexedPoolState.reason, "not_configured");
+    const quoteApi = debug.quoteApi;
+    assert.ok(isRecord(quoteApi));
+    assert.equal(quoteApi.configured, false);
+    assert.equal(quoteApi.attempted, false);
+    assert.equal(quoteApi.reason, "not_configured");
   });
 
-  it("does not derive compact CL quotes from the pool-state endpoint env", async () => {
-    const previousPoolStateUrl = process.env.FAME_POOL_STATE_API_URL;
-    const previousPoolQuoteUrl = process.env.FAME_POOL_QUOTE_API_URL;
+  for (const testCase of [
+    {
+      name: "timeout",
+      envName: "FAME_POOL_QUOTE_TIMEOUT_MS",
+      envValue: "1.5",
+    },
+    {
+      name: "freshness",
+      envName: "FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS",
+      envValue: "-1",
+    },
+  ] as const) {
+    it(`rejects invalid quote API ${testCase.name} integer env before sending bearer auth`, async () => {
+      const warnLog = assertWarnLog();
+      const snapshot = createSnapshotQuoteAdapter();
+      const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
+      const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      const previousQuoteTimeout = process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+      const previousMaxFreshness =
+        process.env.FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS;
+      const previousFetch = globalThis.fetch;
+      let fetchCalls = 0;
+
+      process.env.FAME_POOL_API_URL = "https://society.example";
+      process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+      process.env.FAME_POOL_QUOTE_TIMEOUT_MS = "2500";
+      delete process.env.FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS;
+      process.env[testCase.envName] = testCase.envValue;
+      globalThis.fetch = async () => {
+        fetchCalls += 1;
+        throw new Error("helper fetch should not receive bearer auth");
+      };
+
+      try {
+        const response = await handleFameSwapQuotePost(
+          request({
+            tokenIn: WETH,
+            tokenOut: FAME,
+            amountIn: "100000000000000",
+            recipient: "0x0000000000000000000000000000000000000abc",
+            includeDebug: true,
+          }),
+          {
+            readinessForQuote: async (routerAddress) => ({
+              status: "ready",
+              routerAddress: routerAddress!,
+              feePpm: 2_222n,
+            }),
+            quoteAdapterForRequest: async () => ({
+              quoteContext: {
+                source: "live",
+                chainId: 8453,
+                blockNumber: 125n,
+              },
+              async quoteEdge(edgeRequest) {
+                const quote = snapshot.quoteEdge(edgeRequest);
+                return quote.status === "quoted"
+                  ? {
+                      ...quote,
+                      context: {
+                        source: "live" as const,
+                        chainId: 8453,
+                        blockNumber: 125n,
+                      },
+                    }
+                  : quote;
+              },
+            }),
+          },
+        );
+        const json: unknown = await response.json();
+
+        assert.equal(response.status, 200);
+        assert.ok(isRecord(json));
+        assert.equal(json.status, "ready");
+        assert.equal(fetchCalls, 0);
+        assert.equal(
+          warnLog.events[0]?.event,
+          "fame-pool-quote-api-unavailable",
+        );
+        assert.equal(warnLog.events[0]?.reason, "invalid_config");
+        const debug = json.debug;
+        assert.ok(isRecord(debug));
+        const quoteApi = debug.quoteApi;
+        assert.ok(isRecord(quoteApi));
+        assert.equal(quoteApi.configured, true);
+        assert.equal(quoteApi.attempted, false);
+        assert.equal(quoteApi.reason, "invalid_config");
+        assert.doesNotMatch(
+          JSON.stringify(json),
+          /unit-token|society\.example/,
+        );
+      } finally {
+        globalThis.fetch = previousFetch;
+        warnLog.restore();
+        if (previousPoolApiUrl === undefined)
+          delete process.env.FAME_POOL_API_URL;
+        else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
+        if (previousServiceToken === undefined)
+          delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+        else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+        if (previousQuoteTimeout === undefined)
+          delete process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+        else process.env.FAME_POOL_QUOTE_TIMEOUT_MS = previousQuoteTimeout;
+        if (previousMaxFreshness === undefined)
+          delete process.env.FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS;
+        else
+          process.env.FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS =
+            previousMaxFreshness;
+      }
+    });
+  }
+
+  it("reports selected compact quote attribution only in debug output", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: WETH,
+        tokenOut: FAME,
+        amountIn: "100000000000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = snapshot.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
+          },
+        }),
+        quoteApiClient: {
+          async fetchQuotes(quoteRequest) {
+            return {
+              sourceRegistryId: famePoolStateRegistrySourceId(),
+              currentBlock: quoteRequest.currentBlock,
+              producerMaxFreshnessBlocks: 120,
+              effectiveMaxFreshnessBlocks: 120,
+              quotes: quoteRequest.quotes.map((quote) =>
+                quote.poolId === "uniswap-v2-fame-direct"
+                  ? {
+                      status: "quoted" as const,
+                      quoteKind: "constant-product-quote-v1" as const,
+                      poolId: "uniswap-v2-fame-direct",
+                      chainId: 8453,
+                      poolAddress: "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
+                      token0: WETH,
+                      token1: FAME,
+                      tokenIn: quote.tokenIn,
+                      tokenOut: quote.tokenOut,
+                      venueFamily: "UniswapV2",
+                      amountIn: quote.amountIn,
+                      amountOut: "999999999999999999999999",
+                      observedThroughBlock: 124,
+                      sourceRegistryId: famePoolStateRegistrySourceId(),
+                      maxFreshnessBlocks: 120,
+                      quoteModel: "constant-product-reserves" as const,
+                      quoteModelVersion: 1 as const,
+                      feeBps: 30,
+                      feeSource: "registry-fee" as const,
+                      source: "reserve-pool-state" as const,
+                      stateSource: "sync-event" as const,
+                      priceImpact: {
+                        preSwapPriceX18: "2000000000000000000",
+                        postSwapPriceX18: "1990000000000000000",
+                        executionPriceX18: "9999999999999999999",
+                        marketImpactBps: 0,
+                        method: "constant-product-reserves" as const,
+                      },
+                      protocolEvidence: {
+                        quote: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "999999999999999999999999",
+                        },
+                        prePrice: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "2000000000000000000",
+                        },
+                        postPrice: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "1990000000000000000",
+                        },
+                        marketImpact: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "0",
+                        },
+                        activeLiquidity: {
+                          status: "not_applicable" as const,
+                          source: "indexed reserve quote",
+                          reason:
+                            "Constant-product reserve quotes use reserves.",
+                        },
+                      },
+                    }
+                  : {
+                      status: "unavailable" as const,
+                      requested: quote,
+                      reason: "missing-indexed-state" as const,
+                    },
+              ),
+            };
+          },
+        },
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const quoteApi = debug.quoteApi;
+    assert.ok(isRecord(quoteApi));
+    assert.ok(typeof quoteApi.usedCount === "number" && quoteApi.usedCount > 0);
+    const selectedRoute = quoteApi.selectedRoute;
+    assert.ok(isRecord(selectedRoute));
+    assert.equal(selectedRoute.compactQuoteLegs, 1);
+    assert.equal(selectedRoute.liveLegs, 1);
+    assert.match(JSON.stringify(selectedRoute), /compact_quote/);
+    assert.doesNotMatch(
+      JSON.stringify(json),
+      /protocolEvidence|reserve0|reserve1/,
+    );
+  });
+
+  it("does not attribute losing compact quotes to the selected route", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: WETH,
+        tokenOut: FAME,
+        amountIn: "100000000000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = snapshot.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
+          },
+        }),
+        quoteApiClient: {
+          async fetchQuotes(quoteRequest) {
+            return {
+              sourceRegistryId: famePoolStateRegistrySourceId(),
+              currentBlock: quoteRequest.currentBlock,
+              producerMaxFreshnessBlocks: 120,
+              effectiveMaxFreshnessBlocks: 120,
+              quotes: quoteRequest.quotes.map((quote) =>
+                quote.poolId === "uniswap-v2-fame-direct"
+                  ? {
+                      status: "quoted" as const,
+                      quoteKind: "constant-product-quote-v1" as const,
+                      poolId: "uniswap-v2-fame-direct",
+                      chainId: 8453,
+                      poolAddress: "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
+                      token0: WETH,
+                      token1: FAME,
+                      tokenIn: quote.tokenIn,
+                      tokenOut: quote.tokenOut,
+                      venueFamily: "UniswapV2",
+                      amountIn: quote.amountIn,
+                      amountOut: "1",
+                      observedThroughBlock: 124,
+                      sourceRegistryId: famePoolStateRegistrySourceId(),
+                      maxFreshnessBlocks: 120,
+                      quoteModel: "constant-product-reserves" as const,
+                      quoteModelVersion: 1 as const,
+                      feeBps: 30,
+                      feeSource: "registry-fee" as const,
+                      source: "reserve-pool-state" as const,
+                      stateSource: "sync-event" as const,
+                      priceImpact: {
+                        preSwapPriceX18: "2000000000000000000",
+                        postSwapPriceX18: "1990000000000000000",
+                        executionPriceX18: "1",
+                        marketImpactBps: 9999,
+                        method: "constant-product-reserves" as const,
+                      },
+                      protocolEvidence: {
+                        quote: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "1",
+                        },
+                        prePrice: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "2000000000000000000",
+                        },
+                        postPrice: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "1990000000000000000",
+                        },
+                        marketImpact: {
+                          status: "available" as const,
+                          source: "indexed reserve quote",
+                          value: "9999",
+                        },
+                        activeLiquidity: {
+                          status: "not_applicable" as const,
+                          source: "indexed reserve quote",
+                          reason:
+                            "Constant-product reserve quotes use reserves.",
+                        },
+                      },
+                    }
+                  : {
+                      status: "unavailable" as const,
+                      requested: quote,
+                      reason: "missing-indexed-state" as const,
+                    },
+              ),
+            };
+          },
+        },
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const quoteApi = debug.quoteApi;
+    assert.ok(isRecord(quoteApi));
+    assert.ok(typeof quoteApi.usedCount === "number" && quoteApi.usedCount > 0);
+    const selectedRoute = quoteApi.selectedRoute;
+    assert.ok(isRecord(selectedRoute));
+    assert.equal(selectedRoute.compactQuoteLegs, 0);
+    assert.ok(
+      typeof selectedRoute.liveLegs === "number" && selectedRoute.liveLegs > 0,
+    );
+    assert.doesNotMatch(JSON.stringify(selectedRoute), /compact_quote/);
+  });
+
+  it("rejects unsafe FAME_POOL_API_URL before sending bearer auth", async () => {
+    const warnLog = assertWarnLog();
+    const snapshot = createSnapshotQuoteAdapter();
+    const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
     const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
     const previousFetch = globalThis.fetch;
     let fetchCalls = 0;
 
-    process.env.FAME_POOL_STATE_API_URL =
-      "https://society.example/fame/pool-state";
+    process.env.FAME_POOL_API_URL =
+      "https://unit:secret@society.example/fame/pool-quotes?debug=1";
     process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
-    delete process.env.FAME_POOL_QUOTE_API_URL;
     globalThis.fetch = async () => {
       fetchCalls += 1;
-      throw new Error("unexpected compact quote fetch");
+      throw new Error("helper fetch should not receive bearer auth");
     };
 
     try {
@@ -599,6 +1006,7 @@ describe("/api/fame/swap/quote", () => {
           tokenOut: FAME,
           amountIn: "100000000000000",
           recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
         }),
         {
           readinessForQuote: async (routerAddress) => ({
@@ -628,27 +1036,54 @@ describe("/api/fame/swap/quote", () => {
               };
             },
           }),
-          indexedPoolStateClient: null,
         },
       );
+      const json: unknown = await response.json();
 
       assert.equal(response.status, 200);
+      assert.ok(isRecord(json));
+      assert.equal(json.status, "ready");
       assert.equal(fetchCalls, 0);
+      assert.equal(warnLog.events[0]?.event, "fame-pool-quote-api-unavailable");
+      assert.equal(warnLog.events[0]?.reason, "invalid_config");
+      assert.doesNotMatch(
+        JSON.stringify(json),
+        /unit-token|unit:secret|debug=1/,
+      );
     } finally {
       globalThis.fetch = previousFetch;
-      if (previousPoolStateUrl === undefined) delete process.env.FAME_POOL_STATE_API_URL;
-      else process.env.FAME_POOL_STATE_API_URL = previousPoolStateUrl;
-      if (previousPoolQuoteUrl === undefined) delete process.env.FAME_POOL_QUOTE_API_URL;
-      else process.env.FAME_POOL_QUOTE_API_URL = previousPoolQuoteUrl;
+      warnLog.restore();
+      if (previousPoolApiUrl === undefined)
+        delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
       if (previousServiceToken === undefined)
         delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
       else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
     }
   });
 
-  it("falls back live and logs when indexed pool-state helper fails", async () => {
+  it("uses quote-specific timeout env and falls back live on helper timeout", async () => {
     const warnLog = assertWarnLog();
     const snapshot = createSnapshotQuoteAdapter();
+    const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
+    const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+    const previousQuoteTimeout = process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+    const previousStateTimeout = process.env.FAME_POOL_STATE_TIMEOUT_MS;
+    const previousFetch = globalThis.fetch;
+    let observedAbort = false;
+
+    process.env.FAME_POOL_API_URL = "https://society.example";
+    process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+    process.env.FAME_POOL_QUOTE_TIMEOUT_MS = "1";
+    process.env.FAME_POOL_STATE_TIMEOUT_MS = "60000";
+    globalThis.fetch = async (_input, init) =>
+      await new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          observedAbort = true;
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      });
+
     try {
       const response = await handleFameSwapQuotePost(
         request({
@@ -656,6 +1091,7 @@ describe("/api/fame/swap/quote", () => {
           tokenOut: FAME,
           amountIn: "100000000000000",
           recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
         }),
         {
           readinessForQuote: async (routerAddress) => ({
@@ -683,14 +1119,6 @@ describe("/api/fame/swap/quote", () => {
                 : quote;
             },
           }),
-          indexedPoolStateClient: {
-            async fetchPoolStates() {
-              throw new Error(
-                "FAME indexed pool-state request failed with status 503. https://unit.example/token",
-              );
-            },
-          },
-          indexedClQuoteClient: null,
         },
       );
       const json = await response.json();
@@ -698,86 +1126,140 @@ describe("/api/fame/swap/quote", () => {
       assert.equal(response.status, 200);
       assert.equal(json.status, "ready");
       assert.equal(json.quoteContext.source, "live");
-      assert.equal(
-        warnLog.events[0]?.event,
-        "fame-pool-state-helper-unavailable",
+      assert.equal(observedAbort, true);
+      const debug = json.debug;
+      assert.ok(isRecord(debug));
+      const quoteApi = debug.quoteApi;
+      assert.ok(isRecord(quoteApi));
+      assert.equal(quoteApi.configured, true);
+      assert.equal(quoteApi.batchFailureCount, quoteApi.edgeCount);
+      const timing = quoteApi.timing;
+      assert.ok(isRecord(timing));
+      assert.ok(
+        typeof timing.batchRequestCount === "number" &&
+          timing.batchRequestCount > 0,
       );
-      assert.equal(warnLog.events[0]?.reason, "http_error");
-      assert.equal(warnLog.events[0]?.httpStatus, 503);
-      assert.equal(warnLog.events[0]?.currentBlock, 125);
-      assert.equal(typeof warnLog.events[0]?.poolCount, "number");
-      assert.doesNotMatch(warnLog.raw.join("\n"), /unit\.example|token/);
+      assert.match(
+        JSON.stringify(quoteApi),
+        /"batchFailureCategory":"timeout"/,
+      );
+      assert.equal(warnLog.events[0]?.event, "fame-pool-quote-api-unavailable");
+      assert.equal(warnLog.events[0]?.reason, "quote_api_batch_failed");
+      assert.doesNotMatch(JSON.stringify(json), /unit-token|society\.example/);
     } finally {
+      globalThis.fetch = previousFetch;
       warnLog.restore();
+      if (previousPoolApiUrl === undefined)
+        delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
+      if (previousServiceToken === undefined)
+        delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+      if (previousQuoteTimeout === undefined)
+        delete process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+      else process.env.FAME_POOL_QUOTE_TIMEOUT_MS = previousQuoteTimeout;
+      if (previousStateTimeout === undefined)
+        delete process.env.FAME_POOL_STATE_TIMEOUT_MS;
+      else process.env.FAME_POOL_STATE_TIMEOUT_MS = previousStateTimeout;
     }
   });
 
-  it("still uses compact CL quotes when reserve pool-state fails", async () => {
+  it("caps high quote API timeouts to leave live fallback budget", async () => {
     const warnLog = assertWarnLog();
-    const quoteRequests: FameIndexedClQuoteBatchRequest[] = [];
+    const snapshot = createSnapshotQuoteAdapter();
+    const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
+    const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+    const previousQuoteTimeout = process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+    const previousFetch = globalThis.fetch;
+    const previousNow = Date.now;
+    let nowCalls = 0;
+    let observedAbort = false;
+    const quotePostRequest = request({
+      tokenIn: WETH,
+      tokenOut: FAME,
+      amountIn: "100000000000000",
+      recipient: "0x0000000000000000000000000000000000000abc",
+      includeDebug: true,
+    });
+
+    process.env.FAME_POOL_API_URL = "https://society.example";
+    process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+    process.env.FAME_POOL_QUOTE_TIMEOUT_MS = "60000";
+    Date.now = () => {
+      nowCalls += 1;
+      return nowCalls === 1 ? 1_000_000 : 1_009_500;
+    };
+    globalThis.fetch = async (_input, init) =>
+      await new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          observedAbort = true;
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      });
+
     try {
-      const response = await handleFameSwapQuotePost(
-        request({
-          tokenIn: WETH,
-          tokenOut: FAME,
-          amountIn: "100000000000000",
-          recipient: "0x0000000000000000000000000000000000000abc",
+      const response = await handleFameSwapQuotePost(quotePostRequest, {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
         }),
-        {
-          readinessForQuote: async (routerAddress) => ({
-            status: "ready",
-            routerAddress: routerAddress!,
-            feePpm: 2_222n,
-          }),
-          quoteAdapterForRequest: async () => ({
-            quoteContext: {
-              source: "live",
-              chainId: 8453,
-              blockNumber: 125n,
-            },
-            async quoteEdge(edgeRequest) {
-              return {
-                status: "quoted",
-                amountIn: edgeRequest.amountIn,
-                amountOut: 42n,
-                capacityIn: null,
-                fee: edgeRequest.edge.fee,
-                evidence: "fallback live quote",
-                context: {
-                  source: "live" as const,
-                  chainId: 8453,
-                  blockNumber: 125n,
-                },
-              };
-            },
-          }),
-          indexedPoolStateClient: {
-            async fetchPoolStates() {
-              throw new Error(
-                "FAME indexed pool-state request failed with status 503.",
-              );
-            },
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
           },
-          indexedClQuoteClient: {
-            async fetchQuotes(indexedRequest) {
-              quoteRequests.push(indexedRequest);
-              return compactClQuoteResponse(indexedRequest);
-            },
+          async quoteEdge(edgeRequest) {
+            const quote = snapshot.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
           },
-        },
-      );
+        }),
+      });
       const json = await response.json();
 
       assert.equal(response.status, 200);
       assert.equal(json.status, "ready");
-      assert.ok(quoteRequests.length > 0);
-      assert.equal(warnLog.events[0]?.reason, "http_error");
+      assert.equal(json.quoteContext.source, "live");
+      assert.equal(observedAbort, true);
+      const debug = json.debug;
+      assert.ok(isRecord(debug));
+      const quoteApi = debug.quoteApi;
+      assert.ok(isRecord(quoteApi));
+      assert.equal(quoteApi.configured, true);
+      assert.equal(quoteApi.batchFailureCount, quoteApi.edgeCount);
+      assert.match(
+        JSON.stringify(quoteApi),
+        /"batchFailureCategory":"timeout"/,
+      );
+      assert.equal(warnLog.events[0]?.event, "fame-pool-quote-api-unavailable");
+      assert.equal(warnLog.events[0]?.reason, "quote_api_batch_failed");
     } finally {
+      Date.now = previousNow;
+      globalThis.fetch = previousFetch;
       warnLog.restore();
+      if (previousPoolApiUrl === undefined)
+        delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
+      if (previousServiceToken === undefined)
+        delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+      if (previousQuoteTimeout === undefined)
+        delete process.env.FAME_POOL_QUOTE_TIMEOUT_MS;
+      else process.env.FAME_POOL_QUOTE_TIMEOUT_MS = previousQuoteTimeout;
     }
   });
 
-  it("falls back live and logs when helper registry provenance does not match", async () => {
+  it("falls back live and reports quote API batch failures", async () => {
     const warnLog = assertWarnLog();
     const snapshot = createSnapshotQuoteAdapter();
     try {
@@ -787,6 +1269,7 @@ describe("/api/fame/swap/quote", () => {
           tokenOut: FAME,
           amountIn: "100000000000000",
           recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
         }),
         {
           readinessForQuote: async (routerAddress) => ({
@@ -814,18 +1297,13 @@ describe("/api/fame/swap/quote", () => {
                 : quote;
             },
           }),
-          indexedPoolStateClient: {
-            async fetchPoolStates(indexedRequest) {
-              return {
-                sourceRegistryId: "other-registry",
-                currentBlock: indexedRequest.currentBlock,
-                producerMaxFreshnessBlocks: 120,
-                effectiveMaxFreshnessBlocks: 120,
-                pools: [],
-              };
+          quoteApiClient: {
+            async fetchQuotes() {
+              throw new Error(
+                "FAME pool quote request failed with status 503. https://unit.example/super-secret",
+              );
             },
           },
-          indexedClQuoteClient: null,
         },
       );
       const json = await response.json();
@@ -833,8 +1311,16 @@ describe("/api/fame/swap/quote", () => {
       assert.equal(response.status, 200);
       assert.equal(json.status, "ready");
       assert.equal(json.quoteContext.source, "live");
-      assert.equal(warnLog.events[0]?.reason, "source_registry_mismatch");
-      assert.equal(warnLog.events[0]?.actualSourceRegistryId, "other-registry");
+      const debug = json.debug;
+      assert.ok(isRecord(debug));
+      const quoteApi = debug.quoteApi;
+      assert.ok(isRecord(quoteApi));
+      assert.equal(quoteApi.configured, true);
+      assert.equal(quoteApi.attempted, true);
+      assert.equal(quoteApi.batchFailureCount, quoteApi.edgeCount);
+      assert.equal(warnLog.events[0]?.event, "fame-pool-quote-api-unavailable");
+      assert.equal(warnLog.events[0]?.reason, "quote_api_batch_failed");
+      assert.doesNotMatch(JSON.stringify(json), /unit\.example|super-secret/);
     } finally {
       warnLog.restore();
     }

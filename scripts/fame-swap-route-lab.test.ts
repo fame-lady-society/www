@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   formatRouteLabMarkdown,
+  poolStateEndpointUrlFromEnv,
   runIndexedRouteLab,
   runRouteLab,
   runSnapshotRouteLab,
@@ -12,6 +13,65 @@ import { FAME_ROUTE_CORPUS } from "../src/features/fame-swap/solver/routeCorpus"
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 
 describe("FAME route lab", () => {
+  it("derives the raw pool-state proof endpoint from FAME_POOL_API_URL", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL = "https://api.fame.support/";
+    delete process.env.FAME_POOL_STATE_API_URL;
+
+    try {
+      assert.equal(
+        poolStateEndpointUrlFromEnv(),
+        "https://api.fame.support/fame/pool-state",
+      );
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
+  it("rejects legacy pool-state endpoint env before proof auth is used", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL = "https://api.fame.support";
+    process.env.FAME_POOL_STATE_API_URL =
+      "https://api.fame.support/fame/pool-state";
+
+    try {
+      assert.throws(() => poolStateEndpointUrlFromEnv(), /no longer supported/);
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
+  it("rejects unsafe pool API bases before deriving proof endpoints", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL =
+      "https://unit:secret@api.fame.support/fame/pool-quotes?debug=1";
+    delete process.env.FAME_POOL_STATE_API_URL;
+
+    try {
+      assert.throws(
+        () => poolStateEndpointUrlFromEnv(),
+        /credentials, query, or hash/,
+      );
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
   it("replays the full recorded-state corpus with executable quote evidence", async () => {
     const rows = await runSnapshotRouteLab();
 
@@ -174,8 +234,7 @@ describe("FAME route lab", () => {
                     stateKind: "cl-replay-v1" as const,
                     poolId,
                     chainId: 8453,
-                    poolAddress:
-                      "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+                    poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
                     token0: WETH,
                     token1: USDC,
                     venueFamily: "Slipstream" as const,
@@ -231,30 +290,30 @@ describe("FAME route lab", () => {
                   }
                 : poolId === "scale-equalizer-weth-fame" ||
                     poolId === "uniswap-v2-fame-direct"
-                ? {
-                    status: "fresh" as const,
-                    poolId,
-                    chainId: 8453,
-                    poolAddress:
-                      poolId === "scale-equalizer-weth-fame"
-                        ? "0x0db3a3228520fc31162c24f1b47177255cc1b82e"
-                        : "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
-                    token0: WETH,
-                    token1: FAME,
-                    reserve0: "1000000000000000000",
-                    reserve1: "1000000000000000000000000000000000000",
-                    k: "1000000000000000000000000000000000000000000000000000000",
-                    observedThroughBlock: 124,
-                    lastReserveChangeBlock: 123,
-                    source: "sync-event" as const,
-                    quoteModel: "constant-product-reserves" as const,
-                    maxFreshnessBlocks: 120,
-                  }
-                : {
-                    status: "unknown" as const,
-                    requested: { poolId },
-                    reason: "unit-test",
-                  },
+                  ? {
+                      status: "fresh" as const,
+                      poolId,
+                      chainId: 8453,
+                      poolAddress:
+                        poolId === "scale-equalizer-weth-fame"
+                          ? "0x0db3a3228520fc31162c24f1b47177255cc1b82e"
+                          : "0x3e2cab55bebf41719148b4e6b63f6644b18ae49c",
+                      token0: WETH,
+                      token1: FAME,
+                      reserve0: "1000000000000000000",
+                      reserve1: "1000000000000000000000000000000000000",
+                      k: "1000000000000000000000000000000000000000000000000000000",
+                      observedThroughBlock: 124,
+                      lastReserveChangeBlock: 123,
+                      source: "sync-event" as const,
+                      quoteModel: "constant-product-reserves" as const,
+                      maxFreshnessBlocks: 120,
+                    }
+                  : {
+                      status: "unknown" as const,
+                      requested: { poolId },
+                      reason: "unit-test",
+                    },
             ),
           };
         },
@@ -266,12 +325,18 @@ describe("FAME route lab", () => {
     assert.equal(row.mode, "indexed");
     assert.ok((row.indexedPoolState?.statusCounts.fresh ?? 0) > 0);
     assert.match(row.quoteContext ?? "", /^indexed:8453:125:/);
-    assert.equal(row.indexedPoolState?.clReplay[0]?.poolId, "slipstream-usdc-weth-100");
+    assert.equal(
+      row.indexedPoolState?.clReplay[0]?.poolId,
+      "slipstream-usdc-weth-100",
+    );
     assert.equal(row.indexedPoolState?.clReplay[0]?.initializedTickCount, 2);
     assert.deepEqual(requestedStateSurfaces[0], ["cl-replay-v1"]);
 
     const markdown = formatRouteLabMarkdown(rows);
-    assert.match(markdown, /cl replay slipstream-usdc-weth-100 fresh block 124 ticks 2/);
+    assert.match(
+      markdown,
+      /cl replay slipstream-usdc-weth-100 fresh block 124 ticks 2/,
+    );
   });
 
   it("fails indexed mode clearly without a current block source", async () => {

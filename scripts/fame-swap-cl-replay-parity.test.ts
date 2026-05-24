@@ -12,6 +12,7 @@ import type { FameIndexedPoolStateBatchResponse } from "../src/features/fame-swa
 import { quoteFromIndexedSlipstreamReplay } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
 import {
   displaySafeErrorMessage,
+  poolStateEndpointUrlFromEnv,
   runClReplayParity,
 } from "./fame-swap-cl-replay-parity";
 
@@ -131,6 +132,65 @@ function liveAdapter(
 }
 
 describe("FAME Slipstream CL replay parity harness", () => {
+  it("derives the raw pool-state proof endpoint from FAME_POOL_API_URL", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL = "https://api.fame.support/base";
+    delete process.env.FAME_POOL_STATE_API_URL;
+
+    try {
+      assert.equal(
+        poolStateEndpointUrlFromEnv(),
+        "https://api.fame.support/base/fame/pool-state",
+      );
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
+  it("rejects legacy pool-state endpoint env before proof auth is used", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL = "https://api.fame.support/base";
+    process.env.FAME_POOL_STATE_API_URL =
+      "https://api.fame.support/base/fame/pool-state";
+
+    try {
+      assert.throws(() => poolStateEndpointUrlFromEnv(), /no longer supported/);
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
+  it("rejects unsafe pool API bases before deriving proof endpoints", () => {
+    const previousBase = process.env.FAME_POOL_API_URL;
+    const previousEndpoint = process.env.FAME_POOL_STATE_API_URL;
+    process.env.FAME_POOL_API_URL =
+      "https://unit:secret@api.fame.support/base/fame/pool-quotes?debug=1";
+    delete process.env.FAME_POOL_STATE_API_URL;
+
+    try {
+      assert.throws(
+        () => poolStateEndpointUrlFromEnv(),
+        /credentials, query, or hash/,
+      );
+    } finally {
+      if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousBase;
+      if (previousEndpoint === undefined)
+        delete process.env.FAME_POOL_STATE_API_URL;
+      else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
   it("reports exact local/live parity for fixture-backed quotes", async () => {
     const state = indexedState();
     const report = await runClReplayParity({
