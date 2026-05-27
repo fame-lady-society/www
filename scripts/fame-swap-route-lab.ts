@@ -548,7 +548,9 @@ function indexedPoolStateSummary(
     statusCounts,
     clReplay: indexedState.pools
       .filter(
-        (pool): pool is Extract<
+        (
+          pool,
+        ): pool is Extract<
           FameIndexedPoolStateBatchResponse["pools"][number],
           { stateKind: "cl-replay-v1" }
         > =>
@@ -1271,12 +1273,62 @@ function shouldRunCli(): boolean {
   return process.argv[1]?.endsWith("fame-swap-route-lab.ts") ?? false;
 }
 
+function localOrTestPoolApiBase(url: URL): boolean {
+  return (
+    process.env.NODE_ENV === "test" ||
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "::1"
+  );
+}
+
+function poolApiBaseUrlFromEnv(): URL | undefined {
+  const legacyEndpoint = process.env.FAME_POOL_STATE_API_URL?.trim();
+  if (legacyEndpoint) {
+    throw new Error(
+      "FAME_POOL_STATE_API_URL is no longer supported; set FAME_POOL_API_URL to the pool API base URL.",
+    );
+  }
+
+  const baseUrl = process.env.FAME_POOL_API_URL?.trim();
+  if (!baseUrl) return undefined;
+  const url = new URL(baseUrl);
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(
+      "FAME_POOL_API_URL must not include credentials, query, or hash.",
+    );
+  }
+  const normalizedPath = url.pathname.replace(/\/+$/u, "");
+  if (
+    normalizedPath.endsWith("/fame/pool-state") ||
+    normalizedPath.endsWith("/fame/pool-quotes")
+  ) {
+    throw new Error(
+      "FAME_POOL_API_URL must be a base URL, not a pool API endpoint.",
+    );
+  }
+  if (url.protocol !== "https:" && !localOrTestPoolApiBase(url)) {
+    throw new Error("FAME_POOL_API_URL must use HTTPS outside local/test.");
+  }
+  return url;
+}
+
+export function poolStateEndpointUrlFromEnv(): string | undefined {
+  const url = poolApiBaseUrlFromEnv();
+  if (!url) return undefined;
+  const basePath = url.pathname.replace(/\/+$/u, "");
+  url.pathname = `${basePath}/fame/pool-state`;
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 function routeLabIndexedPoolStateClientFromEnv(): FameIndexedPoolStateClient {
-  const endpointUrl = process.env.FAME_POOL_STATE_API_URL;
+  const endpointUrl = poolStateEndpointUrlFromEnv();
   const serviceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
   if (!endpointUrl || !serviceToken) {
     throw new Error(
-      "Indexed route lab requires FAME_POOL_STATE_API_URL and FAME_POOL_STATE_SERVICE_TOKEN.",
+      "Indexed route lab requires FAME_POOL_API_URL and FAME_POOL_STATE_SERVICE_TOKEN.",
     );
   }
   return createIndexedPoolStateClient({
