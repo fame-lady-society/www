@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import { displaySafeDiagnosticMessage } from "./diagnostics";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
 import type { FameSwapConfig } from "../config";
 import { artifactIntegrityIssue } from "./integrity";
@@ -39,22 +40,7 @@ function blocked(
 }
 
 function displaySafeReadinessError(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  return (
-    raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find(
-        (line) =>
-          line.length > 0 &&
-          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-            line,
-          ),
-      ) ?? "Unknown router policy read error."
-  )
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+  return displaySafeDiagnosticMessage(error);
 }
 
 export function staticReadiness(config: FameSwapConfig): FameSwapReadiness {

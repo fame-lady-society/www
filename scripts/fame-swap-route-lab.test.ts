@@ -8,9 +8,105 @@ import {
   runSnapshotRouteLab,
   type FameRouteLabRow,
 } from "./fame-swap-route-lab";
+import type { FameEdgeQuoteRequest } from "../src/features/fame-swap/solver/quotes/adapters";
+import type { FameIndexedClReplayFreshEntry } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { famePoolStateRegistrySourceId } from "../src/features/fame-swap/solver/poolStateRegistry";
 import { FAME_ROUTE_CORPUS } from "../src/features/fame-swap/solver/routeCorpus";
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
+import { createSnapshotQuoteAdapter } from "../src/features/fame-swap/solver/quotes/snapshotAdapter";
+import { createDeterministicQuoteAdapter } from "../src/features/fame-swap/solver/quotes/deterministicAdapter";
+
+const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
+
+function liveDeterministicFallbackAdapter() {
+  const deterministic = createDeterministicQuoteAdapter();
+  const context = {
+    source: "live" as const,
+    chainId: 8453,
+    blockNumber: 125n,
+  };
+  return {
+    quoteContext: context,
+    async quoteEdge(request: FameEdgeQuoteRequest) {
+      const quote = deterministic.quoteEdge(request);
+      return quote.status === "quoted" ? { ...quote, context } : quote;
+    },
+  };
+}
+
+function deterministicFallbackAdapter() {
+  const deterministic = createDeterministicQuoteAdapter();
+  return {
+    quoteContext: deterministic.quoteContext,
+    async quoteEdge(request: FameEdgeQuoteRequest) {
+      return deterministic.quoteEdge(request);
+    },
+  };
+}
+
+function selectedRawReplayPoolState(
+  poolId: string,
+): FameIndexedClReplayFreshEntry {
+  return {
+    status: "fresh" as const,
+    stateKind: "cl-replay-v1" as const,
+    poolId,
+    chainId: 8453,
+    poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+    token0: BASEDFLICK,
+    token1: FAME,
+    venueFamily: "Slipstream" as const,
+    tickSpacing: 2000,
+    sqrtPriceX96: "14225627699858779769529171968",
+    tick: -34350,
+    liquidity: "1000000000000000000000000000000",
+    fee: "10000",
+    feeSource: "pool-fee" as const,
+    observedThroughBlock: 124,
+    blockHash:
+      "0x1111111111111111111111111111111111111111111111111111111111111111",
+    parentHash:
+      "0x2222222222222222222222222222222222222222222222222222222222222222",
+    snapshotId: "unit-selected-candidate",
+    stateHash:
+      "0x3333333333333333333333333333333333333333333333333333333333333333",
+    source: "slipstream-pool-state" as const,
+    sourceRegistryId: famePoolStateRegistrySourceId(),
+    maxFreshnessBlocks: 120,
+    bitmapWordCount: 2,
+    initializedTickCount: 2,
+    bitmapChunkCount: 1,
+    tickChunkCount: 1,
+    minWordPosition: -10,
+    maxWordPosition: 0,
+    minTick: -40000,
+    maxTick: 0,
+    bitmapWords: [
+      {
+        wordPosition: -10,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000010",
+      },
+      {
+        wordPosition: 0,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+      },
+    ],
+    initializedTicks: [
+      {
+        tick: -40000,
+        liquidityGross: "1000",
+        liquidityNet: "-1000",
+      },
+      {
+        tick: 0,
+        liquidityGross: "1000",
+        liquidityNet: "1000",
+      },
+    ],
+  };
+}
 
 describe("FAME route lab", () => {
   it("derives the raw pool-state proof endpoint from FAME_POOL_API_URL", () => {
@@ -339,6 +435,185 @@ describe("FAME route lab", () => {
     );
   });
 
+  it("identifies the selected raw replay leg and its V4 dependency as live", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "fame-weth-fixture",
+    );
+    assert.ok(entry);
+    const requestedPoolIds: string[][] = [];
+    const rows = await runIndexedRouteLab([entry], {
+      currentBlock: 125,
+      requestedRouteId: "solver-fame-basedflick-zora-weth",
+      fallbackAdapter: liveDeterministicFallbackAdapter(),
+      poolStateClient: {
+        async fetchPoolStates(request) {
+          requestedPoolIds.push([...request.poolIds]);
+          return {
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            currentBlock: request.currentBlock,
+            producerMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 120,
+            pools: request.poolIds.map((poolId) =>
+              poolId === "slipstream-basedflick-fame"
+                ? {
+                    status: "fresh" as const,
+                    stateKind: "cl-replay-v1" as const,
+                    poolId,
+                    chainId: 8453,
+                    poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+                    token0: BASEDFLICK,
+                    token1: FAME,
+                    venueFamily: "Slipstream" as const,
+                    tickSpacing: 2000,
+                    sqrtPriceX96: "14225627699858779769529171968",
+                    tick: -34350,
+                    liquidity: "1000000000000000000000000000000",
+                    fee: "10000",
+                    feeSource: "pool-fee" as const,
+                    observedThroughBlock: 124,
+                    blockHash:
+                      "0x1111111111111111111111111111111111111111111111111111111111111111",
+                    parentHash:
+                      "0x2222222222222222222222222222222222222222222222222222222222222222",
+                    snapshotId: "unit-selected-candidate",
+                    stateHash:
+                      "0x3333333333333333333333333333333333333333333333333333333333333333",
+                    source: "slipstream-pool-state" as const,
+                    sourceRegistryId: famePoolStateRegistrySourceId(),
+                    maxFreshnessBlocks: 120,
+                    bitmapWordCount: 2,
+                    initializedTickCount: 2,
+                    bitmapChunkCount: 1,
+                    tickChunkCount: 1,
+                    minWordPosition: -10,
+                    maxWordPosition: 0,
+                    minTick: -40000,
+                    maxTick: 0,
+                    bitmapWords: [
+                      {
+                        wordPosition: -10,
+                        bitmap:
+                          "0x0000000000000000000000000000000000000000000000000000000000000010",
+                      },
+                      {
+                        wordPosition: 0,
+                        bitmap:
+                          "0x0000000000000000000000000000000000000000000000000000000000000001",
+                      },
+                    ],
+                    initializedTicks: [
+                      {
+                        tick: -40000,
+                        liquidityGross: "1000",
+                        liquidityNet: "-1000",
+                      },
+                      {
+                        tick: 0,
+                        liquidityGross: "1000",
+                        liquidityNet: "1000",
+                      },
+                    ],
+                  }
+                : {
+                    status: "unknown" as const,
+                    requested: { poolId },
+                    reason: "unit-test",
+                  },
+            ),
+          };
+        },
+      },
+    });
+    const row = rows[0];
+    assert.ok(row);
+
+    assert.deepEqual(requestedPoolIds[0], ["slipstream-basedflick-fame"]);
+    assert.equal(row.status, "ready");
+    assert.ok(row.selectedPools.includes("slipstream-basedflick-fame"));
+    assert.ok(row.selectedPools.includes("uniswap-v4-basedflick-zora"));
+    const selectedSource = row.selectedQuoteSources.find(
+      (source) => source.poolId === "slipstream-basedflick-fame",
+    );
+    assert.equal(selectedSource?.source, "raw-replay-indexed");
+    assert.equal(selectedSource?.amountIn, "31597600141347829");
+    assert.equal(
+      row.selectedQuoteSources.find(
+        (source) => source.poolId === "uniswap-v4-basedflick-zora",
+      )?.source,
+      "live",
+    );
+    assert.equal(
+      row.selectedActivation?.outcome,
+      "raw_replay_with_live_dependency",
+    );
+    assert.equal(row.requestedRouteId, "solver-fame-basedflick-zora-weth");
+    assert.equal(row.routeArtifactId, "solver-fame-basedflick-zora-weth");
+
+    const markdown = formatRouteLabMarkdown(rows);
+    assert.match(markdown, /slipstream-basedflick-fame raw-replay-indexed/);
+    assert.match(markdown, /uniswap-v4-basedflick-zora live/);
+  });
+
+  it("keeps raw replay activation outcome distinct without a live dependency", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "fame-weth-fixture",
+    );
+    assert.ok(entry);
+    const rows = await runIndexedRouteLab([entry], {
+      currentBlock: 125,
+      requestedRouteId: "solver-fame-basedflick-zora-weth",
+      fallbackAdapter: deterministicFallbackAdapter(),
+      poolStateClient: {
+        async fetchPoolStates(request) {
+          return {
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            currentBlock: request.currentBlock,
+            producerMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 120,
+            pools: request.poolIds.map((poolId) =>
+              poolId === "slipstream-basedflick-fame"
+                ? selectedRawReplayPoolState(poolId)
+                : {
+                    status: "unknown" as const,
+                    requested: { poolId },
+                    reason: "unit-test",
+                  },
+            ),
+          };
+        },
+      },
+    });
+    const row = rows[0];
+    assert.ok(row);
+
+    assert.equal(
+      row.selectedActivation?.outcome,
+      "raw_replay_without_live_dependency",
+    );
+    assert.equal(
+      row.selectedActivation?.selectedPoolSource,
+      "raw-replay-indexed",
+    );
+    assert.equal(
+      row.selectedActivation?.liveDependencySource,
+      "deterministic-test",
+    );
+  });
+
+  it("rejects generated route ids in requested-route mode", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "weth-fame-small-direct",
+    );
+    assert.ok(entry);
+
+    await assert.rejects(
+      runRouteLab([entry], {
+        requestedRouteId: "solver-single_path-uniswap-v2-fame-direct",
+      }),
+      /pinned route artifact/,
+    );
+  });
+
   it("fails indexed mode clearly without a current block source", async () => {
     const entry = FAME_ROUTE_CORPUS.find(
       (candidate) => candidate.id === "weth-fame-small-direct",
@@ -381,8 +656,13 @@ describe("FAME route lab", () => {
         amountIn: "1000000",
         expectedStatus: "ready",
         status: "quote_adapter_failure",
-        message: "HTTP request failed.\nURL: https://example.invalid/secret",
+        requestedRouteId: null,
+        routeArtifactId: null,
+        message:
+          'HTTP request failed.\nresponse body {"token":"unit-secret"}\nURL: https://example.invalid/secret',
         selectedPools: [],
+        selectedQuoteSources: [],
+        selectedActivation: null,
         quoteContext: null,
         feeBreakdown: {
           routerFeeAmount: null,
@@ -491,7 +771,7 @@ describe("FAME route lab", () => {
     const markdown = formatRouteLabMarkdown(rows);
 
     assert.doesNotMatch(markdown, /https?:\/\//);
-    assert.doesNotMatch(markdown, /secret|Request body/);
+    assert.doesNotMatch(markdown, /secret|Request body|response body/);
     assert.doesNotMatch(markdown, /0x[a-fA-F0-9]{96,}/);
   });
 });

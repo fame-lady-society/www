@@ -66,6 +66,7 @@ export interface FameSwapQuoteRequest {
   readiness?: FameSwapReadiness;
   optimizerMode?: FameOptimizerMode;
   optimizerBudgets?: Partial<FameOptimizerBudgets>;
+  requestedRouteId?: string;
   now?: Date;
   deadlineSeconds?: bigint;
 }

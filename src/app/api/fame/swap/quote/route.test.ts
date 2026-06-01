@@ -18,8 +18,13 @@ import type {
 import { handleFameSwapQuotePost } from "./handler";
 import { POST } from "./route";
 
-function request(body: unknown): NextRequest {
-  return new NextRequest("http://localhost/api/fame/swap/quote", {
+const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
+
+function request(
+  body: unknown,
+  url = "http://localhost/api/fame/swap/quote",
+): NextRequest {
+  return new NextRequest(url, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -602,6 +607,106 @@ describe("/api/fame/swap/quote", () => {
     assert.equal(quoteApi.reason, "not_configured");
   });
 
+  it("omits requested debug diagnostics from non-local hosts", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const response = await handleFameSwapQuotePost(
+      request(
+        {
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
+        },
+        "https://staging.example/api/fame/swap/quote",
+      ),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteForRequest: async (quoteRequest) => {
+          const quote = quoteFameSwap({
+            ...quoteRequest,
+            adapter: snapshot,
+          });
+          return quote.status === "ready"
+            ? {
+                ...quote,
+                diagnosticsVisibleByDefault: true,
+              }
+            : quote;
+        },
+        quoteApiClient: null,
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    assert.equal("debug" in json, false);
+    assert.deepEqual(json.debugUnavailable, { reason: "local_dev_only" });
+  });
+
+  it("omits requested debug diagnostics outside local dev mode", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const env = process.env as Record<string, string | undefined>;
+    const previousNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = "production";
+
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "live",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              const quote = snapshot.quoteEdge(edgeRequest);
+              return quote.status === "quoted"
+                ? {
+                    ...quote,
+                    context: {
+                      source: "live" as const,
+                      chainId: 8453,
+                      blockNumber: 125n,
+                    },
+                  }
+                : quote;
+            },
+          }),
+          quoteApiClient: null,
+        },
+      );
+      const json: unknown = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.ok(isRecord(json));
+      assert.equal(json.status, "ready");
+      assert.equal("debug" in json, false);
+      assert.deepEqual(json.debugUnavailable, { reason: "local_dev_only" });
+    } finally {
+      if (previousNodeEnv === undefined) delete env.NODE_ENV;
+      else env.NODE_ENV = previousNodeEnv;
+    }
+  });
+
   for (const testCase of [
     {
       name: "timeout",
@@ -847,6 +952,256 @@ describe("/api/fame/swap/quote", () => {
     assert.doesNotMatch(
       JSON.stringify(json),
       /protocolEvidence|reserve0|reserve1/,
+    );
+  });
+
+  it("uses compact selected Slipstream quotes while keeping basedflick/ZORA V4 live", async () => {
+    const deterministic = createDeterministicQuoteAdapter();
+    const quoteRequests: FamePoolQuoteBatchRequest[] = [];
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: FAME,
+        tokenOut: WETH,
+        amountIn: "31597600141347829",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+        routeId: "solver-fame-basedflick-zora-weth",
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = deterministic.quoteEdge(edgeRequest);
+            return quote.status === "quoted"
+              ? {
+                  ...quote,
+                  context: {
+                    source: "live" as const,
+                    chainId: 8453,
+                    blockNumber: 125n,
+                  },
+                }
+              : quote;
+          },
+        }),
+        quoteApiClient: {
+          async fetchQuotes(quoteRequest) {
+            quoteRequests.push(quoteRequest);
+            return {
+              sourceRegistryId: famePoolStateRegistrySourceId(),
+              currentBlock: quoteRequest.currentBlock,
+              producerMaxFreshnessBlocks: 120,
+              effectiveMaxFreshnessBlocks: 120,
+              quotes: quoteRequest.quotes.map((quote) =>
+                quote.poolId === "slipstream-basedflick-fame"
+                  ? {
+                      status: "quoted" as const,
+                      quoteKind: "cl-quote-v1" as const,
+                      poolId: "slipstream-basedflick-fame",
+                      chainId: 8453,
+                      poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+                      token0: BASEDFLICK,
+                      token1: FAME,
+                      tokenIn: quote.tokenIn,
+                      tokenOut: quote.tokenOut,
+                      venueFamily: "Slipstream" as const,
+                      tickSpacing: 2000,
+                      amountIn: quote.amountIn,
+                      amountOut: "980100000232613992",
+                      sqrtPriceX96: "79228162514264337593543950",
+                      sqrtPriceX96After: "79228162514264337593543949",
+                      tick: -138163,
+                      liquidity: "1000000000000000000000000000",
+                      fee: "10000",
+                      feeSource: "pool-fee" as const,
+                      observedThroughBlock: 124,
+                      blockHash:
+                        "0x1111111111111111111111111111111111111111111111111111111111111111",
+                      parentHash:
+                        "0x2222222222222222222222222222222222222222222222222222222222222222",
+                      snapshotId: "unit-selected-candidate",
+                      stateHash:
+                        "0x3333333333333333333333333333333333333333333333333333333333333333",
+                      source: "slipstream-pool-state" as const,
+                      sourceRegistryId: famePoolStateRegistrySourceId(),
+                      maxFreshnessBlocks: 120,
+                    }
+                  : {
+                      status: "unavailable" as const,
+                      requested: quote,
+                      reason: "missing-indexed-state" as const,
+                    },
+              ),
+            };
+          },
+        },
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    assert.equal(json.routeArtifactId, "solver-fame-basedflick-zora-weth");
+    assert.equal(json.routeSource, "artifact");
+    assert.ok(
+      quoteRequests.some((batch) =>
+        batch.quotes.some(
+          (quote) => quote.poolId === "slipstream-basedflick-fame",
+        ),
+      ),
+    );
+    assert.equal(
+      quoteRequests.some((batch) =>
+        batch.quotes.some(
+          (quote) => quote.poolId === "uniswap-v4-basedflick-zora",
+        ),
+      ),
+      false,
+    );
+    assert.doesNotMatch(
+      JSON.stringify(quoteRequests),
+      /bitmapWords|initializedTicks|stateSurfaces/,
+    );
+
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const quoteApi = debug.quoteApi;
+    assert.ok(isRecord(quoteApi));
+    assert.ok(typeof quoteApi.usedCount === "number" && quoteApi.usedCount > 0);
+    const selectedRoute = quoteApi.selectedRoute;
+    assert.ok(isRecord(selectedRoute));
+    const activation = selectedRoute.activation;
+    assert.ok(isRecord(activation));
+    assert.equal(activation.outcome, "compact_quote_with_live_dependency");
+    assert.equal(activation.selectedPoolSource, "compact_quote");
+    assert.equal(activation.liveDependencySource, "live");
+    const legs = selectedRoute.legs;
+    assert.ok(Array.isArray(legs));
+    assert.ok(
+      legs.some(
+        (leg) =>
+          isRecord(leg) &&
+          leg.poolId === "slipstream-basedflick-fame" &&
+          leg.source === "compact_quote",
+      ),
+    );
+    assert.ok(
+      legs.some(
+        (leg) =>
+          isRecord(leg) &&
+          leg.poolId === "uniswap-v4-basedflick-zora" &&
+          leg.source === "live",
+      ),
+    );
+  });
+
+  it("reports raw replay selected Slipstream attribution only in debug output", async () => {
+    const deterministic = createDeterministicQuoteAdapter();
+    const response = await handleFameSwapQuotePost(
+      request({
+        tokenIn: FAME,
+        tokenOut: WETH,
+        amountIn: "31597600141347829",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        includeDebug: true,
+        routeId: "solver-fame-basedflick-zora-weth",
+      }),
+      {
+        readinessForQuote: async (routerAddress) => ({
+          status: "ready",
+          routerAddress: routerAddress!,
+          feePpm: 2_222n,
+        }),
+        quoteAdapterForRequest: async () => ({
+          quoteContext: {
+            source: "live",
+            chainId: 8453,
+            blockNumber: 125n,
+          },
+          async quoteEdge(edgeRequest) {
+            const quote = deterministic.quoteEdge(edgeRequest);
+            if (quote.status !== "quoted") return quote;
+            if (edgeRequest.edge.poolId === "slipstream-basedflick-fame") {
+              return {
+                ...quote,
+                context: {
+                  source: "indexed" as const,
+                  chainId: 8453,
+                  currentBlock: 125,
+                  sourceRegistryId: famePoolStateRegistrySourceId(),
+                  effectiveMaxFreshnessBlocks: 120,
+                  statusCounts: {
+                    fresh: 1,
+                    stale: 0,
+                    unknown: 0,
+                    unsupported: 0,
+                  },
+                },
+                evidence:
+                  "indexed Slipstream CL replay for slipstream-basedflick-fame snapshot unit-selected-candidate",
+                indexedEvidence: {
+                  source: "indexed" as const,
+                  kind: "raw-replay" as const,
+                  quoteKind: "cl-replay-v1" as const,
+                  evidenceId: "unit-selected-candidate",
+                  poolId: "slipstream-basedflick-fame",
+                },
+              };
+            }
+            return {
+              ...quote,
+              context: {
+                source: "live" as const,
+                chainId: 8453,
+                blockNumber: 125n,
+              },
+            };
+          },
+        }),
+        quoteApiClient: null,
+      },
+    );
+    const json: unknown = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(isRecord(json));
+    assert.equal(json.status, "ready");
+    assert.doesNotMatch(
+      JSON.stringify(json.feeBreakdown),
+      /indexedEvidence|protocolEvidence|bitmapWords|initializedTicks/,
+    );
+
+    const debug = json.debug;
+    assert.ok(isRecord(debug));
+    const quoteApi = debug.quoteApi;
+    assert.ok(isRecord(quoteApi));
+    const selectedRoute = quoteApi.selectedRoute;
+    assert.ok(isRecord(selectedRoute));
+    const activation = selectedRoute.activation;
+    assert.ok(isRecord(activation));
+    assert.equal(activation.outcome, "raw_replay_with_live_dependency");
+    assert.equal(activation.selectedPoolSource, "raw_replay");
+    assert.equal(activation.liveDependencySource, "live");
+    const legs = selectedRoute.legs;
+    assert.ok(Array.isArray(legs));
+    assert.ok(
+      legs.some(
+        (leg) =>
+          isRecord(leg) &&
+          leg.poolId === "slipstream-basedflick-fame" &&
+          leg.source === "raw_replay" &&
+          leg.evidenceId === "unit-selected-candidate",
+      ),
     );
   });
 
@@ -1300,7 +1655,7 @@ describe("/api/fame/swap/quote", () => {
           quoteApiClient: {
             async fetchQuotes() {
               throw new Error(
-                "FAME pool quote request failed with status 503. https://unit.example/super-secret",
+                'FAME pool quote request failed with status 503.\nraw response {"access_token":"unit-secret"}\nhttps://unit.example/super-secret',
               );
             },
           },
@@ -1320,7 +1675,10 @@ describe("/api/fame/swap/quote", () => {
       assert.equal(quoteApi.batchFailureCount, quoteApi.edgeCount);
       assert.equal(warnLog.events[0]?.event, "fame-pool-quote-api-unavailable");
       assert.equal(warnLog.events[0]?.reason, "quote_api_batch_failed");
-      assert.doesNotMatch(JSON.stringify(json), /unit\.example|super-secret/);
+      assert.doesNotMatch(
+        JSON.stringify(json),
+        /unit\.example|super-secret|unit-secret|raw response/,
+      );
     } finally {
       warnLog.restore();
     }
@@ -1340,6 +1698,38 @@ describe("/api/fame/swap/quote", () => {
 
     assert.equal(response.status, 400);
     assert.match(json.error, /routerAddress overrides/);
+  });
+
+  it("rejects malformed requested route ids before liquidity reads", async () => {
+    const response = await POST(
+      request({
+        tokenIn: USDC,
+        tokenOut: FAME,
+        amountIn: "5000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        routeId: "solver fame/basedflick",
+      }),
+    );
+    const json = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(json.error, /routeId/);
+  });
+
+  it("rejects generated requested route ids on the public API", async () => {
+    const response = await POST(
+      request({
+        tokenIn: WETH,
+        tokenOut: FAME,
+        amountIn: "100000000000000",
+        recipient: "0x0000000000000000000000000000000000000abc",
+        routeId: "solver-single_path-uniswap-v2-fame-direct",
+      }),
+    );
+    const json = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(json.error, /pinned route artifact/);
   });
 
   it("rejects unbounded raw amounts before liquidity reads", async () => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
-import { USDC, WETH } from "../src/features/fame-swap/tokens";
+import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 import { famePoolEdgesForPair } from "../src/features/fame-swap/solver/poolUniverse";
 import type {
   FameAsyncQuoteAdapter,
@@ -22,10 +22,15 @@ type IndexedClReplayEntry = Extract<
 >;
 
 const Q96 = 79_228_162_514_264_337_593_543_950_336n;
+const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
 
-function slipstreamEdge(tokenIn: Address = WETH, tokenOut: Address = USDC) {
+function slipstreamEdge(
+  poolId = "slipstream-usdc-weth-100",
+  tokenIn: Address = WETH,
+  tokenOut: Address = USDC,
+) {
   const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
-    (candidate) => candidate.poolId === "slipstream-usdc-weth-100",
+    (candidate) => candidate.poolId === poolId,
   );
   assert.ok(edge);
   return edge;
@@ -85,13 +90,51 @@ function replayEntry(): IndexedClReplayEntry {
   };
 }
 
-function indexedState(): FameIndexedPoolStateBatchResponse {
+function selectedReplayEntry(): IndexedClReplayEntry {
+  return {
+    ...replayEntry(),
+    poolId: "slipstream-basedflick-fame",
+    poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+    token0: BASEDFLICK,
+    token1: FAME,
+    tickSpacing: 2000,
+    sqrtPriceX96: "14225627699858779769529171968",
+    tick: -34350,
+    liquidity: "1000000000000000000000000000000",
+    fee: "10000",
+    snapshotId: "unit-selected-candidate",
+    minWordPosition: -10,
+    maxWordPosition: 0,
+    minTick: -40000,
+    maxTick: 0,
+    bitmapWords: [
+      {
+        wordPosition: -10,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000010",
+      },
+      {
+        wordPosition: 0,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+      },
+    ],
+    initializedTicks: [
+      { tick: -40000, liquidityGross: "1000", liquidityNet: "-1000" },
+      { tick: 0, liquidityGross: "1000", liquidityNet: "1000" },
+    ],
+  };
+}
+
+function indexedState(
+  pools: FameIndexedPoolStateBatchResponse["pools"] = [replayEntry()],
+): FameIndexedPoolStateBatchResponse {
   return {
     sourceRegistryId: "unit-registry",
     currentBlock: 125,
     producerMaxFreshnessBlocks: 120,
     effectiveMaxFreshnessBlocks: 120,
-    pools: [replayEntry()],
+    pools,
   };
 }
 
@@ -200,20 +243,66 @@ describe("FAME Slipstream CL replay parity harness", () => {
       cases: [
         {
           label: "WETH->USDC",
-          request: { edge: slipstreamEdge(), amountIn: 1_000_000n },
+          request: {
+            edge: slipstreamEdge("slipstream-usdc-weth-100", WETH, USDC),
+            amountIn: 1_000_000n,
+          },
         },
         {
           label: "USDC->WETH",
           request: {
-            edge: slipstreamEdge(USDC, WETH),
+            edge: slipstreamEdge("slipstream-usdc-weth-100", USDC, WETH),
             amountIn: 1_000_000n,
           },
         },
       ],
     });
 
+    assert.equal(report.poolId, "slipstream-usdc-weth-100");
     assert.equal(report.snapshotId, "unit-cl-replay");
     assert.equal(report.results.length, 2);
+    assert.ok(report.results.every((result) => result.driftBps === 0n));
+  });
+
+  it("reports selected-pool parity cases in both directions", async () => {
+    const state = indexedState([selectedReplayEntry()]);
+    const report = await runClReplayParity({
+      indexedState: state,
+      liveAdapter: liveAdapter(state, 0n),
+      currentBlock: 125,
+      poolId: "slipstream-basedflick-fame",
+      cases: [
+        {
+          label: "FAME->basedflick",
+          request: {
+            edge: slipstreamEdge(
+              "slipstream-basedflick-fame",
+              FAME,
+              BASEDFLICK,
+            ),
+            amountIn: 1_000_000n,
+          },
+        },
+        {
+          label: "basedflick->FAME",
+          request: {
+            edge: slipstreamEdge(
+              "slipstream-basedflick-fame",
+              BASEDFLICK,
+              FAME,
+            ),
+            amountIn: 1_000_000n,
+          },
+        },
+      ],
+    });
+
+    assert.equal(report.poolId, "slipstream-basedflick-fame");
+    assert.equal(report.snapshotId, "unit-selected-candidate");
+    assert.deepEqual(
+      report.results.map((result) => result.label),
+      ["FAME->basedflick", "basedflick->FAME"],
+    );
     assert.ok(report.results.every((result) => result.driftBps === 0n));
   });
 
@@ -229,7 +318,10 @@ describe("FAME Slipstream CL replay parity harness", () => {
           cases: [
             {
               label: "WETH->USDC",
-              request: { edge: slipstreamEdge(), amountIn: 1_000_000n },
+              request: {
+                edge: slipstreamEdge("slipstream-usdc-weth-100", WETH, USDC),
+                amountIn: 1_000_000n,
+              },
             },
           ],
         }),

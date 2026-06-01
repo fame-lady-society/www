@@ -2,11 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { decodeAbiParameters } from "viem";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "../artifacts/manifest";
+import { routeArtifactById } from "./artifacts";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../tokens";
-import {
-  solveFameSwapAmount,
-  solveFameSwapAmountAsync,
-} from "./amountSolver";
+import { solveFameSwapAmount, solveFameSwapAmountAsync } from "./amountSolver";
 import type { FameQuoteAdapter } from "./quotes/adapters";
 import { createDeterministicQuoteAdapter } from "./quotes/deterministicAdapter";
 import { toAsyncQuoteAdapter } from "./optimizer/quoteRunAdapter";
@@ -28,7 +26,9 @@ function assertSameAddress(actual: string | undefined, expected: string) {
   assert.equal(actual?.toLowerCase(), expected.toLowerCase());
 }
 
-function token(address: typeof FAME | typeof USDC | typeof WETH | typeof NATIVE_ETH) {
+function token(
+  address: typeof FAME | typeof USDC | typeof WETH | typeof NATIVE_ETH,
+) {
   const result = tokenForAddress(address);
   assert.ok(result);
   return result;
@@ -54,7 +54,10 @@ describe("FAME amount-aware solver", () => {
       assert.equal(result.route.tokenOut, FAME);
       assert.equal(result.route.amountIn, 800_000n);
       assert.equal(result.route.recipient, recipient);
-      assert.equal(result.route.minAmountOutAfterFee, result.plan.protectedAmountOut);
+      assert.equal(
+        result.route.minAmountOutAfterFee,
+        result.plan.protectedAmountOut,
+      );
       assert.ok(result.poolIds.includes("scale-equalizer-usdc-frxusd"));
       assert.ok(result.poolIds.includes("slipstream-usdc-frxusd"));
       assert.ok(result.poolIds.includes("scale-equalizer-frxusd-fame"));
@@ -80,7 +83,10 @@ describe("FAME amount-aware solver", () => {
     if (result.status === "ready") {
       const v4Leg = result.route.legs.find((leg) => leg.venue === "UniswapV4");
       assert.ok(v4Leg);
-      const [payload] = decodeAbiParameters(universalRouterV4PayloadAbi, v4Leg.data);
+      const [payload] = decodeAbiParameters(
+        universalRouterV4PayloadAbi,
+        v4Leg.data,
+      );
       assert.equal(payload.recipient, routerAddress);
       if (v4Leg.amountMode === "All") {
         assert.equal(payload.amountIn, 0n);
@@ -98,7 +104,9 @@ describe("FAME amount-aware solver", () => {
         return {
           status: "quoted",
           amountIn: request.amountIn,
-          amountOut: favorsWethFame ? request.amountIn * 1_000_000n : request.amountIn,
+          amountOut: favorsWethFame
+            ? request.amountIn * 1_000_000n
+            : request.amountIn,
           capacityIn: null,
           fee: request.edge.fee,
           evidence: "unit test native wrap route quote evidence",
@@ -318,6 +326,84 @@ describe("FAME amount-aware solver", () => {
       );
       assert.equal(result.route.legs[0]?.amount, 500_000_000_000_000n);
       assert.equal(result.route.legs[1]?.amount, 0n);
+    }
+  });
+
+  it("honors a requested artifact route and skips optimizer selection", async () => {
+    const routeId = "solver-fame-basedflick-zora-weth";
+    const artifact = routeArtifactById(routeId);
+    assert.ok(artifact);
+
+    const result = await solveFameSwapAmountAsync({
+      tokenIn: token(FAME),
+      tokenOut: token(WETH),
+      amountIn: BigInt(artifact.route.amountIn),
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: toAsyncQuoteAdapter(createDeterministicQuoteAdapter()),
+      optimizerMode: "select",
+      requestedRouteId: routeId,
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.equal(result.routeArtifactId, routeId);
+      assert.equal(result.routeSource, "artifact");
+      assert.deepEqual(result.poolIds, artifact.poolIds);
+      assert.equal(result.optimizerEvidence, undefined);
+      assert.equal(result.optimizerSummary, undefined);
+    }
+  });
+
+  it("pins requested split artifact routes to their exact allocation", async () => {
+    const routeId = "solver-weth-split-fame";
+    const artifact = routeArtifactById(routeId);
+    assert.ok(artifact);
+
+    const result = await solveFameSwapAmountAsync({
+      tokenIn: token(WETH),
+      tokenOut: token(FAME),
+      amountIn: BigInt(artifact.route.amountIn),
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: toAsyncQuoteAdapter(createDeterministicQuoteAdapter()),
+      optimizerMode: "select",
+      requestedRouteId: routeId,
+    });
+
+    assert.equal(result.status, "ready");
+    if (result.status === "ready") {
+      assert.equal(result.routeArtifactId, routeId);
+      assert.equal(result.routeSource, "artifact");
+      assert.deepEqual(result.poolIds, artifact.poolIds);
+      assert.equal(result.routeDisplay[0]?.allocationBps, 5_000);
+      assert.equal(result.routeDisplay[1]?.allocationBps, 5_000);
+    }
+  });
+
+  it("fails closed when a requested artifact route does not match the pair", () => {
+    const result = solveFameSwapAmount({
+      tokenIn: token(WETH),
+      tokenOut: token(FAME),
+      amountIn: 100_000_000_000_000n,
+      routerAddress,
+      recipient,
+      deadline,
+      feePpm: 2_222n,
+      slippageBps: DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      adapter: createDeterministicQuoteAdapter(),
+      requestedRouteId: "solver-fame-basedflick-zora-weth",
+    });
+
+    assert.equal(result.status, "no_safe_route");
+    if (result.status === "no_safe_route") {
+      assert.match(result.message, /artifact token pair does not match/);
     }
   });
 

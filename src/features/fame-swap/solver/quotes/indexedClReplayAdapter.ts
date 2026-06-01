@@ -124,29 +124,46 @@ function getSqrtRatioAtTick(tick: number): bigint {
     (absTick & 0x1) !== 0
       ? 0xfffcb933bd6fad37aa2d162d1a594001n
       : 0x100000000000000000000000000000000n;
-  if ((absTick & 0x2) !== 0) ratio = (ratio * 0xfff97272373d413259a46990580e213an) >> 128n;
-  if ((absTick & 0x4) !== 0) ratio = (ratio * 0xfff2e50f5f656932ef12357cf3c7fdccn) >> 128n;
-  if ((absTick & 0x8) !== 0) ratio = (ratio * 0xffe5caca7e10e4e61c3624eaa0941cd0n) >> 128n;
-  if ((absTick & 0x10) !== 0) ratio = (ratio * 0xffcb9843d60f6159c9db58835c926644n) >> 128n;
-  if ((absTick & 0x20) !== 0) ratio = (ratio * 0xff973b41fa98c081472e6896dfb254c0n) >> 128n;
-  if ((absTick & 0x40) !== 0) ratio = (ratio * 0xff2ea16466c96a3843ec78b326b52861n) >> 128n;
-  if ((absTick & 0x80) !== 0) ratio = (ratio * 0xfe5dee046a99a2a811c461f1969c3053n) >> 128n;
-  if ((absTick & 0x100) !== 0) ratio = (ratio * 0xfcbe86c7900a88aedcffc83b479aa3a4n) >> 128n;
-  if ((absTick & 0x200) !== 0) ratio = (ratio * 0xf987a7253ac413176f2b074cf7815e54n) >> 128n;
-  if ((absTick & 0x400) !== 0) ratio = (ratio * 0xf3392b0822b70005940c7a398e4b70f3n) >> 128n;
-  if ((absTick & 0x800) !== 0) ratio = (ratio * 0xe7159475a2c29b7443b29c7fa6e889d9n) >> 128n;
-  if ((absTick & 0x1000) !== 0) ratio = (ratio * 0xd097f3bdfd2022b8845ad8f792aa5825n) >> 128n;
-  if ((absTick & 0x2000) !== 0) ratio = (ratio * 0xa9f746462d870fdf8a65dc1f90e061e5n) >> 128n;
-  if ((absTick & 0x4000) !== 0) ratio = (ratio * 0x70d869a156d2a1b890bb3df62baf32f7n) >> 128n;
-  if ((absTick & 0x8000) !== 0) ratio = (ratio * 0x31be135f97d08fd981231505542fcfa6n) >> 128n;
-  if ((absTick & 0x10000) !== 0) ratio = (ratio * 0x9aa508b5b7a84e1c677de54f3e99bc9n) >> 128n;
-  if ((absTick & 0x20000) !== 0) ratio = (ratio * 0x5d6af8dedb81196699c329225ee604n) >> 128n;
-  if ((absTick & 0x40000) !== 0) ratio = (ratio * 0x2216e584f5fa1ea926041bedfe98n) >> 128n;
-  if ((absTick & 0x80000) !== 0) ratio = (ratio * 0x48a170391f7dc42444e8fa2n) >> 128n;
+  if ((absTick & 0x2) !== 0)
+    ratio = (ratio * 0xfff97272373d413259a46990580e213an) >> 128n;
+  if ((absTick & 0x4) !== 0)
+    ratio = (ratio * 0xfff2e50f5f656932ef12357cf3c7fdccn) >> 128n;
+  if ((absTick & 0x8) !== 0)
+    ratio = (ratio * 0xffe5caca7e10e4e61c3624eaa0941cd0n) >> 128n;
+  if ((absTick & 0x10) !== 0)
+    ratio = (ratio * 0xffcb9843d60f6159c9db58835c926644n) >> 128n;
+  if ((absTick & 0x20) !== 0)
+    ratio = (ratio * 0xff973b41fa98c081472e6896dfb254c0n) >> 128n;
+  if ((absTick & 0x40) !== 0)
+    ratio = (ratio * 0xff2ea16466c96a3843ec78b326b52861n) >> 128n;
+  if ((absTick & 0x80) !== 0)
+    ratio = (ratio * 0xfe5dee046a99a2a811c461f1969c3053n) >> 128n;
+  if ((absTick & 0x100) !== 0)
+    ratio = (ratio * 0xfcbe86c7900a88aedcffc83b479aa3a4n) >> 128n;
+  if ((absTick & 0x200) !== 0)
+    ratio = (ratio * 0xf987a7253ac413176f2b074cf7815e54n) >> 128n;
+  if ((absTick & 0x400) !== 0)
+    ratio = (ratio * 0xf3392b0822b70005940c7a398e4b70f3n) >> 128n;
+  if ((absTick & 0x800) !== 0)
+    ratio = (ratio * 0xe7159475a2c29b7443b29c7fa6e889d9n) >> 128n;
+  if ((absTick & 0x1000) !== 0)
+    ratio = (ratio * 0xd097f3bdfd2022b8845ad8f792aa5825n) >> 128n;
+  if ((absTick & 0x2000) !== 0)
+    ratio = (ratio * 0xa9f746462d870fdf8a65dc1f90e061e5n) >> 128n;
+  if ((absTick & 0x4000) !== 0)
+    ratio = (ratio * 0x70d869a156d2a1b890bb3df62baf32f7n) >> 128n;
+  if ((absTick & 0x8000) !== 0)
+    ratio = (ratio * 0x31be135f97d08fd981231505542fcfa6n) >> 128n;
+  if ((absTick & 0x10000) !== 0)
+    ratio = (ratio * 0x9aa508b5b7a84e1c677de54f3e99bc9n) >> 128n;
+  if ((absTick & 0x20000) !== 0)
+    ratio = (ratio * 0x5d6af8dedb81196699c329225ee604n) >> 128n;
+  if ((absTick & 0x40000) !== 0)
+    ratio = (ratio * 0x2216e584f5fa1ea926041bedfe98n) >> 128n;
+  if ((absTick & 0x80000) !== 0)
+    ratio = (ratio * 0x48a170391f7dc42444e8fa2n) >> 128n;
   if (tick > 0) ratio = MAX_UINT256 / ratio;
-  return ratio % (2n ** 32n) === 0n
-    ? ratio >> 32n
-    : (ratio >> 32n) + 1n;
+  return ratio % 2n ** 32n === 0n ? ratio >> 32n : (ratio >> 32n) + 1n;
 }
 
 function amount0Delta(
@@ -160,9 +177,12 @@ function amount0Delta(
   const numerator1 = liquidity << 96n;
   const numerator2 = upper - lower;
   if (roundUp) {
-    return divRoundingUp(mulDivRoundingUp(numerator1, numerator2, upper), lower);
+    return divRoundingUp(
+      mulDivRoundingUp(numerator1, numerator2, upper),
+      lower,
+    );
   }
-  return ((numerator1 * numerator2) / upper) / lower;
+  return (numerator1 * numerator2) / upper / lower;
 }
 
 function amount1Delta(
@@ -238,12 +258,21 @@ function computeSwapStep(options: {
     ? amountInAtTarget
     : options.zeroForOne
       ? amount0Delta(sqrtNextX96, options.sqrtPriceX96, options.liquidity, true)
-      : amount1Delta(options.sqrtPriceX96, sqrtNextX96, options.liquidity, true);
+      : amount1Delta(
+          options.sqrtPriceX96,
+          sqrtNextX96,
+          options.liquidity,
+          true,
+        );
   const amountOut = options.zeroForOne
     ? amount1Delta(sqrtNextX96, options.sqrtPriceX96, options.liquidity, false)
     : amount0Delta(options.sqrtPriceX96, sqrtNextX96, options.liquidity, false);
   const feeAmount = reachesTarget
-    ? mulDivRoundingUp(amountIn, options.feePips, FEE_DENOMINATOR - options.feePips)
+    ? mulDivRoundingUp(
+        amountIn,
+        options.feePips,
+        FEE_DENOMINATOR - options.feePips,
+      )
     : options.amountRemaining - amountIn;
   return { sqrtNextX96, amountIn, amountOut, feeAmount };
 }
@@ -263,9 +292,7 @@ function nextInitializedTick(
   return ticks.find((tick) => tick.tick > currentTick) ?? null;
 }
 
-function replayTicks(
-  state: FameIndexedClReplayPoolState,
-): ReplayTick[] | null {
+function replayTicks(state: FameIndexedClReplayPoolState): ReplayTick[] | null {
   const ticks = state.initializedTicks.map((tick) => {
     const liquidityGross = parseUnsignedDecimal(tick.liquidityGross);
     const liquidityNet = parseSignedDecimal(tick.liquidityNet);
@@ -313,7 +340,8 @@ export function replaySlipstreamExactInput(options: {
   while (amountRemaining > 0n) {
     if (liquidity <= 0n) return "outside-indexed-tick-range";
     const nextTick = nextInitializedTick(ticks, tick, options.zeroForOne);
-    const targetTick = nextTick?.tick ?? (options.zeroForOne ? MIN_TICK : MAX_TICK);
+    const targetTick =
+      nextTick?.tick ?? (options.zeroForOne ? MIN_TICK : MAX_TICK);
     const sqrtTarget = getSqrtRatioAtTick(targetTick);
     const step = computeSwapStep({
       sqrtPriceX96: sqrt,
@@ -345,7 +373,9 @@ export function replaySlipstreamExactInput(options: {
     tick = options.zeroForOne ? nextTick.tick - 1 : nextTick.tick;
   }
 
-  return amountOut > 0n ? { amountOut, sqrtPriceX96After: sqrt } : "replay-failed";
+  return amountOut > 0n
+    ? { amountOut, sqrtPriceX96After: sqrt }
+    : "replay-failed";
 }
 
 function replayStateForRequest(
@@ -353,7 +383,8 @@ function replayStateForRequest(
   request: FameEdgeQuoteRequest,
   expectedSourceRegistryId: string,
 ): FameIndexedClReplayPoolState | FameIndexedClReplayFallbackReason {
-  if (request.edge.pool.venue !== "aerodrome-slipstream") return "unsupported-pool";
+  if (request.edge.pool.venue !== "aerodrome-slipstream")
+    return "unsupported-pool";
   if (!state || state.status !== "fresh") return "fresh-replay-state-missing";
   if (!("stateKind" in state) || state.stateKind !== "cl-replay-v1") {
     return "fresh-replay-state-missing";
@@ -413,6 +444,13 @@ export function quoteFromIndexedSlipstreamReplay(options: {
     fee: options.request.edge.fee,
     evidence: source,
     context: options.context,
+    indexedEvidence: {
+      source: "indexed",
+      kind: "raw-replay",
+      quoteKind: "cl-replay-v1",
+      evidenceId: state.snapshotId,
+      poolId: state.poolId,
+    },
     priceImpact: concentratedLiquidityPriceImpact({
       amountIn: options.request.amountIn,
       amountOut: replay.amountOut,

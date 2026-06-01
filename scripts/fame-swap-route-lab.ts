@@ -45,12 +45,19 @@ import { toAsyncQuoteAdapter } from "../src/features/fame-swap/solver/optimizer/
 import {
   famePoolStateRegistryPoolIdsForPair,
   famePoolStateRegistrySourceId,
+  famePoolSupportsCompactQuote,
 } from "../src/features/fame-swap/solver/poolStateRegistry";
+import {
+  FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+  FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+} from "../src/features/fame-swap/solver/poolActivationLedger";
+import type { FameLegQuote } from "../src/features/fame-swap/solver/quotes/adapters";
 import {
   corpusTokenLabel,
   FAME_ROUTE_CORPUS,
   type FameRouteCorpusCase,
 } from "../src/features/fame-swap/solver/routeCorpus";
+import { routeArtifactById } from "../src/features/fame-swap/solver/artifacts";
 import type {
   FameSwapExecutableQuote,
   FameSwapQuote,
@@ -64,11 +71,49 @@ import {
   DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
 } from "../src/features/fame-swap/solver/slippage";
 import { tokenForAddress } from "../src/features/fame-swap/tokens";
+import {
+  displaySafeDiagnosticMessage,
+  redactSensitiveDiagnosticText,
+} from "../src/features/fame-swap/solver/diagnostics";
 
 const ROUTER_ADDRESS =
   "0x0000000000000000000000000000000000000009" as const satisfies Address;
 const RECIPIENT =
   "0x0000000000000000000000000000000000000abc" as const satisfies Address;
+
+export type FameRouteLabSelectedQuoteSourceKind =
+  | "compact-indexed"
+  | "raw-replay-indexed"
+  | "indexed"
+  | "live"
+  | "fork"
+  | "snapshot"
+  | "deterministic-test"
+  | "other";
+
+export interface FameRouteLabSelectedQuoteSource {
+  poolId: string;
+  source: FameRouteLabSelectedQuoteSourceKind;
+  tokenIn: Address;
+  tokenOut: Address;
+  amountIn: string;
+  quoteContextSource: string | null;
+  evidenceId: string | null;
+}
+
+export interface FameRouteLabSelectedActivationSummary {
+  selectedPoolId: typeof FAME_SELECTED_CL_ACTIVATION_CANDIDATE;
+  liveDependencyPoolId: typeof FAME_SELECTED_LIVE_ROUTE_DEPENDENCY;
+  selectedPoolSource: FameRouteLabSelectedQuoteSourceKind | "absent";
+  liveDependencySource: FameRouteLabSelectedQuoteSourceKind | "absent";
+  outcome:
+    | "compact_quote_with_live_dependency"
+    | "raw_replay_with_live_dependency"
+    | "compact_quote_without_live_dependency"
+    | "raw_replay_without_live_dependency"
+    | "selected_pool_live_fallback"
+    | "live_dependency_without_selected_pool";
+}
 
 export interface FameRouteLabRow {
   mode: "deterministic" | "recorded" | "indexed" | "live";
@@ -77,8 +122,12 @@ export interface FameRouteLabRow {
   amountIn: string;
   expectedStatus: string;
   status: string;
+  requestedRouteId: string | null;
+  routeArtifactId: string | null;
   message: string;
   selectedPools: string[];
+  selectedQuoteSources: FameRouteLabSelectedQuoteSource[];
+  selectedActivation: FameRouteLabSelectedActivationSummary | null;
   quoteContext: string | null;
   feeBreakdown: {
     routerFeeAmount: string | null;
@@ -180,6 +229,7 @@ interface RouteLabClient {
 
 interface RouteLabOptions {
   candidateBudgets?: Partial<FameRouteCandidateBudgets>;
+  requestedRouteId?: string;
 }
 
 interface IndexedRouteLabOptions extends RouteLabOptions {
@@ -193,6 +243,7 @@ export async function runSnapshotRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: RouteLabOptions = {},
 ): Promise<FameRouteLabRow[]> {
+  assertRouteLabRequestedRouteArtifact(options.requestedRouteId);
   const adapter = createSnapshotQuoteAdapter();
   const rows: FameRouteLabRow[] = [];
   for (const entry of corpus) {
@@ -219,6 +270,7 @@ export async function runSnapshotRouteLab(
         routerAddress: ROUTER_ADDRESS,
         feePpm: 2_222n,
       },
+      requestedRouteId: options.requestedRouteId,
       now: new Date("2026-05-13T00:00:00Z"),
       adapter: toAsyncQuoteAdapter(adapter),
     });
@@ -235,8 +287,12 @@ export async function runSnapshotRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "recorded"),
       status: quote.status,
+      requestedRouteId: options.requestedRouteId ?? null,
+      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      selectedQuoteSources: selectedQuoteSources(quote),
+      selectedActivation: selectedActivationSummary(quote),
       quoteContext: quoteContextLabel(quote),
       feeBreakdown:
         quote.status === "ready"
@@ -278,6 +334,45 @@ export async function runSnapshotRouteLab(
   return rows;
 }
 
+function routeLabIndexedPoolIdsForRequest(
+  entry: FameRouteCorpusCase,
+  requestedRouteId: string | undefined,
+): string[] {
+  const pairPoolIds = famePoolStateRegistryPoolIdsForPair(
+    entry.tokenIn,
+    entry.tokenOut,
+  );
+  if (!requestedRouteId) return pairPoolIds;
+
+  const artifact = routeArtifactById(requestedRouteId);
+  if (!artifact) {
+    throw new Error(
+      `Route lab --route requires a pinned route artifact id; received ${requestedRouteId}.`,
+    );
+  }
+  if (
+    !sameRouteAddress(entry.tokenIn, artifact.route.tokenIn) ||
+    !sameRouteAddress(entry.tokenOut, artifact.route.tokenOut)
+  ) {
+    return [];
+  }
+
+  return artifact.poolIds.filter((poolId) =>
+    famePoolSupportsCompactQuote(poolId),
+  );
+}
+
+function assertRouteLabRequestedRouteArtifact(
+  requestedRouteId: string | undefined,
+) {
+  if (!requestedRouteId) return;
+  if (!routeArtifactById(requestedRouteId)) {
+    throw new Error(
+      `Route lab --route requires a pinned route artifact id; received ${requestedRouteId}.`,
+    );
+  }
+}
+
 function currentBlockForIndexedState(
   adapter: Awaited<ReturnType<typeof createLiveLiquidityQuoteAdapter>>,
 ): number | null {
@@ -296,6 +391,7 @@ export async function runIndexedRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: IndexedRouteLabOptions,
 ): Promise<FameRouteLabRow[]> {
+  assertRouteLabRequestedRouteArtifact(options.requestedRouteId);
   const fallbackAdapter =
     options.fallbackAdapter ??
     toAsyncQuoteAdapter(createSnapshotQuoteAdapter());
@@ -321,9 +417,9 @@ export async function runIndexedRouteLab(
       currentBlock,
       maxFreshnessBlocks: options.maxFreshnessBlocks,
       stateSurfaces: ["cl-replay-v1"],
-      poolIds: famePoolStateRegistryPoolIdsForPair(
-        entry.tokenIn,
-        entry.tokenOut,
+      poolIds: routeLabIndexedPoolIdsForRequest(
+        entry,
+        options.requestedRouteId,
       ),
     });
     const reserveAdapter = createIndexedReserveQuoteAdapter({
@@ -335,7 +431,7 @@ export async function runIndexedRouteLab(
       indexedState,
       fallback: reserveAdapter,
       expectedSourceRegistryId,
-      mode: "shadow",
+      mode: "local",
     });
     const quote = await quoteFameSwapAsync({
       tokenIn: token(entry.tokenIn),
@@ -352,6 +448,7 @@ export async function runIndexedRouteLab(
         routerAddress: ROUTER_ADDRESS,
         feePpm: 2_222n,
       },
+      requestedRouteId: options.requestedRouteId,
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
@@ -368,8 +465,12 @@ export async function runIndexedRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "indexed"),
       status: quote.status,
+      requestedRouteId: options.requestedRouteId ?? null,
+      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      selectedQuoteSources: selectedQuoteSources(quote),
+      selectedActivation: selectedActivationSummary(quote),
       quoteContext: quoteContextLabel(quote),
       feeBreakdown:
         quote.status === "ready"
@@ -424,6 +525,84 @@ function quoteContextLabel(quote: FameSwapQuote): string | null {
     case "deterministic_test":
       return `deterministic-test:${quote.quoteContext.profileId}`;
   }
+}
+
+function selectedQuoteEvidenceId(leg: FameLegQuote): string | null {
+  if (leg.indexedEvidence?.evidenceId) return leg.indexedEvidence.evidenceId;
+  const snapshotMatch = /\bsnapshot\s+([A-Za-z0-9_.:-]+)/u.exec(leg.evidence);
+  if (snapshotMatch?.[1]) return snapshotMatch[1];
+  const blockMatch = /\bobserved through block\s+([0-9]+)/u.exec(leg.evidence);
+  if (blockMatch?.[1]) return blockMatch[1];
+  return null;
+}
+
+function selectedQuoteSourceKind(
+  leg: FameLegQuote,
+): FameRouteLabSelectedQuoteSourceKind {
+  const source = leg.quoteContext?.source;
+  if (source === "indexed") {
+    if (leg.indexedEvidence?.kind === "compact-quote") return "compact-indexed";
+    if (leg.indexedEvidence?.kind === "raw-replay") return "raw-replay-indexed";
+    return "indexed";
+  }
+  if (source === "live") return "live";
+  if (source === "fork") return "fork";
+  if (source === "snapshot") return "snapshot";
+  if (source === "deterministic_test") return "deterministic-test";
+  return "other";
+}
+
+function selectedQuoteSources(
+  quote: FameSwapQuote,
+): FameRouteLabSelectedQuoteSource[] {
+  if (quote.status !== "ready") return [];
+  return quote.feeBreakdown.legs.map((leg) => ({
+    poolId: leg.poolId,
+    source: selectedQuoteSourceKind(leg),
+    tokenIn: leg.tokenIn,
+    tokenOut: leg.tokenOut,
+    amountIn: leg.amountIn.toString(),
+    quoteContextSource: leg.quoteContext?.source ?? null,
+    evidenceId: selectedQuoteEvidenceId(leg),
+  }));
+}
+
+function selectedActivationSummary(
+  quote: FameSwapQuote,
+): FameRouteLabSelectedActivationSummary | null {
+  const sources = selectedQuoteSources(quote);
+  const selectedPool = sources.find(
+    (leg) => leg.poolId === FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+  );
+  const liveDependency = sources.find(
+    (leg) => leg.poolId === FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+  );
+  if (!selectedPool && !liveDependency) return null;
+
+  const selectedPoolSource = selectedPool?.source ?? "absent";
+  const liveDependencySource = liveDependency?.source ?? "absent";
+  const dependencyIsLive =
+    liveDependencySource === "live" || liveDependencySource === "fork";
+  const outcome =
+    selectedPoolSource === "compact-indexed" && dependencyIsLive
+      ? "compact_quote_with_live_dependency"
+      : selectedPoolSource === "raw-replay-indexed" && dependencyIsLive
+        ? "raw_replay_with_live_dependency"
+        : selectedPoolSource === "compact-indexed"
+          ? "compact_quote_without_live_dependency"
+          : selectedPoolSource === "raw-replay-indexed"
+            ? "raw_replay_without_live_dependency"
+            : selectedPool
+              ? "selected_pool_live_fallback"
+              : "live_dependency_without_selected_pool";
+
+  return {
+    selectedPoolId: FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+    liveDependencyPoolId: FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+    selectedPoolSource,
+    liveDependencySource,
+    outcome,
+  };
 }
 
 function routeEdgeMatrix(
@@ -579,34 +758,8 @@ function pairLabel(entry: FameRouteCorpusCase): string {
   return `${corpusTokenLabel(entry.tokenIn)}->${corpusTokenLabel(entry.tokenOut)}`;
 }
 
-function redactSensitiveDiagnosticText(value: string): string {
-  return value
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
-}
-
 function displaySafeAccountLabel(address: Address): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-function displaySafeDiagnosticMessage(
-  value: unknown,
-  fallback = "Route diagnostic unavailable.",
-): string {
-  const raw = value instanceof Error ? value.message : String(value);
-  return redactSensitiveDiagnosticText(
-    raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find(
-        (line) =>
-          line.length > 0 &&
-          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-            line,
-          ),
-      ) ?? fallback,
-  );
 }
 
 function displaySafeErrorMessage(error: unknown): string {
@@ -808,6 +961,7 @@ export async function runRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: RouteLabOptions = {},
 ): Promise<FameRouteLabRow[]> {
+  assertRouteLabRequestedRouteArtifact(options.requestedRouteId);
   const adapter = createDeterministicQuoteAdapter();
   const rows: FameRouteLabRow[] = [];
   for (const entry of corpus) {
@@ -835,6 +989,7 @@ export async function runRouteLab(
         feePpm: 2_222n,
       },
       optimizerMode: "disabled",
+      requestedRouteId: options.requestedRouteId,
       now: new Date("2026-05-13T00:00:00Z"),
       adapter: toAsyncQuoteAdapter(adapter),
     });
@@ -851,8 +1006,12 @@ export async function runRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "deterministic"),
       status: quote.status,
+      requestedRouteId: options.requestedRouteId ?? null,
+      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      selectedQuoteSources: selectedQuoteSources(quote),
+      selectedActivation: selectedActivationSummary(quote),
       quoteContext: quoteContextLabel(quote),
       feeBreakdown:
         quote.status === "ready"
@@ -898,6 +1057,7 @@ export async function runLiveRouteLab(
   corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
   options: RouteLabOptions & { simulate?: boolean } = {},
 ): Promise<FameRouteLabRow[]> {
+  assertRouteLabRequestedRouteArtifact(options.requestedRouteId);
   const config = getFameSwapConfig();
   const rpcUrl =
     process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
@@ -951,6 +1111,7 @@ export async function runLiveRouteLab(
         routerAddress,
         feePpm: 2_222n,
       },
+      requestedRouteId: options.requestedRouteId,
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
@@ -968,8 +1129,12 @@ export async function runLiveRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "live"),
       status: quote.status,
+      requestedRouteId: options.requestedRouteId ?? null,
+      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      selectedQuoteSources: selectedQuoteSources(quote),
+      selectedActivation: selectedActivationSummary(quote),
       quoteContext: quoteContextLabel(quote),
       feeBreakdown:
         quote.status === "ready"
@@ -1027,6 +1192,8 @@ export function formatRouteLabMarkdown(
       `- Status: ${row.status}`,
       `- Expected: ${row.expectedStatus}`,
       `- Selected pools: ${row.selectedPools.join(", ") || "none"}`,
+      `- Selected quote sources: ${selectedQuoteSourcesSummary(row)}`,
+      `- Selected activation: ${selectedActivationSummaryLine(row.selectedActivation)}`,
       `- Quote context: ${row.quoteContext ?? "n/a"}`,
       `- Router fee amount: ${row.feeBreakdown.routerFeeAmount ?? "n/a"}`,
       `- Venue fees included in quotes: ${String(
@@ -1068,6 +1235,24 @@ export function formatRouteLabMarkdown(
         : "",
     ]),
   ].join("\n");
+}
+
+function selectedQuoteSourcesSummary(row: FameRouteLabRow): string {
+  if (row.selectedQuoteSources.length === 0) return "none";
+  return row.selectedQuoteSources
+    .map((entry) => `${entry.poolId} ${entry.source}`)
+    .join("; ");
+}
+
+function selectedActivationSummaryLine(
+  summary: FameRouteLabSelectedActivationSummary | null,
+): string {
+  if (!summary) return "not applicable";
+  return [
+    summary.outcome,
+    `${summary.selectedPoolId} ${summary.selectedPoolSource}`,
+    `${summary.liveDependencyPoolId} ${summary.liveDependencySource}`,
+  ].join(", ");
 }
 
 function optimizerSummaryLine(optimizer: FameRouteLabRow["optimizer"]): string {
@@ -1269,6 +1454,40 @@ function formatProtocolCoverageMarkdown(
   ];
 }
 
+function sameRouteAddress(left: Address, right: Address): boolean {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function routeLabRequestedRouteIdFromArgs(): string | undefined {
+  const routeArgIndex = process.argv.indexOf("--route");
+  if (routeArgIndex >= 0) {
+    const value = process.argv[routeArgIndex + 1];
+    if (!value) throw new Error("--route requires a route id.");
+    return value;
+  }
+  return process.env.FAME_SWAP_ROUTE_LAB_ROUTE_ID?.trim() || undefined;
+}
+
+function routeLabCorpusForRequestedRoute(
+  corpus: readonly FameRouteCorpusCase[],
+  requestedRouteId: string | undefined,
+): readonly FameRouteCorpusCase[] {
+  if (!requestedRouteId) return corpus;
+  const artifact = routeArtifactById(requestedRouteId);
+  if (!artifact) return corpus;
+  const filtered = corpus.filter(
+    (entry) =>
+      sameRouteAddress(entry.tokenIn, artifact.route.tokenIn) &&
+      sameRouteAddress(entry.tokenOut, artifact.route.tokenOut),
+  );
+  if (filtered.length === 0) {
+    throw new Error(
+      `No route-lab corpus case matches requested route ${requestedRouteId}.`,
+    );
+  }
+  return filtered;
+}
+
 function shouldRunCli(): boolean {
   return process.argv[1]?.endsWith("fame-swap-route-lab.ts") ?? false;
 }
@@ -1345,6 +1564,27 @@ function optionalSafeIntegerEnv(name: string): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
+async function routeLabIndexedFallbackAdapterFromEnv(): Promise<
+  IndexedRouteLabOptions["fallbackAdapter"] | undefined
+> {
+  const rpcUrl = process.env.BASE_RPC_URL;
+  if (!rpcUrl) return undefined;
+  const client = createPublicClient({
+    chain: base,
+    transport: http(rpcUrl),
+  });
+  return createLiveLiquidityQuoteAdapter({
+    client: {
+      getBlockNumber: () => client.getBlockNumber(),
+      readContract: (request) =>
+        client.readContract(
+          request as Parameters<typeof client.readContract>[0],
+        ) as Promise<unknown>,
+    },
+    chainId: base.id,
+  });
+}
+
 async function routeLabIndexedCurrentBlockFromEnv(): Promise<number> {
   const explicitCurrentBlock = optionalSafeIntegerEnv(
     "FAME_POOL_STATE_CURRENT_BLOCK",
@@ -1373,21 +1613,29 @@ async function routeLabIndexedCurrentBlockFromEnv(): Promise<number> {
 
 if (shouldRunCli()) {
   const run = async () => {
+    const requestedRouteId = routeLabRequestedRouteIdFromArgs();
+    const corpus = routeLabCorpusForRequestedRoute(
+      FAME_ROUTE_CORPUS,
+      requestedRouteId,
+    );
     const rows = process.argv.includes("--live")
-      ? await runLiveRouteLab(undefined, {
+      ? await runLiveRouteLab(corpus, {
+          requestedRouteId,
           simulate: process.argv.includes("--simulate"),
         })
       : process.argv.includes("--indexed")
-        ? await runIndexedRouteLab(undefined, {
+        ? await runIndexedRouteLab(corpus, {
+            requestedRouteId,
             poolStateClient: routeLabIndexedPoolStateClientFromEnv(),
+            fallbackAdapter: await routeLabIndexedFallbackAdapterFromEnv(),
             currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
             maxFreshnessBlocks: optionalSafeIntegerEnv(
               "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
             ),
           })
         : process.argv.includes("--deterministic")
-          ? await runRouteLab()
-          : await runSnapshotRouteLab();
+          ? await runRouteLab(corpus, { requestedRouteId })
+          : await runSnapshotRouteLab(corpus, { requestedRouteId });
     if (process.argv.includes("--markdown")) {
       console.log(formatRouteLabMarkdown(rows));
     } else {

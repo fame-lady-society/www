@@ -1,6 +1,6 @@
 import { createPublicClient, http, type Address } from "viem";
 import { base } from "viem/chains";
-import { USDC, WETH } from "../src/features/fame-swap/tokens";
+import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 import { famePoolEdgesForPair } from "../src/features/fame-swap/solver/poolUniverse";
 import { famePoolStateRegistrySourceId } from "../src/features/fame-swap/solver/poolStateRegistry";
 import {
@@ -9,6 +9,7 @@ import {
   type FameIndexedPoolStateEntry,
 } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { quoteFromIndexedSlipstreamReplay } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
+import { displaySafeDiagnosticMessage } from "../src/features/fame-swap/solver/diagnostics";
 import { createLiveLiquidityQuoteAdapter } from "../src/features/fame-swap/solver/quotes/liveAdapters";
 import type {
   FameAsyncQuoteAdapter,
@@ -20,11 +21,22 @@ type ReplayEntry = Extract<
   { stateKind: "cl-replay-v1" }
 >;
 
-const POOL_ID = "slipstream-usdc-weth-100";
+const DEFAULT_CL_REPLAY_PARITY_POOL_ID = "slipstream-usdc-weth-100";
+const SELECTED_CL_REPLAY_PARITY_POOL_ID = "slipstream-basedflick-fame";
+const BASEDFLICK =
+  "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const satisfies Address;
+
 export const DEFAULT_CL_REPLAY_PARITY_AMOUNTS = {
   wethToUsdc: [10n ** 14n, 10n ** 15n, 10n ** 16n],
   usdcToWeth: [1_000_000n, 10_000_000n, 100_000_000n],
+  fameToBasedflick: [10n ** 14n, 10n ** 15n, 31_597_600_141_347_829n],
+  basedflickToFame: [10n ** 14n, 10n ** 15n, 10n ** 16n],
 } as const;
+
+export const DEFAULT_CL_REPLAY_PARITY_POOL_IDS = [
+  DEFAULT_CL_REPLAY_PARITY_POOL_ID,
+  SELECTED_CL_REPLAY_PARITY_POOL_ID,
+] as const;
 
 export interface FameClReplayParityCase {
   label: string;
@@ -39,6 +51,7 @@ export interface FameClReplayParityResult {
 }
 
 export interface FameClReplayParityReport {
+  poolId: string;
   snapshotId: string;
   observedThroughBlock: number;
   stateHash: string;
@@ -112,35 +125,21 @@ export function poolStateEndpointUrlFromEnv(): string {
 }
 
 export function displaySafeErrorMessage(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  return (
-    raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find(
-        (line) =>
-          line.length > 0 &&
-          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-            line,
-          ),
-      ) ?? "FAME CL replay parity failed."
-  )
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+  return displaySafeDiagnosticMessage(error);
 }
 
-function edge(tokenIn: Address, tokenOut: Address) {
+function edge(poolId: string, tokenIn: Address, tokenOut: Address) {
   const found = famePoolEdgesForPair(tokenIn, tokenOut).find(
-    (candidate) => candidate.poolId === POOL_ID,
+    (candidate) => candidate.poolId === poolId,
   );
-  if (!found) throw new Error(`Missing ${POOL_ID} edge.`);
+  if (!found) throw new Error(`Missing ${poolId} edge.`);
   return found;
 }
 
 function replayEntry(
   entry: FameIndexedPoolStateEntry | undefined,
   expectedSourceRegistryId: string,
+  poolId: string,
 ): ReplayEntry {
   if (
     !entry ||
@@ -148,11 +147,11 @@ function replayEntry(
     !("stateKind" in entry) ||
     entry.stateKind !== "cl-replay-v1"
   ) {
-    throw new Error(`${POOL_ID} did not return fresh cl-replay-v1 state.`);
+    throw new Error(`${poolId} did not return fresh cl-replay-v1 state.`);
   }
   if (entry.sourceRegistryId !== expectedSourceRegistryId) {
     throw new Error(
-      `${POOL_ID} returned cl-replay-v1 state for registry ${entry.sourceRegistryId}, expected ${expectedSourceRegistryId}.`,
+      `${poolId} returned cl-replay-v1 state for registry ${entry.sourceRegistryId}, expected ${expectedSourceRegistryId}.`,
     );
   }
   return entry;
@@ -165,15 +164,28 @@ function parityBps(left: bigint, right: bigint): bigint {
   return (delta * 10_000n) / bigger;
 }
 
-function defaultParityCases(): FameClReplayParityCase[] {
+function defaultParityCases(poolId: string): FameClReplayParityCase[] {
+  if (poolId === SELECTED_CL_REPLAY_PARITY_POOL_ID) {
+    return [
+      ...DEFAULT_CL_REPLAY_PARITY_AMOUNTS.fameToBasedflick.map((amountIn) => ({
+        label: `FAME->basedflick ${amountIn.toString()}`,
+        request: { edge: edge(poolId, FAME, BASEDFLICK), amountIn },
+      })),
+      ...DEFAULT_CL_REPLAY_PARITY_AMOUNTS.basedflickToFame.map((amountIn) => ({
+        label: `basedflick->FAME ${amountIn.toString()}`,
+        request: { edge: edge(poolId, BASEDFLICK, FAME), amountIn },
+      })),
+    ];
+  }
+
   return [
     ...DEFAULT_CL_REPLAY_PARITY_AMOUNTS.wethToUsdc.map((amountIn) => ({
       label: `WETH->USDC ${amountIn.toString()}`,
-      request: { edge: edge(WETH, USDC), amountIn },
+      request: { edge: edge(poolId, WETH, USDC), amountIn },
     })),
     ...DEFAULT_CL_REPLAY_PARITY_AMOUNTS.usdcToWeth.map((amountIn) => ({
       label: `USDC->WETH ${amountIn.toString()}`,
-      request: { edge: edge(USDC, WETH), amountIn },
+      request: { edge: edge(poolId, USDC, WETH), amountIn },
     })),
   ];
 }
@@ -184,17 +196,20 @@ export async function runClReplayParity(options: {
   currentBlock: number;
   cases?: readonly FameClReplayParityCase[];
   expectedSourceRegistryId?: string;
+  poolId?: string;
 }): Promise<FameClReplayParityReport> {
   const expectedSourceRegistryId =
     options.expectedSourceRegistryId ?? options.indexedState.sourceRegistryId;
+  const poolId = options.poolId ?? DEFAULT_CL_REPLAY_PARITY_POOL_ID;
   const state = replayEntry(
     options.indexedState.pools.find(
-      (pool) => "poolId" in pool && pool.poolId === POOL_ID,
+      (pool) => "poolId" in pool && pool.poolId === poolId,
     ),
     expectedSourceRegistryId,
+    poolId,
   );
   const results: FameClReplayParityResult[] = [];
-  for (const item of options.cases ?? defaultParityCases()) {
+  for (const item of options.cases ?? defaultParityCases(poolId)) {
     const context = {
       source: "indexed" as const,
       chainId: base.id,
@@ -239,6 +254,7 @@ export async function runClReplayParity(options: {
     }
   }
   return {
+    poolId,
     snapshotId: state.snapshotId,
     observedThroughBlock: state.observedThroughBlock,
     stateHash: state.stateHash,
@@ -266,13 +282,18 @@ async function main(): Promise<void> {
   if (!Number.isSafeInteger(currentBlock)) {
     throw new Error("Current Base block exceeds Number.MAX_SAFE_INTEGER.");
   }
+  const poolIds = process.env.FAME_CL_REPLAY_PARITY_POOL_ID?.split(",")
+    .map((poolId) => poolId.trim())
+    .filter((poolId) => poolId.length > 0) ?? [
+    ...DEFAULT_CL_REPLAY_PARITY_POOL_IDS,
+  ];
   const indexed = await helper.fetchPoolStates({
     currentBlock,
     maxFreshnessBlocks: optionalIntegerEnv(
       "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
     ),
     stateSurfaces: ["cl-replay-v1"],
-    poolIds: [POOL_ID],
+    poolIds,
   });
   const expectedSourceRegistryId = famePoolStateRegistrySourceId();
   if (indexed.sourceRegistryId !== expectedSourceRegistryId) {
@@ -280,41 +301,50 @@ async function main(): Promise<void> {
       `Indexed state registry mismatch: got ${indexed.sourceRegistryId}, expected ${expectedSourceRegistryId}.`,
     );
   }
-  const state = replayEntry(indexed.pools[0], expectedSourceRegistryId);
-  const live = await createLiveLiquidityQuoteAdapter({
-    client: {
-      getBlockNumber: async () => BigInt(state.observedThroughBlock),
-      readContract: (request) => publicClient.readContract(request),
-    },
-    chainId: base.id,
-    blockNumber: BigInt(state.observedThroughBlock),
-  });
-  const report = await runClReplayParity({
-    indexedState: indexed,
-    liveAdapter: live,
-    currentBlock,
-    expectedSourceRegistryId,
-  });
 
-  console.log(
-    [
-      `snapshot=${report.snapshotId}`,
-      `block=${report.observedThroughBlock.toString()}`,
-      `stateHash=${report.stateHash}`,
-      `bitmapWords=${report.bitmapWordCount.toString()}`,
-      `initializedTicks=${report.initializedTickCount.toString()}`,
-    ].join(" "),
-  );
+  for (const poolId of poolIds) {
+    const state = replayEntry(
+      indexed.pools.find((pool) => "poolId" in pool && pool.poolId === poolId),
+      expectedSourceRegistryId,
+      poolId,
+    );
+    const live = await createLiveLiquidityQuoteAdapter({
+      client: {
+        getBlockNumber: async () => BigInt(state.observedThroughBlock),
+        readContract: (request) => publicClient.readContract(request),
+      },
+      chainId: base.id,
+      blockNumber: BigInt(state.observedThroughBlock),
+    });
+    const report = await runClReplayParity({
+      indexedState: indexed,
+      liveAdapter: live,
+      currentBlock,
+      expectedSourceRegistryId,
+      poolId,
+    });
 
-  for (const result of report.results) {
     console.log(
       [
-        result.label,
-        `local=${result.localAmountOut.toString()}`,
-        `live=${result.liveAmountOut.toString()}`,
-        `driftBps=${result.driftBps.toString()}`,
+        `pool=${report.poolId}`,
+        `snapshot=${report.snapshotId}`,
+        `block=${report.observedThroughBlock.toString()}`,
+        `stateHash=${report.stateHash}`,
+        `bitmapWords=${report.bitmapWordCount.toString()}`,
+        `initializedTicks=${report.initializedTickCount.toString()}`,
       ].join(" "),
     );
+
+    for (const result of report.results) {
+      console.log(
+        [
+          result.label,
+          `local=${result.localAmountOut.toString()}`,
+          `live=${result.liveAmountOut.toString()}`,
+          `driftBps=${result.driftBps.toString()}`,
+        ].join(" "),
+      );
+    }
   }
 }
 

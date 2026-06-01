@@ -29,7 +29,15 @@ export type FamePoolQuoteUnavailableReason =
   | "reserve-quote-failed"
   | "malformed-replay-state"
   | "outside-indexed-tick-range"
-  | "replay-failed";
+  | "replay-failed"
+  | "producer-untrusted";
+
+export type FamePoolQuoteProducerStatus =
+  | "trusted"
+  | "warming"
+  | "drift-failed"
+  | "repairing"
+  | "event-gap";
 
 export interface FamePoolQuoteUnavailableEntry {
   status: "unavailable";
@@ -41,6 +49,8 @@ export interface FamePoolQuoteUnavailableEntry {
   observedThroughBlock?: number;
   sourceRegistryId?: string;
   maxFreshnessBlocks?: number;
+  producerStatus?: FamePoolQuoteProducerStatus;
+  producerReason?: string | null;
 }
 
 interface FamePoolQuoteQuotedEntryBase {
@@ -239,11 +249,36 @@ function parseUnavailableReason(
     reason !== "reserve-quote-failed" &&
     reason !== "malformed-replay-state" &&
     reason !== "outside-indexed-tick-range" &&
-    reason !== "replay-failed"
+    reason !== "replay-failed" &&
+    reason !== "producer-untrusted"
   ) {
     throw responseError("reason");
   }
   return reason;
+}
+
+function parseProducerStatus(
+  record: Record<string, unknown>,
+): FamePoolQuoteProducerStatus {
+  const status = stringField(record, "producerStatus");
+  if (
+    status !== "trusted" &&
+    status !== "warming" &&
+    status !== "drift-failed" &&
+    status !== "repairing" &&
+    status !== "event-gap"
+  ) {
+    throw responseError("producerStatus");
+  }
+  return status;
+}
+
+function optionalNullableStringField(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
+  if (record[key] === null) return null;
+  return stringField(record, key);
 }
 
 function parseQuotedBase(
@@ -466,6 +501,12 @@ function parseUnavailableEntry(
       : {
           maxFreshnessBlocks: safeIntegerField(record, "maxFreshnessBlocks"),
         }),
+    ...(record.producerStatus === undefined
+      ? {}
+      : { producerStatus: parseProducerStatus(record) }),
+    ...(record.producerReason === undefined
+      ? {}
+      : { producerReason: optionalNullableStringField(record, "producerReason") }),
   };
 }
 

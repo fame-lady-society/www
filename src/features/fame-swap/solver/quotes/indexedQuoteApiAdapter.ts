@@ -54,6 +54,8 @@ export interface FameQuoteApiEdgeDiagnostics {
   quoteKind?: FamePoolQuoteQuotedEntry["quoteKind"];
   rowStatus?: FamePoolQuoteEntry["status"];
   unavailableReason?: FamePoolQuoteUnavailableReason;
+  producerMaintenanceStatus?: FamePoolQuoteUnavailableEntry["producerStatus"];
+  producerReason?: string | null;
   fallbackReason?: FameQuoteApiFallbackReason;
   batchFailureCategory?: FameQuoteApiBatchFailureCategory;
   observedThroughBlock?: number;
@@ -78,6 +80,9 @@ export interface FameQuoteApiDiagnosticsSnapshot {
     quoted: number;
     unavailable: number;
   };
+  unavailableReasonCounts: Partial<
+    Record<FamePoolQuoteUnavailableReason, number>
+  >;
   fallbackReasonCounts: Partial<Record<FameQuoteApiFallbackReason, number>>;
   details: FameQuoteApiEdgeDiagnostics[];
   truncatedDetailCount: number;
@@ -175,6 +180,9 @@ export function createQuoteApiDiagnosticsRecorder(
   const fallbackReasonCounts: Partial<
     Record<FameQuoteApiFallbackReason, number>
   > = {};
+  const unavailableReasonCounts: Partial<
+    Record<FamePoolQuoteUnavailableReason, number>
+  > = {};
   const details: FameQuoteApiEdgeDiagnostics[] = [];
 
   function pushDetail(detail: FameQuoteApiEdgeDiagnostics): void {
@@ -230,7 +238,10 @@ export function createQuoteApiDiagnosticsRecorder(
       if (reason === "quote_api_batch_failed") batchFailureCount += 1;
       increment(fallbackReasonCounts, reason);
       if (row?.status === "quoted") statusCounts.quoted += 1;
-      if (row?.status === "unavailable") statusCounts.unavailable += 1;
+      if (row?.status === "unavailable") {
+        statusCounts.unavailable += 1;
+        increment(unavailableReasonCounts, row.reason);
+      }
       pushDetail({
         ...edgeDiagnosticsBase(request, block),
         outcome: "fallback",
@@ -238,6 +249,10 @@ export function createQuoteApiDiagnosticsRecorder(
         quoteKind: row?.status === "quoted" ? row.quoteKind : undefined,
         unavailableReason:
           row?.status === "unavailable" ? row.reason : undefined,
+        producerMaintenanceStatus:
+          row?.status === "unavailable" ? row.producerStatus : undefined,
+        producerReason:
+          row?.status === "unavailable" ? row.producerReason : undefined,
         fallbackReason: reason,
         batchFailureCategory,
         observedThroughBlock:
@@ -262,6 +277,7 @@ export function createQuoteApiDiagnosticsRecorder(
           ...(lastBatchDurationMs === undefined ? {} : { lastBatchDurationMs }),
         },
         statusCounts,
+        unavailableReasonCounts,
         fallbackReasonCounts,
         details,
         truncatedDetailCount,
@@ -455,6 +471,13 @@ function quoteResultFromClQuote(options: {
       preSwapSqrtPriceX96,
       postSwapSqrtPriceX96,
     }),
+    indexedEvidence: {
+      source: "indexed",
+      kind: "compact-quote",
+      quoteKind: options.quote.quoteKind,
+      evidenceId: options.quote.snapshotId,
+      poolId: options.quote.poolId,
+    },
   };
 }
 
@@ -509,6 +532,13 @@ function quoteResultFromReserveQuote(options: {
       method: "constant-product-reserves",
     },
     protocolEvidence: options.quote.protocolEvidence,
+    indexedEvidence: {
+      source: "indexed",
+      kind: "compact-quote",
+      quoteKind: options.quote.quoteKind,
+      evidenceId: quoteEvidenceId(options.quote),
+      poolId: options.quote.poolId,
+    },
   };
 }
 

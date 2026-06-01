@@ -1,8 +1,46 @@
 {
   "schemaVersion": 1,
   "description": "Golden compact FAME pool quote response for reserve constant-product pools.",
+  "unavailableExamples": [
+    {
+      "status": "unavailable",
+      "requested": {
+        "poolId": "slipstream-usdc-weth-100",
+        "tokenIn": "0x4200000000000000000000000000000000000006",
+        "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "amountIn": "1000000"
+      },
+      "reason": "producer-untrusted",
+      "poolId": "slipstream-usdc-weth-100",
+      "chainId": 8453,
+      "poolAddress": "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+      "observedThroughBlock": 120,
+      "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
+      "maxFreshnessBlocks": 120,
+      "producerStatus": "trusted",
+      "producerReason": null
+    },
+    {
+      "status": "unavailable",
+      "requested": {
+        "poolId": "slipstream-basedflick-fame",
+        "tokenIn": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+        "tokenOut": "0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418",
+        "amountIn": "1000000"
+      },
+      "reason": "producer-untrusted",
+      "poolId": "slipstream-basedflick-fame",
+      "chainId": 8453,
+      "poolAddress": "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+      "observedThroughBlock": 120,
+      "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
+      "maxFreshnessBlocks": 120,
+      "producerStatus": "warming",
+      "producerReason": "shadow-not-promoted"
+    }
+  ],
   "response": {
-    "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+    "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
     "currentBlock": 125,
     "producerMaxFreshnessBlocks": 120,
     "effectiveMaxFreshnessBlocks": 120,
@@ -27,7 +65,7 @@
         "amountIn": "500",
         "amountOut": "831",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -84,7 +122,7 @@
         "amountIn": "500",
         "amountOut": "166",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -141,7 +179,7 @@
         "amountIn": "500",
         "amountOut": "827",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -198,7 +236,7 @@
         "amountIn": "500",
         "amountOut": "165",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -255,7 +293,7 @@
         "amountIn": "500",
         "amountOut": "827",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -312,7 +350,7 @@
         "amountIn": "500",
         "amountOut": "165",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -369,7 +407,7 @@
         "amountIn": "500",
         "amountOut": "827",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -426,7 +464,7 @@
         "amountIn": "500",
         "amountOut": "165",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -483,7 +521,7 @@
         "amountIn": "500",
         "amountOut": "827",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -540,7 +578,7 @@
         "amountIn": "500",
         "amountOut": "165",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -597,7 +635,7 @@
         "amountIn": "500",
         "amountOut": "831",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -654,7 +692,7 @@
         "amountIn": "500",
         "amountOut": "166",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",
@@ -711,7 +749,7 @@
         "amountIn": "500",
         "amountOut": "831",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "2500000000000000000",
@@ -768,7 +806,7 @@
         "amountIn": "500",
         "amountOut": "166",
         "observedThroughBlock": 120,
-        "sourceRegistryId": "pool-state-registry-v3:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218",
+        "sourceRegistryId": "pool-state-registry-v4:0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b",
         "maxFreshnessBlocks": 120,
         "priceImpact": {
           "preSwapPriceX18": "400000000000000000",

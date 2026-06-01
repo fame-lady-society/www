@@ -9,6 +9,14 @@ export interface FameEdgeQuoteRequest {
   context?: FameQuoteContext;
 }
 
+export type FameIndexedQuoteEvidence = {
+  source: "indexed";
+  kind: "compact-quote" | "raw-replay";
+  quoteKind: "constant-product-quote-v1" | "cl-quote-v1" | "cl-replay-v1";
+  evidenceId: string;
+  poolId: string;
+};
+
 export type FameEdgeQuoteFailureReason =
   | "adapter_failure"
   | "amount_exceeds_capacity"
@@ -47,6 +55,7 @@ export type FameEdgeQuoteResult =
       context?: FameQuoteContext;
       priceImpact?: FamePriceImpactEstimate;
       protocolEvidence?: FameProtocolEvidence;
+      indexedEvidence?: FameIndexedQuoteEvidence;
     }
   | {
       status: "failed";
@@ -79,6 +88,7 @@ export interface FameLegQuote {
   quoteContext?: FameQuoteContext;
   priceImpact?: FamePriceImpactEstimate;
   protocolEvidence?: FameProtocolEvidence;
+  indexedEvidence?: FameIndexedQuoteEvidence;
 }
 
 export interface FameCandidateRejection {

@@ -17,6 +17,7 @@ import type {
   FameSwapRouteDisplayLeg,
 } from "./types";
 import type { FameCandidateRejection, FameLegQuote } from "./quotes/adapters";
+import { displaySafeDiagnosticMessage } from "./diagnostics";
 import type { FameQuoteContext } from "./quotes/quoteContext";
 import type { FameRouteFeeBreakdown } from "./quotes/rankRoutes";
 
@@ -204,9 +205,7 @@ function parseQuoteContext(value: unknown): FameQuoteContext | undefined {
       chainId: numberFrom(raw.chainId),
       currentBlock: numberFrom(raw.currentBlock),
       sourceRegistryId: String(raw.sourceRegistryId ?? ""),
-      effectiveMaxFreshnessBlocks: numberFrom(
-        raw.effectiveMaxFreshnessBlocks,
-      ),
+      effectiveMaxFreshnessBlocks: numberFrom(raw.effectiveMaxFreshnessBlocks),
       statusCounts: {
         fresh: numberFrom(statusCounts.fresh),
         stale: numberFrom(statusCounts.stale),
@@ -256,6 +255,27 @@ function parseRejections(value: unknown): FameCandidateRejection[] {
     : [];
 }
 
+function parseIndexedEvidence(value: unknown): FameLegQuote["indexedEvidence"] {
+  const raw = asRecord(value);
+  if (raw.source !== "indexed") return undefined;
+  if (raw.kind !== "compact-quote" && raw.kind !== "raw-replay")
+    return undefined;
+  if (
+    raw.quoteKind !== "constant-product-quote-v1" &&
+    raw.quoteKind !== "cl-quote-v1" &&
+    raw.quoteKind !== "cl-replay-v1"
+  ) {
+    return undefined;
+  }
+  return {
+    source: "indexed",
+    kind: raw.kind,
+    quoteKind: raw.quoteKind,
+    evidenceId: String(raw.evidenceId ?? ""),
+    poolId: String(raw.poolId ?? ""),
+  };
+}
+
 function parseLegQuote(value: unknown): FameLegQuote {
   const raw = asRecord(value);
   const priceImpact = asRecord(raw.priceImpact);
@@ -278,6 +298,7 @@ function parseLegQuote(value: unknown): FameLegQuote {
     feeIncludedInQuote: booleanFrom(raw.feeIncludedInQuote, true),
     evidence: String(raw.evidence ?? "quote evidence unavailable"),
     quoteContext: parseQuoteContext(raw.quoteContext),
+    indexedEvidence: parseIndexedEvidence(raw.indexedEvidence),
     priceImpact:
       priceImpact.preSwapPriceX18 || priceImpact.executionPriceX18
         ? {
@@ -355,22 +376,7 @@ function parseBlockedReadiness(
 }
 
 export function displaySafeErrorMessage(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  return (
-    raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find(
-        (line) =>
-          line.length > 0 &&
-          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-            line,
-          ),
-      ) ?? "FAME quote request failed."
-  )
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+  return displaySafeDiagnosticMessage(error);
 }
 
 export function quoteAdapterFailure(
@@ -400,7 +406,11 @@ export function publicFeeBreakdown(
   return {
     ...feeBreakdown,
     legs: feeBreakdown.legs.map(
-      ({ protocolEvidence: _protocolEvidence, ...leg }) => leg,
+      ({
+        protocolEvidence: _protocolEvidence,
+        indexedEvidence: _indexedEvidence,
+        ...leg
+      }) => leg,
     ),
   };
 }

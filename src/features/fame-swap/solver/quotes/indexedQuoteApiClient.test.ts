@@ -12,7 +12,7 @@ import { USDC, WETH } from "../../tokens";
 
 const quotedResponse = poolQuoteFixture.response;
 const POOL_QUOTES_V1_FIXTURE_SHA256 =
-  "492e125de5f865f2ef88dd63d5965bd835c3c068d2565cfd355ef93fb28fe763";
+  "1167e7daf16ed8c90c01b053dce24bb08579aef88a24a1ae1a756b290c34237d";
 const clQuoteRow = {
   status: "quoted",
   quoteKind: "cl-quote-v1",
@@ -105,16 +105,19 @@ describe("FAME indexed quote API client", () => {
             tokenOut: USDC,
             amountIn: "1000000",
           },
-          reason: "stale-indexed-state",
+          reason: "producer-untrusted",
           poolId: "slipstream-usdc-weth-100",
           chainId: 8453,
           poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
           observedThroughBlock: 1,
           sourceRegistryId: "unit-registry",
           maxFreshnessBlocks: 120,
+          producerStatus: "trusted",
+          producerReason: null,
         },
       ],
     });
+    const unavailable = parsed.quotes[2];
 
     assert.deepEqual(
       parsed.quotes.map((quote) =>
@@ -125,6 +128,13 @@ describe("FAME indexed quote API client", () => {
     assert.equal("initializedTicks" in parsed.quotes[0]!, false);
     assert.equal("reserve0" in parsed.quotes[1]!, false);
     assert.equal("reserve1" in parsed.quotes[1]!, false);
+    assert.equal(unavailable?.status, "unavailable");
+    if (unavailable?.status !== "unavailable") {
+      throw new Error("Expected unavailable producer trust row.");
+    }
+    assert.equal(unavailable.reason, "producer-untrusted");
+    assert.equal(unavailable.producerStatus, "trusted");
+    assert.equal(unavailable.producerReason, null);
   });
 
   it("accepts the versioned reserve fixture contract", () => {
@@ -158,6 +168,32 @@ describe("FAME indexed quote API client", () => {
     assert.equal(reserveRow.feeSource, "registry-fee");
     assert.equal(reserveRow.priceImpact.marketImpactBps, 3352);
     assert.equal(reserveRow.protocolEvidence.quote.value, "831");
+  });
+
+  it("documents producer-untrusted unavailable fixture examples", () => {
+    const [baselineProducerUntrusted, candidateProducerUntrusted] =
+      poolQuoteFixture.unavailableExamples;
+    const parsed = parseIndexedQuoteApiResponse({
+      ...quotedResponse,
+      quotes: [baselineProducerUntrusted, candidateProducerUntrusted],
+    });
+    const [baselineRow, candidateRow] = parsed.quotes;
+
+    assert.equal(baselineRow?.status, "unavailable");
+    if (baselineRow?.status !== "unavailable") {
+      throw new Error("Expected trusted producer-untrusted fixture example.");
+    }
+    assert.equal(baselineRow.reason, "producer-untrusted");
+    assert.equal(baselineRow.producerStatus, "trusted");
+    assert.equal(baselineRow.producerReason, null);
+    assert.equal(candidateRow?.status, "unavailable");
+    if (candidateRow?.status !== "unavailable") {
+      throw new Error("Expected candidate producer-untrusted fixture example.");
+    }
+    assert.equal(candidateRow.reason, "producer-untrusted");
+    assert.equal(candidateRow.poolId, "slipstream-basedflick-fame");
+    assert.equal(candidateRow.producerStatus, "warming");
+    assert.equal(candidateRow.producerReason, "shadow-not-promoted");
   });
 
   it("rejects non-OK and malformed responses without exposing credentials", async () => {
@@ -206,6 +242,45 @@ describe("FAME indexed quote API client", () => {
           ],
         }),
       /amountOut/,
+    );
+    assert.throws(
+      () =>
+        parseIndexedQuoteApiResponse({
+          ...quotedResponse,
+          quotes: [
+            {
+              status: "unavailable",
+              requested: {
+                poolId: "slipstream-usdc-weth-100",
+                tokenIn: WETH,
+                tokenOut: USDC,
+                amountIn: "1000000",
+              },
+              reason: "operator-sad",
+            },
+          ],
+        }),
+      /reason/,
+    );
+    assert.throws(
+      () =>
+        parseIndexedQuoteApiResponse({
+          ...quotedResponse,
+          quotes: [
+            {
+              status: "unavailable",
+              requested: {
+                poolId: "slipstream-usdc-weth-100",
+                tokenIn: WETH,
+                tokenOut: USDC,
+                amountIn: "1000000",
+              },
+              reason: "producer-untrusted",
+              producerStatus: "sleepy",
+            },
+          ],
+        }),
+      /producerStatus/,
     );
   });
 

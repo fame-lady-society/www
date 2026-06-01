@@ -3,6 +3,7 @@ import { createPublicClient, http, isAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import { FAME_SWAP_ARTIFACT_MANIFEST } from "@/features/fame-swap/artifacts/manifest";
 import { getFameSwapConfig } from "@/features/fame-swap/config";
+import { routeArtifactById } from "@/features/fame-swap/solver/artifacts";
 import { fameRouterAbi } from "@/features/fame-swap/router/abi";
 import {
   quoteFameSwap,
@@ -14,8 +15,15 @@ import {
   famePoolStateRegistrySourceId,
   famePoolSupportsCompactQuote,
 } from "@/features/fame-swap/solver/poolStateRegistry";
+import {
+  FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+  FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+} from "@/features/fame-swap/solver/poolActivationLedger";
 import { serializeFameSwapQuoteResponse } from "@/features/fame-swap/solver/quoteWire";
-import type { FameAsyncQuoteAdapter } from "@/features/fame-swap/solver/quotes/adapters";
+import type {
+  FameAsyncQuoteAdapter,
+  FameLegQuote,
+} from "@/features/fame-swap/solver/quotes/adapters";
 import {
   createIndexedQuoteApiClient,
   type FamePoolQuoteClient,
@@ -38,6 +46,7 @@ import {
 } from "@/features/fame-swap/solver/readiness";
 import { normalizeSlippageBps } from "@/features/fame-swap/solver/slippage";
 import { deadlineMinutesToSeconds } from "@/features/fame-swap/solver/deadline";
+import { displaySafeDiagnosticMessage } from "@/features/fame-swap/solver/diagnostics";
 import { tokenForAddress } from "@/features/fame-swap/tokens";
 import type {
   FameSwapQuote,
@@ -66,6 +75,7 @@ interface ParsedQuoteBody {
   routerAddress?: Address;
   slippageBps?: number;
   deadlineMinutes?: number;
+  routeId?: string;
   includeDebug: boolean;
 }
 
@@ -111,7 +121,13 @@ interface QuoteApiClientConfig {
 
 interface QuoteApiSelectedRouteLegDebug {
   poolId: string;
-  source: "compact_quote" | "live" | "fork" | "snapshot" | "other";
+  source:
+    | "compact_quote"
+    | "raw_replay"
+    | "live"
+    | "fork"
+    | "snapshot"
+    | "other";
   quoteContextSource?: string;
   evidenceId?: string;
   currentBlock?: number;
@@ -119,10 +135,25 @@ interface QuoteApiSelectedRouteLegDebug {
   effectiveMaxFreshnessBlocks?: number;
 }
 
+interface QuoteApiSelectedRouteActivationDebug {
+  selectedPoolId: typeof FAME_SELECTED_CL_ACTIVATION_CANDIDATE;
+  liveDependencyPoolId: typeof FAME_SELECTED_LIVE_ROUTE_DEPENDENCY;
+  selectedPoolSource: QuoteApiSelectedRouteLegDebug["source"] | "absent";
+  liveDependencySource: QuoteApiSelectedRouteLegDebug["source"] | "absent";
+  outcome:
+    | "compact_quote_with_live_dependency"
+    | "raw_replay_with_live_dependency"
+    | "compact_quote_without_live_dependency"
+    | "raw_replay_without_live_dependency"
+    | "selected_pool_live_fallback"
+    | "live_dependency_without_selected_pool";
+}
+
 interface QuoteApiSelectedRouteDebug {
   compactQuoteLegs: number;
   liveLegs: number;
   otherLegs: number;
+  activation?: QuoteApiSelectedRouteActivationDebug;
   legs: QuoteApiSelectedRouteLegDebug[];
 }
 
@@ -208,6 +239,17 @@ function parseQuoteBody(value: unknown): ParsedQuoteBody | string {
     return "amountIn must fit within uint256.";
   }
 
+  if (body.routeId !== undefined) {
+    if (
+      typeof body.routeId !== "string" ||
+      body.routeId.length > 160 ||
+      !/^[A-Za-z0-9_.:-]+$/u.test(body.routeId) ||
+      !routeArtifactById(body.routeId)
+    ) {
+      return "routeId must be a pinned route artifact id.";
+    }
+  }
+
   if (body.recipient !== undefined && body.recipient !== null) {
     if (typeof body.recipient !== "string" || !isAddress(body.recipient)) {
       return "recipient must be an address when provided.";
@@ -244,27 +286,13 @@ function parseQuoteBody(value: unknown): ParsedQuoteBody | string {
       Number.isFinite(body.deadlineMinutes)
         ? body.deadlineMinutes
         : undefined,
+    routeId: typeof body.routeId === "string" ? body.routeId : undefined,
     includeDebug: body.includeDebug === true,
   };
 }
 
 function displaySafeErrorMessage(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  return (
-    raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find(
-        (line) =>
-          line.length > 0 &&
-          !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-            line,
-          ),
-      ) ?? "FAME quote request failed."
-  )
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+  return displaySafeDiagnosticMessage(error);
 }
 
 function baseRpcUrl(): string | undefined {
@@ -540,21 +568,64 @@ async function maybeWrapIndexedQuoteAdapter(options: {
 }
 
 function quoteApiSelectedLegSource(
-  source: string | undefined,
+  leg: FameLegQuote,
 ): QuoteApiSelectedRouteLegDebug["source"] {
-  if (source === "indexed") return "compact_quote";
+  const source = leg.quoteContext?.source;
+  if (source === "indexed") {
+    return leg.indexedEvidence?.kind === "raw-replay"
+      ? "raw_replay"
+      : "compact_quote";
+  }
   if (source === "live") return "live";
   if (source === "fork") return "fork";
   if (source === "snapshot") return "snapshot";
   return "other";
 }
 
-function selectedQuoteApiEvidenceId(evidence: string): string | undefined {
-  const snapshotMatch = /\bsnapshot\s+([A-Za-z0-9_.:-]+)/u.exec(evidence);
+function selectedQuoteApiEvidenceId(leg: FameLegQuote): string | undefined {
+  if (leg.indexedEvidence?.evidenceId) return leg.indexedEvidence.evidenceId;
+  const snapshotMatch = /\bsnapshot\s+([A-Za-z0-9_.:-]+)/u.exec(leg.evidence);
   if (snapshotMatch?.[1]) return snapshotMatch[1];
-  const blockMatch = /\bobserved through block\s+([0-9]+)/u.exec(evidence);
+  const blockMatch = /\bobserved through block\s+([0-9]+)/u.exec(leg.evidence);
   if (blockMatch?.[1]) return blockMatch[1];
   return undefined;
+}
+
+function quoteApiSelectedRouteActivationDebug(
+  legs: readonly QuoteApiSelectedRouteLegDebug[],
+): QuoteApiSelectedRouteActivationDebug | undefined {
+  const selectedPool = legs.find(
+    (leg) => leg.poolId === FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+  );
+  const liveDependency = legs.find(
+    (leg) => leg.poolId === FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+  );
+  if (!selectedPool && !liveDependency) return undefined;
+
+  const selectedPoolSource = selectedPool?.source ?? "absent";
+  const liveDependencySource = liveDependency?.source ?? "absent";
+  const liveDependencyIsLive =
+    liveDependencySource === "live" || liveDependencySource === "fork";
+  const outcome =
+    selectedPoolSource === "compact_quote" && liveDependencyIsLive
+      ? "compact_quote_with_live_dependency"
+      : selectedPoolSource === "raw_replay" && liveDependencyIsLive
+        ? "raw_replay_with_live_dependency"
+        : selectedPoolSource === "compact_quote"
+          ? "compact_quote_without_live_dependency"
+          : selectedPoolSource === "raw_replay"
+            ? "raw_replay_without_live_dependency"
+            : selectedPool
+              ? "selected_pool_live_fallback"
+              : "live_dependency_without_selected_pool";
+
+  return {
+    selectedPoolId: FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
+    liveDependencyPoolId: FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
+    selectedPoolSource,
+    liveDependencySource,
+    outcome,
+  };
 }
 
 function quoteApiSelectedRouteDebug(
@@ -566,7 +637,7 @@ function quoteApiSelectedRouteDebug(
   let liveLegs = 0;
   let otherLegs = 0;
   const legs = quote.feeBreakdown.legs.map((leg) => {
-    const source = quoteApiSelectedLegSource(leg.quoteContext?.source);
+    const source = quoteApiSelectedLegSource(leg);
     if (source === "compact_quote") compactQuoteLegs += 1;
     else if (source === "live" || source === "fork") liveLegs += 1;
     else otherLegs += 1;
@@ -576,8 +647,8 @@ function quoteApiSelectedRouteDebug(
       source,
       quoteContextSource: leg.quoteContext?.source,
       evidenceId:
-        source === "compact_quote"
-          ? selectedQuoteApiEvidenceId(leg.evidence)
+        source === "compact_quote" || source === "raw_replay"
+          ? selectedQuoteApiEvidenceId(leg)
           : undefined,
       currentBlock:
         leg.quoteContext?.source === "indexed"
@@ -593,11 +664,13 @@ function quoteApiSelectedRouteDebug(
           : undefined,
     };
   });
+  const activation = quoteApiSelectedRouteActivationDebug(legs);
 
   return {
     compactQuoteLegs,
     liveLegs,
     otherLegs,
+    ...(activation === undefined ? {} : { activation }),
     legs,
   };
 }
@@ -727,6 +800,14 @@ async function readinessForQuote(routerAddress: Address | null) {
   return readiness;
 }
 
+function localQuoteDebugAllowed(request: NextRequest): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  const hostname = request.nextUrl.hostname.toLowerCase();
+  return (
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
+  );
+}
+
 function publicClientForQuote() {
   const rpcUrl = baseRpcUrl();
   if (!rpcUrl) return null;
@@ -804,6 +885,7 @@ export async function handleFameSwapQuotePost(
       typeof parsedBody.deadlineMinutes === "number"
         ? deadlineMinutesToSeconds(parsedBody.deadlineMinutes)
         : undefined,
+    requestedRouteId: parsedBody.routeId,
   };
 
   let quoteApiDebugOutput: QuoteApiHelperDebug | undefined;
@@ -915,14 +997,21 @@ export async function handleFameSwapQuotePost(
     };
   });
 
-  return json(
-    serializeFameSwapQuoteResponse(quote, {
-      includeDebug: parsedBody.includeDebug,
-      debug: quoteApiDebugOutput
-        ? {
-            quoteApi: quoteApiDebugOutput,
-          }
-        : undefined,
+  const includeLocalDebug =
+    parsedBody.includeDebug && localQuoteDebugAllowed(request);
+
+  return json({
+    ...serializeFameSwapQuoteResponse(quote, {
+      includeDebug: includeLocalDebug,
+      debug:
+        includeLocalDebug && quoteApiDebugOutput
+          ? {
+              quoteApi: quoteApiDebugOutput,
+            }
+          : undefined,
     }),
-  );
+    ...(parsedBody.includeDebug && !includeLocalDebug
+      ? { debugUnavailable: { reason: "local_dev_only" } }
+      : {}),
+  });
 }

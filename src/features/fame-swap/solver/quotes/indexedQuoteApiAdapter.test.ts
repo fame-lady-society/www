@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { USDC, WETH } from "../../tokens";
+import type { Address } from "viem";
+import { FAME, USDC, WETH } from "../../tokens";
 import { famePoolEdgesForPair } from "../poolUniverse";
 import type {
   FameEdgeQuoteRequest,
@@ -21,9 +22,15 @@ import type {
 } from "./indexedQuoteApiClient";
 
 const Q96 = 79_228_162_514_264_337_593_543_950_336n;
+const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
+const ZORA = "0x1111111111166b7fe7bd91427724b487980afc69" as const;
 
-function edgeFor(poolId: string) {
-  const edge = famePoolEdgesForPair(WETH, USDC).find(
+function edgeFor(
+  poolId: string,
+  tokenIn: Address = WETH,
+  tokenOut: Address = USDC,
+) {
+  const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
     (candidate) => candidate.poolId === poolId,
   );
   assert.ok(edge);
@@ -269,6 +276,67 @@ describe("FAME indexed quote API adapter", () => {
     );
   });
 
+  it("requests the promoted selected Slipstream row but not its live V4 dependency", async () => {
+    const selectedEdge = edgeFor(
+      "slipstream-basedflick-fame",
+      FAME,
+      BASEDFLICK,
+    );
+    const v4Edge = edgeFor("uniswap-v4-basedflick-zora", BASEDFLICK, ZORA);
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) =>
+            clRow(quoteRequest, {
+              poolId: "slipstream-basedflick-fame",
+              poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+              token0: BASEDFLICK,
+              token1: FAME,
+              tickSpacing: 2000,
+              amountOut: "980100000232613992",
+              snapshotId: "unit-selected-candidate",
+            }),
+          ),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+    });
+
+    const [selectedQuote, v4Quote] = await Promise.all([
+      adapter.quoteEdge({
+        edge: selectedEdge,
+        amountIn: 31_597_600_141_347_829n,
+      }),
+      adapter.quoteEdge({ edge: v4Edge, amountIn: 980_100_000_232_613_992n }),
+    ]);
+
+    assert.equal(clientRequests.length, 1);
+    assert.deepEqual(
+      clientRequests[0]?.quotes.map((quote) => quote.poolId),
+      ["slipstream-basedflick-fame"],
+    );
+    assert.equal(fallback.calls, 1);
+    assert.equal(selectedQuote.status, "quoted");
+    if (selectedQuote.status === "quoted") {
+      assert.equal(selectedQuote.amountOut, 980_100_000_232_613_992n);
+      assert.match(selectedQuote.evidence, /indexed Slipstream CL quote/);
+      assert.equal(selectedQuote.context?.source, "indexed");
+    }
+    assert.equal(v4Quote.status, "quoted");
+    if (v4Quote.status === "quoted") {
+      assert.equal(v4Quote.evidence, "fallback live quote");
+    }
+  });
+
   it("uses compact output and live fallback in the same batch", async () => {
     const clEdge = edgeFor("slipstream-usdc-weth-100");
     const reserveEdge = edgeFor("uniswap-v2-usdc-weth");
@@ -322,6 +390,72 @@ describe("FAME indexed quote API adapter", () => {
       diagnostics.snapshot().fallbackReasonCounts.unavailable_row,
       1,
     );
+  });
+
+  it("falls back only the producer-untrusted CL row and records producer diagnostics", async () => {
+    const clEdge = edgeFor("slipstream-usdc-weth-100");
+    const reserveEdge = edgeFor("uniswap-v2-usdc-weth");
+    const fallback = { calls: 0 };
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: [],
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) =>
+            quoteRequest.poolId === "slipstream-usdc-weth-100"
+              ? {
+                  status: "unavailable" as const,
+                  requested: quoteRequest,
+                  reason: "producer-untrusted" as const,
+                  poolId: quoteRequest.poolId,
+                  chainId: 8453,
+                  poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+                  observedThroughBlock: 120,
+                  sourceRegistryId: "unit-registry",
+                  maxFreshnessBlocks: 120,
+                  producerStatus: "warming" as const,
+                  producerReason: "seed-required",
+                }
+              : reserveRow(quoteRequest),
+          ),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      diagnostics,
+    });
+
+    const [clQuote, reserveQuote] = await Promise.all([
+      adapter.quoteEdge({ edge: clEdge, amountIn: 1_000_000n }),
+      adapter.quoteEdge({ edge: reserveEdge, amountIn: 1_000_000n }),
+    ]);
+    const snapshot = diagnostics.snapshot();
+    const producerUntrustedDetail = snapshot.details.find(
+      (detail) => detail.unavailableReason === "producer-untrusted",
+    );
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(clQuote.status, "quoted");
+    assert.equal(reserveQuote.status, "quoted");
+    if (clQuote.status === "quoted") {
+      assert.equal(clQuote.evidence, "fallback live quote");
+    }
+    if (reserveQuote.status === "quoted") {
+      assert.match(reserveQuote.evidence, /indexed reserve quote/);
+    }
+    assert.equal(snapshot.usedCount, 1);
+    assert.equal(snapshot.fallbackCount, 1);
+    assert.equal(snapshot.statusCounts.quoted, 1);
+    assert.equal(snapshot.statusCounts.unavailable, 1);
+    assert.equal(snapshot.unavailableReasonCounts["producer-untrusted"], 1);
+    assert.equal(snapshot.fallbackReasonCounts.unavailable_row, 1);
+    assert.equal(producerUntrustedDetail?.producerMaintenanceStatus, "warming");
+    assert.equal(producerUntrustedDetail?.producerReason, "seed-required");
   });
 
   it("falls back when compact quote metadata does not match the local pool", async () => {
