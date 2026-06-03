@@ -1,9 +1,8 @@
 import { RedirectType, redirect } from "next/navigation";
 import { AppMain } from "@/layouts/AppMain";
 import { PublicProfileView } from "@/features/naming/components/PublicProfileView";
+import { LinkButton } from "@/components/LinkButton";
 import Container from "@mui/material/Container";
-import Link from "next/link";
-import Button from "@mui/material/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
   resolveNetwork,
@@ -32,15 +31,14 @@ export default async function PublicProfilePage(
       title="Profile"
       mobileTitle="Profile"
       headerLeft={
-        <Button
-          component={Link}
+        <LinkButton
           href={`/${network}/~/`}
           startIcon={<ArrowBackIcon />}
           size="small"
           sx={{ ml: 2 }}
         >
           All Names
-        </Button>
+        </LinkButton>
       }
     >
       <Container maxWidth="md" sx={{ py: 4 }}>
