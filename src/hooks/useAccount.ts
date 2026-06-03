@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 import { type SIWESession, useSIWE } from "connectkit";
+import {
+  getAuthSession,
+  setAuthSession,
+  withAuthHeaders,
+} from "@/utils/authToken";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -28,9 +33,27 @@ type HookProps = {
   isSuccess: boolean;
   isReady: boolean;
   reset: () => void;
-  signIn: () => Promise<boolean>;
+  signIn?: () => Promise<boolean>;
   signOut: () => Promise<boolean>;
 };
+
+type SiweSessionResponse = {
+  token?: string;
+  expiresAt?: number;
+};
+
+async function restoreAuthSessionFromSiwe(): Promise<boolean> {
+  const response = await fetch("/siwe", {
+    headers: withAuthHeaders(),
+  });
+  if (!response.ok) return false;
+
+  const body = (await response.json()) as SiweSessionResponse;
+  if (!body.token || typeof body.expiresAt !== "number") return false;
+
+  setAuthSession({ token: body.token, expiresAt: body.expiresAt });
+  return true;
+}
 
 export function useAccount() {
   const {
@@ -45,7 +68,9 @@ export function useAccount() {
     useState<MiniAppContext | null>(null);
 
   const signIn = useCallback(async () => {
-    if (isSignedIn) return true;
+    if (getAuthSession()?.token) return true;
+    if (isSignedIn && (await restoreAuthSessionFromSiwe())) return true;
+    if (!signInSIWE) return false;
     const success = await signInSIWE();
     return success;
   }, [isSignedIn, signInSIWE]);

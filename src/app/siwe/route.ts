@@ -14,19 +14,21 @@ import {
   SESSION_MAX_AGE,
   clearSession,
   createSignedSession,
-  getSession,
+  getSignedSession,
   setSession,
 } from "./session-utils";
 
 export async function GET(request: NextRequest) {
-  const session = getSession(request);
-  if (!session) {
+  const signedSession = getSignedSession(request);
+  if (!signedSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const { session, token } = signedSession;
   return NextResponse.json({
     address: session.address,
     chainId: session.chainId,
     expiresAt: session.expiresAt,
+    token,
   });
 }
 
