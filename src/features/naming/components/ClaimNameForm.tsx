@@ -22,7 +22,7 @@ import { useClaimName } from "../hooks/useClaimName";
 import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useChainId, useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
+import { useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
 import { useWriteBulkMinterMint } from "@/wagmi";
 import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
 
@@ -65,18 +65,20 @@ export interface ClaimNameFormProps {
 
 export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   const expectedChainId = getExpectedChainId(network);
-  const chainId = useChainId();
   const { mutateAsync: switchChainAsync } = useSwitchChain();
-  const { isConnected, signIn } = useAccount();
+  const { isConnected, signIn, chainId: connectedChainId } = useAccount();
   const { token } = useAuthSession();
   const [desiredName, setDesiredName] = useState("");
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | "">("");
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [pendingSignIn, setPendingSignIn] = useState(false);
+  const [autoSwitchChainId, setAutoSwitchChainId] = useState<number | null>(
+    null,
+  );
   const [mintError, setMintError] = useState<string | null>(null);
 
-  const isWrongChain = chainId !== expectedChainId;
+  const isWrongChain = isConnected && connectedChainId !== expectedChainId;
   const needsSetup = !isConnected || !token || isWrongChain;
   const isBulkMinterNetwork = network === "base-sepolia" || network === "sepolia";
 
@@ -130,16 +132,66 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     }
   }, [isBulkMinterMintConfirmed, refetchTokens]);
 
+  useEffect(() => {
+    if (!isConnected || !isWrongChain) {
+      setAutoSwitchChainId(null);
+    }
+  }, [isConnected, isWrongChain]);
+
+  useEffect(() => {
+    if (!isConnected || !isWrongChain || autoSwitchChainId === expectedChainId) {
+      return;
+    }
+
+    let cancelled = false;
+    setAutoSwitchChainId(expectedChainId);
+    setIsSettingUp(true);
+    setSetupError(null);
+
+    switchChainAsync({ chainId: expectedChainId })
+      .then(() => {
+        if (cancelled) return;
+        setPendingSignIn(true);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSetupError(
+          err instanceof Error
+            ? err.message
+            : `Switch to ${getNetworkDisplayName(network)} failed. Please try again.`,
+        );
+        setIsSettingUp(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    autoSwitchChainId,
+    expectedChainId,
+    isConnected,
+    isWrongChain,
+    network,
+    switchChainAsync,
+  ]);
+
   // Effect to sign in after chain switch completes
   useEffect(() => {
     if (pendingSignIn && !isWrongChain && isConnected) {
       setPendingSignIn(false);
       signIn()
-        .then(() => {
+        .then((signedIn) => {
+          if (!signedIn) {
+            throw new Error("Sign in failed. Please try again.");
+          }
           refetchTokens();
         })
         .catch((err) => {
-          setSetupError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+          setSetupError(
+            err instanceof Error
+              ? err.message
+              : "Sign in failed. Please try again.",
+          );
         })
         .finally(() => {
           setIsSettingUp(false);
@@ -162,11 +214,16 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
       }
 
       // Already on correct chain (or not connected), sign in directly
-      await signIn();
+      const signedIn = await signIn();
+      if (!signedIn) {
+        throw new Error("Sign in failed. Please try again.");
+      }
       refetchTokens();
       setIsSettingUp(false);
     } catch (err) {
-      setSetupError(err instanceof Error ? err.message : "Setup failed. Please try again.");
+      setSetupError(
+        err instanceof Error ? err.message : "Setup failed. Please try again.",
+      );
       setIsSettingUp(false);
     }
   };

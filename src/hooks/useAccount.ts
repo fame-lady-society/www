@@ -33,7 +33,7 @@ type HookProps = {
   isSuccess: boolean;
   isReady: boolean;
   reset: () => void;
-  signIn?: () => Promise<boolean>;
+  signIn?: () => Promise<unknown>;
   signOut: () => Promise<boolean>;
 };
 
@@ -43,9 +43,15 @@ type SiweSessionResponse = {
 };
 
 async function restoreAuthSessionFromSiwe(): Promise<boolean> {
-  const response = await fetch("/siwe", {
-    headers: withAuthHeaders(),
-  });
+  let response: Response;
+  try {
+    response = await fetch("/siwe", {
+      headers: withAuthHeaders(),
+    });
+  } catch {
+    return false;
+  }
+
   if (!response.ok) return false;
 
   const body = (await response.json()) as SiweSessionResponse;
@@ -61,6 +67,7 @@ export function useAccount() {
     isConnected,
     isConnecting,
     chain,
+    chainId,
   } = useConnection();
   const [isMiniApp, setIsMiniApp] = useState(false);
   const { isSignedIn, signIn: signInSIWE } = useSIWE() as HookProps;
@@ -71,8 +78,8 @@ export function useAccount() {
     if (getAuthSession()?.token) return true;
     if (isSignedIn && (await restoreAuthSessionFromSiwe())) return true;
     if (!signInSIWE) return false;
-    const success = await signInSIWE();
-    return success;
+    await signInSIWE();
+    return getAuthSession()?.token ? true : await restoreAuthSessionFromSiwe();
   }, [isSignedIn, signInSIWE]);
 
   useEffect(() => {
@@ -109,7 +116,7 @@ export function useAccount() {
     isConnecting,
     baseUrl,
     chain,
-    chainId: chain?.id,
+    chainId,
     isMiniApp,
     miniAppContext,
     isSignedIn,
