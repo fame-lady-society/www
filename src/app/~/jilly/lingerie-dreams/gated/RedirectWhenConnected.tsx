@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
 import { useSIWE } from "connectkit";
@@ -14,10 +14,9 @@ export const RedirectWhenConnected: FC<{
   const [targetChainId, setTargetChainId] = useState<number | undefined>(
     toChain,
   );
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chainId: connectedChainId } = useAccount();
   const { isSignedIn } = useSIWE();
 
-  const chainId = useChainId();
   const { chains, switchChainAsync, isSuccess, isPending } = useSwitchChain({
     mutation: {
       onMutate(variables) {
@@ -39,7 +38,7 @@ export const RedirectWhenConnected: FC<{
       targetChainId &&
       chain &&
       !isSuccess &&
-      targetChainId !== chainId &&
+      targetChainId !== connectedChainId &&
       address &&
       isSignedIn
     ) {
@@ -55,7 +54,7 @@ export const RedirectWhenConnected: FC<{
     targetChainId,
     chain,
     isSuccess,
-    chainId,
+    connectedChainId,
     switchChainAsync,
     router,
     pathPrefix,
@@ -67,7 +66,13 @@ export const RedirectWhenConnected: FC<{
 
   useEffect(() => {
     const possiblePath = `${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
-    if (isConnected && address && pathname !== possiblePath && isSignedIn) {
+    if (
+      isConnected &&
+      address &&
+      connectedChainId === toChain &&
+      pathname !== possiblePath &&
+      isSignedIn
+    ) {
       router.replace(possiblePath);
     }
   }, [
@@ -76,7 +81,8 @@ export const RedirectWhenConnected: FC<{
     pathname,
     pathPrefix,
     router,
-    chainId,
+    connectedChainId,
+    toChain,
     pathPostfix,
     isSignedIn,
   ]);

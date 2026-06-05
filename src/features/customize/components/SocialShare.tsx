@@ -12,7 +12,6 @@ import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
 import { mainnet } from "viem/chains";
-import { useChainId, useSwitchChain } from "wagmi";
 import Skeleton from "@mui/material/Skeleton";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -63,10 +62,9 @@ export const SocialShare: FC<{
   textProvider,
   onClose,
 }) => {
-  const { isSignedIn, signIn } = useAccount();
-  const chainId = useChainId();
+  const { isSignedIn, signIn, chainId: connectedChainId } = useAccount();
   const network =
-    propsNetwork ?? chainId === mainnet.id ? "mainnet" : "sepolia";
+    propsNetwork ?? (connectedChainId === mainnet.id ? "mainnet" : "sepolia");
   const imgUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${network}/og/token/${tokenId}`;
   const shareUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${network}/token/${tokenId}`;
 

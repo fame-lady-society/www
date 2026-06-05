@@ -9,6 +9,7 @@ import {
   type FameConstantProductPoolQuoteQuotedEntry,
 } from "./indexedQuoteApiClient";
 import { USDC, WETH } from "../../tokens";
+import { FAME_V4_ZORA_REVIEWED_POOL_SHAPE } from "../poolStateRegistry";
 
 const quotedResponse = poolQuoteFixture.response;
 const POOL_QUOTES_V1_FIXTURE_SHA256 =
@@ -44,6 +45,60 @@ const clQuoteRow = {
   source: "slipstream-pool-state",
   sourceRegistryId: quotedResponse.sourceRegistryId,
   maxFreshnessBlocks: 120,
+} as const;
+const v4QuoteRow = {
+  status: "quoted",
+  quoteKind: "cl-quote-v1",
+  poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+  chainId: 8453,
+  poolAddress: null,
+  poolKey: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+  poolManager: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolManager,
+  stateViewAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.stateViewAddress,
+  token0: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+  token1: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+  tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+  tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+  venueFamily: "UniswapV4",
+  tickSpacing: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.tickSpacing,
+  amountIn: "1000000",
+  amountOut: "969999",
+  sqrtPriceX96: "79228162514264337593543950336",
+  sqrtPriceX96After: "79228162514110420726332444185",
+  tick: 0,
+  liquidity: "1000000000000000000",
+  fee: "30000",
+  lpFee: "30000",
+  protocolFee: "0",
+  protocolFeeStatus: "zero",
+  staticFee: "30000",
+  feeSource: "v4-slot0",
+  observedThroughBlock: 120,
+  blockHash:
+    "0x4444444444444444444444444444444444444444444444444444444444444444",
+  parentHash:
+    "0x5555555555555555555555555555555555555555555555555555555555555555",
+  snapshotId: "unit-v4-cl-quote",
+  stateHash:
+    "0x6666666666666666666666666666666666666666666666666666666666666666",
+  source: "uniswap-v4-state-view",
+  sourceRegistryId: quotedResponse.sourceRegistryId,
+  maxFreshnessBlocks: 120,
+  hookAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hooks,
+  hookData: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData,
+  hookDataStatus: "empty",
+  zoraProvenance: {
+    status: "verified",
+    source: "zora-factory-event",
+    chainId: 8453,
+    factoryAddress: "0x0000000000000000000000000000000000000003",
+    coinAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+    poolKey: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+    poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+    transactionHash:
+      "0x7777777777777777777777777777777777777777777777777777777777777777",
+    eventName: "CoinCreatedV4",
+  },
 } as const;
 
 describe("FAME indexed quote API client", () => {
@@ -91,24 +146,27 @@ describe("FAME indexed quote API client", () => {
     });
   });
 
-  it("parses CL, reserve, and unavailable compact entries", () => {
+  it("parses CL, V4 CL, reserve, and unavailable compact entries", () => {
     const parsed = parseIndexedQuoteApiResponse({
       ...quotedResponse,
       quotes: [
         clQuoteRow,
+        v4QuoteRow,
         quotedResponse.quotes[0],
         {
           status: "unavailable",
           requested: {
-            poolId: "slipstream-usdc-weth-100",
-            tokenIn: WETH,
-            tokenOut: USDC,
+            poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+            tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+            tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
             amountIn: "1000000",
           },
-          reason: "producer-untrusted",
-          poolId: "slipstream-usdc-weth-100",
+          reason: "fee-model-mismatch",
+          poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
           chainId: 8453,
-          poolAddress: "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+          poolAddress: null,
+          poolKey: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+          stateViewAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.stateViewAddress,
           observedThroughBlock: 1,
           sourceRegistryId: "unit-registry",
           maxFreshnessBlocks: 120,
@@ -117,17 +175,72 @@ describe("FAME indexed quote API client", () => {
         },
       ],
     });
-    const unavailable = parsed.quotes[2];
+    const unavailable = parsed.quotes[3];
 
     assert.deepEqual(
       parsed.quotes.map((quote) =>
         quote.status === "quoted" ? quote.quoteKind : quote.status,
       ),
-      ["cl-quote-v1", "constant-product-quote-v1", "unavailable"],
+      [
+        "cl-quote-v1",
+        "cl-quote-v1",
+        "constant-product-quote-v1",
+        "unavailable",
+      ],
     );
     assert.equal("initializedTicks" in parsed.quotes[0]!, false);
-    assert.equal("reserve0" in parsed.quotes[1]!, false);
-    assert.equal("reserve1" in parsed.quotes[1]!, false);
+    const v4Row = parsed.quotes[1];
+    assert.equal(v4Row?.status, "quoted");
+    assert.equal(v4Row?.quoteKind, "cl-quote-v1");
+    assert.equal(v4Row.source, "uniswap-v4-state-view");
+    assert.equal(v4Row.poolAddress, null);
+    assert.equal(v4Row.poolKey, FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey);
+    assert.equal(v4Row.zoraProvenance.poolKey, v4Row.poolKey);
+    assert.equal("initializedTicks" in v4Row, false);
+    assert.equal("reserve0" in parsed.quotes[2]!, false);
+    assert.equal("reserve1" in parsed.quotes[2]!, false);
+    assert.equal(parsed.quotes[3]?.status, "unavailable");
+    assert.equal(parsed.quotes[3]?.reason, "fee-model-mismatch");
+    assert.equal(
+      parsed.quotes[3]?.poolKey,
+      FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+    );
+    assert.equal(unavailable?.status, "unavailable");
+    if (unavailable?.status !== "unavailable") {
+      throw new Error("Expected unavailable V4 fee-model row.");
+    }
+    assert.equal(unavailable.reason, "fee-model-mismatch");
+    assert.equal(unavailable.producerStatus, "trusted");
+    assert.equal(unavailable.producerReason, null);
+  });
+
+  it("parses producer trust unavailable compact entries", () => {
+    const parsed = parseIndexedQuoteApiResponse({
+      ...quotedResponse,
+      quotes: [
+        {
+          status: "unavailable",
+          requested: {
+            poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+            tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+            tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+            amountIn: "1000000",
+          },
+          reason: "producer-untrusted",
+          poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+          chainId: 8453,
+          poolAddress: null,
+          poolKey: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+          stateViewAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.stateViewAddress,
+          observedThroughBlock: 1,
+          sourceRegistryId: "unit-registry",
+          maxFreshnessBlocks: 120,
+          producerStatus: "trusted",
+          producerReason: null,
+        },
+      ],
+    });
+    const unavailable = parsed.quotes[0];
     assert.equal(unavailable?.status, "unavailable");
     if (unavailable?.status !== "unavailable") {
       throw new Error("Expected unavailable producer trust row.");
@@ -135,6 +248,36 @@ describe("FAME indexed quote API client", () => {
     assert.equal(unavailable.reason, "producer-untrusted");
     assert.equal(unavailable.producerStatus, "trusted");
     assert.equal(unavailable.producerReason, null);
+  });
+
+  it("rejects ambiguous V4 compact CL rows without required V4 evidence", () => {
+    assert.throws(() =>
+      parseIndexedQuoteApiResponse({
+        ...quotedResponse,
+        quotes: [{ ...v4QuoteRow, poolKey: undefined }],
+      }),
+    );
+
+    assert.throws(() =>
+      parseIndexedQuoteApiResponse({
+        ...quotedResponse,
+        quotes: [{ ...v4QuoteRow, protocolFee: "1" }],
+      }),
+    );
+
+    assert.throws(() =>
+      parseIndexedQuoteApiResponse({
+        ...quotedResponse,
+        quotes: [{ ...v4QuoteRow, staticFee: "100" }],
+      }),
+    );
+
+    assert.throws(() =>
+      parseIndexedQuoteApiResponse({
+        ...quotedResponse,
+        quotes: [{ ...v4QuoteRow, hookData: "0x01" }],
+      }),
+    );
   });
 
   it("accepts the versioned reserve fixture contract", () => {
@@ -284,7 +427,7 @@ describe("FAME indexed quote API client", () => {
     );
   });
 
-  it("rejects helper responses that loosen the requested freshness cap", async () => {
+  it("leaves row-scoped freshness to the quote adapter", async () => {
     const futureClient = createIndexedQuoteApiClient({
       endpointUrl: "https://society.example/fame/pool-quotes",
       serviceToken: "unit-token",
@@ -301,14 +444,14 @@ describe("FAME indexed quote API client", () => {
           }),
         ),
     });
-    const looseFreshnessClient = createIndexedQuoteApiClient({
+    const staleRowClient = createIndexedQuoteApiClient({
       endpointUrl: "https://society.example/fame/pool-quotes",
       serviceToken: "unit-token",
       fetchFn: async () =>
         new Response(
           JSON.stringify({
             ...quotedResponse,
-            effectiveMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 10,
             quotes: [
               {
                 ...quotedResponse.quotes[0],
@@ -319,14 +462,44 @@ describe("FAME indexed quote API client", () => {
           }),
         ),
     });
-    const staleRowClient = createIndexedQuoteApiClient({
+
+    const futureResponse = await futureClient.fetchQuotes({
+      currentBlock: 125,
+      quotes: [],
+    });
+    const futureRow = futureResponse.quotes[0];
+    assert.equal(futureRow?.status, "quoted");
+    assert.equal(
+      futureRow && "observedThroughBlock" in futureRow
+        ? futureRow.observedThroughBlock
+        : null,
+      126,
+    );
+
+    const staleResponse = await staleRowClient.fetchQuotes({
+      currentBlock: 125,
+      maxFreshnessBlocks: 10,
+      quotes: [],
+    });
+    const staleRow = staleResponse.quotes[0];
+    assert.equal(staleRow?.status, "quoted");
+    assert.equal(
+      staleRow && "observedThroughBlock" in staleRow
+        ? staleRow.observedThroughBlock
+        : null,
+      100,
+    );
+  });
+
+  it("rejects helper responses that loosen the requested freshness cap", async () => {
+    const looseFreshnessClient = createIndexedQuoteApiClient({
       endpointUrl: "https://society.example/fame/pool-quotes",
       serviceToken: "unit-token",
       fetchFn: async () =>
         new Response(
           JSON.stringify({
             ...quotedResponse,
-            effectiveMaxFreshnessBlocks: 10,
+            effectiveMaxFreshnessBlocks: 120,
             quotes: [
               {
                 ...quotedResponse.quotes[0],
@@ -351,29 +524,12 @@ describe("FAME indexed quote API client", () => {
 
     await assert.rejects(
       () =>
-        futureClient.fetchQuotes({
-          currentBlock: 125,
-          quotes: [],
-        }),
-      /observedThroughBlock/,
-    );
-    await assert.rejects(
-      () =>
         looseFreshnessClient.fetchQuotes({
           currentBlock: 125,
           maxFreshnessBlocks: 10,
           quotes: [],
         }),
       /effectiveMaxFreshnessBlocks/,
-    );
-    await assert.rejects(
-      () =>
-        staleRowClient.fetchQuotes({
-          currentBlock: 125,
-          maxFreshnessBlocks: 10,
-          quotes: [],
-        }),
-      /maxFreshnessBlocks/,
     );
     await assert.rejects(
       () =>

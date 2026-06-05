@@ -14,11 +14,19 @@ import {
   activationStatusForRegistryPoolId,
   CL_REPLAY_CAPABLE_FAME_POOL_IDS,
   COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS,
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  UNISWAP_V4_DYNAMIC_FEE_FLAG,
+  V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+  classifyFameV4ZoraPoolConfig,
+  classifyFameV4ZoraQuoteLane,
   famePoolSupportsCompactQuote,
+  famePoolSupportsV4ZoraQuoteLane,
   famePoolStateRegistry,
   famePoolStateRegistrySourceId,
   QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
 } from "./poolStateRegistry";
+import { famePoolById } from "./poolUniverse";
+import type { FameUniswapV4PoolConfig } from "../router/types";
 
 function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) {
@@ -145,6 +153,55 @@ describe("FAME pool-state registry", () => {
     assert.equal(v4Dependency?.replaySurface, null);
   });
 
+  it("emits schema-v4 row fields required by the pool-state producer parser", () => {
+    const registry = famePoolStateRegistry();
+    const pool = (poolId: string) => {
+      const entry = registry.pools.find((candidate) => candidate.id === poolId);
+      assert.ok(entry, `missing ${poolId}`);
+      return entry;
+    };
+
+    assert.ok(
+      registry.pools.every(
+        (entry) =>
+          "factoryAddress" in entry && "activationStatus" in entry,
+      ),
+    );
+    assert.equal(
+      pool("aerodrome-v2-usdc-weth").factoryAddress,
+      "0x420dd381b31aef6683db6b902084cb0ffece40da",
+    );
+    assert.equal(
+      pool("slipstream-usdc-weth-100").factoryAddress,
+      "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
+    );
+    assert.equal(
+      pool(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID).factoryAddress,
+      null,
+    );
+    assert.equal(
+      pool("uniswap-v2-usdc-weth").activationStatus,
+      "reserve-compact-quote-active",
+    );
+    assert.equal(
+      pool("slipstream-usdc-weth-100").activationStatus,
+      "cl-compact-quote-active",
+    );
+    assert.equal(
+      pool(FAME_SELECTED_CL_ACTIVATION_CANDIDATE).activationStatus,
+      "cl-compact-quote-active",
+    );
+    assert.equal(
+      pool("uniswap-v3-zora-usdc").activationStatus,
+      "cl-head-only",
+    );
+    assert.equal(
+      pool(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID).activationStatus,
+      "unsupported",
+    );
+    assert.equal(pool("native-wrap-weth").activationStatus, "tracked-only");
+  });
+
   it("marks activation-approved Slipstream v1 pools as CL replay-capable", () => {
     const registry = famePoolStateRegistry();
     const candidate = registry.pools.find(
@@ -188,7 +245,7 @@ describe("FAME pool-state registry", () => {
     );
   });
 
-  it("derives compact quote-capable pools from reserve quote models plus CL replay", () => {
+  it("derives compact quote-capable pools from reserve, CL replay, and reviewed V4 Zora gates", () => {
     assert.deepEqual(COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS, [
       ...QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
       ...CL_REPLAY_CAPABLE_FAME_POOL_IDS,
@@ -198,6 +255,23 @@ describe("FAME pool-state registry", () => {
       famePoolSupportsCompactQuote("slipstream-usdc-weth-100"),
       true,
     );
+    assert.equal(
+      famePoolSupportsCompactQuote(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID),
+      false,
+    );
+    assert.equal(
+      famePoolSupportsCompactQuote(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID, {
+        v4ZoraQuoteLaneActivation: {
+          status: "active",
+          sourceRegistryId: famePoolStateRegistrySourceId(),
+          parityStatus: "passed",
+          routeSimulationStatus: "passed",
+          evidenceId: "unit-v4-zora-activation",
+        },
+      }),
+      true,
+    );
+    assert.equal(famePoolSupportsCompactQuote("uniswap-v4-usdc-eth"), false);
     assert.equal(famePoolSupportsCompactQuote("native-wrap-weth"), false);
     assert.equal(
       famePoolSupportsCompactQuote(FAME_SELECTED_CL_ACTIVATION_CANDIDATE),
@@ -207,6 +281,121 @@ describe("FAME pool-state registry", () => {
       famePoolSupportsCompactQuote(FAME_SELECTED_LIVE_ROUTE_DEPENDENCY),
       false,
     );
+  });
+
+  it("surfaces BASEDFLICK/ZORA as the only provenance-gated V4 Zora quote lane candidate", () => {
+    assert.deepEqual(
+      classifyFameV4ZoraQuoteLane(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID),
+      {
+        status: "target-blocked",
+        poolId: V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        reason: "missing-provenance",
+        hookPermissions: {
+          beforeInitialize: false,
+          afterInitialize: true,
+          beforeAddLiquidity: false,
+          afterAddLiquidity: false,
+          beforeRemoveLiquidity: false,
+          afterRemoveLiquidity: false,
+          beforeSwap: false,
+          afterSwap: true,
+          beforeDonate: false,
+          afterDonate: false,
+          beforeSwapReturnDelta: false,
+          afterSwapReturnDelta: false,
+          afterAddLiquidityReturnDelta: false,
+          afterRemoveLiquidityReturnDelta: false,
+        },
+      },
+    );
+    assert.equal(
+      famePoolSupportsV4ZoraQuoteLane(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID),
+      false,
+    );
+    assert.equal(
+      famePoolSupportsV4ZoraQuoteLane(
+        V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        { provenanceVerified: true },
+      ),
+      true,
+    );
+    assert.deepEqual(
+      classifyFameV4ZoraQuoteLane("uniswap-v4-usdc-eth", {
+        provenanceVerified: true,
+      }),
+      {
+        status: "non-target-v4-unsupported",
+        poolId: "uniswap-v4-usdc-eth",
+        reason: "non-target-v4-pool",
+      },
+    );
+  });
+
+  it("rejects V4 Zora candidate shape drift before route eligibility", () => {
+    const pool = famePoolById(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID);
+    assert.equal(pool?.venue, "uniswap-v4");
+    const target = pool as FameUniswapV4PoolConfig;
+
+    assert.deepEqual(
+      classifyFameV4ZoraPoolConfig(
+        {
+          ...target,
+          fee: UNISWAP_V4_DYNAMIC_FEE_FLAG,
+        },
+        { provenanceVerified: true },
+      ),
+      {
+        status: "target-blocked",
+        poolId: V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        reason: "dynamic-fee",
+      },
+    );
+    assert.deepEqual(
+      classifyFameV4ZoraPoolConfig(
+        {
+          ...target,
+          hookData: "0x1234",
+        },
+        { provenanceVerified: true },
+      ),
+      {
+        status: "target-blocked",
+        poolId: V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        reason: "hook-data-mismatch",
+      },
+    );
+    assert.deepEqual(
+      classifyFameV4ZoraPoolConfig(
+        {
+          ...target,
+          hooks: "0x00000000000000000000000000000000000010c0",
+        },
+        { provenanceVerified: true },
+      ),
+      {
+        status: "target-blocked",
+        poolId: V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        reason: "unsafe-hook-permissions",
+        hookPermissions: {
+          beforeInitialize: false,
+          afterInitialize: true,
+          beforeAddLiquidity: false,
+          afterAddLiquidity: false,
+          beforeRemoveLiquidity: false,
+          afterRemoveLiquidity: false,
+          beforeSwap: true,
+          afterSwap: true,
+          beforeDonate: false,
+          afterDonate: false,
+          beforeSwapReturnDelta: false,
+          afterSwapReturnDelta: false,
+          afterAddLiquidityReturnDelta: false,
+          afterRemoveLiquidityReturnDelta: false,
+        },
+        unsafeHookPermissions: ["beforeSwap"],
+      },
+    );
+    assert.equal(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData, "0x");
   });
 
   it("omits direct SPX/FAME and cbBTC/FAME until authoritative metadata exists", () => {

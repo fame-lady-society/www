@@ -1,10 +1,4 @@
-import React, {
-  ChangeEventHandler,
-  FC,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import * as sentry from "@sentry/nextjs";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
@@ -14,51 +8,45 @@ import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 import { useNotifications } from "@/features/notifications/Context";
 import { fameSaleAbi, fameSaleTokenAbi } from "@/wagmi";
-import {
-  useAccount,
-  useBalance,
-  useChainId,
-  useReadContracts,
-  useWriteContract,
-} from "wagmi";
+import { useBalance, useReadContracts, useWriteContract } from "wagmi";
+import { useAccount } from "@/hooks/useAccount";
 import { useProof } from "../hooks/useProof";
 import {
   ContractFunctionExecutionError,
   formatEther,
   formatUnits,
-  parseUnits,
 } from "viem";
-import FormGroup from "@mui/material/FormGroup";
 import Button from "@mui/material/Button";
 import { WrappedLink } from "@/components/WrappedLink";
 import { Transaction, TransactionsModal } from "./TransactionsModal";
-
-import { styled } from "@mui/material/styles";
-import MuiInput from "@mui/material/Input";
 import { shortenHash } from "@/utils/hash";
 import { ThankYouCard } from "./ThankYouCard";
 import { fameSaleAddress, fameSaleTokenAddress } from "../../fame/contract";
 import { ContributionGauge } from "./ContributionGauge";
 import { useAllocation } from "@/features/claim-to-fame/hooks/useAllocation";
 import { ClaimEnoughModal } from "./ClaimEnoughModal";
+import { base, sepolia } from "viem/chains";
 
-const Input = styled(MuiInput)`
-  width: 96px;
-`;
-
-const bigIntMax = (...args: bigint[]) => args.reduce((m, e) => (e > m ? e : m));
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
 function formatUnit(amount: bigint) {
   return Math.floor(Number(formatUnits(amount, 18)));
 }
 
-export const PresaleCard: FC<{}> = () => {
+type PresaleNetwork = "base" | "sepolia";
+
+function getSaleChain(network: PresaleNetwork) {
+  return network === "sepolia" ? sepolia : base;
+}
+
+export const PresaleCard: FC<{ network: PresaleNetwork }> = ({ network }) => {
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [requestBuy, setRequestBuy] = useState<bigint>(0n);
 
-  const { address, chain } = useAccount();
-  const chainId = useChainId() as 11155111 | 8453;
+  const saleChain = getSaleChain(network);
+  const saleChainId = saleChain.id;
+  const saleExplorerUrl = saleChain.blockExplorers.default.url;
+  const { address } = useAccount();
   const { proof } = useProof();
 
   const { total } = useAllocation({
@@ -69,6 +57,7 @@ export const PresaleCard: FC<{}> = () => {
 
   const { data: userBalance } = useBalance({
     address,
+    chainId: saleChainId,
   });
 
   const {
@@ -86,40 +75,47 @@ export const PresaleCard: FC<{}> = () => {
     contracts: [
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "raiseRemaining",
+        chainId: saleChainId,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "canProve",
         args: proof && address ? [proof, address] : undefined,
+        chainId: saleChainId,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "maxBuy",
+        chainId: saleChainId,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "isPaused",
+        chainId: saleChainId,
       },
       {
         abi: fameSaleTokenAbi,
-        address: fameSaleTokenAddress(chainId),
+        address: fameSaleTokenAddress(saleChainId),
         functionName: "balanceOf",
         args: address ? [address] : undefined,
+        chainId: saleChainId,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "fameTotalSupply",
+        chainId: saleChainId,
       },
       {
         abi: fameSaleAbi,
-        address: fameSaleAddress(chainId),
+        address: fameSaleAddress(saleChainId),
         functionName: "maxRaise",
+        chainId: saleChainId,
       },
     ],
   });
@@ -169,7 +165,8 @@ export const PresaleCard: FC<{}> = () => {
       try {
         const result = await writeFameSaleBuy({
           abi: fameSaleAbi,
-          address: fameSaleAddress(chainId),
+          address: fameSaleAddress(saleChainId),
+          chainId: saleChainId,
           functionName: "buy",
           args: [proof],
           value: requestBuy,
@@ -182,17 +179,13 @@ export const PresaleCard: FC<{}> = () => {
         ]);
         addNotification({
           id: "buy-pending",
-          message: chain?.blockExplorers?.default.url ? (
+          message: (
             <Typography color="black">
               transaction submitted{" "}
-              <WrappedLink
-                href={`${chain?.blockExplorers?.default.url}/tx/${result}`}
-              >
+              <WrappedLink href={`${saleExplorerUrl}/tx/${result}`}>
                 {shortenHash(result, 4)}
               </WrappedLink>
             </Typography>
-          ) : (
-            "transaction submitted"
           ),
           type: "success",
           autoHideMs: 5000,
@@ -237,10 +230,10 @@ export const PresaleCard: FC<{}> = () => {
     proof,
     writeFameSaleBuyStatus,
     writeFameSaleBuy,
-    chainId,
+    saleChainId,
     requestBuy,
     addNotification,
-    chain?.blockExplorers?.default.url,
+    saleExplorerUrl,
   ]);
 
   const onCloseTransactionModal = useCallback(() => {}, []);

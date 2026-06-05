@@ -7,11 +7,25 @@ The route lab runs amount buckets through the shared FAME swap solver without Re
 - Recorded mode is the default: `bun scripts/fame-swap-route-lab.ts`. It replays the recorded-state artifact `base-v1-pool-state-snapshot.json`, captured from read-only Base quote calls and pool state at `base-v1-live-45964183`.
 - Deterministic mode is explicit: `bun scripts/fame-swap-route-lab.ts --deterministic`. It uses the pinned test-only deterministic capacity profile to prove old cap failures and pure solver behavior.
 - Indexed mode: `BASE_RPC_URL=... FAME_POOL_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --indexed`. It derives `/fame/pool-state` from the `society-bots` pool API base for proof-only raw state, replays fresh V2-style reserves locally, requests `cl-replay-v1` for replay proof pools, and can report selected `slipstream-basedflick-fame` as raw replay indexed evidence while keeping `uniswap-v4-basedflick-zora` live through a `BASE_RPC_URL` fallback. Freshness is checked against a live Base block from server-only `BASE_RPC_URL`, or an explicit `FAME_POOL_STATE_CURRENT_BLOCK`; indexed mode no longer falls back to the pinned artifact block.
+- Quote API mode: `BASE_RPC_URL=... FAME_POOL_API_URL=... FAME_POOL_STATE_SERVICE_TOKEN=... bun scripts/fame-swap-route-lab.ts --quote-api`. It derives `/fame/pool-quotes`, wraps the normal fallback adapter with compact quote rows, and records quote API diagnostics. `--indexed --simulate` also uses quote API mode because route simulation must prove the same compact quote route, not the raw pool-state shadow path.
 - Live mode: `doppler run -- bun scripts/fame-swap-route-lab.ts --live`. It reads Base RPC liquidity through the live adapters and records a live block quote context. Server/operator runs prefer `BASE_RPC_URL`; `NEXT_PUBLIC_BASE_RPC_URL_1` is only a fallback for browser-safe or local endpoints.
 - Live simulation: add `--simulate` and set `FAME_SWAP_SIMULATION_ACCOUNT` or `NEXT_PUBLIC_FAME_SWAP_SIMULATION_ACCOUNT`. ERC20 routes simulate approval plus swap as one bundle, derive a slippage-protected minimum from the probe result, then simulate the protected route; native routes do the same with direct router calls. This is the initiating-account path for below-balance and route-execution checks. Default JSON and Markdown use a shortened account label.
 - Markdown output: add `--markdown` to any mode.
 
 Fork/router execution is still handled by `yarn fame-swap:fork-smoke`; route lab remains the amount grid, quote evidence, optional initiating-account simulation, and contract-todo source. Add `--route <artifact-id>` when proving one activation lane; route lab rejects generated candidate ids and narrows indexed pool-state reads to the requested artifact's compact-capable pools.
+
+## Targeted Runs
+
+Route lab can run one focused proof instead of the full corpus:
+
+- `--case <corpus-id>` selects one `FAME_ROUTE_CORPUS` case.
+- `--route <route-artifact-id>` selects the corpus case with the same token pair and amount, filters solver candidates to the artifact pool/token sequence, and fails if the selected route evidence does not match that requested artifact.
+- `--pool <pool-id>` filters to candidates containing the selected pool.
+- `--token-in <address>` and `--token-out <address>` narrow the selected pool leg direction.
+
+Missing targets and ambiguous filters fail loudly. A selected route that omits the requested pool or direction also fails; the command does not emit release evidence for a merely adjacent route.
+
+Ready rows include `requestedRouteId`, `routeArtifactId`, `selectedCandidateId`, `materializedRouteHash`, selected pools, and quote API diagnostics when quote API mode is used.
 
 ## Quote Context
 
@@ -27,6 +41,8 @@ Indexed quote outputs use the same reserve replay math as recorded snapshots for
 
 `cl-replay-v1` output is deliberately separate from reserve replay. Route lab requests the complete Slipstream replay snapshot and reports snapshot freshness, observed block, state hash, bitmap word count, and initialized tick count in the indexed-pool-state summary. While shadow mode is active, selected CL legs still attribute to the live or recorded fallback quote source; a successful local replay is not public quote authority.
 
+Quote API mode reports compact quote diagnostics separately from route quote context. A selected compact leg includes row evidence id, fallback reason if any, source registry id, current block, and effective freshness in debug output. For `uniswap-v4-basedflick-zora`, quote API mode uses a validation-only V4 activation override so the compact row can be proven before production activation is flipped.
+
 Server-only helper env for route lab and quote API:
 
 - `FAME_POOL_API_URL`
@@ -39,7 +55,7 @@ Server-only helper env for route lab and quote API:
 
 Do not create `NEXT_PUBLIC_` variants for pool API URL or token. Normal `/api/fame/swap/quote` calls `/fame/pool-quotes`; raw `/fame/pool-state` is only for route-lab and parity proof tooling. Public quote requests may pass a pinned route artifact id as `routeId`; generated candidate ids stay internal.
 
-## Slipstream CL Replay Parity
+## Compact Quote Parity
 
 The parity harness defaults to the baseline `slipstream-usdc-weth-100` pool and the selected `slipstream-basedflick-fame` pool, with WETH/USDC and basedflick/FAME amount bands. Set `FAME_CL_REPLAY_PARITY_POOL_ID` to a specific pool id when you only need one route family:
 
@@ -54,6 +70,22 @@ bun scripts/fame-swap-cl-replay-parity.ts
 The harness fetches fresh `cl-replay-v1` state, builds a live Slipstream quoter adapter pinned to the snapshot block, and compares local replay against live quotes for representative WETH -> USDC and USDC -> WETH exact-input amounts. Promotion requires exact `amountOut` equality, not a rounded bps tolerance. A mismatch means state capture, dynamic fee units, tick crossing, rounding, or block consistency needs investigation.
 
 Expected output includes the snapshot id, observed block, state hash, bitmap word count, initialized tick count, and one local/live/drift line per amount. Missing, stale, incomplete, malformed, outside-range, or mismatched state should be treated as live-fallback evidence, not as an indexed CL quote.
+
+The same harness also supports the targeted V4 compact quote lane for `uniswap-v4-basedflick-zora`. When the requested pool is the V4 target, it fetches `/fame/pool-quotes`, validates exactly one fresh V4 `cl-quote-v1` row, pins the live V4 quoter to that row's observed block, and requires exact amount-out equality:
+
+```bash
+BASE_RPC_URL=https://... \
+FAME_POOL_API_URL=https://... \
+FAME_POOL_STATE_SERVICE_TOKEN=... \
+FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS=120 \
+bun scripts/fame-swap-cl-replay-parity.ts \
+  --pool uniswap-v4-basedflick-zora \
+  --token-in 0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926 \
+  --token-out 0x1111111111166b7fe7bd91427724b487980afc69 \
+  --amount 1045794780078973192
+```
+
+Run the reverse direction with the token addresses swapped. V4 parity output includes surface, source registry id, current block, observed block, block hash, parent hash, state hash, evidence id, and one local/live/drift line per amount. Sending the V4 target through the old Slipstream replay path fails closed.
 
 ## Allocation Optimizer Evidence
 
@@ -151,6 +183,7 @@ Recent verified runs:
 - Solidly FAME -> USDC routes now report one computable market-impact leg for the volatile FAME/frxUSD hop; the stable USDC/frxUSD hop remains quoted but non-computable for market impact.
 - Representative larger USDC, WETH, and native ETH buckets now quote from liquidity evidence instead of deterministic capacity caps.
 - CL replay promotion evidence is separate from these historical route-lab runs. Attach the latest indexed route-lab, `fame-swap-cl-replay-parity` output, activation report, and delta replay smoke bundle before treating a selected CL leg as compact quote-capable in the hot path.
+- BASEDFLICK/ZORA V4 compact quote promotion evidence is also separate from the historical live V4 selections above. The required current artifact is a focused `--quote-api --simulate` row whose `requestedRouteId` matches `routeArtifactId`, whose `selectedCandidateId` and `materializedRouteHash` are present, whose selected pools include `uniswap-v4-basedflick-zora`, whose `quoteApi.sourceRegistryId` matches the producer registry, and whose `simulation.status` is `passed`, paired with compact quote parity in both BASEDFLICK -> ZORA and ZORA -> BASEDFLICK directions.
 
 ## Contract Follow-Ups
 

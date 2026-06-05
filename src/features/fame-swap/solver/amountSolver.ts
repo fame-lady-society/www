@@ -70,6 +70,7 @@ export interface FameAmountSolverRequest {
   slippageBps: number;
   adapter?: FameQuoteAdapter;
   requestedRouteId?: string;
+  candidateFilter?: (candidate: FameRouteCandidate) => boolean;
 }
 
 export interface FameAsyncAmountSolverRequest
@@ -238,6 +239,28 @@ function routeDisplay(plan: FameQuotedRoutePlan): FameSwapRouteDisplayLeg[] {
   }));
 }
 
+function applyCandidateFilter(
+  candidates: readonly FameRouteCandidate[],
+  filter: FameAmountSolverRequest["candidateFilter"],
+): FameRouteCandidate[] {
+  if (!filter) return [...candidates];
+  return candidates.filter(filter);
+}
+
+function noFilteredCandidatesResult(): FameAmountSolverResult {
+  return {
+    status: "no_safe_route",
+    rejectedCandidates: [
+      {
+        candidateId: "candidate-filter",
+        reason: "unsafe_output",
+        message: "No route candidates matched the requested route-lab target.",
+      },
+    ],
+    message: "No route candidates matched the requested route-lab target.",
+  };
+}
+
 function buildRoute(
   request: Omit<FameAmountSolverRequest, "adapter">,
   plan: FameQuotedRoutePlan,
@@ -333,8 +356,14 @@ export function solveFameSwapAmount(
     };
   }
 
+  const candidates = applyCandidateFilter(
+    candidateSet.candidates,
+    request.candidateFilter,
+  );
+  if (candidates.length === 0) return noFilteredCandidatesResult();
+
   const ranked = rankRouteCandidates({
-    candidates: candidateSet.candidates,
+    candidates,
     amountIn: request.amountIn,
     feePpm: request.feePpm,
     slippageBps: request.slippageBps,
@@ -379,8 +408,14 @@ export async function solveFameSwapAmountAsync(
   async function legacyResult(
     optimizerEvidence?: FameOptimizerEvidence,
   ): Promise<FameAmountSolverResult> {
+    const candidates = applyCandidateFilter(
+      candidateSet.candidates,
+      request.candidateFilter,
+    );
+    if (candidates.length === 0) return noFilteredCandidatesResult();
+
     const ranked = await rankRouteCandidatesAsync({
-      candidates: candidateSet.candidates,
+      candidates,
       amountIn: request.amountIn,
       feePpm: request.feePpm,
       slippageBps: request.slippageBps,
@@ -406,8 +441,14 @@ export async function solveFameSwapAmountAsync(
     );
   }
 
-  const optimizerMode = request.optimizerMode ?? "select";
-  if (optimizerMode === "disabled" || request.requestedRouteId) {
+  const optimizerMode = request.candidateFilter
+    ? "disabled"
+    : (request.optimizerMode ?? "select");
+  if (
+    optimizerMode === "disabled" ||
+    request.requestedRouteId ||
+    request.candidateFilter
+  ) {
     return legacyResult();
   }
 

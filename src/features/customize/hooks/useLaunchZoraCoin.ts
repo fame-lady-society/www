@@ -1,15 +1,9 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import {
-  useChainId,
-  useSwitchChain,
-  useWriteContract,
-} from "wagmi";
-import {
-  zeroAddress,
-} from "viem";
-import { base, mainnet } from "viem/chains";
+import { useSwitchChain, useWriteContract } from "wagmi";
+import { zeroAddress } from "viem";
+import { base } from "viem/chains";
 import { useAccount } from "@/hooks/useAccount";
 import { Transaction } from "@/features/wrap/types";
 import {
@@ -22,6 +16,7 @@ import {
   baseCommunityMultiSigAddress,
 } from "@/features/fame/contract";
 import { useCallback } from "react";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 
 type LaunchParams = {
   tokenId: bigint | number;
@@ -41,8 +36,13 @@ type LaunchParams = {
 export function useLaunchZoraCoin() {
   // console.log("useLaunchZoraCoin", data);
   // console.log("dopplerData", dopplerData);
-  const chainId = useChainId();
-  const { address, isSignedIn, signIn } = useAccount();
+  const {
+    address,
+    isConnected,
+    isSignedIn,
+    signIn,
+    chainId: connectedChainId,
+  } = useAccount();
   const { mutateAsync: switchChainAsync } = useSwitchChain();
 
   const { mutateAsync: deploy } = useWriteContract();
@@ -116,14 +116,17 @@ export function useLaunchZoraCoin() {
         }
       }
 
-      let promise =
-        chainId === base.id
-          ? deployCoin({ tokenId, symbol, name })
-          : switchChainAsync({ chainId: base.id }).then(() =>
-              deployCoin({ tokenId, symbol, name }),
-            );
+      if (
+        needsConnectedChainSwitch({
+          isConnected,
+          connectedChainId,
+          targetChainId: base.id,
+        })
+      ) {
+        await switchChainAsync({ chainId: base.id });
+      }
 
-      return await promise;
+      return await deployCoin({ tokenId, symbol, name });
     },
   });
 }

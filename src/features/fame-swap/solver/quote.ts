@@ -250,6 +250,7 @@ export function quoteFameSwap(
     slippageBps: prepared.slippageBps,
     adapter: request.adapter,
     requestedRouteId: request.requestedRouteId,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);
@@ -274,6 +275,7 @@ export async function quoteFameSwapAsync(
     optimizerMode: request.optimizerMode ?? fameSwapOptimizerMode(),
     optimizerBudgets: request.optimizerBudgets,
     requestedRouteId: request.requestedRouteId,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);

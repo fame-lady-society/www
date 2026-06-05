@@ -1,8 +1,12 @@
 import { base } from "viem/chains";
 import {
   CL_REPLAY_CAPABLE_FAME_POOL_IDS,
+  FAME_V4_ZORA_QUOTE_LANE_ACTIVATION,
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
   QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
   famePoolSupportsCompactQuote,
+  fameV4ZoraQuoteLaneActivationPassed,
+  type FameV4ZoraQuoteLaneActivation,
 } from "../poolStateRegistry";
 import type {
   FameAsyncQuoteAdapter,
@@ -21,6 +25,7 @@ import type {
   FamePoolQuoteRequestEntry,
   FamePoolQuoteUnavailableEntry,
   FamePoolQuoteUnavailableReason,
+  FameV4ClPoolQuoteQuotedEntry,
 } from "./indexedQuoteApiClient";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
@@ -31,6 +36,7 @@ export type FameQuoteApiFallbackReason =
   | "quote_api_batch_failed"
   | "source_registry_mismatch"
   | "row_not_found"
+  | "row_ambiguous"
   | "unavailable_row"
   | "row_source_registry_mismatch"
   | "row_metadata_mismatch"
@@ -259,6 +265,7 @@ export function createQuoteApiDiagnosticsRecorder(
           row && "observedThroughBlock" in row
             ? row.observedThroughBlock
             : undefined,
+        evidenceId: row?.status === "quoted" ? quoteEvidenceId(row) : undefined,
       });
     },
     snapshot() {
@@ -308,8 +315,27 @@ function isReserveQuoteCapablePool(poolId: string): boolean {
   return QUOTE_MODEL_CAPABLE_FAME_POOL_IDS.some((id) => id === poolId);
 }
 
-function requestSupportedByQuoteApi(request: FameEdgeQuoteRequest): boolean {
-  if (!famePoolSupportsCompactQuote(request.edge.poolId)) return false;
+function isV4ZoraQuoteCapablePool(poolId: string): boolean {
+  return poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId;
+}
+
+function requestSupportedByQuoteApi(
+  request: FameEdgeQuoteRequest,
+  options: {
+    expectedSourceRegistryId?: string;
+    v4ZoraQuoteLaneActivation?: FameV4ZoraQuoteLaneActivation;
+  } = {},
+): boolean {
+  const v4ZoraQuoteLaneActivation =
+    options.v4ZoraQuoteLaneActivation ??
+    FAME_V4_ZORA_QUOTE_LANE_ACTIVATION;
+  if (
+    !famePoolSupportsCompactQuote(request.edge.poolId, {
+      v4ZoraQuoteLaneActivation,
+    })
+  ) {
+    return false;
+  }
   if (isClQuoteCapablePool(request.edge.poolId)) {
     return (
       request.edge.pool.venue === "aerodrome-slipstream" &&
@@ -325,6 +351,20 @@ function requestSupportedByQuoteApi(request: FameEdgeQuoteRequest): boolean {
         (request.edge.pool.venue === "aerodrome-v2" &&
           request.edge.pool.stable === false)) &&
       "pool" in request.edge.pool
+    );
+  }
+  if (isV4ZoraQuoteCapablePool(request.edge.poolId)) {
+    if (
+      !fameV4ZoraQuoteLaneActivationPassed(v4ZoraQuoteLaneActivation) ||
+      (options.expectedSourceRegistryId &&
+        v4ZoraQuoteLaneActivation.sourceRegistryId !==
+          options.expectedSourceRegistryId)
+    ) {
+      return false;
+    }
+    return (
+      request.edge.fee.status === "available" &&
+      request.edge.pool.venue === "uniswap-v4"
     );
   }
   return false;
@@ -351,22 +391,45 @@ function entryMatchesRequestIdentity(
   );
 }
 
-function quotedBaseMatchesRequest(
+function edgeToken0(request: FameEdgeQuoteRequest): `0x${string}` {
+  const pool = request.edge.pool;
+  if (pool.venue === "uniswap-v4") return pool.currency0;
+  if ("token0" in pool) return pool.token0;
+  return request.edge.tokenIn;
+}
+
+function edgeToken1(request: FameEdgeQuoteRequest): `0x${string}` {
+  const pool = request.edge.pool;
+  if (pool.venue === "uniswap-v4") return pool.currency1;
+  if ("token1" in pool) return pool.token1;
+  return request.edge.tokenOut;
+}
+
+function quotedCommonFieldsMatchRequest(
   quote: FamePoolQuoteQuotedEntry,
   request: FameEdgeQuoteRequest,
 ): boolean {
-  const pool = request.edge.pool;
   return (
     quote.poolId === request.edge.poolId &&
     quote.chainId === base.id &&
-    "pool" in pool &&
-    sameAddress(quote.poolAddress, pool.pool) &&
-    sameAddress(quote.token0, pool.token0) &&
-    sameAddress(quote.token1, pool.token1) &&
+    sameAddress(quote.token0, edgeToken0(request)) &&
+    sameAddress(quote.token1, edgeToken1(request)) &&
     sameAddress(quote.tokenIn, request.edge.tokenIn) &&
     sameAddress(quote.tokenOut, request.edge.tokenOut) &&
     quote.venueFamily === request.edge.venue &&
     quote.amountIn === request.amountIn.toString()
+  );
+}
+
+function quotedBaseMatchesRequest(
+  quote: FameClPoolQuoteQuotedEntry | FameConstantProductPoolQuoteQuotedEntry,
+  request: FameEdgeQuoteRequest,
+): boolean {
+  const pool = request.edge.pool;
+  return (
+    quotedCommonFieldsMatchRequest(quote, request) &&
+    "pool" in pool &&
+    sameAddress(quote.poolAddress, pool.pool)
   );
 }
 
@@ -382,6 +445,51 @@ function clQuoteValidationFailure(
     !("pool" in pool) ||
     quote.tickSpacing !== pool.tickSpacing ||
     quote.feeSource !== "pool-fee"
+  ) {
+    return "row_metadata_mismatch";
+  }
+  return null;
+}
+
+function v4ClQuoteValidationFailure(
+  quote: FameV4ClPoolQuoteQuotedEntry,
+  request: FameEdgeQuoteRequest,
+): FameQuoteApiFallbackReason | null {
+  if (!isV4ZoraQuoteCapablePool(request.edge.poolId))
+    return "row_kind_mismatch";
+  const pool = request.edge.pool;
+  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  if (
+    !quotedCommonFieldsMatchRequest(quote, request) ||
+    pool.venue !== "uniswap-v4" ||
+    quote.poolAddress !== null ||
+    quote.source !== "uniswap-v4-state-view" ||
+    quote.venueFamily !== "UniswapV4" ||
+    quote.poolId !== reviewed.poolId ||
+    quote.tickSpacing !== pool.tickSpacing ||
+    quote.tickSpacing !== reviewed.tickSpacing ||
+    quote.feeSource !== "v4-slot0" ||
+    quote.fee !== quote.lpFee ||
+    quote.fee !== reviewed.fee.toString() ||
+    quote.staticFee !== reviewed.fee.toString() ||
+    quote.protocolFee !== "0" ||
+    quote.protocolFeeStatus !== "zero" ||
+    quote.hookData.toLowerCase() !== "0x" ||
+    quote.hookDataStatus !== "empty" ||
+    !sameAddress(quote.poolManager, pool.poolManager) ||
+    !sameAddress(quote.poolManager, reviewed.poolManager) ||
+    !sameAddress(quote.stateViewAddress, pool.stateView) ||
+    !sameAddress(quote.stateViewAddress, reviewed.stateViewAddress) ||
+    quote.poolKey.toLowerCase() !== pool.poolId.toLowerCase() ||
+    quote.poolKey.toLowerCase() !== reviewed.poolKey.toLowerCase() ||
+    !sameAddress(quote.hookAddress, pool.hooks) ||
+    !sameAddress(quote.hookAddress, reviewed.hooks) ||
+    quote.zoraProvenance.status !== "verified" ||
+    quote.zoraProvenance.chainId !== base.id ||
+    !sameAddress(quote.zoraProvenance.coinAddress, pool.currency1) ||
+    quote.zoraProvenance.poolKey.toLowerCase() !==
+      quote.poolKey.toLowerCase() ||
+    quote.zoraProvenance.poolId.toLowerCase() !== quote.poolKey.toLowerCase()
   ) {
     return "row_metadata_mismatch";
   }
@@ -417,9 +525,34 @@ function quotedValidationFailure(
     return "row_source_registry_mismatch";
   }
   if (quote.quoteKind === "cl-quote-v1") {
+    if (quote.source === "uniswap-v4-state-view") {
+      return v4ClQuoteValidationFailure(quote, request);
+    }
+    if (quote.source !== "slipstream-pool-state") return "row_kind_mismatch";
     return clQuoteValidationFailure(quote, request);
   }
   return reserveQuoteValidationFailure(quote, request);
+}
+
+function quotedFreshnessValidationFailure(
+  response: FamePoolQuoteBatchResponse,
+  quote: FamePoolQuoteQuotedEntry,
+  currentBlock: number,
+): FameQuoteApiFallbackReason | null {
+  if (response.currentBlock !== currentBlock) {
+    return "row_metadata_mismatch";
+  }
+  if (quote.observedThroughBlock > currentBlock) {
+    return "row_metadata_mismatch";
+  }
+  const effectiveMaxFreshnessBlocks = Math.min(
+    response.effectiveMaxFreshnessBlocks,
+    quote.maxFreshnessBlocks,
+  );
+  if (currentBlock - quote.observedThroughBlock > effectiveMaxFreshnessBlocks) {
+    return "row_metadata_mismatch";
+  }
+  return null;
 }
 
 function quoteResultFromClQuote(options: {
@@ -478,6 +611,58 @@ function quoteResultFromClQuote(options: {
       evidenceId: options.quote.snapshotId,
       poolId: options.quote.poolId,
     },
+  };
+}
+
+function quoteResultFromV4ClQuote(options: {
+  response: FamePoolQuoteBatchResponse;
+  quote: FameV4ClPoolQuoteQuotedEntry;
+  request: FameEdgeQuoteRequest;
+}): FameEdgeQuoteResult {
+  const amountOut = parsePositiveUint256Decimal(options.quote.amountOut);
+  const preSwapSqrtPriceX96 = parsePositiveUint256Decimal(
+    options.quote.sqrtPriceX96,
+  );
+  const postSwapSqrtPriceX96 = parsePositiveUint256Decimal(
+    options.quote.sqrtPriceX96After,
+  );
+  if (
+    amountOut === null ||
+    preSwapSqrtPriceX96 === null ||
+    postSwapSqrtPriceX96 === null
+  ) {
+    return {
+      status: "failed",
+      reason: "no_quote_evidence",
+      message: "Indexed quote API V4 CL row was not usable.",
+    };
+  }
+
+  return {
+    status: "quoted",
+    amountIn: options.request.amountIn,
+    amountOut,
+    capacityIn: null,
+    fee: options.request.edge.fee,
+    evidence: `indexed Uniswap V4 CL quote for ${options.quote.poolId} snapshot ${options.quote.snapshotId}`,
+    context: {
+      source: "indexed",
+      chainId: options.quote.chainId,
+      currentBlock: options.response.currentBlock,
+      sourceRegistryId: options.response.sourceRegistryId,
+      effectiveMaxFreshnessBlocks: options.response.effectiveMaxFreshnessBlocks,
+      statusCounts: emptyPoolStateStatusCounts(),
+    },
+    priceImpact: concentratedLiquidityPriceImpact({
+      amountIn: options.request.amountIn,
+      amountOut,
+      tokenIn: options.request.edge.tokenIn,
+      tokenOut: options.request.edge.tokenOut,
+      token0: options.quote.token0,
+      token1: options.quote.token1,
+      preSwapSqrtPriceX96,
+      postSwapSqrtPriceX96,
+    }),
   };
 }
 
@@ -548,6 +733,13 @@ function quoteResultFromQuoteApiRow(options: {
   request: FameEdgeQuoteRequest;
 }): FameEdgeQuoteResult {
   if (options.quote.quoteKind === "cl-quote-v1") {
+    if (options.quote.source === "uniswap-v4-state-view") {
+      return quoteResultFromV4ClQuote({
+        response: options.response,
+        quote: options.quote,
+        request: options.request,
+      });
+    }
     return quoteResultFromClQuote({
       response: options.response,
       quote: options.quote,
@@ -589,6 +781,7 @@ export function createIndexedQuoteApiAdapter(options: {
   currentBlock: number;
   maxFreshnessBlocks?: number;
   expectedSourceRegistryId?: string;
+  v4ZoraQuoteLaneActivation?: FameV4ZoraQuoteLaneActivation;
   diagnostics?: FameQuoteApiDiagnosticsRecorder;
   onBatchFailure?: (event: {
     category: FameQuoteApiBatchFailureCategory;
@@ -698,7 +891,12 @@ export function createIndexedQuoteApiAdapter(options: {
   return {
     quoteContext: fallback.quoteContext,
     async quoteEdge(request) {
-      if (!requestSupportedByQuoteApi(request)) {
+      if (
+        !requestSupportedByQuoteApi(request, {
+          expectedSourceRegistryId: options.expectedSourceRegistryId,
+          v4ZoraQuoteLaneActivation: options.v4ZoraQuoteLaneActivation,
+        })
+      ) {
         return fallback.quoteEdge(request);
       }
 
@@ -725,9 +923,13 @@ export function createIndexedQuoteApiAdapter(options: {
         });
       }
 
-      const row = response.quotes.find((entry) =>
+      const rows = response.quotes.filter((entry) =>
         entryMatchesRequestIdentity(entry, request),
       );
+      if (rows.length > 1) {
+        return fallbackQuote({ request, reason: "row_ambiguous" });
+      }
+      const row = rows[0];
       if (!row) {
         return fallbackQuote({ request, reason: "row_not_found" });
       }
@@ -739,7 +941,9 @@ export function createIndexedQuoteApiAdapter(options: {
         });
       }
 
-      const validationFailure = quotedValidationFailure(response, row, request);
+      const validationFailure =
+        quotedFreshnessValidationFailure(response, row, options.currentBlock) ??
+        quotedValidationFailure(response, row, request);
       if (validationFailure) {
         return fallbackQuote({
           request,

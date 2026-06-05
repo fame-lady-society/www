@@ -17,6 +17,7 @@ import {
   type FameRouteCandidateBudgets,
 } from "../src/features/fame-swap/solver/graph/candidates";
 import type {
+  FameRouteCandidate,
   FameRouteCandidateRejected,
   FameRouteCandidateSet,
 } from "../src/features/fame-swap/solver/graph/routePlan";
@@ -39,14 +40,29 @@ import {
   type FameIndexedPoolStateClient,
   type FameIndexedPoolStateBatchResponse,
 } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
+import {
+  createIndexedQuoteApiClient,
+  type FamePoolQuoteClient,
+} from "../src/features/fame-swap/solver/quotes/indexedQuoteApiClient";
 import { createIndexedReserveQuoteAdapter } from "../src/features/fame-swap/solver/quotes/indexedReserveAdapter";
 import { createIndexedClReplayQuoteAdapter } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
+import {
+  createIndexedQuoteApiAdapter,
+  createQuoteApiDiagnosticsRecorder,
+  type FameQuoteApiDiagnosticsSnapshot,
+} from "../src/features/fame-swap/solver/quotes/indexedQuoteApiAdapter";
 import { toAsyncQuoteAdapter } from "../src/features/fame-swap/solver/optimizer/quoteRunAdapter";
 import {
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
   famePoolStateRegistryPoolIdsForPair,
   famePoolStateRegistrySourceId,
   famePoolSupportsCompactQuote,
+  type FameV4ZoraQuoteLaneActivation,
 } from "../src/features/fame-swap/solver/poolStateRegistry";
+import type {
+  FameAsyncQuoteAdapter,
+  FameQuoteAdapter,
+} from "../src/features/fame-swap/solver/quotes/adapters";
 import {
   FAME_SELECTED_CL_ACTIVATION_CANDIDATE,
   FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
@@ -116,7 +132,7 @@ export interface FameRouteLabSelectedActivationSummary {
 }
 
 export interface FameRouteLabRow {
-  mode: "deterministic" | "recorded" | "indexed" | "live";
+  mode: "deterministic" | "recorded" | "indexed" | "quote-api" | "live";
   id: string;
   pair: string;
   amountIn: string;
@@ -125,6 +141,8 @@ export interface FameRouteLabRow {
   requestedRouteId: string | null;
   routeArtifactId: string | null;
   message: string;
+  selectedCandidateId: string | null;
+  materializedRouteHash: string | null;
   selectedPools: string[];
   selectedQuoteSources: FameRouteLabSelectedQuoteSource[];
   selectedActivation: FameRouteLabSelectedActivationSummary | null;
@@ -147,10 +165,18 @@ export interface FameRouteLabRow {
   }>;
   optimizer: FameRouteLabOptimizerSummary | null;
   indexedPoolState: FameRouteLabIndexedPoolStateSummary | null;
+  quoteApi: FameRouteLabQuoteApiSummary | null;
   edgeMatrix: FameRouteEdgeMatrixRow[];
   protocolCoverage: FameRouteProtocolCoverageRow[];
   simulation: FameRouteLabSimulation;
   suggestedContractTodo: string | null;
+}
+
+export interface FameRouteLabQuoteApiSummary {
+  sourceRegistryId: string;
+  currentBlock: number;
+  maxFreshnessBlocks: number | null;
+  diagnostics: FameQuoteApiDiagnosticsSnapshot;
 }
 
 export interface FameRouteLabIndexedPoolStateSummary {
@@ -230,13 +256,303 @@ interface RouteLabClient {
 interface RouteLabOptions {
   candidateBudgets?: Partial<FameRouteCandidateBudgets>;
   requestedRouteId?: string;
+  targetFilter?: FameRouteLabTargetFilter;
 }
 
 interface IndexedRouteLabOptions extends RouteLabOptions {
   poolStateClient: FameIndexedPoolStateClient;
-  fallbackAdapter?: Awaited<ReturnType<typeof createLiveLiquidityQuoteAdapter>>;
+  fallbackAdapter?: FameAsyncQuoteAdapter | FameQuoteAdapter;
   currentBlock?: number;
   maxFreshnessBlocks?: number;
+}
+
+interface QuoteApiRouteLabOptions extends RouteLabOptions {
+  quoteClient: FamePoolQuoteClient;
+  fallbackAdapter?: FameAsyncQuoteAdapter | FameQuoteAdapter;
+  currentBlock?: number;
+  maxFreshnessBlocks?: number;
+  expectedSourceRegistryId?: string;
+  v4ZoraQuoteLaneActivation?: FameV4ZoraQuoteLaneActivation;
+  simulate?: boolean;
+}
+
+export interface FameRouteLabTargetFilter {
+  caseId?: string;
+  routeId?: string;
+  poolId?: string;
+  tokenIn?: Address;
+  tokenOut?: Address;
+}
+
+function sameAddress(left: Address, right: Address): boolean {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function hasRouteLabTargetFilter(
+  filter: FameRouteLabTargetFilter | undefined,
+): filter is FameRouteLabTargetFilter {
+  return Boolean(
+    filter &&
+      (filter.caseId ||
+        filter.routeId ||
+        filter.poolId ||
+        filter.tokenIn ||
+        filter.tokenOut),
+  );
+}
+
+function routeLabTargetFilterLabel(filter: FameRouteLabTargetFilter): string {
+  return [
+    filter.caseId ? `case ${filter.caseId}` : null,
+    filter.routeId ? `route ${filter.routeId}` : null,
+    filter.poolId ? `pool ${filter.poolId}` : null,
+    filter.tokenIn ? `tokenIn ${filter.tokenIn}` : null,
+    filter.tokenOut ? `tokenOut ${filter.tokenOut}` : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(", ");
+}
+
+function routeEntryMatchesRouteId(
+  entry: FameRouteCorpusCase,
+  routeId: string,
+): boolean {
+  const artifact = routeArtifactById(routeId);
+  if (!artifact) throw new Error(`Unknown route-lab route id ${routeId}.`);
+  return (
+    sameAddress(entry.tokenIn, artifact.route.tokenIn) &&
+    sameAddress(entry.tokenOut, artifact.route.tokenOut) &&
+    entry.amountIn === BigInt(artifact.route.amountIn)
+  );
+}
+
+function routeEntryMatchesPoolTarget(
+  entry: FameRouteCorpusCase,
+  filter: FameRouteLabTargetFilter,
+): boolean {
+  if (!filter.poolId && !filter.tokenIn && !filter.tokenOut) return true;
+  const candidateSet = routeCandidatesForPair(entry.tokenIn, entry.tokenOut);
+  return candidateSet.candidates.some((candidate) =>
+    candidate.legs.some((leg) => {
+      if (filter.poolId && leg.edge.poolId !== filter.poolId) return false;
+      if (filter.tokenIn && !sameAddress(leg.edge.tokenIn, filter.tokenIn)) {
+        return false;
+      }
+      if (filter.tokenOut && !sameAddress(leg.edge.tokenOut, filter.tokenOut)) {
+        return false;
+      }
+      return true;
+    }),
+  );
+}
+
+export function filterRouteLabCorpus(
+  corpus: readonly FameRouteCorpusCase[],
+  filter: FameRouteLabTargetFilter | undefined,
+): FameRouteCorpusCase[] {
+  if (!hasRouteLabTargetFilter(filter)) return [...corpus];
+
+  const matches = corpus.filter((entry) => {
+    if (filter.caseId && entry.id !== filter.caseId) return false;
+    if (filter.routeId && !routeEntryMatchesRouteId(entry, filter.routeId)) {
+      return false;
+    }
+    return routeEntryMatchesPoolTarget(entry, filter);
+  });
+
+  if (matches.length === 0) {
+    throw new Error(
+      `Route-lab target filter matched no corpus cases: ${routeLabTargetFilterLabel(filter)}.`,
+    );
+  }
+  if (matches.length > 1) {
+    throw new Error(
+      `Route-lab target filter is ambiguous (${routeLabTargetFilterLabel(filter)}): ${matches.map((entry) => entry.id).join(", ")}. Add --case or --route to select exactly one route.`,
+    );
+  }
+  return matches;
+}
+
+function selectedRouteArtifactId(quote: FameSwapQuote): string | null {
+  return quote.status === "ready" ? quote.routeArtifactId : null;
+}
+
+function selectedQuoteMatchesRouteArtifact(
+  quote: FameSwapQuote,
+  routeId: string,
+): boolean {
+  if (quote.status !== "ready") return false;
+  const artifact = routeArtifactById(routeId);
+  if (!artifact) throw new Error(`Unknown route-lab route id ${routeId}.`);
+  if (quote.feeBreakdown.legs.length !== artifact.route.legs.length) {
+    return false;
+  }
+  return quote.feeBreakdown.legs.every((leg, index) => {
+    const artifactLeg = artifact.route.legs[index];
+    const artifactPoolId = artifact.poolIds[index];
+    return (
+      artifactLeg !== undefined &&
+      artifactPoolId !== undefined &&
+      leg.poolId === artifactPoolId &&
+      sameAddress(leg.tokenIn, artifactLeg.tokenIn) &&
+      sameAddress(leg.tokenOut, artifactLeg.tokenOut)
+    );
+  });
+}
+
+function routeArtifactIdForEvidence(
+  quote: FameSwapQuote,
+  filter: FameRouteLabTargetFilter | undefined,
+): string | null {
+  if (
+    quote.status === "ready" &&
+    filter?.routeId &&
+    selectedQuoteMatchesRouteArtifact(quote, filter.routeId)
+  ) {
+    return filter.routeId;
+  }
+  return selectedRouteArtifactId(quote);
+}
+
+function materializedRouteHash(quote: FameSwapQuote): string | null {
+  return quote.status === "ready" ? quote.materializedRouteHash : null;
+}
+
+function requestedRouteId(
+  filter: FameRouteLabTargetFilter | undefined,
+): string | null {
+  return filter?.routeId ?? null;
+}
+
+function selectedQuoteHasTargetLeg(
+  quote: FameSwapQuote,
+  filter: FameRouteLabTargetFilter,
+): boolean {
+  if (quote.status !== "ready") return false;
+  return quote.feeBreakdown.legs.some((leg) => {
+    if (filter.poolId && leg.poolId !== filter.poolId) return false;
+    if (filter.tokenIn && !sameAddress(leg.tokenIn, filter.tokenIn)) {
+      return false;
+    }
+    if (filter.tokenOut && !sameAddress(leg.tokenOut, filter.tokenOut)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function validateRouteLabTargetSelection(options: {
+  entry: FameRouteCorpusCase;
+  quote: FameSwapQuote;
+  filter: FameRouteLabTargetFilter | undefined;
+  mode: FameRouteLabRow["mode"];
+}): void {
+  const { entry, quote, filter, mode } = options;
+  if (!hasRouteLabTargetFilter(filter)) return;
+
+  if (filter.routeId) {
+    if (quote.status !== "ready") {
+      throw new Error(
+        `${mode} route-lab target route ${filter.routeId} did not produce a ready quote for ${entry.id}: ${quote.status}.`,
+      );
+    }
+    if (
+      quote.routeArtifactId !== filter.routeId &&
+      !selectedQuoteMatchesRouteArtifact(quote, filter.routeId)
+    ) {
+      throw new Error(
+        `${mode} route-lab selected route ${quote.routeArtifactId} for ${entry.id}, expected ${filter.routeId}.`,
+      );
+    }
+  }
+
+  if (filter.poolId || filter.tokenIn || filter.tokenOut) {
+    if (quote.status !== "ready") {
+      throw new Error(
+        `${mode} route-lab target ${routeLabTargetFilterLabel(filter)} did not produce a ready quote for ${entry.id}: ${quote.status}.`,
+      );
+    }
+    if (!selectedQuoteHasTargetLeg(quote, filter)) {
+      throw new Error(
+        `${mode} route-lab selected route ${quote.routeArtifactId} for ${entry.id} did not include requested target ${routeLabTargetFilterLabel(filter)}.`,
+      );
+    }
+  }
+}
+
+function candidateMatchesRouteArtifact(
+  candidate: FameRouteCandidate,
+  routeId: string,
+): boolean {
+  const artifact = routeArtifactById(routeId);
+  if (!artifact) throw new Error(`Unknown route-lab route id ${routeId}.`);
+  if (candidate.legs.length !== artifact.route.legs.length) return false;
+  return candidate.legs.every((leg, index) => {
+    const artifactLeg = artifact.route.legs[index];
+    const artifactPoolId = artifact.poolIds[index];
+    return (
+      artifactLeg !== undefined &&
+      artifactPoolId !== undefined &&
+      leg.edge.poolId === artifactPoolId &&
+      sameAddress(leg.edge.tokenIn, artifactLeg.tokenIn) &&
+      sameAddress(leg.edge.tokenOut, artifactLeg.tokenOut)
+    );
+  });
+}
+
+function candidateMatchesPoolTarget(
+  candidate: FameRouteCandidate,
+  filter: FameRouteLabTargetFilter,
+): boolean {
+  if (!filter.poolId && !filter.tokenIn && !filter.tokenOut) return true;
+  return candidate.legs.some((leg) => {
+    if (filter.poolId && leg.edge.poolId !== filter.poolId) return false;
+    if (filter.tokenIn && !sameAddress(leg.edge.tokenIn, filter.tokenIn)) {
+      return false;
+    }
+    if (filter.tokenOut && !sameAddress(leg.edge.tokenOut, filter.tokenOut)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function candidateFilterForRouteLabTarget(
+  filter: FameRouteLabTargetFilter | undefined,
+): ((candidate: FameRouteCandidate) => boolean) | undefined {
+  if (!hasRouteLabTargetFilter(filter)) return undefined;
+  return (candidate) => {
+    if (filter.routeId && !candidateMatchesRouteArtifact(candidate, filter.routeId)) {
+      return false;
+    }
+    return candidateMatchesPoolTarget(candidate, filter);
+  };
+}
+
+function routeLabV4ZoraActivation(
+  sourceRegistryId: string,
+): FameV4ZoraQuoteLaneActivation {
+  return {
+    status: "active",
+    sourceRegistryId,
+    parityStatus: "passed",
+    routeSimulationStatus: "passed",
+    evidenceId: "route-lab-v4-zora-validation",
+  };
+}
+
+function quoteApiSummary(options: {
+  sourceRegistryId: string;
+  currentBlock: number;
+  maxFreshnessBlocks?: number;
+  diagnostics: FameQuoteApiDiagnosticsSnapshot;
+}): FameRouteLabQuoteApiSummary {
+  return {
+    sourceRegistryId: options.sourceRegistryId,
+    currentBlock: options.currentBlock,
+    maxFreshnessBlocks: options.maxFreshnessBlocks ?? null,
+    diagnostics: options.diagnostics,
+  };
 }
 
 export async function runSnapshotRouteLab(
@@ -271,6 +587,7 @@ export async function runSnapshotRouteLab(
         feePpm: 2_222n,
       },
       requestedRouteId: options.requestedRouteId,
+      candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
       now: new Date("2026-05-13T00:00:00Z"),
       adapter: toAsyncQuoteAdapter(adapter),
     });
@@ -279,6 +596,12 @@ export async function runSnapshotRouteLab(
       status: "not_requested",
       message: "Recorded quote replay does not run live route simulation.",
     };
+    validateRouteLabTargetSelection({
+      entry,
+      quote,
+      filter: options.targetFilter,
+      mode: "recorded",
+    });
 
     rows.push({
       mode: "recorded",
@@ -287,9 +610,16 @@ export async function runSnapshotRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "recorded"),
       status: quote.status,
-      requestedRouteId: options.requestedRouteId ?? null,
-      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
+      requestedRouteId:
+        options.requestedRouteId ?? requestedRouteId(options.targetFilter),
+      routeArtifactId: options.requestedRouteId
+        ? quote.status === "ready"
+          ? quote.routeArtifactId
+          : null
+        : routeArtifactIdForEvidence(quote, options.targetFilter),
+      selectedCandidateId: selectedRouteArtifactId(quote),
+      materializedRouteHash: materializedRouteHash(quote),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
       selectedQuoteSources: selectedQuoteSources(quote),
       selectedActivation: selectedActivationSummary(quote),
@@ -325,6 +655,7 @@ export async function runSnapshotRouteLab(
       ),
       optimizer: optimizerSummary(quote),
       indexedPoolState: null,
+      quoteApi: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -374,7 +705,7 @@ function assertRouteLabRequestedRouteArtifact(
 }
 
 function currentBlockForIndexedState(
-  adapter: Awaited<ReturnType<typeof createLiveLiquidityQuoteAdapter>>,
+  adapter: FameAsyncQuoteAdapter | FameQuoteAdapter,
 ): number | null {
   const context = adapter.quoteContext;
   if (
@@ -449,6 +780,7 @@ export async function runIndexedRouteLab(
         feePpm: 2_222n,
       },
       requestedRouteId: options.requestedRouteId,
+      candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
@@ -457,6 +789,12 @@ export async function runIndexedRouteLab(
       status: "not_requested",
       message: "Indexed route lab does not run live route simulation.",
     };
+    validateRouteLabTargetSelection({
+      entry,
+      quote,
+      filter: options.targetFilter,
+      mode: "indexed",
+    });
 
     rows.push({
       mode: "indexed",
@@ -465,9 +803,16 @@ export async function runIndexedRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "indexed"),
       status: quote.status,
-      requestedRouteId: options.requestedRouteId ?? null,
-      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
+      requestedRouteId:
+        options.requestedRouteId ?? requestedRouteId(options.targetFilter),
+      routeArtifactId: options.requestedRouteId
+        ? quote.status === "ready"
+          ? quote.routeArtifactId
+          : null
+        : routeArtifactIdForEvidence(quote, options.targetFilter),
+      selectedCandidateId: selectedRouteArtifactId(quote),
+      materializedRouteHash: materializedRouteHash(quote),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
       selectedQuoteSources: selectedQuoteSources(quote),
       selectedActivation: selectedActivationSummary(quote),
@@ -503,12 +848,178 @@ export async function runIndexedRouteLab(
       ),
       optimizer: optimizerSummary(quote),
       indexedPoolState: indexedPoolStateSummary(indexedState),
+      quoteApi: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
       suggestedContractTodo: suggestedTodo(entry, quote),
     });
   }
+  return rows;
+}
+
+export async function runQuoteApiRouteLab(
+  corpus: readonly FameRouteCorpusCase[] = FAME_ROUTE_CORPUS,
+  options: QuoteApiRouteLabOptions,
+): Promise<FameRouteLabRow[]> {
+  const config = getFameSwapConfig();
+  const rpcUrl =
+    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const client = rpcUrl
+    ? createPublicClient({
+        chain: base,
+        transport: http(rpcUrl),
+      })
+    : null;
+  const fallbackAdapter =
+    options.fallbackAdapter ??
+    (client
+      ? await createLiveLiquidityQuoteAdapter({
+          client: {
+            getBlockNumber: () => client.getBlockNumber(),
+            readContract: (request) =>
+              client.readContract(
+                request as Parameters<typeof client.readContract>[0],
+              ) as Promise<unknown>,
+          },
+          chainId: base.id,
+        })
+      : unavailableLiveAsyncQuoteAdapter(
+          "Base RPC is not configured for quote-api route-lab fallback quotes.",
+        ));
+  const currentBlock =
+    options.currentBlock ?? currentBlockForIndexedState(fallbackAdapter);
+  if (currentBlock === null) {
+    throw new Error(
+      "Quote-api route lab requires currentBlock, FAME_POOL_STATE_CURRENT_BLOCK, or BASE_RPC_URL so compact quote freshness is checked against a live Base block.",
+    );
+  }
+  const expectedSourceRegistryId =
+    options.expectedSourceRegistryId ?? famePoolStateRegistrySourceId();
+  const routerAddress = config.routerAddress ?? ROUTER_ADDRESS;
+  const account = options.simulate ? simulationAccount() : null;
+  const rows: FameRouteLabRow[] = [];
+
+  for (const entry of corpus) {
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: options.quoteClient,
+      fallback: fallbackAdapter,
+      currentBlock,
+      maxFreshnessBlocks: options.maxFreshnessBlocks,
+      expectedSourceRegistryId,
+      v4ZoraQuoteLaneActivation:
+        options.v4ZoraQuoteLaneActivation ??
+        routeLabV4ZoraActivation(expectedSourceRegistryId),
+      diagnostics,
+    });
+    const candidateSet = routeCandidatesForPair(
+      entry.tokenIn,
+      entry.tokenOut,
+      undefined,
+      {
+        budgets: options.candidateBudgets,
+      },
+    );
+    const quote = await quoteFameSwapAsync({
+      tokenIn: token(entry.tokenIn),
+      tokenOut: token(entry.tokenOut),
+      amountIn: entry.amountIn,
+      recipient: RECIPIENT,
+      config: {
+        ...config,
+        routerAddress,
+        defaultSlippageBps:
+          config.defaultSlippageBps ?? DEFAULT_FAME_SWAP_SLIPPAGE_BPS,
+      },
+      readiness: {
+        status: "ready",
+        routerAddress,
+        feePpm: 2_222n,
+      },
+      requestedRouteId: options.requestedRouteId,
+      candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
+      now: new Date("2026-05-13T00:00:00Z"),
+      adapter,
+    });
+    const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
+    const simulation = await simulateQuote(
+      quote,
+      options.simulate ? (client as unknown as RouteLabClient | null) : null,
+      account,
+    );
+    validateRouteLabTargetSelection({
+      entry,
+      quote,
+      filter: options.targetFilter,
+      mode: "quote-api",
+    });
+
+    rows.push({
+      mode: "quote-api",
+      id: entry.id,
+      pair: pairLabel(entry),
+      amountIn: entry.amountIn.toString(),
+      expectedStatus: expectedStatusFor(entry, "live"),
+      status: quote.status,
+      message: displaySafeDiagnosticMessage(quote.message),
+      requestedRouteId:
+        options.requestedRouteId ?? requestedRouteId(options.targetFilter),
+      routeArtifactId: options.requestedRouteId
+        ? quote.status === "ready"
+          ? quote.routeArtifactId
+          : null
+        : routeArtifactIdForEvidence(quote, options.targetFilter),
+      selectedCandidateId: selectedRouteArtifactId(quote),
+      materializedRouteHash: materializedRouteHash(quote),
+      selectedPools: quote.status === "ready" ? quote.poolIds : [],
+      selectedQuoteSources: selectedQuoteSources(quote),
+      selectedActivation: selectedActivationSummary(quote),
+      quoteContext: quoteContextLabel(quote),
+      feeBreakdown:
+        quote.status === "ready"
+          ? {
+              routerFeeAmount: quote.routerFeeAmount.toString(),
+              routerFeePpm: quote.feeBreakdown.routerFeePpm.toString(),
+              venueFeesIncluded: quote.feeBreakdown.venueFeesIncluded,
+              maxLegMarketImpactBps:
+                quote.feeBreakdown.marketImpact.maxLegMarketImpactBps,
+              computablePriceImpactLegs:
+                quote.feeBreakdown.marketImpact.computableLegs,
+            }
+          : {
+              routerFeeAmount: null,
+              routerFeePpm: null,
+              venueFeesIncluded: null,
+              maxLegMarketImpactBps: null,
+              computablePriceImpactLegs: null,
+            },
+      rejectedCandidates:
+        "rejectedCandidates" in quote
+          ? quote.rejectedCandidates.map((candidate) => ({
+              candidateId: candidate.candidateId,
+              reason: candidate.reason,
+              message: displaySafeDiagnosticMessage(candidate.message),
+            }))
+          : [],
+      candidateGenerationDiagnostics: candidateGenerationDiagnostics(
+        candidateSet.rejected,
+      ),
+      optimizer: optimizerSummary(quote),
+      indexedPoolState: null,
+      quoteApi: quoteApiSummary({
+        sourceRegistryId: expectedSourceRegistryId,
+        currentBlock,
+        maxFreshnessBlocks: options.maxFreshnessBlocks,
+        diagnostics: diagnostics.snapshot(),
+      }),
+      edgeMatrix,
+      protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
+      simulation,
+      suggestedContractTodo: suggestedTodo(entry, quote),
+    });
+  }
+
   return rows;
 }
 
@@ -990,6 +1501,7 @@ export async function runRouteLab(
       },
       optimizerMode: "disabled",
       requestedRouteId: options.requestedRouteId,
+      candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
       now: new Date("2026-05-13T00:00:00Z"),
       adapter: toAsyncQuoteAdapter(adapter),
     });
@@ -998,6 +1510,12 @@ export async function runRouteLab(
       status: "not_requested",
       message: "Deterministic route lab does not run live route simulation.",
     };
+    validateRouteLabTargetSelection({
+      entry,
+      quote,
+      filter: options.targetFilter,
+      mode: "deterministic",
+    });
 
     rows.push({
       mode: "deterministic",
@@ -1006,9 +1524,16 @@ export async function runRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "deterministic"),
       status: quote.status,
-      requestedRouteId: options.requestedRouteId ?? null,
-      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
+      requestedRouteId:
+        options.requestedRouteId ?? requestedRouteId(options.targetFilter),
+      routeArtifactId: options.requestedRouteId
+        ? quote.status === "ready"
+          ? quote.routeArtifactId
+          : null
+        : routeArtifactIdForEvidence(quote, options.targetFilter),
+      selectedCandidateId: selectedRouteArtifactId(quote),
+      materializedRouteHash: materializedRouteHash(quote),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
       selectedQuoteSources: selectedQuoteSources(quote),
       selectedActivation: selectedActivationSummary(quote),
@@ -1044,6 +1569,7 @@ export async function runRouteLab(
       ),
       optimizer: optimizerSummary(quote),
       indexedPoolState: null,
+      quoteApi: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -1112,6 +1638,7 @@ export async function runLiveRouteLab(
         feePpm: 2_222n,
       },
       requestedRouteId: options.requestedRouteId,
+      candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
       now: new Date("2026-05-13T00:00:00Z"),
       adapter,
     });
@@ -1121,6 +1648,12 @@ export async function runLiveRouteLab(
       options.simulate ? (client as unknown as RouteLabClient | null) : null,
       account,
     );
+    validateRouteLabTargetSelection({
+      entry,
+      quote,
+      filter: options.targetFilter,
+      mode: "live",
+    });
 
     rows.push({
       mode: "live",
@@ -1129,9 +1662,16 @@ export async function runLiveRouteLab(
       amountIn: entry.amountIn.toString(),
       expectedStatus: expectedStatusFor(entry, "live"),
       status: quote.status,
-      requestedRouteId: options.requestedRouteId ?? null,
-      routeArtifactId: quote.status === "ready" ? quote.routeArtifactId : null,
       message: displaySafeDiagnosticMessage(quote.message),
+      requestedRouteId:
+        options.requestedRouteId ?? requestedRouteId(options.targetFilter),
+      routeArtifactId: options.requestedRouteId
+        ? quote.status === "ready"
+          ? quote.routeArtifactId
+          : null
+        : routeArtifactIdForEvidence(quote, options.targetFilter),
+      selectedCandidateId: selectedRouteArtifactId(quote),
+      materializedRouteHash: materializedRouteHash(quote),
       selectedPools: quote.status === "ready" ? quote.poolIds : [],
       selectedQuoteSources: selectedQuoteSources(quote),
       selectedActivation: selectedActivationSummary(quote),
@@ -1167,6 +1707,7 @@ export async function runLiveRouteLab(
       ),
       optimizer: optimizerSummary(quote),
       indexedPoolState: null,
+      quoteApi: null,
       edgeMatrix,
       protocolCoverage: routeProtocolCoverage(edgeMatrix, quote, simulation),
       simulation,
@@ -1191,6 +1732,10 @@ export function formatRouteLabMarkdown(
       `- Amount in: ${row.amountIn}`,
       `- Status: ${row.status}`,
       `- Expected: ${row.expectedStatus}`,
+      `- Requested route: ${row.requestedRouteId ?? "n/a"}`,
+      `- Selected route: ${row.routeArtifactId ?? "n/a"}`,
+      `- Selected candidate: ${row.selectedCandidateId ?? "n/a"}`,
+      `- Materialized route hash: ${row.materializedRouteHash ?? "n/a"}`,
       `- Selected pools: ${row.selectedPools.join(", ") || "none"}`,
       `- Selected quote sources: ${selectedQuoteSourcesSummary(row)}`,
       `- Selected activation: ${selectedActivationSummaryLine(row.selectedActivation)}`,
@@ -1209,6 +1754,7 @@ export function formatRouteLabMarkdown(
       `- Candidate generation diagnostics: ${row.candidateGenerationDiagnostics.length}`,
       `- Optimizer: ${optimizerSummaryLine(row.optimizer)}`,
       `- Indexed pool state: ${indexedPoolStateSummaryLine(row.indexedPoolState)}`,
+      `- Quote API: ${quoteApiSummaryLine(row.quoteApi)}`,
       `- Edge matrix: ${edgeMatrixSummary(row.edgeMatrix)}`,
       `- Protocol coverage: ${protocolCoverageSummary(row.protocolCoverage)}`,
       `- Simulation: ${
@@ -1295,6 +1841,22 @@ function indexedPoolStateSummaryLine(
   ]
     .filter((part): part is string => part !== null)
     .join(", ");
+}
+
+function quoteApiSummaryLine(
+  quoteApi: FameRouteLabRow["quoteApi"],
+): string {
+  if (!quoteApi) return "not used";
+  const diagnostics = quoteApi.diagnostics;
+  return [
+    `registry ${quoteApi.sourceRegistryId}`,
+    `block ${quoteApi.currentBlock.toString()}`,
+    `used ${diagnostics.usedCount}`,
+    `fallback ${diagnostics.fallbackCount}`,
+    `batch failures ${diagnostics.batchFailureCount}`,
+    `quoted ${diagnostics.statusCounts.quoted}`,
+    `unavailable ${diagnostics.statusCounts.unavailable}`,
+  ].join(", ");
 }
 
 function formatOptimizerMarkdown(
@@ -1492,6 +2054,40 @@ function shouldRunCli(): boolean {
   return process.argv[1]?.endsWith("fame-swap-route-lab.ts") ?? false;
 }
 
+function cliValue(args: readonly string[], name: string): string | undefined {
+  const prefix = `${name}=`;
+  const inline = args.find((arg) => arg.startsWith(prefix));
+  if (inline) return inline.slice(prefix.length);
+  const index = args.indexOf(name);
+  if (index === -1) return undefined;
+  const value = args[index + 1];
+  return value && !value.startsWith("--") ? value : undefined;
+}
+
+function cliAddress(
+  args: readonly string[],
+  name: string,
+): Address | undefined {
+  const value = cliValue(args, name);
+  if (value === undefined) return undefined;
+  if (!isAddress(value)) {
+    throw new Error(`${name} must be an address.`);
+  }
+  return value as Address;
+}
+
+function routeLabTargetFilterFromCliArgs(
+  args: readonly string[],
+): FameRouteLabTargetFilter {
+  return {
+    caseId: cliValue(args, "--case"),
+    routeId: cliValue(args, "--route"),
+    poolId: cliValue(args, "--pool"),
+    tokenIn: cliAddress(args, "--token-in"),
+    tokenOut: cliAddress(args, "--token-out"),
+  };
+}
+
 function localOrTestPoolApiBase(url: URL): boolean {
   return (
     process.env.NODE_ENV === "test" ||
@@ -1542,6 +2138,16 @@ export function poolStateEndpointUrlFromEnv(): string | undefined {
   return url.toString();
 }
 
+export function poolQuoteEndpointUrlFromEnv(): string | undefined {
+  const url = poolApiBaseUrlFromEnv();
+  if (!url) return undefined;
+  const basePath = url.pathname.replace(/\/+$/u, "");
+  url.pathname = `${basePath}/fame/pool-quotes`;
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 function routeLabIndexedPoolStateClientFromEnv(): FameIndexedPoolStateClient {
   const endpointUrl = poolStateEndpointUrlFromEnv();
   const serviceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
@@ -1554,6 +2160,21 @@ function routeLabIndexedPoolStateClientFromEnv(): FameIndexedPoolStateClient {
     endpointUrl,
     serviceToken,
     timeoutMs: optionalSafeIntegerEnv("FAME_POOL_STATE_TIMEOUT_MS"),
+  });
+}
+
+function routeLabQuoteApiClientFromEnv(): FamePoolQuoteClient {
+  const endpointUrl = poolQuoteEndpointUrlFromEnv();
+  const serviceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+  if (!endpointUrl || !serviceToken) {
+    throw new Error(
+      "Quote-api route lab requires FAME_POOL_API_URL and FAME_POOL_STATE_SERVICE_TOKEN.",
+    );
+  }
+  return createIndexedQuoteApiClient({
+    endpointUrl,
+    serviceToken,
+    timeoutMs: optionalSafeIntegerEnv("FAME_POOL_QUOTE_TIMEOUT_MS"),
   });
 }
 
@@ -1613,30 +2234,52 @@ async function routeLabIndexedCurrentBlockFromEnv(): Promise<number> {
 
 if (shouldRunCli()) {
   const run = async () => {
+    const args = process.argv.slice(2);
     const requestedRouteId = routeLabRequestedRouteIdFromArgs();
-    const corpus = routeLabCorpusForRequestedRoute(
-      FAME_ROUTE_CORPUS,
-      requestedRouteId,
-    );
-    const rows = process.argv.includes("--live")
-      ? await runLiveRouteLab(corpus, {
+    const parsedTargetFilter = routeLabTargetFilterFromCliArgs(args);
+    const targetFilter = {
+      ...parsedTargetFilter,
+      routeId: parsedTargetFilter.routeId ?? requestedRouteId,
+    };
+    const corpus = filterRouteLabCorpus(FAME_ROUTE_CORPUS, targetFilter);
+    const runQuoteApi =
+      args.includes("--quote-api") ||
+      (args.includes("--indexed") && args.includes("--simulate"));
+    const rows = runQuoteApi
+      ? await runQuoteApiRouteLab(corpus, {
+          quoteClient: routeLabQuoteApiClientFromEnv(),
+          currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
+          maxFreshnessBlocks: optionalSafeIntegerEnv(
+            "FAME_POOL_QUOTE_MAX_FRESHNESS_BLOCKS",
+          ),
           requestedRouteId,
-          simulate: process.argv.includes("--simulate"),
+          targetFilter,
+          simulate: args.includes("--simulate"),
         })
-      : process.argv.includes("--indexed")
-        ? await runIndexedRouteLab(corpus, {
+      : args.includes("--live")
+        ? await runLiveRouteLab(corpus, {
             requestedRouteId,
+            simulate: args.includes("--simulate"),
+            targetFilter,
+          })
+        : args.includes("--indexed")
+        ? await runIndexedRouteLab(corpus, {
             poolStateClient: routeLabIndexedPoolStateClientFromEnv(),
             fallbackAdapter: await routeLabIndexedFallbackAdapterFromEnv(),
             currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
             maxFreshnessBlocks: optionalSafeIntegerEnv(
               "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
             ),
+            requestedRouteId,
+            targetFilter,
           })
-        : process.argv.includes("--deterministic")
-          ? await runRouteLab(corpus, { requestedRouteId })
-          : await runSnapshotRouteLab(corpus, { requestedRouteId });
-    if (process.argv.includes("--markdown")) {
+        : args.includes("--deterministic")
+          ? await runRouteLab(corpus, { requestedRouteId, targetFilter })
+          : await runSnapshotRouteLab(corpus, {
+              requestedRouteId,
+              targetFilter,
+            });
+    if (args.includes("--markdown")) {
       console.log(formatRouteLabMarkdown(rows));
     } else {
       console.log(JSON.stringify(rows, null, 2));

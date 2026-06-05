@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useConnection } from "wagmi";
 import { type SIWESession, useSIWE } from "connectkit";
+import {
+  getAuthSession,
+  setAuthSession,
+  withAuthHeaders,
+} from "@/utils/authToken";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -28,9 +33,33 @@ type HookProps = {
   isSuccess: boolean;
   isReady: boolean;
   reset: () => void;
-  signIn: () => Promise<boolean>;
+  signIn?: () => Promise<unknown>;
   signOut: () => Promise<boolean>;
 };
+
+type SiweSessionResponse = {
+  token?: string;
+  expiresAt?: number;
+};
+
+async function restoreAuthSessionFromSiwe(): Promise<boolean> {
+  let response: Response;
+  try {
+    response = await fetch("/siwe", {
+      headers: withAuthHeaders(),
+    });
+  } catch {
+    return false;
+  }
+
+  if (!response.ok) return false;
+
+  const body = (await response.json()) as SiweSessionResponse;
+  if (!body.token || typeof body.expiresAt !== "number") return false;
+
+  setAuthSession({ token: body.token, expiresAt: body.expiresAt });
+  return true;
+}
 
 export function useAccount() {
   const {
@@ -38,6 +67,7 @@ export function useAccount() {
     isConnected,
     isConnecting,
     chain,
+    chainId,
   } = useConnection();
   const [isMiniApp, setIsMiniApp] = useState(false);
   const { isSignedIn, signIn: signInSIWE } = useSIWE() as HookProps;
@@ -45,9 +75,11 @@ export function useAccount() {
     useState<MiniAppContext | null>(null);
 
   const signIn = useCallback(async () => {
-    if (isSignedIn) return true;
-    const success = await signInSIWE();
-    return success;
+    if (getAuthSession()?.token) return true;
+    if (isSignedIn && (await restoreAuthSessionFromSiwe())) return true;
+    if (!signInSIWE) return false;
+    await signInSIWE();
+    return getAuthSession()?.token ? true : await restoreAuthSessionFromSiwe();
   }, [isSignedIn, signInSIWE]);
 
   useEffect(() => {
@@ -84,7 +116,7 @@ export function useAccount() {
     isConnecting,
     baseUrl,
     chain,
-    chainId: chain?.id,
+    chainId,
     isMiniApp,
     miniAppContext,
     isSignedIn,

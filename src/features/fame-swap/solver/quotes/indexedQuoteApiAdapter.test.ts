@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
 import { FAME, USDC, WETH } from "../../tokens";
-import { famePoolEdgesForPair } from "../poolUniverse";
+import {
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  type FameV4ZoraQuoteLaneActivation,
+} from "../poolStateRegistry";
+import { famePoolEdges, famePoolEdgesForPair } from "../poolUniverse";
 import type {
   FameEdgeQuoteRequest,
   FameEdgeQuoteResult,
@@ -19,11 +23,19 @@ import type {
   FamePoolQuoteBatchRequest,
   FamePoolQuoteBatchResponse,
   FamePoolQuoteClient,
+  FameV4ClPoolQuoteQuotedEntry,
 } from "./indexedQuoteApiClient";
 
 const Q96 = 79_228_162_514_264_337_593_543_950_336n;
 const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
 const ZORA = "0x1111111111166b7fe7bd91427724b487980afc69" as const;
+const UNIT_V4_ZORA_ACTIVATION = {
+  status: "active",
+  sourceRegistryId: "unit-registry",
+  parityStatus: "passed",
+  routeSimulationStatus: "passed",
+  evidenceId: "unit-v4-zora-activation",
+} as const satisfies FameV4ZoraQuoteLaneActivation;
 
 function edgeFor(
   poolId: string,
@@ -33,6 +45,12 @@ function edgeFor(
   const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
     (candidate) => candidate.poolId === poolId,
   );
+  assert.ok(edge);
+  return edge;
+}
+
+function edgeForPool(poolId: string) {
+  const edge = famePoolEdges().find((candidate) => candidate.poolId === poolId);
   assert.ok(edge);
   return edge;
 }
@@ -140,6 +158,68 @@ function reserveRow(
   };
 }
 
+function v4Row(
+  quoteRequest: FamePoolQuoteBatchRequest["quotes"][number],
+  overrides: Partial<FameV4ClPoolQuoteQuotedEntry> = {},
+): FameV4ClPoolQuoteQuotedEntry {
+  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  return {
+    status: "quoted",
+    quoteKind: "cl-quote-v1",
+    poolId: reviewed.poolId,
+    chainId: 8453,
+    poolAddress: null,
+    poolKey: reviewed.poolKey,
+    poolManager: reviewed.poolManager,
+    stateViewAddress: reviewed.stateViewAddress,
+    token0: reviewed.currency0,
+    token1: reviewed.currency1,
+    tokenIn: quoteRequest.tokenIn,
+    tokenOut: quoteRequest.tokenOut,
+    venueFamily: "UniswapV4",
+    tickSpacing: reviewed.tickSpacing,
+    amountIn: quoteRequest.amountIn,
+    amountOut: "969999",
+    sqrtPriceX96: Q96.toString(),
+    sqrtPriceX96After: (Q96 - 1n).toString(),
+    tick: 0,
+    liquidity: "1000000000000000000",
+    fee: reviewed.fee.toString(),
+    lpFee: reviewed.fee.toString(),
+    protocolFee: "0",
+    protocolFeeStatus: "zero",
+    staticFee: reviewed.fee.toString(),
+    feeSource: "v4-slot0",
+    observedThroughBlock: 120,
+    blockHash:
+      "0x4444444444444444444444444444444444444444444444444444444444444444",
+    parentHash:
+      "0x5555555555555555555555555555555555555555555555555555555555555555",
+    snapshotId: "unit-v4-cl-quote",
+    stateHash:
+      "0x6666666666666666666666666666666666666666666666666666666666666666",
+    source: "uniswap-v4-state-view",
+    sourceRegistryId: "unit-registry",
+    maxFreshnessBlocks: 120,
+    hookAddress: reviewed.hooks,
+    hookData: reviewed.hookData,
+    hookDataStatus: "empty",
+    zoraProvenance: {
+      status: "verified",
+      source: "zora-factory-event",
+      chainId: 8453,
+      factoryAddress: "0x0000000000000000000000000000000000000003",
+      coinAddress: reviewed.currency1,
+      poolKey: reviewed.poolKey,
+      poolId: reviewed.poolKey,
+      transactionHash:
+        "0x7777777777777777777777777777777777777777777777777777777777777777",
+      eventName: "CoinCreatedV4",
+    },
+    ...overrides,
+  };
+}
+
 function quotedResponse(
   request: FamePoolQuoteBatchRequest,
 ): FamePoolQuoteBatchResponse {
@@ -227,6 +307,113 @@ describe("FAME indexed quote API adapter", () => {
     }
   });
 
+  it("falls back for the reviewed V4 Zora edge until parity and route-simulation activation passes", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) => v4Row(quoteRequest)),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(clientRequests.length, 0);
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+  });
+
+  it("falls back before requesting V4 rows when activation source registry mismatches", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) => v4Row(quoteRequest)),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: {
+        ...UNIT_V4_ZORA_ACTIVATION,
+        sourceRegistryId: "other-registry",
+      },
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(clientRequests.length, 0);
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+  });
+
+  it("quotes the reviewed V4 Zora edge from activated compact CL rows", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) => v4Row(quoteRequest)),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      maxFreshnessBlocks: 10,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 0);
+    assert.deepEqual(clientRequests[0], {
+      currentBlock: 125,
+      maxFreshnessBlocks: 10,
+      quotes: [
+        {
+          poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+          tokenIn: edge.tokenIn,
+          tokenOut: edge.tokenOut,
+          amountIn: "1000000",
+        },
+      ],
+    });
+    assert.equal(quote.status, "quoted");
+    if (quote.status === "quoted") {
+      assert.equal(quote.amountOut, 969_999n);
+      assert.match(quote.evidence, /indexed Uniswap V4 CL quote/);
+      assert.equal(quote.context?.source, "indexed");
+      assert.equal(quote.priceImpact?.method, "quoter-price-after");
+    }
+    assert.equal(diagnostics.snapshot().usedCount, 1);
+  });
+
   it("quotes reserve edges from constant-product compact rows", async () => {
     const edge = edgeFor("uniswap-v2-usdc-weth");
     const fallback = { calls: 0 };
@@ -239,6 +426,7 @@ describe("FAME indexed quote API adapter", () => {
       fallback: fallbackAdapter(fallback),
       currentBlock: 125,
       expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
       diagnostics,
     });
 
@@ -371,6 +559,7 @@ describe("FAME indexed quote API adapter", () => {
       fallback: fallbackAdapter(fallback),
       currentBlock: 125,
       expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
       diagnostics,
     });
 
@@ -478,6 +667,7 @@ describe("FAME indexed quote API adapter", () => {
       fallback: fallbackAdapter(fallback),
       currentBlock: 125,
       expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
       diagnostics,
     });
 
@@ -487,6 +677,177 @@ describe("FAME indexed quote API adapter", () => {
     assert.equal(quote.status, "quoted");
     assert.equal(
       diagnostics.snapshot().fallbackReasonCounts.row_metadata_mismatch,
+      1,
+    );
+  });
+
+  it("falls back when a reviewed V4 row is stale for the requested block", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: [],
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 10,
+          quotes: request.quotes.map((quoteRequest) =>
+            v4Row(quoteRequest, {
+              observedThroughBlock: 100,
+              maxFreshnessBlocks: 10,
+            }),
+          ),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+    assert.equal(
+      diagnostics.snapshot().fallbackReasonCounts.row_metadata_mismatch,
+      1,
+    );
+    assert.equal(
+      diagnostics.snapshot().details.find(
+        (detail) => detail.outcome === "fallback",
+      )?.evidenceId,
+      "unit-v4-cl-quote",
+    );
+  });
+
+  it("falls back when a reviewed V4 response has duplicate matching rows", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: [],
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.flatMap((quoteRequest) => [
+            v4Row(quoteRequest),
+            v4Row(quoteRequest, { snapshotId: "unit-v4-cl-quote-duplicate" }),
+          ]),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+    assert.equal(diagnostics.snapshot().fallbackReasonCounts.row_ambiguous, 1);
+  });
+
+  it("falls back when reviewed V4 row metadata does not match the local pool", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: [],
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) =>
+            v4Row(quoteRequest, {
+              poolKey:
+                "0x8888888888888888888888888888888888888888888888888888888888888888",
+            }),
+          ),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+    assert.equal(
+      diagnostics.snapshot().fallbackReasonCounts.row_metadata_mismatch,
+      1,
+    );
+  });
+
+  it("does not request compact rows for non-target V4 pools", async () => {
+    const edge = edgeForPool("uniswap-v4-zora-eth");
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => quotedResponse(request),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(clientRequests.length, 0);
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+  });
+
+  it("falls back when a V4 edge receives a Slipstream-sourced CL row", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: [],
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) =>
+            clRow(quoteRequest, {
+              poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+              poolAddress: "0x0000000000000000000000000000000000000001",
+              venueFamily: "UniswapV4",
+            }),
+          ),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 1);
+    assert.equal(quote.status, "quoted");
+    assert.equal(
+      diagnostics.snapshot().fallbackReasonCounts.row_kind_mismatch,
       1,
     );
   });

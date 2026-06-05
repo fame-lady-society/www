@@ -12,6 +12,11 @@ export type SessionData = {
   expiresAt: number;
 };
 
+export type SignedSession = {
+  session: SessionData;
+  token: string;
+};
+
 function signSession(data: SessionData): string {
   const payload = JSON.stringify(data);
   const hmac = createHmac("sha256", SESSION_SECRET);
@@ -62,6 +67,11 @@ export function createSignedSession(
   return { token: signSession(session), session };
 }
 
+function readSignedSession(token: string): SignedSession | null {
+  const session = verifySession(token);
+  return session ? { session, token } : null;
+}
+
 function extractBearerToken(request: NextRequest): string | null {
   const header = request.headers.get("authorization");
   if (!header) {
@@ -76,9 +86,13 @@ function extractBearerToken(request: NextRequest): string | null {
 }
 
 export function getSession(request: NextRequest): SessionData | null {
+  return getSignedSession(request)?.session ?? null;
+}
+
+export function getSignedSession(request: NextRequest): SignedSession | null {
   const bearerToken = extractBearerToken(request);
   if (bearerToken) {
-    const bearerSession = verifySession(bearerToken);
+    const bearerSession = readSignedSession(bearerToken);
     if (bearerSession) {
       return bearerSession;
     }
@@ -86,7 +100,7 @@ export function getSession(request: NextRequest): SessionData | null {
 
   const cookie = request.cookies.get(COOKIE_NAME);
   if (cookie?.value) {
-    return verifySession(cookie.value);
+    return readSignedSession(cookie.value);
   }
 
   return null;

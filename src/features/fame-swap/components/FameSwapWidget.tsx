@@ -17,7 +17,7 @@ import type { FC, SyntheticEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { parseUnits } from "viem";
 import { base } from "viem/chains";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { getFameSwapConfig } from "../config";
 import { useFameSwapBalance } from "../hooks/useFameSwapBalance";
@@ -200,8 +200,7 @@ const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
 };
 
 export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
+  const { address, isConnected, chainId: connectedChainId } = useAccount();
   const {
     switchChainAsync,
     isPending: isSwitchingChain,
@@ -218,7 +217,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const compact = mode === "compact";
-  const onBase = chainId === base.id;
+  const onBase = isConnected && connectedChainId === base.id;
   const pair = useMemo(() => deriveFameSwapPair(trade), [trade]);
   const inputBalance = useFameSwapBalance(address, pair.inputToken);
   const config = useMemo(

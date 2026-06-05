@@ -10,11 +10,16 @@ import type {
 } from "../src/features/fame-swap/solver/quotes/adapters";
 import type { FameIndexedPoolStateBatchResponse } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { quoteFromIndexedSlipstreamReplay } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
+import { FAME_V4_ZORA_REVIEWED_POOL_SHAPE } from "../src/features/fame-swap/solver/poolStateRegistry";
 import {
+  buildClReplayParityCases,
   displaySafeErrorMessage,
+  poolQuoteEndpointUrlFromEnv,
   poolStateEndpointUrlFromEnv,
+  runCompactQuoteParity,
   runClReplayParity,
 } from "./fame-swap-cl-replay-parity";
+import type { FamePoolQuoteBatchResponse } from "../src/features/fame-swap/solver/quotes/indexedQuoteApiClient";
 
 type IndexedClReplayEntry = Extract<
   FameIndexedPoolStateBatchResponse["pools"][number],
@@ -31,6 +36,18 @@ function slipstreamEdge(
 ) {
   const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
     (candidate) => candidate.poolId === poolId,
+  );
+  assert.ok(edge);
+  return edge;
+}
+
+function v4ZoraEdge(
+  tokenIn: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+  tokenOut: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+) {
+  const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
+    (candidate) =>
+      candidate.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
   );
   assert.ok(edge);
   return edge;
@@ -174,6 +191,92 @@ function liveAdapter(
   };
 }
 
+function compactQuoteResponse(
+  amountIn: bigint,
+  amountOut: bigint,
+  tokenIn: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+  tokenOut: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+): FamePoolQuoteBatchResponse {
+  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  return {
+    sourceRegistryId: "unit-registry",
+    currentBlock: 125,
+    producerMaxFreshnessBlocks: 120,
+    effectiveMaxFreshnessBlocks: 120,
+    quotes: [
+      {
+        status: "quoted",
+        quoteKind: "cl-quote-v1",
+        poolId: reviewed.poolId,
+        chainId: 8453,
+        poolAddress: null,
+        poolKey: reviewed.poolKey,
+        poolManager: reviewed.poolManager,
+        stateViewAddress: reviewed.stateViewAddress,
+        token0: reviewed.currency0,
+        token1: reviewed.currency1,
+        tokenIn,
+        tokenOut,
+        venueFamily: "UniswapV4",
+        tickSpacing: reviewed.tickSpacing,
+        amountIn: amountIn.toString(),
+        amountOut: amountOut.toString(),
+        sqrtPriceX96: Q96.toString(),
+        sqrtPriceX96After: (Q96 - 1n).toString(),
+        tick: 0,
+        liquidity: "1000000000000000000",
+        fee: "30000",
+        lpFee: "30000",
+        protocolFee: "0",
+        protocolFeeStatus: "zero",
+        staticFee: "30000",
+        feeSource: "v4-slot0",
+        observedThroughBlock: 124,
+        blockHash:
+          "0x4444444444444444444444444444444444444444444444444444444444444444",
+        parentHash:
+          "0x5555555555555555555555555555555555555555555555555555555555555555",
+        snapshotId: "unit-v4-compact-quote",
+        stateHash:
+          "0x6666666666666666666666666666666666666666666666666666666666666666",
+        source: "uniswap-v4-state-view",
+        sourceRegistryId: "unit-registry",
+        maxFreshnessBlocks: 120,
+        hookAddress: reviewed.hooks,
+        hookData: reviewed.hookData,
+        hookDataStatus: "empty",
+        zoraProvenance: {
+          status: "verified",
+          source: "zora-factory-event",
+          chainId: 8453,
+          factoryAddress: "0x0000000000000000000000000000000000000003",
+          coinAddress: reviewed.currency1,
+          poolKey: reviewed.poolKey,
+          poolId: reviewed.poolKey,
+          transactionHash:
+            "0x7777777777777777777777777777777777777777777777777777777777777777",
+          eventName: "CoinCreatedV4",
+        },
+      },
+    ],
+  };
+}
+
+function compactLiveAdapter(amountOut: bigint): FameAsyncQuoteAdapter {
+  return {
+    async quoteEdge(request) {
+      return {
+        status: "quoted",
+        amountIn: request.amountIn,
+        amountOut,
+        capacityIn: null,
+        fee: request.edge.fee,
+        evidence: "unit live v4 quoter",
+      };
+    },
+  };
+}
+
 describe("FAME Slipstream CL replay parity harness", () => {
   it("derives the raw pool-state proof endpoint from FAME_POOL_API_URL", () => {
     const previousBase = process.env.FAME_POOL_API_URL;
@@ -185,6 +288,10 @@ describe("FAME Slipstream CL replay parity harness", () => {
       assert.equal(
         poolStateEndpointUrlFromEnv(),
         "https://api.fame.support/base/fame/pool-state",
+      );
+      assert.equal(
+        poolQuoteEndpointUrlFromEnv(),
+        "https://api.fame.support/base/fame/pool-quotes",
       );
     } finally {
       if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
@@ -260,6 +367,13 @@ describe("FAME Slipstream CL replay parity harness", () => {
 
     assert.equal(report.poolId, "slipstream-usdc-weth-100");
     assert.equal(report.snapshotId, "unit-cl-replay");
+    assert.equal(report.surface, "cl-replay-v1");
+    assert.equal(report.sourceRegistryId, "unit-registry");
+    assert.equal(report.currentBlock, 125);
+    assert.equal(
+      report.blockHash,
+      "0x1111111111111111111111111111111111111111111111111111111111111111",
+    );
     assert.equal(report.results.length, 2);
     assert.ok(report.results.every((result) => result.driftBps === 0n));
   });
@@ -304,6 +418,119 @@ describe("FAME Slipstream CL replay parity harness", () => {
       ["FAME->basedflick", "basedflick->FAME"],
     );
     assert.ok(report.results.every((result) => result.driftBps === 0n));
+  });
+
+  it("reports exact compact quote/live parity for the V4 Zora target", async () => {
+    const amountIn = 980_100_000_232_613_992n;
+    const amountOut = 950_696_999_225_635_572n;
+    const cases = [
+      {
+        label: "BASED->ZORA",
+        request: {
+          edge: v4ZoraEdge(
+            FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+            FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+          ),
+          amountIn,
+        },
+      },
+    ];
+
+    const report = await runCompactQuoteParity({
+      quoteResponse: compactQuoteResponse(amountIn, amountOut),
+      liveAdapter: compactLiveAdapter(amountOut),
+      currentBlock: 125,
+      cases,
+      expectedSourceRegistryId: "unit-registry",
+    });
+
+    assert.equal(report.surface, "compact-quote-v1");
+    assert.equal(report.snapshotId, "unit-v4-compact-quote");
+    assert.equal(report.evidenceId, "unit-v4-compact-quote");
+    assert.equal(report.observedThroughBlock, 124);
+    assert.equal(report.results.length, 1);
+    assert.equal(report.results[0]?.localAmountOut, amountOut);
+    assert.equal(report.results[0]?.driftBps, 0n);
+  });
+
+  it("keeps V4 targets out of the Slipstream replay runner", async () => {
+    const state = indexedState();
+    const cases = buildClReplayParityCases([
+      {
+        poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+        tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+        tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+        amounts: [1_000_000n],
+      },
+    ]);
+
+    await assert.rejects(
+      () =>
+        runClReplayParity({
+          indexedState: state,
+          liveAdapter: liveAdapter(state, 0n),
+          currentBlock: 125,
+          cases,
+        }),
+      /use compact quote parity for V4 targets/,
+    );
+  });
+
+  it("builds targeted parity cases for a requested pool direction", () => {
+    const cases = buildClReplayParityCases([
+      {
+        poolId: "slipstream-usdc-weth-100",
+        tokenIn: WETH,
+        tokenOut: USDC,
+        amounts: [1_000_000n, 2_000_000n],
+      },
+    ]);
+
+    assert.deepEqual(
+      cases.map((item) => item.request.amountIn),
+      [1_000_000n, 2_000_000n],
+    );
+    assert.ok(
+      cases.every(
+        (item) => item.request.edge.poolId === "slipstream-usdc-weth-100",
+      ),
+    );
+    assert.match(cases[0]?.label ?? "", /slipstream-usdc-weth-100/);
+  });
+
+  it("rejects mixed-pool parity cases before comparing live quotes", async () => {
+    const state = indexedState();
+    const first = buildClReplayParityCases([
+      {
+        poolId: "slipstream-usdc-weth-100",
+        tokenIn: WETH,
+        tokenOut: USDC,
+        amounts: [1_000_000n],
+      },
+    ])[0];
+    assert.ok(first);
+    await assert.rejects(
+      () =>
+        runClReplayParity({
+          indexedState: state,
+          liveAdapter: liveAdapter(state, 0n),
+          currentBlock: 125,
+          cases: [
+            first,
+            {
+              ...first,
+              request: {
+                ...first.request,
+                edge: {
+                  ...first.request.edge,
+                  poolId: "other-pool",
+                },
+              },
+            },
+          ],
+        }),
+      /must target one pool id/,
+    );
   });
 
   it("rejects any amount-out mismatch even when integer bps drift rounds to zero", async () => {

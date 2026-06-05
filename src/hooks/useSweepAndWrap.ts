@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
-import { useChainId, useSwitchChain, useWriteContract } from "wagmi";
+import { useSwitchChain, useWriteContract } from "wagmi";
 import {
   WaitForTransactionReceiptErrorType,
   type WriteContractErrorType,
@@ -16,6 +16,7 @@ import { prepareSweepPayload } from "@/lib/seaport/prepareSweepPayload";
 import type { Listing } from "opensea-js";
 import { waitForTransactionReceipt } from "viem/actions";
 import { client as mainnetClient } from "@/viem/mainnet-client";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 
 const FEE_BPS = 250n;
 
@@ -28,9 +29,12 @@ export function useSweepAndWrap() {
 
   const { data: wrapCostData } = useReadFameLadySocietyWrapCost();
   const { mutateAsync: switchChainAsync } = useSwitchChain();
-  const { address: receiver } = useAccount();
+  const {
+    address: receiver,
+    chainId: connectedChainId,
+    isConnected,
+  } = useAccount();
   const { mutateAsync: writeContractAsync } = useWriteContract();
-  const chainId = useChainId();
 
   const submitSweep = useCallback(
     async (selectedListings: Listing[]) => {
@@ -50,6 +54,7 @@ export function useSweepAndWrap() {
           const txHash = await writeContractAsync({
             abi: saveLadyAbi,
             address: saveLadyAddress[mainnet.id],
+            chainId: mainnet.id,
             functionName: "sweepAndWrap",
             args: [
               payload.advancedOrders,
@@ -110,15 +115,20 @@ export function useSweepAndWrap() {
   );
   const executeSweep = useCallback(
     async (selectedListings: Listing[]) => {
-      if (chainId === mainnet.id) {
-        return await submitSweep(selectedListings);
-      } else {
+      if (
+        needsConnectedChainSwitch({
+          isConnected,
+          connectedChainId,
+          targetChainId: mainnet.id,
+        })
+      ) {
         return await switchChainAsync({ chainId: mainnet.id }).then(() =>
           submitSweep(selectedListings),
         );
       }
+      return await submitSweep(selectedListings);
     },
-    [submitSweep, switchChainAsync, chainId],
+    [submitSweep, switchChainAsync, connectedChainId, isConnected],
   );
 
   return {

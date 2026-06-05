@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 import { IMetadata, defaultDescription, imageUrl } from "@/utils/metadata";
 import { useUpdateMetadata } from "../hooks/useUpdateMetadata";
 import { useAccount } from "@/hooks/useAccount";
-import { useChainId, useSwitchChain, useWriteContract } from "wagmi";
+import { useSwitchChain, useWriteContract } from "wagmi";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { TransactionsModal } from "@/features/wrap/components/TransactionsModal";
 import { useNotifications } from "@/features/notifications/Context";
@@ -24,6 +24,7 @@ import BackIcon from "@mui/icons-material/ArrowBack";
 import { ServiceModal } from "./ServiceModal";
 import { SocialShareDialog } from "./SocialShare";
 import { mainnet } from "viem/chains";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 
 const EditableNameAndDescription: FC<{
   initialName: string;
@@ -138,7 +139,7 @@ export const TokenDetails: FC<{
   tokenId: number;
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
-  const { chain } = useAccount();
+  const { isConnected, chainId: connectedChainId } = useAccount();
   const { refresh, push } = useRouter();
   const { addNotification } = useNotifications();
 
@@ -148,13 +149,12 @@ export const TokenDetails: FC<{
   );
   const { mutateAsync, isPending } = useUpdateMetadata(network ?? "mainnet");
   const { namedLadyRendererAbi, namedLadyRendererAddress } =
-    useChainContracts();
+    useChainContracts(mainnet.id);
   const { mutateAsync: writeContractAsync } = useWriteContract();
   const symbol = useMemo(() => {
     return metadata.name.replace(/\s+/g, "").toUpperCase();
   }, [metadata.name]);
 
-  const chainId = useChainId();
   const { mutateAsync: switchChainAsync } = useSwitchChain();
 
   const initialDescription = useMemo(() => {
@@ -185,6 +185,7 @@ export const TokenDetails: FC<{
         const tx = await writeContractAsync({
           abi: namedLadyRendererAbi,
           address: namedLadyRendererAddress,
+          chainId: mainnet.id,
           functionName: "setTokenUri",
           args: [BigInt(tokenId), uri, finalSignature],
         });
@@ -213,15 +214,18 @@ export const TokenDetails: FC<{
 
   const onSubmit = useCallback(
     async (name: string, description: string) => {
-      if (chainId === mainnet.id) {
-        return await doSubmit(name, description);
-      } else {
-        return await switchChainAsync({ chainId: mainnet.id }).then(() =>
-          doSubmit(name, description),
-        );
+      if (
+        needsConnectedChainSwitch({
+          isConnected,
+          connectedChainId,
+          targetChainId: mainnet.id,
+        })
+      ) {
+        await switchChainAsync({ chainId: mainnet.id });
       }
+      return await doSubmit(name, description);
     },
-    [doSubmit, switchChainAsync, chainId],
+    [connectedChainId, doSubmit, isConnected, switchChainAsync],
   );
 
   const pendingTransactions = useMemo(

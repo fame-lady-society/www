@@ -16,6 +16,7 @@ import type {
   FameOptimizerMode,
   FameOptimizerQuotePlanStats,
 } from "./optimizer/types";
+import type { FameRouteCandidate } from "./graph/routePlan";
 
 export type FameSwapQuoteStatus =
   | "ready"
@@ -67,6 +68,7 @@ export interface FameSwapQuoteRequest {
   optimizerMode?: FameOptimizerMode;
   optimizerBudgets?: Partial<FameOptimizerBudgets>;
   requestedRouteId?: string;
+  candidateFilter?: (candidate: FameRouteCandidate) => boolean;
   now?: Date;
   deadlineSeconds?: bigint;
 }
