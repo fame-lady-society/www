@@ -78,10 +78,76 @@ export interface FameIndexedClReplayStaleEntry
   status: "stale";
 }
 
+interface FameIndexedV4ClReplayBaseEntry
+  extends FameIndexedPoolStateObservedFields {
+  status: "fresh" | "stale";
+  stateKind: "v4-cl-replay-v1";
+  poolId: string;
+  chainId: number;
+  poolKey: Hex;
+  stateViewAddress: Address;
+  token0: Address;
+  token1: Address;
+  venueFamily: "UniswapV4";
+  tickSpacing: number;
+  sqrtPriceX96: string;
+  tick: number;
+  liquidity: string;
+  lpFee: string;
+  protocolFee: string;
+  feeSource: "v4-slot0";
+  blockHash: Hex;
+  parentHash: Hex;
+  snapshotId: string;
+  stateHash: Hex;
+  source: "uniswap-v4-state-view";
+  zoraProvenance: {
+    status: "verified";
+    source: "zora-factory-event" | "zora-factory-transaction-trace";
+    chainId: 8453;
+    factoryAddress: Address;
+    coinAddress: Address;
+    poolKey: Hex;
+    poolId: Hex;
+    transactionHash: Hex;
+    eventName: string | null;
+  };
+  sourceRegistryId: string;
+  bitmapWordCount: number;
+  initializedTickCount: number;
+  bitmapChunkCount: number;
+  tickChunkCount: number;
+  minWordPosition: number | null;
+  maxWordPosition: number | null;
+  minTick: number | null;
+  maxTick: number | null;
+}
+
+export interface FameIndexedV4ClReplayFreshEntry
+  extends FameIndexedV4ClReplayBaseEntry {
+  status: "fresh";
+  bitmapWords: {
+    wordPosition: number;
+    bitmap: Hex;
+  }[];
+  initializedTicks: {
+    tick: number;
+    liquidityGross: string;
+    liquidityNet: string;
+  }[];
+}
+
+export interface FameIndexedV4ClReplayStaleEntry
+  extends FameIndexedV4ClReplayBaseEntry {
+  status: "stale";
+}
+
 export type FameIndexedPoolStateEntry =
   | FameIndexedReservePoolStateEntry
   | FameIndexedClReplayFreshEntry
   | FameIndexedClReplayStaleEntry
+  | FameIndexedV4ClReplayFreshEntry
+  | FameIndexedV4ClReplayStaleEntry
   | {
       status: "unsupported";
       poolId: string;
@@ -112,7 +178,11 @@ export interface FameIndexedPoolStateClient {
     currentBlock: number;
     poolIds: readonly string[];
     maxFreshnessBlocks?: number;
-    stateSurfaces?: readonly ("cl-head-snapshot" | "cl-replay-v1")[];
+    stateSurfaces?: readonly (
+      | "cl-head-snapshot"
+      | "cl-replay-v1"
+      | "v4-cl-replay-v1"
+    )[];
   }): Promise<FameIndexedPoolStateBatchResponse>;
 }
 
@@ -187,6 +257,14 @@ function signedDecimalStringField(
 function hexField(record: Record<string, unknown>, key: string): Hex {
   const value = stringField(record, key);
   if (!isHex(value, { strict: true })) {
+    throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
+  }
+  return value;
+}
+
+function bytes32HexField(record: Record<string, unknown>, key: string): Hex {
+  const value = hexField(record, key);
+  if (!/^0x[0-9a-fA-F]{64}$/.test(value)) {
     throw new Error(`FAME indexed pool-state response invalid at ${key}.`);
   }
   return value;
@@ -317,6 +395,122 @@ function parseClReplayBaseEntry(
   };
 }
 
+function parseV4ClReplayBaseEntry(
+  record: Record<string, unknown>,
+  status: "fresh" | "stale",
+): FameIndexedV4ClReplayBaseEntry {
+  const feeSource = stringField(record, "feeSource");
+  if (feeSource !== "v4-slot0") {
+    throw new Error("FAME indexed pool-state response invalid at feeSource.");
+  }
+  const source = stringField(record, "source");
+  if (source !== "uniswap-v4-state-view") {
+    throw new Error("FAME indexed pool-state response invalid at source.");
+  }
+  const venueFamily = stringField(record, "venueFamily");
+  if (venueFamily !== "UniswapV4") {
+    throw new Error("FAME indexed pool-state response invalid at venueFamily.");
+  }
+  const tickSpacing = safeIntegerField(record, "tickSpacing");
+  if (tickSpacing <= 0) {
+    throw new Error("FAME indexed pool-state response invalid at tickSpacing.");
+  }
+
+  const poolId = stringField(record, "poolId");
+  const chainId = safeIntegerField(record, "chainId");
+  const poolKey = bytes32HexField(record, "poolKey");
+  const stateViewAddress = addressField(record, "stateViewAddress");
+  const token0 = addressField(record, "token0");
+  const token1 = addressField(record, "token1");
+  const zoraProvenance = parseV4ZoraProvenance(
+    record.zoraProvenance,
+    "zoraProvenance",
+  );
+  if (
+    zoraProvenance.chainId !== chainId ||
+    zoraProvenance.poolKey.toLowerCase() !== poolKey.toLowerCase() ||
+    zoraProvenance.poolId.toLowerCase() !== poolKey.toLowerCase() ||
+    zoraProvenance.coinAddress.toLowerCase() !== token1.toLowerCase()
+  ) {
+    throw new Error(
+      "FAME indexed pool-state response invalid at zoraProvenance.",
+    );
+  }
+
+  return {
+    status,
+    stateKind: "v4-cl-replay-v1",
+    poolId,
+    chainId,
+    poolKey,
+    stateViewAddress,
+    token0,
+    token1,
+    venueFamily,
+    tickSpacing,
+    sqrtPriceX96: decimalStringField(record, "sqrtPriceX96"),
+    tick: safeIntegerField(record, "tick"),
+    liquidity: decimalStringField(record, "liquidity"),
+    lpFee: decimalStringField(record, "lpFee"),
+    protocolFee: decimalStringField(record, "protocolFee"),
+    feeSource,
+    observedThroughBlock: safeIntegerField(record, "observedThroughBlock"),
+    blockHash: hexField(record, "blockHash"),
+    parentHash: hexField(record, "parentHash"),
+    snapshotId: stringField(record, "snapshotId"),
+    stateHash: hexField(record, "stateHash"),
+    source,
+    zoraProvenance,
+    sourceRegistryId: stringField(record, "sourceRegistryId"),
+    maxFreshnessBlocks: safeIntegerField(record, "maxFreshnessBlocks"),
+    bitmapWordCount: safeIntegerField(record, "bitmapWordCount"),
+    initializedTickCount: safeIntegerField(record, "initializedTickCount"),
+    bitmapChunkCount: safeIntegerField(record, "bitmapChunkCount"),
+    tickChunkCount: safeIntegerField(record, "tickChunkCount"),
+    minWordPosition: nullableNumberField(record, "minWordPosition"),
+    maxWordPosition: nullableNumberField(record, "maxWordPosition"),
+    minTick: nullableNumberField(record, "minTick"),
+    maxTick: nullableNumberField(record, "maxTick"),
+  };
+}
+
+function parseV4ZoraProvenance(
+  value: unknown,
+  path: string,
+): FameIndexedV4ClReplayBaseEntry["zoraProvenance"] {
+  const record = asRecord(value, path);
+  const status = stringField(record, "status");
+  if (status !== "verified") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const source = stringField(record, "source");
+  if (
+    source !== "zora-factory-event" &&
+    source !== "zora-factory-transaction-trace"
+  ) {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const chainId = safeIntegerField(record, "chainId");
+  if (chainId !== 8453) {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const eventName = record.eventName;
+  if (eventName !== null && typeof eventName !== "string") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  return {
+    status,
+    source,
+    chainId,
+    factoryAddress: addressField(record, "factoryAddress"),
+    coinAddress: addressField(record, "coinAddress"),
+    poolKey: bytes32HexField(record, "poolKey"),
+    poolId: bytes32HexField(record, "poolId"),
+    transactionHash: bytes32HexField(record, "transactionHash"),
+    eventName,
+  };
+}
+
 function bitmapWordPosition(tick: number, tickSpacing: number): number {
   return Math.floor(tick / tickSpacing / 256);
 }
@@ -327,7 +521,7 @@ function bitmapBitPosition(tick: number, tickSpacing: number): number {
 }
 
 function validateClReplayFreshEntry(
-  entry: FameIndexedClReplayFreshEntry,
+  entry: FameIndexedClReplayFreshEntry | FameIndexedV4ClReplayFreshEntry,
 ): void {
   if (entry.bitmapWords.length !== entry.bitmapWordCount) {
     throw new Error("FAME indexed pool-state response invalid at bitmapWords.");
@@ -339,20 +533,50 @@ function validateClReplayFreshEntry(
   }
 
   const ticks = entry.initializedTicks.map((tick) => tick.tick);
+  const bitmapPositions = entry.bitmapWords.map((word) => word.wordPosition);
   if (new Set(ticks).size !== ticks.length) {
     throw new Error(
       "FAME indexed pool-state response invalid at initializedTicks.",
     );
   }
+  if (new Set(bitmapPositions).size !== bitmapPositions.length) {
+    throw new Error("FAME indexed pool-state response invalid at bitmapWords.");
+  }
+  if (bitmapPositions.length === 0) {
+    if (entry.minWordPosition !== null || entry.maxWordPosition !== null) {
+      throw new Error(
+        "FAME indexed pool-state response invalid at bitmap word bounds.",
+      );
+    }
+  } else if (
+    entry.minWordPosition !== Math.min(...bitmapPositions) ||
+    entry.maxWordPosition !== Math.max(...bitmapPositions)
+  ) {
+    throw new Error(
+      "FAME indexed pool-state response invalid at bitmap word bounds.",
+    );
+  }
+
+  const bitmapByWord = new Map(
+    entry.bitmapWords.map((word) => [word.wordPosition, BigInt(word.bitmap)]),
+  );
   if (ticks.length === 0) {
     if (
       entry.minTick !== null ||
-      entry.maxTick !== null ||
-      entry.minWordPosition !== null ||
-      entry.maxWordPosition !== null
+      entry.maxTick !== null
     ) {
       throw new Error(
         "FAME indexed pool-state response invalid at initialized tick bounds.",
+      );
+    }
+    if (entry.stateKind === "v4-cl-replay-v1" && bitmapByWord.size === 0) {
+      throw new Error(
+        "FAME indexed pool-state response invalid at bitmapWords.",
+      );
+    }
+    if ([...bitmapByWord.values()].some((bitmap) => bitmap !== 0n)) {
+      throw new Error(
+        "FAME indexed pool-state response invalid at initialized tick bitmap.",
       );
     }
     return;
@@ -363,21 +587,6 @@ function validateClReplayFreshEntry(
   if (entry.minTick !== minTick || entry.maxTick !== maxTick) {
     throw new Error(
       "FAME indexed pool-state response invalid at initialized tick bounds.",
-    );
-  }
-
-  const bitmapByWord = new Map(
-    entry.bitmapWords.map((word) => [word.wordPosition, BigInt(word.bitmap)]),
-  );
-  const wordPositions = ticks.map((tick) =>
-    bitmapWordPosition(tick, entry.tickSpacing),
-  );
-  if (
-    entry.minWordPosition !== Math.min(...wordPositions) ||
-    entry.maxWordPosition !== Math.max(...wordPositions)
-  ) {
-    throw new Error(
-      "FAME indexed pool-state response invalid at bitmap word bounds.",
     );
   }
 
@@ -426,6 +635,32 @@ function parseEntry(value: unknown, path: string): FameIndexedPoolStateEntry {
           parseInitializedTick,
         ),
       } satisfies FameIndexedClReplayFreshEntry;
+      validateClReplayFreshEntry(entry);
+      return entry;
+    }
+    if (stateKind === "v4-cl-replay-v1") {
+      const baseEntry = parseV4ClReplayBaseEntry(record, status);
+      if (status === "stale") {
+        return {
+          ...baseEntry,
+          status,
+        } satisfies FameIndexedV4ClReplayStaleEntry;
+      }
+
+      const entry = {
+        ...baseEntry,
+        status,
+        bitmapWords: parseArray(
+          record.bitmapWords,
+          `${path}.bitmapWords`,
+          parseBitmapWord,
+        ),
+        initializedTicks: parseArray(
+          record.initializedTicks,
+          `${path}.initializedTicks`,
+          parseInitializedTick,
+        ),
+      } satisfies FameIndexedV4ClReplayFreshEntry;
       validateClReplayFreshEntry(entry);
       return entry;
     }

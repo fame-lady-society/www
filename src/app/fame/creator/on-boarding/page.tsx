@@ -2,24 +2,22 @@
 import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "../ChainSelector";
 import { useAccount } from "@/hooks/useAccount";
-import { useChainId } from "wagmi";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { base } from "viem/chains";
 import { ConnectKitButton } from "connectkit";
 
 export default function OnBoardingPage() {
-  const { isConnected } = useAccount();
-  const chainId = useChainId();
+  const { isConnected, chainId: connectedChainId } = useAccount();
   const router = useRouter();
 
   useEffect(() => {
-    if (isConnected && chainId === base.id) {
+    if (isConnected && connectedChainId === base.id) {
       router.push("/fame/creator");
     }
-  }, [isConnected, chainId, router]);
+  }, [isConnected, connectedChainId, router]);
 
-  const isOnCorrectNetwork = chainId === base.id;
+  const isOnCorrectNetwork = isConnected && connectedChainId === base.id;
 
   return (
     <AppMain title="Connect Wallet" mobileTitle="" isDao headerRight={<ChainSelector />}>

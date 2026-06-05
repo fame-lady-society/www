@@ -6,30 +6,32 @@ import Typography from "@mui/material/Typography";
 import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
-import { FC, PropsWithChildren, ReactNode, useEffect } from "react";
+import { FC, PropsWithChildren, useEffect } from "react";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { PresaleCard } from "@/features/presale/components/PresaleCard";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { base, sepolia } from "viem/chains";
 import { InfoCard } from "@/features/presale/components/InfoCard";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 
 const Content: FC<PropsWithChildren<{ network?: "base" | "sepolia" }>> = ({
   children,
   network,
 }) => {
-  const { isConnected } = useAccount();
-  const chainId = useChainId();
+  const { isConnected, chainId: connectedChainId } = useAccount();
   const { mutate: switchChain } = useSwitchChain();
-  const correctChain =
-    isConnected &&
-    ((network === "base" && chainId === base.id) ||
-      (network === "sepolia" && chainId === sepolia.id));
+  const targetChainId = network === "sepolia" ? sepolia.id : base.id;
+  const shouldSwitchChain = needsConnectedChainSwitch({
+    isConnected,
+    connectedChainId,
+    targetChainId,
+  });
   useEffect(() => {
-    if (isConnected && !correctChain) {
-      switchChain({ chainId: network === "sepolia" ? sepolia.id : base.id });
+    if (shouldSwitchChain) {
+      switchChain({ chainId: targetChainId });
     }
-  }, [correctChain, isConnected, network, switchChain]);
+  }, [shouldSwitchChain, switchChain, targetChainId]);
   return children;
 };
 
@@ -56,7 +58,7 @@ export const FamePresale: FC<{
         <Container maxWidth="xl" sx={{ py: 2, mt: 4 }}>
           <Grid2 container spacing={2}>
             <Content network={network}>
-              <PresaleCard />
+              <PresaleCard network={network} />
               <Grid2 xs={12} md={12}>
                 <InfoCard />
               </Grid2>

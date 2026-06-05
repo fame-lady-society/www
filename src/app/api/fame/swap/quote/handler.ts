@@ -513,7 +513,7 @@ async function maybeWrapIndexedQuoteAdapter(options: {
   const poolIds = famePoolStateRegistryPoolIdsForPair(
     options.tokenIn,
     options.tokenOut,
-  ).filter(famePoolSupportsCompactQuote);
+  ).filter((poolId) => famePoolSupportsCompactQuote(poolId));
   if (poolIds.length === 0) {
     return result(options.adapter, "no_registered_pools", 0);
   }

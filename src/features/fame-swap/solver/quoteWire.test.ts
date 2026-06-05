@@ -300,6 +300,77 @@ describe("FAME swap quote wire contract", () => {
     }
   });
 
+  it("keeps quote API diagnostics debug data compact and sanitized", () => {
+    const { quote } = readyWireResponse();
+    const wire = serializeFameSwapQuoteResponse(
+      {
+        ...quote,
+        diagnosticsVisibleByDefault: true,
+      },
+      {
+        includeDebug: true,
+        debug: {
+          quoteApi: {
+            configured: true,
+            attempted: true,
+            currentBlock: 125,
+            edgeCount: 2,
+            usedCount: 1,
+            fallbackCount: 1,
+            batchFailureCount: 0,
+            timing: {
+              batchRequestCount: 1,
+              totalBatchDurationMs: 4,
+              maxBatchDurationMs: 4,
+              lastBatchDurationMs: 4,
+            },
+            statusCounts: {
+              quoted: 1,
+              unavailable: 1,
+            },
+            fallbackReasonCounts: {
+              row_metadata_mismatch: 1,
+            },
+            details: [
+              {
+                poolId: "uniswap-v4-basedflick-zora",
+                tokenIn: "0x1111111111166b7fe7bd91427724b487980afc69",
+                tokenOut: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+                amountIn: "1000000",
+                currentBlock: 125,
+                outcome: "used",
+                quoteKind: "cl-quote-v1",
+                rowStatus: "quoted",
+                observedThroughBlock: 120,
+                evidenceId: "unit-v4-cl-quote",
+              },
+              {
+                poolId: "uniswap-v4-basedflick-zora",
+                tokenIn: "0x1111111111166b7fe7bd91427724b487980afc69",
+                tokenOut: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+                amountIn: "1000000",
+                currentBlock: 125,
+                outcome: "fallback",
+                fallbackReason: "row_metadata_mismatch",
+                evidenceId: "unit-v4-cl-quote",
+              },
+            ],
+            truncatedDetailCount: 0,
+          },
+        },
+      },
+    );
+
+    assert.ok(isRecord(wire.debug));
+    assert.ok(isRecord(wire.debug.quoteApi));
+    const debug = JSON.stringify(wire.debug);
+    assert.match(debug, /unit-v4-cl-quote|row_metadata_mismatch/);
+    assert.doesNotMatch(
+      debug,
+      /bitmapWords|initializedTicks|serviceToken|authorization|helperUrl|rpcUrl|secret/i,
+    );
+  });
+
   it("fails closed when a ready response route hash does not match the decoded route", () => {
     const { tokenIn, tokenOut, quote, wire } = readyWireResponse();
     const parsed = deserializeFameSwapQuoteResponse(

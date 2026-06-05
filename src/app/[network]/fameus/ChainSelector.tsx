@@ -14,9 +14,10 @@ import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/CheckCircle";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import type { SxProps, TooltipProps } from "@mui/material";
 import { Chain } from "viem";
+import { useAccount } from "@/hooks/useAccount";
 
 export type TChain = Chain & {
   chainImageUrl: string;
@@ -33,7 +34,7 @@ export function decorateChainImageUrl(chain?: Chain): string {
     case 5:
       chainImageUrl = "/images/chains/goerli.png";
       break;
-    case 8543:
+    case 8453:
       chainImageUrl = "/images/chains/base.png";
       break;
     default:
@@ -122,7 +123,7 @@ export const ChainSelector: FC<{
 }> = ({ assetPrefix, sx, tooltipProps }) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<Element | null>(null);
 
-  const chainId = useChainId();
+  const { chainId } = useAccount();
 
   const { chains, error, switchChain, isPending } = useSwitchChain();
   const handleMenu = useCallback((event: MouseEvent) => {

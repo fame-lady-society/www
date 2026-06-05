@@ -249,6 +249,7 @@ export function quoteFameSwap(
     feePpm: prepared.readiness.feePpm,
     slippageBps: prepared.slippageBps,
     adapter: request.adapter,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);
@@ -272,6 +273,7 @@ export async function quoteFameSwapAsync(
     adapter: request.adapter,
     optimizerMode: request.optimizerMode ?? fameSwapOptimizerMode(),
     optimizerBudgets: request.optimizerBudgets,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);

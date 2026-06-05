@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useSwitchChain, useChains, useChainId } from "wagmi";
+import { useSwitchChain, useChains } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -24,9 +24,8 @@ export const RedirectWhenConnected: FC<{
   const [targetChainId, setTargetChainId] = useState<number | undefined>(
     toChain,
   );
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chainId: connectedChainId } = useAccount();
   const chains = useChains();
-  const chainId = useChainId();
   const {
     mutateAsync: switchChainAsync,
     isSuccess,
@@ -52,14 +51,15 @@ export const RedirectWhenConnected: FC<{
       targetChainId &&
       chain &&
       !isSuccess &&
-      targetChainId !== chainId &&
+      targetChainId !== connectedChainId &&
       address
     ) {
       console.log("switching chain", targetChainId);
       switchChainAsync({ chainId: targetChainId }).then((newChain) => {
-        if (newChain) {
+        const chainName = chainIdToChainName(newChain?.id ?? targetChainId);
+        if (chainName) {
           router.replace(
-            `/${chainIdToChainName(newChain.id)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`,
+            `/${chainName}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`,
           );
         }
       });
@@ -68,7 +68,7 @@ export const RedirectWhenConnected: FC<{
     targetChainId,
     chain,
     isSuccess,
-    chainId,
+    connectedChainId,
     switchChainAsync,
     router,
     pathPrefix,
@@ -78,9 +78,18 @@ export const RedirectWhenConnected: FC<{
   ]);
 
   useEffect(() => {
-    const possiblePath = `/${chainIdToChainName(chainId)}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
-    if (isConnected && address && pathname !== possiblePath) {
-      console.log(`redirecting to ${possiblePath} with chainId ${chainId}`);
+    const chainName = chainIdToChainName(toChain);
+    if (!chainName) return;
+    const possiblePath = `/${chainName}/${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
+    if (
+      isConnected &&
+      address &&
+      connectedChainId === toChain &&
+      pathname !== possiblePath
+    ) {
+      console.log(
+        `redirecting to ${possiblePath} with chainId ${connectedChainId}`,
+      );
       router.replace(possiblePath);
     }
   }, [
@@ -89,7 +98,8 @@ export const RedirectWhenConnected: FC<{
     pathname,
     pathPrefix,
     router,
-    chainId,
+    connectedChainId,
+    toChain,
     pathPostfix,
   ]);
 

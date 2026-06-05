@@ -25,6 +25,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
 import { useWriteBulkMinterMint } from "@/wagmi";
 import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 
 function getTokenImageUrl(network: NetworkType, tokenId: number): string {
   switch (network) {
@@ -78,7 +79,11 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   );
   const [mintError, setMintError] = useState<string | null>(null);
 
-  const isWrongChain = isConnected && connectedChainId !== expectedChainId;
+  const isWrongChain = needsConnectedChainSwitch({
+    isConnected,
+    connectedChainId,
+    targetChainId: expectedChainId,
+  });
   const needsSetup = !isConnected || !token || isWrongChain;
   const isBulkMinterNetwork = network === "base-sepolia" || network === "sepolia";
 

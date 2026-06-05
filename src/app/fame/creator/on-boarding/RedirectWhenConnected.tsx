@@ -2,19 +2,8 @@
 
 import { FC, useEffect, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
-import { useChainId, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import { useRouter, usePathname } from "next/navigation";
-
-function chainIdToChainName(chainId: number) {
-  switch (chainId) {
-    case 11155111:
-      return "sepolia";
-    case 8453:
-      return "base";
-    case 1:
-      return "mainnet";
-  }
-}
 
 export const RedirectWhenConnected: FC<{
   pathPrefix: string;
@@ -24,8 +13,7 @@ export const RedirectWhenConnected: FC<{
   const [targetChainId, setTargetChainId] = useState<number | undefined>(
     toChain,
   );
-  const { isConnected, address } = useAccount();
-  const chainId = useChainId();
+  const { isConnected, address, chainId: connectedChainId } = useAccount();
   const { chains, switchChainAsync, isSuccess, isPending } = useSwitchChain({
     mutation: {
       onMutate(variables) {
@@ -47,7 +35,7 @@ export const RedirectWhenConnected: FC<{
       targetChainId &&
       chain &&
       !isSuccess &&
-      targetChainId !== chainId &&
+      targetChainId !== connectedChainId &&
       address
     ) {
       console.log("switching chain", targetChainId);
@@ -63,7 +51,7 @@ export const RedirectWhenConnected: FC<{
     targetChainId,
     chain,
     isSuccess,
-    chainId,
+    connectedChainId,
     switchChainAsync,
     router,
     pathPrefix,
@@ -74,8 +62,15 @@ export const RedirectWhenConnected: FC<{
 
   useEffect(() => {
     const possiblePath = `${pathPrefix ? pathPrefix + "/" : ""}${address}${pathPostfix ? "/" + pathPostfix : ""}`;
-    if (isConnected && address && pathname !== possiblePath) {
-      console.log(`redirecting to ${possiblePath} with chainId ${chainId}`);
+    if (
+      isConnected &&
+      address &&
+      connectedChainId === toChain &&
+      pathname !== possiblePath
+    ) {
+      console.log(
+        `redirecting to ${possiblePath} with chainId ${connectedChainId}`,
+      );
       router.replace(possiblePath);
     }
   }, [
@@ -84,7 +79,8 @@ export const RedirectWhenConnected: FC<{
     pathname,
     pathPrefix,
     router,
-    chainId,
+    connectedChainId,
+    toChain,
     pathPostfix,
   ]);
 
