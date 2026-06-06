@@ -3,7 +3,7 @@ import { base } from "viem/chains";
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
 import { famePoolEdgesForPair } from "../src/features/fame-swap/solver/poolUniverse";
 import {
-  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  fameV4ZoraReviewedPoolManifestForPool,
   famePoolStateRegistrySourceId,
 } from "../src/features/fame-swap/solver/poolStateRegistry";
 import {
@@ -310,7 +310,7 @@ function paritySurfaceForCases(
 ): ParitySurface {
   const surfaces = new Set<ParitySurface>();
   for (const item of cases) {
-    if (item.request.edge.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId) {
+    if (fameV4ZoraReviewedPoolManifestForPool(item.request.edge.poolId)) {
       surfaces.add("compact-quote-v1");
       continue;
     }
@@ -361,6 +361,9 @@ function compactQuoteRowsForCases(options: {
   }
 
   return cases.map((item) => {
+    const manifest = fameV4ZoraReviewedPoolManifestForPool(
+      item.request.edge.poolId,
+    );
     const rows = quoteResponse.quotes.filter(
       (quote): quote is FamePoolQuoteQuotedEntry =>
         quote.status === "quoted" &&
@@ -377,7 +380,8 @@ function compactQuoteRowsForCases(options: {
       );
     }
     const row = rows[0]!;
-    if (item.request.edge.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId) {
+    if (manifest) {
+      const reviewed = manifest.reviewedPoolShape;
       if (
         row.quoteKind !== "cl-quote-v1" ||
         row.source !== "uniswap-v4-state-view"
@@ -387,10 +391,14 @@ function compactQuoteRowsForCases(options: {
         );
       }
       if (
-        row.poolKey.toLowerCase() !==
-          FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey.toLowerCase() ||
-        row.hookData.toLowerCase() !==
-          FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData.toLowerCase()
+        row.poolKey.toLowerCase() !== reviewed.poolKey.toLowerCase() ||
+        row.hookData.toLowerCase() !== reviewed.hookData.toLowerCase() ||
+        row.reviewedPoolEvidence.manifestVersion !== manifest.version ||
+        row.reviewedPoolEvidence.poolId !== reviewed.poolId ||
+        row.reviewedPoolEvidence.kind !==
+          (manifest.provenanceRequired
+            ? "zora-protocol-pool"
+            : "zero-hook-static-fee")
       ) {
         throw new Error(
           `${item.label} did not return the reviewed V4 row shape.`,

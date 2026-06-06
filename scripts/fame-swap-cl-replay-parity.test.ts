@@ -10,7 +10,10 @@ import type {
 } from "../src/features/fame-swap/solver/quotes/adapters";
 import type { FameIndexedPoolStateBatchResponse } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
 import { quoteFromIndexedSlipstreamReplay } from "../src/features/fame-swap/solver/quotes/indexedClReplayAdapter";
-import { FAME_V4_ZORA_REVIEWED_POOL_SHAPE } from "../src/features/fame-swap/solver/poolStateRegistry";
+import {
+  FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+} from "../src/features/fame-swap/solver/poolStateRegistry";
 import {
   buildClReplayParityCases,
   displaySafeErrorMessage,
@@ -19,7 +22,10 @@ import {
   runCompactQuoteParity,
   runClReplayParity,
 } from "./fame-swap-cl-replay-parity";
-import type { FamePoolQuoteBatchResponse } from "../src/features/fame-swap/solver/quotes/indexedQuoteApiClient";
+import type {
+  FamePoolQuoteBatchResponse,
+  FameV4ClPoolQuoteQuotedEntry,
+} from "../src/features/fame-swap/solver/quotes/indexedQuoteApiClient";
 
 type IndexedClReplayEntry = Extract<
   FameIndexedPoolStateBatchResponse["pools"][number],
@@ -41,13 +47,15 @@ function slipstreamEdge(
   return edge;
 }
 
-function v4ZoraEdge(
-  tokenIn: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
-  tokenOut: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+function v4ReviewedEdge(
+  reviewed:
+    | typeof FAME_V4_ZORA_REVIEWED_POOL_SHAPE
+    | typeof FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE = FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  tokenIn: Address = reviewed.currency1,
+  tokenOut: Address = reviewed.currency0,
 ) {
   const edge = famePoolEdgesForPair(tokenIn, tokenOut).find(
-    (candidate) =>
-      candidate.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+    (candidate) => candidate.poolId === reviewed.poolId,
   );
   assert.ok(edge);
   return edge;
@@ -191,85 +199,112 @@ function liveAdapter(
   };
 }
 
+function compactQuoteRow(
+  amountIn: bigint,
+  amountOut: bigint,
+  reviewed:
+    | typeof FAME_V4_ZORA_REVIEWED_POOL_SHAPE
+    | typeof FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE = FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  tokenIn: Address = reviewed.currency1,
+  tokenOut: Address = reviewed.currency0,
+): FameV4ClPoolQuoteQuotedEntry {
+  const provenanceRequired =
+    reviewed.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId;
+  return {
+    status: "quoted",
+    quoteKind: "cl-quote-v1",
+    poolId: reviewed.poolId,
+    chainId: 8453,
+    poolAddress: null,
+    poolKey: reviewed.poolKey,
+    poolManager: reviewed.poolManager,
+    stateViewAddress: reviewed.stateViewAddress,
+    token0: reviewed.currency0,
+    token1: reviewed.currency1,
+    tokenIn,
+    tokenOut,
+    venueFamily: "UniswapV4",
+    tickSpacing: reviewed.tickSpacing,
+    amountIn: amountIn.toString(),
+    amountOut: amountOut.toString(),
+    sqrtPriceX96: Q96.toString(),
+    sqrtPriceX96After: (Q96 - 1n).toString(),
+    tick: 0,
+    liquidity: "1000000000000000000",
+    fee: reviewed.fee.toString(),
+    lpFee: reviewed.fee.toString(),
+    protocolFee: "0",
+    protocolFeeStatus: "zero",
+    staticFee: reviewed.fee.toString(),
+    feeSource: "v4-slot0",
+    observedThroughBlock: 124,
+    blockHash:
+      "0x4444444444444444444444444444444444444444444444444444444444444444",
+    parentHash:
+      "0x5555555555555555555555555555555555555555555555555555555555555555",
+    snapshotId: "unit-v4-compact-quote",
+    stateHash:
+      "0x6666666666666666666666666666666666666666666666666666666666666666",
+    source: "uniswap-v4-state-view",
+    sourceRegistryId: "unit-registry",
+    maxFreshnessBlocks: 120,
+    hookAddress: reviewed.hooks,
+    hookData: reviewed.hookData,
+    hookDataStatus: "empty",
+    reviewedPoolEvidence: {
+      status: "verified",
+      source: "reviewed-v4-manifest",
+      kind: provenanceRequired ? "zora-protocol-pool" : "zero-hook-static-fee",
+      manifestVersion: 1,
+      poolId: reviewed.poolId,
+      poolKey: reviewed.poolKey,
+      staticFee: reviewed.fee.toString(),
+      hookAddress: reviewed.hooks,
+      hookData: reviewed.hookData,
+      protocolFeeStatus: "zero",
+    },
+    ...(provenanceRequired
+      ? {
+          zoraProvenance: {
+            status: "verified" as const,
+            source: "zora-factory-event" as const,
+            chainId: 8453 as const,
+            factoryAddress:
+              "0x0000000000000000000000000000000000000003" as const,
+            coinAddress: reviewed.currency1,
+            poolKey: reviewed.poolKey,
+            poolId: reviewed.poolKey,
+            transactionHash:
+              "0x7777777777777777777777777777777777777777777777777777777777777777" as const,
+            eventName: "CoinCreatedV4",
+          },
+        }
+      : {}),
+  };
+}
+
 function compactQuoteResponse(
   amountIn: bigint,
   amountOut: bigint,
-  tokenIn: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
-  tokenOut: Address = FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+  tokenIn?: Address,
+  tokenOut?: Address,
+  reviewed:
+    | typeof FAME_V4_ZORA_REVIEWED_POOL_SHAPE
+    | typeof FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE = FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
 ): FamePoolQuoteBatchResponse {
-  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
   return {
     sourceRegistryId: "unit-registry",
     currentBlock: 125,
     producerMaxFreshnessBlocks: 120,
     effectiveMaxFreshnessBlocks: 120,
     quotes: [
-      {
-        status: "quoted",
-        quoteKind: "cl-quote-v1",
-        poolId: reviewed.poolId,
-        chainId: 8453,
-        poolAddress: null,
-        poolKey: reviewed.poolKey,
-        poolManager: reviewed.poolManager,
-        stateViewAddress: reviewed.stateViewAddress,
-        token0: reviewed.currency0,
-        token1: reviewed.currency1,
-        tokenIn,
-        tokenOut,
-        venueFamily: "UniswapV4",
-        tickSpacing: reviewed.tickSpacing,
-        amountIn: amountIn.toString(),
-        amountOut: amountOut.toString(),
-        sqrtPriceX96: Q96.toString(),
-        sqrtPriceX96After: (Q96 - 1n).toString(),
-        tick: 0,
-        liquidity: "1000000000000000000",
-        fee: "30000",
-        lpFee: "30000",
-        protocolFee: "0",
-        protocolFeeStatus: "zero",
-        staticFee: "30000",
-        feeSource: "v4-slot0",
-        observedThroughBlock: 124,
-        blockHash:
-          "0x4444444444444444444444444444444444444444444444444444444444444444",
-        parentHash:
-          "0x5555555555555555555555555555555555555555555555555555555555555555",
-        snapshotId: "unit-v4-compact-quote",
-        stateHash:
-          "0x6666666666666666666666666666666666666666666666666666666666666666",
-        source: "uniswap-v4-state-view",
-        sourceRegistryId: "unit-registry",
-        maxFreshnessBlocks: 120,
-        hookAddress: reviewed.hooks,
-        hookData: reviewed.hookData,
-        hookDataStatus: "empty",
-        reviewedPoolEvidence: {
-          status: "verified",
-          source: "reviewed-v4-manifest",
-          kind: "zora-protocol-pool",
-          manifestVersion: 1,
-          poolId: reviewed.poolId,
-          poolKey: reviewed.poolKey,
-          staticFee: reviewed.fee.toString(),
-          hookAddress: reviewed.hooks,
-          hookData: reviewed.hookData,
-          protocolFeeStatus: "zero",
-        },
-        zoraProvenance: {
-          status: "verified",
-          source: "zora-factory-event",
-          chainId: 8453,
-          factoryAddress: "0x0000000000000000000000000000000000000003",
-          coinAddress: reviewed.currency1,
-          poolKey: reviewed.poolKey,
-          poolId: reviewed.poolKey,
-          transactionHash:
-            "0x7777777777777777777777777777777777777777777777777777777777777777",
-          eventName: "CoinCreatedV4",
-        },
-      },
+      compactQuoteRow(
+        amountIn,
+        amountOut,
+        reviewed,
+        tokenIn ?? reviewed.currency1,
+        tokenOut ?? reviewed.currency0,
+      ),
     ],
   };
 }
@@ -439,7 +474,8 @@ describe("FAME Slipstream CL replay parity harness", () => {
       {
         label: "BASED->ZORA",
         request: {
-          edge: v4ZoraEdge(
+          edge: v4ReviewedEdge(
+            FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
             FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
             FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
           ),
@@ -463,6 +499,91 @@ describe("FAME Slipstream CL replay parity harness", () => {
     assert.equal(report.results.length, 1);
     assert.equal(report.results[0]?.localAmountOut, amountOut);
     assert.equal(report.results[0]?.driftBps, 0n);
+  });
+
+  it("reports exact compact quote/live parity for the no-hook V4 ZORA/ETH target", async () => {
+    const amountIn = 1_000_000_000_000_000n;
+    const ethToZoraOut = 170_174_733_551_265_108_370n;
+    const zoraToEthOut = 5_876_315_014_197n;
+    const cases = [
+      {
+        label: "ETH->ZORA",
+        request: {
+          edge: v4ReviewedEdge(
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+          ),
+          amountIn,
+        },
+      },
+      {
+        label: "ZORA->ETH",
+        request: {
+          edge: v4ReviewedEdge(
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+          ),
+          amountIn,
+        },
+      },
+    ];
+
+    const report = await runCompactQuoteParity({
+      quoteResponse: {
+        ...compactQuoteResponse(
+          amountIn,
+          ethToZoraOut,
+          FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+          FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+          FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+        ),
+        quotes: [
+          compactQuoteRow(
+            amountIn,
+            ethToZoraOut,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+          ),
+          compactQuoteRow(
+            amountIn,
+            zoraToEthOut,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+          ),
+        ],
+      },
+      liveAdapter: {
+        async quoteEdge(request) {
+          return {
+            status: "quoted",
+            amountIn: request.amountIn,
+            amountOut:
+              request.edge.tokenIn ===
+              FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0
+                ? ethToZoraOut
+                : zoraToEthOut,
+            capacityIn: null,
+            fee: request.edge.fee,
+            evidence: "unit live v4 zora-eth quoter",
+          };
+        },
+      },
+      currentBlock: 125,
+      cases,
+      expectedSourceRegistryId: "unit-registry",
+    });
+
+    assert.equal(report.poolId, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId);
+    assert.equal(report.surface, "compact-quote-v1");
+    assert.equal(report.results.length, 2);
+    assert.deepEqual(
+      report.results.map((result) => result.driftBps),
+      [0n, 0n],
+    );
   });
 
   it("keeps V4 targets out of the Slipstream replay runner", async () => {
