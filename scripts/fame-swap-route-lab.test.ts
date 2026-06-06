@@ -372,6 +372,59 @@ describe("FAME route lab", () => {
     );
   });
 
+  it("uses a fresh quote deadline for simulated quote-api route lab runs", async () => {
+    const routeId = "solver-fame-basedflick-zora-usdc";
+    const corpus = filterRouteLabCorpus(FAME_ROUTE_CORPUS, { routeId });
+    const targetFilter = {
+      routeId,
+      poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+      tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+      tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+    };
+    const quoteClient = {
+      async fetchQuotes(request: FamePoolQuoteBatchRequest) {
+        return quoteApiResponseForRequest(request);
+      },
+    };
+    const previousBaseRpcUrl = process.env.BASE_RPC_URL;
+    const previousPublicBaseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    delete process.env.BASE_RPC_URL;
+    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+
+    try {
+      const fixedRows = await runQuoteApiRouteLab(corpus, {
+        currentBlock: 125,
+        maxFreshnessBlocks: 120,
+        fallbackAdapter: createSnapshotQuoteAdapter(),
+        targetFilter,
+        quoteClient,
+      });
+      const simulatedRows = await runQuoteApiRouteLab(corpus, {
+        currentBlock: 125,
+        maxFreshnessBlocks: 120,
+        fallbackAdapter: createSnapshotQuoteAdapter(),
+        targetFilter,
+        quoteClient,
+        simulate: true,
+        now: new Date("2026-06-06T01:12:00Z"),
+      });
+
+      assert.notEqual(
+        simulatedRows[0]?.materializedRouteHash,
+        fixedRows[0]?.materializedRouteHash,
+      );
+      assert.equal(simulatedRows[0]?.simulation.status, "not_requested");
+    } finally {
+      if (previousBaseRpcUrl === undefined) delete process.env.BASE_RPC_URL;
+      else process.env.BASE_RPC_URL = previousBaseRpcUrl;
+      if (previousPublicBaseRpcUrl === undefined) {
+        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+      } else {
+        process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousPublicBaseRpcUrl;
+      }
+    }
+  });
+
   it("replays the full recorded-state corpus with executable quote evidence", async () => {
     const rows = await runSnapshotRouteLab();
 

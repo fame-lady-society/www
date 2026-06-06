@@ -96,6 +96,7 @@ const ROUTER_ADDRESS =
   "0x0000000000000000000000000000000000000009" as const satisfies Address;
 const RECIPIENT =
   "0x0000000000000000000000000000000000000abc" as const satisfies Address;
+const FIXED_ROUTE_LAB_NOW = new Date("2026-05-13T00:00:00Z");
 
 export type FameRouteLabSelectedQuoteSourceKind =
   | "compact-indexed"
@@ -255,6 +256,7 @@ interface RouteLabClient {
 
 interface RouteLabOptions {
   candidateBudgets?: Partial<FameRouteCandidateBudgets>;
+  now?: Date;
   requestedRouteId?: string;
   targetFilter?: FameRouteLabTargetFilter;
 }
@@ -541,6 +543,13 @@ function routeLabV4ZoraActivation(
   };
 }
 
+function routeLabQuoteNow(
+  options: RouteLabOptions & { simulate?: boolean },
+): Date {
+  if (options.now) return options.now;
+  return options.simulate ? new Date() : FIXED_ROUTE_LAB_NOW;
+}
+
 function quoteApiSummary(options: {
   sourceRegistryId: string;
   currentBlock: number;
@@ -588,7 +597,7 @@ export async function runSnapshotRouteLab(
       },
       requestedRouteId: options.requestedRouteId,
       candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
-      now: new Date("2026-05-13T00:00:00Z"),
+      now: routeLabQuoteNow(options),
       adapter: toAsyncQuoteAdapter(adapter),
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
@@ -781,7 +790,7 @@ export async function runIndexedRouteLab(
       },
       requestedRouteId: options.requestedRouteId,
       candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
-      now: new Date("2026-05-13T00:00:00Z"),
+      now: routeLabQuoteNow(options),
       adapter,
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
@@ -939,7 +948,7 @@ export async function runQuoteApiRouteLab(
       },
       requestedRouteId: options.requestedRouteId,
       candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
-      now: new Date("2026-05-13T00:00:00Z"),
+      now: routeLabQuoteNow(options),
       adapter,
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
@@ -1502,7 +1511,7 @@ export async function runRouteLab(
       optimizerMode: "disabled",
       requestedRouteId: options.requestedRouteId,
       candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
-      now: new Date("2026-05-13T00:00:00Z"),
+      now: routeLabQuoteNow(options),
       adapter: toAsyncQuoteAdapter(adapter),
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
@@ -1639,7 +1648,7 @@ export async function runLiveRouteLab(
       },
       requestedRouteId: options.requestedRouteId,
       candidateFilter: candidateFilterForRouteLabTarget(options.targetFilter),
-      now: new Date("2026-05-13T00:00:00Z"),
+      now: routeLabQuoteNow(options),
       adapter,
     });
     const edgeMatrix = routeEdgeMatrix(candidateSet, quote);
