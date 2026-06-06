@@ -108,6 +108,19 @@ export interface FameV4ZoraVerifiedProvenance {
   eventName: string | null;
 }
 
+export interface FameV4ReviewedPoolEvidence {
+  status: "verified";
+  source: "reviewed-v4-manifest";
+  kind: "zero-hook-static-fee" | "zora-protocol-pool";
+  manifestVersion: number;
+  poolId: string;
+  poolKey: Hex;
+  staticFee: string;
+  hookAddress: Address;
+  hookData: Hex;
+  protocolFeeStatus: "zero";
+}
+
 export interface FameV4ClPoolQuoteQuotedEntry
   extends FamePoolQuoteQuotedEntryBase {
   quoteKind: "cl-quote-v1";
@@ -135,7 +148,8 @@ export interface FameV4ClPoolQuoteQuotedEntry
   hookAddress: Address;
   hookData: Hex;
   hookDataStatus: "empty";
-  zoraProvenance: FameV4ZoraVerifiedProvenance;
+  reviewedPoolEvidence: FameV4ReviewedPoolEvidence;
+  zoraProvenance?: FameV4ZoraVerifiedProvenance;
 }
 
 export interface FameConstantProductQuotePriceImpact {
@@ -441,6 +455,43 @@ function parseV4ZoraProvenance(
   };
 }
 
+function parseOptionalV4ZoraProvenance(
+  value: unknown,
+): FameV4ZoraVerifiedProvenance | undefined {
+  if (value === undefined) return undefined;
+  return parseV4ZoraProvenance(value);
+}
+
+function parseV4ReviewedPoolEvidence(
+  value: unknown,
+): FameV4ReviewedPoolEvidence {
+  const record = asRecord(value, "reviewedPoolEvidence");
+  const kind = stringField(record, "kind");
+  if (kind !== "zero-hook-static-fee" && kind !== "zora-protocol-pool") {
+    throw responseError("reviewedPoolEvidence.kind");
+  }
+  return {
+    status: literalStringField(record, "status", "verified"),
+    source: literalStringField(
+      record,
+      "source",
+      "reviewed-v4-manifest",
+    ),
+    kind,
+    manifestVersion: safeIntegerField(record, "manifestVersion"),
+    poolId: stringField(record, "poolId"),
+    poolKey: bytes32HexField(record, "poolKey"),
+    staticFee: decimalStringField(record, "staticFee"),
+    hookAddress: addressField(record, "hookAddress"),
+    hookData: hexField(record, "hookData"),
+    protocolFeeStatus: literalStringField(
+      record,
+      "protocolFeeStatus",
+      "zero",
+    ),
+  };
+}
+
 function parseV4ClQuotedEntry(
   record: Record<string, unknown>,
 ): FameV4ClPoolQuoteQuotedEntry {
@@ -489,7 +540,10 @@ function parseV4ClQuotedEntry(
     hookAddress: addressField(record, "hookAddress"),
     hookData,
     hookDataStatus: literalStringField(record, "hookDataStatus", "empty"),
-    zoraProvenance: parseV4ZoraProvenance(record.zoraProvenance),
+    reviewedPoolEvidence: parseV4ReviewedPoolEvidence(
+      record.reviewedPoolEvidence,
+    ),
+    zoraProvenance: parseOptionalV4ZoraProvenance(record.zoraProvenance),
   };
 }
 

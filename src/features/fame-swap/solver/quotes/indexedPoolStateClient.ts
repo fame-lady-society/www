@@ -78,6 +78,31 @@ export interface FameIndexedClReplayStaleEntry
   status: "stale";
 }
 
+export interface FameV4ZoraVerifiedProvenance {
+  status: "verified";
+  source: "zora-factory-event" | "zora-factory-transaction-trace";
+  chainId: 8453;
+  factoryAddress: Address;
+  coinAddress: Address;
+  poolKey: Hex;
+  poolId: Hex;
+  transactionHash: Hex;
+  eventName: string | null;
+}
+
+export interface FameV4ReviewedPoolEvidence {
+  status: "verified";
+  source: "reviewed-v4-manifest";
+  kind: "zero-hook-static-fee" | "zora-protocol-pool";
+  manifestVersion: number;
+  poolId: string;
+  poolKey: Hex;
+  staticFee: string;
+  hookAddress: Address;
+  hookData: Hex;
+  protocolFeeStatus: "zero";
+}
+
 interface FameIndexedV4ClReplayBaseEntry
   extends FameIndexedPoolStateObservedFields {
   status: "fresh" | "stale";
@@ -101,17 +126,8 @@ interface FameIndexedV4ClReplayBaseEntry
   snapshotId: string;
   stateHash: Hex;
   source: "uniswap-v4-state-view";
-  zoraProvenance: {
-    status: "verified";
-    source: "zora-factory-event" | "zora-factory-transaction-trace";
-    chainId: 8453;
-    factoryAddress: Address;
-    coinAddress: Address;
-    poolKey: Hex;
-    poolId: Hex;
-    transactionHash: Hex;
-    eventName: string | null;
-  };
+  reviewedPoolEvidence: FameV4ReviewedPoolEvidence;
+  zoraProvenance?: FameV4ZoraVerifiedProvenance;
   sourceRegistryId: string;
   bitmapWordCount: number;
   initializedTickCount: number;
@@ -422,15 +438,32 @@ function parseV4ClReplayBaseEntry(
   const stateViewAddress = addressField(record, "stateViewAddress");
   const token0 = addressField(record, "token0");
   const token1 = addressField(record, "token1");
-  const zoraProvenance = parseV4ZoraProvenance(
+  const lpFee = decimalStringField(record, "lpFee");
+  const protocolFee = decimalStringField(record, "protocolFee");
+  const reviewedPoolEvidence = parseV4ReviewedPoolEvidence(
+    record.reviewedPoolEvidence,
+    "reviewedPoolEvidence",
+  );
+  const zoraProvenance = parseOptionalV4ZoraProvenance(
     record.zoraProvenance,
     "zoraProvenance",
   );
   if (
-    zoraProvenance.chainId !== chainId ||
-    zoraProvenance.poolKey.toLowerCase() !== poolKey.toLowerCase() ||
-    zoraProvenance.poolId.toLowerCase() !== poolKey.toLowerCase() ||
-    zoraProvenance.coinAddress.toLowerCase() !== token1.toLowerCase()
+    reviewedPoolEvidence.poolId !== poolId ||
+    reviewedPoolEvidence.poolKey.toLowerCase() !== poolKey.toLowerCase() ||
+    reviewedPoolEvidence.staticFee !== lpFee ||
+    protocolFee !== "0"
+  ) {
+    throw new Error(
+      "FAME indexed pool-state response invalid at reviewedPoolEvidence.",
+    );
+  }
+  if (
+    zoraProvenance !== undefined &&
+    (zoraProvenance.chainId !== chainId ||
+      zoraProvenance.poolKey.toLowerCase() !== poolKey.toLowerCase() ||
+      zoraProvenance.poolId.toLowerCase() !== poolKey.toLowerCase() ||
+      zoraProvenance.coinAddress.toLowerCase() !== token1.toLowerCase())
   ) {
     throw new Error(
       "FAME indexed pool-state response invalid at zoraProvenance.",
@@ -451,8 +484,8 @@ function parseV4ClReplayBaseEntry(
     sqrtPriceX96: decimalStringField(record, "sqrtPriceX96"),
     tick: safeIntegerField(record, "tick"),
     liquidity: decimalStringField(record, "liquidity"),
-    lpFee: decimalStringField(record, "lpFee"),
-    protocolFee: decimalStringField(record, "protocolFee"),
+    lpFee,
+    protocolFee,
     feeSource,
     observedThroughBlock: safeIntegerField(record, "observedThroughBlock"),
     blockHash: hexField(record, "blockHash"),
@@ -460,6 +493,7 @@ function parseV4ClReplayBaseEntry(
     snapshotId: stringField(record, "snapshotId"),
     stateHash: hexField(record, "stateHash"),
     source,
+    reviewedPoolEvidence,
     zoraProvenance,
     sourceRegistryId: stringField(record, "sourceRegistryId"),
     maxFreshnessBlocks: safeIntegerField(record, "maxFreshnessBlocks"),
@@ -477,7 +511,7 @@ function parseV4ClReplayBaseEntry(
 function parseV4ZoraProvenance(
   value: unknown,
   path: string,
-): FameIndexedV4ClReplayBaseEntry["zoraProvenance"] {
+): FameV4ZoraVerifiedProvenance {
   const record = asRecord(value, path);
   const status = stringField(record, "status");
   if (status !== "verified") {
@@ -508,6 +542,49 @@ function parseV4ZoraProvenance(
     poolId: bytes32HexField(record, "poolId"),
     transactionHash: bytes32HexField(record, "transactionHash"),
     eventName,
+  };
+}
+
+function parseOptionalV4ZoraProvenance(
+  value: unknown,
+  path: string,
+): FameV4ZoraVerifiedProvenance | undefined {
+  if (value === undefined) return undefined;
+  return parseV4ZoraProvenance(value, path);
+}
+
+function parseV4ReviewedPoolEvidence(
+  value: unknown,
+  path: string,
+): FameV4ReviewedPoolEvidence {
+  const record = asRecord(value, path);
+  const status = stringField(record, "status");
+  if (status !== "verified") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const source = stringField(record, "source");
+  if (source !== "reviewed-v4-manifest") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const kind = stringField(record, "kind");
+  if (kind !== "zero-hook-static-fee" && kind !== "zora-protocol-pool") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  const protocolFeeStatus = stringField(record, "protocolFeeStatus");
+  if (protocolFeeStatus !== "zero") {
+    throw new Error(`FAME indexed pool-state response invalid at ${path}.`);
+  }
+  return {
+    status,
+    source,
+    kind,
+    manifestVersion: safeIntegerField(record, "manifestVersion"),
+    poolId: stringField(record, "poolId"),
+    poolKey: bytes32HexField(record, "poolKey"),
+    staticFee: decimalStringField(record, "staticFee"),
+    hookAddress: addressField(record, "hookAddress"),
+    hookData: hexField(record, "hookData"),
+    protocolFeeStatus,
   };
 }
 

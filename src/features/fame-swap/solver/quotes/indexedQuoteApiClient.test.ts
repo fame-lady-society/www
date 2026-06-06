@@ -9,7 +9,10 @@ import {
   type FameConstantProductPoolQuoteQuotedEntry,
 } from "./indexedQuoteApiClient";
 import { USDC, WETH } from "../../tokens";
-import { FAME_V4_ZORA_REVIEWED_POOL_SHAPE } from "../poolStateRegistry";
+import {
+  FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+} from "../poolStateRegistry";
 
 const quotedResponse = poolQuoteFixture.response;
 const POOL_QUOTES_V1_FIXTURE_SHA256 =
@@ -87,6 +90,18 @@ const v4QuoteRow = {
   hookAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hooks,
   hookData: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData,
   hookDataStatus: "empty",
+  reviewedPoolEvidence: {
+    status: "verified",
+    source: "reviewed-v4-manifest",
+    kind: "zora-protocol-pool",
+    manifestVersion: 1,
+    poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+    poolKey: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+    staticFee: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.fee.toString(),
+    hookAddress: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hooks,
+    hookData: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData,
+    protocolFeeStatus: "zero",
+  },
   zoraProvenance: {
     status: "verified",
     source: "zora-factory-event",
@@ -98,6 +113,60 @@ const v4QuoteRow = {
     transactionHash:
       "0x7777777777777777777777777777777777777777777777777777777777777777",
     eventName: "CoinCreatedV4",
+  },
+} as const;
+const zoraEthV4QuoteRow = {
+  status: "quoted",
+  quoteKind: "cl-quote-v1",
+  poolId: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId,
+  chainId: 8453,
+  poolAddress: null,
+  poolKey: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolKey,
+  poolManager: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolManager,
+  stateViewAddress: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.stateViewAddress,
+  token0: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+  token1: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+  tokenIn: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+  tokenOut: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+  venueFamily: "UniswapV4",
+  tickSpacing: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.tickSpacing,
+  amountIn: "1000000",
+  amountOut: "969999",
+  sqrtPriceX96: "79228162514264337593543950336",
+  sqrtPriceX96After: "79228162514110420726332444185",
+  tick: 0,
+  liquidity: "1000000000000000000",
+  fee: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+  lpFee: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+  protocolFee: "0",
+  protocolFeeStatus: "zero",
+  staticFee: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+  feeSource: "v4-slot0",
+  observedThroughBlock: 120,
+  blockHash:
+    "0x4444444444444444444444444444444444444444444444444444444444444444",
+  parentHash:
+    "0x5555555555555555555555555555555555555555555555555555555555555555",
+  snapshotId: "unit-v4-zora-eth-quote",
+  stateHash:
+    "0x6666666666666666666666666666666666666666666666666666666666666666",
+  source: "uniswap-v4-state-view",
+  sourceRegistryId: quotedResponse.sourceRegistryId,
+  maxFreshnessBlocks: 120,
+  hookAddress: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.hooks,
+  hookData: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.hookData,
+  hookDataStatus: "empty",
+  reviewedPoolEvidence: {
+    status: "verified",
+    source: "reviewed-v4-manifest",
+    kind: "zero-hook-static-fee",
+    manifestVersion: 1,
+    poolId: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId,
+    poolKey: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolKey,
+    staticFee: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+    hookAddress: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.hooks,
+    hookData: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.hookData,
+    protocolFeeStatus: "zero",
   },
 } as const;
 
@@ -195,6 +264,12 @@ describe("FAME indexed quote API client", () => {
     assert.equal(v4Row.source, "uniswap-v4-state-view");
     assert.equal(v4Row.poolAddress, null);
     assert.equal(v4Row.poolKey, FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey);
+    assert.equal(v4Row.reviewedPoolEvidence.kind, "zora-protocol-pool");
+    assert.equal(
+      v4Row.reviewedPoolEvidence.poolKey,
+      FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolKey,
+    );
+    assert.ok(v4Row.zoraProvenance);
     assert.equal(v4Row.zoraProvenance.poolKey, v4Row.poolKey);
     assert.equal("initializedTicks" in v4Row, false);
     assert.equal("reserve0" in parsed.quotes[2]!, false);
@@ -212,6 +287,34 @@ describe("FAME indexed quote API client", () => {
     assert.equal(unavailable.reason, "fee-model-mismatch");
     assert.equal(unavailable.producerStatus, "trusted");
     assert.equal(unavailable.producerReason, null);
+  });
+
+  it("parses no-hook ZORA/ETH V4 compact rows without provenance", () => {
+    const parsed = parseIndexedQuoteApiResponse({
+      ...quotedResponse,
+      quotes: [zoraEthV4QuoteRow],
+    });
+    const row = parsed.quotes[0];
+
+    assert.equal(row?.status, "quoted");
+    if (
+      row?.status !== "quoted" ||
+      row.quoteKind !== "cl-quote-v1" ||
+      !("poolKey" in row)
+    ) {
+      throw new Error("Expected quoted V4 CL row.");
+    }
+    assert.equal(row.poolId, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId);
+    assert.equal(row.poolKey, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolKey);
+    assert.equal(row.zoraProvenance, undefined);
+    assert.equal(
+      row.reviewedPoolEvidence.kind,
+      "zero-hook-static-fee",
+    );
+    assert.equal(
+      row.reviewedPoolEvidence.staticFee,
+      FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+    );
   });
 
   it("parses producer trust unavailable compact entries", () => {
@@ -256,6 +359,15 @@ describe("FAME indexed quote API client", () => {
         ...quotedResponse,
         quotes: [{ ...v4QuoteRow, poolKey: undefined }],
       }),
+    );
+
+    assert.throws(
+      () =>
+        parseIndexedQuoteApiResponse({
+          ...quotedResponse,
+          quotes: [{ ...v4QuoteRow, reviewedPoolEvidence: undefined }],
+        }),
+      /reviewedPoolEvidence/,
     );
 
     assert.throws(() =>

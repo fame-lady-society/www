@@ -245,6 +245,18 @@ function compactQuoteResponse(
         hookAddress: reviewed.hooks,
         hookData: reviewed.hookData,
         hookDataStatus: "empty",
+        reviewedPoolEvidence: {
+          status: "verified",
+          source: "reviewed-v4-manifest",
+          kind: "zora-protocol-pool",
+          manifestVersion: 1,
+          poolId: reviewed.poolId,
+          poolKey: reviewed.poolKey,
+          staticFee: reviewed.fee.toString(),
+          hookAddress: reviewed.hooks,
+          hookData: reviewed.hookData,
+          protocolFeeStatus: "zero",
+        },
         zoraProvenance: {
           status: "verified",
           source: "zora-factory-event",

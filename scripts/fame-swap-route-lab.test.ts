@@ -170,6 +170,18 @@ function quoteApiResponseForRequest(
             hookAddress: reviewed.hooks,
             hookData: reviewed.hookData,
             hookDataStatus: "empty" as const,
+            reviewedPoolEvidence: {
+              status: "verified" as const,
+              source: "reviewed-v4-manifest" as const,
+              kind: "zora-protocol-pool" as const,
+              manifestVersion: 1,
+              poolId: reviewed.poolId,
+              poolKey: reviewed.poolKey,
+              staticFee: reviewed.fee.toString(),
+              hookAddress: reviewed.hooks,
+              hookData: reviewed.hookData,
+              protocolFeeStatus: "zero" as const,
+            },
             zoraProvenance: {
               status: "verified" as const,
               source: "zora-factory-event" as const,

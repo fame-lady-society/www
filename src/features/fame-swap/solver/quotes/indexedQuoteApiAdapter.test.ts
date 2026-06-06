@@ -3,7 +3,9 @@ import { describe, it } from "node:test";
 import type { Address } from "viem";
 import { FAME, USDC, WETH } from "../../tokens";
 import {
+  FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
   FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  fameV4ZoraReviewedPoolManifestForPool,
   type FameV4ZoraQuoteLaneActivation,
 } from "../poolStateRegistry";
 import { famePoolEdges, famePoolEdgesForPair } from "../poolUniverse";
@@ -162,7 +164,9 @@ function v4Row(
   quoteRequest: FamePoolQuoteBatchRequest["quotes"][number],
   overrides: Partial<FameV4ClPoolQuoteQuotedEntry> = {},
 ): FameV4ClPoolQuoteQuotedEntry {
-  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  const manifest = fameV4ZoraReviewedPoolManifestForPool(quoteRequest.poolId);
+  assert.ok(manifest);
+  const reviewed = manifest.reviewedPoolShape;
   return {
     status: "quoted",
     quoteKind: "cl-quote-v1",
@@ -204,18 +208,37 @@ function v4Row(
     hookAddress: reviewed.hooks,
     hookData: reviewed.hookData,
     hookDataStatus: "empty",
-    zoraProvenance: {
+    reviewedPoolEvidence: {
       status: "verified",
-      source: "zora-factory-event",
-      chainId: 8453,
-      factoryAddress: "0x0000000000000000000000000000000000000003",
-      coinAddress: reviewed.currency1,
+      source: "reviewed-v4-manifest",
+      kind: manifest.provenanceRequired
+        ? "zora-protocol-pool"
+        : "zero-hook-static-fee",
+      manifestVersion: manifest.version,
+      poolId: reviewed.poolId,
       poolKey: reviewed.poolKey,
-      poolId: reviewed.poolKey,
-      transactionHash:
-        "0x7777777777777777777777777777777777777777777777777777777777777777",
-      eventName: "CoinCreatedV4",
+      staticFee: reviewed.fee.toString(),
+      hookAddress: reviewed.hooks,
+      hookData: reviewed.hookData,
+      protocolFeeStatus: "zero",
     },
+    ...(manifest.provenanceRequired
+      ? {
+          zoraProvenance: {
+            status: "verified" as const,
+            source: "zora-factory-event" as const,
+            chainId: 8453 as const,
+            factoryAddress:
+              "0x0000000000000000000000000000000000000003" as const,
+            coinAddress: reviewed.currency1,
+            poolKey: reviewed.poolKey,
+            poolId: reviewed.poolKey,
+            transactionHash:
+              "0x7777777777777777777777777777777777777777777777777777777777777777" as const,
+            eventName: "CoinCreatedV4",
+          },
+        }
+      : {}),
     ...overrides,
   };
 }
@@ -409,7 +432,68 @@ describe("FAME indexed quote API adapter", () => {
       assert.equal(quote.amountOut, 969_999n);
       assert.match(quote.evidence, /indexed Uniswap V4 CL quote/);
       assert.equal(quote.context?.source, "indexed");
+      assert.deepEqual(quote.indexedEvidence, {
+        source: "indexed",
+        kind: "compact-quote",
+        quoteKind: "cl-quote-v1",
+        evidenceId: "unit-v4-cl-quote",
+        poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+      });
       assert.equal(quote.priceImpact?.method, "quoter-price-after");
+    }
+    assert.equal(diagnostics.snapshot().usedCount, 1);
+  });
+
+  it("quotes the reviewed V4 ZORA/ETH edge without Zora provenance", async () => {
+    const edge = edgeForPool(FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId);
+    const fallback = { calls: 0 };
+    const clientRequests: FamePoolQuoteBatchRequest[] = [];
+    const diagnostics = createQuoteApiDiagnosticsRecorder(true);
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: quoteClient({
+        requests: clientRequests,
+        response: async (request) => ({
+          sourceRegistryId: "unit-registry",
+          currentBlock: request.currentBlock,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          quotes: request.quotes.map((quoteRequest) => v4Row(quoteRequest)),
+        }),
+      }),
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      maxFreshnessBlocks: 10,
+      expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
+      diagnostics,
+    });
+
+    const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+
+    assert.equal(fallback.calls, 0);
+    assert.deepEqual(clientRequests[0], {
+      currentBlock: 125,
+      maxFreshnessBlocks: 10,
+      quotes: [
+        {
+          poolId: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId,
+          tokenIn: edge.tokenIn,
+          tokenOut: edge.tokenOut,
+          amountIn: "1000000",
+        },
+      ],
+    });
+    assert.equal(quote.status, "quoted");
+    if (quote.status === "quoted") {
+      assert.equal(quote.amountOut, 969_999n);
+      assert.match(quote.evidence, /indexed Uniswap V4 CL quote/);
+      assert.deepEqual(quote.indexedEvidence, {
+        source: "indexed",
+        kind: "compact-quote",
+        quoteKind: "cl-quote-v1",
+        evidenceId: "unit-v4-cl-quote",
+        poolId: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId,
+      });
     }
     assert.equal(diagnostics.snapshot().usedCount, 1);
   });
@@ -793,8 +877,8 @@ describe("FAME indexed quote API adapter", () => {
     );
   });
 
-  it("does not request compact rows for non-target V4 pools", async () => {
-    const edge = edgeForPool("uniswap-v4-zora-eth");
+  it("does not request compact rows for unreviewed V4 pools", async () => {
+    const edge = edgeForPool("uniswap-v4-usdc-eth");
     const fallback = { calls: 0 };
     const clientRequests: FamePoolQuoteBatchRequest[] = [];
     const adapter = createIndexedQuoteApiAdapter({
@@ -805,6 +889,7 @@ describe("FAME indexed quote API adapter", () => {
       fallback: fallbackAdapter(fallback),
       currentBlock: 125,
       expectedSourceRegistryId: "unit-registry",
+      v4ZoraQuoteLaneActivation: UNIT_V4_ZORA_ACTIVATION,
     });
 
     const quote = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });

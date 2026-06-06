@@ -14,8 +14,10 @@ import {
   activationStatusForRegistryPoolId,
   CL_REPLAY_CAPABLE_FAME_POOL_IDS,
   COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS,
+  FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
   FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
   UNISWAP_V4_DYNAMIC_FEE_FLAG,
+  V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
   V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
   classifyFameV4ZoraPoolConfig,
   classifyFameV4ZoraQuoteLane,
@@ -246,6 +248,14 @@ describe("FAME pool-state registry", () => {
   });
 
   it("derives compact quote-capable pools from reserve, CL replay, and reviewed V4 Zora gates", () => {
+    const activeV4QuoteLane = {
+      status: "active",
+      sourceRegistryId: famePoolStateRegistrySourceId(),
+      parityStatus: "passed",
+      routeSimulationStatus: "passed",
+      evidenceId: "unit-v4-zora-activation",
+    } as const;
+
     assert.deepEqual(COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS, [
       ...QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
       ...CL_REPLAY_CAPABLE_FAME_POOL_IDS,
@@ -261,14 +271,21 @@ describe("FAME pool-state registry", () => {
     );
     assert.equal(
       famePoolSupportsCompactQuote(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID, {
-        v4ZoraQuoteLaneActivation: {
-          status: "active",
-          sourceRegistryId: famePoolStateRegistrySourceId(),
-          parityStatus: "passed",
-          routeSimulationStatus: "passed",
-          evidenceId: "unit-v4-zora-activation",
-        },
+        v4ZoraQuoteLaneActivation: activeV4QuoteLane,
       }),
+      true,
+    );
+    assert.equal(
+      famePoolSupportsCompactQuote(
+        V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+      ),
+      false,
+    );
+    assert.equal(
+      famePoolSupportsCompactQuote(
+        V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        { v4ZoraQuoteLaneActivation: activeV4QuoteLane },
+      ),
       true,
     );
     assert.equal(famePoolSupportsCompactQuote("uniswap-v4-usdc-eth"), false);
@@ -283,7 +300,7 @@ describe("FAME pool-state registry", () => {
     );
   });
 
-  it("surfaces BASEDFLICK/ZORA as the only provenance-gated V4 Zora quote lane candidate", () => {
+  it("surfaces reviewed V4 Zora quote lane candidates with lane-specific provenance", () => {
     assert.deepEqual(
       classifyFameV4ZoraQuoteLane(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID),
       {
@@ -319,6 +336,40 @@ describe("FAME pool-state registry", () => {
       ),
       true,
     );
+    const zoraEth = classifyFameV4ZoraQuoteLane(
+      V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+    );
+    assert.equal(zoraEth.status, "target-eligible");
+    if (zoraEth.status !== "target-eligible") {
+      throw new Error("Expected reviewed ZORA/ETH to be target eligible.");
+    }
+    assert.equal(
+      famePoolSupportsV4ZoraQuoteLane(
+        V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+      ),
+      true,
+    );
+    assert.equal(zoraEth.manifest.provenanceRequired, false);
+    assert.deepEqual(
+      zoraEth.reviewedPoolShape,
+      FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+    );
+    assert.deepEqual(zoraEth.hookPermissions, {
+      beforeInitialize: false,
+      afterInitialize: false,
+      beforeAddLiquidity: false,
+      afterAddLiquidity: false,
+      beforeRemoveLiquidity: false,
+      afterRemoveLiquidity: false,
+      beforeSwap: false,
+      afterSwap: false,
+      beforeDonate: false,
+      afterDonate: false,
+      beforeSwapReturnDelta: false,
+      afterSwapReturnDelta: false,
+      afterAddLiquidityReturnDelta: false,
+      afterRemoveLiquidityReturnDelta: false,
+    });
     assert.deepEqual(
       classifyFameV4ZoraQuoteLane("uniswap-v4-usdc-eth", {
         provenanceVerified: true,
@@ -333,8 +384,13 @@ describe("FAME pool-state registry", () => {
 
   it("rejects V4 Zora candidate shape drift before route eligibility", () => {
     const pool = famePoolById(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID);
+    const zoraEthPool = famePoolById(
+      V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+    );
     assert.equal(pool?.venue, "uniswap-v4");
+    assert.equal(zoraEthPool?.venue, "uniswap-v4");
     const target = pool as FameUniswapV4PoolConfig;
+    const zoraEthTarget = zoraEthPool as FameUniswapV4PoolConfig;
 
     assert.deepEqual(
       classifyFameV4ZoraPoolConfig(
@@ -396,6 +452,25 @@ describe("FAME pool-state registry", () => {
       },
     );
     assert.equal(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.hookData, "0x");
+    assert.equal(
+      classifyFameV4ZoraPoolConfig({
+        ...zoraEthTarget,
+        hooks: "0x00000000000000000000000000000000000010c0",
+      }).status,
+      "target-blocked",
+    );
+    assert.deepEqual(
+      classifyFameV4ZoraPoolConfig({
+        ...zoraEthTarget,
+        hookData: "0x1234",
+      }),
+      {
+        status: "target-blocked",
+        poolId: V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
+        reason: "hook-data-mismatch",
+      },
+    );
+    assert.equal(FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.hookData, "0x");
   });
 
   it("omits direct SPX/FAME and cbBTC/FAME until authoritative metadata exists", () => {

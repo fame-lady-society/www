@@ -2,10 +2,10 @@ import { base } from "viem/chains";
 import {
   CL_REPLAY_CAPABLE_FAME_POOL_IDS,
   FAME_V4_ZORA_QUOTE_LANE_ACTIVATION,
-  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
   QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
   famePoolSupportsCompactQuote,
   fameV4ZoraQuoteLaneActivationPassed,
+  fameV4ZoraReviewedPoolManifestForPool,
   type FameV4ZoraQuoteLaneActivation,
 } from "../poolStateRegistry";
 import type {
@@ -316,7 +316,7 @@ function isReserveQuoteCapablePool(poolId: string): boolean {
 }
 
 function isV4ZoraQuoteCapablePool(poolId: string): boolean {
-  return poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId;
+  return fameV4ZoraReviewedPoolManifestForPool(poolId) !== null;
 }
 
 function requestSupportedByQuoteApi(
@@ -458,7 +458,19 @@ function v4ClQuoteValidationFailure(
   if (!isV4ZoraQuoteCapablePool(request.edge.poolId))
     return "row_kind_mismatch";
   const pool = request.edge.pool;
-  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  const manifest = fameV4ZoraReviewedPoolManifestForPool(request.edge.poolId);
+  if (manifest === null) return "row_kind_mismatch";
+  const reviewed = manifest.reviewedPoolShape;
+  const evidence = quote.reviewedPoolEvidence;
+  const provenanceMatches = manifest.provenanceRequired
+    ? quote.zoraProvenance !== undefined &&
+      quote.zoraProvenance.status === "verified" &&
+      quote.zoraProvenance.chainId === base.id &&
+      sameAddress(quote.zoraProvenance.coinAddress, reviewed.currency1) &&
+      quote.zoraProvenance.poolKey.toLowerCase() ===
+        quote.poolKey.toLowerCase() &&
+      quote.zoraProvenance.poolId.toLowerCase() === quote.poolKey.toLowerCase()
+    : quote.zoraProvenance === undefined;
   if (
     !quotedCommonFieldsMatchRequest(quote, request) ||
     pool.venue !== "uniswap-v4" ||
@@ -484,12 +496,20 @@ function v4ClQuoteValidationFailure(
     quote.poolKey.toLowerCase() !== reviewed.poolKey.toLowerCase() ||
     !sameAddress(quote.hookAddress, pool.hooks) ||
     !sameAddress(quote.hookAddress, reviewed.hooks) ||
-    quote.zoraProvenance.status !== "verified" ||
-    quote.zoraProvenance.chainId !== base.id ||
-    !sameAddress(quote.zoraProvenance.coinAddress, pool.currency1) ||
-    quote.zoraProvenance.poolKey.toLowerCase() !==
-      quote.poolKey.toLowerCase() ||
-    quote.zoraProvenance.poolId.toLowerCase() !== quote.poolKey.toLowerCase()
+    evidence.status !== "verified" ||
+    evidence.source !== "reviewed-v4-manifest" ||
+    evidence.kind !==
+      (manifest.provenanceRequired
+        ? "zora-protocol-pool"
+        : "zero-hook-static-fee") ||
+    evidence.manifestVersion !== manifest.version ||
+    evidence.poolId !== reviewed.poolId ||
+    evidence.poolKey.toLowerCase() !== reviewed.poolKey.toLowerCase() ||
+    evidence.staticFee !== reviewed.fee.toString() ||
+    !sameAddress(evidence.hookAddress, reviewed.hooks) ||
+    evidence.hookData.toLowerCase() !== reviewed.hookData.toLowerCase() ||
+    evidence.protocolFeeStatus !== "zero" ||
+    !provenanceMatches
   ) {
     return "row_metadata_mismatch";
   }
@@ -663,6 +683,13 @@ function quoteResultFromV4ClQuote(options: {
       preSwapSqrtPriceX96,
       postSwapSqrtPriceX96,
     }),
+    indexedEvidence: {
+      source: "indexed",
+      kind: "compact-quote",
+      quoteKind: options.quote.quoteKind,
+      evidenceId: options.quote.snapshotId,
+      poolId: options.quote.poolId,
+    },
   };
 }
 
