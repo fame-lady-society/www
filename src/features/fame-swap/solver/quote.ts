@@ -206,7 +206,7 @@ function quoteFromSolverResult(
     requestedAmountIn: request.amountIn,
     routerAddress: prepared.readiness.routerAddress,
     routeArtifactId: solved.routeArtifactId,
-    routeSource: "generated",
+    routeSource: solved.routeSource,
     fixtureRouteHash: solved.routeHash,
     materializedRouteHash: solved.routeHash,
     poolIds: solved.poolIds,
@@ -249,6 +249,8 @@ export function quoteFameSwap(
     feePpm: prepared.readiness.feePpm,
     slippageBps: prepared.slippageBps,
     adapter: request.adapter,
+    requestedRouteId: request.requestedRouteId,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);
@@ -272,6 +274,8 @@ export async function quoteFameSwapAsync(
     adapter: request.adapter,
     optimizerMode: request.optimizerMode ?? fameSwapOptimizerMode(),
     optimizerBudgets: request.optimizerBudgets,
+    requestedRouteId: request.requestedRouteId,
+    candidateFilter: request.candidateFilter,
   });
 
   return quoteFromSolverResult(request, prepared, solved);

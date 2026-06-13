@@ -29,7 +29,18 @@ export type FamePoolQuoteUnavailableReason =
   | "reserve-quote-failed"
   | "malformed-replay-state"
   | "outside-indexed-tick-range"
-  | "replay-failed";
+  | "replay-failed"
+  | "missing-provenance"
+  | "v4-shape-mismatch"
+  | "fee-model-mismatch"
+  | "producer-untrusted";
+
+export type FamePoolQuoteProducerStatus =
+  | "trusted"
+  | "warming"
+  | "drift-failed"
+  | "repairing"
+  | "event-gap";
 
 export interface FamePoolQuoteUnavailableEntry {
   status: "unavailable";
@@ -38,16 +49,19 @@ export interface FamePoolQuoteUnavailableEntry {
   poolId?: string;
   chainId?: number;
   poolAddress?: Address | null;
+  poolKey?: Hex | null;
+  stateViewAddress?: Address | null;
   observedThroughBlock?: number;
   sourceRegistryId?: string;
   maxFreshnessBlocks?: number;
+  producerStatus?: FamePoolQuoteProducerStatus;
+  producerReason?: string | null;
 }
 
 interface FamePoolQuoteQuotedEntryBase {
   status: "quoted";
   poolId: string;
   chainId: number;
-  poolAddress: Address;
   token0: Address;
   token1: Address;
   tokenIn: Address;
@@ -60,8 +74,13 @@ interface FamePoolQuoteQuotedEntryBase {
   maxFreshnessBlocks: number;
 }
 
-export interface FameClPoolQuoteQuotedEntry
+interface FameAddressBackedPoolQuoteQuotedEntryBase
   extends FamePoolQuoteQuotedEntryBase {
+  poolAddress: Address;
+}
+
+export interface FameClPoolQuoteQuotedEntry
+  extends FameAddressBackedPoolQuoteQuotedEntryBase {
   quoteKind: "cl-quote-v1";
   tickSpacing: number;
   sqrtPriceX96: string;
@@ -77,6 +96,62 @@ export interface FameClPoolQuoteQuotedEntry
   source: "slipstream-pool-state";
 }
 
+export interface FameV4ZoraVerifiedProvenance {
+  status: "verified";
+  source: "zora-factory-event" | "zora-factory-transaction-trace";
+  chainId: 8453;
+  factoryAddress: Address;
+  coinAddress: Address;
+  poolKey: Hex;
+  poolId: Hex;
+  transactionHash: Hex;
+  eventName: string | null;
+}
+
+export interface FameV4ReviewedPoolEvidence {
+  status: "verified";
+  source: "reviewed-v4-manifest";
+  kind: "zero-hook-static-fee" | "zora-protocol-pool";
+  manifestVersion: number;
+  poolId: string;
+  poolKey: Hex;
+  staticFee: string;
+  hookAddress: Address;
+  hookData: Hex;
+  protocolFeeStatus: "zero";
+}
+
+export interface FameV4ClPoolQuoteQuotedEntry
+  extends FamePoolQuoteQuotedEntryBase {
+  quoteKind: "cl-quote-v1";
+  poolAddress: null;
+  poolKey: Hex;
+  poolManager: Address;
+  stateViewAddress: Address;
+  venueFamily: "UniswapV4";
+  tickSpacing: number;
+  sqrtPriceX96: string;
+  sqrtPriceX96After: string;
+  tick: number;
+  liquidity: string;
+  fee: string;
+  lpFee: string;
+  protocolFee: string;
+  protocolFeeStatus: "zero";
+  staticFee: string;
+  feeSource: "v4-slot0";
+  blockHash: Hex;
+  parentHash: Hex;
+  snapshotId: string;
+  stateHash: Hex;
+  source: "uniswap-v4-state-view";
+  hookAddress: Address;
+  hookData: Hex;
+  hookDataStatus: "empty";
+  reviewedPoolEvidence: FameV4ReviewedPoolEvidence;
+  zoraProvenance?: FameV4ZoraVerifiedProvenance;
+}
+
 export interface FameConstantProductQuotePriceImpact {
   preSwapPriceX18: string;
   postSwapPriceX18: string;
@@ -86,7 +161,7 @@ export interface FameConstantProductQuotePriceImpact {
 }
 
 export interface FameConstantProductPoolQuoteQuotedEntry
-  extends FamePoolQuoteQuotedEntryBase {
+  extends FameAddressBackedPoolQuoteQuotedEntryBase {
   quoteKind: "constant-product-quote-v1";
   quoteModel: "constant-product-reserves";
   quoteModelVersion: 1;
@@ -100,6 +175,7 @@ export interface FameConstantProductPoolQuoteQuotedEntry
 
 export type FamePoolQuoteQuotedEntry =
   | FameClPoolQuoteQuotedEntry
+  | FameV4ClPoolQuoteQuotedEntry
   | FameConstantProductPoolQuoteQuotedEntry;
 
 export type FamePoolQuoteEntry =
@@ -184,6 +260,14 @@ function bytes32HexField(record: Record<string, unknown>, key: string): Hex {
   return value as Hex;
 }
 
+function hexField(record: Record<string, unknown>, key: string): Hex {
+  const value = stringField(record, key);
+  if (!isHex(value, { strict: true })) {
+    throw responseError(key);
+  }
+  return value as Hex;
+}
+
 function addressField(record: Record<string, unknown>, key: string): Address {
   const value = stringField(record, key);
   if (!isAddress(value, { strict: false })) {
@@ -199,6 +283,15 @@ function optionalAddressField(
   if (record[key] === undefined) return undefined;
   if (record[key] === null) return null;
   return addressField(record, key);
+}
+
+function optionalBytes32HexField(
+  record: Record<string, unknown>,
+  key: string,
+): Hex | null | undefined {
+  if (record[key] === undefined) return undefined;
+  if (record[key] === null) return null;
+  return bytes32HexField(record, key);
 }
 
 function literalStringField<T extends string>(
@@ -239,11 +332,39 @@ function parseUnavailableReason(
     reason !== "reserve-quote-failed" &&
     reason !== "malformed-replay-state" &&
     reason !== "outside-indexed-tick-range" &&
-    reason !== "replay-failed"
+    reason !== "replay-failed" &&
+    reason !== "missing-provenance" &&
+    reason !== "v4-shape-mismatch" &&
+    reason !== "fee-model-mismatch" &&
+    reason !== "producer-untrusted"
   ) {
     throw responseError("reason");
   }
   return reason;
+}
+
+function parseProducerStatus(
+  record: Record<string, unknown>,
+): FamePoolQuoteProducerStatus {
+  const status = stringField(record, "producerStatus");
+  if (
+    status !== "trusted" &&
+    status !== "warming" &&
+    status !== "drift-failed" &&
+    status !== "repairing" &&
+    status !== "event-gap"
+  ) {
+    throw responseError("producerStatus");
+  }
+  return status;
+}
+
+function optionalNullableStringField(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
+  if (record[key] === null) return null;
+  return stringField(record, key);
 }
 
 function parseQuotedBase(
@@ -253,7 +374,6 @@ function parseQuotedBase(
     status: "quoted",
     poolId: stringField(record, "poolId"),
     chainId: safeIntegerField(record, "chainId"),
-    poolAddress: addressField(record, "poolAddress"),
     token0: addressField(record, "token0"),
     token1: addressField(record, "token1"),
     tokenIn: addressField(record, "tokenIn"),
@@ -267,6 +387,15 @@ function parseQuotedBase(
   };
 }
 
+function parseAddressBackedQuotedBase(
+  record: Record<string, unknown>,
+): FameAddressBackedPoolQuoteQuotedEntryBase {
+  return {
+    ...parseQuotedBase(record),
+    poolAddress: addressField(record, "poolAddress"),
+  };
+}
+
 function parseClQuotedEntry(
   record: Record<string, unknown>,
 ): FameClPoolQuoteQuotedEntry {
@@ -274,7 +403,7 @@ function parseClQuotedEntry(
   if (tickSpacing <= 0) throw responseError("tickSpacing");
 
   return {
-    ...parseQuotedBase(record),
+    ...parseAddressBackedQuotedBase(record),
     quoteKind: "cl-quote-v1",
     tickSpacing,
     sqrtPriceX96: decimalStringField(record, "sqrtPriceX96"),
@@ -288,6 +417,133 @@ function parseClQuotedEntry(
     snapshotId: stringField(record, "snapshotId"),
     stateHash: bytes32HexField(record, "stateHash"),
     source: literalStringField(record, "source", "slipstream-pool-state"),
+  };
+}
+
+function parseNullableString(
+  value: unknown,
+  path: string,
+): string | null {
+  if (value === null) return null;
+  if (typeof value === "string" && value.length > 0) return value;
+  throw responseError(path);
+}
+
+function parseV4ZoraProvenance(
+  value: unknown,
+): FameV4ZoraVerifiedProvenance {
+  const record = asRecord(value, "zoraProvenance");
+  const source = stringField(record, "source");
+  if (
+    source !== "zora-factory-event" &&
+    source !== "zora-factory-transaction-trace"
+  ) {
+    throw responseError("zoraProvenance.source");
+  }
+  const chainId = safeIntegerField(record, "chainId");
+  if (chainId !== 8453) throw responseError("zoraProvenance.chainId");
+  return {
+    status: literalStringField(record, "status", "verified"),
+    source,
+    chainId,
+    factoryAddress: addressField(record, "factoryAddress"),
+    coinAddress: addressField(record, "coinAddress"),
+    poolKey: bytes32HexField(record, "poolKey"),
+    poolId: bytes32HexField(record, "poolId"),
+    transactionHash: bytes32HexField(record, "transactionHash"),
+    eventName: parseNullableString(record.eventName, "zoraProvenance.eventName"),
+  };
+}
+
+function parseOptionalV4ZoraProvenance(
+  value: unknown,
+): FameV4ZoraVerifiedProvenance | undefined {
+  if (value === undefined) return undefined;
+  return parseV4ZoraProvenance(value);
+}
+
+function parseV4ReviewedPoolEvidence(
+  value: unknown,
+): FameV4ReviewedPoolEvidence {
+  const record = asRecord(value, "reviewedPoolEvidence");
+  const kind = stringField(record, "kind");
+  if (kind !== "zero-hook-static-fee" && kind !== "zora-protocol-pool") {
+    throw responseError("reviewedPoolEvidence.kind");
+  }
+  return {
+    status: literalStringField(record, "status", "verified"),
+    source: literalStringField(
+      record,
+      "source",
+      "reviewed-v4-manifest",
+    ),
+    kind,
+    manifestVersion: safeIntegerField(record, "manifestVersion"),
+    poolId: stringField(record, "poolId"),
+    poolKey: bytes32HexField(record, "poolKey"),
+    staticFee: decimalStringField(record, "staticFee"),
+    hookAddress: addressField(record, "hookAddress"),
+    hookData: hexField(record, "hookData"),
+    protocolFeeStatus: literalStringField(
+      record,
+      "protocolFeeStatus",
+      "zero",
+    ),
+  };
+}
+
+function parseV4ClQuotedEntry(
+  record: Record<string, unknown>,
+): FameV4ClPoolQuoteQuotedEntry {
+  if (record.poolAddress !== null) throw responseError("poolAddress");
+
+  const fee = decimalStringField(record, "fee");
+  const lpFee = decimalStringField(record, "lpFee");
+  const protocolFee = decimalStringField(record, "protocolFee");
+  const staticFee = decimalStringField(record, "staticFee");
+  const tickSpacing = safeIntegerField(record, "tickSpacing");
+  const hookData = hexField(record, "hookData");
+  if (fee !== lpFee) throw responseError("fee");
+  if (staticFee !== fee) throw responseError("staticFee");
+  if (protocolFee !== "0") throw responseError("protocolFee");
+  if (tickSpacing <= 0) throw responseError("tickSpacing");
+  if (hookData.toLowerCase() !== "0x") throw responseError("hookData");
+
+  return {
+    ...parseQuotedBase(record),
+    quoteKind: "cl-quote-v1",
+    poolAddress: null,
+    poolKey: bytes32HexField(record, "poolKey"),
+    poolManager: addressField(record, "poolManager"),
+    stateViewAddress: addressField(record, "stateViewAddress"),
+    venueFamily: literalStringField(record, "venueFamily", "UniswapV4"),
+    tickSpacing,
+    sqrtPriceX96: decimalStringField(record, "sqrtPriceX96"),
+    sqrtPriceX96After: decimalStringField(record, "sqrtPriceX96After"),
+    tick: safeIntegerField(record, "tick"),
+    liquidity: decimalStringField(record, "liquidity"),
+    fee,
+    lpFee,
+    protocolFee,
+    protocolFeeStatus: literalStringField(
+      record,
+      "protocolFeeStatus",
+      "zero",
+    ),
+    staticFee,
+    feeSource: literalStringField(record, "feeSource", "v4-slot0"),
+    blockHash: bytes32HexField(record, "blockHash"),
+    parentHash: bytes32HexField(record, "parentHash"),
+    snapshotId: stringField(record, "snapshotId"),
+    stateHash: bytes32HexField(record, "stateHash"),
+    source: literalStringField(record, "source", "uniswap-v4-state-view"),
+    hookAddress: addressField(record, "hookAddress"),
+    hookData,
+    hookDataStatus: literalStringField(record, "hookDataStatus", "empty"),
+    reviewedPoolEvidence: parseV4ReviewedPoolEvidence(
+      record.reviewedPoolEvidence,
+    ),
+    zoraProvenance: parseOptionalV4ZoraProvenance(record.zoraProvenance),
   };
 }
 
@@ -405,7 +661,7 @@ function parseConstantProductQuotedEntry(
   record: Record<string, unknown>,
 ): FameConstantProductPoolQuoteQuotedEntry {
   return {
-    ...parseQuotedBase(record),
+    ...parseAddressBackedQuotedBase(record),
     quoteKind: "constant-product-quote-v1",
     quoteModel: literalStringField(
       record,
@@ -426,7 +682,12 @@ function parseQuotedEntry(
   record: Record<string, unknown>,
 ): FamePoolQuoteQuotedEntry {
   const quoteKind = stringField(record, "quoteKind");
-  if (quoteKind === "cl-quote-v1") return parseClQuotedEntry(record);
+  if (quoteKind === "cl-quote-v1") {
+    const source = stringField(record, "source");
+    if (source === "slipstream-pool-state") return parseClQuotedEntry(record);
+    if (source === "uniswap-v4-state-view") return parseV4ClQuotedEntry(record);
+    throw responseError("source");
+  }
   if (quoteKind === "constant-product-quote-v1") {
     return parseConstantProductQuotedEntry(record);
   }
@@ -450,6 +711,12 @@ function parseUnavailableEntry(
     ...(record.poolAddress === undefined
       ? {}
       : { poolAddress: optionalAddressField(record, "poolAddress") }),
+    ...(record.poolKey === undefined
+      ? {}
+      : { poolKey: optionalBytes32HexField(record, "poolKey") }),
+    ...(record.stateViewAddress === undefined
+      ? {}
+      : { stateViewAddress: optionalAddressField(record, "stateViewAddress") }),
     ...(record.observedThroughBlock === undefined
       ? {}
       : {
@@ -466,6 +733,12 @@ function parseUnavailableEntry(
       : {
           maxFreshnessBlocks: safeIntegerField(record, "maxFreshnessBlocks"),
         }),
+    ...(record.producerStatus === undefined
+      ? {}
+      : { producerStatus: parseProducerStatus(record) }),
+    ...(record.producerReason === undefined
+      ? {}
+      : { producerReason: optionalNullableStringField(record, "producerReason") }),
   };
 }
 
@@ -514,24 +787,6 @@ function validateFreshness(
     response.effectiveMaxFreshnessBlocks > request.maxFreshnessBlocks
   ) {
     throw responseError("effectiveMaxFreshnessBlocks");
-  }
-
-  for (const quote of response.quotes) {
-    if (quote.status !== "quoted") continue;
-    if (quote.observedThroughBlock > response.currentBlock) {
-      throw responseError("observedThroughBlock");
-    }
-    const effectiveFreshness = Math.min(
-      quote.maxFreshnessBlocks,
-      response.effectiveMaxFreshnessBlocks,
-      request.maxFreshnessBlocks ?? Number.MAX_SAFE_INTEGER,
-    );
-    if (
-      response.currentBlock - quote.observedThroughBlock >
-      effectiveFreshness
-    ) {
-      throw responseError("maxFreshnessBlocks");
-    }
   }
 }
 

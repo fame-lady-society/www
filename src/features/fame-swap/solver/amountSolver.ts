@@ -7,8 +7,17 @@ import {
   type FameRouteCapabilities,
 } from "../router/types";
 import { tokenForAddress, type FameSwapToken } from "../tokens";
+import { routeArtifactById } from "./artifacts";
 import { routeCandidatesForPair } from "./graph/candidates";
-import type { FameSwapOptimizerSummary, FameSwapRouteDisplayLeg } from "./types";
+import type {
+  FameRouteCandidate,
+  FameRouteCandidateRejected,
+  FameRouteCandidateSet,
+} from "./graph/routePlan";
+import type {
+  FameSwapOptimizerSummary,
+  FameSwapRouteDisplayLeg,
+} from "./types";
 import type {
   FameAsyncQuoteAdapter,
   FameCandidateRejection,
@@ -31,6 +40,7 @@ export type FameAmountSolverResult =
   | {
       status: "ready";
       routeArtifactId: string;
+      routeSource: "artifact" | "generated";
       route: FameRoute;
       abiEncodedRoute: Hex;
       routeHash: Hex;
@@ -59,6 +69,8 @@ export interface FameAmountSolverRequest {
   feePpm: bigint;
   slippageBps: number;
   adapter?: FameQuoteAdapter;
+  requestedRouteId?: string;
+  candidateFilter?: (candidate: FameRouteCandidate) => boolean;
 }
 
 export interface FameAsyncAmountSolverRequest
@@ -66,6 +78,154 @@ export interface FameAsyncAmountSolverRequest
   adapter: FameAsyncQuoteAdapter;
   optimizerMode?: FameOptimizerMode;
   optimizerBudgets?: Partial<FameOptimizerBudgets>;
+}
+
+function sameAddress(left: Address, right: Address): boolean {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function candidatePoolIds(candidate: FameRouteCandidate): string[] {
+  return candidate.legs.map((leg) => leg.edge.poolId);
+}
+
+function samePoolPath(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((poolId, index) => poolId === right[index])
+  );
+}
+
+function allocationBpsForExactLeg(
+  amountIn: bigint,
+  legAmount: string,
+): number | null {
+  const amount = BigInt(legAmount);
+  const numerator = amount * 10_000n;
+  if (amountIn <= 0n || numerator % amountIn !== 0n) return null;
+  const allocation = numerator / amountIn;
+  return allocation >= 0n && allocation <= 10_000n ? Number(allocation) : null;
+}
+
+function requestedArtifactKind(
+  artifact: NonNullable<ReturnType<typeof routeArtifactById>>,
+): FameRouteCandidate["kind"] {
+  const allocatedLegs = artifact.route.legs.filter(
+    (leg) =>
+      leg.amountMode === "Exact" &&
+      BigInt(leg.amount) < BigInt(artifact.route.amountIn),
+  ).length;
+  if (allocatedLegs === 0) return "single_path";
+  return artifact.route.legs.length === 2 ? "split" : "split_merge";
+}
+
+function candidateMatchesArtifact(
+  candidate: FameRouteCandidate,
+  artifact: NonNullable<ReturnType<typeof routeArtifactById>>,
+): boolean {
+  if (candidate.kind !== requestedArtifactKind(artifact)) return false;
+  if (!samePoolPath(candidatePoolIds(candidate), artifact.poolIds))
+    return false;
+  if (candidate.legs.length !== artifact.route.legs.length) return false;
+
+  const routeAmountIn = BigInt(artifact.route.amountIn);
+  let firstAllocationBps: number | null = null;
+
+  return candidate.legs.every((leg, index) => {
+    const artifactLeg = artifact.route.legs[index];
+    if (!artifactLeg) return false;
+
+    if (leg.allocationBps === null) return true;
+    if (leg.amountMode !== artifactLeg.amountMode) return false;
+    if (artifactLeg.amountMode === "Exact") {
+      const allocation = allocationBpsForExactLeg(
+        routeAmountIn,
+        artifactLeg.amount,
+      );
+      firstAllocationBps = allocation;
+      return allocation !== null && leg.allocationBps === allocation;
+    }
+    if (artifactLeg.amountMode === "All" && firstAllocationBps !== null) {
+      return leg.allocationBps === 10_000 - firstAllocationBps;
+    }
+    return false;
+  });
+}
+
+function requestedRouteMismatch(
+  requestedRouteId: string,
+  detail: string,
+): FameRouteCandidateRejected {
+  return {
+    reason: "requested_route_unavailable",
+    detail: `Requested route ${requestedRouteId} is not available: ${detail}`,
+  };
+}
+
+function routeCandidateSetForRequest(
+  request: Pick<
+    FameAmountSolverRequest,
+    "tokenIn" | "tokenOut" | "requestedRouteId"
+  >,
+): FameRouteCandidateSet {
+  const candidateSet = routeCandidatesForPair(
+    request.tokenIn.address,
+    request.tokenOut.address,
+  );
+  const requestedRouteId = request.requestedRouteId?.trim();
+  if (!requestedRouteId) return candidateSet;
+
+  const artifact = routeArtifactById(requestedRouteId);
+  if (artifact) {
+    if (
+      !sameAddress(artifact.route.tokenIn, request.tokenIn.address) ||
+      !sameAddress(artifact.route.tokenOut, request.tokenOut.address)
+    ) {
+      return {
+        candidates: [],
+        rejected: [
+          requestedRouteMismatch(
+            requestedRouteId,
+            "the artifact token pair does not match this quote request.",
+          ),
+        ],
+      };
+    }
+
+    const candidates = candidateSet.candidates.filter((candidate) =>
+      candidateMatchesArtifact(candidate, artifact),
+    );
+    return candidates.length > 0
+      ? { candidates, rejected: candidateSet.rejected }
+      : {
+          candidates: [],
+          rejected: [
+            requestedRouteMismatch(
+              requestedRouteId,
+              "no generated candidate matches the artifact pool path.",
+            ),
+            ...candidateSet.rejected,
+          ],
+        };
+  }
+
+  const candidates = candidateSet.candidates.filter(
+    (candidate) => candidate.id === requestedRouteId,
+  );
+  return candidates.length > 0
+    ? { candidates, rejected: candidateSet.rejected }
+    : {
+        candidates: [],
+        rejected: [
+          requestedRouteMismatch(
+            requestedRouteId,
+            "no generated candidate has that id.",
+          ),
+          ...candidateSet.rejected,
+        ],
+      };
 }
 
 function routeDisplay(plan: FameQuotedRoutePlan): FameSwapRouteDisplayLeg[] {
@@ -77,6 +237,28 @@ function routeDisplay(plan: FameQuotedRoutePlan): FameSwapRouteDisplayLeg[] {
     poolId: leg.edge.poolId,
     allocationBps: leg.allocationBps,
   }));
+}
+
+function applyCandidateFilter(
+  candidates: readonly FameRouteCandidate[],
+  filter: FameAmountSolverRequest["candidateFilter"],
+): FameRouteCandidate[] {
+  if (!filter) return [...candidates];
+  return candidates.filter(filter);
+}
+
+function noFilteredCandidatesResult(): FameAmountSolverResult {
+  return {
+    status: "no_safe_route",
+    rejectedCandidates: [
+      {
+        candidateId: "candidate-filter",
+        reason: "unsafe_output",
+        message: "No route candidates matched the requested route-lab target.",
+      },
+    ],
+    message: "No route candidates matched the requested route-lab target.",
+  };
 }
 
 function buildRoute(
@@ -115,10 +297,14 @@ function readyResult(
 ): Extract<FameAmountSolverResult, { status: "ready" }> {
   const route = buildRoute(request, plan);
   const routeHash = hashFameRoute(route);
+  const requestedArtifact = request.requestedRouteId
+    ? routeArtifactById(request.requestedRouteId)
+    : undefined;
 
   return {
     status: "ready",
-    routeArtifactId: plan.candidate.id,
+    routeArtifactId: requestedArtifact?.id ?? plan.candidate.id,
+    routeSource: requestedArtifact ? "artifact" : "generated",
     route,
     abiEncodedRoute: encodeFameRoute(route),
     routeHash,
@@ -136,10 +322,7 @@ function readyResult(
 export function solveFameSwapAmount(
   request: FameAmountSolverRequest,
 ): FameAmountSolverResult {
-  const candidateSet = routeCandidatesForPair(
-    request.tokenIn.address,
-    request.tokenOut.address,
-  );
+  const candidateSet = routeCandidateSetForRequest(request);
   if (candidateSet.candidates.length === 0) {
     return {
       status:
@@ -173,8 +356,14 @@ export function solveFameSwapAmount(
     };
   }
 
+  const candidates = applyCandidateFilter(
+    candidateSet.candidates,
+    request.candidateFilter,
+  );
+  if (candidates.length === 0) return noFilteredCandidatesResult();
+
   const ranked = rankRouteCandidates({
-    candidates: candidateSet.candidates,
+    candidates,
     amountIn: request.amountIn,
     feePpm: request.feePpm,
     slippageBps: request.slippageBps,
@@ -198,10 +387,7 @@ export function solveFameSwapAmount(
 export async function solveFameSwapAmountAsync(
   request: FameAsyncAmountSolverRequest,
 ): Promise<FameAmountSolverResult> {
-  const candidateSet = routeCandidatesForPair(
-    request.tokenIn.address,
-    request.tokenOut.address,
-  );
+  const candidateSet = routeCandidateSetForRequest(request);
   if (candidateSet.candidates.length === 0) {
     return {
       status:
@@ -222,8 +408,14 @@ export async function solveFameSwapAmountAsync(
   async function legacyResult(
     optimizerEvidence?: FameOptimizerEvidence,
   ): Promise<FameAmountSolverResult> {
+    const candidates = applyCandidateFilter(
+      candidateSet.candidates,
+      request.candidateFilter,
+    );
+    if (candidates.length === 0) return noFilteredCandidatesResult();
+
     const ranked = await rankRouteCandidatesAsync({
-      candidates: candidateSet.candidates,
+      candidates,
       amountIn: request.amountIn,
       feePpm: request.feePpm,
       slippageBps: request.slippageBps,
@@ -249,8 +441,14 @@ export async function solveFameSwapAmountAsync(
     );
   }
 
-  const optimizerMode = request.optimizerMode ?? "select";
-  if (optimizerMode === "disabled") {
+  const optimizerMode = request.candidateFilter
+    ? "disabled"
+    : (request.optimizerMode ?? "select");
+  if (
+    optimizerMode === "disabled" ||
+    request.requestedRouteId ||
+    request.candidateFilter
+  ) {
     return legacyResult();
   }
 
@@ -282,8 +480,7 @@ export async function solveFameSwapAmountAsync(
     return {
       status: "quote_adapter_failure",
       rejectedCandidates: optimized.rejectedCandidates,
-      message:
-        "FAME optimizer timed out before completing a safe route quote.",
+      message: "FAME optimizer timed out before completing a safe route quote.",
     };
   }
 

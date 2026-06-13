@@ -1,16 +1,208 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  filterRouteLabCorpus,
   formatRouteLabMarkdown,
+  poolQuoteEndpointUrlFromEnv,
   poolStateEndpointUrlFromEnv,
   runIndexedRouteLab,
+  runQuoteApiRouteLab,
   runRouteLab,
   runSnapshotRouteLab,
   type FameRouteLabRow,
 } from "./fame-swap-route-lab";
-import { famePoolStateRegistrySourceId } from "../src/features/fame-swap/solver/poolStateRegistry";
+import type { FameEdgeQuoteRequest } from "../src/features/fame-swap/solver/quotes/adapters";
+import type { FameIndexedClReplayFreshEntry } from "../src/features/fame-swap/solver/quotes/indexedPoolStateClient";
+import {
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+  famePoolStateRegistrySourceId,
+} from "../src/features/fame-swap/solver/poolStateRegistry";
+import type {
+  FamePoolQuoteBatchRequest,
+  FamePoolQuoteBatchResponse,
+} from "../src/features/fame-swap/solver/quotes/indexedQuoteApiClient";
 import { FAME_ROUTE_CORPUS } from "../src/features/fame-swap/solver/routeCorpus";
 import { FAME, USDC, WETH } from "../src/features/fame-swap/tokens";
+import { createSnapshotQuoteAdapter } from "../src/features/fame-swap/solver/quotes/snapshotAdapter";
+import { createDeterministicQuoteAdapter } from "../src/features/fame-swap/solver/quotes/deterministicAdapter";
+
+const BASEDFLICK = "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926" as const;
+
+function liveDeterministicFallbackAdapter() {
+  const deterministic = createDeterministicQuoteAdapter();
+  const context = {
+    source: "live" as const,
+    chainId: 8453,
+    blockNumber: 125n,
+  };
+  return {
+    quoteContext: context,
+    async quoteEdge(request: FameEdgeQuoteRequest) {
+      const quote = deterministic.quoteEdge(request);
+      return quote.status === "quoted" ? { ...quote, context } : quote;
+    },
+  };
+}
+
+function deterministicFallbackAdapter() {
+  const deterministic = createDeterministicQuoteAdapter();
+  return {
+    quoteContext: deterministic.quoteContext,
+    async quoteEdge(request: FameEdgeQuoteRequest) {
+      return deterministic.quoteEdge(request);
+    },
+  };
+}
+
+function selectedRawReplayPoolState(
+  poolId: string,
+): FameIndexedClReplayFreshEntry {
+  return {
+    status: "fresh" as const,
+    stateKind: "cl-replay-v1" as const,
+    poolId,
+    chainId: 8453,
+    poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+    token0: BASEDFLICK,
+    token1: FAME,
+    venueFamily: "Slipstream" as const,
+    tickSpacing: 2000,
+    sqrtPriceX96: "14225627699858779769529171968",
+    tick: -34350,
+    liquidity: "1000000000000000000000000000000",
+    fee: "10000",
+    feeSource: "pool-fee" as const,
+    observedThroughBlock: 124,
+    blockHash:
+      "0x1111111111111111111111111111111111111111111111111111111111111111",
+    parentHash:
+      "0x2222222222222222222222222222222222222222222222222222222222222222",
+    snapshotId: "unit-selected-candidate",
+    stateHash:
+      "0x3333333333333333333333333333333333333333333333333333333333333333",
+    source: "slipstream-pool-state" as const,
+    sourceRegistryId: famePoolStateRegistrySourceId(),
+    maxFreshnessBlocks: 120,
+    bitmapWordCount: 2,
+    initializedTickCount: 2,
+    bitmapChunkCount: 1,
+    tickChunkCount: 1,
+    minWordPosition: -10,
+    maxWordPosition: 0,
+    minTick: -40000,
+    maxTick: 0,
+    bitmapWords: [
+      {
+        wordPosition: -10,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000010",
+      },
+      {
+        wordPosition: 0,
+        bitmap:
+          "0x0000000000000000000000000000000000000000000000000000000000000001",
+      },
+    ],
+    initializedTicks: [
+      {
+        tick: -40000,
+        liquidityGross: "1000",
+        liquidityNet: "-1000",
+      },
+      {
+        tick: 0,
+        liquidityGross: "1000",
+        liquidityNet: "1000",
+      },
+    ],
+  };
+}
+
+function quoteApiResponseForRequest(
+  request: FamePoolQuoteBatchRequest,
+): FamePoolQuoteBatchResponse {
+  const reviewed = FAME_V4_ZORA_REVIEWED_POOL_SHAPE;
+  return {
+    sourceRegistryId: famePoolStateRegistrySourceId(),
+    currentBlock: request.currentBlock,
+    producerMaxFreshnessBlocks: 120,
+    effectiveMaxFreshnessBlocks: request.maxFreshnessBlocks ?? 120,
+    quotes: request.quotes.map((quote) =>
+      quote.poolId === reviewed.poolId
+        ? {
+            status: "quoted" as const,
+            quoteKind: "cl-quote-v1" as const,
+            poolId: reviewed.poolId,
+            chainId: 8453,
+            poolAddress: null,
+            poolKey: reviewed.poolKey,
+            poolManager: reviewed.poolManager,
+            stateViewAddress: reviewed.stateViewAddress,
+            token0: reviewed.currency0,
+            token1: reviewed.currency1,
+            tokenIn: quote.tokenIn,
+            tokenOut: quote.tokenOut,
+            venueFamily: "UniswapV4" as const,
+            tickSpacing: reviewed.tickSpacing,
+            amountIn: quote.amountIn,
+            amountOut: "583370986295932128",
+            sqrtPriceX96: "79228162514264337593543950336",
+            sqrtPriceX96After: "79228162514264337593543950335",
+            tick: 0,
+            liquidity: "1000000000000000000",
+            fee: "30000",
+            lpFee: "30000",
+            protocolFee: "0",
+            protocolFeeStatus: "zero" as const,
+            staticFee: "30000",
+            feeSource: "v4-slot0" as const,
+            observedThroughBlock: request.currentBlock - 1,
+            blockHash:
+              "0x4444444444444444444444444444444444444444444444444444444444444444",
+            parentHash:
+              "0x5555555555555555555555555555555555555555555555555555555555555555",
+            snapshotId: "unit-v4-route-lab-quote",
+            stateHash:
+              "0x6666666666666666666666666666666666666666666666666666666666666666",
+            source: "uniswap-v4-state-view" as const,
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            maxFreshnessBlocks: 120,
+            hookAddress: reviewed.hooks,
+            hookData: reviewed.hookData,
+            hookDataStatus: "empty" as const,
+            reviewedPoolEvidence: {
+              status: "verified" as const,
+              source: "reviewed-v4-manifest" as const,
+              kind: "zora-protocol-pool" as const,
+              manifestVersion: 1,
+              poolId: reviewed.poolId,
+              poolKey: reviewed.poolKey,
+              staticFee: reviewed.fee.toString(),
+              hookAddress: reviewed.hooks,
+              hookData: reviewed.hookData,
+              protocolFeeStatus: "zero" as const,
+            },
+            zoraProvenance: {
+              status: "verified" as const,
+              source: "zora-factory-event" as const,
+              chainId: 8453,
+              factoryAddress: "0x0000000000000000000000000000000000000003",
+              coinAddress: reviewed.currency1,
+              poolKey: reviewed.poolKey,
+              poolId: reviewed.poolKey,
+              transactionHash:
+                "0x7777777777777777777777777777777777777777777777777777777777777777",
+              eventName: "CoinCreatedV4",
+            },
+          }
+        : {
+            status: "unavailable" as const,
+            requested: quote,
+            reason: "unsupported-pool" as const,
+          },
+    ),
+  };
+}
 
 describe("FAME route lab", () => {
   it("derives the raw pool-state proof endpoint from FAME_POOL_API_URL", () => {
@@ -23,6 +215,10 @@ describe("FAME route lab", () => {
       assert.equal(
         poolStateEndpointUrlFromEnv(),
         "https://api.fame.support/fame/pool-state",
+      );
+      assert.equal(
+        poolQuoteEndpointUrlFromEnv(),
+        "https://api.fame.support/fame/pool-quotes",
       );
     } finally {
       if (previousBase === undefined) delete process.env.FAME_POOL_API_URL;
@@ -69,6 +265,175 @@ describe("FAME route lab", () => {
       if (previousEndpoint === undefined)
         delete process.env.FAME_POOL_STATE_API_URL;
       else process.env.FAME_POOL_STATE_API_URL = previousEndpoint;
+    }
+  });
+
+  it("filters route-lab to one requested basedflick/ZORA corpus case", () => {
+    const cases = filterRouteLabCorpus(FAME_ROUTE_CORPUS, {
+      caseId: "fame-usdc-fixture",
+      poolId: "uniswap-v4-basedflick-zora",
+    });
+
+    assert.deepEqual(
+      cases.map((entry) => entry.id),
+      ["fame-usdc-fixture"],
+    );
+  });
+
+  it("filters route-lab by pinned route artifact id", () => {
+    const cases = filterRouteLabCorpus(FAME_ROUTE_CORPUS, {
+      routeId: "solver-fame-basedflick-zora-usdc",
+    });
+
+    assert.deepEqual(
+      cases.map((entry) => entry.id),
+      ["fame-usdc-fixture"],
+    );
+  });
+
+  it("fails route-lab filters that are missing or ambiguous", () => {
+    assert.throws(
+      () =>
+        filterRouteLabCorpus(FAME_ROUTE_CORPUS, {
+          poolId: "uniswap-v4-basedflick-zora",
+        }),
+      /ambiguous.*fame-usdc-fixture.*fame-usdc-large-closed.*fame-weth-fixture/,
+    );
+    assert.throws(
+      () =>
+        filterRouteLabCorpus(FAME_ROUTE_CORPUS, {
+          routeId: "missing-route",
+        }),
+      /Unknown route-lab route id missing-route/,
+    );
+    assert.throws(
+      () =>
+        filterRouteLabCorpus(FAME_ROUTE_CORPUS, {
+          poolId: "missing-pool",
+        }),
+      /matched no corpus cases/,
+    );
+  });
+
+  it("fails when a targeted run selects a different route or omits the requested pool", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "fame-usdc-fixture",
+    );
+    assert.ok(entry);
+
+    await assert.rejects(
+      () =>
+        runSnapshotRouteLab([entry], {
+          targetFilter: {
+            routeId: "solver-fame-basedflick-zora-weth",
+          },
+        }),
+      /did not produce a ready quote/,
+    );
+
+    await assert.rejects(
+      () =>
+        runSnapshotRouteLab([entry], {
+          targetFilter: {
+            poolId: "uniswap-v4-zora-eth",
+          },
+        }),
+      /did not produce a ready quote|did not include requested target pool uniswap-v4-zora-eth/,
+    );
+  });
+
+  it("runs a focused quote-api route lab through the compact V4 row", async () => {
+    const routeId = "solver-fame-basedflick-zora-usdc";
+    const corpus = filterRouteLabCorpus(FAME_ROUTE_CORPUS, { routeId });
+    const requests: FamePoolQuoteBatchRequest[] = [];
+
+    const rows = await runQuoteApiRouteLab(corpus, {
+      currentBlock: 125,
+      maxFreshnessBlocks: 120,
+      fallbackAdapter: createSnapshotQuoteAdapter(),
+      targetFilter: {
+        routeId,
+        poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+        tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+        tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+      },
+      quoteClient: {
+        async fetchQuotes(request) {
+          requests.push(request);
+          return quoteApiResponseForRequest(request);
+        },
+      },
+    });
+
+    const row = rows[0];
+    assert.ok(row);
+    assert.equal(row.mode, "quote-api");
+    assert.equal(row.requestedRouteId, routeId);
+    assert.equal(row.routeArtifactId, routeId);
+    assert.match(row.materializedRouteHash ?? "", /^0x[0-9a-f]{64}$/);
+    assert.ok(
+      row.selectedPools.includes(FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId),
+    );
+    assert.ok((row.quoteApi?.diagnostics.usedCount ?? 0) > 0);
+    assert.ok(
+      requests.some((request) =>
+        request.quotes.some(
+          (quote) => quote.poolId === FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+        ),
+      ),
+    );
+  });
+
+  it("uses a fresh quote deadline for simulated quote-api route lab runs", async () => {
+    const routeId = "solver-fame-basedflick-zora-usdc";
+    const corpus = filterRouteLabCorpus(FAME_ROUTE_CORPUS, { routeId });
+    const targetFilter = {
+      routeId,
+      poolId: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.poolId,
+      tokenIn: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency1,
+      tokenOut: FAME_V4_ZORA_REVIEWED_POOL_SHAPE.currency0,
+    };
+    const quoteClient = {
+      async fetchQuotes(request: FamePoolQuoteBatchRequest) {
+        return quoteApiResponseForRequest(request);
+      },
+    };
+    const previousBaseRpcUrl = process.env.BASE_RPC_URL;
+    const previousPublicBaseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    delete process.env.BASE_RPC_URL;
+    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+
+    try {
+      const fixedRows = await runQuoteApiRouteLab(corpus, {
+        currentBlock: 125,
+        maxFreshnessBlocks: 120,
+        fallbackAdapter: createSnapshotQuoteAdapter(),
+        targetFilter,
+        quoteClient,
+      });
+      const simulatedRows = await runQuoteApiRouteLab(corpus, {
+        currentBlock: 125,
+        maxFreshnessBlocks: 120,
+        fallbackAdapter: createSnapshotQuoteAdapter(),
+        targetFilter,
+        quoteClient,
+        simulate: true,
+        now: new Date("2026-06-06T01:12:00Z"),
+      });
+
+      assert.notEqual(
+        simulatedRows[0]?.materializedRouteHash,
+        fixedRows[0]?.materializedRouteHash,
+      );
+      assert.equal(simulatedRows[0]?.simulation.status, "not_requested");
+    } finally {
+      if (previousBaseRpcUrl === undefined) delete process.env.BASE_RPC_URL;
+      else process.env.BASE_RPC_URL = previousBaseRpcUrl;
+      if (previousPublicBaseRpcUrl === undefined) {
+        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+      } else {
+        process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousPublicBaseRpcUrl;
+      }
     }
   });
 
@@ -339,6 +704,185 @@ describe("FAME route lab", () => {
     );
   });
 
+  it("identifies the selected raw replay leg and its V4 dependency as live", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "fame-weth-fixture",
+    );
+    assert.ok(entry);
+    const requestedPoolIds: string[][] = [];
+    const rows = await runIndexedRouteLab([entry], {
+      currentBlock: 125,
+      requestedRouteId: "solver-fame-basedflick-zora-weth",
+      fallbackAdapter: liveDeterministicFallbackAdapter(),
+      poolStateClient: {
+        async fetchPoolStates(request) {
+          requestedPoolIds.push([...request.poolIds]);
+          return {
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            currentBlock: request.currentBlock,
+            producerMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 120,
+            pools: request.poolIds.map((poolId) =>
+              poolId === "slipstream-basedflick-fame"
+                ? {
+                    status: "fresh" as const,
+                    stateKind: "cl-replay-v1" as const,
+                    poolId,
+                    chainId: 8453,
+                    poolAddress: "0xbd7e5bb5a6251f6dde2cf56afa50ed0c8b4c2cdb",
+                    token0: BASEDFLICK,
+                    token1: FAME,
+                    venueFamily: "Slipstream" as const,
+                    tickSpacing: 2000,
+                    sqrtPriceX96: "14225627699858779769529171968",
+                    tick: -34350,
+                    liquidity: "1000000000000000000000000000000",
+                    fee: "10000",
+                    feeSource: "pool-fee" as const,
+                    observedThroughBlock: 124,
+                    blockHash:
+                      "0x1111111111111111111111111111111111111111111111111111111111111111",
+                    parentHash:
+                      "0x2222222222222222222222222222222222222222222222222222222222222222",
+                    snapshotId: "unit-selected-candidate",
+                    stateHash:
+                      "0x3333333333333333333333333333333333333333333333333333333333333333",
+                    source: "slipstream-pool-state" as const,
+                    sourceRegistryId: famePoolStateRegistrySourceId(),
+                    maxFreshnessBlocks: 120,
+                    bitmapWordCount: 2,
+                    initializedTickCount: 2,
+                    bitmapChunkCount: 1,
+                    tickChunkCount: 1,
+                    minWordPosition: -10,
+                    maxWordPosition: 0,
+                    minTick: -40000,
+                    maxTick: 0,
+                    bitmapWords: [
+                      {
+                        wordPosition: -10,
+                        bitmap:
+                          "0x0000000000000000000000000000000000000000000000000000000000000010",
+                      },
+                      {
+                        wordPosition: 0,
+                        bitmap:
+                          "0x0000000000000000000000000000000000000000000000000000000000000001",
+                      },
+                    ],
+                    initializedTicks: [
+                      {
+                        tick: -40000,
+                        liquidityGross: "1000",
+                        liquidityNet: "-1000",
+                      },
+                      {
+                        tick: 0,
+                        liquidityGross: "1000",
+                        liquidityNet: "1000",
+                      },
+                    ],
+                  }
+                : {
+                    status: "unknown" as const,
+                    requested: { poolId },
+                    reason: "unit-test",
+                  },
+            ),
+          };
+        },
+      },
+    });
+    const row = rows[0];
+    assert.ok(row);
+
+    assert.deepEqual(requestedPoolIds[0], ["slipstream-basedflick-fame"]);
+    assert.equal(row.status, "ready");
+    assert.ok(row.selectedPools.includes("slipstream-basedflick-fame"));
+    assert.ok(row.selectedPools.includes("uniswap-v4-basedflick-zora"));
+    const selectedSource = row.selectedQuoteSources.find(
+      (source) => source.poolId === "slipstream-basedflick-fame",
+    );
+    assert.equal(selectedSource?.source, "raw-replay-indexed");
+    assert.equal(selectedSource?.amountIn, "31597600141347829");
+    assert.equal(
+      row.selectedQuoteSources.find(
+        (source) => source.poolId === "uniswap-v4-basedflick-zora",
+      )?.source,
+      "live",
+    );
+    assert.equal(
+      row.selectedActivation?.outcome,
+      "raw_replay_with_live_dependency",
+    );
+    assert.equal(row.requestedRouteId, "solver-fame-basedflick-zora-weth");
+    assert.equal(row.routeArtifactId, "solver-fame-basedflick-zora-weth");
+
+    const markdown = formatRouteLabMarkdown(rows);
+    assert.match(markdown, /slipstream-basedflick-fame raw-replay-indexed/);
+    assert.match(markdown, /uniswap-v4-basedflick-zora live/);
+  });
+
+  it("keeps raw replay activation outcome distinct without a live dependency", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "fame-weth-fixture",
+    );
+    assert.ok(entry);
+    const rows = await runIndexedRouteLab([entry], {
+      currentBlock: 125,
+      requestedRouteId: "solver-fame-basedflick-zora-weth",
+      fallbackAdapter: deterministicFallbackAdapter(),
+      poolStateClient: {
+        async fetchPoolStates(request) {
+          return {
+            sourceRegistryId: famePoolStateRegistrySourceId(),
+            currentBlock: request.currentBlock,
+            producerMaxFreshnessBlocks: 120,
+            effectiveMaxFreshnessBlocks: 120,
+            pools: request.poolIds.map((poolId) =>
+              poolId === "slipstream-basedflick-fame"
+                ? selectedRawReplayPoolState(poolId)
+                : {
+                    status: "unknown" as const,
+                    requested: { poolId },
+                    reason: "unit-test",
+                  },
+            ),
+          };
+        },
+      },
+    });
+    const row = rows[0];
+    assert.ok(row);
+
+    assert.equal(
+      row.selectedActivation?.outcome,
+      "raw_replay_without_live_dependency",
+    );
+    assert.equal(
+      row.selectedActivation?.selectedPoolSource,
+      "raw-replay-indexed",
+    );
+    assert.equal(
+      row.selectedActivation?.liveDependencySource,
+      "deterministic-test",
+    );
+  });
+
+  it("rejects generated route ids in requested-route mode", async () => {
+    const entry = FAME_ROUTE_CORPUS.find(
+      (candidate) => candidate.id === "weth-fame-small-direct",
+    );
+    assert.ok(entry);
+
+    await assert.rejects(
+      runRouteLab([entry], {
+        requestedRouteId: "solver-single_path-uniswap-v2-fame-direct",
+      }),
+      /pinned route artifact/,
+    );
+  });
+
   it("fails indexed mode clearly without a current block source", async () => {
     const entry = FAME_ROUTE_CORPUS.find(
       (candidate) => candidate.id === "weth-fame-small-direct",
@@ -381,8 +925,15 @@ describe("FAME route lab", () => {
         amountIn: "1000000",
         expectedStatus: "ready",
         status: "quote_adapter_failure",
-        message: "HTTP request failed.\nURL: https://example.invalid/secret",
+        message:
+          'HTTP request failed.\nresponse body {"token":"unit-secret"}\nURL: https://example.invalid/secret',
+        requestedRouteId: null,
+        routeArtifactId: null,
+        selectedCandidateId: null,
+        materializedRouteHash: null,
         selectedPools: [],
+        selectedQuoteSources: [],
+        selectedActivation: null,
         quoteContext: null,
         feeBreakdown: {
           routerFeeAmount: null,
@@ -407,6 +958,7 @@ describe("FAME route lab", () => {
         ],
         optimizer: null,
         indexedPoolState: null,
+        quoteApi: null,
         edgeMatrix: [
           {
             chainId: 8453,
@@ -491,7 +1043,7 @@ describe("FAME route lab", () => {
     const markdown = formatRouteLabMarkdown(rows);
 
     assert.doesNotMatch(markdown, /https?:\/\//);
-    assert.doesNotMatch(markdown, /secret|Request body/);
+    assert.doesNotMatch(markdown, /secret|Request body|response body/);
     assert.doesNotMatch(markdown, /0x[a-fA-F0-9]{96,}/);
   });
 });

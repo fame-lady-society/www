@@ -4,6 +4,30 @@ import {
   createIndexedPoolStateClient,
   parseIndexedPoolStateResponse,
 } from "./indexedPoolStateClient";
+import {
+  FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+  FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+} from "../poolStateRegistry";
+
+function reviewedV4Evidence(
+  reviewed:
+    | typeof FAME_V4_ZORA_REVIEWED_POOL_SHAPE
+    | typeof FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+  kind: "zora-protocol-pool" | "zero-hook-static-fee" = "zora-protocol-pool",
+) {
+  return {
+    status: "verified",
+    source: "reviewed-v4-manifest",
+    kind,
+    manifestVersion: 1,
+    poolId: reviewed.poolId,
+    poolKey: reviewed.poolKey,
+    staticFee: reviewed.fee.toString(),
+    hookAddress: reviewed.hooks,
+    hookData: reviewed.hookData,
+    protocolFeeStatus: "zero",
+  } as const;
+}
 
 describe("FAME indexed pool-state client", () => {
   it("posts bounded pool-state requests with service auth", async () => {
@@ -28,7 +52,7 @@ describe("FAME indexed pool-state client", () => {
     const response = await client.fetchPoolStates({
       currentBlock: 125,
       maxFreshnessBlocks: 10,
-      stateSurfaces: ["cl-replay-v1"],
+      stateSurfaces: ["cl-replay-v1", "v4-cl-replay-v1"],
       poolIds: ["uniswap-v2-fame-direct"],
     });
 
@@ -37,7 +61,7 @@ describe("FAME indexed pool-state client", () => {
     assert.deepEqual(await requests[0]?.json(), {
       currentBlock: 125,
       maxFreshnessBlocks: 10,
-      stateSurfaces: ["cl-replay-v1"],
+      stateSurfaces: ["cl-replay-v1", "v4-cl-replay-v1"],
       pools: [{ poolId: "uniswap-v2-fame-direct" }],
     });
   });
@@ -215,6 +239,394 @@ describe("FAME indexed pool-state client", () => {
     assert.equal(pool?.status, "stale");
     assert.equal(pool && "stateKind" in pool && pool.stateKind, "cl-replay-v1");
     assert.equal(pool && "bitmapWords" in pool, false);
+  });
+
+  it("parses V4 replay entries with PoolKey identity", () => {
+    const parsed = parseIndexedPoolStateResponse({
+      sourceRegistryId: "unit",
+      currentBlock: 125,
+      producerMaxFreshnessBlocks: 120,
+      effectiveMaxFreshnessBlocks: 120,
+      pools: [
+        {
+          status: "fresh",
+          stateKind: "v4-cl-replay-v1",
+          poolId: "uniswap-v4-basedflick-zora",
+          chainId: 8453,
+          poolKey:
+            "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+          stateViewAddress: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
+          token0: "0x1111111111166b7fe7bd91427724b487980afc69",
+          token1: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+          venueFamily: "UniswapV4",
+          tickSpacing: 200,
+          sqrtPriceX96: "79228162514264337593543950336",
+          tick: -17400,
+          liquidity: "8888",
+          lpFee: "30000",
+          protocolFee: "0",
+          feeSource: "v4-slot0",
+          observedThroughBlock: 120,
+          blockHash:
+            "0x4444444444444444444444444444444444444444444444444444444444444444",
+          parentHash:
+            "0x5555555555555555555555555555555555555555555555555555555555555555",
+          snapshotId: "unit-v4-cl-replay",
+          stateHash:
+            "0x6666666666666666666666666666666666666666666666666666666666666666",
+          source: "uniswap-v4-state-view",
+          reviewedPoolEvidence: reviewedV4Evidence(
+            FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+          ),
+          zoraProvenance: {
+            status: "verified",
+            source: "zora-factory-event",
+            chainId: 8453,
+            factoryAddress: "0x0000000000000000000000000000000000000003",
+            coinAddress: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+            poolKey:
+              "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+            poolId:
+              "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+            transactionHash:
+              "0x7777777777777777777777777777777777777777777777777777777777777777",
+            eventName: "CoinCreatedV4",
+          },
+          sourceRegistryId: "unit",
+          maxFreshnessBlocks: 120,
+          bitmapWordCount: 1,
+          initializedTickCount: 1,
+          bitmapChunkCount: 1,
+          tickChunkCount: 1,
+          minWordPosition: -1,
+          maxWordPosition: -1,
+          minTick: -17400,
+          maxTick: -17400,
+          bitmapWords: [
+            {
+              wordPosition: -1,
+              bitmap:
+                "0x0000000000000000000002000000000000000000000000000000000000000000",
+            },
+          ],
+          initializedTicks: [
+            { tick: -17400, liquidityGross: "30", liquidityNet: "10" },
+          ],
+        },
+        {
+          status: "stale",
+          stateKind: "v4-cl-replay-v1",
+          poolId: "uniswap-v4-basedflick-zora",
+          chainId: 8453,
+          poolKey:
+            "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+          stateViewAddress: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
+          token0: "0x1111111111166b7fe7bd91427724b487980afc69",
+          token1: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+          venueFamily: "UniswapV4",
+          tickSpacing: 200,
+          sqrtPriceX96: "79228162514264337593543950336",
+          tick: -17400,
+          liquidity: "8888",
+          lpFee: "30000",
+          protocolFee: "0",
+          feeSource: "v4-slot0",
+          observedThroughBlock: 1,
+          blockHash:
+            "0x4444444444444444444444444444444444444444444444444444444444444444",
+          parentHash:
+            "0x5555555555555555555555555555555555555555555555555555555555555555",
+          snapshotId: "unit-v4-cl-replay",
+          stateHash:
+            "0x6666666666666666666666666666666666666666666666666666666666666666",
+          source: "uniswap-v4-state-view",
+          reviewedPoolEvidence: reviewedV4Evidence(
+            FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+          ),
+          zoraProvenance: {
+            status: "verified",
+            source: "zora-factory-event",
+            chainId: 8453,
+            factoryAddress: "0x0000000000000000000000000000000000000003",
+            coinAddress: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+            poolKey:
+              "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+            poolId:
+              "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+            transactionHash:
+              "0x7777777777777777777777777777777777777777777777777777777777777777",
+            eventName: "CoinCreatedV4",
+          },
+          sourceRegistryId: "unit",
+          maxFreshnessBlocks: 120,
+          bitmapWordCount: 1,
+          initializedTickCount: 1,
+          bitmapChunkCount: 1,
+          tickChunkCount: 1,
+          minWordPosition: -1,
+          maxWordPosition: -1,
+          minTick: -17400,
+          maxTick: -17400,
+        },
+      ],
+    });
+
+    const [fresh, stale] = parsed.pools;
+    assert.equal(fresh?.status, "fresh");
+    assert.equal(fresh && "stateKind" in fresh && fresh.stateKind, "v4-cl-replay-v1");
+    assert.equal(fresh && "poolAddress" in fresh, false);
+    assert.equal(fresh && "poolKey" in fresh && fresh.poolKey.startsWith("0x"), true);
+    assert.equal(stale?.status, "stale");
+    assert.equal(stale && "stateKind" in stale && stale.stateKind, "v4-cl-replay-v1");
+    assert.equal(stale && "bitmapWords" in stale, false);
+  });
+
+  it("parses no-hook ZORA/ETH V4 replay entries without provenance", () => {
+    const parsed = parseIndexedPoolStateResponse({
+      sourceRegistryId: "unit",
+      currentBlock: 125,
+      producerMaxFreshnessBlocks: 120,
+      effectiveMaxFreshnessBlocks: 120,
+      pools: [
+        {
+          status: "fresh",
+          stateKind: "v4-cl-replay-v1",
+          poolId: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId,
+          chainId: 8453,
+          poolKey: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolKey,
+          stateViewAddress:
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.stateViewAddress,
+          token0: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency0,
+          token1: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.currency1,
+          venueFamily: "UniswapV4",
+          tickSpacing: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.tickSpacing,
+          sqrtPriceX96: "79228162514264337593543950336",
+          tick: 0,
+          liquidity: "8888",
+          lpFee: FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
+          protocolFee: "0",
+          feeSource: "v4-slot0",
+          observedThroughBlock: 120,
+          blockHash:
+            "0x4444444444444444444444444444444444444444444444444444444444444444",
+          parentHash:
+            "0x5555555555555555555555555555555555555555555555555555555555555555",
+          snapshotId: "unit-v4-zora-eth-replay",
+          stateHash:
+            "0x6666666666666666666666666666666666666666666666666666666666666666",
+          source: "uniswap-v4-state-view",
+          reviewedPoolEvidence: reviewedV4Evidence(
+            FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE,
+            "zero-hook-static-fee",
+          ),
+          sourceRegistryId: "unit",
+          maxFreshnessBlocks: 120,
+          bitmapWordCount: 1,
+          initializedTickCount: 0,
+          bitmapChunkCount: 1,
+          tickChunkCount: 0,
+          minWordPosition: 0,
+          maxWordPosition: 0,
+          minTick: null,
+          maxTick: null,
+          bitmapWords: [
+            {
+              wordPosition: 0,
+              bitmap:
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            },
+          ],
+          initializedTicks: [],
+        },
+      ],
+    });
+    const pool = parsed.pools[0];
+
+    assert.equal(pool?.status, "fresh");
+    if (pool?.status !== "fresh" || !("stateKind" in pool)) {
+      throw new Error("Expected fresh ZORA/ETH V4 replay state.");
+    }
+    assert.equal(pool.stateKind, "v4-cl-replay-v1");
+    assert.equal(pool.poolId, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId);
+    assert.equal(pool.reviewedPoolEvidence.kind, "zero-hook-static-fee");
+    assert.equal(pool.zoraProvenance, undefined);
+  });
+
+  it("rejects V4 replay entries whose provenance does not bind the row", () => {
+    assert.throws(
+      () =>
+        parseIndexedPoolStateResponse({
+          sourceRegistryId: "unit",
+          currentBlock: 125,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          pools: [
+            {
+              status: "fresh",
+              stateKind: "v4-cl-replay-v1",
+              poolId: "uniswap-v4-basedflick-zora",
+              chainId: 8453,
+              poolKey:
+                "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+              stateViewAddress: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
+              token0: "0x1111111111166b7fe7bd91427724b487980afc69",
+              token1: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+              venueFamily: "UniswapV4",
+              tickSpacing: 200,
+              sqrtPriceX96: "79228162514264337593543950336",
+              tick: -17400,
+              liquidity: "8888",
+              lpFee: "30000",
+              protocolFee: "0",
+              feeSource: "v4-slot0",
+              observedThroughBlock: 120,
+              blockHash:
+                "0x4444444444444444444444444444444444444444444444444444444444444444",
+              parentHash:
+                "0x5555555555555555555555555555555555555555555555555555555555555555",
+              snapshotId: "unit-v4-cl-replay",
+              stateHash:
+                "0x6666666666666666666666666666666666666666666666666666666666666666",
+              source: "uniswap-v4-state-view",
+              reviewedPoolEvidence: reviewedV4Evidence(
+                FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+              ),
+              zoraProvenance: {
+                status: "verified",
+                source: "zora-factory-event",
+                chainId: 8453,
+                factoryAddress: "0x0000000000000000000000000000000000000003",
+                coinAddress: "0x1111111111166b7fe7bd91427724b487980afc69",
+                poolKey:
+                  "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+                poolId:
+                  "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+                transactionHash:
+                  "0x7777777777777777777777777777777777777777777777777777777777777777",
+                eventName: "CoinCreatedV4",
+              },
+              sourceRegistryId: "unit",
+              maxFreshnessBlocks: 120,
+              bitmapWordCount: 1,
+              initializedTickCount: 1,
+              bitmapChunkCount: 1,
+              tickChunkCount: 1,
+              minWordPosition: -1,
+              maxWordPosition: -1,
+              minTick: -17400,
+              maxTick: -17400,
+              bitmapWords: [
+                {
+                  wordPosition: -1,
+                  bitmap:
+                    "0x0000000000000000000002000000000000000000000000000000000000000000",
+                },
+              ],
+              initializedTicks: [
+                { tick: -17400, liquidityGross: "30", liquidityNet: "10" },
+              ],
+            },
+          ],
+        }),
+      /zoraProvenance/,
+    );
+  });
+
+  it("requires V4 empty tick snapshots to carry bitmap coverage", () => {
+    const emptyV4Entry = {
+      status: "fresh",
+      stateKind: "v4-cl-replay-v1",
+      poolId: "uniswap-v4-basedflick-zora",
+      chainId: 8453,
+      poolKey:
+        "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+      stateViewAddress: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
+      token0: "0x1111111111166b7fe7bd91427724b487980afc69",
+      token1: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+      venueFamily: "UniswapV4",
+      tickSpacing: 200,
+      sqrtPriceX96: "79228162514264337593543950336",
+      tick: -17400,
+      liquidity: "0",
+      lpFee: "30000",
+      protocolFee: "0",
+      feeSource: "v4-slot0",
+      observedThroughBlock: 120,
+      blockHash:
+        "0x4444444444444444444444444444444444444444444444444444444444444444",
+      parentHash:
+        "0x5555555555555555555555555555555555555555555555555555555555555555",
+      snapshotId: "unit-v4-cl-replay-empty",
+      stateHash:
+        "0x6666666666666666666666666666666666666666666666666666666666666666",
+      source: "uniswap-v4-state-view",
+      reviewedPoolEvidence: reviewedV4Evidence(
+        FAME_V4_ZORA_REVIEWED_POOL_SHAPE,
+      ),
+      zoraProvenance: {
+        status: "verified",
+        source: "zora-factory-event",
+        chainId: 8453,
+        factoryAddress: "0x0000000000000000000000000000000000000003",
+        coinAddress: "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+        poolKey:
+          "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+        poolId:
+          "0x0fe6333346fcd0ffa4be3fda91f271bda52c6755f604b06483b709666d363628",
+        transactionHash:
+          "0x7777777777777777777777777777777777777777777777777777777777777777",
+        eventName: "CoinCreatedV4",
+      },
+      sourceRegistryId: "unit",
+      maxFreshnessBlocks: 120,
+      bitmapWordCount: 1,
+      initializedTickCount: 0,
+      bitmapChunkCount: 1,
+      tickChunkCount: 0,
+      minWordPosition: -18,
+      maxWordPosition: -18,
+      minTick: null,
+      maxTick: null,
+      bitmapWords: [
+        {
+          wordPosition: -18,
+          bitmap:
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        },
+      ],
+      initializedTicks: [],
+    };
+
+    assert.equal(
+      parseIndexedPoolStateResponse({
+        sourceRegistryId: "unit",
+        currentBlock: 125,
+        producerMaxFreshnessBlocks: 120,
+        effectiveMaxFreshnessBlocks: 120,
+        pools: [emptyV4Entry],
+      }).pools[0]?.status,
+      "fresh",
+    );
+    assert.throws(
+      () =>
+        parseIndexedPoolStateResponse({
+          sourceRegistryId: "unit",
+          currentBlock: 125,
+          producerMaxFreshnessBlocks: 120,
+          effectiveMaxFreshnessBlocks: 120,
+          pools: [
+            {
+              ...emptyV4Entry,
+              bitmapWordCount: 0,
+              bitmapChunkCount: 0,
+              minWordPosition: null,
+              maxWordPosition: null,
+              bitmapWords: [],
+            },
+          ],
+        }),
+      /bitmapWords/,
+    );
   });
 
   it("rejects incomplete fresh CL replay tick snapshots", () => {

@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useDropzone } from "react-dropzone";
 import { useAccount } from "@/hooks/useAccount";
-import { useWalletClient, usePublicClient, useChainId } from "wagmi";
+import { useWalletClient, usePublicClient } from "wagmi";
 import { getIrysUploader } from "@/service/irys_client";
 import { formatEther } from "viem";
 
@@ -68,8 +68,7 @@ export const IrysUploaderWidget: React.FC<IrysUploaderWidgetProps> = ({
   onComplete,
   initialFile = null,
 }) => {
-  const { address, isConnected, chain } = useAccount();
-  const chainId = useChainId();
+  const { address, isConnected, chain, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const [uploader, setUploader] = useState<any | null>(null);

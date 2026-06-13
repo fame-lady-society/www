@@ -1,7 +1,6 @@
 "use client";
 
 import { FC, useEffect } from "react";
-import { useChainId } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -10,7 +9,6 @@ export const RedirectWhenConnected: FC<{
   pathPostfix?: string;
 }> = ({ pathPrefix, pathPostfix }) => {
   const { isConnected, address } = useAccount();
-  const chainId = useChainId();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,7 +23,6 @@ export const RedirectWhenConnected: FC<{
     pathname,
     pathPrefix,
     router,
-    chainId,
     pathPostfix,
   ]);
 

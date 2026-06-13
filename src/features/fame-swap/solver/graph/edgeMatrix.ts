@@ -9,6 +9,7 @@ import type {
   FameProtocolEvidence,
   FameProtocolEvidenceItem,
 } from "../quotes/adapters";
+import { redactSensitiveDiagnosticText as sanitizeDiagnosticText } from "../diagnostics";
 import type { FameRouteCandidate, FameRouteCandidateSet } from "./routePlan";
 
 export type FameRouteEdgeMatrixStatus =
@@ -165,24 +166,6 @@ function sameAddress(left: Address, right: Address): boolean {
 
 function tokenSymbol(address: Address): string {
   return tokenForAddress(address)?.symbol ?? address;
-}
-
-function sanitizeDiagnosticText(value: string): string {
-  const safeLine = value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(
-      (line) =>
-        line.length > 0 &&
-        !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-          line,
-        ),
-    );
-
-  return (safeLine ?? "Route diagnostic unavailable.")
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
 }
 
 function sanitizeCoverageField(

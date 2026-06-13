@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import { displaySafeDiagnosticMessage } from "../diagnostics";
 import type { FameSlipstreamPoolConfig } from "../../router/types";
 import type {
   FameAsyncQuoteAdapter,
@@ -273,21 +274,7 @@ function unavailable(message: string): FameEdgeQuoteResult {
 }
 
 function displaySafeErrorMessage(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error);
-  const firstLine = raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(
-      (line) =>
-        line.length > 0 &&
-        !/\b(request body|calldata|approval|swap request|private key|signer|authorization|api[-_ ]?key)\b|(?:^|\s)secret(?:[-_ ]?(?:key|token))?\s*[:=]/i.test(
-          line,
-        ),
-    );
-  return (firstLine ?? "Unknown live quote error.")
-    .replace(/(?:https?|wss?):\/\/\S+/g, "[redacted-url]")
-    .replace(/\b(?:bearer|token)\s+[a-z0-9._~+/=-]+/gi, "[redacted-secret]")
-    .replace(/0x[a-fA-F0-9]{64,}/g, "[redacted-hex]");
+  return displaySafeDiagnosticMessage(error);
 }
 
 function availableEvidence(
@@ -585,9 +572,7 @@ function feeBpsFor(request: FameEdgeQuoteRequest): number | null {
   return fee.status === "available" ? fee.feeBps : null;
 }
 
-function poolGetAmountOutVenueLabel(
-  venue: "solidly" | "aerodrome-v2",
-): string {
+function poolGetAmountOutVenueLabel(venue: "solidly" | "aerodrome-v2"): string {
   return venue === "aerodrome-v2" ? "Aerodrome V2" : "Solidly";
 }
 

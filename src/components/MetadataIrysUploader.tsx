@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
-import { useWalletClient, usePublicClient, useChainId } from "wagmi";
+import React, { useCallback, useState } from "react";
+import { useWalletClient, usePublicClient } from "wagmi";
 import IrysUploaderWidget from "@/components/IrysUploaderWidget";
 import { getIrysUploader } from "@/service/irys_client";
 import { useAccount } from "@/hooks/useAccount";
@@ -34,8 +34,7 @@ export const MetadataIrysUploader: React.FC<MetadataIrysUploaderProps> = ({
   onComplete,
   label = "Metadata Upload",
 }) => {
-  const { isConnected, chain } = useAccount();
-  const chainId = useChainId();
+  const { isConnected, chain, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const [step, setStep] = useState<"image" | "metadata" | "done">("image");

@@ -1,7 +1,7 @@
 ---
 title: FAME Swap Indexed Pool-State Quote Helper
 date: 2026-05-19
-last_updated: 2026-05-23
+last_updated: 2026-06-01
 category: architecture-patterns
 module: fame-swap
 problem_type: architecture_pattern
@@ -85,11 +85,11 @@ Use compact quote rows in normal flow. `src/features/fame-swap/solver/quotes/ind
 
 For CL replay, parse and validate `stateKind: "cl-replay-v1"` as a distinct state surface. The indexed CL replay adapter accepts only fresh `slipstream-usdc-weth-100` state with matching registry provenance, pool address, token order, dynamic fee, and complete tick records. Missing state, stale or future-block state, malformed decimals or bitmap words, unsupported pools, token-direction mismatch, outside-range replay, replay exceptions, and parity mismatches all keep the request on the live fallback path.
 
-Keep the ownership line crisp, but let it evolve. The proof slice made `society-bots` the replayable market-state producer and `www` the shadow math/parity consumer. The compact quote slice makes `society-bots` own exact-input quote execution for this one indexed pool so `www` does not need raw ticks in the hot path. `www` still owns route ranking, route attribution, quote safety, slippage, public readiness, and live-quoter fallback.
+Keep the ownership line crisp, but let it evolve. The proof slice made `society-bots` the replayable market-state producer and `www` the shadow math/parity consumer. The compact quote slice makes `society-bots` own exact-input quote execution for reviewed indexed CL lanes so `www` does not need raw ticks in the hot path. `www` still owns route ranking, activation eligibility, route attribution, quote safety, slippage, public readiness, and live-quoter fallback. For the selected basedflick/FAME lane, compact `cl-quote-v1` evidence is valid only when route lab also proves the selected basedflick/ZORA route still depends on live `uniswap-v4-basedflick-zora` quoting.
 
 Quote attribution must be per selected leg, not per adapter. `src/features/fame-swap/solver/quotes/rankRoutes.ts` now reports route-level indexed context only when all selected legs share the same indexed context. Mixed indexed/live fallback routes should not claim a fully indexed quote. `src/features/fame-swap/solver/quoteWire.ts` preserves the public indexed context fields without leaking helper credentials or protocol evidence.
 
-Keep helper failure visible without breaking fallback. The API logs sanitized `fame-pool-quote-api-unavailable` events for compact helper failures. `includeDebug: true` returns structured `debug.quoteApi` counts and capped per-edge details, not server logs, service tokens, helper URLs, raw reserve state, or raw tick payloads. In `society-bots`, CL replay capture failures must remain error-level operational failures, not INFO-only metrics, because bad replay snapshots are the correctness boundary for every downstream quote.
+Keep helper failure visible without breaking fallback. The API logs sanitized `fame-pool-quote-api-unavailable` events for compact helper failures. In local development and tests, `includeDebug: true` returns structured `debug.quoteApi` counts and capped per-edge details, not server logs, service tokens, helper URLs, raw reserve state, or raw tick payloads. Production responses redact that debug surface. In `society-bots`, CL replay capture failures must remain error-level operational failures, not INFO-only metrics, because bad replay snapshots are the correctness boundary for every downstream quote.
 
 ## Why This Matters
 
@@ -126,6 +126,14 @@ This also continues earlier quote-builder lessons (session history):
 - Expanding the solver toward allocation optimization where many quote trials reuse the same reserves, slot0, liquidity, or quoter state.
 
 ## Current State and TODO Triage
+
+Selected activation evidence:
+
+- Run indexed route lab with `--route <artifact-id>` for the selected basedflick/ZORA route to avoid full-corpus compute when proving this lane.
+- Route lab must show `slipstream-basedflick-fame raw-replay-indexed`, `uniswap-v4-basedflick-zora live`, and `selectedActivation.outcome: "raw_replay_with_live_dependency"`; the delta replay smoke bundle must also match a compact `cl-quote-v1` row for the selected pool, direction, and amount.
+- Pair route-lab rows with `bun scripts/fame-swap-pool-activation-report.ts` and the `society-bots` delta replay smoke bundle.
+- Treat `activationEvidence.status: "blocked"` as a gate failure, not as a reason to discard reducer candidate state.
+- Do not claim V4 compact quote support from this lane; the selected route remains mixed compact/live until a reviewed V4 reducer exists.
 
 Route lab readiness:
 
@@ -165,7 +173,7 @@ Follow-up soon:
 - TODO: Split reserve compact-quote unavailable reasons from CL replay reasons and require non-null reserve post-swap price fields when a reserve row is quoted, with fixture coverage for malformed reserve state and zero-output math.
 - TODO: Add a compact quote batching regression for repeated optimizer waves so `www` proves duplicate evaluated edges are coalesced and total helper requests stay bounded before live fallback.
 - TODO: Add a bounded replay-work path for dense CL `/fame/pool-quotes`: avoid bitmap chunk reads for compact quotes when possible, prepare parsed tick state once per pool/batch, use cursor or binary search traversal instead of repeated full scans, and cap crossed ticks/work before Lambda timeout.
-- TODO: Add selected-route and losing-route smoke evidence for compact quote attribution after dev deploy.
+- TODO: Attach selected-route activation evidence from indexed route lab, the activation report, and the delta replay smoke bundle after dev deploy.
 - TODO: Contain backend replay exceptions per quote and return typed `unavailable` entries instead of failing the whole `/fame/pool-quotes` batch.
 - TODO: Continue compact quote observability in runtime logs after `debug.quoteApi` proves configured/attempted/used, status/reason counts, helper failure, source mismatch, no matching quote, unusable quote, and selected evidence identity.
 

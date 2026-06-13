@@ -178,6 +178,7 @@ export function quoteRouteCandidate(
       quoteContext: quote.context ?? quoteContext,
       priceImpact: quote.priceImpact,
       protocolEvidence: quote.protocolEvidence,
+      indexedEvidence: quote.indexedEvidence,
     });
   }
 
