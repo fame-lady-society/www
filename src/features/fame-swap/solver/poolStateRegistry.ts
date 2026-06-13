@@ -188,6 +188,7 @@ export type FamePoolStateUnsupportedReason =
   | "concentrated-liquidity"
   | "missing-fee-metadata"
   | "native-wrap"
+  | "non-direct-fame-pool"
   | "stable-pool"
   | "unsupported-venue";
 
@@ -464,6 +465,9 @@ export function famePoolSupportsCompactQuote(
   poolId: string,
   options: FameCompactQuoteSupportOptions = {},
 ): boolean {
+  const pool = famePoolById(poolId);
+  if (!pool || !directFamePool(pool)) return false;
+
   return (
     COMPACT_QUOTE_CAPABLE_FAME_POOL_IDS.some((id) => id === poolId) ||
     (fameV4ZoraQuoteLaneActivationPassed(
@@ -616,7 +620,11 @@ export function famePoolStateRegistrySourceId(
 function unsupportedReasonForPool(
   pool: FamePoolConfig,
   fee: FamePoolFeeDescriptor,
+  activationStatus: FamePoolActivationStatus,
 ): FamePoolStateUnsupportedReason | null {
+  if (activationStatus === "tracked-only" && !directFamePool(pool)) {
+    return pool.venue === "native-wrap" ? "native-wrap" : "non-direct-fame-pool";
+  }
   if (pool.venue === "uniswap-v2") {
     return fee.status === "available" ? null : "missing-fee-metadata";
   }
@@ -685,6 +693,13 @@ function stateViewAddress(pool: FamePoolConfig): Address | null {
   return pool.venue === "uniswap-v4" ? pool.stateView : null;
 }
 
+function directFamePool(pool: FamePoolConfig): boolean {
+  return (
+    token0(pool).toLowerCase() === FAME ||
+    token1(pool).toLowerCase() === FAME
+  );
+}
+
 function activationStatusForPool(
   pool: FamePoolConfig,
   capability: FamePoolStateCapability,
@@ -711,13 +726,18 @@ function token1(pool: FamePoolConfig): Address {
 
 function registryEntry(pool: FamePoolConfig): FamePoolStateRegistryEntry {
   const fee = feeDescriptorForPool(pool);
-  const unsupportedReason = unsupportedReasonForPool(pool, fee);
   const activationStatus = activationStatusForRegistryPoolId(pool.id);
+  const unsupportedReason = unsupportedReasonForPool(
+    pool,
+    fee,
+    activationStatus,
+  );
   const consumerQuoteCapability =
     compactQuoteCapabilityForStatus(activationStatus);
   const supportsQuoteModel =
     consumerQuoteCapability === "reserve-compact-quote";
-  const supportsMarketState = clHeadSnapshotEligible(pool, fee);
+  const supportsMarketState =
+    activationStatus !== "tracked-only" && clHeadSnapshotEligible(pool, fee);
   if (consumerQuoteCapability === "cl-compact-quote" && !supportsMarketState) {
     throw new Error(
       `FAME pool-state registry cannot make ${pool.id} CL compact-quote active without CL head-state metadata.`,

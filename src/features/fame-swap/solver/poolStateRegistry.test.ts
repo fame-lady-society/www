@@ -66,13 +66,10 @@ describe("FAME pool-state registry", () => {
     );
     assert.deepEqual(capableIds, QUOTE_MODEL_CAPABLE_FAME_POOL_IDS);
     assert.deepEqual(capableIds, [
-      "aerodrome-v2-usdc-weth",
       "scale-equalizer-frxusd-fame",
       "scale-equalizer-scale-fame",
-      "scale-equalizer-usdc-scale",
       "scale-equalizer-weth-fame",
       "uniswap-v2-fame-direct",
-      "uniswap-v2-usdc-weth",
     ]);
     assert.ok(
       registry.pools
@@ -88,7 +85,7 @@ describe("FAME pool-state registry", () => {
     );
   });
 
-  it("keeps unsupported pools visible while making reviewed CL market-state eligible", () => {
+  it("keeps non-direct FAME pools visible without indexing them", () => {
     const registry = famePoolStateRegistry();
     const trackedOnly = registry.pools.filter(
       (pool) => pool.capability === "tracked-only",
@@ -107,7 +104,7 @@ describe("FAME pool-state registry", () => {
       trackedOnly.some(
         (pool) =>
           pool.id === "scale-equalizer-usdc-frxusd" &&
-          pool.unsupportedReason === "stable-pool",
+          pool.unsupportedReason === "non-direct-fame-pool",
       ),
     );
     assert.ok(
@@ -118,29 +115,7 @@ describe("FAME pool-state registry", () => {
       ),
     );
     assert.ok(
-      marketState.some(
-        (pool) =>
-          pool.venue === "aerodrome-slipstream" &&
-          pool.stateSurface === "cl-head-snapshot" &&
-          pool.tickSpacing !== null,
-      ),
-    );
-    assert.ok(
-      marketState.some(
-        (pool) =>
-          pool.venue === "uniswap-v3" &&
-          pool.stateSurface === "cl-head-snapshot" &&
-          pool.tickSpacing !== null,
-      ),
-    );
-    assert.ok(
-      marketState.some(
-        (pool) =>
-          pool.venue === "uniswap-v4" &&
-          pool.stateSurface === "cl-head-snapshot" &&
-          pool.poolKey !== null &&
-          pool.stateViewAddress !== null,
-      ),
+      marketState.every((pool) => pool.id === FAME_SELECTED_CL_ACTIVATION_CANDIDATE),
     );
     assert.equal(candidate?.capability, "market-state");
     assert.equal(candidate?.activationStatus, "cl-compact-quote-active");
@@ -150,9 +125,11 @@ describe("FAME pool-state registry", () => {
     );
     assert.equal(candidate?.stateSurface, "cl-head-snapshot");
     assert.equal(candidate?.replaySurface, "cl-replay-v1");
-    assert.equal(v4Dependency?.capability, "market-state");
-    assert.equal(v4Dependency?.activationStatus, "unsupported");
+    assert.equal(v4Dependency?.capability, "tracked-only");
+    assert.equal(v4Dependency?.activationStatus, "tracked-only");
+    assert.equal(v4Dependency?.stateSurface, null);
     assert.equal(v4Dependency?.replaySurface, null);
+    assert.equal(v4Dependency?.unsupportedReason, "non-direct-fame-pool");
   });
 
   it("emits schema-v4 row fields required by the pool-state producer parser", () => {
@@ -183,11 +160,11 @@ describe("FAME pool-state registry", () => {
     );
     assert.equal(
       pool("uniswap-v2-usdc-weth").activationStatus,
-      "reserve-compact-quote-active",
+      "tracked-only",
     );
     assert.equal(
       pool("slipstream-usdc-weth-100").activationStatus,
-      "cl-compact-quote-active",
+      "tracked-only",
     );
     assert.equal(
       pool(FAME_SELECTED_CL_ACTIVATION_CANDIDATE).activationStatus,
@@ -195,11 +172,11 @@ describe("FAME pool-state registry", () => {
     );
     assert.equal(
       pool("uniswap-v3-zora-usdc").activationStatus,
-      "cl-head-only",
+      "tracked-only",
     );
     assert.equal(
       pool(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID).activationStatus,
-      "unsupported",
+      "tracked-only",
     );
     assert.equal(pool("native-wrap-weth").activationStatus, "tracked-only");
   });
@@ -212,21 +189,13 @@ describe("FAME pool-state registry", () => {
     const replayIds = registry.pools
       .filter((pool) => pool.replaySurface === "cl-replay-v1")
       .map((pool) => pool.id);
-    const replayPool = registry.pools.find(
-      (pool) => pool.id === "slipstream-usdc-weth-100",
-    );
 
     assert.deepEqual(
       CL_REPLAY_CAPABLE_FAME_POOL_IDS,
       poolIdsForActivationStatus("cl-compact-quote-active"),
     );
     assert.deepEqual(replayIds, CL_REPLAY_CAPABLE_FAME_POOL_IDS);
-    assert.equal(replayPool?.capability, "market-state");
-    assert.equal(replayPool?.stateSurface, "cl-head-snapshot");
-    assert.equal(replayPool?.replaySurface, "cl-replay-v1");
-    assert.equal(replayPool?.activationStatus, "cl-compact-quote-active");
-    assert.equal(replayPool?.venue, "aerodrome-slipstream");
-    assert.equal(replayPool?.tickSpacing, 100);
+    assert.deepEqual(replayIds, [FAME_SELECTED_CL_ACTIVATION_CANDIDATE]);
     assert.equal(candidate?.replaySurface, "cl-replay-v1");
     assert.equal(candidate?.activationStatus, "cl-compact-quote-active");
     assert.ok(CL_REPLAY_CAPABLE_FAME_POOL_IDS.includes(candidate?.id ?? ""));
@@ -260,10 +229,10 @@ describe("FAME pool-state registry", () => {
       ...QUOTE_MODEL_CAPABLE_FAME_POOL_IDS,
       ...CL_REPLAY_CAPABLE_FAME_POOL_IDS,
     ]);
-    assert.equal(famePoolSupportsCompactQuote("uniswap-v2-usdc-weth"), true);
+    assert.equal(famePoolSupportsCompactQuote("uniswap-v2-usdc-weth"), false);
     assert.equal(
       famePoolSupportsCompactQuote("slipstream-usdc-weth-100"),
-      true,
+      false,
     );
     assert.equal(
       famePoolSupportsCompactQuote(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID),
@@ -273,7 +242,7 @@ describe("FAME pool-state registry", () => {
       famePoolSupportsCompactQuote(V4_ZORA_QUOTE_LANE_CANDIDATE_FAME_POOL_ID, {
         v4ZoraQuoteLaneActivation: activeV4QuoteLane,
       }),
-      true,
+      false,
     );
     assert.equal(
       famePoolSupportsCompactQuote(
@@ -286,7 +255,7 @@ describe("FAME pool-state registry", () => {
         V4_ZORA_ETH_QUOTE_LANE_CANDIDATE_FAME_POOL_ID,
         { v4ZoraQuoteLaneActivation: activeV4QuoteLane },
       ),
-      true,
+      false,
     );
     assert.equal(famePoolSupportsCompactQuote("uniswap-v4-usdc-eth"), false);
     assert.equal(famePoolSupportsCompactQuote("native-wrap-weth"), false);

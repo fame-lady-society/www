@@ -1,6 +1,6 @@
 export const FAME_POOL_ACTIVATION_SCHEMA_VERSION = 1;
 export const FAME_POOL_ACTIVATION_LEDGER_HASH =
-  "0xb5b11fb5b0e829d7cef286ed3eb9df977260d1de50aabd658994b3995efb958b";
+  "0xb533796d3cec89d202f49e0245c9769cba8aa7c92ad537fe33cfc44597927c0f";
 
 export const FAME_SELECTED_CL_ACTIVATION_CANDIDATE =
   "slipstream-basedflick-fame";
@@ -46,9 +46,10 @@ export interface ReviewedFamePoolActivationEntry
 
 export const REVIEWED_POOL_ACTIVATIONS = {
   "aerodrome-v2-usdc-weth": {
-    activationStatus: "reserve-compact-quote-active",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
-    reason: "Reserve pool is active for compact quote rows.",
+    reason:
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "scale-equalizer-frxusd-fame": {
     activationStatus: "reserve-compact-quote-active",
@@ -64,12 +65,13 @@ export const REVIEWED_POOL_ACTIVATIONS = {
     activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Stable Solidly reserve math is not part of this activation lane; keep tracked for inventory only.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "scale-equalizer-usdc-scale": {
-    activationStatus: "reserve-compact-quote-active",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
-    reason: "Reserve pool is active for compact quote rows.",
+    reason:
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "scale-equalizer-weth-fame": {
     activationStatus: "reserve-compact-quote-active",
@@ -95,16 +97,16 @@ export const REVIEWED_POOL_ACTIVATIONS = {
       "Upstream Slipstream pool is not represented in the producer pool-state registry.",
   },
   "slipstream-usdc-frxusd": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Slipstream pool can support CL head-state diagnostics, but is not selected for compact quote activation in v1.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "slipstream-usdc-weth-100": {
-    activationStatus: "cl-compact-quote-active",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Reviewed Slipstream CL replay baseline is active for compact quote rows.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "slipstream-usdc-weth-migrating-50": {
     activationStatus: "blocked",
@@ -119,16 +121,16 @@ export const REVIEWED_POOL_ACTIVATIONS = {
       "Upstream Slipstream pool is not represented in the producer pool-state registry.",
   },
   "slipstream-zora-usdc": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Slipstream pool can support CL head-state diagnostics, but is not selected for compact quote activation in v1.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "slipstream-zora-weth": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Slipstream pool can support CL head-state diagnostics, but is not selected for compact quote activation in v1.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "slipstream2-msusd-mseth": {
     activationStatus: "producer-unrepresented",
@@ -148,51 +150,52 @@ export const REVIEWED_POOL_ACTIVATIONS = {
     reason: "Reserve pool is active for compact quote rows.",
   },
   "uniswap-v2-usdc-weth": {
-    activationStatus: "reserve-compact-quote-active",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
-    reason: "Reserve pool is active for compact quote rows.",
+    reason:
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v3-usdc-weth-30bps": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V3 pool can support CL head-state diagnostics, but is not compact quote active in this checkout.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v3-usdc-weth-5bps": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V3 pool can support CL head-state diagnostics, but is not compact quote active in this checkout.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v3-zora-usdc": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V3 pool can support CL head-state diagnostics, but is not compact quote active in this checkout.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v3-zora-weth": {
-    activationStatus: "cl-head-only",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V3 pool can support CL head-state diagnostics, but is not compact quote active in this checkout.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v4-basedflick-zora": {
-    activationStatus: "unsupported",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Live V4 route dependency; Uniswap V4 compact quote support is unsupported until a V4 reducer model is reviewed.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v4-usdc-eth": {
-    activationStatus: "unsupported",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V4 compact quote support is unsupported until PoolManager, PoolId, hook, fee, and StateView semantics have a reviewed reducer model.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
   "uniswap-v4-zora-eth": {
-    activationStatus: "unsupported",
+    activationStatus: "tracked-only",
     producerRegistryPresence: "present",
     reason:
-      "Uniswap V4 compact quote support is unsupported until PoolManager, PoolId, hook, fee, and StateView semantics have a reviewed reducer model.",
+      "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
   },
 } as const satisfies Record<string, ReviewedFamePoolActivation>;
 

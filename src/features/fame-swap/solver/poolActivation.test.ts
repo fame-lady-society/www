@@ -102,16 +102,16 @@ describe("FAME pool activation report", () => {
     }
   });
 
-  it("keeps the basedflick/ZORA V4 dependency unsupported for compact quotes", () => {
+  it("keeps the basedflick/ZORA V4 dependency tracked-only for compact quotes", () => {
     const report = famePoolActivationReport();
     const v4Dependency = report.upstreamPools.find(
       (entry) => entry.poolId === FAME_SELECTED_LIVE_ROUTE_DEPENDENCY,
     );
 
-    assert.equal(v4Dependency?.activationStatus, "unsupported");
+    assert.equal(v4Dependency?.activationStatus, "tracked-only");
     assert.equal(v4Dependency?.consumerQuoteCapability, "none");
     assert.equal(v4Dependency?.liveRouteDependency, true);
-    assert.match(v4Dependency?.reason ?? "", /V4 compact quote support/i);
+    assert.match(v4Dependency?.reason ?? "", /Non-direct FAME pool/i);
   });
 
   it("reports producer-only entries without counting them as upstream pools", () => {
