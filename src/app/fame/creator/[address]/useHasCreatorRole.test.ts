@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { decodeCreatorPortalRoles } from "./useHasCreatorRole";
+import {
+  decodeCreatorPortalRoles,
+  formatCreatorRoleReadError,
+} from "./useHasCreatorRole";
 
 describe("decodeCreatorPortalRoles", () => {
   it("does not grant access while the role read has no data", () => {
@@ -47,5 +50,15 @@ describe("decodeCreatorPortalRoles", () => {
       hasAnyRole: true,
       raw: 3,
     });
+  });
+
+  it("formats role read errors without leaking full RPC URLs", () => {
+    assert.equal(
+      formatCreatorRoleReadError({
+        shortMessage:
+          "HTTP request failed. URL: https://example.rpc-provider.test/v2/secret-key",
+      }),
+      "HTTP request failed. URL: https://example.rpc-provider.test/...",
+    );
   });
 });

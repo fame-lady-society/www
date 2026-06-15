@@ -43,6 +43,12 @@ export function CreatorPortal({
     }
   }, [isConnecting, isConnectedAddress, router]);
 
+  useEffect(() => {
+    if (!roles.isError || !roles.errorMessage) return;
+
+    console.error("Creator Portal role read failed", roles.errorMessage);
+  }, [roles.errorMessage, roles.isError]);
+
   if (!isConnectedAddress) {
     return null;
   }
@@ -73,6 +79,11 @@ export function CreatorPortal({
             We could not verify this wallet&apos;s Creator Portal permissions on
             Base. This is a read failure, not a confirmed missing-role denial.
           </p>
+          {roles.errorMessage && (
+            <p className="text-sm text-center mb-6 text-gray-400">
+              Read failure: {roles.errorMessage}
+            </p>
+          )}
           <div className="text-center">
             <button
               onClick={() => void roles.refetch()}

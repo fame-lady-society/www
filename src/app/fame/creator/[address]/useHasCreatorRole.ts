@@ -33,6 +33,40 @@ export function decodeCreatorPortalRoles(roles?: bigint): CreatorPortalRoles {
   };
 }
 
+function redactUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+    return `${url.protocol}//${url.host}/...`;
+  } catch {
+    return "[redacted url]";
+  }
+}
+
+export function formatCreatorRoleReadError(error: unknown) {
+  const maybeViemError = error as
+    | {
+        message?: unknown;
+        shortMessage?: unknown;
+      }
+    | undefined;
+  const message =
+    typeof maybeViemError?.shortMessage === "string"
+      ? maybeViemError.shortMessage
+      : typeof maybeViemError?.message === "string"
+        ? maybeViemError.message
+        : typeof error === "string"
+          ? error
+          : undefined;
+
+  if (!message) return undefined;
+
+  return message
+    .replace(/https?:\/\/[^\s)]+/g, redactUrl)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 280);
+}
+
 export function useHasCreatorRole(address?: `0x${string}`) {
   // read raw roles bitmask from contract
   const rolesRead = useReadContract({
@@ -53,6 +87,7 @@ export function useHasCreatorRole(address?: `0x${string}`) {
     isError: rolesRead.isError,
     isSuccess: rolesRead.isSuccess,
     error: rolesRead.error,
+    errorMessage: formatCreatorRoleReadError(rolesRead.error),
     refetch: rolesRead.refetch,
   };
 }
