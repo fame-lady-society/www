@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
+import { isAddressEqual } from "viem";
 import { useHasCreatorRole } from "./useHasCreatorRole";
 import { TokenSelection } from "./TokenSelection";
 import { MetadataSwap } from "./MetadataSwap";
@@ -25,26 +26,67 @@ export function CreatorPortal({
   mintPool,
   artPool,
 }: CreatorPortalProps) {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress, isConnecting } = useAccount();
   const router = useRouter();
   const roles = useHasCreatorRole(address);
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | null>(null);
-
-  useEffect(() => {
-    // Redirect if not connected or not the correct address
-    if (!connectedAddress || connectedAddress !== address) {
-      router.push("/fame/creator");
-    }
-  }, [connectedAddress, address, router]);
-
-  // Redirect if user has no relevant roles
-  const hasAnyRole = !!(
-    roles?.isCreator ||
-    roles?.isBanisher ||
-    roles?.isArtPoolManager
+  const isConnectedAddress = Boolean(
+    connectedAddress && isAddressEqual(connectedAddress, address),
   );
 
-  if (!hasAnyRole) {
+  useEffect(() => {
+    if (isConnecting) return;
+
+    // Redirect if not connected or not the correct address
+    if (!isConnectedAddress) {
+      router.push("/fame/creator");
+    }
+  }, [isConnecting, isConnectedAddress, router]);
+
+  if (!isConnectedAddress) {
+    return null;
+  }
+
+  if (roles.isLoading || roles.isPending) {
+    return (
+      <div className="w-full pl-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-6 text-center">
+            Checking Permissions
+          </h1>
+          <p className="text-lg text-center mb-6">
+            Verifying Creator Portal roles on Base.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roles.isError) {
+    return (
+      <div className="w-full pl-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-6 text-center">
+            Could Not Verify Permissions
+          </h1>
+          <p className="text-lg text-center mb-6">
+            The Creator Portal could not read this wallet&apos;s roles from the
+            CreatorMagic contract on Base.
+          </p>
+          <div className="text-center">
+            <button
+              onClick={() => void roles.refetch()}
+              className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!roles.hasAnyRole) {
     return (
       <div className="w-full pl-4 py-8">
         <div className="max-w-4xl mx-auto">
