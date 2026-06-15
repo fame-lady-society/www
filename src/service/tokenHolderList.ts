@@ -10,30 +10,24 @@ import {
   http,
 } from "viem";
 import { base } from "viem/chains";
+import { baseRpcUrls } from "@/viem/baseRpcUrls";
 
 const REVALIDATE_INTERVAL = 60 * 60;
 
 export const client = createPublicClient({
-  transport: fallback([
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: REVALIDATE_INTERVAL,
+  transport: fallback(
+    baseRpcUrls().map((rpc) =>
+      http(rpc, {
+        batch: true,
+        retryCount: 10,
+        fetchOptions: {
+          next: {
+            revalidate: REVALIDATE_INTERVAL,
+          },
         },
-      },
-    }),
-    // http(process.env.NEXT_PUBLIC_BASE_RPC_URL_2, {
-    //   batch: true,
-    //   retryCount: 10,
-    //   fetchOptions: {
-    //     next: {
-    //       revalidate: REVALIDATE_INTERVAL,
-    //     },
-    //   },
-    // }),
-  ]),
+      }),
+    ),
+  ),
   chain: base,
 });
 
