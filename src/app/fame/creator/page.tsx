@@ -6,7 +6,6 @@ import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useHasCreatorRole } from "./[address]/useHasCreatorRole";
-import { base } from "viem/chains";
 
 const videoWipeUrl = "/videos/wipe-1.mp4";
 
@@ -16,10 +15,10 @@ export default function CreatorPage() {
   const roles = useHasCreatorRole(address);
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && roles.isSuccess && roles.hasAnyRole) {
       router.push(`/fame/creator/${address}`);
     }
-  }, [isConnected, address, router]);
+  }, [isConnected, address, roles.isSuccess, roles.hasAnyRole, router]);
 
   return (
     <>

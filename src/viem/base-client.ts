@@ -8,19 +8,24 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
+import { baseRpcUrls } from "./baseRpcUrls";
+
+const baseRpcTransportConfig = {
+  batch: true,
+  retryCount: 10,
+  fetchOptions: {
+    next: {
+      revalidate: 60,
+    },
+  },
+} satisfies HttpTransportConfig;
+
+function createBaseRpcTransports() {
+  return baseRpcUrls().map((rpc) => http(rpc, baseRpcTransportConfig));
+}
 
 export const client = createPublicClient({
-  transport: fallback([
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-  ]),
+  transport: fallback(createBaseRpcTransports()),
   chain: base,
   batch: {
     multicall: true,
@@ -28,17 +33,7 @@ export const client = createPublicClient({
 });
 
 export const walletClient = createWalletClient({
-  transport: fallback([
-    http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1, {
-      batch: true,
-      retryCount: 10,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-  ]),
+  transport: fallback(createBaseRpcTransports()),
   chain: base,
 });
 

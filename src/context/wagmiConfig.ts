@@ -9,6 +9,7 @@ import {
 } from "wagmi/chains";
 import { Chain, Transport } from "viem";
 import { parseRpcUrls } from "@/viem/rpcUrls";
+import { baseRpcUrls } from "@/viem/baseRpcUrls";
 
 const sepoliaRpcUrls = parseRpcUrls(
   process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON,
@@ -52,11 +53,13 @@ export const sepoliaOnly = {
 export const baseSepoliaOnly = {
   chains: [base, sepolia],
   transports: {
-    [base.id]: fallback([
-      http(process.env.NEXT_PUBLIC_BASE_RPC_URL_1!, {
-        batch: true,
-      }),
-    ]),
+    [base.id]: fallback(
+      baseRpcUrls().map((rpc) =>
+        http(rpc, {
+          batch: true,
+        }),
+      ),
+    ),
     [sepolia.id]: fallback(
       sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
     ),
