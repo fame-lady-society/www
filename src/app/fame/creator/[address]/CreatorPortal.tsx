@@ -67,11 +67,11 @@ export function CreatorPortal({
       <div className="w-full pl-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-center">
-            Could Not Verify Permissions
+            Could Not Check Access
           </h1>
           <p className="text-lg text-center mb-6">
-            The Creator Portal could not read this wallet&apos;s roles from the
-            CreatorMagic contract on Base.
+            We could not verify this wallet&apos;s Creator Portal permissions on
+            Base. This is a read failure, not a confirmed missing-role denial.
           </p>
           <div className="text-center">
             <button
