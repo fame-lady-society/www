@@ -135,6 +135,7 @@ export function CreatorPortal({
           />
         ) : (
           <MetadataSwap
+            address={address}
             selectedTokenId={Number(selectedTokenId)}
             burnPool={burnPool}
             nextArtPoolIndex={nextArtPoolIndex}

@@ -5,5 +5,5 @@ export default function CreatorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DefaultProvider base>{children}</DefaultProvider>;
+  return <DefaultProvider base siwe>{children}</DefaultProvider>;
 }
