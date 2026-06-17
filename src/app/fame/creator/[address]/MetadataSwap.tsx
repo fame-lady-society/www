@@ -1,14 +1,15 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useSwapMetadata } from "./useSwapMetadata";
 import { base } from "viem/chains";
 import { TransactionsModal, Transaction } from "@/components/TransactionsModal";
 import { SwapModeGrid } from "./SwapModeGrid";
 import { TokenPoolGrid } from "./TokenPoolGrid";
 import { SwapMode } from "./SwapModeToken";
-import MetadataIrysUploader from "@/components/MetadataIrysUploader";
+import { SponsoredCreatorMetadataUploader } from "./SponsoredCreatorMetadataUploader";
 
 interface MetadataSwapProps {
+  address: `0x${string}`;
   selectedTokenId: number;
   burnPool: Array<{ tokenId: number; uri: string }>;
   nextArtPoolIndex: number;
@@ -25,6 +26,7 @@ interface MetadataSwapProps {
 }
 
 export function MetadataSwap({
+  address,
   selectedTokenId,
   burnPool,
   nextArtPoolIndex,
@@ -59,17 +61,6 @@ export function MetadataSwap({
   const [showUploaderFor, setShowUploaderFor] = useState<
     null | "art" | "end" | "update"
   >(null);
-
-  const defaultTemplate = useCallback(
-    (imageUrl: string) =>
-      JSON.stringify({
-        name: `FAME Society #${selectedTokenId}`,
-        image: imageUrl,
-        description:
-          "Experience the innovative $FAME token from the Fame Lady Society, a DN404 project seamlessly integrating ERC20 and ERC721 standards. Each $FAME token is part of a revolutionary system where owning multiples of 1 million $FAME automatically mints a rare and exclusive Society NFT to your wallet. These NFTs, backed by 1 million $FAME tokens each, merge the worlds of liquidity and ownership, offering both stability and exclusivity.\n\nWhen you hold a Society NFT, you're not just an owner; you're part of a vibrant, empowering community dedicated to transparency, community governance, and women's empowerment in Web3. Selling any portion of the associated 1 million $FAME will cause the NFT to vanish, reflecting the unique balance of value and rarity within the Fame Lady Society ecosystem.\n\nThe Fame Lady Society, born from the pioneering all-female generative PFP project, continues to push boundaries by promoting true decentralization and sustainability. Fame Lady Society's mission is to transform Web3 into 'webWE,' ensuring every member has a voice in shaping the future. Join us in this exciting journey and redefine how NFTs and tokens can be traded and gamified.",
-      }),
-    [selectedTokenId],
-  );
 
   const handleSubmit = async () => {
     if (!swapMode) return;
@@ -219,10 +210,12 @@ export function MetadataSwap({
                   </button>
                   {showUploaderFor === "art" && (
                     <div className="mt-3">
-                      <MetadataIrysUploader
-                        template={defaultTemplate}
-                        onComplete={(txid) => {
-                          setArtPoolUrl(`https://gateway.irys.xyz/${txid}`);
+                      <SponsoredCreatorMetadataUploader
+                        address={address}
+                        tokenId={selectedTokenId}
+                        mode="art"
+                        onComplete={(metadataUri) => {
+                          setArtPoolUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}
                       />
@@ -255,10 +248,12 @@ export function MetadataSwap({
                   </button>
                   {showUploaderFor === "end" && (
                     <div className="mt-3">
-                      <MetadataIrysUploader
-                        template={defaultTemplate}
-                        onComplete={(uri) => {
-                          setEndOfMintUrl(uri);
+                      <SponsoredCreatorMetadataUploader
+                        address={address}
+                        tokenId={selectedTokenId}
+                        mode="end"
+                        onComplete={(metadataUri) => {
+                          setEndOfMintUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}
                       />
@@ -291,10 +286,12 @@ export function MetadataSwap({
                   </button>
                   {showUploaderFor === "update" && (
                     <div className="mt-3">
-                      <MetadataIrysUploader
-                        template={defaultTemplate}
-                        onComplete={(txid) => {
-                          setUpdateMetadataUrl(txid);
+                      <SponsoredCreatorMetadataUploader
+                        address={address}
+                        tokenId={selectedTokenId}
+                        mode="update"
+                        onComplete={(metadataUri) => {
+                          setUpdateMetadataUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}
                       />
