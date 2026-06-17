@@ -10,7 +10,7 @@ export type IrysSponsoredUploader = {
   getBalance: () => Promise<unknown>;
   fund: (amount: bigint) => Promise<unknown>;
   upload: (
-    content: string | Uint8Array,
+    content: Buffer,
     opts: { tags: IrysUploadTag[] },
   ) => Promise<{ id?: string } | undefined>;
 };
@@ -79,7 +79,11 @@ export async function uploadToIrys(opts: {
   content: string | Uint8Array;
   tags: IrysUploadTag[];
 }) {
-  const result = await opts.uploader.upload(opts.content, { tags: opts.tags });
+  const uploadContent =
+    typeof opts.content === "string"
+      ? Buffer.from(opts.content)
+      : Buffer.from(opts.content);
+  const result = await opts.uploader.upload(uploadContent, { tags: opts.tags });
   const txid = result?.id;
   if (!txid) {
     throw new Error("Upload failed: no transaction ID returned");

@@ -141,7 +141,7 @@ describe("/api/fame/creator/metadata", () => {
   });
 
   it("uploads the image, then generated metadata, and returns both gateway URIs", async () => {
-    const uploads: Array<{ content: string | Uint8Array; tags: unknown }> = [];
+    const uploads: Array<{ content: Buffer; tags: unknown }> = [];
     const response = await handleCreatorMetadataUpload(
       makeRequest({
         address: CREATOR,
@@ -158,9 +158,10 @@ describe("/api/fame/creator/metadata", () => {
       metadataUri: "https://gateway.irys.xyz/metadata-tx",
     });
     assert.equal(uploads.length, 2);
-    assert.ok(uploads[0].content instanceof Uint8Array);
+    assert.ok(Buffer.isBuffer(uploads[0].content));
+    assert.ok(Buffer.isBuffer(uploads[1].content));
     assert.equal(
-      JSON.parse(uploads[1].content as string).image,
+      JSON.parse(uploads[1].content.toString("utf-8")).image,
       "https://gateway.irys.xyz/image-tx",
     );
   });
