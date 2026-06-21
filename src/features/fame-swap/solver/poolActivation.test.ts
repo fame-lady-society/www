@@ -12,7 +12,7 @@ describe("FAME pool activation report", () => {
     const report = famePoolActivationReport();
     const poolIds = report.upstreamPools.map((pool) => pool.poolId);
 
-    assert.equal(report.upstreamPoolCount, 26);
+    assert.equal(report.upstreamPoolCount, 22);
     assert.equal(report.upstreamPools.length, report.upstreamPoolCount);
     assert.equal(new Set(poolIds).size, report.upstreamPoolCount);
     assert.equal(
@@ -41,10 +41,6 @@ describe("FAME pool activation report", () => {
     const unrepresented = [
       "slipstream-spx-weth",
       "slipstream-usdc-weth-migrating-50",
-      "slipstream-msusd-usdc-a",
-      "slipstream-weth-mseth",
-      "slipstream2-msusd-mseth",
-      "slipstream2-msusd-usdc-c",
     ];
 
     for (const poolId of unrepresented) {

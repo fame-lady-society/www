@@ -1,13 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { Address } from "viem";
 import { FAME, NATIVE_ETH, USDC, WETH, tokenForAddress } from "../../tokens";
 import { solveFameSwapAmountAsync } from "../amountSolver";
 import { famePoolEdges } from "../poolUniverse";
 import { DEFAULT_FAME_SWAP_SLIPPAGE_BPS } from "../slippage";
 import {
   BASE_SLIPSTREAM_QUOTER_V2,
-  BASE_SLIPSTREAM2_QUOTER,
   BASE_UNISWAP_V3_QUOTER_V2,
   BASE_UNISWAP_V4_QUOTER,
   createLiveLiquidityQuoteAdapter,
@@ -54,7 +52,10 @@ describe("FAME live liquidity quote adapter", () => {
     if (quote.status === "quoted") {
       assert.equal(quote.amountOut, 123n);
       assert.equal(quote.fee.status, "available");
-      assert.equal(quote.protocolEvidence?.marketImpact.status, "not_applicable");
+      assert.equal(
+        quote.protocolEvidence?.marketImpact.status,
+        "not_applicable",
+      );
     }
     assert.equal(reads, 0);
   });
@@ -425,150 +426,20 @@ describe("FAME live liquidity quote adapter", () => {
     }
   });
 
-  it("quotes Slipstream2 Gauge Caps legs through the dedicated quoter", async () => {
-    const edge = famePoolEdges().find(
-      (candidate) => candidate.poolId === "slipstream2-msusd-mseth",
+  it("does not expose depegged msUSD or msETH pool legs", () => {
+    const depeggedPoolIds = new Set([
+      "slipstream-msusd-usdc-a",
+      "slipstream-weth-mseth",
+      "slipstream2-msusd-mseth",
+      "slipstream2-msusd-usdc-c",
+    ]);
+
+    assert.deepEqual(
+      famePoolEdges()
+        .map((edge) => edge.poolId)
+        .filter((poolId) => depeggedPoolIds.has(poolId)),
+      [],
     );
-    assert.ok(edge);
-    if (edge.pool.venue !== "aerodrome-slipstream2") {
-      throw new Error("Expected Slipstream2 edge.");
-    }
-    const pool = edge.pool;
-
-    const adapter = await createLiveLiquidityQuoteAdapter({
-      client: {
-        async readContract(request) {
-          if (request.functionName === "slot0") {
-            assert.equal(request.address, pool.pool);
-            return [Q96, 0, 0, 0, 0, true];
-          }
-          if (request.functionName === "liquidity") {
-            assert.equal(request.address, pool.pool);
-            assert.equal(request.blockNumber, 45_884_844n);
-            return 123_456n;
-          }
-          assert.equal(request.address, BASE_SLIPSTREAM2_QUOTER);
-          assert.equal(request.functionName, "quoteExactInputSingle");
-          assert.deepEqual(request.args, [
-            edge.tokenIn,
-            edge.tokenOut,
-            200,
-            12_345n,
-            0n,
-          ]);
-          assert.equal(request.blockNumber, 45_884_844n);
-          return 67_890n;
-        },
-      },
-      chainId: 8453,
-      blockNumber: 45_884_844n,
-    });
-
-    const quote = await adapter.quoteEdge({ edge, amountIn: 12_345n });
-
-    assert.equal(quote.status, "quoted");
-    if (quote.status === "quoted") {
-      assert.equal(quote.amountOut, 67_890n);
-      assert.match(quote.evidence, /Slipstream2 quoter/);
-      assert.equal(quote.context?.source, "live");
-      assert.equal(quote.priceImpact?.method, "concentrated-liquidity-slot0");
-      assert.equal(quote.priceImpact.postSwapPriceX18, null);
-      assert.equal(quote.protocolEvidence?.quote.status, "available");
-      assert.equal(quote.protocolEvidence?.prePrice.status, "available");
-      assert.equal(quote.protocolEvidence?.postPrice.status, "unavailable");
-      assert.equal(quote.protocolEvidence?.activeLiquidity.status, "available");
-      assert.equal(quote.protocolEvidence?.activeLiquidity.value, "123456");
-    }
-  });
-
-  it("keeps Slipstream2 quotes when active liquidity evidence is unavailable", async () => {
-    const edge = famePoolEdges().find(
-      (candidate) => candidate.poolId === "slipstream2-msusd-mseth",
-    );
-    assert.ok(edge);
-    if (edge.pool.venue !== "aerodrome-slipstream2") {
-      throw new Error("Expected Slipstream2 edge.");
-    }
-    const pool = edge.pool;
-
-    const adapter = await createLiveLiquidityQuoteAdapter({
-      client: {
-        async readContract(request) {
-          if (request.functionName === "slot0") {
-            return [Q96, 0, 0, 0, 0, true];
-          }
-          if (request.functionName === "liquidity") {
-            throw new Error("liquidity failed https://example.invalid/secret");
-          }
-          assert.equal(request.address, BASE_SLIPSTREAM2_QUOTER);
-          assert.equal(request.functionName, "quoteExactInputSingle");
-          assert.equal(request.blockNumber, 45_884_844n);
-          return 67_890n;
-        },
-      },
-      chainId: 8453,
-      blockNumber: 45_884_844n,
-    });
-
-    const quote = await adapter.quoteEdge({ edge, amountIn: 12_345n });
-
-    assert.equal(quote.status, "quoted");
-    if (quote.status === "quoted") {
-      assert.equal(quote.amountOut, 67_890n);
-      assert.equal(
-        quote.protocolEvidence?.activeLiquidity.status,
-        "unavailable",
-      );
-      assert.match(
-        quote.protocolEvidence?.activeLiquidity.reason ?? "",
-        /liquidity failed/,
-      );
-      assert.doesNotMatch(
-        quote.protocolEvidence?.activeLiquidity.reason ?? "",
-        /https?:\/\//,
-      );
-    }
-  });
-
-  it("fails closed for unknown Slipstream2 deployments", async () => {
-    const edge = famePoolEdges().find(
-      (candidate) => candidate.poolId === "slipstream2-msusd-mseth",
-    );
-    assert.ok(edge);
-    if (edge.pool.venue !== "aerodrome-slipstream2") {
-      throw new Error("Expected Slipstream2 edge.");
-    }
-    const unknownDeploymentEdge = {
-      ...edge,
-      pool: {
-        ...edge.pool,
-        factory:
-          "0x00000000000000000000000000000000000000f1" as const satisfies Address,
-        router:
-          "0x00000000000000000000000000000000000000f2" as const satisfies Address,
-      },
-    };
-
-    const adapter = await createLiveLiquidityQuoteAdapter({
-      client: {
-        async readContract() {
-          throw new Error("should not read unknown Slipstream2 deployment");
-        },
-      },
-      chainId: 8453,
-      blockNumber: 45_884_844n,
-    });
-
-    const quote = await adapter.quoteEdge({
-      edge: unknownDeploymentEdge,
-      amountIn: 12_345n,
-    });
-
-    assert.equal(quote.status, "failed");
-    if (quote.status === "failed") {
-      assert.equal(quote.reason, "no_quote_evidence");
-      assert.match(quote.message, /unsupported Slipstream2 deployment/);
-    }
   });
 
   it("quotes Uniswap V3 legs through the Base QuoterV2", async () => {

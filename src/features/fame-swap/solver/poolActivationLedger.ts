@@ -1,6 +1,6 @@
 export const FAME_POOL_ACTIVATION_SCHEMA_VERSION = 1;
 export const FAME_POOL_ACTIVATION_LEDGER_HASH =
-  "0xb533796d3cec89d202f49e0245c9769cba8aa7c92ad537fe33cfc44597927c0f";
+  "0x4212d61e225b7504c307c9ea60783147d485ea16e59bd8e0254257b5e6d59842";
 
 export const FAME_SELECTED_CL_ACTIVATION_CANDIDATE =
   "slipstream-basedflick-fame";
@@ -84,12 +84,6 @@ export const REVIEWED_POOL_ACTIVATIONS = {
     reason:
       "Selected v1 Slipstream CL leg is compact quote active for www routes; basedflick/ZORA remains a live V4 dependency.",
   },
-  "slipstream-msusd-usdc-a": {
-    activationStatus: "producer-unrepresented",
-    producerRegistryPresence: "producer-unrepresented",
-    reason:
-      "Upstream Slipstream pool is not represented in the producer pool-state registry.",
-  },
   "slipstream-spx-weth": {
     activationStatus: "producer-unrepresented",
     producerRegistryPresence: "producer-unrepresented",
@@ -114,12 +108,6 @@ export const REVIEWED_POOL_ACTIVATIONS = {
     reason:
       "Aerodrome migrating pool belongs to the migration factory and must stay blocked until factory and tick-spacing assumptions are reviewed.",
   },
-  "slipstream-weth-mseth": {
-    activationStatus: "producer-unrepresented",
-    producerRegistryPresence: "producer-unrepresented",
-    reason:
-      "Upstream Slipstream pool is not represented in the producer pool-state registry.",
-  },
   "slipstream-zora-usdc": {
     activationStatus: "tracked-only",
     producerRegistryPresence: "present",
@@ -131,18 +119,6 @@ export const REVIEWED_POOL_ACTIVATIONS = {
     producerRegistryPresence: "present",
     reason:
       "Non-direct FAME pool disabled to keep producer and quote traffic scoped to direct FAME pairs.",
-  },
-  "slipstream2-msusd-mseth": {
-    activationStatus: "producer-unrepresented",
-    producerRegistryPresence: "producer-unrepresented",
-    reason:
-      "Slipstream2 pool is not represented in the producer registry and cannot inherit Slipstream replay support.",
-  },
-  "slipstream2-msusd-usdc-c": {
-    activationStatus: "producer-unrepresented",
-    producerRegistryPresence: "producer-unrepresented",
-    reason:
-      "Slipstream2 pool is not represented in the producer registry and cannot inherit Slipstream replay support.",
   },
   "uniswap-v2-fame-direct": {
     activationStatus: "reserve-compact-quote-active",

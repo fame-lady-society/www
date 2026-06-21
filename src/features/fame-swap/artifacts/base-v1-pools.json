@@ -143,28 +143,6 @@
       "feeBps": 5
     },
     {
-      "id": "slipstream-msusd-usdc-a",
-      "venue": "aerodrome-slipstream",
-      "router": "0xbe6d8f0d05cc4be24d5167a3ef062215be6d18a5",
-      "factory": "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
-      "pool": "0x7501bc8bb51616f79bfa524e464fb7b41f0b10fb",
-      "token0": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-      "token1": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-      "tickSpacing": 50,
-      "feeBps": 5
-    },
-    {
-      "id": "slipstream-weth-mseth",
-      "venue": "aerodrome-slipstream",
-      "router": "0xbe6d8f0d05cc4be24d5167a3ef062215be6d18a5",
-      "factory": "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
-      "pool": "0x74f72788f4814d7ff3c49b44684aa98eee140c0e",
-      "token0": "0x4200000000000000000000000000000000000006",
-      "token1": "0x7ba6f01772924a82d9626c126347a28299e98c98",
-      "tickSpacing": 50,
-      "feeBps": 5
-    },
-    {
       "id": "slipstream-zora-usdc",
       "venue": "aerodrome-slipstream",
       "router": "0xbe6d8f0d05cc4be24d5167a3ef062215be6d18a5",
@@ -185,28 +163,6 @@
       "token1": "0x4200000000000000000000000000000000000006",
       "tickSpacing": 100,
       "feeBps": 30
-    },
-    {
-      "id": "slipstream2-msusd-mseth",
-      "venue": "aerodrome-slipstream2",
-      "router": "0xcbbb8035cac7d4b3ca7abb74cf7bdf900215ce0d",
-      "factory": "0xade65c38cd4849adba595a4323a8c7ddfe89716a",
-      "pool": "0x8845126640b36df1d24bf3df9b2903fd4c730fe6",
-      "token0": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-      "token1": "0x7ba6f01772924a82d9626c126347a28299e98c98",
-      "tickSpacing": 200,
-      "feeBps": 5
-    },
-    {
-      "id": "slipstream2-msusd-usdc-c",
-      "venue": "aerodrome-slipstream2",
-      "router": "0xcbbb8035cac7d4b3ca7abb74cf7bdf900215ce0d",
-      "factory": "0xade65c38cd4849adba595a4323a8c7ddfe89716a",
-      "pool": "0x054b67943ba17b2cd8c420544c88bde71a81ef9f",
-      "token0": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-      "token1": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-      "tickSpacing": 1,
-      "feeBps": 5
     },
     {
       "id": "uniswap-v3-zora-usdc",
@@ -289,7 +245,5 @@
       "hooks": "0x0000000000000000000000000000000000000000"
     }
   ],
-  "pendingLaunchBlockingPools": [
-    "slipstream-usdc-weth-migrating-50"
-  ]
+  "pendingLaunchBlockingPools": ["slipstream-usdc-weth-migrating-50"]
 }

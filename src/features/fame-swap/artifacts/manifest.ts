@@ -19,9 +19,9 @@ export const FAME_SWAP_ARTIFACT_MANIFEST = {
   parityVectorsContentHash:
     "0x8ccba890d2ec3ed28586f548b087d53e36630fe1d4a55c8c21471bc9e1fb9cf2" as Hex,
   poolsJsonHash:
-    "0x7867763b3c520edb717f71186f8ee47364fb66871f82b9c8c830e7d911e3839b" as Hex,
+    "0x582b48fdaeb3c88bfc40415ba5a86d1cfd1bd4fe208fa6533f3681c02700f1c7" as Hex,
   poolsContentHash:
-    "0xcf346fe2875d030a9b5872895e59e044e6e2b01613e3f3072c721c49c2234715" as Hex,
+    "0xca5d31d8b6266a075137c83d58b00bce1c763f30b73388719a6e2bce29085fcf" as Hex,
   poolStateSnapshotJsonHash:
     "0x5d7fa2a9ccd334bfae92e1ef1e8eb5b77ba48cc2e9945ee71769f014c75f4c07" as Hex,
   poolStateSnapshotContentHash:

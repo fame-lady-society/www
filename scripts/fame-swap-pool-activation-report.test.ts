@@ -12,8 +12,8 @@ describe("FAME pool activation report script", () => {
     };
 
     assert.equal(parsed.status, "generated-reviewed-activation");
-    assert.equal(parsed.upstreamPoolCount, 26);
-    assert.equal(parsed.upstreamPools?.length, 26);
+    assert.equal(parsed.upstreamPoolCount, 22);
+    assert.equal(parsed.upstreamPools?.length, 22);
     assert.ok((parsed.producerOnlyPools?.length ?? 0) > 0);
   });
 });
