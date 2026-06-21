@@ -16,7 +16,7 @@ import {
 
 const quotedResponse = poolQuoteFixture.response;
 const POOL_QUOTES_V1_FIXTURE_SHA256 =
-  "1167e7daf16ed8c90c01b053dce24bb08579aef88a24a1ae1a756b290c34237d";
+  "e994c740c00f179d16492d9c68db4ca63024d3df9d74fd4165b08a6fdcbbc952";
 const clQuoteRow = {
   status: "quoted",
   quoteKind: "cl-quote-v1",
@@ -307,10 +307,7 @@ describe("FAME indexed quote API client", () => {
     assert.equal(row.poolId, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolId);
     assert.equal(row.poolKey, FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.poolKey);
     assert.equal(row.zoraProvenance, undefined);
-    assert.equal(
-      row.reviewedPoolEvidence.kind,
-      "zero-hook-static-fee",
-    );
+    assert.equal(row.reviewedPoolEvidence.kind, "zero-hook-static-fee");
     assert.equal(
       row.reviewedPoolEvidence.staticFee,
       FAME_V4_ZORA_ETH_REVIEWED_POOL_SHAPE.fee.toString(),
