@@ -12,15 +12,20 @@ As of 2026-07-12, direct fork probes confirmed:
 - chain ID `8453` at `http://127.0.0.1:8545`
 - deployed bytecode at `0x6536A328419785212BD4DA43F4E5155af60dB7D2`
 - `SOCIETY_NFT()` equals `0xBB5ED04dD7B207592429eb8d599d103CCad646c4`
-- `lifecycle()` equals `0` (`Unstarted`)
 - the browser route at `http://localhost:3002/fame/auction` rendered “Auction
-  has not started” without displaying token `144`
+  has not started” without displaying token `144` while lifecycle was `0`
+- after the out-of-band owner start, `lifecycle()` equals `1`, `tokenId()`
+  equals `144`, the auction owns token `144`, and the onchain window is exactly
+  three days
+- the active browser route renders the live lot, typed Irys artwork, zero-bid
+  state, matching start/end timestamps, countdown, BaseScan links, and the
+  disconnected bid form
+- disconnected validation rejects a zero bid without enabling a transaction
 
-The fork was later stopped, and the port `3002` app was intentionally stopped
-with it so an RPC error page is not mistaken for a live test environment.
-Active-auction, real browser bid, replacement bid, deadline, and settlement
-proof remain pending until the fork is restarted and the owner calls
-`start(144)`.
+The fork and port `3002` app are currently running for wallet-assisted QA. A
+real browser bid, replacement bid, exact-deadline transition, and settlement
+proof remain pending until a disposable funded Anvil wallet is connected to
+this same local Base RPC.
 
 ## Local configuration
 
