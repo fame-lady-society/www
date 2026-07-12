@@ -4,6 +4,7 @@ import {
   auctionTransactionReducer,
   classifyAuctionTransactionError,
   createAuctionSubmissionGate,
+  auctionBidFormAfterResult,
   initialAuctionTransactionState,
 } from "./transactionState";
 
@@ -120,4 +121,15 @@ test("reset restores a retryable idle state", () => {
     auctionTransactionReducer(failed, { type: "reset" }),
     initialAuctionTransactionState,
   );
+});
+
+test("bid input clears only after canonical confirmation", () => {
+  const input = { value: "1.000000000000000001", touched: true };
+
+  assert.deepEqual(auctionBidFormAfterResult(input, "confirmed"), {
+    value: "",
+    touched: false,
+  });
+  assert.strictEqual(auctionBidFormAfterResult(input, "failed"), input);
+  assert.strictEqual(auctionBidFormAfterResult(input, "blocked"), input);
 });

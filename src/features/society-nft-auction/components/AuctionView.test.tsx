@@ -10,7 +10,7 @@ import type {
 } from "../types";
 import type { AuctionTransactionState } from "../transactionState";
 import { AuctionActionPanel } from "./AuctionActionPanel";
-import { AuctionHero } from "./AuctionHero";
+import { AuctionHero, formatAuctionEth } from "./AuctionHero";
 import { AuctionTransactionStatus } from "./AuctionTransactionStatus";
 
 const auctionAddress = "0x6536A328419785212BD4DA43F4E5155af60dB7D2" as Address;
@@ -84,6 +84,14 @@ function renderAction(
 }
 
 describe("Society NFT auction view", () => {
+  it("renders exact ETH amounts without truncating meaningful wei", () => {
+    assert.equal(formatAuctionEth(1n), "0.000000000000000001 ETH");
+    assert.equal(
+      formatAuctionEth(1_000_000_000_000_000_001n),
+      "1.000000000000000001 ETH",
+    );
+  });
+
   it("keeps the active lot and bid facts visible while disconnected", () => {
     const hero = renderToStaticMarkup(
       <AuctionHero

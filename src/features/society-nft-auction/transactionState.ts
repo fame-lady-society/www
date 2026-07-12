@@ -21,13 +21,28 @@ export type AuctionTransactionErrorKind =
   | "broadcast_failure"
   | "receipt_reverted"
   | "receipt_failure"
-  | "replacement_cancelled";
+  | "replacement_cancelled"
+  | "replacement_replaced"
+  | "refresh_failure"
+  | "environment_changed";
 
 export interface AuctionTransactionError {
   kind: AuctionTransactionErrorKind;
   message: string;
   retryable: boolean;
   shouldRefresh: boolean;
+}
+
+export interface AuctionBidFormState {
+  value: string;
+  touched: boolean;
+}
+
+export function auctionBidFormAfterResult(
+  state: AuctionBidFormState,
+  resultStatus: "confirmed" | "resolved_by_refresh" | "failed" | "blocked",
+): AuctionBidFormState {
+  return resultStatus === "confirmed" ? { value: "", touched: false } : state;
 }
 
 export interface AuctionTransactionState {
@@ -95,7 +110,9 @@ export type AuctionErrorStage =
   | "simulation"
   | "wallet"
   | "receipt"
-  | "replacement_cancelled";
+  | "replacement_cancelled"
+  | "replacement_replaced"
+  | "refresh";
 
 function errorChain(error: unknown): unknown[] {
   const chain: unknown[] = [];
@@ -180,6 +197,25 @@ export function classifyAuctionTransactionError(
     return {
       kind: "replacement_cancelled",
       message: "The replacement cancelled this transaction.",
+      retryable: true,
+      shouldRefresh: false,
+    };
+  }
+
+  if (stage === "replacement_replaced") {
+    return {
+      kind: "replacement_replaced",
+      message: "A different transaction replaced this auction request.",
+      retryable: true,
+      shouldRefresh: false,
+    };
+  }
+
+  if (stage === "refresh") {
+    return {
+      kind: "refresh_failure",
+      message:
+        "Transaction confirmed, but the latest auction state could not be refreshed.",
       retryable: true,
       shouldRefresh: false,
     };

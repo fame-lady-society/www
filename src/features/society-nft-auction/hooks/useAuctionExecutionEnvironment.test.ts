@@ -16,6 +16,7 @@ test("fails closed when the app fork and wallet provider do not share the auctio
   const identity = evaluateAuctionExecutionIdentity({
     code: "0x",
     societyNft,
+    expectedCode: "0x6001600055",
     expectedSocietyNft: societyNft,
   });
 
@@ -30,6 +31,7 @@ test("fails closed when the wallet contract points at another collection", () =>
   const identity = evaluateAuctionExecutionIdentity({
     code: "0x6001600055",
     societyNft: otherCollection,
+    expectedCode: "0x6001600055",
     expectedSocietyNft: societyNft,
   });
 
@@ -41,10 +43,23 @@ test("accepts nonempty code with the expected Society NFT", () => {
   const identity = evaluateAuctionExecutionIdentity({
     code: "0x6001600055",
     societyNft,
+    expectedCode: "0x6001600055",
     expectedSocietyNft: societyNft.toLowerCase(),
   });
 
   assert.deepEqual(identity, { compatible: true });
+});
+
+test("fails closed when runtime bytecode differs", () => {
+  const identity = evaluateAuctionExecutionIdentity({
+    code: "0x6002600055",
+    societyNft,
+    expectedCode: "0x6001600055",
+    expectedSocietyNft: societyNft,
+  });
+
+  assert.equal(identity.compatible, false);
+  assert.equal(identity.reason, "runtime_mismatch");
 });
 
 test("reads code and SOCIETY_NFT through the wallet provider", async () => {
@@ -82,6 +97,17 @@ test("does not call an empty wallet address as though it were the auction", asyn
 
   assert.deepEqual(identity, { code: "0x", societyNft: null });
   assert.deepEqual(calls, ["eth_getCode"]);
+});
+
+test("wallet identity verification times out instead of hanging", async () => {
+  await assert.rejects(
+    readWalletAuctionIdentity(
+      () => new Promise<never>(() => undefined),
+      auction,
+      1,
+    ),
+    /timed out/i,
+  );
 });
 
 test("disconnected and wrong-chain states expose recovery without preflight", () => {

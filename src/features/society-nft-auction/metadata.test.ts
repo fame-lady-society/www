@@ -65,4 +65,15 @@ describe("Society NFT auction metadata", () => {
     assert.equal(metadata.image, FAME_METADATA_FALLBACK_IMAGE);
     assert.match(metadata.error ?? "", /token URI is unavailable/i);
   });
+
+  it("falls back instead of hanging when metadata never responds", async () => {
+    const metadata = await loadSocietyNftMetadata(
+      "https://gateway.irys.xyz/metadataTx/144.json",
+      () => new Promise<Response>(() => undefined),
+      1,
+    );
+
+    assert.equal(metadata.image, FAME_METADATA_FALLBACK_IMAGE);
+    assert.match(metadata.error ?? "", /unavailable/i);
+  });
 });

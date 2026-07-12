@@ -15,6 +15,7 @@ import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { Main } from "@/layouts/Main";
 import { validateBidAmount } from "../state";
 import type { AuctionActiveProjection, AuctionEndedProjection } from "../types";
+import { auctionBidFormAfterResult } from "../transactionState";
 import { useAuctionClock } from "../hooks/useAuctionClock";
 import { useAuctionExecutionEnvironment } from "../hooks/useAuctionExecutionEnvironment";
 import { useAuctionTransaction } from "../hooks/useAuctionTransaction";
@@ -55,6 +56,7 @@ function SocietyNftAuctionExperience() {
       execution.environment.canExecute &&
       !auction.isRefreshing &&
       (clock.canBid || clock.canSettle),
+    verifyEnvironment: execution.verify,
     refresh: auction.refresh,
   });
   const {
@@ -139,7 +141,12 @@ function SocietyNftAuctionExperience() {
     setBidTouched(true);
     if (!bidValidation?.valid) return;
     const result = await transaction.submitBid(bidValidation.wei);
-    if (result.status === "confirmed") setBidValue("");
+    const next = auctionBidFormAfterResult(
+      { value: bidValue, touched: true },
+      result.status,
+    );
+    setBidValue(next.value);
+    setBidTouched(next.touched);
   };
 
   return (

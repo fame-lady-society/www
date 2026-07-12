@@ -16,9 +16,11 @@ As of 2026-07-12, direct fork probes confirmed:
 - the browser route at `http://localhost:3002/fame/auction` rendered “Auction
   has not started” without displaying token `144`
 
-The fork was later stopped. Active-auction, real browser bid, replacement bid,
-deadline, and settlement proof remain pending until the fork is restarted and
-the owner calls `start(144)`.
+The fork was later stopped, and the port `3002` app was intentionally stopped
+with it so an RPC error page is not mistaken for a live test environment.
+Active-auction, real browser bid, replacement bid, deadline, and settlement
+proof remain pending until the fork is restarted and the owner calls
+`start(144)`.
 
 ## Local configuration
 

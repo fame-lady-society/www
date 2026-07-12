@@ -32,6 +32,7 @@ function optionalMetadataString(
 export async function loadSocietyNftMetadata(
   tokenUri: string,
   fetchMetadata: MetadataFetch = fetch,
+  timeoutMs = 10_000,
 ): Promise<SocietyNftAuctionMetadata> {
   if (tokenUri.trim().length === 0) {
     return societyNftMetadataFallback("Society NFT token URI is unavailable");
@@ -41,7 +42,16 @@ export async function loadSocietyNftMetadata(
 
   for (const url of fameMetadataFetchUrls(tokenUri)) {
     try {
-      const response = await fetchMetadata(url);
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      const response = await Promise.race([
+        fetchMetadata(url),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error("Society NFT metadata request timed out")),
+            timeoutMs,
+          );
+        }),
+      ]).finally(() => clearTimeout(timeout));
       if (!response.ok) continue;
 
       const metadata: unknown = await response.json();

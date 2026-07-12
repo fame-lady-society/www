@@ -27,7 +27,7 @@ function shortAddress(address: Address): string {
 
 export function formatAuctionEth(value: bigint): string {
   const [whole, fraction = ""] = formatEther(value).split(".");
-  const trimmedFraction = fraction.slice(0, 6).replace(/0+$/, "");
+  const trimmedFraction = fraction.replace(/0+$/, "");
   return `${whole}${trimmedFraction ? `.${trimmedFraction}` : ""} ETH`;
 }
 

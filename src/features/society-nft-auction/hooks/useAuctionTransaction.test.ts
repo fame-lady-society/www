@@ -168,6 +168,76 @@ test("receipt revert and cancelled replacement are distinct failures", async () 
   assert.equal(cancelled.error.kind, "replacement_cancelled");
 });
 
+test("a reverted settlement resolves when canonical state is already settled", async () => {
+  const request = buildAuctionTransactionRequest({
+    action: "settle",
+    auctionAddress: auction,
+    account: bidder,
+  });
+
+  const result = await executeAuctionTransaction(request, {
+    dispatch: () => undefined,
+    simulate: async () => request,
+    write: async () => hash,
+    wait: async () => ({ status: "reverted" }),
+    refresh: async () => undefined,
+    isActionResolved: () => true,
+  });
+
+  assert.deepEqual(result, { status: "resolved_by_refresh" });
+});
+
+test("a calldata replacement never masquerades as confirmation", async () => {
+  const request = buildAuctionTransactionRequest({
+    action: "bid",
+    auctionAddress: auction,
+    account: bidder,
+    value: 10n,
+  });
+
+  const result = await executeAuctionTransaction(request, {
+    dispatch: () => undefined,
+    simulate: async () => request,
+    write: async () => hash,
+    wait: async (_hash, onReplaced) => {
+      onReplaced({ reason: "replaced", hash: replacementHash });
+      return { status: "success" };
+    },
+    refresh: async () => undefined,
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.error.kind, "replacement_replaced");
+});
+
+test("a confirmed receipt with failed canonical refresh stays unresolved", async () => {
+  const events: AuctionTransactionEvent[] = [];
+  const request = buildAuctionTransactionRequest({
+    action: "bid",
+    auctionAddress: auction,
+    account: bidder,
+    value: 10n,
+  });
+
+  const result = await executeAuctionTransaction(request, {
+    dispatch: (event) => events.push(event),
+    simulate: async () => request,
+    write: async () => hash,
+    wait: async () => ({ status: "success" }),
+    refresh: async () => {
+      throw new Error("RPC unavailable");
+    },
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.error.kind, "refresh_failure");
+  assert.equal(events.at(-1)?.type, "failed");
+  assert.equal(
+    events.some((event) => event.type === "confirmed"),
+    false,
+  );
+});
+
 test("repriced replacement confirms only after canonical refresh", async () => {
   const events: AuctionTransactionEvent[] = [];
   const request = buildAuctionTransactionRequest({

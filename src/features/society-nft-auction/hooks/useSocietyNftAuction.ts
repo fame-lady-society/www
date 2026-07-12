@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { erc721Abi, isAddress, type Address } from "viem";
+import { erc721Abi, type Address } from "viem";
 import { base } from "viem/chains";
 import { useBlock, useReadContract, useReadContracts } from "wagmi";
 import {
@@ -75,16 +75,27 @@ export function mapSocietyNftAuctionReads(
     );
   }
 
+  const [
+    societyNft,
+    lifecycle,
+    tokenId,
+    startTime,
+    endTime,
+    highestBidder,
+    highestBid,
+    settledRecipient,
+  ] = values;
+
   return buildAuctionSnapshot({
     auctionAddress,
-    societyNft: values[0],
-    lifecycle: values[1],
-    tokenId: values[2],
-    startTime: values[3],
-    endTime: values[4],
-    highestBidder: values[5],
-    highestBid: values[6],
-    settledRecipient: values[7],
+    societyNft,
+    lifecycle,
+    tokenId,
+    startTime,
+    endTime,
+    highestBidder,
+    highestBid,
+    settledRecipient,
   });
 }
 
@@ -94,34 +105,20 @@ export interface AuctionMetadataTarget {
 }
 
 export function metadataTargetFromProjection(
-  projection: unknown,
+  projection: SocietyNftAuctionPageProjection,
 ): AuctionMetadataTarget | null {
-  if (projection === null || typeof projection !== "object") return null;
+  if (
+    projection.kind !== "active" &&
+    projection.kind !== "ended_unsettled" &&
+    projection.kind !== "settled"
+  ) {
+    return null;
+  }
 
-  const candidate = projection as {
-    kind?: unknown;
-    societyNft?: unknown;
-    lot?: { tokenId?: unknown };
-    tokenId?: unknown;
+  return {
+    societyNft: projection.societyNft,
+    tokenId: projection.lot.tokenId,
   };
-  if (
-    candidate.kind !== "active" &&
-    candidate.kind !== "ended_unsettled" &&
-    candidate.kind !== "settled"
-  ) {
-    return null;
-  }
-
-  const tokenId = candidate.lot?.tokenId ?? candidate.tokenId;
-  if (
-    typeof candidate.societyNft !== "string" ||
-    !isAddress(candidate.societyNft) ||
-    typeof tokenId !== "bigint"
-  ) {
-    return null;
-  }
-
-  return { societyNft: candidate.societyNft, tokenId };
 }
 
 /** Coalesces event bursts; logs are freshness hints, never canonical state. */
@@ -136,6 +133,28 @@ export function createCoalescedAuctionRefresh(refresh: () => void) {
       refresh();
     });
   };
+}
+
+export async function refreshCanonicalAuction(
+  refetchSnapshot: () => Promise<{
+    error: unknown;
+    data?: readonly { status: string }[];
+  }>,
+  refetchBlock: () => Promise<{ error: unknown; data?: unknown }>,
+): Promise<void> {
+  const [snapshot, block] = await Promise.all([
+    refetchSnapshot(),
+    refetchBlock(),
+  ]);
+  const error = snapshot.error ?? block.error;
+  if (error) throw error;
+  if (
+    snapshot.data?.length !== AUCTION_SNAPSHOT_FUNCTIONS.length ||
+    snapshot.data.some((read) => read.status !== "success") ||
+    block.data === undefined
+  ) {
+    throw new Error("Canonical auction refresh returned incomplete data");
+  }
 }
 
 export interface UseSocietyNftAuctionResult {
@@ -156,7 +175,7 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   );
 
   const snapshotQuery = useReadContracts({
-    allowFailure: false,
+    allowFailure: true,
     contracts,
     query: { enabled: auctionAddress !== null },
   });
@@ -170,14 +189,16 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   let snapshotResult: SocietyNftAuctionSnapshotResult;
   if (auctionAddress === null) {
     snapshotResult = failedSnapshot("Auction is not configured");
-  } else if (snapshotQuery.error) {
+  } else if (snapshotQuery.error || blockQuery.error) {
     snapshotResult = failedSnapshot("Auction data is unavailable. Try again.");
   } else if (!snapshotQuery.data) {
     snapshotResult = failedSnapshot("Auction data is loading");
+  } else if (snapshotQuery.data.some((read) => read.status !== "success")) {
+    snapshotResult = failedSnapshot("Auction data is unavailable. Try again.");
   } else {
     snapshotResult = mapSocietyNftAuctionReads(
       auctionAddress,
-      snapshotQuery.data as readonly unknown[],
+      snapshotQuery.data.map((read) => read.result),
     );
   }
 
@@ -215,16 +236,24 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
 
   const refetchSnapshot = snapshotQuery.refetch;
   const refetchBlock = blockQuery.refetch;
-  const refresh = useCallback(async () => {
-    await Promise.allSettled([refetchSnapshot(), refetchBlock()]);
-  }, [refetchBlock, refetchSnapshot]);
+  const refresh = useCallback(
+    () =>
+      refreshCanonicalAuction(
+        () => refetchSnapshot({ cancelRefetch: false }),
+        () => refetchBlock({ cancelRefetch: false }),
+      ),
+    [refetchBlock, refetchSnapshot],
+  );
 
   const refreshRef = useRef(refresh);
   useEffect(() => {
     refreshRef.current = refresh;
   }, [refresh]);
   const onAuctionEvent = useMemo(
-    () => createCoalescedAuctionRefresh(() => void refreshRef.current()),
+    () =>
+      createCoalescedAuctionRefresh(() => {
+        void refreshRef.current().catch(() => undefined);
+      }),
     [],
   );
   const watchOptions = {
@@ -243,11 +272,7 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
     projection,
     blockTimestamp,
     metadata,
-    isRefreshing:
-      snapshotQuery.isFetching ||
-      blockQuery.isFetching ||
-      tokenUriQuery.isFetching ||
-      metadataQuery.isFetching,
+    isRefreshing: snapshotQuery.isFetching || blockQuery.isFetching,
     refresh,
   };
 }

@@ -10,7 +10,7 @@ import {
   type Hex,
 } from "viem";
 import { base } from "viem/chains";
-import { useConnectorClient } from "wagmi";
+import { useBytecode, useConnectorClient } from "wagmi";
 import { useAccount } from "../../../hooks/useAccount";
 import { needsConnectedChainSwitch } from "../../../utils/connectedChain";
 import { societyNftAuctionAbi } from "../../../wagmi";
@@ -24,15 +24,21 @@ export type AuctionIdentityEvaluation =
   | { compatible: true }
   | {
       compatible: false;
-      reason: "missing_code" | "invalid_collection" | "collection_mismatch";
+      reason:
+        | "missing_code"
+        | "runtime_mismatch"
+        | "invalid_collection"
+        | "collection_mismatch";
       message: string;
     };
 
 export function evaluateAuctionExecutionIdentity({
   code,
   societyNft,
+  expectedCode,
   expectedSocietyNft,
 }: WalletAuctionIdentity & {
+  expectedCode: Hex;
   expectedSocietyNft: string;
 }): AuctionIdentityEvaluation {
   if (!/^0x0*[1-9a-f]/i.test(code)) {
@@ -40,6 +46,15 @@ export function evaluateAuctionExecutionIdentity({
       compatible: false,
       reason: "missing_code",
       message: "Your wallet provider cannot find this auction contract.",
+    };
+  }
+
+  if (code.toLowerCase() !== expectedCode.toLowerCase()) {
+    return {
+      compatible: false,
+      reason: "runtime_mismatch",
+      message:
+        "Your wallet provider is connected to a different auction environment.",
     };
   }
 
@@ -67,19 +82,40 @@ export function evaluateAuctionExecutionIdentity({
   return { compatible: true };
 }
 
-export type WalletRpcRequest = (input: {
-  method: string;
-  params?: readonly unknown[];
-}) => Promise<unknown>;
-
 export async function readWalletAuctionIdentity(
-  request: WalletRpcRequest,
+  request: (
+    input:
+      | {
+          method: "eth_getCode";
+          params: [Address, "latest"];
+        }
+      | {
+          method: "eth_call";
+          params: [{ to: Address; data: Hex }, "latest"];
+        },
+  ) => Promise<unknown>,
   auctionAddress: Address,
+  timeoutMs = 10_000,
 ): Promise<WalletAuctionIdentity> {
-  const code = await request({
-    method: "eth_getCode",
-    params: [auctionAddress, "latest"],
-  });
+  const requestWithTimeout = <T>(request: Promise<T>) => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    return Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("Wallet provider verification timed out")),
+          timeoutMs,
+        );
+      }),
+    ]).finally(() => clearTimeout(timeout));
+  };
+
+  const code = await requestWithTimeout(
+    request({
+      method: "eth_getCode",
+      params: [auctionAddress, "latest"],
+    }),
+  );
   if (typeof code !== "string" || !code.startsWith("0x")) {
     throw new Error("Wallet provider returned invalid contract code");
   }
@@ -87,19 +123,21 @@ export async function readWalletAuctionIdentity(
     return { code: code as Hex, societyNft: null };
   }
 
-  const callResult = await request({
-    method: "eth_call",
-    params: [
-      {
-        to: auctionAddress,
-        data: encodeFunctionData({
-          abi: societyNftAuctionAbi,
-          functionName: "SOCIETY_NFT",
-        }),
-      },
-      "latest",
-    ],
-  });
+  const callResult = await requestWithTimeout(
+    request({
+      method: "eth_call",
+      params: [
+        {
+          to: auctionAddress,
+          data: encodeFunctionData({
+            abi: societyNftAuctionAbi,
+            functionName: "SOCIETY_NFT",
+          }),
+        },
+        "latest",
+      ],
+    }),
+  );
   if (typeof callResult !== "string" || !callResult.startsWith("0x")) {
     throw new Error("Wallet provider returned an invalid auction identity");
   }
@@ -218,6 +256,7 @@ export interface UseAuctionExecutionEnvironmentResult {
   environment: AuctionExecutionEnvironment;
   account: Address | undefined;
   retry: () => Promise<void>;
+  verify: () => Promise<boolean>;
 }
 
 export function useAuctionExecutionEnvironment({
@@ -242,6 +281,11 @@ export function useAuctionExecutionEnvironment({
     chainId: base.id,
     query: { enabled: canCheck },
   });
+  const appBytecode = useBytecode({
+    address: auctionAddress ?? undefined,
+    chainId: base.id,
+    query: { enabled: auctionAddress !== null },
+  });
   const walletIdentity = useQuery({
     queryKey: [
       "society-nft-auction",
@@ -249,34 +293,49 @@ export function useAuctionExecutionEnvironment({
       connectorClient.data?.key,
       connectorClient.data?.account.address,
       auctionAddress,
+      appBytecode.data,
       expectedSocietyNft,
     ],
-    enabled: canCheck && connectorClient.data !== undefined,
+    enabled:
+      canCheck &&
+      connectorClient.data !== undefined &&
+      appBytecode.data !== undefined,
     queryFn: async () => {
-      if (!connectorClient.data || !auctionAddress || !expectedSocietyNft) {
+      if (
+        !connectorClient.data ||
+        !auctionAddress ||
+        !appBytecode.data ||
+        !expectedSocietyNft
+      ) {
         throw new Error("Wallet auction identity is unavailable");
       }
 
       const identity = await readWalletAuctionIdentity(
-        (request) => connectorClient.data!.request(request as never),
+        (request) => connectorClient.data!.request(request),
         auctionAddress,
       );
       return evaluateAuctionExecutionIdentity({
         ...identity,
+        expectedCode: appBytecode.data,
         expectedSocietyNft,
       });
     },
     retry: false,
     staleTime: 15_000,
   });
-  const identityError = connectorClient.error ?? walletIdentity.error;
+  const identityError =
+    connectorClient.error ?? appBytecode.error ?? walletIdentity.error;
   const environment = resolveAuctionExecutionEnvironment({
     isConnected,
     connectedChainId,
-    hasExpectedIdentity: auctionAddress !== null && expectedSocietyNft !== null,
+    hasExpectedIdentity:
+      auctionAddress !== null &&
+      expectedSocietyNft !== null &&
+      appBytecode.data !== undefined,
     identityPending:
       canCheck &&
-      (connectorClient.isPending ||
+      (appBytecode.isPending ||
+        connectorClient.isPending ||
         (connectorClient.data !== undefined && walletIdentity.isPending)),
     identity: walletIdentity.data ?? null,
     identityError,
@@ -286,8 +345,39 @@ export function useAuctionExecutionEnvironment({
     environment,
     account,
     retry: async () => {
+      await appBytecode.refetch();
       await connectorClient.refetch();
       await walletIdentity.refetch();
+    },
+    verify: async () => {
+      try {
+        const [codeResult, clientResult] = await Promise.all([
+          appBytecode.refetch(),
+          connectorClient.refetch(),
+        ]);
+        if (
+          codeResult.error ||
+          !codeResult.data ||
+          clientResult.error ||
+          !clientResult.data ||
+          !auctionAddress ||
+          !expectedSocietyNft
+        ) {
+          return false;
+        }
+
+        const identity = await readWalletAuctionIdentity(
+          (request) => clientResult.data!.request(request),
+          auctionAddress,
+        );
+        return evaluateAuctionExecutionIdentity({
+          ...identity,
+          expectedCode: codeResult.data,
+          expectedSocietyNft,
+        }).compatible;
+      } catch {
+        return false;
+      }
     },
   };
 }

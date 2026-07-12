@@ -143,11 +143,34 @@ export async function executeAuctionTransaction(
       return { status: "failed", error };
     }
 
+    if (replacement.current?.reason === "replaced") {
+      dependencies.dispatch({ type: "refreshing" });
+      try {
+        await dependencies.refresh();
+        if (await dependencies.isActionResolved?.()) {
+          dependencies.dispatch({ type: "confirmed" });
+          return { status: "resolved_by_refresh" };
+        }
+      } catch {
+        // The replacement remains the actionable result.
+      }
+      const error = classifyAuctionTransactionError(
+        new Error("A different transaction replaced this request"),
+        "replacement_replaced",
+      );
+      dependencies.dispatch({ type: "failed", error });
+      return { status: "failed", error };
+    }
+
     if (receipt.status === "reverted") {
       const error = receiptRevertedError();
       dependencies.dispatch({ type: "refreshing" });
       try {
         await dependencies.refresh();
+        if (await dependencies.isActionResolved?.()) {
+          dependencies.dispatch({ type: "confirmed" });
+          return { status: "resolved_by_refresh" };
+        }
       } catch {
         // The confirmed revert remains the useful failure to report.
       }
@@ -156,6 +179,7 @@ export async function executeAuctionTransaction(
     }
 
     dependencies.dispatch({ type: "refreshing" });
+    stage = "refresh";
     await dependencies.refresh();
     dependencies.dispatch({ type: "confirmed" });
     return {
@@ -186,6 +210,7 @@ export interface UseAuctionTransactionInput {
   auctionAddress: Address | null;
   account: Address | undefined;
   executionReady: boolean;
+  verifyEnvironment: () => Promise<boolean>;
   refresh: () => Promise<void>;
 }
 
@@ -205,6 +230,7 @@ export function useAuctionTransaction({
   auctionAddress,
   account,
   executionReady,
+  verifyEnvironment,
   refresh,
 }: UseAuctionTransactionInput): UseAuctionTransactionResult {
   const publicClient = usePublicClient({ chainId: base.id });
@@ -228,31 +254,53 @@ export function useAuctionTransaction({
         value,
       });
       const gated = await gate.current.run(() =>
-        executeAuctionTransaction(request, {
-          dispatch,
-          simulate: async (exactRequest) => {
-            await publicClient.simulateContract(exactRequest as never);
-            return exactRequest;
-          },
-          write: async (simulatedRequest) =>
-            writeContractAsync(simulatedRequest as never),
-          wait: async (hash, onReplaced) =>
-            publicClient.waitForTransactionReceipt({
-              hash,
-              onReplaced: ({ reason, transaction }) =>
-                onReplaced({ reason, hash: transaction.hash }),
-            }),
-          refresh,
-          // Do not infer fresh canonical state from a React render closure here:
-          // refetch completion and rendering are separate clocks. Re-read the
-          // lifecycle from the app RPC before treating a settlement race as done.
-          isActionResolved: async () =>
-            action === "settle" &&
-            (await publicClient.readContract({
-              abi: societyNftAuctionAbi,
-              address: auctionAddress,
-              functionName: "lifecycle",
-            })) === 2,
+        verifyEnvironment().then((verified) => {
+          if (!verified) {
+            const error: AuctionTransactionError = {
+              kind: "environment_changed",
+              message:
+                "Your wallet auction environment changed. Check it and try again.",
+              retryable: true,
+              shouldRefresh: false,
+            };
+            dispatch({ type: "failed", error });
+            return { status: "failed" as const, error };
+          }
+
+          return executeAuctionTransaction(request, {
+            dispatch,
+            simulate: async (exactRequest) => {
+              if (exactRequest.functionName === "bid") {
+                await publicClient.simulateContract(exactRequest);
+              } else {
+                await publicClient.simulateContract(exactRequest);
+              }
+              return exactRequest;
+            },
+            write: async (simulatedRequest) => {
+              if (simulatedRequest.functionName === "bid") {
+                return writeContractAsync(simulatedRequest);
+              }
+              return writeContractAsync(simulatedRequest);
+            },
+            wait: async (hash, onReplaced) =>
+              publicClient.waitForTransactionReceipt({
+                hash,
+                onReplaced: ({ reason, transaction }) =>
+                  onReplaced({ reason, hash: transaction.hash }),
+              }),
+            refresh,
+            // Do not infer fresh canonical state from a React render closure here:
+            // refetch completion and rendering are separate clocks. Re-read the
+            // lifecycle from the app RPC before treating a settlement race as done.
+            isActionResolved: async () =>
+              action === "settle" &&
+              (await publicClient.readContract({
+                abi: societyNftAuctionAbi,
+                address: auctionAddress,
+                functionName: "lifecycle",
+              })) === 2,
+          });
         }),
       );
 
@@ -264,6 +312,7 @@ export function useAuctionTransaction({
       executionReady,
       publicClient,
       refresh,
+      verifyEnvironment,
       writeContractAsync,
     ],
   );
