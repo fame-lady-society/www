@@ -1,4 +1,4 @@
-import { isAddress } from "viem";
+import { isAddress, parseEther } from "viem";
 import type {
   BidValidationResult,
   SocietyNftAuctionLifecycle,
@@ -7,8 +7,6 @@ import type {
   SocietyNftAuctionSnapshotInput,
   SocietyNftAuctionSnapshotResult,
 } from "./types";
-
-const WEI_PER_ETH = 1_000_000_000_000_000_000n;
 
 function requiredAddress(
   value: unknown,
@@ -170,7 +168,7 @@ function parseExactEther(value: string): BidValidationResult {
     };
   }
 
-  const [, whole, fraction = ""] = match;
+  const [, , fraction = ""] = match;
   if (fraction.length > 18) {
     return {
       valid: false,
@@ -179,11 +177,7 @@ function parseExactEther(value: string): BidValidationResult {
     };
   }
 
-  const wei =
-    BigInt(whole) * WEI_PER_ETH +
-    (fraction.length === 0 ? 0n : BigInt(fraction.padEnd(18, "0")));
-
-  return { valid: true, wei };
+  return { valid: true, wei: parseEther(amount) };
 }
 
 export function validateBidAmount(

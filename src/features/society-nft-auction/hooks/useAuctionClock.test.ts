@@ -43,10 +43,10 @@ test("requests one refresh for each observed deadline", () => {
     refreshes += 1;
   });
 
-  gate.request("105", true);
-  gate.request("105", true);
-  gate.request("106", false);
-  gate.request("106", true);
+  gate.request(105n, true);
+  gate.request(105n, true);
+  gate.request(106n, false);
+  gate.request(106n, true);
 
   assert.equal(refreshes, 2);
 });

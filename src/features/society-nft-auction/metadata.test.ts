@@ -21,14 +21,11 @@ describe("Society NFT auction metadata", () => {
       },
     );
 
-    assert.deepEqual(requested, [
-      "https://arweave.net/metadataTx/144.json",
-    ]);
+    assert.deepEqual(requested, ["https://arweave.net/metadataTx/144.json"]);
     assert.deepEqual(metadata, {
       name: "Fame Lady #144",
       description: "A Society NFT",
       image: "https://arweave.net/imageTx/144.png",
-      usedFallback: false,
       error: null,
     });
   });
@@ -40,7 +37,6 @@ describe("Society NFT auction metadata", () => {
     );
 
     assert.equal(metadata.image, FAME_METADATA_FALLBACK_IMAGE);
-    assert.equal(metadata.usedFallback, true);
     assert.match(metadata.error ?? "", /usable image/i);
   });
 
@@ -54,7 +50,6 @@ describe("Society NFT auction metadata", () => {
       image: FAME_METADATA_FALLBACK_IMAGE,
       name: null,
       description: null,
-      usedFallback: true,
       error: "Society NFT metadata is unavailable",
     });
   });
@@ -68,6 +63,6 @@ describe("Society NFT auction metadata", () => {
 
     assert.equal(called, false);
     assert.equal(metadata.image, FAME_METADATA_FALLBACK_IMAGE);
-    assert.equal(metadata.usedFallback, true);
+    assert.match(metadata.error ?? "", /token URI is unavailable/i);
   });
 });

@@ -11,12 +11,14 @@ import {
   useWatchSocietyNftAuctionAuctionStartedEvent,
   useWatchSocietyNftAuctionBidAcceptedEvent,
 } from "../../../wagmi";
-import { FAME_METADATA_FALLBACK_IMAGE } from "../../../service/fameMetadata";
 import {
   getSocietyNftAuctionConfig,
   type SocietyNftAuctionConfig,
 } from "../config";
-import { loadSocietyNftMetadata } from "../metadata";
+import {
+  loadSocietyNftMetadata,
+  societyNftMetadataFallback,
+} from "../metadata";
 import { buildAuctionSnapshot, projectAuctionPage } from "../state";
 import type {
   SocietyNftAuctionMetadata,
@@ -47,56 +49,12 @@ export function createSocietyNftAuctionReadContracts(
 ): readonly AuctionSnapshotReadContract[] {
   if (address === null) return [];
 
-  return [
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "SOCIETY_NFT",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "lifecycle",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "tokenId",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "startTime",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "endTime",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "highestBidder",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "highestBid",
-    },
-    {
-      abi: societyNftAuctionAbi,
-      address,
-      chainId: base.id,
-      functionName: "settledRecipient",
-    },
-  ] as const;
+  return AUCTION_SNAPSHOT_FUNCTIONS.map((functionName) => ({
+    abi: societyNftAuctionAbi,
+    address,
+    chainId: base.id,
+    functionName,
+  }));
 }
 
 function failedSnapshot(message: string): SocietyNftAuctionSnapshotResult {
@@ -180,22 +138,11 @@ export function createCoalescedAuctionRefresh(refresh: () => void) {
   };
 }
 
-function metadataFallback(error: string): SocietyNftAuctionMetadata {
-  return {
-    image: FAME_METADATA_FALLBACK_IMAGE,
-    name: null,
-    description: null,
-    usedFallback: true,
-    error,
-  };
-}
-
 export interface UseSocietyNftAuctionResult {
   config: SocietyNftAuctionConfig;
   projection: SocietyNftAuctionPageProjection;
   blockTimestamp: bigint | null;
   metadata: SocietyNftAuctionMetadata | null;
-  isLoading: boolean;
   isRefreshing: boolean;
   refresh: () => Promise<void>;
 }
@@ -263,18 +210,14 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   const metadata =
     metadataQuery.data ??
     (tokenUriQuery.error || metadataQuery.error
-      ? metadataFallback("Society NFT metadata is unavailable")
+      ? societyNftMetadataFallback("Society NFT metadata is unavailable")
       : null);
 
+  const refetchSnapshot = snapshotQuery.refetch;
+  const refetchBlock = blockQuery.refetch;
   const refresh = useCallback(async () => {
-    await Promise.allSettled([snapshotQuery.refetch(), blockQuery.refetch()]);
-    if (metadataTarget !== null) {
-      await Promise.allSettled([
-        tokenUriQuery.refetch(),
-        metadataQuery.refetch(),
-      ]);
-    }
-  }, [blockQuery, metadataQuery, metadataTarget, snapshotQuery, tokenUriQuery]);
+    await Promise.allSettled([refetchSnapshot(), refetchBlock()]);
+  }, [refetchBlock, refetchSnapshot]);
 
   const refreshRef = useRef(refresh);
   useEffect(() => {
@@ -300,10 +243,6 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
     projection,
     blockTimestamp,
     metadata,
-    isLoading:
-      snapshotQuery.isPending ||
-      blockQuery.isPending ||
-      (metadataTarget !== null && tokenUriQuery.isPending),
     isRefreshing:
       snapshotQuery.isFetching ||
       blockQuery.isFetching ||

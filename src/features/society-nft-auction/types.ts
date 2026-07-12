@@ -108,7 +108,6 @@ export interface SocietyNftAuctionMetadata {
   image: string;
   name: string | null;
   description: string | null;
-  usedFallback: boolean;
   error: string | null;
 }
 

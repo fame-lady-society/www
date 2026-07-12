@@ -5,6 +5,7 @@ import {
   decodeFunctionResult,
   encodeFunctionData,
   isAddress,
+  isAddressEqual,
   type Address,
   type Hex,
 } from "viem";
@@ -54,7 +55,7 @@ export function evaluateAuctionExecutionIdentity({
     };
   }
 
-  if (societyNft.toLowerCase() !== expectedSocietyNft.toLowerCase()) {
+  if (!isAddressEqual(societyNft, expectedSocietyNft)) {
     return {
       compatible: false,
       reason: "collection_mismatch",
@@ -216,7 +217,6 @@ export interface UseAuctionExecutionEnvironmentInput {
 export interface UseAuctionExecutionEnvironmentResult {
   environment: AuctionExecutionEnvironment;
   account: Address | undefined;
-  connectedChainId: number | undefined;
   retry: () => Promise<void>;
 }
 
@@ -285,7 +285,6 @@ export function useAuctionExecutionEnvironment({
   return {
     environment,
     account,
-    connectedChainId,
     retry: async () => {
       await connectorClient.refetch();
       await walletIdentity.refetch();

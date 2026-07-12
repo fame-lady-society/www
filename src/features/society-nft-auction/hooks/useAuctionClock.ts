@@ -42,12 +42,12 @@ export function deriveAuctionClock(
 }
 
 export function createDeadlineRefreshGate(refresh: () => void) {
-  let refreshedDeadline: string | null = null;
+  let refreshedDeadline: bigint | null = null;
 
   return {
-    request(deadlineKey: string, shouldRefresh: boolean) {
-      if (!shouldRefresh || refreshedDeadline === deadlineKey) return;
-      refreshedDeadline = deadlineKey;
+    request(deadline: bigint, shouldRefresh: boolean) {
+      if (!shouldRefresh || refreshedDeadline === deadline) return;
+      refreshedDeadline = deadline;
       refresh();
     },
   };
@@ -63,7 +63,6 @@ export interface UseAuctionClockInput {
 
 export interface UseAuctionClockResult {
   remainingSeconds: bigint | null;
-  displayTimestamp: bigint | null;
   canBid: boolean;
   canSettle: boolean;
 }
@@ -130,16 +129,12 @@ export function useAuctionClock({
 
   useEffect(() => {
     if (endTime !== null) {
-      refreshGate.request(
-        endTime.toString(),
-        clock?.shouldRefreshDeadline === true,
-      );
+      refreshGate.request(endTime, clock?.shouldRefreshDeadline === true);
     }
   }, [clock?.shouldRefreshDeadline, endTime, refreshGate]);
 
   return {
     remainingSeconds: clock?.remainingSeconds ?? null,
-    displayTimestamp: clock?.displayTimestamp ?? blockTimestamp,
     canBid: clock?.canBid ?? false,
     canSettle: clock?.canSettle ?? canonicalCanSettle,
   };

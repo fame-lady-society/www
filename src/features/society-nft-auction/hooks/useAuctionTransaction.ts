@@ -199,7 +199,6 @@ export interface UseAuctionTransactionResult {
     ExecuteAuctionTransactionResult | { status: "blocked" }
   >;
   reset: () => void;
-  retry: () => void;
 }
 
 export function useAuctionTransaction({
@@ -281,6 +280,5 @@ export function useAuctionTransaction({
     submitBid: (value) => submit("bid", value),
     settle: () => submit("settle"),
     reset,
-    retry: reset,
   };
 }

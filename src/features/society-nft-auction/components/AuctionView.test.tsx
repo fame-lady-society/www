@@ -54,7 +54,6 @@ const metadata = {
   image: "/images/fame/gold-leaf-square.png",
   name: "Society NFT #144",
   description: "A one-of-one Society NFT.",
-  usedFallback: false,
   error: null,
 };
 

@@ -6,7 +6,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { base } from "viem/chains";
 import { useSwitchChain } from "wagmi";
 import { DefaultProvider } from "@/context/default";
@@ -100,32 +100,40 @@ function SocietyNftAuctionExperience() {
         ? "Connect your wallet to settle."
         : execution.environment.message;
 
-  const walletControl =
-    execution.environment.status === "disconnected" ? (
-      <ConnectKitButton />
-    ) : execution.environment.status === "wrong_chain" ? (
-      <Button
-        type="button"
-        variant="outlined"
-        disabled={isSwitching}
-        onClick={() =>
-          void switchChainAsync({ chainId: base.id }).catch(() => undefined)
-        }
-        sx={{ minHeight: 44 }}
-      >
-        {isSwitching ? "Switching to Base…" : "Switch to Base"}
-      </Button>
-    ) : execution.environment.status === "error" ||
-      execution.environment.status === "incompatible" ? (
-      <Button
-        type="button"
-        variant="outlined"
-        onClick={() => void execution.retry()}
-        sx={{ minHeight: 44 }}
-      >
-        Check again
-      </Button>
-    ) : undefined;
+  let walletControl: ReactNode = undefined;
+  switch (execution.environment.status) {
+    case "disconnected":
+      walletControl = <ConnectKitButton />;
+      break;
+    case "wrong_chain":
+      walletControl = (
+        <Button
+          type="button"
+          variant="outlined"
+          disabled={isSwitching}
+          onClick={() =>
+            void switchChainAsync({ chainId: base.id }).catch(() => undefined)
+          }
+          sx={{ minHeight: 44 }}
+        >
+          {isSwitching ? "Switching to Base…" : "Switch to Base"}
+        </Button>
+      );
+      break;
+    case "error":
+    case "incompatible":
+      walletControl = (
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={() => void execution.retry()}
+          sx={{ minHeight: 44 }}
+        >
+          Check again
+        </Button>
+      );
+      break;
+  }
 
   const submitBid = async () => {
     setBidTouched(true);
@@ -177,7 +185,7 @@ function SocietyNftAuctionExperience() {
         <Stack sx={{ width: "100%", maxWidth: 520, ml: "auto" }}>
           <AuctionTransactionStatus
             state={transaction.state}
-            onRetry={transaction.retry}
+            onRetry={transaction.reset}
             onReset={transaction.reset}
           />
         </Stack>

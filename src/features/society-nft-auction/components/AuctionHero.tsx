@@ -5,7 +5,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
-import { formatEther, zeroAddress } from "viem";
+import { formatEther, zeroAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
 import type {
@@ -21,7 +21,7 @@ export interface AuctionHeroProps {
   onRefresh?: () => void;
 }
 
-function shortAddress(address: string): string {
+function shortAddress(address: Address): string {
   return `${address.slice(0, 8)}…${address.slice(-6)}`;
 }
 
@@ -60,7 +60,7 @@ function ExplorerAddressLink({
   address,
   label,
 }: {
-  address: string;
+  address: Address;
   label: string;
 }) {
   return (
@@ -206,15 +206,7 @@ export function AuctionHero({
         "@media (prefers-reduced-motion: reduce)": { animation: "none" },
       }}
     >
-      <Box
-        sx={{
-          position: "relative",
-          aspectRatio: "1 / 1",
-          overflow: "hidden",
-          backgroundColor: "action.hover",
-          borderRadius: 1,
-        }}
-      >
+      <div className="relative aspect-square overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
         <Image
           src={image}
           alt={`${lotName} auction artwork`}
@@ -223,7 +215,7 @@ export function AuctionHero({
           sizes="(max-width: 899px) calc(100vw - 32px), 56vw"
           style={{ objectFit: "cover" }}
         />
-      </Box>
+      </div>
 
       <Stack spacing={2.5} sx={{ pb: { md: 1 } }}>
         <div>

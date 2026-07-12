@@ -10,12 +10,13 @@ type MetadataFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-function fallbackMetadata(error: string): SocietyNftAuctionMetadata {
+export function societyNftMetadataFallback(
+  error: string,
+): SocietyNftAuctionMetadata {
   return {
     image: FAME_METADATA_FALLBACK_IMAGE,
     name: null,
     description: null,
-    usedFallback: true,
     error,
   };
 }
@@ -33,7 +34,7 @@ export async function loadSocietyNftMetadata(
   fetchMetadata: MetadataFetch = fetch,
 ): Promise<SocietyNftAuctionMetadata> {
   if (tokenUri.trim().length === 0) {
-    return fallbackMetadata("Society NFT token URI is unavailable");
+    return societyNftMetadataFallback("Society NFT token URI is unavailable");
   }
 
   let foundMetadataWithoutImage = false;
@@ -55,7 +56,6 @@ export async function loadSocietyNftMetadata(
           image: imageFromFameMetadata(metadata),
           name: optionalMetadataString(record, "name"),
           description: optionalMetadataString(record, "description"),
-          usedFallback: false,
           error: null,
         };
       } catch {
@@ -66,7 +66,7 @@ export async function loadSocietyNftMetadata(
     }
   }
 
-  return fallbackMetadata(
+  return societyNftMetadataFallback(
     foundMetadataWithoutImage
       ? "Society NFT metadata does not contain a usable image"
       : "Society NFT metadata is unavailable",
