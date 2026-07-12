@@ -72,6 +72,8 @@ export function AuctionActionPanel({
   const actionPaused = isPending || isRefreshing;
 
   if (projection.kind === "ended_unsettled") {
+    const settleDisabled =
+      !canSettle || walletStatus !== "ready" || actionPaused;
     const submitSettle = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       onSettle?.();
@@ -102,8 +104,7 @@ export function AuctionActionPanel({
 
           <Button
             type="submit"
-            variant="contained"
-            disabled={!canSettle || walletStatus !== "ready" || actionPaused}
+            disabled={settleDisabled}
             sx={{ minHeight: 48, fontWeight: 700 }}
           >
             {isPending ? "Settling auction…" : "Settle auction"}
@@ -117,6 +118,12 @@ export function AuctionActionPanel({
     event.preventDefault();
     onBid?.();
   };
+  const bidDisabled =
+    !canBid ||
+    walletStatus !== "ready" ||
+    Boolean(bidError) ||
+    bidValue.trim().length === 0 ||
+    actionPaused;
 
   return (
     <Paper
@@ -126,9 +133,6 @@ export function AuctionActionPanel({
       sx={{
         p: { xs: 2.5, sm: 3 },
         borderRadius: 1,
-        borderTop: "3px solid",
-        borderTopColor: (theme) =>
-          theme.palette.mode === "dark" ? "#dec47d" : "#8b691e",
       }}
     >
       <Stack component="form" spacing={2} onSubmit={submitBid} noValidate>
@@ -181,14 +185,7 @@ export function AuctionActionPanel({
 
         <Button
           type="submit"
-          variant="contained"
-          disabled={
-            !canBid ||
-            walletStatus !== "ready" ||
-            Boolean(bidError) ||
-            bidValue.trim().length === 0 ||
-            actionPaused
-          }
+          disabled={bidDisabled}
           sx={{ minHeight: 48, fontWeight: 700 }}
         >
           {isPending ? "Submitting bid…" : "Bid with ETH"}

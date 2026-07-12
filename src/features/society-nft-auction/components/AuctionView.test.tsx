@@ -140,6 +140,22 @@ describe("Society NFT auction view", () => {
     assert.match(html, /Bid with ETH/);
   });
 
+  it("uses the base themed button for unavailable and actionable states", () => {
+    const unavailable = renderAction(active, "disconnected");
+    const actionable = renderAction(active, "ready");
+
+    assert.doesNotMatch(unavailable, /MuiButton-(contained|outlined)/);
+    assert.match(
+      unavailable,
+      /<button[^>]*disabled[^>]*>Bid with ETH<\/button>/,
+    );
+    assert.doesNotMatch(actionable, /MuiButton-(contained|outlined)/);
+    assert.doesNotMatch(
+      actionable,
+      /<button[^>]*disabled[^>]*>Bid with ETH<\/button>/,
+    );
+  });
+
   it("shows settlement action only after bidding ends", () => {
     const html = renderAction(ended);
 

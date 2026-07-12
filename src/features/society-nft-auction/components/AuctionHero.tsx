@@ -222,8 +222,6 @@ export function AuctionHero({
           <Typography
             variant="overline"
             sx={{
-              color: (theme) =>
-                theme.palette.mode === "dark" ? "#dec47d" : "#765718",
               letterSpacing: "0.15em",
             }}
           >
