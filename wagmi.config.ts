@@ -1,17 +1,17 @@
 import { config } from "dotenv";
 import { defineConfig } from "@wagmi/cli";
-import {
-  etherscan,
-  react,
-  foundry,
-} from "@wagmi/cli/plugins";
+import { etherscan, react, foundry } from "@wagmi/cli/plugins";
 import { sepolia, mainnet, base, baseSepolia } from "wagmi/chains";
 
 config({
   path: ".env.local",
 });
 
-type SupportedChainId = typeof sepolia.id | typeof baseSepolia.id | typeof mainnet.id | typeof base.id;
+type SupportedChainId =
+  | typeof sepolia.id
+  | typeof baseSepolia.id
+  | typeof mainnet.id
+  | typeof base.id;
 
 const fameRouterAddress = {
   [base.id]: "0xAdefa5860389E8936ebf2977e1Fb4a365aA39636",
@@ -23,7 +23,7 @@ export default defineConfig({
   plugins: [
     etherscan({
       apiKey: process.env.ETHERSCAN_API_KEY!,
-      chainId: sepolia.id,
+      chainId: base.id,
       contracts: [
         {
           name: "UnrevealedLadyRenderer",
@@ -37,6 +37,12 @@ export default defineConfig({
             [base.id]: "0x8Ec7f068A77fa5FC1925110f82381374BA054Ff2",
           } as Partial<Record<SupportedChainId, `0x${string}`>> as any,
         },
+      ],
+    }),
+    etherscan({
+      apiKey: process.env.ETHERSCAN_API_KEY!,
+      chainId: sepolia.id,
+      contracts: [
         {
           name: "BulkMinter",
           address: {
@@ -73,6 +79,19 @@ export default defineConfig({
           },
         },
         {
+          name: "NamedLadyRenderer",
+          address: {
+            [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
+            [mainnet.id]: "0xeb3577c4df71ee2fb6a6717f6b0887f2d77bc201",
+          },
+        },
+      ],
+    }),
+    etherscan({
+      apiKey: process.env.ETHERSCAN_API_KEY!,
+      chainId: mainnet.id,
+      contracts: [
+        {
           name: "FameLadySociety",
           address: {
             [mainnet.id]: "0x6cf4328f1ea83b5d592474f9fcdc714faafd1574",
@@ -82,13 +101,6 @@ export default defineConfig({
           name: "FameLadySquad",
           address: {
             [mainnet.id]: "0xf3E6DbBE461C6fa492CeA7Cb1f5C5eA660EB1B47",
-          },
-        },
-        {
-          name: "NamedLadyRenderer",
-          address: {
-            [sepolia.id]: "0xDaE12D4fB5d0A173cEf2f8C69e5Dd32280f71c9a",
-            [mainnet.id]: "0xeb3577c4df71ee2fb6a6717f6b0887f2d77bc201",
           },
         },
         {
@@ -123,6 +135,7 @@ export default defineConfig({
         "FUNKNLOVE.sol/**",
         "CreatorArtistMagic.sol/**",
         "SimpleOffchainReveal.sol/**",
+        "SocietyNftAuction.sol/**",
       ],
     }),
     react(),

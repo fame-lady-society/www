@@ -22208,3 +22208,887 @@ export const useWatchZoraFactoryImplUpgradedEvent =
     address: zoraFactoryImplAddress,
     eventName: 'Upgraded',
   })
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SocietyNftAuction
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const societyNftAuctionAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'initialOwner', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'AUCTION_DURATION',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'MIN_GAS_BEFORE_REFUND',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'REFUND_GAS_STIPEND',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'SOCIETY_NFT',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'bid',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'endTime',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'failedRefundDonations',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'highestBid',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'highestBidder',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'lifecycle',
+    outputs: [
+      {
+        name: '',
+        internalType: 'enum SocietyNftAuction.Lifecycle',
+        type: 'uint8',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'receivedTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'onERC721Received',
+    outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'settle',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'settledRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'selectedTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'start',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'startTime',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'sweepExcess',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'tokenId',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawProceeds',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawableProceeds',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'winningBid',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'proceeds',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'AuctionSettled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'startTime',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'endTime',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'AuctionStarted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'bidder',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'BidAccepted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'bidder',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'BidRefundDonated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'bidder',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'BidRefunded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ExcessSwept',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ProceedsWithdrawn',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'AlreadyStarted' },
+  { type: 'error', inputs: [], name: 'BidTooLow' },
+  { type: 'error', inputs: [], name: 'BiddingClosed' },
+  { type: 'error', inputs: [], name: 'InsufficientRefundGas' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoExcess' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NoProceeds' },
+  { type: 'error', inputs: [], name: 'NotApproved' },
+  { type: 'error', inputs: [], name: 'NotSettled' },
+  { type: 'error', inputs: [], name: 'OwnershipRenunciationDisabled' },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
+  { type: 'error', inputs: [], name: 'SettlementUnavailable' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'TokenDoesNotExist',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'address', type: 'address' },
+      { name: 'actual', internalType: 'address', type: 'address' },
+    ],
+    name: 'TokenOwnerMismatch',
+  },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  { type: 'error', inputs: [], name: 'UnexpectedEth' },
+  { type: 'error', inputs: [], name: 'UnexpectedNftReceipt' },
+  { type: 'error', inputs: [], name: 'ZeroAddress' },
+] as const
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__
+ */
+export const useReadSocietyNftAuction = /*#__PURE__*/ createUseReadContract({
+  abi: societyNftAuctionAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"AUCTION_DURATION"`
+ */
+export const useReadSocietyNftAuctionAuctionDuration =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'AUCTION_DURATION',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"MIN_GAS_BEFORE_REFUND"`
+ */
+export const useReadSocietyNftAuctionMinGasBeforeRefund =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'MIN_GAS_BEFORE_REFUND',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"REFUND_GAS_STIPEND"`
+ */
+export const useReadSocietyNftAuctionRefundGasStipend =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'REFUND_GAS_STIPEND',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"SOCIETY_NFT"`
+ */
+export const useReadSocietyNftAuctionSocietyNft =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'SOCIETY_NFT',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"endTime"`
+ */
+export const useReadSocietyNftAuctionEndTime =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'endTime',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"failedRefundDonations"`
+ */
+export const useReadSocietyNftAuctionFailedRefundDonations =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'failedRefundDonations',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"highestBid"`
+ */
+export const useReadSocietyNftAuctionHighestBid =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'highestBid',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"highestBidder"`
+ */
+export const useReadSocietyNftAuctionHighestBidder =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'highestBidder',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"lifecycle"`
+ */
+export const useReadSocietyNftAuctionLifecycle =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'lifecycle',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadSocietyNftAuctionOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadSocietyNftAuctionOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"settledRecipient"`
+ */
+export const useReadSocietyNftAuctionSettledRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'settledRecipient',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"startTime"`
+ */
+export const useReadSocietyNftAuctionStartTime =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'startTime',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"tokenId"`
+ */
+export const useReadSocietyNftAuctionTokenId =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'tokenId',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"withdrawableProceeds"`
+ */
+export const useReadSocietyNftAuctionWithdrawableProceeds =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'withdrawableProceeds',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__
+ */
+export const useWriteSocietyNftAuction = /*#__PURE__*/ createUseWriteContract({
+  abi: societyNftAuctionAbi,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"bid"`
+ */
+export const useWriteSocietyNftAuctionBid =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'bid',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteSocietyNftAuctionCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteSocietyNftAuctionCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useWriteSocietyNftAuctionOnErc721Received =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'onERC721Received',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteSocietyNftAuctionRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteSocietyNftAuctionRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"settle"`
+ */
+export const useWriteSocietyNftAuctionSettle =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'settle',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"start"`
+ */
+export const useWriteSocietyNftAuctionStart =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'start',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"sweepExcess"`
+ */
+export const useWriteSocietyNftAuctionSweepExcess =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'sweepExcess',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteSocietyNftAuctionTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"withdrawProceeds"`
+ */
+export const useWriteSocietyNftAuctionWithdrawProceeds =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'withdrawProceeds',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__
+ */
+export const useSimulateSocietyNftAuction =
+  /*#__PURE__*/ createUseSimulateContract({ abi: societyNftAuctionAbi })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"bid"`
+ */
+export const useSimulateSocietyNftAuctionBid =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'bid',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateSocietyNftAuctionCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateSocietyNftAuctionCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useSimulateSocietyNftAuctionOnErc721Received =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'onERC721Received',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateSocietyNftAuctionRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateSocietyNftAuctionRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"settle"`
+ */
+export const useSimulateSocietyNftAuctionSettle =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'settle',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"start"`
+ */
+export const useSimulateSocietyNftAuctionStart =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'start',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"sweepExcess"`
+ */
+export const useSimulateSocietyNftAuctionSweepExcess =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'sweepExcess',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateSocietyNftAuctionTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"withdrawProceeds"`
+ */
+export const useSimulateSocietyNftAuctionWithdrawProceeds =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'withdrawProceeds',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__
+ */
+export const useWatchSocietyNftAuctionEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: societyNftAuctionAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"AuctionSettled"`
+ */
+export const useWatchSocietyNftAuctionAuctionSettledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'AuctionSettled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"AuctionStarted"`
+ */
+export const useWatchSocietyNftAuctionAuctionStartedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'AuctionStarted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"BidAccepted"`
+ */
+export const useWatchSocietyNftAuctionBidAcceptedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'BidAccepted',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"BidRefundDonated"`
+ */
+export const useWatchSocietyNftAuctionBidRefundDonatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'BidRefundDonated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"BidRefunded"`
+ */
+export const useWatchSocietyNftAuctionBidRefundedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'BidRefunded',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"ExcessSwept"`
+ */
+export const useWatchSocietyNftAuctionExcessSweptEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'ExcessSwept',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchSocietyNftAuctionOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchSocietyNftAuctionOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchSocietyNftAuctionOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `eventName` set to `"ProceedsWithdrawn"`
+ */
+export const useWatchSocietyNftAuctionProceedsWithdrawnEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: societyNftAuctionAbi,
+    eventName: 'ProceedsWithdrawn',
+  })
