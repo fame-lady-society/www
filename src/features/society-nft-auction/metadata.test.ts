@@ -4,7 +4,7 @@ import { FAME_METADATA_FALLBACK_IMAGE } from "../../service/fameMetadata";
 import { loadSocietyNftMetadata } from "./metadata";
 
 describe("Society NFT auction metadata", () => {
-  it("normalizes Irys metadata and image URLs through Arweave", async () => {
+  it("normalizes Irys metadata reads while preserving its typed image redirect", async () => {
     const requested: string[] = [];
     const metadata = await loadSocietyNftMetadata(
       "https://gateway.irys.xyz/metadataTx/144.json",
@@ -25,7 +25,7 @@ describe("Society NFT auction metadata", () => {
     assert.deepEqual(metadata, {
       name: "Fame Lady #144",
       description: "A Society NFT",
-      image: "https://arweave.net/imageTx/144.png",
+      image: "https://gateway.irys.xyz/imageTx/144.png",
       error: null,
     });
   });

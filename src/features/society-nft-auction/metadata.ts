@@ -29,6 +29,14 @@ function optionalMetadataString(
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
+function validatedAuctionImage(metadata: unknown): string {
+  // Reuse the shared FAME validator, but preserve the source URL. Current Irys
+  // transactions redirect to typed media while their arweave.net mirrors can
+  // resolve to HTML, which Next/Image correctly refuses to render.
+  imageFromFameMetadata(metadata);
+  return (metadata as { image: string }).image;
+}
+
 export async function loadSocietyNftMetadata(
   tokenUri: string,
   fetchMetadata: MetadataFetch = fetch,
@@ -63,7 +71,7 @@ export async function loadSocietyNftMetadata(
       try {
         const record = metadata as Record<string, unknown>;
         return {
-          image: imageFromFameMetadata(metadata),
+          image: validatedAuctionImage(metadata),
           name: optionalMetadataString(record, "name"),
           description: optionalMetadataString(record, "description"),
           error: null,

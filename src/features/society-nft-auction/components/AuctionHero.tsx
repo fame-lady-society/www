@@ -233,7 +233,16 @@ export function AuctionHero({
             {lotName}
           </Typography>
           {metadata?.description ? (
-            <Typography color="text.secondary" sx={{ mt: 1.25 }}>
+            <Typography
+              color="text.secondary"
+              sx={{
+                mt: 1.25,
+                display: "-webkit-box",
+                overflow: "hidden",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 4,
+              }}
+            >
               {metadata.description}
             </Typography>
           ) : null}
