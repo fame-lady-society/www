@@ -242,6 +242,18 @@ export function AuctionHero({
             >
               Created by Cool, this one of a kind Society NFT represents the number one ranked Fame Lady Society token.
             </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            All proceeds will be donated to{" "}
+            <Link
+              href="https://theexodusroad.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+            >
+              Exodus Road
+            </Link>
+            .
+          </Typography>
           {metadata?.error ? (
             <Typography color="text.secondary" variant="caption" sx={{ mt: 1 }}>
               Showing collection artwork while token details are unavailable.

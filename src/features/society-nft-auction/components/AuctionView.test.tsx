@@ -116,6 +116,9 @@ describe("Society NFT auction view", () => {
     assert.match(hero, /The Number One Ranked Fame Lady/);
     assert.match(hero, /1\.25 ETH/);
     assert.match(hero, /01:01:01/);
+    assert.match(hero, /All proceeds will be donated to/);
+    assert.match(hero, /href="https:\/\/theexodusroad\.com\/"/);
+    assert.match(hero, />Exodus Road</);
     assert.match(action, /Bid amount in ETH/);
     assert.match(action, /Connect wallet/);
   });
