@@ -177,7 +177,7 @@ export function AuctionHero({
   const bidAmount = isSettled ? projection.winningBid : projection.highestBid;
   const hasBid = projection.highestBidder !== zeroAddress;
   const hasRecipient = isSettled && projection.settledRecipient !== zeroAddress;
-  const lotName = metadata?.name ?? `Society NFT #${projection.lot.tokenId}`;
+  
   const image = metadata?.image ?? FAME_METADATA_FALLBACK_IMAGE;
   const statusLabel =
     projection.kind === "active"
@@ -209,7 +209,7 @@ export function AuctionHero({
       <div className="relative aspect-square overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
         <Image
           src={image}
-          alt={`${lotName} auction artwork`}
+          alt="auction artwork"
           fill
           priority
           sizes="(max-width: 899px) calc(100vw - 32px), 56vw"
@@ -228,10 +228,9 @@ export function AuctionHero({
             {statusLabel}
           </Typography>
           <Typography id="auction-lot-heading" component="h2" variant="h3">
-            {lotName}
+            The Number One Ranked Fame Lady
           </Typography>
-          {metadata?.description ? (
-            <Typography
+          <Typography
               color="text.secondary"
               sx={{
                 mt: 1.25,
@@ -241,9 +240,8 @@ export function AuctionHero({
                 WebkitLineClamp: 4,
               }}
             >
-              {metadata.description}
+              Created by Cool, this one of a kind Society NFT represents the number one ranked Fame Lady Society token.
             </Typography>
-          ) : null}
           {metadata?.error ? (
             <Typography color="text.secondary" variant="caption" sx={{ mt: 1 }}>
               Showing collection artwork while token details are unavailable.
