@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Address, Hash } from "viem";
 import {
+  addAuctionGasBuffer,
   buildAuctionTransactionRequest,
   executeAuctionTransaction,
 } from "./useAuctionTransaction";
@@ -11,6 +12,11 @@ const auction = "0x6536A328419785212BD4DA43F4E5155af60dB7D2";
 const bidder = "0x00000000000000000000000000000000000000B1";
 const hash = `0x${"1".repeat(64)}` as Hash;
 const replacementHash = `0x${"2".repeat(64)}` as Hash;
+
+test("adds a 25 percent ceiling buffer to the app RPC gas estimate", () => {
+  assert.equal(addAuctionGasBuffer(78_799n), 98_499n);
+  assert.equal(addAuctionGasBuffer(78_799n, 175_000n), 273_499n);
+});
 
 test("builds an exact native ETH bid with no approval request", () => {
   const request = buildAuctionTransactionRequest({

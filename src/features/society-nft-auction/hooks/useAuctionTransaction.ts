@@ -32,6 +32,7 @@ export type AuctionBidRequest = {
   chainId: typeof base.id;
   functionName: "bid";
   value: bigint;
+  gas?: bigint;
 };
 
 export type AuctionSettleRequest = {
@@ -40,11 +41,19 @@ export type AuctionSettleRequest = {
   account: Address;
   chainId: typeof base.id;
   functionName: "settle";
+  gas?: bigint;
 };
 
 export type AuctionTransactionRequest =
   | AuctionBidRequest
   | AuctionSettleRequest;
+
+export function addAuctionGasBuffer(
+  estimatedGas: bigint,
+  requiredHeadroom = 0n,
+): bigint {
+  return (estimatedGas * 125n + 99n) / 100n + requiredHeadroom;
+}
 
 export function buildAuctionTransactionRequest({
   action,
@@ -271,11 +280,26 @@ export function useAuctionTransaction({
             dispatch,
             simulate: async (exactRequest) => {
               if (exactRequest.functionName === "bid") {
-                await publicClient.simulateContract(exactRequest);
-              } else {
-                await publicClient.simulateContract(exactRequest);
+                const [estimatedGas, refundGasHeadroom] = await Promise.all([
+                  publicClient.estimateContractGas(exactRequest),
+                  publicClient.readContract({
+                    abi: societyNftAuctionAbi,
+                    address: auctionAddress,
+                    functionName: "MIN_GAS_BEFORE_REFUND",
+                  }),
+                ]);
+                return {
+                  ...exactRequest,
+                  gas: addAuctionGasBuffer(estimatedGas, refundGasHeadroom),
+                };
               }
-              return exactRequest;
+
+              const estimatedGas =
+                await publicClient.estimateContractGas(exactRequest);
+              return {
+                ...exactRequest,
+                gas: addAuctionGasBuffer(estimatedGas),
+              };
             },
             write: async (simulatedRequest) => {
               if (simulatedRequest.functionName === "bid") {
