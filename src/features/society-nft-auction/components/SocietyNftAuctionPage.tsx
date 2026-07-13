@@ -24,6 +24,7 @@ import {
   AuctionActionPanel,
   type AuctionActionWalletStatus,
 } from "./AuctionActionPanel";
+import { AuctionFameLiquidValue } from "./AuctionFameLiquidValue";
 import { AuctionHero } from "./AuctionHero";
 import { AuctionTransactionStatus } from "./AuctionTransactionStatus";
 
@@ -189,6 +190,7 @@ function SocietyNftAuctionExperience() {
           metadata={auction.metadata}
           remainingSeconds={clock.remainingSeconds}
           isRefreshing={auction.isRefreshing}
+          liquidValue={<AuctionFameLiquidValue />}
           onRefresh={
             auction.config.status === "configured"
               ? () => void auction.refresh().catch(() => undefined)

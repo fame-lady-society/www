@@ -108,12 +108,20 @@ describe("Society NFT auction view", () => {
         projection={active}
         metadata={metadata}
         remainingSeconds={3_661n}
+        liquidValue={
+          <span>Current liquid price: 0.42 ETH · 1,234.56 USDC</span>
+        }
       />,
     );
     const action = renderAction(active, "disconnected");
 
     assert.match(hero, /Live auction/);
     assert.match(hero, /The Number One Ranked Fame Lady/);
+    assert.match(
+      hero,
+      /This Society NFT is a DN404 with 1,000,000 linked \$FAME\./,
+    );
+    assert.match(hero, /Current liquid price: 0\.42 ETH · 1,234\.56 USDC/);
     assert.match(hero, /1\.25 ETH/);
     assert.match(hero, /01:01:01/);
     assert.match(hero, /All proceeds will be donated to/);

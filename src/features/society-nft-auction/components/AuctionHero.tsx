@@ -5,6 +5,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { formatEther, zeroAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
@@ -19,6 +20,7 @@ export interface AuctionHeroProps {
   remainingSeconds: bigint | null;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+  liquidValue?: ReactNode;
 }
 
 function shortAddress(address: Address): string {
@@ -164,6 +166,7 @@ export function AuctionHero({
   remainingSeconds,
   isRefreshing = false,
   onRefresh,
+  liquidValue,
 }: AuctionHeroProps) {
   if (
     projection.kind === "loading" ||
@@ -242,6 +245,10 @@ export function AuctionHero({
             >
               Created by Cool, this one of a kind Society NFT represents the number one ranked Fame Lady Society token.
             </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This Society NFT is a DN404 with 1,000,000 linked $FAME.
+          </Typography>
+          {liquidValue}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             All proceeds will be donated to{" "}
             <Link
