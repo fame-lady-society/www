@@ -2,89 +2,84 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  AUCTION_CTA_TIMING_FUNCTIONS,
+  auctionLiveCtaTimerDelay,
   AuctionLiveCtaView,
-  deriveAuctionLiveCtaState,
-  isAuctionLive,
+  createAuctionLiveCtaReadContracts,
+  deriveAuctionLiveCtaWindow,
 } from "./AuctionLiveCta";
 
+const auctionAddress = "0x6536A328419785212BD4DA43F4E5155af60dB7D2";
+
 describe("auction live CTA", () => {
-  it("is visible only during the active onchain window", () => {
-    assert.equal(isAuctionLive(0, 200n, 100n), false);
-    assert.equal(isAuctionLive(1, 200n, 100n), true);
-    assert.equal(isAuctionLive(1, 200n, 200n), false);
-    assert.equal(isAuctionLive(2, 200n, 100n), false);
-    assert.equal(isAuctionLive(undefined, undefined, undefined), false);
+  it("loads both fixed timestamps through one read-contracts query", () => {
+    assert.deepEqual(AUCTION_CTA_TIMING_FUNCTIONS, ["startTime", "endTime"]);
+    assert.deepEqual(createAuctionLiveCtaReadContracts(null), []);
+    assert.deepEqual(
+      createAuctionLiveCtaReadContracts(auctionAddress).map(
+        (contract) => contract.functionName,
+      ),
+      ["startTime", "endTime"],
+    );
   });
 
-  it("enables watchers only for their relevant lifecycle window", () => {
+  it("is visible only during the active onchain window", () => {
+    const live = (
+      startTime: bigint | undefined,
+      endTime: bigint | undefined,
+      nowMs: number,
+    ) => deriveAuctionLiveCtaWindow({ startTime, endTime, nowMs }).live;
+
+    assert.equal(live(100n, 200n, 99_000), false);
+    assert.equal(live(100n, 200n, 100_000), true);
+    assert.equal(live(100n, 200n, 199_999), true);
+    assert.equal(live(100n, 200n, 200_000), false);
+    assert.equal(live(0n, 0n, 100_000), false);
+    assert.equal(live(undefined, undefined, 100_000), false);
+  });
+
+  it("caps distant boundaries so the local timer can re-arm", () => {
+    assert.equal(auctionLiveCtaTimerDelay(null, 100_000), null);
+    assert.equal(auctionLiveCtaTimerDelay(200_000, 100_000), 100_025);
+    assert.equal(auctionLiveCtaTimerDelay(3_000_000_000, 0), 2_147_483_647);
+  });
+
+  it("schedules only the next local start or end boundary", () => {
     const cases = [
       {
-        name: "unconfigured",
-        input: { configured: false, lifecycle: undefined },
-        expected: [false, false, false],
+        name: "unconfigured timestamps",
+        input: { startTime: undefined, endTime: undefined, nowMs: 100_000 },
+        expected: { live: false, nextBoundaryMs: null },
       },
       {
-        name: "unknown lifecycle",
-        input: { configured: true, lifecycle: undefined },
-        expected: [false, false, false],
+        name: "unstarted timestamps",
+        input: { startTime: 0n, endTime: 0n, nowMs: 100_000 },
+        expected: { live: false, nextBoundaryMs: null },
       },
       {
-        name: "unstarted",
-        input: { configured: true, lifecycle: 0 },
-        expected: [false, true, false],
+        name: "before start",
+        input: { startTime: 100n, endTime: 200n, nowMs: 99_000 },
+        expected: { live: false, nextBoundaryMs: 100_000 },
       },
       {
         name: "live",
-        input: {
-          configured: true,
-          lifecycle: 1,
-          endTime: 200n,
-          blockTimestamp: 199n,
-        },
-        expected: [true, false, true],
+        input: { startTime: 100n, endTime: 200n, nowMs: 150_000 },
+        expected: { live: true, nextBoundaryMs: 200_000 },
       },
       {
-        name: "deadline reached",
-        input: {
-          configured: true,
-          lifecycle: 1,
-          endTime: 200n,
-          blockTimestamp: 200n,
-        },
-        expected: [false, false, false],
+        name: "ended",
+        input: { startTime: 100n, endTime: 200n, nowMs: 200_000 },
+        expected: { live: false, nextBoundaryMs: null },
       },
       {
-        name: "retained deadline",
-        input: {
-          configured: true,
-          lifecycle: 1,
-          endTime: 200n,
-          retainedDeadlineReached: true,
-        },
-        expected: [false, false, false],
-      },
-      {
-        name: "settled",
-        input: { configured: true, lifecycle: 2 },
-        expected: [false, false, false],
+        name: "invalid range",
+        input: { startTime: 200n, endTime: 100n, nowMs: 150_000 },
+        expected: { live: false, nextBoundaryMs: null },
       },
     ] as const;
 
     for (const { name, input, expected } of cases) {
-      const state = deriveAuctionLiveCtaState({
-        endTime: undefined,
-        blockTimestamp: undefined,
-        ...input,
-      });
-      assert.deepEqual(
-        [
-          state.blockWatcherEnabled,
-          state.startWatcherEnabled,
-          state.settlementWatcherEnabled,
-        ],
-        expected,
-        name,
-      );
+      assert.deepEqual(deriveAuctionLiveCtaWindow(input), expected, name);
     }
   });
 

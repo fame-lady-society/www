@@ -4,75 +4,68 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Address } from "viem";
 import { base } from "viem/chains";
-import { useBlock } from "wagmi";
+import { useReadContracts } from "wagmi";
 import { WrappedLink } from "@/components/WrappedLink";
-import {
-  useReadSocietyNftAuctionEndTime,
-  useReadSocietyNftAuctionLifecycle,
-  useWatchSocietyNftAuctionAuctionStartedEvent,
-  useWatchSocietyNftAuctionAuctionSettledEvent,
-} from "@/wagmi";
+import { societyNftAuctionAbi } from "@/wagmi";
 import { getSocietyNftAuctionConfig } from "../config";
-import type { SocietyNftAuctionLifecycle } from "../types";
+import { usePageAttentionRefresh } from "../hooks/usePageAttentionRefresh";
 
-const ACTIVE_AUCTION_LIFECYCLE: SocietyNftAuctionLifecycle = 1;
+const MAX_TIMER_DELAY_MS = 2_147_483_647;
+export const AUCTION_CTA_TIMING_FUNCTIONS = ["startTime", "endTime"] as const;
 
-type AuctionLiveCtaState = {
-  deadlineReached: boolean;
-  blockWatcherEnabled: boolean;
-  startWatcherEnabled: boolean;
-  settlementWatcherEnabled: boolean;
-};
-
-type DeadlineObservation = {
-  endTime: bigint | undefined;
-  reached: boolean;
-};
-
-export function deriveAuctionLiveCtaState({
-  configured,
-  lifecycle,
-  endTime,
-  blockTimestamp,
-  retainedDeadlineReached = false,
-}: {
-  configured: boolean;
-  lifecycle: number | undefined;
-  endTime: bigint | undefined;
-  blockTimestamp: bigint | undefined;
-  retainedDeadlineReached?: boolean;
-}): AuctionLiveCtaState {
-  const deadlineReached =
-    lifecycle === ACTIVE_AUCTION_LIFECYCLE &&
-    endTime !== undefined &&
-    (retainedDeadlineReached ||
-      (blockTimestamp !== undefined && blockTimestamp >= endTime));
-  const activeBeforeDeadline =
-    configured &&
-    lifecycle === ACTIVE_AUCTION_LIFECYCLE &&
-    !deadlineReached;
-
-  return {
-    deadlineReached,
-    blockWatcherEnabled: activeBeforeDeadline,
-    startWatcherEnabled: configured && lifecycle === 0,
-    settlementWatcherEnabled: activeBeforeDeadline,
-  };
+export function createAuctionLiveCtaReadContracts(address: Address | null) {
+  if (address === null) return [];
+  return AUCTION_CTA_TIMING_FUNCTIONS.map((functionName) => ({
+    abi: societyNftAuctionAbi,
+    address,
+    chainId: base.id,
+    functionName,
+  }));
 }
 
-export function isAuctionLive(
-  lifecycle: number | undefined,
-  endTime: bigint | undefined,
-  blockTimestamp: bigint | undefined,
-): boolean {
-  return (
-    lifecycle === ACTIVE_AUCTION_LIFECYCLE &&
-    endTime !== undefined &&
-    blockTimestamp !== undefined &&
-    blockTimestamp < endTime
-  );
+export interface AuctionLiveCtaWindow {
+  live: boolean;
+  nextBoundaryMs: number | null;
+}
+
+export function deriveAuctionLiveCtaWindow({
+  startTime,
+  endTime,
+  nowMs,
+}: {
+  startTime: bigint | undefined;
+  endTime: bigint | undefined;
+  nowMs: number;
+}): AuctionLiveCtaWindow {
+  if (
+    startTime === undefined ||
+    endTime === undefined ||
+    startTime <= 0n ||
+    endTime <= startTime
+  ) {
+    return { live: false, nextBoundaryMs: null };
+  }
+
+  const startTimeMs = Number(startTime * 1_000n);
+  const endTimeMs = Number(endTime * 1_000n);
+  if (nowMs < startTimeMs) {
+    return { live: false, nextBoundaryMs: startTimeMs };
+  }
+  if (nowMs < endTimeMs) {
+    return { live: true, nextBoundaryMs: endTimeMs };
+  }
+  return { live: false, nextBoundaryMs: null };
+}
+
+export function auctionLiveCtaTimerDelay(
+  nextBoundaryMs: number | null,
+  nowMs: number,
+): number | null {
+  if (nextBoundaryMs === null) return null;
+  return Math.min(Math.max(0, nextBoundaryMs - nowMs + 25), MAX_TIMER_DELAY_MS);
 }
 
 export function AuctionLiveCtaView() {
@@ -115,84 +108,50 @@ export function AuctionLiveCtaView() {
 
 export function AuctionLiveCta() {
   const config = getSocietyNftAuctionConfig();
-  const address = config.status === "configured" ? config.address : undefined;
-  const configured = address !== undefined;
-  const { data: lifecycle, refetch: refetchLifecycle } =
-    useReadSocietyNftAuctionLifecycle({
-      address,
-      chainId: base.id,
-      query: { enabled: configured },
-    });
-  const { data: endTime, refetch: refetchEndTime } =
-    useReadSocietyNftAuctionEndTime({
-      address,
-      chainId: base.id,
-      query: { enabled: configured },
-    });
-  const [deadlineObservation, setDeadlineObservation] =
-    useState<DeadlineObservation>({ endTime: undefined, reached: false });
-  const retainedDeadlineReached =
-    deadlineObservation.endTime === endTime && deadlineObservation.reached;
-  const stateBeforeBlock = deriveAuctionLiveCtaState({
-    configured,
-    lifecycle,
-    endTime,
-    blockTimestamp: undefined,
-    retainedDeadlineReached,
+  const address = config.status === "configured" ? config.address : null;
+  const configured = address !== null;
+  const contracts = useMemo(
+    () => createAuctionLiveCtaReadContracts(address),
+    [address],
+  );
+  const timingQuery = useReadContracts({
+    allowFailure: true,
+    contracts,
+    query: {
+      enabled: configured,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
-  const block = useBlock({
-    chainId: base.id,
-    watch: stateBeforeBlock.blockWatcherEnabled,
-    query: { enabled: stateBeforeBlock.blockWatcherEnabled },
-  });
-  const state = deriveAuctionLiveCtaState({
-    configured,
-    lifecycle,
-    endTime,
-    blockTimestamp: block.data?.timestamp,
-    retainedDeadlineReached,
-  });
+  const startTime =
+    timingQuery.data?.[0]?.status === "success"
+      ? (timingQuery.data[0].result as bigint)
+      : undefined;
+  const endTime =
+    timingQuery.data?.[1]?.status === "success"
+      ? (timingQuery.data[1].result as bigint)
+      : undefined;
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const ctaWindow = deriveAuctionLiveCtaWindow({ startTime, endTime, nowMs });
+  const refetchTiming = timingQuery.refetch;
 
   useEffect(() => {
-    setDeadlineObservation((current) => {
-      if (lifecycle !== ACTIVE_AUCTION_LIFECYCLE || endTime === undefined) {
-        return current.endTime === endTime && !current.reached
-          ? current
-          : { endTime, reached: false };
-      }
+    const delay = auctionLiveCtaTimerDelay(
+      ctaWindow.nextBoundaryMs,
+      Date.now(),
+    );
+    if (delay === null) return;
+    const timer = globalThis.setTimeout(() => setNowMs(Date.now()), delay);
+    return () => globalThis.clearTimeout(timer);
+  }, [ctaWindow.nextBoundaryMs, nowMs]);
 
-      const reached =
-        (current.endTime === endTime && current.reached) ||
-        (block.data?.timestamp !== undefined &&
-          block.data.timestamp >= endTime);
-      return current.endTime === endTime && current.reached === reached
-        ? current
-        : { endTime, reached };
-    });
-  }, [block.data?.timestamp, endTime, lifecycle]);
+  const refresh = useCallback(async () => {
+    const result = await refetchTiming({ cancelRefetch: false });
+    if (result.error) throw result.error;
+    setNowMs(Date.now());
+  }, [refetchTiming]);
+  usePageAttentionRefresh(refresh, configured);
 
-  const refresh = useCallback(() => {
-    void Promise.all([
-      refetchLifecycle({ cancelRefetch: false }),
-      refetchEndTime({ cancelRefetch: false }),
-    ]).catch(() => undefined);
-  }, [refetchEndTime, refetchLifecycle]);
-  useWatchSocietyNftAuctionAuctionStartedEvent({
-    address,
-    chainId: base.id,
-    enabled: state.startWatcherEnabled,
-    onLogs: refresh,
-  });
-  useWatchSocietyNftAuctionAuctionSettledEvent({
-    address,
-    chainId: base.id,
-    enabled: state.settlementWatcherEnabled,
-    onLogs: refresh,
-  });
-
-  if (!isAuctionLive(lifecycle, endTime, block.data?.timestamp)) {
-    return null;
-  }
-
+  if (!ctaWindow.live) return null;
   return <AuctionLiveCtaView />;
 }

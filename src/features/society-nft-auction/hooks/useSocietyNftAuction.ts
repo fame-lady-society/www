@@ -1,16 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { erc721Abi, type Address } from "viem";
 import { base } from "viem/chains";
 import { useBlock, useReadContract, useReadContracts } from "wagmi";
 import {
   societyNftAuctionAbi,
   useReadSocietyNftAuctionMinimumNextBid,
-  useWatchSocietyNftAuctionAuctionSettledEvent,
-  useWatchSocietyNftAuctionAuctionStartedEvent,
-  useWatchSocietyNftAuctionBidAcceptedEvent,
 } from "../../../wagmi";
 import {
   getSocietyNftAuctionConfig,
@@ -27,6 +24,7 @@ import type {
   SocietyNftAuctionPageProjection,
   SocietyNftAuctionSnapshotResult,
 } from "../types";
+import { usePageAttentionRefresh } from "./usePageAttentionRefresh";
 
 export const AUCTION_SNAPSHOT_FUNCTIONS = [
   "SOCIETY_NFT",
@@ -123,46 +121,90 @@ export function metadataTargetFromProjection(
   };
 }
 
-/** Coalesces event bursts; logs are freshness hints, never canonical state. */
-export function createCoalescedAuctionRefresh(refresh: () => void) {
-  let pending = false;
+export type CanonicalAuctionRefreshRead =
+  | { status: "success"; result: unknown }
+  | { status: "failure"; error?: unknown };
 
-  return () => {
-    if (pending) return;
-    pending = true;
-    queueMicrotask(() => {
-      pending = false;
-      refresh();
-    });
-  };
+export interface CanonicalAuctionRefreshResult {
+  snapshot: readonly CanonicalAuctionRefreshRead[];
+  blockTimestamp: bigint;
+  minimumNextBid: bigint | null;
 }
 
 export async function refreshCanonicalAuction(
   refetchSnapshot: () => Promise<{
     error: unknown;
-    data?: readonly { status: string }[];
+    data?: readonly CanonicalAuctionRefreshRead[];
   }>,
-  refetchBlock: () => Promise<{ error: unknown; data?: unknown }>,
+  refetchBlock: () => Promise<{
+    error: unknown;
+    data?: { timestamp?: bigint };
+  }>,
   refetchMinimumNextBid?: () => Promise<{
     error: unknown;
     data?: unknown;
   }>,
-): Promise<void> {
-  const [snapshot, block, minimumNextBid] = await Promise.all([
+  shouldRefetchMinimumNextBid: (
+    refreshed: CanonicalAuctionRefreshResult,
+  ) => boolean = () => true,
+): Promise<CanonicalAuctionRefreshResult> {
+  const [snapshot, block] = await Promise.all([
     refetchSnapshot(),
     refetchBlock(),
-    refetchMinimumNextBid?.() ?? Promise.resolve(null),
   ]);
-  const error = snapshot.error ?? block.error ?? minimumNextBid?.error;
+  const error = snapshot.error ?? block.error;
   if (error) throw error;
   if (
     snapshot.data?.length !== AUCTION_SNAPSHOT_FUNCTIONS.length ||
     snapshot.data.some((read) => read.status !== "success") ||
-    block.data === undefined ||
-    (refetchMinimumNextBid && minimumNextBid?.data === undefined)
+    block.data?.timestamp === undefined
   ) {
     throw new Error("Canonical auction refresh returned incomplete data");
   }
+
+  const refreshed: CanonicalAuctionRefreshResult = {
+    snapshot: snapshot.data,
+    blockTimestamp: block.data.timestamp,
+    minimumNextBid: null,
+  };
+  if (!refetchMinimumNextBid || !shouldRefetchMinimumNextBid(refreshed)) {
+    return refreshed;
+  }
+
+  try {
+    const minimumNextBid = await refetchMinimumNextBid();
+    return {
+      ...refreshed,
+      minimumNextBid:
+        !minimumNextBid.error && typeof minimumNextBid.data === "bigint"
+          ? minimumNextBid.data
+          : null,
+    };
+  } catch {
+    return refreshed;
+  }
+}
+
+export interface PreparedAuctionAction {
+  projection: SocietyNftAuctionPageProjection;
+  minimumNextBid: bigint | null;
+}
+
+export function prepareAuctionAction(
+  auctionAddress: Address,
+  refreshed: CanonicalAuctionRefreshResult,
+): PreparedAuctionAction {
+  const snapshot = mapSocietyNftAuctionReads(
+    auctionAddress,
+    refreshed.snapshot.map((read) =>
+      read.status === "success" ? read.result : undefined,
+    ),
+  );
+
+  return {
+    projection: projectAuctionPage(snapshot, refreshed.blockTimestamp),
+    minimumNextBid: refreshed.minimumNextBid,
+  };
 }
 
 export interface UseSocietyNftAuctionResult {
@@ -173,6 +215,7 @@ export interface UseSocietyNftAuctionResult {
   minimumNextBid: MinimumNextBidState;
   isRefreshing: boolean;
   refresh: () => Promise<void>;
+  prepareAction: () => Promise<PreparedAuctionAction>;
 }
 
 export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
@@ -186,12 +229,19 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   const snapshotQuery = useReadContracts({
     allowFailure: true,
     contracts,
-    query: { enabled: auctionAddress !== null },
+    query: {
+      enabled: auctionAddress !== null,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
   const blockQuery = useBlock({
     chainId: base.id,
-    watch: true,
-    query: { enabled: auctionAddress !== null },
+    query: {
+      enabled: auctionAddress !== null,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
   const blockTimestamp = blockQuery.data?.timestamp ?? null;
 
@@ -225,11 +275,11 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   const minimumNextBidQuery = useReadSocietyNftAuctionMinimumNextBid({
     address: auctionAddress ?? undefined,
     chainId: base.id,
-    scopeKey:
-      activeHighestBid === null
-        ? undefined
-        : `minimum-next-bid-${activeHighestBid}`,
-    query: { enabled: activeHighestBid !== null },
+    query: {
+      enabled: activeHighestBid !== null,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
   let minimumNextBid: MinimumNextBidState;
   if (activeHighestBid === null) {
@@ -251,7 +301,12 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
     args: metadataTarget ? [metadataTarget.tokenId] : undefined,
     chainId: base.id,
     functionName: "tokenURI",
-    query: { enabled: metadataTarget !== null },
+    query: {
+      enabled: metadataTarget !== null,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: Number.POSITIVE_INFINITY,
+    },
   });
   const metadataQuery = useQuery({
     queryKey: ["society-nft-auction", "metadata", tokenUriQuery.data],
@@ -269,46 +324,32 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
   const refetchSnapshot = snapshotQuery.refetch;
   const refetchBlock = blockQuery.refetch;
   const refetchMinimumNextBid = minimumNextBidQuery.refetch;
-  const shouldRetryMinimumNextBid =
-    activeHighestBid !== null && minimumNextBidQuery.error !== null;
-  const refresh = useCallback(
+  const refreshCanonical = useCallback(
     () =>
       refreshCanonicalAuction(
         () => refetchSnapshot({ cancelRefetch: false }),
         () => refetchBlock({ cancelRefetch: false }),
-        shouldRetryMinimumNextBid
+        auctionAddress !== null
           ? () => refetchMinimumNextBid({ cancelRefetch: false })
           : undefined,
+        (refreshed) =>
+          auctionAddress !== null &&
+          prepareAuctionAction(auctionAddress, refreshed).projection.kind ===
+            "active",
       ),
-    [
-      refetchBlock,
-      refetchMinimumNextBid,
-      refetchSnapshot,
-      shouldRetryMinimumNextBid,
-    ],
+    [auctionAddress, refetchBlock, refetchMinimumNextBid, refetchSnapshot],
   );
+  const refresh = useCallback(async () => {
+    await refreshCanonical();
+  }, [refreshCanonical]);
+  const prepareAction = useCallback(async () => {
+    if (auctionAddress === null) {
+      throw new Error("Auction is not configured");
+    }
+    return prepareAuctionAction(auctionAddress, await refreshCanonical());
+  }, [auctionAddress, refreshCanonical]);
 
-  const refreshRef = useRef(refresh);
-  useEffect(() => {
-    refreshRef.current = refresh;
-  }, [refresh]);
-  const onAuctionEvent = useMemo(
-    () =>
-      createCoalescedAuctionRefresh(() => {
-        void refreshRef.current().catch(() => undefined);
-      }),
-    [],
-  );
-  const watchOptions = {
-    address: auctionAddress ?? undefined,
-    chainId: base.id,
-    enabled: auctionAddress !== null,
-    onLogs: onAuctionEvent,
-  } as const;
-
-  useWatchSocietyNftAuctionAuctionStartedEvent(watchOptions);
-  useWatchSocietyNftAuctionBidAcceptedEvent(watchOptions);
-  useWatchSocietyNftAuctionAuctionSettledEvent(watchOptions);
+  usePageAttentionRefresh(refresh, auctionAddress !== null);
 
   return {
     config,
@@ -321,5 +362,6 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
       blockQuery.isFetching ||
       (activeHighestBid !== null && minimumNextBidQuery.isFetching),
     refresh,
+    prepareAction,
   };
 }

@@ -7,16 +7,24 @@ import type {
 } from "../types";
 import {
   AUCTION_SNAPSHOT_FUNCTIONS,
-  createCoalescedAuctionRefresh,
+  type CanonicalAuctionRefreshRead,
   createSocietyNftAuctionReadContracts,
   mapSocietyNftAuctionReads,
   metadataTargetFromProjection,
+  prepareAuctionAction,
   refreshCanonicalAuction,
 } from "./useSocietyNftAuction";
 
 const auctionAddress = "0x6536A328419785212BD4DA43F4E5155af60dB7D2";
 const societyNft = "0xBB5ED04dD7B207592429eb8d599d103CCad646c4";
 const bidder = "0x00000000000000000000000000000000000000B1";
+
+function successfulRefreshReads(): CanonicalAuctionRefreshRead[] {
+  return AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({
+    status: "success",
+    result: null,
+  }));
+}
 
 test("maps the complete required read tuple in stable order", () => {
   assert.deepEqual(AUCTION_SNAPSHOT_FUNCTIONS, [
@@ -92,23 +100,6 @@ test("metadata is requested only for a started lot", () => {
   );
 });
 
-test("auction events coalesce into one canonical refresh", async () => {
-  let refreshes = 0;
-  const onAuctionEvent = createCoalescedAuctionRefresh(() => {
-    refreshes += 1;
-  });
-
-  // Started, bid, and settled handlers all use this same callback. Logs never
-  // supply state to it; they are only freshness hints.
-  onAuctionEvent();
-  onAuctionEvent();
-  onAuctionEvent();
-  assert.equal(refreshes, 0);
-
-  await new Promise<void>((resolve) => queueMicrotask(resolve));
-  assert.equal(refreshes, 1);
-});
-
 test("canonical refresh rejects when either required refetch fails", async () => {
   const failure = new Error("block RPC unavailable");
 
@@ -116,7 +107,7 @@ test("canonical refresh rejects when either required refetch fails", async () =>
     refreshCanonicalAuction(
       async () => ({
         error: null,
-        data: AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" })),
+        data: successfulRefreshReads(),
       }),
       async () => ({ error: failure, data: undefined }),
     ),
@@ -125,7 +116,7 @@ test("canonical refresh rejects when either required refetch fails", async () =>
 });
 
 test("canonical refresh rejects a partial required-read failure", async () => {
-  const reads = AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" }));
+  const reads = successfulRefreshReads();
   reads[3] = { status: "failure" };
 
   await assert.rejects(
@@ -143,7 +134,7 @@ test("canonical refresh can recover the active minimum-bid read", async () => {
   await refreshCanonicalAuction(
     async () => ({
       error: null,
-      data: AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" })),
+      data: successfulRefreshReads(),
     }),
     async () => ({ error: null, data: { timestamp: 1_000n } }),
     async () => {
@@ -153,15 +144,70 @@ test("canonical refresh can recover the active minimum-bid read", async () => {
   );
 
   assert.equal(minimumReadAttempts, 1);
-  await assert.rejects(
-    refreshCanonicalAuction(
-      async () => ({
-        error: null,
-        data: AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" })),
-      }),
-      async () => ({ error: null, data: { timestamp: 1_000n } }),
-      async () => ({ error: null, data: undefined }),
-    ),
-    /incomplete data/i,
+  const withoutMinimum = await refreshCanonicalAuction(
+    async () => ({
+      error: null,
+      data: successfulRefreshReads(),
+    }),
+    async () => ({ error: null, data: { timestamp: 1_000n } }),
+    async () => ({ error: new Error("BiddingClosed"), data: undefined }),
   );
+  assert.equal(withoutMinimum.minimumNextBid, null);
+});
+
+test("deadline refresh skips the minimum read after projecting the fresh state", async () => {
+  let minimumReadAttempts = 0;
+  const refreshed = await refreshCanonicalAuction(
+    async () => ({
+      error: null,
+      data: [
+        { status: "success", result: societyNft },
+        { status: "success", result: 1 },
+        { status: "success", result: 144n },
+        { status: "success", result: 1_000n },
+        { status: "success", result: 2_000n },
+        { status: "success", result: bidder },
+        { status: "success", result: 10n },
+        { status: "success", result: zeroAddress },
+      ],
+    }),
+    async () => ({ error: null, data: { timestamp: 2_000n } }),
+    async () => {
+      minimumReadAttempts += 1;
+      return { error: new Error("BiddingClosed"), data: undefined };
+    },
+    (canonical) =>
+      prepareAuctionAction(auctionAddress, canonical).projection.kind ===
+      "active",
+  );
+
+  assert.equal(minimumReadAttempts, 0);
+  assert.equal(
+    prepareAuctionAction(auctionAddress, refreshed).projection.kind,
+    "ended_unsettled",
+  );
+});
+
+test("prepares an action from the freshly returned snapshot and minimum", async () => {
+  const refreshed = await refreshCanonicalAuction(
+    async () => ({
+      error: null,
+      data: [
+        { status: "success", result: societyNft },
+        { status: "success", result: 1 },
+        { status: "success", result: 144n },
+        { status: "success", result: 1_000n },
+        { status: "success", result: 2_000n },
+        { status: "success", result: bidder },
+        { status: "success", result: 10n },
+        { status: "success", result: zeroAddress },
+      ],
+    }),
+    async () => ({ error: null, data: { timestamp: 1_500n } }),
+    async () => ({ error: null, data: 11n }),
+  );
+
+  const prepared = prepareAuctionAction(auctionAddress, refreshed);
+  assert.equal(prepared.projection.kind, "active");
+  assert.equal(prepared.minimumNextBid, 11n);
 });

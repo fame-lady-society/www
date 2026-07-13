@@ -150,7 +150,29 @@ function SocietyNftAuctionExperience() {
   const submitBid = async () => {
     setBidTouched(true);
     if (!bidValidation?.valid) return;
-    const result = await transaction.submitBid(bidValidation.wei);
+
+    let prepared;
+    try {
+      prepared = await auction.prepareAction();
+    } catch {
+      return;
+    }
+    if (prepared.projection.kind !== "active") {
+      return;
+    }
+    if (prepared.minimumNextBid === null) {
+      return;
+    }
+
+    const preparedValidation = validateBidAmount(
+      bidValue,
+      prepared.minimumNextBid,
+    );
+    if (!preparedValidation.valid) {
+      return;
+    }
+
+    const result = await transaction.submitBid(preparedValidation.wei);
     if (result.status === "confirmed") {
       await walletBalance.refetch();
     }
@@ -160,6 +182,16 @@ function SocietyNftAuctionExperience() {
     );
     setBidValue(next.value);
     setBidTouched(next.touched);
+  };
+
+  const settleAuction = async () => {
+    try {
+      const prepared = await auction.prepareAction();
+      if (prepared.projection.kind !== "ended_unsettled") return;
+      await transaction.settle();
+    } catch {
+      // The canonical refresh updates the page failure state when it fails.
+    }
   };
 
   const retryTransaction = async () => {
@@ -222,7 +254,7 @@ function SocietyNftAuctionExperience() {
                 setBidValue(value);
               }}
               onBid={() => void submitBid()}
-              onSettle={() => void transaction.settle()}
+              onSettle={() => void settleAuction()}
               onRefresh={() => void auction.refresh().catch(() => undefined)}
             />
           </Stack>
