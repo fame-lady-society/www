@@ -241,7 +241,6 @@ export function SocietyNftAuctionPage() {
   return (
     <DefaultProvider base>
       <Main
-        disableConnect
         menu={
           <MenuList dense disablePadding>
             <LinksMenuItems />
