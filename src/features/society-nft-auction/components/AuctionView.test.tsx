@@ -147,6 +147,10 @@ describe("Society NFT auction view", () => {
 
     assert.match(html, /Bid amount in ETH/);
     assert.match(html, /Minimum next bid: 1\.375 ETH/);
+    assert.match(
+      html,
+      /If you’re outbid, your ETH is automatically returned to your wallet\./,
+    );
     assert.match(html, /Native ETH on Base/);
     assert.match(html, /Bid with ETH/);
   });

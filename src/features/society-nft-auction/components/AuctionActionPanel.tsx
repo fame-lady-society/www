@@ -184,6 +184,10 @@ export function AuctionActionPanel({
           <Typography color="text.secondary" sx={{ mt: 0.75 }}>
             {minimumBidMessage}
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            If you’re outbid, your ETH is automatically returned to your
+            wallet.
+          </Typography>
         </div>
 
         <TextField
