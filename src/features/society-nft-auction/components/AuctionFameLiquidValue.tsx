@@ -69,14 +69,14 @@ export function AuctionFameLiquidValue() {
       aria-live="polite"
       sx={{ mt: 0.5 }}
     >
-      Current liquid price:{" "}<br></br>
+      Current liquid price:<br></br>
       {auctionFameQuoteLabel(
         ethQuote.quote,
         ETH_TOKEN,
         4,
         isChecking || ethQuote.isLoading,
       )}{" "}
-      <br></br>{" $"}
+      <br></br>{usdcQuote.quote?.status === "ready" ? "$" : ""}
       {auctionFameQuoteLabel(
         usdcQuote.quote,
         USDC_TOKEN,
