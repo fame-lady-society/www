@@ -18,6 +18,7 @@ import { TwitterIcon } from "@/components/icons/twitter";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 
 const AnimatedBox = animated(Box);
 
@@ -255,6 +256,9 @@ export const Layout: FC = () => {
               >
                 EST. JULY 12, 2021
               </Typography>
+              <div style={{ marginBottom: 24, maxWidth: 560 }}>
+                <AuctionLiveCta />
+              </div>
               <Typography
                 variant="h1"
                 sx={{

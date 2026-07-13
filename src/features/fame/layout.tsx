@@ -40,6 +40,7 @@ import {
   OG_RANK_BOOST,
 } from "@/features/claim-to-fame/hooks/constants";
 import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
+import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 
 const BASE_URL = "https://fame.support/thumb/";
 function ImageForToken({ tokenId }: { tokenId: bigint }) {
@@ -235,6 +236,11 @@ const Content: FC<{
       spacing={2}
       sx={{ mt: 4, mx: 4, pt: 2, color: "text.primary" }}
     >
+      <Grid2 xs={12} display="flex" justifyContent="center" width="100%">
+        <div style={{ width: "100%", maxWidth: 720, marginBottom: 32 }}>
+          <AuctionLiveCta />
+        </div>
+      </Grid2>
       <Grid2
         xs={12}
         display="flex"

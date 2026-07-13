@@ -30,6 +30,15 @@ export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
 export const baseCommunityMultiSigAddress =
   "0xC952C53D8B63919e372caa2E6FEe605ee24E4D3D" as const;
 
+export function societyNftAuctionAddress(chainId: typeof base.id) {
+  switch (chainId) {
+    case base.id:
+      return "0x6536A328419785212BD4DA43F4E5155af60dB7D2" as const;
+    default:
+      throw new Error("Invalid chainId");
+  }
+}
+
 export function societyFromNetwork(
   chainId: typeof sepolia.id | typeof base.id,
 ) {
