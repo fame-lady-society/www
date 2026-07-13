@@ -1,4 +1,6 @@
+import { societyNftAuctionAddress } from "@/features/fame/contract";
 import { isAddress, zeroAddress, type Address } from "viem";
+import { base } from "viem/chains";
 
 export type SocietyNftAuctionConfig =
   | {
@@ -11,8 +13,7 @@ export type SocietyNftAuctionConfig =
     };
 
 export function getSocietyNftAuctionConfig(
-  rawAddress: string | undefined = process.env
-    .NEXT_PUBLIC_SOCIETY_NFT_AUCTION_ADDRESS,
+  rawAddress: string | undefined = societyNftAuctionAddress(base.id),
 ): SocietyNftAuctionConfig {
   const address = rawAddress?.trim();
 
