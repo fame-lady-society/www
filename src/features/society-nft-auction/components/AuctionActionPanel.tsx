@@ -4,6 +4,8 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { FormEvent, ReactNode } from "react";
+import { formatEther } from "viem";
+import { bidExceedsBalance } from "../state";
 import type { AuctionActiveProjection, AuctionEndedProjection } from "../types";
 
 export type AuctionActionWalletStatus =
@@ -17,6 +19,7 @@ export interface AuctionActionPanelProps {
   projection: AuctionActiveProjection | AuctionEndedProjection;
   bidValue?: string;
   bidError?: string | null;
+  balanceWei?: bigint | null;
   walletStatus: AuctionActionWalletStatus;
   walletMessage: string;
   walletControl?: ReactNode;
@@ -27,6 +30,15 @@ export interface AuctionActionPanelProps {
   onBidValueChange?: (value: string) => void;
   onBid?: () => void;
   onSettle?: () => void;
+}
+
+export function formatAuctionBalance(balanceWei: bigint): string {
+  const [whole, fraction = ""] = formatEther(balanceWei).split(".");
+  const truncatedFraction = fraction.padEnd(4, "0").slice(0, 4);
+  if (balanceWei > 0n && whole === "0" && truncatedFraction === "0000") {
+    return "<0.0001";
+  }
+  return `${whole}.${truncatedFraction}`;
 }
 
 function WalletBoundary({
@@ -58,6 +70,7 @@ export function AuctionActionPanel({
   projection,
   bidValue = "",
   bidError = null,
+  balanceWei = null,
   walletStatus,
   walletMessage,
   walletControl,
@@ -124,6 +137,12 @@ export function AuctionActionPanel({
     Boolean(bidError) ||
     bidValue.trim().length === 0 ||
     actionPaused;
+  const balanceExceeded = bidExceedsBalance(bidValue, balanceWei);
+  const balanceLabel =
+    balanceWei === null
+      ? "Native ETH on Base"
+      : `Balance: ${formatAuctionBalance(balanceWei)} ETH`;
+  const helperText = bidError ? `${bidError} · ${balanceLabel}` : balanceLabel;
 
   return (
     <Paper
@@ -154,8 +173,8 @@ export function AuctionActionPanel({
           autoComplete="off"
           value={bidValue}
           onChange={(event) => onBidValueChange?.(event.target.value)}
-          error={Boolean(bidError)}
-          helperText={bidError ?? "Native ETH on Base"}
+          error={Boolean(bidError) || balanceExceeded}
+          helperText={helperText}
           disabled={actionPaused || !canBid}
           fullWidth
           inputProps={{

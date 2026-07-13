@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import { useState, type ReactNode } from "react";
 import { base } from "viem/chains";
-import { useSwitchChain } from "wagmi";
+import { useBalance, useSwitchChain } from "wagmi";
 import { DefaultProvider } from "@/context/default";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
@@ -48,6 +48,11 @@ function SocietyNftAuctionExperience() {
   const execution = useAuctionExecutionEnvironment({
     auctionAddress: actionProjection?.auctionAddress ?? null,
     expectedSocietyNft: actionProjection?.societyNft ?? null,
+  });
+  const walletBalance = useBalance({
+    address: execution.account,
+    chainId: base.id,
+    query: { enabled: execution.environment.status === "ready" },
   });
   const transaction = useAuctionTransaction({
     auctionAddress: actionProjection?.auctionAddress ?? null,
@@ -141,6 +146,9 @@ function SocietyNftAuctionExperience() {
     setBidTouched(true);
     if (!bidValidation?.valid) return;
     const result = await transaction.submitBid(bidValidation.wei);
+    if (result.status === "confirmed") {
+      await walletBalance.refetch();
+    }
     const next = auctionBidFormAfterResult(
       { value: bidValue, touched: true },
       result.status,
@@ -173,6 +181,11 @@ function SocietyNftAuctionExperience() {
               projection={actionProjection}
               bidValue={bidValue}
               bidError={bidError}
+              balanceWei={
+                execution.environment.status === "ready"
+                  ? walletBalance.data?.value ?? null
+                  : null
+              }
               walletStatus={walletStatus}
               walletMessage={walletMessage}
               walletControl={walletControl}

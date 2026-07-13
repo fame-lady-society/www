@@ -205,3 +205,12 @@ export function validateBidAmount(
 
   return parsed;
 }
+
+export function bidExceedsBalance(
+  value: string,
+  balanceWei: bigint | null,
+): boolean {
+  if (balanceWei === null) return false;
+  const parsed = parseExactEther(value);
+  return parsed.valid && parsed.wei > balanceWei;
+}

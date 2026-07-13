@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
 import {
+  bidExceedsBalance,
   buildAuctionSnapshot,
   projectAuctionPage,
   validateBidAmount,
@@ -136,5 +137,17 @@ describe("exact ETH bid validation", () => {
       valid: true,
       wei: 12_340_000_000_000_000_000n,
     });
+  });
+});
+
+describe("wallet balance advisory", () => {
+  it("flags only valid ETH amounts above the connected balance", () => {
+    assert.equal(bidExceedsBalance("0.5", 500_000_000_000_000_000n), false);
+    assert.equal(
+      bidExceedsBalance("0.500000000000000001", 500_000_000_000_000_000n),
+      true,
+    );
+    assert.equal(bidExceedsBalance("not-an-amount", 1n), false);
+    assert.equal(bidExceedsBalance("1", null), false);
   });
 });

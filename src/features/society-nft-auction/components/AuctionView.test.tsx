@@ -9,7 +9,7 @@ import type {
   AuctionUnstartedProjection,
 } from "../types";
 import type { AuctionTransactionState } from "../transactionState";
-import { AuctionActionPanel } from "./AuctionActionPanel";
+import { AuctionActionPanel, formatAuctionBalance } from "./AuctionActionPanel";
 import { AuctionHero, formatAuctionEth } from "./AuctionHero";
 import { AuctionTransactionStatus } from "./AuctionTransactionStatus";
 
@@ -61,11 +61,13 @@ function renderAction(
   projection: AuctionActiveProjection | AuctionEndedProjection,
   walletStatus: "disconnected" | "ready" = "ready",
   isRefreshing = false,
+  balanceWei: bigint | null = null,
 ) {
   return renderToStaticMarkup(
     <AuctionActionPanel
       projection={projection}
       bidValue="1.5"
+      balanceWei={balanceWei}
       walletStatus={walletStatus}
       walletMessage={
         walletStatus === "ready"
@@ -84,6 +86,12 @@ function renderAction(
 }
 
 describe("Society NFT auction view", () => {
+  it("truncates displayed balance without overstating available ETH", () => {
+    assert.equal(formatAuctionBalance(999_960_000_000_000_000n), "0.9999");
+    assert.equal(formatAuctionBalance(1_000_000_000_000_000_000n), "1.0000");
+    assert.equal(formatAuctionBalance(1n), "<0.0001");
+  });
+
   it("renders exact ETH amounts without truncating meaningful wei", () => {
     assert.equal(formatAuctionEth(1n), "0.000000000000000001 ETH");
     assert.equal(
@@ -152,6 +160,22 @@ describe("Society NFT auction view", () => {
     assert.doesNotMatch(actionable, /MuiButton-(contained|outlined)/);
     assert.doesNotMatch(
       actionable,
+      /<button[^>]*disabled[^>]*>Bid with ETH<\/button>/,
+    );
+  });
+
+  it("shows wallet balance and marks an over-balance bid without blocking", () => {
+    const html = renderAction(
+      active,
+      "ready",
+      false,
+      1_000_000_000_000_000_000n,
+    );
+
+    assert.match(html, /Balance: 1\.0000 ETH/);
+    assert.match(html, /Mui-error/);
+    assert.doesNotMatch(
+      html,
       /<button[^>]*disabled[^>]*>Bid with ETH<\/button>/,
     );
   });
