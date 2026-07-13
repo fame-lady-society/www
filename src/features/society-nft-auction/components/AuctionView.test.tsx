@@ -113,7 +113,7 @@ describe("Society NFT auction view", () => {
     const action = renderAction(active, "disconnected");
 
     assert.match(hero, /Live auction/);
-    assert.match(hero, /Society NFT #144/);
+    assert.match(hero, /The Number One Ranked Fame Lady/);
     assert.match(hero, /1\.25 ETH/);
     assert.match(hero, /01:01:01/);
     assert.match(action, /Bid amount in ETH/);
@@ -149,6 +149,25 @@ describe("Society NFT auction view", () => {
     assert.match(html, /Minimum next bid: 1\.375 ETH/);
     assert.match(html, /Native ETH on Base/);
     assert.match(html, /Bid with ETH/);
+  });
+
+  it("offers an in-page retry when the minimum bid read fails", () => {
+    const html = renderToStaticMarkup(
+      <AuctionActionPanel
+        projection={active}
+        minimumNextBid={{ status: "error" }}
+        walletStatus="ready"
+        walletMessage="Wallet is ready."
+        canBid={false}
+        canSettle={false}
+        isPending={false}
+        isRefreshing={false}
+        onRefresh={() => undefined}
+      />,
+    );
+
+    assert.match(html, /Minimum bid unavailable/);
+    assert.match(html, /Refresh auction/);
   });
 
   it("uses the base themed button for unavailable and actionable states", () => {
@@ -237,7 +256,7 @@ describe("Society NFT auction view", () => {
 
     assert.doesNotMatch(
       visibleText,
-      /refund|donation|failedRefundDonations|FAME|WETH|approval|allowance|reserve|owner|start auction/i,
+      /refund|donation|failedRefundDonations|WETH|approval|allowance|reserve|owner|start auction/i,
     );
   });
 

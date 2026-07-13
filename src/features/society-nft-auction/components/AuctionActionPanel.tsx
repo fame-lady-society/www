@@ -35,6 +35,7 @@ export interface AuctionActionPanelProps {
   onBidValueChange?: (value: string) => void;
   onBid?: () => void;
   onSettle?: () => void;
+  onRefresh?: () => void;
 }
 
 export function formatAuctionBalance(balanceWei: bigint): string {
@@ -87,6 +88,7 @@ export function AuctionActionPanel({
   onBidValueChange,
   onBid,
   onSettle,
+  onRefresh,
 }: AuctionActionPanelProps) {
   const actionPaused = isPending || isRefreshing;
 
@@ -210,6 +212,17 @@ export function AuctionActionPanel({
           walletMessage={walletMessage}
           walletControl={walletControl}
         />
+
+        {minimumNextBid.status === "error" && onRefresh ? (
+          <Button
+            type="button"
+            disabled={actionPaused}
+            onClick={onRefresh}
+            sx={{ minHeight: 48, fontWeight: 700 }}
+          >
+            Refresh auction
+          </Button>
+        ) : null}
 
         {isRefreshing ? (
           <Typography

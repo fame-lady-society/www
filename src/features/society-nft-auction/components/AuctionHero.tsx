@@ -177,7 +177,7 @@ export function AuctionHero({
   const bidAmount = isSettled ? projection.winningBid : projection.highestBid;
   const hasBid = projection.highestBidder !== zeroAddress;
   const hasRecipient = isSettled && projection.settledRecipient !== zeroAddress;
-  
+
   const image = metadata?.image ?? FAME_METADATA_FALLBACK_IMAGE;
   const statusLabel =
     projection.kind === "active"

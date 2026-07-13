@@ -51,7 +51,7 @@ The auction contract exists, but `fls-www` has no public surface that turns its 
 **Bidding**
 
 - R7. Active auctions must accept native ETH through payable `bid()` only; no FAME ERC-20, WETH, approval, allowance, or token-swap path may appear.
-- R8. Bid input must parse at up to 18 decimals into exact wei, reject zero and values less than or equal to `highestBid`, and preserve enough displayed precision to explain the strictly-higher rule.
+- R8. Bid input must parse at up to 18 decimals into exact wei, reject zero and values below the contract-provided `minimumNextBid()`, and display that exact threshold. The contract owns its rounded-up 10% increase rule.
 - R9. A bid must follow simulate, wallet confirmation, broadcast, receipt, and canonical refetch phases with distinct pending, confirming, confirmed, rejected, replaced, reverted, and RPC-failure outcomes.
 - R10. A confirmed receipt may be described as “Bid confirmed,” but “You are the current highest bidder” may appear only after a refreshed read matches `highestBidder` to the connected account.
 - R11. Concurrent `BidTooLow` failures must refetch first, preserve the entered amount, and show the new exact threshold instead of a generic transaction error.
@@ -95,9 +95,9 @@ The auction contract exists, but `fls-www` has no public surface that turns its 
 
 - AE1. Given no wallet, when the configured auction is active, then the artwork, exact current bid, bidder, timestamps, countdown, and addresses render while the bid action offers wallet connection.
 - AE2. Given an unstarted auction, when the page loads, then “Auction has not started” renders and no token, metadata, start control, or bid control appears.
-- AE3. Given a highest bid of `1 ETH`, when a bidder enters `1`, `0`, or an over-precision value, then submission remains disabled; `1.000000000000000001` is eligible if the wallet environment preflight passes.
+- AE3. Given a highest bid of `1 ETH` and a contract-provided minimum next bid of `1.1 ETH`, when a bidder enters `1`, `1.099999999999999999`, `0`, or an over-precision value, then submission remains disabled; `1.1` is eligible if the wallet environment preflight passes.
 - AE4. Given a valid first bid, when its receipt succeeds, then the page refetches and shows the submitted address as highest bidder only if the refreshed contract state still agrees.
-- AE5. Given another bid lands while a wallet dialog is open, when the stale bid reverts `BidTooLow`, then the amount remains editable and the new strictly-higher threshold appears after refetch.
+- AE5. Given another bid lands while a wallet dialog is open, when the stale bid reverts `BidTooLow`, then the amount remains editable and the new exact `minimumNextBid()` threshold appears after refetch.
 - AE6. Given any nonzero `failedRefundDonations` value, when the page renders any lifecycle state, then the value and its underlying exceptional accounting remain absent from bidder-facing reads and copy.
 - AE7. Given the latest observed block reaches `endTime`, when lifecycle remains `Active`, then bidding is disabled and `Settle auction` becomes available after a confirming refetch.
 - AE8. Given two users attempt settlement, when the second transaction encounters an already-settled contract, then the page refetches and shows the settled recipient rather than a dead-end error.
@@ -292,7 +292,7 @@ sequenceDiagram
 - **Test scenarios:**
   1. Covers AE2. Unstarted renders only “Auction has not started,” hides writes, and does not request token metadata.
   2. Active before `endTime`, active at `endTime - 1`, ended-unsettled at the exact deadline, and settled project the correct actions and copy.
-  3. Covers AE3. Zero, equal-to-highest, below-highest, exponent notation, negative, and more than 18 decimals fail; one wei above succeeds without using `Number`.
+  3. Covers AE3. Zero, any amount below `minimumNextBid()`, exponent notation, negative, and more than 18 decimals fail; the exact contract threshold succeeds without using `Number`.
   4. A required snapshot field failure produces a retryable error instead of treating undefined values as zero.
   5. Covers AE6. Failed-refund donation state is absent from the projection and all rendered auction facts.
   6. Missing/invalid metadata uses `FAME_METADATA_FALLBACK_IMAGE`; valid Irys metadata normalizes to the repository’s Arweave fallback path.
@@ -380,7 +380,7 @@ sequenceDiagram
   1. `npx wagmi generate` reads the sibling Foundry artifact and updates the committed `src/wagmi/index.ts`.
   2. The local page reads auction `0x6536A328419785212BD4DA43F4E5155af60dB7D2` from `http://127.0.0.1:8545` and renders “Auction has not started.”
   3. Owner-start verification occurs outside the UI; `start(144)` transitions the fork to Active and token `144` becomes owned by the auction contract.
-  4. A funded browser wallet on the Anvil-backed Base network places a native ETH first bid and a second wallet places a strictly higher replacement bid; the UI state refreshes after each receipt/event without exposing refund implementation details.
+  4. A funded browser wallet on the Anvil-backed Base network places a native ETH first bid and a second wallet places a replacement bid at or above the displayed `minimumNextBid()`; the UI state refreshes after each receipt/event without exposing refund implementation details.
   5. The page never reads or renders `failedRefundDonations`, including when the fork state is nonzero.
   6. Advancing Anvil to the exact deadline disables bidding, exposes permissionless settlement, transfers the NFT to the winner, and renders the settled recipient/winning bid.
   7. Disconnected, wrong-chain, app-RPC failure, wallet-RPC mismatch, rejected signature, reverted transaction, stale concurrent bid, mobile, and desktop checks all have recorded expected outcomes.
@@ -464,7 +464,7 @@ The validation document should record the precise `cast rpc`, `cast call`, `cast
 ### Sources and Research
 
 - `../fame-contracts/src/SocietyNftAuction.sol` and `../fame-contracts/out/SocietyNftAuction.sol/SocietyNftAuction.json` define the ABI, lifecycle, custom errors, and events.
-- `../fame-contracts/test/SocietyNftAuction.t.sol` already proves strict-increase bidding, exact deadline closure, and permissionless settlement.
+- `../fame-contracts/test/SocietyNftAuction.t.sol` already proves the rounded-up 10% minimum bid increase, exact deadline closure, and permissionless settlement.
 - `docs/solutions/tooling-decisions/next-15-react-19-upgrade-migration-2026-05-16.md` requires fail-fast RPC configuration and the real production build gate.
 - `docs/solutions/runtime-errors/fame-metadata-farcaster-client-regressions-2026-05-17.md` requires validated metadata, normalized gateways, a real fallback image, correct theme inheritance, and no render-time wallet redirects.
 - `docs/solutions/performance-issues/fame-swap-quote-solver-timeouts-native-wrap-routing-2026-05-15.md` preserves the native ETH versus WETH boundary and generated-address discipline.

@@ -232,6 +232,7 @@ export interface UseAuctionTransactionResult {
   settle: () => Promise<
     ExecuteAuctionTransactionResult | { status: "blocked" }
   >;
+  confirmAfterRefresh: () => void;
   reset: () => void;
 }
 
@@ -352,6 +353,7 @@ export function useAuctionTransaction({
       state.status === "refreshing",
     submitBid: (value) => submit("bid", value),
     settle: () => submit("settle"),
+    confirmAfterRefresh: () => dispatch({ type: "confirmed" }),
     reset,
   };
 }

@@ -125,9 +125,10 @@ facts, and countdown agree.
    cast call "$AUCTION" "highestBid()(uint256)" --rpc-url "$RPC"
    ```
 
-5. Switch to a second funded disposable account and place a strictly higher
-   bid. Verify its receipt and repeat the two direct reads. The refreshed UI
-   must show the second bidder and exact winning bid.
+5. Switch to a second funded disposable account and place a bid at or above the
+   displayed contract-provided minimum. Verify its receipt and repeat the two
+   direct reads. The refreshed UI must show the second bidder and exact winning
+   bid.
 6. Submit a stale/equal/lower amount after another bid lands. Simulation or the
    receipt must fail legibly, the page must refresh, and it must not claim the
    stale bidder is winning.

@@ -161,6 +161,23 @@ function SocietyNftAuctionExperience() {
     setBidTouched(next.touched);
   };
 
+  const retryTransaction = async () => {
+    if (transaction.state.error?.kind !== "refresh_failure") {
+      transaction.reset();
+      return;
+    }
+
+    try {
+      await auction.refresh();
+      transaction.confirmAfterRefresh();
+      setBidValue("");
+      setBidTouched(false);
+      await walletBalance.refetch().catch(() => undefined);
+    } catch {
+      // Keep the refresh failure visible and retryable.
+    }
+  };
+
   return (
     <Container
       maxWidth="lg"
@@ -174,7 +191,7 @@ function SocietyNftAuctionExperience() {
           isRefreshing={auction.isRefreshing}
           onRefresh={
             auction.config.status === "configured"
-              ? () => void auction.refresh()
+              ? () => void auction.refresh().catch(() => undefined)
               : undefined
           }
         />
@@ -204,13 +221,14 @@ function SocietyNftAuctionExperience() {
               }}
               onBid={() => void submitBid()}
               onSettle={() => void transaction.settle()}
+              onRefresh={() => void auction.refresh().catch(() => undefined)}
             />
           </Stack>
         ) : null}
         <Stack sx={{ width: "100%", maxWidth: 520, ml: "auto" }}>
           <AuctionTransactionStatus
             state={transaction.state}
-            onRetry={transaction.reset}
+            onRetry={() => void retryTransaction()}
             onReset={transaction.reset}
           />
         </Stack>
