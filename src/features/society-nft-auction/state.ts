@@ -1,4 +1,4 @@
-import { isAddress, parseEther } from "viem";
+import { formatEther, isAddress, parseEther } from "viem";
 import type {
   BidValidationResult,
   SocietyNftAuctionLifecycle,
@@ -182,7 +182,7 @@ function parseExactEther(value: string): BidValidationResult {
 
 export function validateBidAmount(
   value: string,
-  highestBid: bigint,
+  minimumNextBid: bigint,
 ): BidValidationResult {
   const parsed = parseExactEther(value);
   if (!parsed.valid) return parsed;
@@ -195,11 +195,11 @@ export function validateBidAmount(
     };
   }
 
-  if (parsed.wei <= highestBid) {
+  if (parsed.wei < minimumNextBid) {
     return {
       valid: false,
-      reason: "not_above_highest",
-      message: `Bid must be at least ${highestBid + 1n} wei`,
+      reason: "below_minimum",
+      message: `Bid must be at least ${formatEther(minimumNextBid)} ETH`,
     };
   }
 

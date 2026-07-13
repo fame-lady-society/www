@@ -136,3 +136,32 @@ test("canonical refresh rejects a partial required-read failure", async () => {
     /incomplete data/i,
   );
 });
+
+test("canonical refresh can recover the active minimum-bid read", async () => {
+  let minimumReadAttempts = 0;
+
+  await refreshCanonicalAuction(
+    async () => ({
+      error: null,
+      data: AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" })),
+    }),
+    async () => ({ error: null, data: { timestamp: 1_000n } }),
+    async () => {
+      minimumReadAttempts += 1;
+      return { error: null, data: 1_100_000_000_000_000_000n };
+    },
+  );
+
+  assert.equal(minimumReadAttempts, 1);
+  await assert.rejects(
+    refreshCanonicalAuction(
+      async () => ({
+        error: null,
+        data: AUCTION_SNAPSHOT_FUNCTIONS.map(() => ({ status: "success" })),
+      }),
+      async () => ({ error: null, data: { timestamp: 1_000n } }),
+      async () => ({ error: null, data: undefined }),
+    ),
+    /incomplete data/i,
+  );
+});

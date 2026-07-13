@@ -111,10 +111,16 @@ export interface SocietyNftAuctionMetadata {
   error: string | null;
 }
 
+export type MinimumNextBidState =
+  | { status: "inactive" }
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; value: bigint };
+
 export type BidValidationResult =
   | { valid: true; wei: bigint }
   | {
       valid: false;
-      reason: "empty" | "invalid" | "precision" | "zero" | "not_above_highest";
+      reason: "empty" | "invalid" | "precision" | "zero" | "below_minimum";
       message: string;
     };

@@ -22316,6 +22316,13 @@ export const societyNftAuctionAbi = [
   },
   {
     type: 'function',
+    inputs: [],
+    name: 'minimumNextBid',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'operator', internalType: 'address', type: 'address' },
       { name: 'from', internalType: 'address', type: 'address' },
@@ -22730,6 +22737,15 @@ export const useReadSocietyNftAuctionLifecycle =
   /*#__PURE__*/ createUseReadContract({
     abi: societyNftAuctionAbi,
     functionName: 'lifecycle',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link societyNftAuctionAbi}__ and `functionName` set to `"minimumNextBid"`
+ */
+export const useReadSocietyNftAuctionMinimumNextBid =
+  /*#__PURE__*/ createUseReadContract({
+    abi: societyNftAuctionAbi,
+    functionName: 'minimumNextBid',
   })
 
 /**

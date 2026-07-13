@@ -71,10 +71,14 @@ function SocietyNftAuctionExperience() {
   } = useSwitchChain();
   const [bidValue, setBidValue] = useState("");
   const [bidTouched, setBidTouched] = useState(false);
+  const minimumNextBid =
+    auction.minimumNextBid.status === "ready"
+      ? auction.minimumNextBid.value
+      : null;
 
   const bidValidation =
-    actionProjection?.kind === "active"
-      ? validateBidAmount(bidValue, actionProjection.highestBid)
+    actionProjection?.kind === "active" && minimumNextBid !== null
+      ? validateBidAmount(bidValue, minimumNextBid)
       : null;
   const bidError =
     bidTouched && bidValidation && !bidValidation.valid
@@ -186,10 +190,11 @@ function SocietyNftAuctionExperience() {
                   ? walletBalance.data?.value ?? null
                   : null
               }
+              minimumNextBid={auction.minimumNextBid}
               walletStatus={walletStatus}
               walletMessage={walletMessage}
               walletControl={walletControl}
-              canBid={clock.canBid}
+              canBid={clock.canBid && minimumNextBid !== null}
               canSettle={clock.canSettle}
               isPending={transaction.isPending || isSwitching}
               isRefreshing={auction.isRefreshing}

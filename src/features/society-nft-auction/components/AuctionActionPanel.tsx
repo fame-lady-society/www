@@ -6,7 +6,11 @@ import Typography from "@mui/material/Typography";
 import type { FormEvent, ReactNode } from "react";
 import { formatEther } from "viem";
 import { bidExceedsBalance } from "../state";
-import type { AuctionActiveProjection, AuctionEndedProjection } from "../types";
+import type {
+  AuctionActiveProjection,
+  AuctionEndedProjection,
+  MinimumNextBidState,
+} from "../types";
 
 export type AuctionActionWalletStatus =
   | "disconnected"
@@ -20,6 +24,7 @@ export interface AuctionActionPanelProps {
   bidValue?: string;
   bidError?: string | null;
   balanceWei?: bigint | null;
+  minimumNextBid: MinimumNextBidState;
   walletStatus: AuctionActionWalletStatus;
   walletMessage: string;
   walletControl?: ReactNode;
@@ -71,6 +76,7 @@ export function AuctionActionPanel({
   bidValue = "",
   bidError = null,
   balanceWei = null,
+  minimumNextBid,
   walletStatus,
   walletMessage,
   walletControl,
@@ -143,6 +149,20 @@ export function AuctionActionPanel({
       ? "Native ETH on Base"
       : `Balance: ${formatAuctionBalance(balanceWei)} ETH`;
   const helperText = bidError ? `${bidError} · ${balanceLabel}` : balanceLabel;
+  let minimumBidMessage: string;
+  switch (minimumNextBid.status) {
+    case "ready":
+      minimumBidMessage = `Minimum next bid: ${formatEther(minimumNextBid.value)} ETH.`;
+      break;
+    case "error":
+      minimumBidMessage = "Minimum bid unavailable. Refresh the auction data.";
+      break;
+    case "inactive":
+      minimumBidMessage = "Bidding is not active.";
+      break;
+    default:
+      minimumBidMessage = "Loading the minimum next bid…";
+  }
 
   return (
     <Paper
@@ -160,7 +180,7 @@ export function AuctionActionPanel({
             Place a bid
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.75 }}>
-            Enter an amount above the current highest bid.
+            {minimumBidMessage}
           </Typography>
         </div>
 

@@ -106,25 +106,37 @@ describe("Society NFT auction lifecycle projection", () => {
 });
 
 describe("exact ETH bid validation", () => {
-  const highestBid = 1_000_000_000_000_000_000n;
+  const minimumNextBid = 1_100_000_000_000_000_000n;
 
-  it("rejects zero, equal, below, exponent, negative, and over-precision bids", () => {
+  it("rejects zero, below-minimum, exponent, negative, and over-precision bids", () => {
     for (const amount of [
       "0",
       "1",
-      "0.999999999999999999",
+      "1.099999999999999999",
       "1e1",
       "-2",
       "1.0000000000000000001",
     ]) {
-      assert.equal(validateBidAmount(amount, highestBid).valid, false, amount);
+      assert.equal(
+        validateBidAmount(amount, minimumNextBid).valid,
+        false,
+        amount,
+      );
     }
   });
 
-  it("accepts exactly one wei above the current bid", () => {
-    assert.deepEqual(validateBidAmount("1.000000000000000001", highestBid), {
+  it("accepts the exact contract-provided minimum next bid", () => {
+    assert.deepEqual(validateBidAmount("1.1", minimumNextBid), {
       valid: true,
-      wei: 1_000_000_000_000_000_001n,
+      wei: minimumNextBid,
+    });
+  });
+
+  it("reports the exact contract-provided minimum in ETH", () => {
+    assert.deepEqual(validateBidAmount("1.099", minimumNextBid), {
+      valid: false,
+      reason: "below_minimum",
+      message: "Bid must be at least 1.1 ETH",
     });
   });
 

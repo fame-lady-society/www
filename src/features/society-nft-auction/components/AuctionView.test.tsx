@@ -62,12 +62,14 @@ function renderAction(
   walletStatus: "disconnected" | "ready" = "ready",
   isRefreshing = false,
   balanceWei: bigint | null = null,
+  minimumNextBid = 1_375_000_000_000_000_000n,
 ) {
   return renderToStaticMarkup(
     <AuctionActionPanel
       projection={projection}
       bidValue="1.5"
       balanceWei={balanceWei}
+      minimumNextBid={{ status: "ready", value: minimumNextBid }}
       walletStatus={walletStatus}
       walletMessage={
         walletStatus === "ready"
@@ -144,6 +146,7 @@ describe("Society NFT auction view", () => {
     const html = renderAction(active);
 
     assert.match(html, /Bid amount in ETH/);
+    assert.match(html, /Minimum next bid: 1\.375 ETH/);
     assert.match(html, /Native ETH on Base/);
     assert.match(html, /Bid with ETH/);
   });

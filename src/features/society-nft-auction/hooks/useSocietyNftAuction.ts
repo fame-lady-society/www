@@ -7,6 +7,7 @@ import { base } from "viem/chains";
 import { useBlock, useReadContract, useReadContracts } from "wagmi";
 import {
   societyNftAuctionAbi,
+  useReadSocietyNftAuctionMinimumNextBid,
   useWatchSocietyNftAuctionAuctionSettledEvent,
   useWatchSocietyNftAuctionAuctionStartedEvent,
   useWatchSocietyNftAuctionBidAcceptedEvent,
@@ -21,6 +22,7 @@ import {
 } from "../metadata";
 import { buildAuctionSnapshot, projectAuctionPage } from "../state";
 import type {
+  MinimumNextBidState,
   SocietyNftAuctionMetadata,
   SocietyNftAuctionPageProjection,
   SocietyNftAuctionSnapshotResult,
@@ -141,17 +143,23 @@ export async function refreshCanonicalAuction(
     data?: readonly { status: string }[];
   }>,
   refetchBlock: () => Promise<{ error: unknown; data?: unknown }>,
+  refetchMinimumNextBid?: () => Promise<{
+    error: unknown;
+    data?: unknown;
+  }>,
 ): Promise<void> {
-  const [snapshot, block] = await Promise.all([
+  const [snapshot, block, minimumNextBid] = await Promise.all([
     refetchSnapshot(),
     refetchBlock(),
+    refetchMinimumNextBid?.() ?? Promise.resolve(null),
   ]);
-  const error = snapshot.error ?? block.error;
+  const error = snapshot.error ?? block.error ?? minimumNextBid?.error;
   if (error) throw error;
   if (
     snapshot.data?.length !== AUCTION_SNAPSHOT_FUNCTIONS.length ||
     snapshot.data.some((read) => read.status !== "success") ||
-    block.data === undefined
+    block.data === undefined ||
+    (refetchMinimumNextBid && minimumNextBid?.data === undefined)
   ) {
     throw new Error("Canonical auction refresh returned incomplete data");
   }
@@ -162,6 +170,7 @@ export interface UseSocietyNftAuctionResult {
   projection: SocietyNftAuctionPageProjection;
   blockTimestamp: bigint | null;
   metadata: SocietyNftAuctionMetadata | null;
+  minimumNextBid: MinimumNextBidState;
   isRefreshing: boolean;
   refresh: () => Promise<void>;
 }
@@ -211,6 +220,29 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
           canSettle: false,
         } satisfies SocietyNftAuctionPageProjection)
       : projectAuctionPage(snapshotResult, blockTimestamp);
+  const activeHighestBid =
+    projection.kind === "active" ? projection.highestBid : null;
+  const minimumNextBidQuery = useReadSocietyNftAuctionMinimumNextBid({
+    address: auctionAddress ?? undefined,
+    chainId: base.id,
+    scopeKey:
+      activeHighestBid === null
+        ? undefined
+        : `minimum-next-bid-${activeHighestBid}`,
+    query: { enabled: activeHighestBid !== null },
+  });
+  let minimumNextBid: MinimumNextBidState;
+  if (activeHighestBid === null) {
+    minimumNextBid = { status: "inactive" };
+  } else if (minimumNextBidQuery.isFetching) {
+    minimumNextBid = { status: "loading" };
+  } else if (minimumNextBidQuery.error) {
+    minimumNextBid = { status: "error" };
+  } else if (minimumNextBidQuery.data !== undefined) {
+    minimumNextBid = { status: "ready", value: minimumNextBidQuery.data };
+  } else {
+    minimumNextBid = { status: "loading" };
+  }
   const metadataTarget = metadataTargetFromProjection(projection);
 
   const tokenUriQuery = useReadContract({
@@ -236,13 +268,24 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
 
   const refetchSnapshot = snapshotQuery.refetch;
   const refetchBlock = blockQuery.refetch;
+  const refetchMinimumNextBid = minimumNextBidQuery.refetch;
+  const shouldRetryMinimumNextBid =
+    activeHighestBid !== null && minimumNextBidQuery.error !== null;
   const refresh = useCallback(
     () =>
       refreshCanonicalAuction(
         () => refetchSnapshot({ cancelRefetch: false }),
         () => refetchBlock({ cancelRefetch: false }),
+        shouldRetryMinimumNextBid
+          ? () => refetchMinimumNextBid({ cancelRefetch: false })
+          : undefined,
       ),
-    [refetchBlock, refetchSnapshot],
+    [
+      refetchBlock,
+      refetchMinimumNextBid,
+      refetchSnapshot,
+      shouldRetryMinimumNextBid,
+    ],
   );
 
   const refreshRef = useRef(refresh);
@@ -272,7 +315,11 @@ export function useSocietyNftAuction(): UseSocietyNftAuctionResult {
     projection,
     blockTimestamp,
     metadata,
-    isRefreshing: snapshotQuery.isFetching || blockQuery.isFetching,
+    minimumNextBid,
+    isRefreshing:
+      snapshotQuery.isFetching ||
+      blockQuery.isFetching ||
+      (activeHighestBid !== null && minimumNextBidQuery.isFetching),
     refresh,
   };
 }
