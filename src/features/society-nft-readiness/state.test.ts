@@ -5,9 +5,10 @@ import {
   bytecodeQueryReadState,
   contractQueryReadState,
   hasNonEmptyRuntimeCode,
-  postFixBranchForBalance,
+  postFixSnapshotForBalances,
   projectSocietyNftReadiness,
   projectVerifiedRepair,
+  skipNftForGenerationEnabled,
   type ReadState,
 } from "./state";
 
@@ -153,6 +154,7 @@ test("a successful receipt without authoritative skip=false is never verified", 
     connectedAccount: ACCOUNT,
     balance: success(999_999n),
     unit: success(1_000_000n),
+    nftBalance: success(0n),
   };
 
   assert.deepEqual(
@@ -190,6 +192,7 @@ test("reverted and failed receipts cannot produce verified readiness", () => {
     skipNft: success(false),
     balance: success(1_000_000n),
     unit: success(1_000_000n),
+    nftBalance: success(0n),
   };
 
   assert.deepEqual(
@@ -206,10 +209,33 @@ test("reverted and failed receipts cannot produce verified readiness", () => {
   );
 });
 
-test("balance below, exactly at, and above unit selects the correct post-fix branch", () => {
-  assert.equal(postFixBranchForBalance(999_999n, 1_000_000n), "future");
-  assert.equal(postFixBranchForBalance(1_000_000n, 1_000_000n), "catch_up");
-  assert.equal(postFixBranchForBalance(1_000_001n, 1_000_000n), "catch_up");
+test("generation controls map directly to the inverse skipNFT setting", () => {
+  assert.equal(skipNftForGenerationEnabled(true), false);
+  assert.equal(skipNftForGenerationEnabled(false), true);
+});
+
+test("post-fix snapshots offer reconciliation only for an NFT deficit", () => {
+  assert.deepEqual(postFixSnapshotForBalances(999_999n, 1_000_000n, 0n), {
+    branch: "future",
+    eligibleNftCount: 0n,
+    nftDeficit: 0n,
+  });
+  assert.deepEqual(postFixSnapshotForBalances(1_000_000n, 1_000_000n, 0n), {
+    branch: "catch_up",
+    eligibleNftCount: 1n,
+    nftDeficit: 1n,
+  });
+  assert.deepEqual(postFixSnapshotForBalances(2_000_000n, 1_000_000n, 1n), {
+    branch: "catch_up",
+    eligibleNftCount: 2n,
+    nftDeficit: 1n,
+  });
+  assert.deepEqual(postFixSnapshotForBalances(1_000_000n, 1_000_000n, 1n), {
+    branch: "current",
+    eligibleNftCount: 1n,
+    nftDeficit: 0n,
+  });
+  assert.equal(postFixSnapshotForBalances(1_000_000n, 0n, 0n), null);
 });
 
 test("verified repair includes the branch from the same authoritative snapshot", () => {
@@ -219,6 +245,7 @@ test("verified repair includes the branch from the same authoritative snapshot",
     connectedAccount: ACCOUNT,
     skipNft: success(false),
     unit: success(1_000_000n),
+    nftBalance: success(0n),
   };
 
   assert.deepEqual(
@@ -228,6 +255,9 @@ test("verified repair includes the branch from the same authoritative snapshot",
       branch: "future",
       balance: 999_999n,
       unit: 1_000_000n,
+      nftBalance: 0n,
+      eligibleNftCount: 0n,
+      nftDeficit: 0n,
     },
   );
   assert.deepEqual(
@@ -237,6 +267,9 @@ test("verified repair includes the branch from the same authoritative snapshot",
       branch: "catch_up",
       balance: 1_000_000n,
       unit: 1_000_000n,
+      nftBalance: 0n,
+      eligibleNftCount: 1n,
+      nftDeficit: 1n,
     },
   );
 });

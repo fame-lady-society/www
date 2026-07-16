@@ -13,6 +13,8 @@ import {
   shouldOpenSocietyNftReadinessDialog,
   SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID,
   SOCIETY_NFT_READINESS_DIALOG_TITLE_ID,
+  SocietyNftGenerationSettingView,
+  SocietyNftMintedDialogContent,
   SocietyNftReadinessDialogContent,
   SocietyNftReadinessRailView,
 } from "./SocietyNftReadinessRail";
@@ -132,6 +134,18 @@ describe("Society NFT readiness rail", () => {
     assert.doesNotMatch(html, /Try verification again/);
   });
 
+  it("uses a fresh repair retry when the block-pinned readback mismatches", () => {
+    const transactionState: ReadinessTransactionState = {
+      status: "error",
+      hash: HASH,
+      error: readinessTransactionError("verification_mismatch"),
+    };
+    const html = renderRail({ transactionState });
+
+    assert.match(html, /Try again/);
+    assert.doesNotMatch(html, /Try verification again/);
+  });
+
   it("uses fixed error copy without accepting provider details", () => {
     const transactionState: ReadinessTransactionState = {
       status: "error",
@@ -171,6 +185,54 @@ describe("Society NFT readiness rail", () => {
   });
 });
 
+describe("Society NFT generation setting", () => {
+  it("makes the inverted skipNFT values explicit for a smart account", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftGenerationSettingView
+        generationEnabled
+        transactionState={initialReadinessTransactionState}
+        offsetForHeader
+        onGenerationEnabledChange={noop}
+      />,
+    );
+
+    assert.match(html, /Society NFT generation setting/);
+    assert.match(html, /Generate Society NFTs/);
+    assert.match(html, /setSkipNFT\(false\)/);
+    assert.match(html, /setSkipNFT\(true\)/);
+    assert.match(html, /checked/);
+  });
+
+  it("disables the setting while its transaction is pending", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftGenerationSettingView
+        generationEnabled={false}
+        transactionState={{ status: "confirming", hash: HASH, error: null }}
+        offsetForHeader={false}
+        onGenerationEnabledChange={noop}
+      />,
+    );
+
+    assert.match(html, /disabled/);
+    assert.match(html, /Waiting for Base confirmation/);
+  });
+
+  it("keeps the setting disabled until the live skip value refreshes", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftGenerationSettingView
+        generationEnabled={false}
+        generationRefreshing
+        transactionState={{ status: "confirmed", hash: HASH, error: null }}
+        offsetForHeader={false}
+        onGenerationEnabledChange={noop}
+      />,
+    );
+
+    assert.match(html, /disabled/);
+    assert.match(html, /FAME now reflects your selection/);
+  });
+});
+
 describe("verified post-fix guidance", () => {
   it("does not authorize a modal before both verification and confirmation", () => {
     const verified = {
@@ -178,6 +240,9 @@ describe("verified post-fix guidance", () => {
       branch: "future" as const,
       balance: 1n,
       unit: 2n,
+      nftBalance: 0n,
+      eligibleNftCount: 0n,
+      nftDeficit: 0n,
     };
 
     assert.equal(
@@ -207,9 +272,10 @@ describe("verified post-fix guidance", () => {
     const html = renderToStaticMarkup(
       <SocietyNftReadinessDialogContent
         branch="future"
-        surface="fame"
+        nftDeficit={0n}
+        reconciliationState={initialReadinessTransactionState}
         onDone={noop}
-        onContinue={noop}
+        onReconcile={noop}
       />,
     );
 
@@ -227,13 +293,14 @@ describe("verified post-fix guidance", () => {
     assert.doesNotMatch(html, /close|dismiss/i);
   });
 
-  it("renders non-retroactive catch-up guidance and a swap link on fame", () => {
+  it("offers a 1 wei self-transfer only when the wallet has an NFT deficit", () => {
     const html = renderToStaticMarkup(
       <SocietyNftReadinessDialogContent
         branch="catch_up"
-        surface="fame"
+        nftDeficit={1n}
+        reconciliationState={initialReadinessTransactionState}
         onDone={noop}
-        onContinue={noop}
+        onReconcile={noop}
       />,
     );
 
@@ -241,25 +308,65 @@ describe("verified post-fix guidance", () => {
     assert.match(html, /already holds at least 1 million \$FAME/i);
     assert.match(html, /receiving or self-transferring at least 1 wei/i);
     assert.match(html, /Society NFT reconciliation/i);
-    assert.match(html, /href="\/fame\/swap"/);
-    assert.match(html, /Buy a tiny amount of \$FAME/);
-    assert.doesNotMatch(html, /self-transfer[^<]*<\/button>/i);
+    assert.match(html, /1 Society NFT can be generated/i);
+    assert.match(html, /Transfer 1 wei to myself/);
+    assert.doesNotMatch(html, /href="\/fame\/swap"/);
     assert.doesNotMatch(html, /guarantee|will mint|will generate/i);
   });
 
-  it("continues locally on swap without linking back to the same route", () => {
+  it("does not offer a write when the current NFT balance already matches", () => {
     const html = renderToStaticMarkup(
       <SocietyNftReadinessDialogContent
-        branch="catch_up"
-        surface="swap"
+        branch="current"
+        nftDeficit={0n}
+        reconciliationState={initialReadinessTransactionState}
         onDone={noop}
-        onContinue={noop}
+        onReconcile={noop}
       />,
     );
 
-    assert.match(html, /Continue to \$FAME swap/);
-    assert.match(html, /<button/);
+    assert.match(html, /already matches this wallet/i);
+    assert.match(html, /current \$FAME balance/i);
+    assert.match(html, />Done</);
+    assert.doesNotMatch(html, /Transfer 1 wei to myself/);
     assert.doesNotMatch(html, /href="\/fame\/swap"/);
+  });
+
+  it("shows transfer progress inside the catch-up dialog", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftReadinessDialogContent
+        branch="catch_up"
+        nftDeficit={2n}
+        reconciliationState={{ status: "confirming", hash: HASH, error: null }}
+        onDone={noop}
+        onReconcile={noop}
+      />,
+    );
+
+    assert.match(html, /2 Society NFTs can be generated/i);
+    assert.match(html, /Transfer submitted/);
+    assert.match(html, /<button[^>]*disabled/);
+  });
+
+  it("does not offer another write after a confirmed transfer mints nothing", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftReadinessDialogContent
+        branch="catch_up"
+        nftDeficit={1n}
+        reconciliationState={{
+          status: "error",
+          hash: HASH,
+          error: readinessTransactionError("mint_not_detected"),
+        }}
+        onDone={noop}
+        onReconcile={noop}
+      />,
+    );
+
+    assert.match(html, /Transfer confirmed/);
+    assert.match(html, /No Society NFT was generated/);
+    assert.match(html, />Done</);
+    assert.doesNotMatch(html, /Try 1 wei transfer again/);
   });
 
   it("exposes stable dialog labels", () => {
@@ -271,5 +378,44 @@ describe("verified post-fix guidance", () => {
       SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID,
       "society-nft-readiness-dialog-description",
     );
+  });
+});
+
+describe("minted Society NFT follow-up", () => {
+  it("renders every NFT extracted from the self-transfer receipt", () => {
+    const html = renderToStaticMarkup(
+      <SocietyNftMintedDialogContent
+        hash={HASH}
+        nfts={[
+          {
+            tokenId: 41n,
+            metadata: {
+              image: "https://arweave.net/first.png",
+              name: "Society Lady #41",
+              description: null,
+              error: null,
+            },
+          },
+          {
+            tokenId: 42n,
+            metadata: {
+              image: "/images/fame/gold-leaf-square.png",
+              name: null,
+              description: null,
+              error: "metadata unavailable",
+            },
+          },
+        ]}
+        onDone={noop}
+      />,
+    );
+
+    assert.match(html, /Your Society NFTs arrived/);
+    assert.match(html, /Society Lady #41/);
+    assert.match(html, /Society NFT #42/);
+    assert.match(html, /first\.png/);
+    assert.match(html, /gold-leaf-square\.png/);
+    assert.match(html, new RegExp(BASE_TRANSACTION_URL.replaceAll("/", "\\/")));
+    assert.match(html, />Done</);
   });
 });

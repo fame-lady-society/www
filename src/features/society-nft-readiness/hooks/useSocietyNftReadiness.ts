@@ -8,12 +8,19 @@ import {
   useReadFameUnit,
   useWriteFameSetSkipNft,
 } from "@/wagmi";
-import { fameFromNetwork } from "@/features/fame/contract";
+import { fameFromNetwork, societyFromNetwork } from "@/features/fame/contract";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { isAddressEqual, zeroAddress, type Address, type Hash } from "viem";
+import {
+  erc721Abi,
+  isAddressEqual,
+  zeroAddress,
+  type Address,
+  type Hash,
+} from "viem";
 import { base } from "viem/chains";
 import {
   useBytecode,
+  useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from "wagmi";
@@ -23,6 +30,7 @@ import {
   hasNonEmptyRuntimeCode,
   projectSocietyNftReadiness,
   projectVerifiedRepair,
+  skipNftForGenerationEnabled,
   type RepairReceiptStatus,
   type SocietyNftReadinessProjection,
   type VerifiedRepairProjection,
@@ -35,13 +43,18 @@ import {
 } from "../transactionState";
 
 const fameAddress = fameFromNetwork(base.id);
+const societyAddress = societyFromNetwork(base.id);
 
 export interface UseSocietyNftReadinessResult {
   account: Address | undefined;
+  codeBearingWallet: boolean;
+  generationEnabled: boolean | null;
+  generationRefreshing: boolean;
   readiness: SocietyNftReadinessProjection;
   transactionState: ReadinessTransactionState;
   verifiedRepair: VerifiedRepairProjection;
   repair: () => Promise<Hash | null>;
+  setGenerationEnabled: (enabled: boolean) => Promise<Hash | null>;
   retryDetection: () => Promise<void>;
   retryVerification: () => Promise<void>;
 }
@@ -55,6 +68,9 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     initialReadinessTransactionState,
   );
   const [initiatingAccount, setInitiatingAccount] = useState<Address | null>(
+    null,
+  );
+  const [initiatingSkipNft, setInitiatingSkipNft] = useState<boolean | null>(
     null,
   );
   const detectionEnabled = isConnected && address !== undefined;
@@ -90,6 +106,14 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
       }),
     [detectionEnabled, skipNft.data, skipNft.isError, skipNft.isSuccess],
   );
+  const codeBearingWallet = skipDetectionEnabled;
+  const generationEnabled =
+    skipNftRead.status === "success" ? !skipNftRead.data : null;
+  const generationRefreshing =
+    transactionState.status === "confirmed" &&
+    initiatingSkipNft !== null &&
+    (skipNftRead.status !== "success" ||
+      skipNftRead.data !== initiatingSkipNft);
   const readiness = useMemo(
     () => projectSocietyNftReadiness({ code: codeRead, skipNft: skipNftRead }),
     [codeRead, skipNftRead],
@@ -113,8 +137,11 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
   const verificationEnabled =
     transactionState.status === "verifying" &&
     initiatingAccount !== null &&
+    initiatingSkipNft !== null &&
     receiptStatus === "success" &&
     receiptBlockNumber !== undefined;
+  const repairVerificationEnabled =
+    verificationEnabled && initiatingSkipNft === false;
   const verificationAccount = initiatingAccount ?? zeroAddress;
 
   const verifiedSkipNft = useReadFameGetSkipNft({
@@ -129,18 +156,29 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     args: [verificationAccount],
     blockNumber: receiptBlockNumber,
     chainId: base.id,
-    query: { enabled: verificationEnabled },
+    query: { enabled: repairVerificationEnabled },
   });
   const verifiedUnit = useReadFameUnit({
     address: fameAddress,
     blockNumber: receiptBlockNumber,
     chainId: base.id,
-    query: { enabled: verificationEnabled },
+    query: { enabled: repairVerificationEnabled },
+  });
+  const verifiedNftBalance = useReadContract({
+    abi: erc721Abi,
+    address: societyAddress,
+    args: [verificationAccount],
+    blockNumber: receiptBlockNumber,
+    chainId: base.id,
+    functionName: "balanceOf",
+    query: { enabled: repairVerificationEnabled },
   });
   const verificationFetching =
     verifiedSkipNft.isFetching ||
-    verifiedBalance.isFetching ||
-    verifiedUnit.isFetching;
+    (initiatingSkipNft === false &&
+      (verifiedBalance.isFetching ||
+        verifiedUnit.isFetching ||
+        verifiedNftBalance.isFetching));
   const refetchDetectionSkipNft = skipNft.refetch;
 
   const verifiedSkipNftRead = useMemo(
@@ -185,6 +223,20 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
       verifiedUnit.isSuccess,
     ],
   );
+  const verifiedNftBalanceRead = useMemo(
+    () =>
+      contractQueryReadState(detectionEnabled, {
+        data: verifiedNftBalance.data,
+        isError: verifiedNftBalance.isError,
+        isSuccess: verifiedNftBalance.isSuccess,
+      }),
+    [
+      detectionEnabled,
+      verifiedNftBalance.data,
+      verifiedNftBalance.isError,
+      verifiedNftBalance.isSuccess,
+    ],
+  );
   const verifiedRepair = useMemo(
     () =>
       projectVerifiedRepair({
@@ -194,6 +246,7 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
         skipNft: verifiedSkipNftRead,
         balance: verifiedBalanceRead,
         unit: verifiedUnitRead,
+        nftBalance: verifiedNftBalanceRead,
       }),
     [
       address,
@@ -201,6 +254,7 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
       isConnected,
       receiptStatus,
       verifiedBalanceRead,
+      verifiedNftBalanceRead,
       verifiedSkipNftRead,
       verifiedUnitRead,
     ],
@@ -208,6 +262,7 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
 
   useEffect(() => {
     setInitiatingAccount(null);
+    setInitiatingSkipNft(null);
     dispatch({ type: "reset" });
   }, [address, isConnected]);
 
@@ -249,7 +304,35 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
   ]);
 
   useEffect(() => {
-    if (transactionState.status !== "verifying" || verificationFetching) {
+    if (
+      transactionState.status !== "verifying" ||
+      verificationFetching ||
+      initiatingSkipNft === null
+    ) {
+      return;
+    }
+
+    if (verifiedSkipNftRead.status === "error") {
+      dispatch({
+        type: "failed",
+        error: readinessTransactionError("verification_failed"),
+      });
+      return;
+    }
+
+    if (verifiedSkipNftRead.status !== "success") return;
+
+    if (verifiedSkipNftRead.data !== initiatingSkipNft) {
+      dispatch({
+        type: "failed",
+        error: readinessTransactionError("verification_mismatch"),
+      });
+      return;
+    }
+
+    if (initiatingSkipNft) {
+      dispatch({ type: "verification_confirmed" });
+      void refetchDetectionSkipNft();
       return;
     }
 
@@ -275,59 +358,71 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     }
   }, [
     refetchDetectionSkipNft,
+    initiatingSkipNft,
     transactionState.status,
     verificationFetching,
+    verifiedSkipNftRead,
     verifiedRepair,
   ]);
 
-  const repair = useCallback(async (): Promise<Hash | null> => {
-    if (!isConnected || !address) return null;
+  const setSkipNftValue = useCallback(
+    async (skipNftValue: boolean): Promise<Hash | null> => {
+      if (!isConnected || !address) return null;
 
-    setInitiatingAccount(address);
+      setInitiatingAccount(address);
+      setInitiatingSkipNft(skipNftValue);
 
-    if (
-      needsConnectedChainSwitch({
-        isConnected,
-        connectedChainId,
-        targetChainId: base.id,
-      })
-    ) {
-      dispatch({ type: "switch_requested" });
+      if (
+        needsConnectedChainSwitch({
+          isConnected,
+          connectedChainId,
+          targetChainId: base.id,
+        })
+      ) {
+        dispatch({ type: "switch_requested" });
+        try {
+          await switchChainAsync({ chainId: base.id });
+        } catch {
+          dispatch({
+            type: "failed",
+            error: readinessTransactionError("switch_failed"),
+          });
+          return null;
+        }
+      }
+
+      dispatch({ type: "wallet_requested" });
       try {
-        await switchChainAsync({ chainId: base.id });
+        const hash = await writeContractAsync({
+          account: address,
+          address: fameAddress,
+          args: [skipNftValue],
+          chainId: base.id,
+        });
+        dispatch({ type: "broadcast", hash });
+        return hash;
       } catch {
         dispatch({
           type: "failed",
-          error: readinessTransactionError("switch_failed"),
+          error: readinessTransactionError("wallet_request_failed"),
         });
         return null;
       }
-    }
+    },
+    [
+      address,
+      connectedChainId,
+      isConnected,
+      switchChainAsync,
+      writeContractAsync,
+    ],
+  );
 
-    dispatch({ type: "wallet_requested" });
-    try {
-      const hash = await writeContractAsync({
-        account: address,
-        address: fameAddress,
-        args: [false],
-        chainId: base.id,
-      });
-      dispatch({ type: "broadcast", hash });
-      return hash;
-    } catch {
-      dispatch({
-        type: "failed",
-        error: readinessTransactionError("wallet_request_failed"),
-      });
-      return null;
-    }
-  }, [
-    address,
-    connectedChainId,
-    isConnected,
-    switchChainAsync,
-    writeContractAsync,
-  ]);
+  const repair = useCallback(() => setSkipNftValue(false), [setSkipNftValue]);
+  const setGenerationEnabled = useCallback(
+    (enabled: boolean) => setSkipNftValue(skipNftForGenerationEnabled(enabled)),
+    [setSkipNftValue],
+  );
 
   const retryDetection = useCallback(async () => {
     if (skipDetectionEnabled) {
@@ -353,10 +448,14 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
 
   return {
     account: address,
+    codeBearingWallet,
+    generationEnabled,
+    generationRefreshing,
     readiness,
     transactionState,
     verifiedRepair,
     repair,
+    setGenerationEnabled,
     retryDetection,
     retryVerification,
   };

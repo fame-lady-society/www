@@ -8,13 +8,18 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Hash } from "viem";
 import { base } from "viem/chains";
-import { WrappedLink } from "@/components/WrappedLink";
+import type { ReconciledSocietyNft } from "../hooks/useSocietyNftReconciliation";
+import { useSocietyNftReconciliation } from "../hooks/useSocietyNftReconciliation";
 import type {
   PostFixBranch,
   SocietyNftReadinessProjection,
@@ -23,7 +28,9 @@ import type {
 import type { ReadinessTransactionState } from "../transactionState";
 import {
   isReadinessTransactionPending,
+  reconciliationTransactionStatusCopy,
   readinessTransactionStatusCopy,
+  type ReadinessTransactionStatusCopy,
 } from "../transactionState";
 import { useSocietyNftReadiness } from "../hooks/useSocietyNftReadiness";
 
@@ -47,14 +54,17 @@ export function shouldOpenSocietyNftReadinessDialog(
   );
 }
 
-interface SocietyNftReadinessStatusProps {
+interface TransactionStatusPanelProps {
+  ariaLabel: string;
+  copy: ReadinessTransactionStatusCopy | null;
   state: ReadinessTransactionState;
 }
 
-export function SocietyNftReadinessStatus({
+function TransactionStatusPanel({
+  ariaLabel,
+  copy,
   state,
-}: SocietyNftReadinessStatusProps) {
-  const copy = readinessTransactionStatusCopy(state);
+}: TransactionStatusPanelProps) {
   if (!copy) return null;
 
   const isError = state.status === "error";
@@ -62,7 +72,7 @@ export function SocietyNftReadinessStatus({
   return (
     <Stack
       component="section"
-      aria-label="Society NFT repair status"
+      aria-label={ariaLabel}
       role={isError ? "alert" : "status"}
       aria-live={isError ? "assertive" : "polite"}
       spacing={0.5}
@@ -95,6 +105,90 @@ export function SocietyNftReadinessStatus({
   );
 }
 
+interface SocietyNftReadinessStatusProps {
+  state: ReadinessTransactionState;
+}
+
+export function SocietyNftReadinessStatus({
+  state,
+}: SocietyNftReadinessStatusProps) {
+  return (
+    <TransactionStatusPanel
+      ariaLabel="Society NFT repair status"
+      copy={readinessTransactionStatusCopy(state)}
+      state={state}
+    />
+  );
+}
+
+function SocietyNftReconciliationStatus({
+  state,
+}: SocietyNftReadinessStatusProps) {
+  return (
+    <TransactionStatusPanel
+      ariaLabel="Society NFT reconciliation status"
+      copy={reconciliationTransactionStatusCopy(state)}
+      state={state}
+    />
+  );
+}
+
+export interface SocietyNftGenerationSettingViewProps {
+  generationEnabled: boolean;
+  generationRefreshing?: boolean;
+  transactionState: ReadinessTransactionState;
+  offsetForHeader: boolean;
+  onGenerationEnabledChange: (enabled: boolean) => void | Promise<unknown>;
+  showTransactionStatus?: boolean;
+}
+
+export function SocietyNftGenerationSettingView({
+  generationEnabled,
+  generationRefreshing = false,
+  transactionState,
+  offsetForHeader,
+  onGenerationEnabledChange,
+  showTransactionStatus = true,
+}: SocietyNftGenerationSettingViewProps) {
+  const pending =
+    isReadinessTransactionPending(transactionState) || generationRefreshing;
+
+  return (
+    <Stack
+      component="section"
+      aria-label="Society NFT generation setting"
+      spacing={1}
+      sx={{
+        width: "100%",
+        mt: offsetForHeader ? { xs: 7, sm: 8 } : 0,
+        borderBlockEnd: 1,
+        borderColor: "divider",
+        px: { xs: 2, sm: 3 },
+        py: 2,
+      }}
+    >
+      <FormControlLabel
+        control={
+          <Switch
+            checked={generationEnabled}
+            disabled={pending}
+            onChange={(_, checked) => onGenerationEnabledChange(checked)}
+            inputProps={{ "aria-label": "Generate Society NFTs" }}
+          />
+        }
+        label={<Typography fontWeight={700}>Generate Society NFTs</Typography>}
+      />
+      <Typography variant="body2" color="text.secondary">
+        On calls setSkipNFT(false). Off calls setSkipNFT(true). This setting is
+        available because the connected wallet is a smart account.
+      </Typography>
+      {showTransactionStatus ? (
+        <SocietyNftReadinessStatus state={transactionState} />
+      ) : null}
+    </Stack>
+  );
+}
+
 export interface SocietyNftReadinessRailViewProps {
   readiness: SocietyNftReadinessProjection;
   transactionState: ReadinessTransactionState;
@@ -122,6 +216,7 @@ export function SocietyNftReadinessRailView({
         spacing={1}
         sx={{
           width: "100%",
+          mt: { xs: 7, sm: 8 },
           borderBlock: 1,
           borderColor: "divider",
           py: 1.5,
@@ -149,8 +244,7 @@ export function SocietyNftReadinessRailView({
 
   const verificationRetry =
     transactionState.status === "error" &&
-    (transactionState.error?.kind === "verification_failed" ||
-      transactionState.error?.kind === "verification_mismatch");
+    transactionState.error?.kind === "verification_failed";
   const action = verificationRetry ? onRetryVerification : onRepair;
   const actionLabel = isRepairPending
     ? "Repair in progress"
@@ -168,6 +262,7 @@ export function SocietyNftReadinessRailView({
       spacing={2}
       sx={(theme) => ({
         width: "100%",
+        mt: { xs: 7, sm: 8 },
         borderBlock: 1,
         borderInlineStart: "4px solid",
         borderColor: "warning.main",
@@ -193,7 +288,7 @@ export function SocietyNftReadinessRailView({
           generate Society NFTs.
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          While this setting is enabled, holding 1 million $FAME will not
+          Until this setting is enabled, holding 1 million $FAME will not
           generate a Society NFT.
         </Typography>
       </Stack>
@@ -216,17 +311,28 @@ export function SocietyNftReadinessRailView({
 
 export interface SocietyNftReadinessDialogContentProps {
   branch: PostFixBranch;
-  surface: SocietyNftReadinessSurface;
+  nftDeficit: bigint;
+  reconciliationState: ReadinessTransactionState;
   onDone: () => void;
-  onContinue: () => void;
+  onReconcile: VoidAction;
 }
 
 export function SocietyNftReadinessDialogContent({
   branch,
-  surface,
+  nftDeficit,
+  reconciliationState,
   onDone,
-  onContinue,
+  onReconcile,
 }: SocietyNftReadinessDialogContentProps) {
+  const reconciliationPending =
+    isReadinessTransactionPending(reconciliationState);
+  const mintNotDetected =
+    reconciliationState.status === "error" &&
+    reconciliationState.error?.kind === "mint_not_detected";
+  const nftLabel = `${nftDeficit.toString()} Society NFT${
+    nftDeficit === 1n ? "" : "s"
+  }`;
+
   return (
     <>
       <DialogTitle id={SOCIETY_NFT_READINESS_DIALOG_TITLE_ID}>
@@ -237,6 +343,12 @@ export function SocietyNftReadinessDialogContent({
           <DialogContentText>
             Your wallet can now generate Society NFTs. Future qualifying $FAME
             receipts can generate Society NFTs for this wallet.
+          </DialogContentText>
+        ) : branch === "current" ? (
+          <DialogContentText>
+            Your existing Society NFT balance already matches this wallet&apos;s
+            current $FAME balance. Your wallet is ready for future qualifying
+            $FAME receipts.
           </DialogContentText>
         ) : (
           <Stack spacing={1.5}>
@@ -249,11 +361,15 @@ export function SocietyNftReadinessDialogContent({
               Receiving or self-transferring at least 1 wei of $FAME triggers
               that reconciliation.
             </DialogContentText>
+            <DialogContentText>
+              Based on the current balances, {nftLabel} can be generated.
+            </DialogContentText>
+            <SocietyNftReconciliationStatus state={reconciliationState} />
           </Stack>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        {branch === "future" ? (
+        {branch !== "catch_up" || mintNotDetected ? (
           <Button
             type="button"
             variant="contained"
@@ -263,28 +379,99 @@ export function SocietyNftReadinessDialogContent({
           >
             Done
           </Button>
-        ) : surface === "fame" ? (
-          <Button
-            component={WrappedLink}
-            href="/fame/swap"
-            variant="contained"
-            autoFocus
-            onClick={onContinue}
-            sx={{ minHeight: 44 }}
-          >
-            Buy a tiny amount of $FAME
-          </Button>
         ) : (
-          <Button
-            type="button"
-            variant="contained"
-            autoFocus
-            onClick={onContinue}
-            sx={{ minHeight: 44 }}
-          >
-            Continue to $FAME swap
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="text"
+              disabled={reconciliationPending}
+              onClick={onDone}
+              sx={{ minHeight: 44 }}
+            >
+              Not now
+            </Button>
+            <Button
+              type="button"
+              variant="contained"
+              autoFocus
+              disabled={reconciliationPending}
+              onClick={onReconcile}
+              sx={{ minHeight: 44 }}
+            >
+              {reconciliationState.status === "error"
+                ? "Try 1 wei transfer again"
+                : "Transfer 1 wei to myself"}
+            </Button>
+          </>
         )}
+      </DialogActions>
+    </>
+  );
+}
+
+export interface SocietyNftMintedDialogContentProps {
+  hash: Hash;
+  nfts: ReconciledSocietyNft[];
+  onDone: () => void;
+}
+
+export function SocietyNftMintedDialogContent({
+  hash,
+  nfts,
+  onDone,
+}: SocietyNftMintedDialogContentProps) {
+  const plural = nfts.length !== 1;
+
+  return (
+    <>
+      <DialogTitle id="society-nft-minted-dialog-title">
+        Your Society NFT{plural ? "s" : ""} arrived
+      </DialogTitle>
+      <DialogContent id="society-nft-minted-dialog-description">
+        <Stack spacing={2.5}>
+          <DialogContentText>
+            The 1 wei self-transfer generated {nfts.length} Society NFT
+            {plural ? "s" : ""} for this wallet.
+          </DialogContentText>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {nfts.map(({ tokenId, metadata }) => (
+              <article className="min-w-0 space-y-2" key={tokenId.toString()}>
+                <div className="relative aspect-square overflow-hidden rounded bg-neutral-100 dark:bg-neutral-900">
+                  <Image
+                    src={metadata.image}
+                    alt={metadata.name ?? `Society NFT #${tokenId}`}
+                    fill
+                    sizes="(max-width: 599px) calc(100vw - 48px), 280px"
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+                <Typography fontWeight={700}>
+                  {metadata.name ?? `Society NFT #${tokenId}`}
+                </Typography>
+              </article>
+            ))}
+          </div>
+          <Link
+            href={`${base.blockExplorers.default.url}/tx/${hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            View generation transaction{" "}
+            <OpenInNewIcon sx={{ fontSize: "0.85em", verticalAlign: -1 }} />
+          </Link>
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button
+          type="button"
+          variant="contained"
+          autoFocus
+          onClick={onDone}
+          sx={{ minHeight: 44 }}
+        >
+          Done
+        </Button>
       </DialogActions>
     </>
   );
@@ -301,47 +488,84 @@ export function SocietyNftReadinessRail({
 }: SocietyNftReadinessRailProps) {
   const {
     account,
+    codeBearingWallet,
+    generationEnabled,
+    generationRefreshing,
     readiness,
     transactionState,
     verifiedRepair,
     repair,
+    setGenerationEnabled,
     retryDetection,
     retryVerification,
   } = useSocietyNftReadiness();
-  const [dialogBranch, setDialogBranch] = useState<PostFixBranch | null>(null);
+  const {
+    transactionState: reconciliationState,
+    nfts: reconciledNfts,
+    selfTransfer,
+    reset: resetReconciliation,
+  } = useSocietyNftReconciliation();
+  const [dialogRepair, setDialogRepair] = useState<{
+    branch: PostFixBranch;
+    nftDeficit: bigint;
+  } | null>(null);
   const focusAnchorRef = useRef<HTMLSpanElement>(null);
   const focusAfterCloseRef = useRef(false);
   const repairVerified = shouldOpenSocietyNftReadinessDialog(
     transactionState,
     verifiedRepair,
   );
+  const mintedDialogOpen =
+    reconciliationState.status === "confirmed" &&
+    reconciliationState.hash !== null &&
+    reconciledNfts.length > 0;
 
   useEffect(() => {
-    setDialogBranch(null);
+    setDialogRepair(null);
   }, [account]);
 
   useEffect(() => {
     if (repairVerified) {
-      setDialogBranch(verifiedRepair.branch);
+      setDialogRepair({
+        branch: verifiedRepair.branch,
+        nftDeficit: verifiedRepair.nftDeficit,
+      });
     }
   }, [repairVerified, verifiedRepair]);
 
   useEffect(() => {
-    if (dialogBranch === null && focusAfterCloseRef.current) {
+    if (mintedDialogOpen) setDialogRepair(null);
+  }, [mintedDialogOpen]);
+
+  useEffect(() => {
+    if (
+      dialogRepair === null &&
+      !mintedDialogOpen &&
+      focusAfterCloseRef.current
+    ) {
       focusAfterCloseRef.current = false;
-      focusAnchorRef.current?.focus();
+      if (surface === "swap") {
+        onSwapContinue?.();
+      } else {
+        focusAnchorRef.current?.focus();
+      }
     }
-  }, [dialogBranch]);
+  }, [dialogRepair, mintedDialogOpen, onSwapContinue, surface]);
 
   const handleDone = useCallback(() => {
     focusAfterCloseRef.current = true;
-    setDialogBranch(null);
-  }, []);
+    resetReconciliation();
+    setDialogRepair(null);
+  }, [resetReconciliation]);
 
-  const handleContinue = useCallback(() => {
-    setDialogBranch(null);
-    if (surface === "swap") onSwapContinue?.();
-  }, [onSwapContinue, surface]);
+  const handleMintedDone = useCallback(() => {
+    focusAfterCloseRef.current = true;
+    resetReconciliation();
+  }, [resetReconciliation]);
+
+  const settingVisible =
+    surface === "fame" && codeBearingWallet && generationEnabled !== null;
+  const railVisible = !repairVerified && readiness.status !== "unaffected";
 
   return (
     <>
@@ -355,19 +579,49 @@ export function SocietyNftReadinessRail({
         />
       ) : null}
 
+      {settingVisible ? (
+        <SocietyNftGenerationSettingView
+          generationEnabled={generationEnabled}
+          generationRefreshing={generationRefreshing}
+          transactionState={transactionState}
+          offsetForHeader={!railVisible}
+          onGenerationEnabledChange={setGenerationEnabled}
+          showTransactionStatus={readiness.status !== "affected"}
+        />
+      ) : null}
+
       <Dialog
-        open={dialogBranch !== null}
+        open={dialogRepair !== null && !mintedDialogOpen}
         disableEscapeKeyDown
         disableRestoreFocus
         aria-labelledby={SOCIETY_NFT_READINESS_DIALOG_TITLE_ID}
         aria-describedby={SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID}
       >
-        {dialogBranch ? (
+        {dialogRepair ? (
           <SocietyNftReadinessDialogContent
-            branch={dialogBranch}
-            surface={surface}
+            branch={dialogRepair.branch}
+            nftDeficit={dialogRepair.nftDeficit}
+            reconciliationState={reconciliationState}
             onDone={handleDone}
-            onContinue={handleContinue}
+            onReconcile={selfTransfer}
+          />
+        ) : null}
+      </Dialog>
+
+      <Dialog
+        open={mintedDialogOpen}
+        disableEscapeKeyDown
+        disableRestoreFocus
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="society-nft-minted-dialog-title"
+        aria-describedby="society-nft-minted-dialog-description"
+      >
+        {reconciliationState.hash && reconciledNfts.length > 0 ? (
+          <SocietyNftMintedDialogContent
+            hash={reconciliationState.hash}
+            nfts={reconciledNfts}
+            onDone={handleMintedDone}
           />
         ) : null}
       </Dialog>

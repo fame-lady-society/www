@@ -99,7 +99,40 @@ export type RepairReceiptStatus =
   | "reverted"
   | "error";
 
-export type PostFixBranch = "future" | "catch_up";
+export type PostFixBranch = "future" | "current" | "catch_up";
+
+export interface PostFixSnapshot {
+  branch: PostFixBranch;
+  eligibleNftCount: bigint;
+  nftDeficit: bigint;
+}
+
+export function skipNftForGenerationEnabled(enabled: boolean): boolean {
+  return !enabled;
+}
+
+export function postFixSnapshotForBalances(
+  balance: bigint,
+  unit: bigint,
+  nftBalance: bigint,
+): PostFixSnapshot | null {
+  if (unit === 0n) return null;
+
+  const eligibleNftCount = balance / unit;
+  const nftDeficit =
+    eligibleNftCount > nftBalance ? eligibleNftCount - nftBalance : 0n;
+
+  return {
+    branch:
+      eligibleNftCount === 0n
+        ? "future"
+        : nftDeficit > 0n
+          ? "catch_up"
+          : "current",
+    eligibleNftCount,
+    nftDeficit,
+  };
+}
 
 export interface VerifiedRepairInput {
   receiptStatus: RepairReceiptStatus;
@@ -108,6 +141,7 @@ export interface VerifiedRepairInput {
   skipNft: ReadState<boolean>;
   balance: ReadState<bigint>;
   unit: ReadState<bigint>;
+  nftBalance: ReadState<bigint>;
 }
 
 export type VerifiedRepairProjection =
@@ -124,14 +158,10 @@ export type VerifiedRepairProjection =
       branch: PostFixBranch;
       balance: bigint;
       unit: bigint;
+      nftBalance: bigint;
+      eligibleNftCount: bigint;
+      nftDeficit: bigint;
     };
-
-export function postFixBranchForBalance(
-  balance: bigint,
-  unit: bigint,
-): PostFixBranch {
-  return balance >= unit ? "catch_up" : "future";
-}
 
 export function projectVerifiedRepair({
   receiptStatus,
@@ -140,6 +170,7 @@ export function projectVerifiedRepair({
   skipNft,
   balance,
   unit,
+  nftBalance,
 }: VerifiedRepairInput): VerifiedRepairProjection {
   if (
     initiatingAccount === null ||
@@ -173,18 +204,34 @@ export function projectVerifiedRepair({
     return { status: "unresolved", reason: "skip_enabled" };
   }
 
-  if (balance.status === "error" || unit.status === "error") {
+  if (
+    balance.status === "error" ||
+    unit.status === "error" ||
+    nftBalance.status === "error"
+  ) {
     return { status: "error", reason: "readback" };
   }
 
-  if (balance.status !== "success" || unit.status !== "success") {
+  if (
+    balance.status !== "success" ||
+    unit.status !== "success" ||
+    nftBalance.status !== "success"
+  ) {
     return { status: "unresolved", reason: "readback" };
   }
 
+  const postFix = postFixSnapshotForBalances(
+    balance.data,
+    unit.data,
+    nftBalance.data,
+  );
+  if (postFix === null) return { status: "error", reason: "readback" };
+
   return {
     status: "verified",
-    branch: postFixBranchForBalance(balance.data, unit.data),
+    ...postFix,
     balance: balance.data,
     unit: unit.data,
+    nftBalance: nftBalance.data,
   };
 }
