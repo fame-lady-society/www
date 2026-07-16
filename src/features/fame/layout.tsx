@@ -41,6 +41,7 @@ import {
 } from "@/features/claim-to-fame/hooks/constants";
 import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
+import { SocietyNftReadinessRail } from "@/features/society-nft-readiness/components/SocietyNftReadinessRail";
 
 const BASE_URL = "https://fame.support/thumb/";
 function ImageForToken({ tokenId }: { tokenId: bigint }) {
@@ -1118,6 +1119,7 @@ const Header: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
         </>
       }
     >
+      <SocietyNftReadinessRail surface="fame" />
       <ParallaxProvider>
         <Content burnPool={burnPool} unrevealed={unrevealed} />
       </ParallaxProvider>
