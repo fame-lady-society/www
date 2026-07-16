@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ideation: Smart-account Society NFT readiness</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1e9;
+      --surface: #fffdf8;
+      --surface-soft: #f7f2e6;
+      --ink: #201d18;
+      --muted: #625b50;
+      --line: #d9d1c1;
+      --gold: #8b651b;
+      --gold-soft: #f3e7c5;
+      --teal: #165f5a;
+      --teal-soft: #dcefeb;
+      --blue: #244e78;
+      --blue-soft: #e2edf7;
+      --warn: #7a4321;
+      --warn-soft: #f8e7d8;
+      --shadow: 0 14px 40px rgba(44, 36, 21, 0.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+    a { color: var(--teal); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: #0c4743; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9em;
+      background: #ede8dd;
+      padding: 0.12em 0.34em;
+      border-radius: 5px;
+    }
+    .page {
+      width: min(940px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 64px;
+    }
+    header.hero {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: clamp(28px, 6vw, 52px);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--gold);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { line-height: 1.17; letter-spacing: -0.025em; }
+    h1 { max-width: 16ch; margin: 0; font-size: clamp(2.2rem, 6vw, 4.4rem); font-weight: 760; }
+    h2 { margin: 0 0 18px; font-size: clamp(1.55rem, 3vw, 2.15rem); }
+    h3 { margin: 0; font-size: 1.35rem; }
+    .lede { max-width: 69ch; margin: 22px 0 0; color: var(--muted); font-size: 1.08rem; }
+    .metadata, .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 28px 0 0;
+    }
+    .metadata div, .stat {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 12px 14px;
+      background: var(--surface-soft);
+    }
+    .metadata dt, .stat-label, .idea-meta dt {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .metadata dd, .idea-meta dd { margin: 3px 0 0; font-weight: 650; overflow-wrap: anywhere; }
+    .stat-value { display: block; font-size: 1.55rem; font-weight: 800; line-height: 1.1; }
+    .stat-label { display: block; margin-top: 5px; }
+    nav.doc-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 0;
+    }
+    nav.doc-nav a, .jump-list a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 680;
+      text-decoration: none;
+    }
+    nav.doc-nav a:hover, .jump-list a:hover { border-color: var(--gold); background: var(--gold-soft); }
+    section { margin-top: 58px; scroll-margin-top: 24px; }
+    .prose { max-width: 72ch; }
+    .prose p { margin: 0 0 14px; }
+    .callout {
+      margin-top: 20px;
+      border: 1px solid #cfb875;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      background: var(--gold-soft);
+      color: #47340f;
+    }
+    .callout .eyebrow { color: #6f4f10; margin-bottom: 4px; }
+    .axes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 0;
+      list-style: none;
+      counter-reset: axes;
+    }
+    .axes li {
+      counter-increment: axes;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 15px;
+      background: var(--surface);
+    }
+    .axes li::before {
+      content: counter(axes);
+      display: grid;
+      place-items: center;
+      flex: 0 0 30px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--teal-soft);
+      color: var(--teal);
+      font-weight: 850;
+    }
+    .jump-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 0 20px;
+      padding: 0;
+      list-style: none;
+    }
+    .jump-list a { width: 100%; justify-content: flex-start; border-radius: 12px; }
+    .idea-card {
+      margin: 18px 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(20px, 4vw, 30px);
+      background: var(--surface);
+      box-shadow: 0 8px 26px rgba(44, 36, 21, 0.05);
+      scroll-margin-top: 20px;
+    }
+    .idea-card.top-pick { background: linear-gradient(145deg, #fffdf8, #fbf3da); border-color: #c9a85c; }
+    .idea-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--gold-soft);
+      color: #694a0f;
+      font-size: 0.83rem;
+      font-weight: 850;
+    }
+    .idea-title-wrap { display: flex; gap: 12px; align-items: center; }
+    .badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .badge.conf { background: var(--teal-soft); color: #104b47; border-color: #b4d9d3; }
+    .badge.cx { background: var(--blue-soft); color: #1f466c; border-color: #bfd2e6; }
+    .badge.axis { background: var(--gold-soft); color: #684a10; border-color: #dbc78f; white-space: normal; }
+    .idea-card > p { max-width: 72ch; }
+    .idea-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .idea-meta div {
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: var(--surface-soft);
+    }
+    .field { max-width: 74ch; margin: 14px 0 0; }
+    .field-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 850;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .diagram {
+      margin: 22px 0 4px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: #faf8f2;
+      overflow-x: auto;
+    }
+    .diagram figcaption { max-width: 70ch; margin: 8px 4px 0; color: var(--muted); font-size: 0.86rem; }
+    svg text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; fill: var(--ink); }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    th, td { padding: 11px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { background: var(--surface-soft); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    .composition-signal {
+      margin-top: 58px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    @media (max-width: 720px) {
+      .metadata, .stats, .idea-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .axes, .jump-list { grid-template-columns: 1fr; }
+      .idea-head { flex-direction: column; }
+      .badges { justify-content: flex-start; }
+      th:nth-child(1), td:nth-child(1) { width: 40px; }
+      table { font-size: 0.9rem; }
+    }
+    @media (max-width: 460px) {
+      .page { width: min(100% - 20px, 940px); padding-top: 14px; }
+      header.hero { padding: 24px 20px; border-radius: 18px; }
+      .metadata, .stats, .idea-meta { grid-template-columns: 1fr; }
+      h1 { font-size: 2.25rem; }
+      th, td { padding: 9px 8px; }
+    }
+    @media print {
+      body { background: white; }
+      .page { width: 100%; padding: 0; }
+      header.hero, .idea-card { box-shadow: none; break-inside: avoid; }
+      nav.doc-nav, .jump-list { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">FAME · grounded ideation</p>
+      <h1>Smart-account Society NFT readiness</h1>
+      <p class="lede">A ranked set of directions for detecting code-bearing wallets that currently skip Society NFTs, repairing the setting on Base, and helping already-qualified holders generate what they are owed.</p>
+
+      <dl class="metadata">
+        <div><dt>Date</dt><dd><time datetime="2026-07-15">2026-07-15</time></dd></div>
+        <div><dt>Topic</dt><dd>smart-account-society-nft-readiness</dd></div>
+        <div><dt>Mode</dt><dd>repo-grounded</dd></div>
+        <div><dt>Focus</dt><dd><code>/fame</code> + <code>/fame/swap</code></dd></div>
+      </dl>
+
+      <div class="stats" aria-label="Ideation summary">
+        <div class="stat"><span class="stat-value">46</span><span class="stat-label">Raw ideas</span></div>
+        <div class="stat"><span class="stat-value">20</span><span class="stat-label">After dedupe</span></div>
+        <div class="stat"><span class="stat-value">7</span><span class="stat-label">Ranked survivors</span></div>
+        <div class="stat"><span class="stat-value">5</span><span class="stat-label">Topic axes</span></div>
+      </div>
+
+      <nav class="doc-nav" aria-label="Document sections">
+        <a href="#grounding-context">Grounding Context</a>
+        <a href="#topic-axes">Topic Axes</a>
+        <a href="#ranked-ideas">Ranked Ideas</a>
+        <a href="#rejection-summary">Rejection Summary</a>
+      </nav>
+    </header>
+
+    <section id="grounding-context">
+      <p class="eyebrow">What the contract and repo establish</p>
+      <h2>Grounding Context</h2>
+      <div class="prose">
+        <p><strong>Detection is sound when it is Base-pinned.</strong> A non-empty Base code read catches deployed contract accounts and EIP-7702 delegated EOAs. FAME’s verified DN404 source defaults an uninitialized code-bearing address to <code>getSkipNFT(address) == true</code>, and <code>setSkipNFT(false)</code> stores the caller’s opt-in.</p>
+        <p><strong>The repair is not retroactive.</strong> Changing the flag does not mint anything by itself. A later inbound FAME event reconciles the missing Society NFT balance. The user confirmed during this run that <code>transfer(connectedAddress, 1)</code>—a one-wei self-transfer—does trigger the mint after skip mode is disabled.</p>
+        <p><strong>Catch-up has a real edge case.</strong> DN404 reconciliation is O(n) in the number of NFTs it must mint or move and can exceed the block gas limit. “Generate now” therefore needs a preflight rather than a universal promise.</p>
+        <p><strong>The repo already has the seams.</strong> Both pages own separate <code>DefaultProvider</code> and <code>Main</code> trees. A reusable client component can be mounted immediately inside each <code>Main</code>. Generated bindings already expose <code>getSkipNFT</code>, <code>setSkipNFT</code>, <code>balanceOf</code>, and <code>unit</code>; an existing auction hook demonstrates Base-pinned <code>useBytecode</code> and explicit checking/error states.</p>
+        <p><strong>The narrower two-signal predicate is intentional.</strong> Skip mode alone is the contract’s full inability predicate, but this feature deliberately adds the code check to target the smart-account default and avoid warning ordinary EOAs that intentionally chose to skip Society NFTs.</p>
+      </div>
+      <aside class="callout">
+        <p class="eyebrow">Primary-source correction</p>
+        <strong>Use “receive or self-transfer,” not ambiguous “transfer” copy.</strong> Sending FAME out does not describe the recovery event. Buying on <code>/fame/swap</code> is a fallback; an already-qualified holder can use the direct one-wei self-transfer.
+      </aside>
+      <p class="prose">Primary references: <a href="https://eips.ethereum.org/EIPS/eip-7702">EIP-7702</a>, <a href="https://ethereum.org/developers/docs/apis/json-rpc/#eth_getcode">Ethereum JSON-RPC <code>eth_getCode</code></a>, and the <a href="https://basescan.org/token/0xf307e242bfe1ec1ff01a4cef2fdaa81b10a52418#code">verified FAME source on BaseScan</a>.</p>
+    </section>
+
+    <section id="topic-axes">
+      <p class="eyebrow">The surface map</p>
+      <h2>Topic Axes</h2>
+      <ol class="axes">
+        <li>Base account-code and <code>skipNFT</code> detection semantics</li>
+        <li>Shared top-level placement across <code>/fame</code> and <code>/fame/swap</code></li>
+        <li><code>setSkipNFT(false)</code> transaction lifecycle and failure recovery</li>
+        <li>Balance-aware post-fix recovery and catch-up triggering</li>
+        <li>User-facing copy, trust, and accessibility</li>
+      </ol>
+    </section>
+
+    <section id="ranked-ideas">
+      <p class="eyebrow">Seven ideas survived the cut</p>
+      <h2>Ranked Ideas</h2>
+      <ol class="jump-list">
+        <li><a href="#idea-1">1. Society NFT Readiness Rail</a></li>
+        <li><a href="#idea-2">2. Repair, Verify, Generate</a></li>
+        <li><a href="#idea-3">3. Two-signal targeted readiness</a></li>
+        <li><a href="#idea-4">4. Readback-owned repair lifecycle</a></li>
+        <li><a href="#idea-5">5. Preflight the catch-up</a></li>
+        <li><a href="#idea-6">6. Consequence-first copy</a></li>
+        <li><a href="#idea-7">7. Route-adapted recovery</a></li>
+      </ol>
+
+      <article class="idea-card top-pick" id="idea-1">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">1</span><h3>Society NFT Readiness Rail</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 94%</span><span class="badge cx">Complexity Medium</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Shared top-level placement</dd></div>
+          <div><dt>Shape</dt><dd>One component, two mounts</dd></div>
+          <div><dt>Recommendation</dt><dd>Primary direction</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Treat the banner as an account-level safety rail rather than a disposable alert. Mount one reusable client component immediately inside each page’s existing <code>Main</code>. It owns the Base diagnosis, consequence-first explanation, repair action, transaction progress, verified readback, and post-fix branch; presentation may adapt slightly to each route without changing behavior.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> Both requested routes already expose the same safe insertion seam inside independent provider trees, and the repo already has Base code-read, transaction-state, retry, and accessible status patterns. The provider-free shared route layout would broaden the feature to unrelated <code>/fame/*</code> pages.</p>
+        <p class="field"><span class="field-label">Rationale</span>This gives the feature one source of truth while preserving the current architecture. It also prevents the classic drift where swap claims an address is fixed while the FAME homepage still shows stale state.</p>
+        <p class="field"><span class="field-label">Downsides</span>The rail needs a real state model rather than a couple of booleans, and it must be mounted twice. That is modest complexity, but it is complexity the product can see and test.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 860 395" width="100%" role="img" aria-labelledby="flow-title flow-desc">
+            <title id="flow-title">Society NFT readiness recovery flow</title>
+            <desc id="flow-desc">A connected address is checked for Base code and skip state. Affected accounts enable generation, verify the flag, then either wait for a future qualifying balance or trigger a one-wei self-transfer.</desc>
+            <defs>
+              <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+                <path d="M0,0 L9,4.5 L0,9 z" fill="#8b651b"></path>
+              </marker>
+            </defs>
+            <rect x="20" y="105" width="130" height="64" rx="18" fill="#e2edf7" stroke="#8faeca"></rect>
+            <text x="85" y="132" text-anchor="middle" font-size="14" font-weight="750">Connected</text>
+            <text x="85" y="151" text-anchor="middle" font-size="13">address</text>
+            <line x1="150" y1="137" x2="190" y2="137" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <polygon points="250,82 310,137 250,192 190,137" fill="#f3e7c5" stroke="#b5964f"></polygon>
+            <text x="250" y="130" text-anchor="middle" font-size="13" font-weight="750">Base code</text>
+            <text x="250" y="149" text-anchor="middle" font-size="13">+ skip=true?</text>
+            <line x1="310" y1="137" x2="350" y2="137" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <rect x="350" y="105" width="138" height="64" rx="18" fill="#f8e7d8" stroke="#d09a74"></rect>
+            <text x="419" y="130" text-anchor="middle" font-size="13" font-weight="750">Readiness rail</text>
+            <text x="419" y="149" text-anchor="middle" font-size="12">Enable NFTs</text>
+            <line x1="488" y1="137" x2="528" y2="137" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <rect x="528" y="105" width="138" height="64" rx="18" fill="#dcefeb" stroke="#7fb5ad"></rect>
+            <text x="597" y="130" text-anchor="middle" font-size="13" font-weight="750">Receipt + readback</text>
+            <text x="597" y="149" text-anchor="middle" font-size="12">skip=false</text>
+            <line x1="666" y1="137" x2="706" y2="137" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <polygon points="766,82 826,137 766,192 706,137" fill="#f3e7c5" stroke="#b5964f"></polygon>
+            <text x="766" y="130" text-anchor="middle" font-size="13" font-weight="750">At least</text>
+            <text x="766" y="149" text-anchor="middle" font-size="13">1 unit?</text>
+            <line x1="766" y1="192" x2="766" y2="215" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <text x="784" y="211" font-size="11" font-weight="800" fill="#6f4f10">Yes</text>
+            <polygon points="766,215 826,260 766,305 706,260" fill="#f3e7c5" stroke="#b5964f"></polygon>
+            <text x="766" y="253" text-anchor="middle" font-size="13" font-weight="750">Simulation</text>
+            <text x="766" y="272" text-anchor="middle" font-size="13">succeeds?</text>
+            <line x1="766" y1="305" x2="766" y2="325" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <text x="784" y="321" font-size="11" font-weight="800" fill="#6f4f10">Yes</text>
+            <rect x="686" y="325" width="160" height="52" rx="16" fill="#dcefeb" stroke="#7fb5ad"></rect>
+            <text x="766" y="347" text-anchor="middle" font-size="13" font-weight="750">Generate now</text>
+            <text x="766" y="365" text-anchor="middle" font-size="12">self-transfer 1 wei</text>
+            <line x1="706" y1="260" x2="666" y2="260" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <text x="678" y="250" font-size="11" font-weight="800" fill="#6f4f10">No</text>
+            <rect x="506" y="233" width="160" height="54" rx="16" fill="#f8e7d8" stroke="#d09a74"></rect>
+            <text x="586" y="256" text-anchor="middle" font-size="13" font-weight="750">Guarded recovery</text>
+            <text x="586" y="274" text-anchor="middle" font-size="12">no success promise</text>
+            <line x1="706" y1="137" x2="666" y2="63" stroke="#8b651b" stroke-width="2" marker-end="url(#arrow)"></line>
+            <text x="692" y="94" font-size="11" font-weight="800" fill="#6f4f10">No</text>
+            <rect x="516" y="20" width="150" height="54" rx="16" fill="#e2edf7" stroke="#8faeca"></rect>
+            <text x="591" y="43" text-anchor="middle" font-size="13" font-weight="750">Ready for future</text>
+            <text x="591" y="61" text-anchor="middle" font-size="12">qualifying receipts</text>
+          </svg>
+          <figcaption>Illustrative flow: the rail stays authoritative from diagnosis through verified repair, then preflights catch-up before offering the one-wei activation transaction.</figcaption>
+        </figure>
+      </article>
+
+      <article class="idea-card" id="idea-2">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">2</span><h3>Repair, Verify, Generate</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 91%</span><span class="badge cx">Complexity Medium</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Post-fix recovery</dd></div>
+          <div><dt>Shape</dt><dd>Two explicit Base transactions</dd></div>
+          <div><dt>Key move</dt><dd>Self-transfer replaces swap detour</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Sequence the user journey as Diagnose → Enable → Verify → Generate. After <code>setSkipNFT(false)</code> confirms and readback proves the flag is false, users below one FAME unit get a clean future-eligibility confirmation. Users already at or above the threshold get a primary <strong>Generate Society NFT now</strong> action that calls <code>transfer(connectedAddress, 1)</code>; <code>/fame/swap</code> becomes a secondary fallback.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> The user observed the one-wei self-transfer minting successfully, and the current DN404 source explicitly handles <code>from == to</code> while computing the full recipient deficit.</p>
+        <p class="field"><span class="field-label">Rationale</span>An already-qualified holder should not need to buy more FAME just to manufacture an inbound event. This turns the modal from documentation into an actual repair tool.</p>
+        <p class="field"><span class="field-label">Downsides</span>It is a second wallet transaction and may reconcile more than one missing NFT. It must be paired with the preflight idea below and should never be described as universally cheap.</p>
+      </article>
+
+      <article class="idea-card" id="idea-3">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">3</span><h3>Two-signal targeted readiness</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 90%</span><span class="badge cx">Complexity Low</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Detection semantics</dd></div>
+          <div><dt>Predicate</dt><dd>Base code + skip=true</dd></div>
+          <div><dt>States</dt><dd>Affected, safe, unknown</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Pin both reads to Base and model affected, unaffected, checking, and error explicitly. Show the remediation banner only when runtime code is non-empty and <code>getSkipNFT(address)</code> is true. Key state by connected address, and invalidate an in-progress repair if the signer changes.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> EIP-7702 delegation is non-empty Base code; FAME defaults uninitialized code-bearing addresses to skip mode; existing repo code already distinguishes checking/error/ready. The user explicitly scoped the banner to the conjunction of both signals.</p>
+        <p class="field"><span class="field-label">Rationale</span>The added code predicate deliberately targets the smart-account default rather than every address that has ever chosen to skip NFTs. Explicit unknown states stop RPC failure from dressing up as an all-clear.</p>
+        <p class="field"><span class="field-label">Downsides</span>An ordinary EOA that explicitly enabled skip mode will not see this banner even though it also cannot generate NFTs. That is an intentional product boundary, not the full contract predicate.</p>
+      </article>
+
+      <article class="idea-card" id="idea-4">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">4</span><h3>Readback-owned repair lifecycle</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 93%</span><span class="badge cx">Complexity Medium</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Transaction lifecycle</dd></div>
+          <div><dt>Success</dt><dd>Receipt + skip=false</dd></div>
+          <div><dt>Failure</dt><dd>Inline, retryable</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Define “one click” as one product intent, not one invisible blockchain step. The rail visibly owns Switch to Base → Confirm in wallet → Submitted → Confirming → Verified. It remains present on rejection, revert, or refetch failure, and opens the post-fix modal only after <code>getSkipNFT</code> reads back as false for the same initiating address.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> The repo already contains chain switching, duplicate-write guards, Base-scoped receipt handling, normalized rejection copy, and post-confirmation refetch patterns.</p>
+        <p class="field"><span class="field-label">Rationale</span>A transaction hash proves a request exists; a receipt proves execution; the readback proves the product outcome. The UI should not collapse those into one optimistic spinner.</p>
+        <p class="field"><span class="field-label">Downsides</span>Readback can lag or fail after a successful receipt, so the design needs a calm “confirmed, still verifying” state and an explicit retry.</p>
+      </article>
+
+      <article class="idea-card" id="idea-5">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">5</span><h3>Preflight the catch-up</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 76%</span><span class="badge cx">Complexity Medium</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Post-fix recovery</dd></div>
+          <div><dt>Guard</dt><dd>Simulate self-transfer</dd></div>
+          <div><dt>Edge case</dt><dd>Large NFT deficit</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Before showing <strong>Generate now</strong>, simulate the one-wei self-transfer for the repaired account. Offer the direct action when simulation succeeds. If reconciliation is too large or the call is likely to revert, replace the promise with guarded copy and an honest support/manual path; another inbound swap would exercise the same costly reconciliation.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> DN404 documents automatic NFT reconciliation as O(n) and warns that it can exceed the block gas limit.</p>
+        <p class="field"><span class="field-label">Rationale</span>The cost is driven by missing NFTs, not the tiny ERC-20 amount. A preflight protects the exact high-balance users most likely to have a large historical deficit.</p>
+        <p class="field"><span class="field-label">Downsides</span>Simulation behavior can vary by provider and smart-account execution environment. Reading exact mirror debt would improve the explanation, but that adds another contract dependency and is better treated as a follow-up unless simulation proves insufficient.</p>
+      </article>
+
+      <article class="idea-card" id="idea-6">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">6</span><h3>Consequence-first, taxonomy-second copy</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 95%</span><span class="badge cx">Complexity Low</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Copy, trust, accessibility</dd></div>
+          <div><dt>Headline</dt><dd>Observable consequence</dd></div>
+          <div><dt>Detail</dt><dd>Smart-account explanation second</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Lead with: <strong>“Society NFT generation is off for this wallet.”</strong> Then explain: “This wallet uses smart-account features, so FAME leaves Society NFT generation off by default until you enable it. While it is off, holding 1 million FAME will not generate a Society NFT.” Put EIP-7702 and delegation mechanics behind optional detail.</p>
+        <p class="field"><span class="field-label">Basis</span><code>external:</code> EIP-7702 delegated EOAs satisfy the code test without becoming deployed contract accounts. <code>direct:</code> The repo’s existing promise is simply “1 million FAME = 1 Society NFT,” and the contract’s skip behavior is the exception that must be made legible.</p>
+        <p class="field"><span class="field-label">Rationale</span>The app can prove the outcome and current flag; it cannot reliably prove which wallet product or account taxonomy the user identifies with. Consequence-first language is accurate for Safe, Base Account, and delegated EOA users.</p>
+        <p class="field"><span class="field-label">Downsides</span>“Uses smart-account features” is still a simplification. The detail disclosure should explain that the check found code on Base without turning the banner into an account-abstraction lecture.</p>
+      </article>
+
+      <article class="idea-card" id="idea-7">
+        <div class="idea-head">
+          <div class="idea-title-wrap"><span class="rank">7</span><h3>Shared behavior, route-adapted recovery</h3></div>
+          <div class="badges"><span class="badge conf">Confidence 78%</span><span class="badge cx">Complexity Medium</span></div>
+        </div>
+        <dl class="idea-meta">
+          <div><dt>Axis</dt><dd>Shared placement</dd></div>
+          <div><dt><code>/fame</code></dt><dd>Link to swap fallback</dd></div>
+          <div><dt><code>/fame/swap</code></dt><dd>Continue inline</dd></div>
+        </dl>
+        <p><span class="field-label">Description</span>Keep one controller and state model, but let each mount adapt the final fallback. On <code>/fame</code>, a user who declines or cannot use direct generation can continue to <code>/fame/swap</code> with recovery intent. On the swap route, the same action dismisses into the already-visible Buy widget with context that receiving FAME can trigger reconciliation; it never links to itself.</p>
+        <p class="field"><span class="field-label">Basis</span><code>direct:</code> Swap already defaults to Buy and labels the output “Receive FAME,” while the two routes expose different top-content structures and no recovery-intent handoff exists today.</p>
+        <p class="field"><span class="field-label">Rationale</span>Shared behavior should not force identical presentation. Small route adapters preserve continuity without duplicating contract logic or state.</p>
+        <p class="field"><span class="field-label">Downsides</span>Once direct self-transfer is primary, this fallback may be uncommon. Query-state handoff should not become a miniature routing subsystem; a small explicit intent is enough.</p>
+      </article>
+    </section>
+
+    <section id="rejection-summary">
+      <p class="eyebrow">What did not survive</p>
+      <h2>Rejection Summary</h2>
+      <table>
+        <thead><tr><th>#</th><th>Idea</th><th>Reason rejected</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Detect condition, not taxonomy</td><td>Its useful language is retained in ranked idea 6; as a standalone direction it duplicates the stronger readiness model.</td></tr>
+          <tr><td>2</td><td>Lock repair session to initiating address</td><td>Real correctness race, but below the standalone ambition floor; folded into ideas 1, 3, and 4.</td></tr>
+          <tr><td>3</td><td>One safety rail mounted twice</td><td>Superseded by the broader Society NFT Readiness Rail.</td></tr>
+          <tr><td>4</td><td>Any positive received amount completes catch-up</td><td>Basis refuted: below-unit accounts still do not qualify, and large reconciliation may exceed block gas.</td></tr>
+          <tr><td>5</td><td>One intent with checkpoints</td><td>Duplicates the stronger Readback-owned repair lifecycle.</td></tr>
+          <tr><td>6</td><td>Banner as repair runbook</td><td>Folded into the Readiness Rail and readback lifecycle rather than kept as a separate idea.</td></tr>
+          <tr><td>7</td><td>Optional atomic batching</td><td>Speculative first-slice complexity; the repo has no proven connector capability surface for safe ordered batching.</td></tr>
+          <tr><td>8</td><td>Balance-only Generate now</td><td>Unsafe on its own; retained only when merged with receipt/readback verification and catch-up preflight.</td></tr>
+          <tr><td>9</td><td>Exact mirror-debt diagnostics</td><td>Useful follow-up, but it adds another contract dependency before simulation proves the extra precision is needed.</td></tr>
+          <tr><td>10</td><td>Eligibility-versus-activation modal</td><td>Strong language pattern, folded into Repair, Verify, Generate and the copy direction.</td></tr>
+          <tr><td>11</td><td>Privacy-safe repair diagnostics</td><td>The proposed field set lacks evidence of meaningful support value and adds UI weight before the core recovery loop ships.</td></tr>
+          <tr><td>12</td><td>Adaptive smart-account fast path</td><td>Duplicates the weak batching candidate without solving reliable capability detection.</td></tr>
+          <tr><td>13</td><td>Verified recovery receipt</td><td>Overlaps stronger survivors and overstates existing evidence for its full information architecture.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="composition-signal">Composed <time datetime="2026-07-15T21:01:06-06:00">2026-07-15T21:01:06-06:00</time> by ce-ideate from the connected-wallet Society NFT readiness prompt and direct user confirmation of the one-wei self-transfer trigger.</footer>
+  </main>
+</body>
+</html>
