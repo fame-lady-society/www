@@ -20,9 +20,10 @@ import type {
   SocietyNftReadinessProjection,
   VerifiedRepairProjection,
 } from "../state";
-import type {
-  ReadinessTransactionState,
-  ReadinessTransactionStatusCopy,
+import type { ReadinessTransactionState } from "../transactionState";
+import {
+  isReadinessTransactionPending,
+  readinessTransactionStatusCopy,
 } from "../transactionState";
 import { useSocietyNftReadiness } from "../hooks/useSocietyNftReadiness";
 
@@ -36,18 +37,6 @@ const SOCIETY_NFT_READINESS_HEADING_ID = "society-nft-readiness-heading";
 
 type VoidAction = () => void | Promise<unknown>;
 
-export type PostFixContinuation =
-  | { kind: "link"; href: "/fame/swap" }
-  | { kind: "callback" };
-
-export function postFixContinuationForSurface(
-  surface: SocietyNftReadinessSurface,
-): PostFixContinuation {
-  return surface === "fame"
-    ? { kind: "link", href: "/fame/swap" }
-    : { kind: "callback" };
-}
-
 export function shouldOpenSocietyNftReadinessDialog(
   transactionState: ReadinessTransactionState,
   verifiedRepair: VerifiedRepairProjection,
@@ -58,30 +47,17 @@ export function shouldOpenSocietyNftReadinessDialog(
   );
 }
 
-function canonicalBaseTransactionUrl(
-  state: ReadinessTransactionState,
-  transactionUrl: string | null,
-): string | null {
-  if (!state.hash) return null;
-  const expected = `${base.blockExplorers.default.url}/tx/${state.hash}`;
-  return transactionUrl === expected ? expected : null;
-}
-
 interface SocietyNftReadinessStatusProps {
   state: ReadinessTransactionState;
-  copy: ReadinessTransactionStatusCopy | null;
-  transactionUrl: string | null;
 }
 
 export function SocietyNftReadinessStatus({
   state,
-  copy,
-  transactionUrl,
 }: SocietyNftReadinessStatusProps) {
+  const copy = readinessTransactionStatusCopy(state);
   if (!copy) return null;
 
   const isError = state.status === "error";
-  const safeTransactionUrl = canonicalBaseTransactionUrl(state, transactionUrl);
 
   return (
     <Stack
@@ -102,10 +78,10 @@ export function SocietyNftReadinessStatus({
       <Typography variant="body2" color="text.secondary">
         {copy.detail}
       </Typography>
-      {safeTransactionUrl ? (
+      {state.hash ? (
         <Typography variant="body2">
           <Link
-            href={safeTransactionUrl}
+            href={`${base.blockExplorers.default.url}/tx/${state.hash}`}
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
@@ -122,9 +98,6 @@ export function SocietyNftReadinessStatus({
 export interface SocietyNftReadinessRailViewProps {
   readiness: SocietyNftReadinessProjection;
   transactionState: ReadinessTransactionState;
-  transactionStatusCopy: ReadinessTransactionStatusCopy | null;
-  transactionUrl: string | null;
-  isRepairPending: boolean;
   onRepair: VoidAction;
   onRetryDetection: VoidAction;
   onRetryVerification: VoidAction;
@@ -133,13 +106,12 @@ export interface SocietyNftReadinessRailViewProps {
 export function SocietyNftReadinessRailView({
   readiness,
   transactionState,
-  transactionStatusCopy,
-  transactionUrl,
-  isRepairPending,
   onRepair,
   onRetryDetection,
   onRetryVerification,
 }: SocietyNftReadinessRailViewProps) {
+  const isRepairPending = isReadinessTransactionPending(transactionState);
+
   if (readiness.status === "error") {
     return (
       <Stack
@@ -237,11 +209,7 @@ export function SocietyNftReadinessRailView({
         {actionLabel}
       </Button>
 
-      <SocietyNftReadinessStatus
-        state={transactionState}
-        copy={transactionStatusCopy}
-        transactionUrl={transactionUrl}
-      />
+      <SocietyNftReadinessStatus state={transactionState} />
     </Stack>
   );
 }
@@ -259,8 +227,6 @@ export function SocietyNftReadinessDialogContent({
   onDone,
   onContinue,
 }: SocietyNftReadinessDialogContentProps) {
-  const continuation = postFixContinuationForSurface(surface);
-
   return (
     <>
       <DialogTitle id={SOCIETY_NFT_READINESS_DIALOG_TITLE_ID}>
@@ -297,10 +263,10 @@ export function SocietyNftReadinessDialogContent({
           >
             Done
           </Button>
-        ) : continuation.kind === "link" ? (
+        ) : surface === "fame" ? (
           <Button
             component={WrappedLink}
-            href={continuation.href}
+            href="/fame/swap"
             variant="contained"
             autoFocus
             onClick={onContinue}
@@ -337,10 +303,7 @@ export function SocietyNftReadinessRail({
     account,
     readiness,
     transactionState,
-    transactionStatusCopy,
-    isRepairPending,
     verifiedRepair,
-    transactionUrl,
     repair,
     retryDetection,
     retryVerification,
@@ -386,9 +349,6 @@ export function SocietyNftReadinessRail({
         <SocietyNftReadinessRailView
           readiness={readiness}
           transactionState={transactionState}
-          transactionStatusCopy={transactionStatusCopy}
-          transactionUrl={transactionUrl}
-          isRepairPending={isRepairPending}
           onRepair={repair}
           onRetryDetection={retryDetection}
           onRetryVerification={retryVerification}
@@ -401,9 +361,6 @@ export function SocietyNftReadinessRail({
         disableRestoreFocus
         aria-labelledby={SOCIETY_NFT_READINESS_DIALOG_TITLE_ID}
         aria-describedby={SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID}
-        onClose={(_event, reason) => {
-          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
-        }}
       >
         {dialogBranch ? (
           <SocietyNftReadinessDialogContent

@@ -83,6 +83,20 @@ test("only authoritative non-empty code with skip mode enabled is affected", () 
     projectSocietyNftReadiness({ code: deployedCode, skipNft: success(false) }),
     { status: "unaffected" },
   );
+  assert.deepEqual(
+    projectSocietyNftReadiness({
+      code: success("0x"),
+      skipNft: { status: "error" },
+    }),
+    { status: "unaffected" },
+  );
+  assert.deepEqual(
+    projectSocietyNftReadiness({
+      code: success("0x"),
+      skipNft: { status: "loading" },
+    }),
+    { status: "unaffected" },
+  );
 });
 
 test("partial, loading, failed, and disconnected reads remain non-authoritative", () => {

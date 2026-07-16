@@ -20,6 +20,7 @@ import {
 import {
   bytecodeQueryReadState,
   contractQueryReadState,
+  hasNonEmptyRuntimeCode,
   projectSocietyNftReadiness,
   projectVerifiedRepair,
   type RepairReceiptStatus,
@@ -28,12 +29,9 @@ import {
 } from "../state";
 import {
   initialReadinessTransactionState,
-  isReadinessTransactionPending,
   readinessTransactionError,
   readinessTransactionReducer,
-  readinessTransactionStatusCopy,
   type ReadinessTransactionState,
-  type ReadinessTransactionStatusCopy,
 } from "../transactionState";
 
 const fameAddress = fameFromNetwork(base.id);
@@ -42,15 +40,10 @@ export interface UseSocietyNftReadinessResult {
   account: Address | undefined;
   readiness: SocietyNftReadinessProjection;
   transactionState: ReadinessTransactionState;
-  transactionStatusCopy: ReadinessTransactionStatusCopy | null;
-  isRepairPending: boolean;
   verifiedRepair: VerifiedRepairProjection;
-  transactionHash: Hash | null;
-  transactionUrl: string | null;
   repair: () => Promise<Hash | null>;
   retryDetection: () => Promise<void>;
   retryVerification: () => Promise<void>;
-  resetRepair: () => void;
 }
 
 export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
@@ -71,13 +64,6 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     chainId: base.id,
     query: { enabled: detectionEnabled },
   });
-  const skipNft = useReadFameGetSkipNft({
-    address: fameAddress,
-    args: [address ?? zeroAddress],
-    chainId: base.id,
-    query: { enabled: detectionEnabled },
-  });
-
   const codeRead = useMemo(
     () =>
       bytecodeQueryReadState(detectionEnabled, {
@@ -87,6 +73,14 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
       }),
     [bytecode.data, bytecode.isError, bytecode.isSuccess, detectionEnabled],
   );
+  const skipDetectionEnabled =
+    codeRead.status === "success" && hasNonEmptyRuntimeCode(codeRead.data);
+  const skipNft = useReadFameGetSkipNft({
+    address: fameAddress,
+    args: [address ?? zeroAddress],
+    chainId: base.id,
+    query: { enabled: skipDetectionEnabled },
+  });
   const skipNftRead = useMemo(
     () =>
       contractQueryReadState(detectionEnabled, {
@@ -149,16 +143,15 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     verifiedUnit.isFetching;
   const refetchDetectionSkipNft = skipNft.refetch;
 
-  const connectedForVerification = isConnected && address !== undefined;
   const verifiedSkipNftRead = useMemo(
     () =>
-      contractQueryReadState(connectedForVerification, {
+      contractQueryReadState(detectionEnabled, {
         data: verifiedSkipNft.data,
         isError: verifiedSkipNft.isError,
         isSuccess: verifiedSkipNft.isSuccess,
       }),
     [
-      connectedForVerification,
+      detectionEnabled,
       verifiedSkipNft.data,
       verifiedSkipNft.isError,
       verifiedSkipNft.isSuccess,
@@ -166,13 +159,13 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
   );
   const verifiedBalanceRead = useMemo(
     () =>
-      contractQueryReadState(connectedForVerification, {
+      contractQueryReadState(detectionEnabled, {
         data: verifiedBalance.data,
         isError: verifiedBalance.isError,
         isSuccess: verifiedBalance.isSuccess,
       }),
     [
-      connectedForVerification,
+      detectionEnabled,
       verifiedBalance.data,
       verifiedBalance.isError,
       verifiedBalance.isSuccess,
@@ -180,13 +173,13 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
   );
   const verifiedUnitRead = useMemo(
     () =>
-      contractQueryReadState(connectedForVerification, {
+      contractQueryReadState(detectionEnabled, {
         data: verifiedUnit.data,
         isError: verifiedUnit.isError,
         isSuccess: verifiedUnit.isSuccess,
       }),
     [
-      connectedForVerification,
+      detectionEnabled,
       verifiedUnit.data,
       verifiedUnit.isError,
       verifiedUnit.isSuccess,
@@ -337,8 +330,13 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
   ]);
 
   const retryDetection = useCallback(async () => {
-    await Promise.all([bytecode.refetch(), skipNft.refetch()]);
-  }, [bytecode, skipNft]);
+    if (skipDetectionEnabled) {
+      await Promise.all([bytecode.refetch(), skipNft.refetch()]);
+      return;
+    }
+
+    await bytecode.refetch();
+  }, [bytecode, skipDetectionEnabled, skipNft]);
 
   const retryVerification = useCallback(async () => {
     if (
@@ -351,40 +349,15 @@ export function useSocietyNftReadiness(): UseSocietyNftReadinessResult {
     }
 
     dispatch({ type: "receipt_confirmed" });
-    await Promise.all([
-      verifiedSkipNft.refetch(),
-      verifiedBalance.refetch(),
-      verifiedUnit.refetch(),
-    ]);
-  }, [
-    address,
-    initiatingAccount,
-    receiptStatus,
-    verifiedBalance,
-    verifiedSkipNft,
-    verifiedUnit,
-  ]);
+  }, [address, initiatingAccount, receiptStatus]);
 
-  const resetRepair = useCallback(() => {
-    setInitiatingAccount(null);
-    dispatch({ type: "reset" });
-  }, []);
-
-  const transactionHash = transactionState.hash;
   return {
     account: address,
     readiness,
     transactionState,
-    transactionStatusCopy: readinessTransactionStatusCopy(transactionState),
-    isRepairPending: isReadinessTransactionPending(transactionState),
     verifiedRepair,
-    transactionHash,
-    transactionUrl: transactionHash
-      ? `${base.blockExplorers.default.url}/tx/${transactionHash}`
-      : null,
     repair,
     retryDetection,
     retryVerification,
-    resetRepair,
   };
 }

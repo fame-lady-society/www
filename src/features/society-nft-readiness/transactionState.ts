@@ -19,52 +19,26 @@ export type ReadinessTransactionErrorKind =
 
 export interface ReadinessTransactionError {
   kind: ReadinessTransactionErrorKind;
-  message: string;
-  retryable: true;
 }
 
-const READINESS_TRANSACTION_ERRORS: Record<
+const READINESS_TRANSACTION_ERROR_MESSAGES: Record<
   ReadinessTransactionErrorKind,
-  ReadinessTransactionError
+  string
 > = {
-  switch_failed: {
-    kind: "switch_failed",
-    message: "The network switch was not completed. Try again.",
-    retryable: true,
-  },
-  wallet_request_failed: {
-    kind: "wallet_request_failed",
-    message: "The wallet request was not completed. Try again.",
-    retryable: true,
-  },
-  receipt_reverted: {
-    kind: "receipt_reverted",
-    message: "The transaction reverted on Base. Try again.",
-    retryable: true,
-  },
-  receipt_failed: {
-    kind: "receipt_failed",
-    message: "The transaction could not be confirmed on Base. Try again.",
-    retryable: true,
-  },
-  verification_failed: {
-    kind: "verification_failed",
-    message:
-      "The transaction confirmed, but Society NFT readiness could not be verified. Try again.",
-    retryable: true,
-  },
-  verification_mismatch: {
-    kind: "verification_mismatch",
-    message:
-      "FAME still reports Society NFT generation as disabled. Try again.",
-    retryable: true,
-  },
+  switch_failed: "The network switch was not completed. Try again.",
+  wallet_request_failed: "The wallet request was not completed. Try again.",
+  receipt_reverted: "The transaction reverted on Base. Try again.",
+  receipt_failed: "The transaction could not be confirmed on Base. Try again.",
+  verification_failed:
+    "The transaction confirmed, but Society NFT readiness could not be verified. Try again.",
+  verification_mismatch:
+    "FAME still reports Society NFT generation as disabled. Try again.",
 };
 
 export function readinessTransactionError(
   kind: ReadinessTransactionErrorKind,
 ): ReadinessTransactionError {
-  return { ...READINESS_TRANSACTION_ERRORS[kind] };
+  return { kind };
 }
 
 export interface ReadinessTransactionState {
@@ -160,8 +134,9 @@ export function readinessTransactionStatusCopy(
     case "error":
       return {
         title: "Transaction not completed",
-        detail:
-          state.error?.message ?? "The transaction could not be completed.",
+        detail: state.error
+          ? READINESS_TRANSACTION_ERROR_MESSAGES[state.error.kind]
+          : "The transaction could not be completed.",
       };
   }
 }

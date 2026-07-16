@@ -61,21 +61,35 @@ export function projectSocietyNftReadiness({
   code,
   skipNft,
 }: SocietyNftReadinessInput): SocietyNftReadinessProjection {
-  if (code.status === "disconnected" || skipNft.status === "disconnected") {
+  if (code.status === "disconnected") {
     return { status: "disconnected" };
   }
 
-  if (code.status === "error" || skipNft.status === "error") {
+  if (code.status === "error") {
     return { status: "error" };
   }
 
-  if (code.status !== "success" || skipNft.status !== "success") {
+  if (code.status !== "success") {
     return { status: "checking" };
   }
 
-  return hasNonEmptyRuntimeCode(code.data) && skipNft.data
-    ? { status: "affected" }
-    : { status: "unaffected" };
+  if (!hasNonEmptyRuntimeCode(code.data)) {
+    return { status: "unaffected" };
+  }
+
+  if (skipNft.status === "disconnected") {
+    return { status: "disconnected" };
+  }
+
+  if (skipNft.status === "error") {
+    return { status: "error" };
+  }
+
+  if (skipNft.status !== "success") {
+    return { status: "checking" };
+  }
+
+  return skipNft.data ? { status: "affected" } : { status: "unaffected" };
 }
 
 export type RepairReceiptStatus =

@@ -10,7 +10,6 @@ import {
   type ReadinessTransactionState,
 } from "../transactionState";
 import {
-  postFixContinuationForSurface,
   shouldOpenSocietyNftReadinessDialog,
   SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID,
   SOCIETY_NFT_READINESS_DIALOG_TITLE_ID,
@@ -25,21 +24,14 @@ const noop = () => undefined;
 function renderRail({
   readiness = { status: "affected" },
   transactionState = initialReadinessTransactionState,
-  transactionUrl = null,
-  isRepairPending = false,
 }: {
   readiness?: SocietyNftReadinessProjection;
   transactionState?: ReadinessTransactionState;
-  transactionUrl?: string | null;
-  isRepairPending?: boolean;
 } = {}) {
   return renderToStaticMarkup(
     <SocietyNftReadinessRailView
       readiness={readiness}
       transactionState={transactionState}
-      transactionStatusCopy={readinessTransactionStatusCopy(transactionState)}
-      transactionUrl={transactionUrl}
-      isRepairPending={isRepairPending}
       onRepair={noop}
       onRetryDetection={noop}
       onRetryVerification={noop}
@@ -99,9 +91,6 @@ describe("Society NFT readiness rail", () => {
     for (const transactionState of pendingStates) {
       const html = renderRail({
         transactionState,
-        transactionUrl:
-          transactionState.hash === null ? null : BASE_TRANSACTION_URL,
-        isRepairPending: true,
       });
 
       const copy = readinessTransactionStatusCopy(transactionState);
@@ -121,7 +110,6 @@ describe("Society NFT readiness rail", () => {
     };
     const html = renderRail({
       transactionState,
-      transactionUrl: BASE_TRANSACTION_URL,
     });
 
     assert.match(html, /Society NFT generation is off for this wallet/);
@@ -144,28 +132,16 @@ describe("Society NFT readiness rail", () => {
     assert.doesNotMatch(html, /Try verification again/);
   });
 
-  it("never renders raw provider details or noncanonical transaction URLs", () => {
+  it("uses fixed error copy without accepting provider details", () => {
     const transactionState: ReadinessTransactionState = {
       status: "error",
       hash: HASH,
-      error: {
-        kind: "receipt_failed",
-        message:
-          "POST https://hostile-rpc.invalid secret request body 0xdeadbeef",
-        retryable: true,
-      },
-    };
-    const fixedCopy = {
-      title: "Transaction not completed",
-      detail: "The transaction could not be confirmed on Base. Try again.",
+      error: readinessTransactionError("receipt_failed"),
     };
     const html = renderToStaticMarkup(
       <SocietyNftReadinessRailView
         readiness={{ status: "affected" }}
         transactionState={transactionState}
-        transactionStatusCopy={fixedCopy}
-        transactionUrl="https://hostile-rpc.invalid/tx/0xdeadbeef"
-        isRepairPending={false}
         onRepair={noop}
         onRetryDetection={noop}
         onRetryVerification={noop}
@@ -173,8 +149,7 @@ describe("Society NFT readiness rail", () => {
     );
 
     assert.match(html, /The transaction could not be confirmed on Base/);
-    assert.doesNotMatch(html, /hostile-rpc|secret request|deadbeef/);
-    assert.doesNotMatch(html, /View transaction/);
+    assert.doesNotMatch(html, /hostile-rpc|secret request|0xdeadbeef/);
   });
 
   it("links only the matching hash through the fixed Base explorer origin", () => {
@@ -185,8 +160,6 @@ describe("Society NFT readiness rail", () => {
     };
     const html = renderRail({
       transactionState,
-      transactionUrl: BASE_TRANSACTION_URL,
-      isRepairPending: true,
     });
 
     assert.match(
@@ -289,7 +262,7 @@ describe("verified post-fix guidance", () => {
     assert.doesNotMatch(html, /href="\/fame\/swap"/);
   });
 
-  it("exposes stable dialog labels and route continuation semantics", () => {
+  it("exposes stable dialog labels", () => {
     assert.equal(
       SOCIETY_NFT_READINESS_DIALOG_TITLE_ID,
       "society-nft-readiness-dialog-title",
@@ -298,12 +271,5 @@ describe("verified post-fix guidance", () => {
       SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID,
       "society-nft-readiness-dialog-description",
     );
-    assert.deepEqual(postFixContinuationForSurface("fame"), {
-      kind: "link",
-      href: "/fame/swap",
-    });
-    assert.deepEqual(postFixContinuationForSurface("swap"), {
-      kind: "callback",
-    });
   });
 });

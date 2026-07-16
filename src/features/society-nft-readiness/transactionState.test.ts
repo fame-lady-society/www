@@ -62,11 +62,7 @@ test("reverted receipts and readback failures retain the validated hash", () => 
   });
   assert.equal(reverted.status, "error");
   assert.equal(reverted.hash, HASH);
-  assert.deepEqual(reverted.error, {
-    kind: "receipt_reverted",
-    message: "The transaction reverted on Base. Try again.",
-    retryable: true,
-  });
+  assert.deepEqual(reverted.error, { kind: "receipt_reverted" });
 
   state = readinessTransactionReducer(state, { type: "receipt_confirmed" });
   const readbackFailed = readinessTransactionReducer(state, {
@@ -75,10 +71,7 @@ test("reverted receipts and readback failures retain the validated hash", () => 
   });
   assert.equal(readbackFailed.status, "error");
   assert.equal(readbackFailed.hash, HASH);
-  assert.equal(
-    readbackFailed.error?.message,
-    "The transaction confirmed, but Society NFT readiness could not be verified. Try again.",
-  );
+  assert.equal(readbackFailed.error?.kind, "verification_failed");
 });
 
 test("new repair attempts clear stale errors and hashes", () => {
