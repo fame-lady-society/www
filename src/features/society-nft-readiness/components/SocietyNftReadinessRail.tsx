@@ -41,6 +41,7 @@ export const SOCIETY_NFT_READINESS_DIALOG_TITLE_ID =
 export const SOCIETY_NFT_READINESS_DIALOG_DESCRIPTION_ID =
   "society-nft-readiness-dialog-description";
 const SOCIETY_NFT_READINESS_HEADING_ID = "society-nft-readiness-heading";
+const SOCIETY_NFT_GENERATION_SETTING_VISIBLE = false;
 
 type VoidAction = () => void | Promise<unknown>;
 
@@ -564,7 +565,10 @@ export function SocietyNftReadinessRail({
   }, [resetReconciliation]);
 
   const settingVisible =
-    surface === "fame" && codeBearingWallet && generationEnabled !== null;
+    SOCIETY_NFT_GENERATION_SETTING_VISIBLE &&
+    surface === "fame" &&
+    codeBearingWallet &&
+    generationEnabled !== null;
   const railVisible = !repairVerified && readiness.status !== "unaffected";
 
   return (
