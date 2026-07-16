@@ -6,6 +6,37 @@ export type ReadState<T> =
   | { status: "error" }
   | { status: "success"; data: T };
 
+export interface QueryReadSnapshot<T> {
+  data: T | undefined;
+  isError: boolean;
+  isSuccess: boolean;
+}
+
+export function contractQueryReadState<T>(
+  connected: boolean,
+  query: QueryReadSnapshot<T>,
+): ReadState<T> {
+  if (!connected) return { status: "disconnected" };
+  if (query.isError) return { status: "error" };
+  if (query.isSuccess && query.data !== undefined) {
+    return { status: "success", data: query.data };
+  }
+  return { status: "loading" };
+}
+
+export function bytecodeQueryReadState(
+  connected: boolean,
+  query: QueryReadSnapshot<Hex>,
+): ReadState<Hex> {
+  if (!connected) return { status: "disconnected" };
+  if (query.isError) return { status: "error" };
+  if (query.isSuccess) {
+    // getBytecode returns undefined for an authoritative empty-code result.
+    return { status: "success", data: query.data ?? "0x" };
+  }
+  return { status: "loading" };
+}
+
 export type SocietyNftReadinessProjection =
   | { status: "disconnected" }
   | { status: "checking" }

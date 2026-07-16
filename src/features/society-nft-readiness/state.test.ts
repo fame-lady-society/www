@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Address, Hex } from "viem";
 import {
+  bytecodeQueryReadState,
+  contractQueryReadState,
   hasNonEmptyRuntimeCode,
   postFixBranchForBalance,
   projectSocietyNftReadiness,
@@ -15,6 +17,25 @@ const OTHER_ACCOUNT = "0x2222222222222222222222222222222222222222" as Address;
 function success<T>(data: T): ReadState<T> {
   return { status: "success", data };
 }
+
+test("query snapshots preserve authoritative empty bytecode and false values", () => {
+  assert.deepEqual(
+    bytecodeQueryReadState(true, {
+      data: undefined,
+      isError: false,
+      isSuccess: true,
+    }),
+    success("0x" as Hex),
+  );
+  assert.deepEqual(
+    contractQueryReadState(true, {
+      data: false,
+      isError: false,
+      isSuccess: true,
+    }),
+    success(false),
+  );
+});
 
 test("deployed runtime code and EIP-7702 delegation code are non-empty", () => {
   const deployedCode = "0x6080604052" as Hex;
