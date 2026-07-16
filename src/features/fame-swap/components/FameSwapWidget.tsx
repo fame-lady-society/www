@@ -57,6 +57,18 @@ export interface FameSwapWidgetProps {
   mode?: FameSwapWidgetMode;
 }
 
+export const FAME_SWAP_HEADING_ID = "fame-swap-heading";
+
+export const FameSwapHeading: FC<{ compact: boolean }> = ({ compact }) => (
+  <Typography
+    id={FAME_SWAP_HEADING_ID}
+    tabIndex={-1}
+    variant={compact ? "h5" : "h4"}
+  >
+    FAME swap
+  </Typography>
+);
+
 const fallbackLinks = [
   {
     label: "Uniswap",
@@ -393,7 +405,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   return (
     <Box
       component="section"
-      aria-labelledby="fame-swap-heading"
+      aria-labelledby={FAME_SWAP_HEADING_ID}
       sx={{
         width: "100%",
         maxWidth: compact ? 480 : 760,
@@ -404,9 +416,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     >
       <Stack spacing={2.25}>
         <div>
-          <Typography id="fame-swap-heading" variant={compact ? "h5" : "h4"}>
-            FAME swap
-          </Typography>
+          <FameSwapHeading compact={compact} />
           <Typography color="text.secondary" sx={{ mt: 1 }}>
             via preferred liquidity
           </Typography>

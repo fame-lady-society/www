@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it } from "node:test";
 import { FAME, WETH, tokenForAddress } from "../tokens";
 import { routeArtifactById } from "../solver/artifacts";
@@ -6,6 +8,7 @@ import { quoteWithReadyReadiness } from "../solver/quote";
 import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
 import { fameSwapQuoteView } from "../ui/quoteView";
 import {
+  FameSwapHeading,
   fameSwapErrorDetails,
   fameSwapErrorSummary,
   quoteSummary,
@@ -13,6 +16,18 @@ import {
 
 const routerAddress = "0x0000000000000000000000000000000000000009";
 const recipient = "0x0000000000000000000000000000000000000abc";
+
+describe("FameSwapWidget focus target", () => {
+  it("exposes the existing heading as a stable programmatic focus target", () => {
+    const html = renderToStaticMarkup(
+      createElement(FameSwapHeading, { compact: false }),
+    );
+
+    assert.match(html, /id="fame-swap-heading"/);
+    assert.match(html, /tabindex="-1"/);
+    assert.match(html, />FAME swap<\/h4>/);
+  });
+});
 
 describe("FameSwapWidget quote summary", () => {
   it("does not show the fixture placeholder minimum before wallet simulation", () => {
