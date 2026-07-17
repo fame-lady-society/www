@@ -22,6 +22,7 @@ import type {
   GalleryHookProjection,
 } from "../types";
 import { AdminGate, type AdminGateState } from "./AdminGate";
+import { AdminMarketActions } from "./AdminMarketActions";
 
 type AuthorizedState = {
   status: "authorized";
@@ -31,6 +32,7 @@ type AuthorizedState = {
   global: GalleryHookProjection<GalleryGlobalState>;
   isSwitching: boolean;
   onSwitchChain: () => void;
+  actions?: React.ReactNode;
 };
 
 export type AdminWorkbenchViewState = AdminGateState | AuthorizedState;
@@ -176,14 +178,13 @@ export function AdminWorkbenchView({
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Typography component="h2" variant="h5">
-          Market actions
-        </Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>
-          Listing, rotation, recovery, and fee controls will appear here.
-        </Typography>
-      </Paper>
+      {state.actions ?? (
+        <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+          <Typography color="text.secondary">
+            Market controls are loading…
+          </Typography>
+        </Paper>
+      )}
     </Stack>
   );
 }
@@ -234,6 +235,13 @@ export function AdminWorkbench() {
           () => undefined,
         );
       },
+      actions: (
+        <AdminMarketActions
+          authority={authority.projection.data.authority}
+          global={global.projection}
+          refreshGlobal={global.refresh}
+        />
+      ),
     };
   }
 

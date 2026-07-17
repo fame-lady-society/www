@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { PRIMARY_GALLERY_ADMIN_ACTIONS } from "./AdminMarketActions";
 import { AdminWorkbenchView } from "./AdminWorkbench";
 import { TestBadge } from "./TestBadge";
 
@@ -88,5 +89,23 @@ describe("TEST gallery admin access", () => {
     const html = renderToStaticMarkup(<TestBadge />);
 
     assert.match(html, />TEST</);
+  });
+
+  it("keeps the primary workbench scoped to TEST gallery contract actions", () => {
+    assert.deepEqual(PRIMARY_GALLERY_ADMIN_ACTIONS, [
+      "list",
+      "set_premium",
+      "unlist",
+      "rotate_mint",
+      "rotate_burn",
+      "rotate_end_of_mint",
+      "withdraw_fees",
+      "scan_all_888",
+    ]);
+    assert.ok(
+      PRIMARY_GALLERY_ADMIN_ACTIONS.every(
+        (action) => !/art|upload|creator|payment/i.test(action),
+      ),
+    );
   });
 });
