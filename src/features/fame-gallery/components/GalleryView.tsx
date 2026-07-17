@@ -3,15 +3,22 @@
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Link from "next/link";
+import { TransactionsModal } from "@/components/TransactionsModal";
+import { displaySafeErrorMessage } from "@/features/fame-swap/solver/diagnostics";
 import { useCallback, type ReactNode } from "react";
+import NextLink from "next/link";
+import { baseSepolia } from "viem/chains";
 import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
+import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
+import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ListingCard } from "./ListingCard";
+import { formatTestAmount } from "./ListingCard";
 
 export type GalleryViewContentState =
   | { status: "loading" }
@@ -100,9 +107,104 @@ export function GalleryViewContent({
   );
 }
 
+function purchaseStatusCopy(state: GalleryPurchaseState) {
+  switch (state.status) {
+    case "idle":
+      return "Choose a listing to begin.";
+    case "preparing":
+      return "Reading current TEST price and allowance…";
+    case "switching_chain":
+      return "Switching your wallet to Base Sepolia…";
+    case "simulating":
+      return state.transactionKind === "approval"
+        ? "Checking the exact TEST approval…"
+        : "Checking the gallery purchase with the contract…";
+    case "awaiting_wallet":
+      return state.transactionKind === "approval"
+        ? "Approve the exact TEST total in your wallet."
+        : "Confirm the gallery purchase in your wallet.";
+    case "confirming_approval":
+      return "Waiting for the TEST approval to be confirmed…";
+    case "approval_confirmed":
+      return `Approval confirmed ${state.approvalConfirmations} block${
+        state.approvalConfirmations === 1 ? "" : "s"
+      } deep.`;
+    case "confirming_fill":
+      return "Waiting for the gallery purchase to be confirmed…";
+    case "fill_receipt_confirmed":
+      return "Gallery purchase confirmed.";
+    case "outcome_unknown":
+      return "The transaction was broadcast, but its receipt could not be confirmed. Check the explorer before trying again.";
+    case "error":
+      return state.failure
+        ? displaySafeErrorMessage(state.failure.cause)
+        : "The gallery transaction failed.";
+  }
+}
+
+export function GalleryPurchaseModalContent({
+  state,
+  onDone,
+}: {
+  state: GalleryPurchaseState;
+  onDone: () => void;
+}) {
+  const terminal =
+    state.status === "fill_receipt_confirmed" ||
+    state.status === "outcome_unknown" ||
+    state.status === "error";
+  const severity =
+    state.status === "error"
+      ? "error"
+      : state.status === "outcome_unknown"
+        ? "warning"
+        : "info";
+
+  return (
+    <Stack spacing={2} sx={{ mb: 2 }}>
+      <Alert severity={severity}>{purchaseStatusCopy(state)}</Alert>
+      {state.fingerprint ? (
+        <Stack spacing={0.5}>
+          <Typography variant="body2" color="text.secondary">
+            Token #{state.fingerprint.tokenId.toString()} to{" "}
+            {state.fingerprint.recipient}
+          </Typography>
+          <Typography variant="body2">
+            Exact total: {formatTestAmount(state.fingerprint.total)} TEST
+          </Typography>
+        </Stack>
+      ) : null}
+      {state.approvalHash ? (
+        <Link
+          href={`${baseSepolia.blockExplorers.default.url}/tx/${state.approvalHash}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View TEST approval
+        </Link>
+      ) : null}
+      {state.fillHash ? (
+        <Link
+          href={`${baseSepolia.blockExplorers.default.url}/tx/${state.fillHash}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View gallery purchase
+        </Link>
+      ) : null}
+      {terminal ? (
+        <Button type="button" variant="outlined" onClick={onDone}>
+          Done
+        </Button>
+      ) : null}
+    </Stack>
+  );
+}
+
 export function GalleryView() {
   const global = useGalleryGlobalState();
   const discovery = useGalleryDiscovery();
+  const purchase = useGalleryPurchase();
   const refresh = useCallback(async () => {
     await Promise.all([global.refresh(), discovery.refresh()]);
   }, [discovery, global]);
@@ -142,6 +244,9 @@ export function GalleryView() {
               key={tokenId.toString()}
               tokenId={tokenId}
               unit={unit}
+              onBuy={(exactTokenId, recipient) => {
+                void purchase.start(exactTokenId, recipient);
+              }}
             />
           ))}
         </div>
@@ -174,13 +279,24 @@ export function GalleryView() {
             </Typography>
           </div>
           <Button
-            component={Link}
+            component={NextLink}
             href="/fame/gallery/test/admin"
             variant="text"
           >
             Open admin
           </Button>
         </Stack>
+
+        {purchase.state.status !== "idle" && !purchase.modalOpen ? (
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={() => purchase.setModalOpen(true)}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            View purchase
+          </Button>
+        ) : null}
 
         <GalleryViewContent
           state={state}
@@ -189,6 +305,21 @@ export function GalleryView() {
           {listings}
         </GalleryViewContent>
       </Stack>
+      <TransactionsModal
+        open={purchase.modalOpen}
+        onClose={() => purchase.setModalOpen(false)}
+        transactions={purchase.transactions}
+        onTransactionConfirmed={() => undefined}
+        topContent={
+          <GalleryPurchaseModalContent
+            state={purchase.state}
+            onDone={() => {
+              purchase.reset();
+              purchase.setModalOpen(false);
+            }}
+          />
+        }
+      />
     </Container>
   );
 }

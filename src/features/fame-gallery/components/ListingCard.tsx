@@ -7,10 +7,11 @@ import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useModal } from "connectkit";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatUnits } from "viem";
+import { formatUnits, isAddress, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import { useGalleryTokenState } from "../hooks/useGalleryTokenState";
@@ -32,6 +33,9 @@ export function ListingCardView({
   premium,
   metadata,
   walletConnected,
+  recipient,
+  recipientError,
+  onRecipientChange,
   onBuy,
 }: {
   tokenId: bigint;
@@ -39,6 +43,9 @@ export function ListingCardView({
   premium: bigint;
   metadata: GalleryMetadataResult;
   walletConnected: boolean;
+  recipient?: string;
+  recipientError?: string | null;
+  onRecipientChange?: (value: string) => void;
   onBuy: () => void;
 }) {
   const displayName =
@@ -85,6 +92,22 @@ export function ListingCardView({
             </Typography>
           ) : null}
           <Divider />
+          <TextField
+            label="Recipient (optional)"
+            value={recipient ?? ""}
+            onChange={(event) => onRecipientChange?.(event.target.value)}
+            error={Boolean(recipientError)}
+            helperText={
+              recipientError ?? "Leave blank to send it to your wallet."
+            }
+            inputProps={{
+              autoCapitalize: "none",
+              autoCorrect: "off",
+              spellCheck: false,
+            }}
+            fullWidth
+            size="small"
+          />
           <Stack spacing={0.75}>
             <Stack direction="row" justifyContent="space-between" spacing={2}>
               <Typography color="text.secondary">NFT unit</Typography>
@@ -154,10 +177,12 @@ export function ListingCard({
 }: {
   tokenId: bigint;
   unit: bigint;
-  onBuy?: (tokenId: bigint) => void;
+  onBuy?: (tokenId: bigint, recipient?: Address) => void;
 }) {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const [recipient, setRecipient] = useState("");
+  const [recipientError, setRecipientError] = useState<string | null>(null);
   const account = useConnection();
   const modal = useModal();
   const token = useGalleryTokenState(tokenId, { enabled: visible });
@@ -202,7 +227,16 @@ export function ListingCard({
       modal.setOpen(true);
       return;
     }
-    onBuy?.(tokenId);
+    const normalizedRecipient = recipient.trim();
+    if (normalizedRecipient && !isAddress(normalizedRecipient)) {
+      setRecipientError("Enter a valid EVM address.");
+      return;
+    }
+    setRecipientError(null);
+    onBuy?.(
+      tokenId,
+      normalizedRecipient ? (normalizedRecipient as Address) : undefined,
+    );
   };
   return (
     <div ref={cardRef}>
@@ -213,6 +247,12 @@ export function ListingCard({
           premium={activeProjection.data.listing.premium}
           metadata={metadata}
           walletConnected={account.isConnected}
+          recipient={recipient}
+          recipientError={recipientError}
+          onRecipientChange={(value) => {
+            setRecipient(value);
+            setRecipientError(null);
+          }}
           onBuy={buy}
         />
       ) : (

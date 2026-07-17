@@ -2,8 +2,15 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
-import { GalleryViewContent } from "./GalleryView";
+import {
+  GalleryPurchaseModalContent,
+  GalleryViewContent,
+} from "./GalleryView";
 import { ListingCardView } from "./ListingCard";
+import {
+  galleryPurchaseReducer,
+  initialGalleryPurchaseState,
+} from "../transactions/purchaseQueue";
 
 describe("TEST gallery public view", () => {
   it("distinguishes loading, failed, verified-empty, and incomplete discovery", () => {
@@ -54,6 +61,28 @@ describe("TEST gallery public view", () => {
     assert.match(html, /1,001,000 TEST/);
     assert.match(html, /Artwork unavailable/);
     assert.match(html, /Buy with TEST/);
+    assert.match(html, /Recipient \(optional\)/);
     assert.doesNotMatch(html, /eligible|allowlist|deployment flag/i);
+  });
+
+  it("keeps a broadcast transaction visible when receipt lookup is unknown", () => {
+    const hash = `0x${"a".repeat(64)}` as `0x${string}`;
+    const broadcast = galleryPurchaseReducer(initialGalleryPurchaseState, {
+      type: "broadcast",
+      kind: "fill",
+      hash,
+    });
+    const unknown = galleryPurchaseReducer(broadcast, {
+      type: "outcome_unknown",
+      kind: "fill",
+      cause: new Error("RPC unavailable"),
+    });
+    const html = renderToStaticMarkup(
+      <GalleryPurchaseModalContent state={unknown} onDone={() => undefined} />,
+    );
+
+    assert.match(html, /receipt could not be confirmed/);
+    assert.match(html, /View gallery purchase/);
+    assert.match(html, /Done/);
   });
 });
