@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   decodeEventLog,
   isAddress,
+  isAddressEqual,
   type Address,
   type Hex,
 } from "viem";
@@ -32,6 +33,7 @@ import {
   scanGalleryRecoveryInventory,
   type GalleryRecoveryScanResult,
 } from "../discovery/recoveryScan";
+import { formatTestAmount } from "../format";
 import { useGalleryAdminAction } from "../hooks/useGalleryAdminAction";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
 import { useGalleryTokenState } from "../hooks/useGalleryTokenState";
@@ -42,7 +44,6 @@ import {
 import {
   galleryQueryKeys,
   invalidateGalleryDiscovery,
-  invalidateGalleryGlobal,
   invalidateGalleryToken,
 } from "../queryKeys";
 import {
@@ -58,7 +59,6 @@ import type {
   GalleryGlobalState,
   GalleryHookProjection,
 } from "../types";
-import { formatTestAmount } from "./ListingCard";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 const identity = {
@@ -203,9 +203,15 @@ export function AdminMarketActions({
     }
   }, [global, withdrawRecipient]);
 
+  useEffect(
+    () => () => {
+      scanController.current?.abort();
+    },
+    [],
+  );
+
   const refreshAfterAction = useCallback(
     async (call: GalleryAdminCall) => {
-      await invalidateGalleryGlobal(queryClient, identity);
       if ("tokenId" in call) {
         await invalidateGalleryToken(queryClient, identity, call.tokenId);
       }
@@ -353,10 +359,8 @@ export function AdminMarketActions({
                 });
                 const { from, to, id } = decoded.args;
                 if (
-                  (from.toLowerCase() ===
-                    config.addresses.gallery.toLowerCase() ||
-                    to.toLowerCase() ===
-                      config.addresses.gallery.toLowerCase()) &&
+                  (isAddressEqual(from, config.addresses.gallery) ||
+                    isAddressEqual(to, config.addresses.gallery)) &&
                   id >= 1n &&
                   id <= 888n
                 ) {

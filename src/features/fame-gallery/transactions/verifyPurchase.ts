@@ -1,4 +1,10 @@
-import { decodeEventLog, type Address, type Hash, type Hex } from "viem";
+import {
+  decodeEventLog,
+  isAddress as isViemAddress,
+  type Address,
+  type Hash,
+  type Hex,
+} from "viem";
 import {
   closedLoopGallerySwapAbi,
   fameMirrorAbi,
@@ -69,7 +75,10 @@ function sameAddress(left: Address, right: Address) {
 }
 
 function isAddress(value: unknown): value is Address {
-  return typeof value === "string" && /^0x[0-9a-fA-F]{40}$/.test(value);
+  return (
+    typeof value === "string" &&
+    isViemAddress(value, { strict: false })
+  );
 }
 
 function asBigint(value: unknown) {
@@ -459,7 +468,7 @@ export async function verifyGalleryPurchase({
   }
 
   try {
-    const [receiptBlockState, logs] = await Promise.all([
+    const [receiptBlockState, logs, tokenUri] = await Promise.all([
       dependencies.readReceiptBlockState(
         decoded.proof.blockNumber,
         fingerprint.tokenId,
@@ -468,16 +477,10 @@ export async function verifyGalleryPurchase({
         preFillSnapshot.blockNumber + 1n,
         decoded.proof.blockNumber,
       ),
+      dependencies
+        .readTokenUri(decoded.proof.blockNumber, fingerprint.tokenId)
+        .catch(() => null),
     ]);
-    let tokenUri: string | null = null;
-    try {
-      tokenUri = await dependencies.readTokenUri(
-        decoded.proof.blockNumber,
-        fingerprint.tokenId,
-      );
-    } catch {
-      // Metadata is presentation-only; ordered contract facts still verify.
-    }
 
     return reconcileGalleryPurchase({
       proof: decoded.proof,

@@ -14,12 +14,12 @@ import NextLink from "next/link";
 import { baseSepolia } from "viem/chains";
 import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
+import { formatTestAmount } from "../format";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { AcquiredNftResult } from "./AcquiredNftResult";
 import { ListingCard } from "./ListingCard";
-import { formatTestAmount } from "./ListingCard";
 
 export type GalleryViewContentState =
   | { status: "loading" }
@@ -279,9 +279,15 @@ export function GalleryView() {
               tokenId={tokenId}
               unit={unit}
               onBuy={(exactTokenId, recipient) => {
-                void purchase
-                  .start(exactTokenId, recipient)
-                  .finally(() => refresh());
+                void purchase.start(exactTokenId, recipient).then((result) => {
+                  if (
+                    result.status === "verified" ||
+                    result.status === "confirmed_refreshing" ||
+                    result.status === "confirmed_unverified"
+                  ) {
+                    return refresh();
+                  }
+                });
               }}
             />
           ))}

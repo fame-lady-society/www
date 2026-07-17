@@ -1,5 +1,10 @@
-import type { Address, Hash } from "viem";
-import { maxUint256 } from "viem";
+import {
+  isAddressEqual,
+  maxUint256,
+  parseUnits,
+  type Address,
+  type Hash,
+} from "viem";
 import type { ReplacementReason } from "viem/actions";
 
 const UINT96_MAX = (1n << 96n) - 1n;
@@ -20,13 +25,11 @@ export function parseUnsignedTestAmount(
   ) {
     throw new Error("Enter a plain unsigned TEST amount.");
   }
-  const [whole, fraction = ""] = normalized.split(".");
+  const fraction = normalized.split(".")[1] ?? "";
   if (fraction.length > 18) {
     throw new Error("TEST amounts support at most 18 decimal places.");
   }
-  const parsed =
-    BigInt(whole) * 10n ** 18n +
-    BigInt((fraction + "0".repeat(18)).slice(0, 18));
+  const parsed = parseUnits(normalized, 18);
   if ((!allowZero && parsed === 0n) || parsed > maximum) {
     throw new Error("TEST amount is outside the supported range.");
   }
@@ -184,10 +187,6 @@ export type GalleryAdminResult =
   | { status: "outcome_unknown"; hash: Hash; cause: unknown }
   | { status: "failed"; stage: string; cause: unknown };
 
-function sameAddress(left: Address, right: Address) {
-  return left.toLowerCase() === right.toLowerCase();
-}
-
 export async function executeGalleryAdminAction(
   call: GalleryAdminCall,
   targetChainId: number,
@@ -223,7 +222,7 @@ export async function executeGalleryAdminAction(
     if (
       !current.account ||
       current.chainId !== targetChainId ||
-      !sameAddress(current.account, account)
+      !isAddressEqual(current.account, account)
     ) {
       return fail(
         new Error("The connected wallet or chain changed before submission."),

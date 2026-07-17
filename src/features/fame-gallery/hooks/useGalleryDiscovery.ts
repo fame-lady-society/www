@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { parseAbi } from "viem";
+import { isAddressEqual, parseAbi } from "viem";
 import { usePublicClient } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
@@ -114,8 +114,10 @@ function discoverySource(
           verification.set(tokenId, {
             status:
               projection.data.listing.active &&
-              projection.data.owner.toLowerCase() ===
-                config.addresses.gallery.toLowerCase()
+              isAddressEqual(
+                projection.data.owner,
+                config.addresses.gallery,
+              )
                 ? "active"
                 : "inactive",
           });

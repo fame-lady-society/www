@@ -1,4 +1,4 @@
-import type { Address } from "viem";
+import { isAddressEqual, type Address } from "viem";
 
 export const GALLERY_RECOVERY_SCAN_BATCH_SIZE = 64;
 export const GALLERY_RECOVERY_SCAN_CONCURRENCY = 2;
@@ -36,8 +36,14 @@ export type GalleryRecoveryScanResult = {
 
 function tokenChunks(tokenIds: readonly bigint[]) {
   const chunks: bigint[][] = [];
-  for (let index = 0; index < tokenIds.length; index += 64) {
-    chunks.push(tokenIds.slice(index, index + 64));
+  for (
+    let index = 0;
+    index < tokenIds.length;
+    index += GALLERY_RECOVERY_SCAN_BATCH_SIZE
+  ) {
+    chunks.push(
+      tokenIds.slice(index, index + GALLERY_RECOVERY_SCAN_BATCH_SIZE),
+    );
   }
   return chunks;
 }
@@ -78,10 +84,6 @@ function sorted(values: Iterable<bigint>) {
   );
 }
 
-function sameAddress(left: Address, right: Address) {
-  return left.toLowerCase() === right.toLowerCase();
-}
-
 export async function scanGalleryRecoveryInventory({
   source,
   gallery,
@@ -102,7 +104,7 @@ export async function scanGalleryRecoveryInventory({
   const galleryOwned = new Set<bigint>();
   for (const owners of ownerMaps) {
     for (const [tokenId, owner] of owners) {
-      if (sameAddress(owner, gallery)) galleryOwned.add(tokenId);
+      if (isAddressEqual(owner, gallery)) galleryOwned.add(tokenId);
     }
   }
 
@@ -128,9 +130,9 @@ export async function scanGalleryRecoveryInventory({
   const activeListings = new Set<bigint>();
   for (const states of finalStateMaps) {
     for (const [tokenId, state] of states) {
-      if (sameAddress(state.owner, gallery)) galleryOwned.add(tokenId);
+      if (isAddressEqual(state.owner, gallery)) galleryOwned.add(tokenId);
       else galleryOwned.delete(tokenId);
-      if (state.listingActive && sameAddress(state.owner, gallery)) {
+      if (state.listingActive && isAddressEqual(state.owner, gallery)) {
         activeListings.add(tokenId);
       }
     }

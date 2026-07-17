@@ -1,4 +1,4 @@
-import type { Address } from "viem";
+import { isAddress, isAddressEqual, type Address } from "viem";
 import {
   closedLoopGallerySwapAbi,
   creatorArtistMagicAbi,
@@ -83,7 +83,7 @@ function successfulValues(
 }
 
 function isAddressValue(value: unknown): value is Address {
-  return typeof value === "string" && /^0x[0-9a-fA-F]{40}$/.test(value);
+  return typeof value === "string" && isAddress(value, { strict: false });
 }
 
 function isBigint(value: unknown): value is bigint {
@@ -549,7 +549,7 @@ export async function readGalleryAuthority(
     }
     const [owner, operatorRole, accountRoles] = values;
     const authority =
-      owner.toLowerCase() === account.toLowerCase()
+      isAddressEqual(owner, account)
         ? "owner"
         : (accountRoles & operatorRole) !== 0n
           ? "operator"

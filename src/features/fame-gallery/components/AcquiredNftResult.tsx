@@ -16,7 +16,7 @@ import {
   type GalleryMetadataResult,
 } from "../metadata/testMetadata";
 import type { GalleryAcquiredNft } from "../transactions/purchaseQueue";
-import { formatTestAmount } from "./ListingCard";
+import { formatTestAmount } from "../format";
 
 export function AcquiredNftResultView({
   result,

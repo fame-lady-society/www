@@ -178,14 +178,16 @@ export async function discoverGalleryListings({
   const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
   const provenance = createGalleryDiscoveryProvenance();
   const headBlock = await source.getBlockNumber();
-  const deploymentHash = await source.getBlockHash(
-    config.deployment.blockNumber,
-  );
+  const [deploymentHash, checkpointHash] = await Promise.all([
+    source.getBlockHash(config.deployment.blockNumber),
+    headBlock >= config.checkpoint.blockNumber
+      ? source.getBlockHash(config.checkpoint.blockNumber)
+      : Promise.resolve(null),
+  ]);
   const deploymentTrusted = deploymentHash === config.deployment.blockHash;
   const checkpointTrusted =
     headBlock >= config.checkpoint.blockNumber &&
-    (await source.getBlockHash(config.checkpoint.blockNumber)) ===
-      config.checkpoint.blockHash;
+    checkpointHash === config.checkpoint.blockHash;
 
   let baseCache: GalleryDiscoveryCache | null = null;
   if (restoredCache && checkpointTrusted) {

@@ -11,28 +11,21 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useModal } from "connectkit";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatUnits, isAddress, type Address } from "viem";
+import { isAddress, isAddressEqual, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { formatTestAmount } from "../format";
 import { useGalleryTokenState } from "../hooks/useGalleryTokenState";
 import {
   decodeTestGalleryMetadata,
   type GalleryMetadataResult,
 } from "../metadata/testMetadata";
 
-export function formatTestAmount(amount: bigint) {
-  const [whole, fraction = ""] = formatUnits(amount, 18).split(".");
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const trimmedFraction = fraction.replace(/0+$/, "");
-  return trimmedFraction ? `${grouped}.${trimmedFraction}` : grouped;
-}
-
 export function ListingCardView({
   tokenId,
   unit,
   premium,
   metadata,
-  walletConnected,
   recipient,
   recipientError,
   onRecipientChange,
@@ -42,7 +35,6 @@ export function ListingCardView({
   unit: bigint;
   premium: bigint;
   metadata: GalleryMetadataResult;
-  walletConnected: boolean;
   recipient?: string;
   recipientError?: string | null;
   onRecipientChange?: (value: string) => void;
@@ -134,7 +126,7 @@ export function ListingCardView({
           onClick={onBuy}
           sx={{ minHeight: 48 }}
         >
-          {walletConnected ? "Buy with TEST" : "Buy with TEST"}
+          Buy with TEST
         </Button>
       </CardActions>
     </Card>
@@ -210,8 +202,10 @@ export function ListingCard({
   const activeProjection =
     token.projection.status === "success" &&
     token.projection.data.listing.active &&
-    token.projection.data.owner.toLowerCase() ===
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery.toLowerCase()
+    isAddressEqual(
+      token.projection.data.owner,
+      BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
+    )
       ? token.projection
       : null;
   const metadata = useMemo(
@@ -246,7 +240,6 @@ export function ListingCard({
           unit={unit}
           premium={activeProjection.data.listing.premium}
           metadata={metadata}
-          walletConnected={account.isConnected}
           recipient={recipient}
           recipientError={recipientError}
           onRecipientChange={(value) => {

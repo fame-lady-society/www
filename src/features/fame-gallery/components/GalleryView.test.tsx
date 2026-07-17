@@ -52,7 +52,6 @@ describe("TEST gallery public view", () => {
         unit={1_000_000n * 10n ** 18n}
         premium={1_000n * 10n ** 18n}
         metadata={decodeTestGalleryMetadata("bad uri")}
-        walletConnected={false}
         onBuy={() => undefined}
       />,
     );

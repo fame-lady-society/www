@@ -1,4 +1,4 @@
-import type { Address, Hash, Hex } from "viem";
+import { isAddressEqual, type Address, type Hash, type Hex } from "viem";
 import type { ReplacementReason } from "viem/actions";
 
 export type GalleryPurchaseTransactionKind = "approval" | "fill";
@@ -349,23 +349,19 @@ export type ExecuteGalleryPurchaseResult =
       cause: unknown;
     };
 
-function sameAddress(left: Address, right: Address) {
-  return left.toLowerCase() === right.toLowerCase();
-}
-
 export function sameGalleryPurchaseFingerprint(
   left: GalleryPurchaseFingerprint,
   right: GalleryPurchaseFingerprint,
 ) {
   return (
     left.chainId === right.chainId &&
-    sameAddress(left.account, right.account) &&
-    sameAddress(left.recipient, right.recipient) &&
+    isAddressEqual(left.account, right.account) &&
+    isAddressEqual(left.recipient, right.recipient) &&
     left.tokenId === right.tokenId &&
     left.unit === right.unit &&
     left.premium === right.premium &&
     left.total === right.total &&
-    sameAddress(left.allowanceTarget, right.allowanceTarget) &&
+    isAddressEqual(left.allowanceTarget, right.allowanceTarget) &&
     left.fillCalldata === right.fillCalldata
   );
 }
@@ -378,7 +374,7 @@ async function walletContextMatches(
   return (
     context.chainId === fingerprint.chainId &&
     context.account !== null &&
-    sameAddress(context.account, fingerprint.account)
+    isAddressEqual(context.account, fingerprint.account)
   );
 }
 
@@ -527,7 +523,7 @@ export async function executeGalleryPurchase(
     const frozen = initialSnapshot.fingerprint;
     dependencies.dispatch({ type: "frozen", snapshot: initialSnapshot });
 
-    if (!sameAddress(frozen.account, account)) {
+    if (!isAddressEqual(frozen.account, account)) {
       return fail(dependencies, "context", contextChangedError());
     }
 
