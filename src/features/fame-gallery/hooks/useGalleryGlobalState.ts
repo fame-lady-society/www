@@ -16,7 +16,9 @@ const identity = {
   galleryAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
 } as const;
 
-export function useGalleryGlobalState() {
+export function useGalleryGlobalState({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   const publicClient = usePublicClient({
     chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
   });
@@ -24,15 +26,16 @@ export function useGalleryGlobalState() {
     queryKey: galleryQueryKeys.global(identity),
     queryFn: () =>
       readGalleryGlobalState(publicClient as unknown as GalleryMulticallClient),
-    enabled: Boolean(publicClient),
+    enabled: enabled && Boolean(publicClient),
     ...GALLERY_CANONICAL_QUERY_OPTIONS,
   });
   const refresh = useCallback(async () => {
     await query.refetch();
   }, [query]);
 
-  const projection: GalleryHookProjection<GalleryGlobalState> =
-    !publicClient || query.isPending
+  const projection: GalleryHookProjection<GalleryGlobalState> = !enabled
+    ? { status: "idle" }
+    : !publicClient || query.isPending
       ? { status: "loading" }
       : query.data ?? {
           status: "failure",
