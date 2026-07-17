@@ -9,6 +9,7 @@ import {
 import {
   createGalleryTokenReadBatcher,
   readGalleryAuthority,
+  readGalleryCandidateStates,
   readGalleryGlobalState,
   type GalleryMulticallClient,
 } from "./reads";
@@ -159,6 +160,17 @@ describe("gallery canonical reads", () => {
         ),
       );
     }
+  });
+
+  it("verifies discovery candidates without loading token metadata", async () => {
+    const mock = createClient();
+    const results = await readGalleryCandidateStates(mock.client, [1n, 2n]);
+
+    assert.equal(results.get(1n)?.status, "success");
+    assert.deepEqual(
+      mock.multicalls[0]?.contracts.map((contract) => contract.functionName),
+      ["listings", "ownerAt", "listings", "ownerAt"],
+    );
   });
 
   it("classifies owner, operator, and denied authority from contract reads", async () => {

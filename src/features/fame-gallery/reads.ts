@@ -13,6 +13,7 @@ import {
 import type {
   GalleryAccountState,
   GalleryAuthorityState,
+  GalleryCandidateState,
   GalleryGlobalState,
   GalleryPoolKind,
   GalleryPoolState,
@@ -316,6 +317,92 @@ export async function readGalleryTokenState(
     results.get(tokenId) ??
     failure(`Gallery token ${tokenId} state is unavailable`, null)
   );
+}
+
+export async function readGalleryCandidateStates(
+  client: GalleryMulticallClient,
+  tokenIds: readonly bigint[],
+  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+) {
+  if (
+    tokenIds.length === 0 ||
+    tokenIds.length > GALLERY_VISIBLE_TOKEN_BATCH_LIMIT
+  ) {
+    throw new Error(
+      `Gallery candidate reads require between 1 and ${GALLERY_VISIBLE_TOKEN_BATCH_LIMIT} token IDs`,
+    );
+  }
+
+  let blockNumber: bigint | null = null;
+  try {
+    const captured = await captureMulticall(
+      client,
+      tokenIds.flatMap((tokenId) => [
+        {
+          address: addresses.gallery,
+          abi: closedLoopGallerySwapAbi,
+          functionName: "listings",
+          args: [tokenId],
+        },
+        {
+          address: addresses.mirror,
+          abi: fameMirrorAbi,
+          functionName: "ownerAt",
+          args: [tokenId],
+        },
+      ]),
+    );
+    blockNumber = captured.blockNumber;
+    return new Map<bigint, GalleryProjectionResult<GalleryCandidateState>>(
+      tokenIds.map((tokenId, index) => {
+        const values = successfulValues(
+          captured.results.slice(index * 2, index * 2 + 2),
+          2,
+        );
+        const [listing, owner] = values ?? [];
+        if (
+          !values ||
+          !Array.isArray(listing) ||
+          !isBigint(listing[0]) ||
+          typeof listing[1] !== "boolean" ||
+          !isAddressValue(owner)
+        ) {
+          return [
+            tokenId,
+            failure(
+              `Gallery candidate ${tokenId} state is incomplete`,
+              blockNumber,
+            ),
+          ];
+        }
+        return [
+          tokenId,
+          {
+            status: "success" as const,
+            blockNumber: captured.blockNumber,
+            data: {
+              tokenId,
+              listing: {
+                premium: listing[0],
+                active: listing[1],
+              },
+              owner,
+            },
+          },
+        ];
+      }),
+    );
+  } catch {
+    return new Map<bigint, GalleryProjectionResult<GalleryCandidateState>>(
+      tokenIds.map((tokenId) => [
+        tokenId,
+        failure(
+          `Gallery candidate ${tokenId} state is unavailable`,
+          blockNumber,
+        ),
+      ]),
+    );
+  }
 }
 
 export interface GalleryTokenReadBatcher {

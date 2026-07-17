@@ -122,3 +122,13 @@ export async function invalidateGalleryAccount(
     exact: true,
   });
 }
+
+export async function invalidateGalleryDiscovery(
+  queryClient: QueryClient,
+  identity: GalleryQueryIdentity,
+) {
+  await queryClient.invalidateQueries({
+    queryKey: galleryQueryKeys.discovery(identity),
+    exact: true,
+  });
+}

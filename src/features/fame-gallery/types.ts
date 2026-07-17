@@ -45,6 +45,12 @@ export type GalleryTokenState = {
   tokenUri: string;
 };
 
+export type GalleryCandidateState = {
+  tokenId: bigint;
+  listing: GalleryListing;
+  owner: Address;
+};
+
 export type GalleryAccountState = {
   account: Address;
   balance: bigint;
