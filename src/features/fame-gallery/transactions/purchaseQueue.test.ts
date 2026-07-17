@@ -60,6 +60,7 @@ function dependencyHarness({
   const remainingSnapshots = [...snapshots];
   let currentChainId = chainId;
   let approvalWaits = 0;
+  let lastSnapshot: GalleryPurchaseSnapshot | null = null;
 
   const dependencies: GalleryPurchaseDependencies = {
     dispatch(event) {
@@ -76,6 +77,7 @@ function dependencyHarness({
       calls.push("snapshot");
       const next = remainingSnapshots.shift();
       if (!next) throw new Error("unexpected snapshot");
+      lastSnapshot = next;
       return next;
     },
     async simulateApproval() {
@@ -88,6 +90,12 @@ function dependencyHarness({
     },
     async simulateFill() {
       calls.push("simulate fill");
+      if (
+        lastSnapshot &&
+        lastSnapshot.allowance < lastSnapshot.fingerprint.total
+      ) {
+        throw new Error("approval allowance is not visible");
+      }
       return { request: "fill" };
     },
     async writeFill() {
@@ -152,6 +160,7 @@ describe("gallery purchase queue", () => {
       "write approval",
       "wait approval 1",
       "snapshot",
+      "simulate fill",
       "snapshot",
       "simulate fill",
       "write fill",
@@ -186,6 +195,30 @@ describe("gallery purchase queue", () => {
     assert.equal(result.status, "fill_receipt_confirmed");
     assert.ok(harness.calls.includes("wait approval 2"));
     assert.ok(harness.calls.includes("wait approval 3"));
+  });
+
+  it("stops unresolved after depth three when fill simulation still cannot see approval", async () => {
+    const harness = dependencyHarness({
+      snapshots: [
+        snapshot(0n),
+        snapshot(0n, { blockNumber: 101n }),
+        snapshot(0n, { blockNumber: 102n }),
+        snapshot(0n, { blockNumber: 103n }),
+      ],
+    });
+
+    const result = await executeGalleryPurchase(
+      { tokenId: 7n, recipient, targetChainId: 84_532 },
+      harness.dependencies,
+    );
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.stage, "simulation");
+    assert.equal(
+      harness.calls.filter((call) => call === "simulate fill").length,
+      3,
+    );
+    assert.ok(!harness.calls.includes("write fill"));
   });
 
   it("stops before a later wallet request when the frozen premium changes", async () => {

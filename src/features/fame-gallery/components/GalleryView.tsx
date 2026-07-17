@@ -17,6 +17,7 @@ import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
+import { AcquiredNftResult } from "./AcquiredNftResult";
 import { ListingCard } from "./ListingCard";
 import { formatTestAmount } from "./ListingCard";
 
@@ -132,7 +133,18 @@ function purchaseStatusCopy(state: GalleryPurchaseState) {
     case "confirming_fill":
       return "Waiting for the gallery purchase to be confirmed…";
     case "fill_receipt_confirmed":
-      return "Gallery purchase confirmed.";
+      return "Gallery purchase confirmed. Verifying what you acquired…";
+    case "verifying":
+      return "Verifying the receipt events and receipt-block contract state…";
+    case "verified":
+      return "Purchase verified.";
+    case "confirmed_refreshing":
+      return "The fill is confirmed. Follow-up contract reads are still unavailable, so verification can be retried.";
+    case "confirmed_unverified":
+      return (
+        state.unverifiedReason ??
+        "The fill is confirmed, but its acquisition proof did not reconcile."
+      );
     case "outcome_unknown":
       return "The transaction was broadcast, but its receipt could not be confirmed. Check the explorer before trying again.";
     case "error":
@@ -145,24 +157,35 @@ function purchaseStatusCopy(state: GalleryPurchaseState) {
 export function GalleryPurchaseModalContent({
   state,
   onDone,
+  onRetryVerification,
 }: {
   state: GalleryPurchaseState;
   onDone: () => void;
+  onRetryVerification: () => void;
 }) {
   const terminal =
-    state.status === "fill_receipt_confirmed" ||
+    state.status === "verified" ||
+    state.status === "confirmed_refreshing" ||
+    state.status === "confirmed_unverified" ||
     state.status === "outcome_unknown" ||
     state.status === "error";
   const severity =
     state.status === "error"
       ? "error"
-      : state.status === "outcome_unknown"
+      : state.status === "verified"
+        ? "success"
+        : state.status === "outcome_unknown" ||
+            state.status === "confirmed_refreshing" ||
+            state.status === "confirmed_unverified"
         ? "warning"
         : "info";
 
   return (
     <Stack spacing={2} sx={{ mb: 2 }}>
       <Alert severity={severity}>{purchaseStatusCopy(state)}</Alert>
+      {state.status === "verified" && state.acquiredNft ? (
+        <AcquiredNftResult result={state.acquiredNft} />
+      ) : null}
       {state.fingerprint ? (
         <Stack spacing={0.5}>
           <Typography variant="body2" color="text.secondary">
@@ -193,9 +216,20 @@ export function GalleryPurchaseModalContent({
         </Link>
       ) : null}
       {terminal ? (
-        <Button type="button" variant="outlined" onClick={onDone}>
-          Done
-        </Button>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          {state.status === "confirmed_refreshing" ? (
+            <Button
+              type="button"
+              variant="contained"
+              onClick={onRetryVerification}
+            >
+              Retry verification
+            </Button>
+          ) : null}
+          <Button type="button" variant="outlined" onClick={onDone}>
+            Done
+          </Button>
+        </Stack>
       ) : null}
     </Stack>
   );
@@ -245,7 +279,9 @@ export function GalleryView() {
               tokenId={tokenId}
               unit={unit}
               onBuy={(exactTokenId, recipient) => {
-                void purchase.start(exactTokenId, recipient);
+                void purchase
+                  .start(exactTokenId, recipient)
+                  .finally(() => refresh());
               }}
             />
           ))}
@@ -313,6 +349,9 @@ export function GalleryView() {
         topContent={
           <GalleryPurchaseModalContent
             state={purchase.state}
+            onRetryVerification={() => {
+              void purchase.retryVerification().finally(() => refresh());
+            }}
             onDone={() => {
               purchase.reset();
               purchase.setModalOpen(false);

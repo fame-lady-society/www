@@ -13,6 +13,10 @@ export type GalleryPurchaseStatus =
   | "approval_confirmed"
   | "confirming_fill"
   | "fill_receipt_confirmed"
+  | "verifying"
+  | "verified"
+  | "confirmed_refreshing"
+  | "confirmed_unverified"
   | "outcome_unknown"
   | "error";
 
@@ -50,6 +54,24 @@ export type GalleryPurchaseFailure = {
   cause: unknown;
 };
 
+export type GalleryAcquiredNft = {
+  transactionHash: Hash;
+  receiptBlockNumber: bigint;
+  buyer: Address;
+  recipient: Address;
+  tokenId: bigint;
+  unit: bigint;
+  premium: bigint;
+  total: bigint;
+  inventoryBefore: bigint;
+  inventoryAfter: bigint;
+  receiptBlockInventory: bigint;
+  receiptBlockAccruedFees: bigint;
+  currentOwner: Address;
+  listingActive: boolean;
+  tokenUri: string | null;
+};
+
 export type GalleryPurchaseState = {
   status: GalleryPurchaseStatus;
   transactionKind: GalleryPurchaseTransactionKind | null;
@@ -64,6 +86,8 @@ export type GalleryPurchaseState = {
     hash: Hash;
   } | null;
   failure: GalleryPurchaseFailure | null;
+  acquiredNft: GalleryAcquiredNft | null;
+  unverifiedReason: string | null;
 };
 
 export const initialGalleryPurchaseState: GalleryPurchaseState = {
@@ -76,6 +100,8 @@ export const initialGalleryPurchaseState: GalleryPurchaseState = {
   approvalConfirmations: 0,
   replacement: null,
   failure: null,
+  acquiredNft: null,
+  unverifiedReason: null,
 };
 
 export type GalleryPurchaseEvent =
@@ -98,6 +124,10 @@ export type GalleryPurchaseEvent =
   | { type: "approval_confirmed"; confirmations: number }
   | { type: "pre_fill"; snapshot: GalleryPurchaseSnapshot }
   | { type: "fill_receipt_confirmed" }
+  | { type: "verifying" }
+  | { type: "verified"; acquiredNft: GalleryAcquiredNft }
+  | { type: "confirmed_refreshing"; cause: unknown }
+  | { type: "confirmed_unverified"; reason: string }
   | {
       type: "outcome_unknown";
       kind: GalleryPurchaseTransactionKind;
@@ -179,6 +209,39 @@ export function galleryPurchaseReducer(
         transactionKind: "fill",
         failure: null,
       };
+    case "verifying":
+      return {
+        ...state,
+        status: "verifying",
+        transactionKind: "fill",
+        failure: null,
+        unverifiedReason: null,
+      };
+    case "verified":
+      return {
+        ...state,
+        status: "verified",
+        transactionKind: "fill",
+        acquiredNft: event.acquiredNft,
+        failure: null,
+        unverifiedReason: null,
+      };
+    case "confirmed_refreshing":
+      return {
+        ...state,
+        status: "confirmed_refreshing",
+        transactionKind: "fill",
+        failure: { stage: "receipt", cause: event.cause },
+        unverifiedReason: null,
+      };
+    case "confirmed_unverified":
+      return {
+        ...state,
+        status: "confirmed_unverified",
+        transactionKind: "fill",
+        failure: null,
+        unverifiedReason: event.reason,
+      };
     case "outcome_unknown":
       return {
         ...state,
@@ -215,6 +278,19 @@ export type GalleryPurchaseReplacement = {
 
 export type GalleryPurchaseReceipt = {
   status: "success" | "reverted";
+  blockNumber?: bigint;
+  transactionHash?: Hash;
+  logs?: readonly GalleryTransactionLog[];
+};
+
+export type GalleryTransactionLog = {
+  address: Address;
+  data: Hex;
+  topics: readonly Hex[];
+  blockNumber?: bigint;
+  transactionHash?: Hash;
+  transactionIndex?: number;
+  logIndex: number;
 };
 
 export type GalleryPreparedWrite = unknown;
@@ -259,6 +335,7 @@ export type ExecuteGalleryPurchaseResult =
       fillHash: Hash;
       fingerprint: GalleryPurchaseFingerprint;
       preFillSnapshot: GalleryPurchaseSnapshot;
+      receipt: GalleryPurchaseReceipt;
     }
   | {
       status: "outcome_unknown";
@@ -312,7 +389,11 @@ function contextChangedError() {
 }
 
 type KnownReceiptResult =
-  | { status: "success"; hash: Hash }
+  | {
+      status: "success";
+      hash: Hash;
+      receipt: GalleryPurchaseReceipt;
+    }
   | {
       status: "outcome_unknown";
       hash: Hash;
@@ -375,7 +456,7 @@ async function waitForKnownReceipt({
         cause: new Error("The transaction reverted onchain."),
       };
     }
-    return { status: "success", hash: currentHash };
+    return { status: "success", hash: currentHash, receipt };
   } catch (cause) {
     if (incompatibleReplacement) {
       const replacement: GalleryPurchaseReplacement = incompatibleReplacement;
@@ -509,7 +590,19 @@ export async function executeGalleryPurchase(
         ) {
           return fail(dependencies, "context", contextChangedError());
         }
-        if (refreshed.allowance >= frozen.total) break;
+        stage = "simulation";
+        dependencies.dispatch({ type: "simulating", kind: "fill" });
+        try {
+          await dependencies.simulateFill(frozen);
+          break;
+        } catch (cause) {
+          if (
+            refreshed.allowance >= frozen.total ||
+            confirmations === 3
+          ) {
+            return fail(dependencies, "simulation", cause);
+          }
+        }
       }
     }
 
@@ -571,6 +664,7 @@ export async function executeGalleryPurchase(
       fillHash,
       fingerprint: frozen,
       preFillSnapshot,
+      receipt: fillReceipt.receipt,
     };
   } catch (cause) {
     return fail(dependencies, stage, cause);

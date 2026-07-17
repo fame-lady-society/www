@@ -10,7 +10,9 @@ import { ListingCardView } from "./ListingCard";
 import {
   galleryPurchaseReducer,
   initialGalleryPurchaseState,
+  type GalleryAcquiredNft,
 } from "../transactions/purchaseQueue";
+import { AcquiredNftResultView } from "./AcquiredNftResult";
 
 describe("TEST gallery public view", () => {
   it("distinguishes loading, failed, verified-empty, and incomplete discovery", () => {
@@ -78,11 +80,51 @@ describe("TEST gallery public view", () => {
       cause: new Error("RPC unavailable"),
     });
     const html = renderToStaticMarkup(
-      <GalleryPurchaseModalContent state={unknown} onDone={() => undefined} />,
+      <GalleryPurchaseModalContent
+        state={unknown}
+        onDone={() => undefined}
+        onRetryVerification={() => undefined}
+      />,
     );
 
     assert.match(html, /receipt could not be confirmed/);
     assert.match(html, /View gallery purchase/);
     assert.match(html, /Done/);
+  });
+
+  it("shows the verified NFT outcome even when artwork metadata fails", () => {
+    const acquiredNft: GalleryAcquiredNft = {
+      transactionHash: `0x${"a".repeat(64)}`,
+      receiptBlockNumber: 101n,
+      buyer: "0x1111111111111111111111111111111111111111",
+      recipient: "0x2222222222222222222222222222222222222222",
+      tokenId: 7n,
+      unit: 1_000n * 10n ** 18n,
+      premium: 50n * 10n ** 18n,
+      total: 1_050n * 10n ** 18n,
+      inventoryBefore: 10n,
+      inventoryAfter: 11n,
+      receiptBlockInventory: 11n,
+      receiptBlockAccruedFees: 70n,
+      currentOwner: "0x3333333333333333333333333333333333333333",
+      listingActive: false,
+      tokenUri: null,
+    };
+    const html = renderToStaticMarkup(
+      <AcquiredNftResultView
+        result={acquiredNft}
+        metadata={decodeTestGalleryMetadata("")}
+        latestOwner="0x4444444444444444444444444444444444444444"
+      />,
+    );
+
+    assert.match(html, /Society NFT #7/);
+    assert.match(html, /Recipient:/);
+    assert.match(html, /Owner at end of receipt block:/);
+    assert.match(html, /Current owner:/);
+    assert.match(html, /Paid: 1,050 TEST/);
+    assert.match(html, /Artwork unavailable/);
+    assert.match(html, /View verified purchase/);
+    assert.doesNotMatch(html, /export|report/i);
   });
 });
