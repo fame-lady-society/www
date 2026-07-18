@@ -5,6 +5,7 @@ import {
   DISCOVERY_CACHE_MAX_BYTES,
   createGalleryDiscoveryProvenance,
   mergeGalleryDiscoveryCaches,
+  mergeGalleryRecoveryCandidates,
   parseGalleryDiscoveryCache,
   serializeGalleryDiscoveryCache,
   type GalleryDiscoveryCache,
@@ -141,6 +142,19 @@ describe("gallery discovery cache", () => {
     assert.deepEqual(mergeGalleryDiscoveryCaches(newer, older), {
       ...newer,
       candidateTokenIds: ["1", "2", "3"],
+    });
+  });
+
+  it("adds recovery candidates without advancing the discovery cursor", () => {
+    const current = validCache({
+      candidateTokenIds: ["1", "2"],
+      updatedAt: 2_000,
+    });
+
+    assert.deepEqual(mergeGalleryRecoveryCandidates(current, [3n], 3_000), {
+      ...current,
+      candidateTokenIds: ["1", "2", "3"],
+      updatedAt: 3_000,
     });
   });
 });

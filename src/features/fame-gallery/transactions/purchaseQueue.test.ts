@@ -103,7 +103,9 @@ function dependencyHarness({
       return fillHash;
     },
     async waitForReceipt({ hash, confirmations, onReplaced }) {
-      calls.push(`wait ${hash === fillHash ? "fill" : "approval"} ${confirmations}`);
+      calls.push(
+        `wait ${hash === fillHash ? "fill" : "approval"} ${confirmations}`,
+      );
       if (hash === approvalHash && approvalWaits++ === 0) {
         onReplaced({ reason: "repriced", hash: repricedApprovalHash });
       }

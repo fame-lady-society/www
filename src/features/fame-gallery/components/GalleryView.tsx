@@ -177,8 +177,8 @@ export function GalleryPurchaseModalContent({
         : state.status === "outcome_unknown" ||
             state.status === "confirmed_refreshing" ||
             state.status === "confirmed_unverified"
-        ? "warning"
-        : "info";
+          ? "warning"
+          : "info";
 
   return (
     <Stack spacing={2} sx={{ mb: 2 }}>

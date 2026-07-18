@@ -173,9 +173,7 @@ export function galleryPurchaseReducer(
       return {
         ...state,
         status:
-          event.kind === "approval"
-            ? "confirming_approval"
-            : "confirming_fill",
+          event.kind === "approval" ? "confirming_approval" : "confirming_fill",
         transactionKind: event.kind,
         approvalHash:
           event.kind === "approval" ? event.hash : state.approvalHash,
@@ -297,9 +295,7 @@ export type GalleryPreparedWrite = unknown;
 
 export type GalleryPurchaseDependencies = {
   dispatch: (event: GalleryPurchaseEvent) => void;
-  getWalletContext: () =>
-    | GalleryWalletContext
-    | Promise<GalleryWalletContext>;
+  getWalletContext: () => GalleryWalletContext | Promise<GalleryWalletContext>;
   switchChain: (chainId: number) => Promise<unknown>;
   captureSnapshot: (input: {
     account: Address;
@@ -503,10 +499,7 @@ export async function executeGalleryPurchase(
       dependencies.dispatch({ type: "switching_chain" });
       await dependencies.switchChain(request.targetChainId);
       wallet = await dependencies.getWalletContext();
-      if (
-        wallet.chainId !== request.targetChainId ||
-        !wallet.account
-      ) {
+      if (wallet.chainId !== request.targetChainId || !wallet.account) {
         return fail(dependencies, "switch_chain", contextChangedError());
       }
     }
@@ -581,9 +574,7 @@ export async function executeGalleryPurchase(
           tokenId: frozen.tokenId,
           targetChainId: frozen.chainId,
         });
-        if (
-          !sameGalleryPurchaseFingerprint(frozen, refreshed.fingerprint)
-        ) {
+        if (!sameGalleryPurchaseFingerprint(frozen, refreshed.fingerprint)) {
           return fail(dependencies, "context", contextChangedError());
         }
         stage = "simulation";
@@ -592,10 +583,7 @@ export async function executeGalleryPurchase(
           await dependencies.simulateFill(frozen);
           break;
         } catch (cause) {
-          if (
-            refreshed.allowance >= frozen.total ||
-            confirmations === 3
-          ) {
+          if (refreshed.allowance >= frozen.total || confirmations === 3) {
             return fail(dependencies, "simulation", cause);
           }
         }
@@ -609,9 +597,7 @@ export async function executeGalleryPurchase(
       tokenId: frozen.tokenId,
       targetChainId: frozen.chainId,
     });
-    if (
-      !sameGalleryPurchaseFingerprint(frozen, preFillSnapshot.fingerprint)
-    ) {
+    if (!sameGalleryPurchaseFingerprint(frozen, preFillSnapshot.fingerprint)) {
       return fail(dependencies, "context", contextChangedError());
     }
     dependencies.dispatch({ type: "pre_fill", snapshot: preFillSnapshot });

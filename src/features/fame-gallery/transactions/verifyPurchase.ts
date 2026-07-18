@@ -5,10 +5,7 @@ import {
   type Hash,
   type Hex,
 } from "viem";
-import {
-  closedLoopGallerySwapAbi,
-  fameMirrorAbi,
-} from "../../../wagmi";
+import { closedLoopGallerySwapAbi, fameMirrorAbi } from "../../../wagmi";
 import type {
   GalleryAcquiredNft,
   GalleryPurchaseFingerprint,
@@ -58,10 +55,7 @@ export type GalleryPurchaseVerificationDependencies = {
     fromBlock: bigint,
     toBlock: bigint,
   ) => Promise<readonly GalleryTransactionLog[]>;
-  readTokenUri: (
-    blockNumber: bigint,
-    tokenId: bigint,
-  ) => Promise<string>;
+  readTokenUri: (blockNumber: bigint, tokenId: bigint) => Promise<string>;
 };
 
 type DecodedLog = {
@@ -75,10 +69,7 @@ function sameAddress(left: Address, right: Address) {
 }
 
 function isAddress(value: unknown): value is Address {
-  return (
-    typeof value === "string" &&
-    isViemAddress(value, { strict: false })
-  );
+  return typeof value === "string" && isViemAddress(value, { strict: false });
 }
 
 function asBigint(value: unknown) {
@@ -144,7 +135,8 @@ export function decodeGalleryPurchaseReceiptProof({
   ) {
     return {
       status: "confirmed_unverified",
-      reason: "The mined fill receipt is incomplete or does not match its canonical hash.",
+      reason:
+        "The mined fill receipt is incomplete or does not match its canonical hash.",
     };
   }
 
@@ -185,8 +177,7 @@ export function decodeGalleryPurchaseReceiptProof({
     unit !== fingerprint.unit ||
     premium !== fingerprint.premium ||
     unit + premium !== fingerprint.total ||
-    inventoryAfter < inventoryBefore ||
-    inventoryBefore < preFillSnapshot.inventory
+    inventoryAfter < inventoryBefore
   ) {
     return {
       status: "confirmed_unverified",
@@ -225,7 +216,8 @@ export function decodeGalleryPurchaseReceiptProof({
   if (transfers.length !== 1) {
     return {
       status: "confirmed_unverified",
-      reason: "The receipt is missing the matching gallery-to-recipient mirror Transfer.",
+      reason:
+        "The receipt is missing the matching gallery-to-recipient mirror Transfer.",
     };
   }
 
@@ -248,9 +240,11 @@ export function decodeGalleryPurchaseReceiptProof({
   };
 }
 
-function compareLogs(left: GalleryTransactionLog, right: GalleryTransactionLog) {
-  const block =
-    (left.blockNumber ?? 0n) - (right.blockNumber ?? 0n);
+function compareLogs(
+  left: GalleryTransactionLog,
+  right: GalleryTransactionLog,
+) {
+  const block = (left.blockNumber ?? 0n) - (right.blockNumber ?? 0n);
   if (block !== 0n) return block < 0n ? -1 : 1;
   const transaction =
     (left.transactionIndex ?? 0) - (right.transactionIndex ?? 0);
@@ -318,17 +312,12 @@ export function reconcileGalleryPurchase({
       const to = mirrorEvent.args.to;
       const tokenId = asBigint(mirrorEvent.args.id);
       if (!isAddress(from) || !isAddress(to) || tokenId === null) {
-        return unverified("A mirror Transfer in the reconciliation range is malformed.");
+        return unverified(
+          "A mirror Transfer in the reconciliation range is malformed.",
+        );
       }
 
-      if (
-        isProofLog(
-          mirrorEvent,
-          proof,
-          "Transfer",
-          proof.transferLogIndex,
-        )
-      ) {
+      if (isProofLog(mirrorEvent, proof, "Transfer", proof.transferLogIndex)) {
         targetTransferSeen = true;
       }
 
@@ -360,16 +349,13 @@ export function reconcileGalleryPurchase({
     if (galleryEvent.eventName === "Filled") {
       const eventPremium = asBigint(galleryEvent.args.premium);
       if (eventPremium === null) {
-        return unverified("A Filled event in the reconciliation range is malformed.");
+        return unverified(
+          "A Filled event in the reconciliation range is malformed.",
+        );
       }
       accruedFees += eventPremium;
-      if (
-        isProofLog(galleryEvent, proof, "Filled", proof.filledLogIndex)
-      ) {
-        if (
-          !targetTransferSeen ||
-          inventory !== proof.inventoryAfter
-        ) {
+      if (isProofLog(galleryEvent, proof, "Filled", proof.filledLogIndex)) {
+        if (!targetTransferSeen || inventory !== proof.inventoryAfter) {
           return unverified(
             "The target fill inventory does not reconcile with its ordered mirror transfer.",
           );

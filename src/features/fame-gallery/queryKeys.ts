@@ -65,6 +65,9 @@ export const galleryQueryKeys = {
       tokenIds.map((tokenId) => tokenId.toString()),
     ] as const;
   },
+  poolCandidates(identity: GalleryQueryIdentity, kind: GalleryPoolKind) {
+    return [...this.pools(identity), kind, "candidates"] as const;
+  },
 };
 
 export const GALLERY_CANONICAL_QUERY_OPTIONS = {

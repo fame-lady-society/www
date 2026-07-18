@@ -23,6 +23,10 @@ import {
   type ExecuteGalleryPurchaseResult,
   type GalleryTransactionLog,
 } from "../transactions/purchaseQueue";
+import {
+  galleryApprovalContractRequest,
+  galleryFillContractRequest,
+} from "../transactions/contractRequests";
 import { verifyGalleryPurchase } from "../transactions/verifyPurchase";
 
 const gallery = BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery;
@@ -35,17 +39,15 @@ type ConfirmedPurchase = Extract<
   { status: "fill_receipt_confirmed" }
 >;
 
-function transactionLog(
-  log: {
-    address: Address;
-    data: `0x${string}`;
-    topics: readonly `0x${string}`[];
-    blockNumber: bigint | null;
-    transactionHash: `0x${string}` | null;
-    transactionIndex: number | null;
-    logIndex: number | null;
-  },
-): GalleryTransactionLog {
+function transactionLog(log: {
+  address: Address;
+  data: `0x${string}`;
+  topics: readonly `0x${string}`[];
+  blockNumber: bigint | null;
+  transactionHash: `0x${string}` | null;
+  transactionIndex: number | null;
+  logIndex: number | null;
+}): GalleryTransactionLog {
   if (
     log.blockNumber === null ||
     log.transactionHash === null ||
@@ -185,7 +187,11 @@ export function useGalleryPurchase() {
       if (!publicClient) {
         const cause = new Error("Base Sepolia RPC client is unavailable.");
         dispatch({ type: "failed", stage: "connection", cause });
-        return { status: "failed" as const, stage: "connection" as const, cause };
+        return {
+          status: "failed" as const,
+          stage: "connection" as const,
+          cause,
+        };
       }
 
       return gate.current.run(async () => {
@@ -208,46 +214,41 @@ export function useGalleryPurchase() {
               targetChainId: exactChainId,
             }) => {
               const blockNumber = await publicClient.getBlockNumber();
-              const [
-                unit,
-                inventory,
-                accruedProtocolFees,
-                listing,
-                allowance,
-              ] = await publicClient.multicall({
-                allowFailure: false,
-                blockNumber,
-                contracts: [
-                  {
-                    abi: fameAbi,
-                    address: fame,
-                    functionName: "unit",
-                  },
-                  {
-                    abi: fameMirrorAbi,
-                    address: mirror,
-                    functionName: "balanceOf",
-                    args: [gallery],
-                  },
-                  {
-                    abi: closedLoopGallerySwapAbi,
-                    address: gallery,
-                    functionName: "accruedProtocolFees",
-                  },
-                  {
-                    abi: closedLoopGallerySwapAbi,
-                    address: gallery,
-                    functionName: "listings",
-                    args: [exactTokenId],
-                  },
-                  {
-                    abi: fameAbi,
-                    address: fame,
-                    functionName: "allowance",
-                    args: [account, gallery],
-                  },
-                ],
-              });
+              const [unit, inventory, accruedProtocolFees, listing, allowance] =
+                await publicClient.multicall({
+                  allowFailure: false,
+                  blockNumber,
+                  contracts: [
+                    {
+                      abi: fameAbi,
+                      address: fame,
+                      functionName: "unit",
+                    },
+                    {
+                      abi: fameMirrorAbi,
+                      address: mirror,
+                      functionName: "balanceOf",
+                      args: [gallery],
+                    },
+                    {
+                      abi: closedLoopGallerySwapAbi,
+                      address: gallery,
+                      functionName: "accruedProtocolFees",
+                    },
+                    {
+                      abi: closedLoopGallerySwapAbi,
+                      address: gallery,
+                      functionName: "listings",
+                      args: [exactTokenId],
+                    },
+                    {
+                      abi: fameAbi,
+                      address: fame,
+                      functionName: "allowance",
+                      args: [account, gallery],
+                    },
+                  ],
+                });
               const premium = listing[0];
               return {
                 blockNumber,
@@ -272,48 +273,22 @@ export function useGalleryPurchase() {
               };
             },
             simulateApproval: async (fingerprint) => {
-              await publicClient.simulateContract({
-                abi: fameAbi,
-                address: fame,
-                account: fingerprint.account,
-                functionName: "approve",
-                args: [fingerprint.allowanceTarget, fingerprint.total],
-              });
+              await publicClient.simulateContract(
+                galleryApprovalContractRequest(fingerprint),
+              );
               return null;
             },
             writeApproval: (_prepared, fingerprint) =>
-              writeContractAsync({
-                abi: fameAbi,
-                address: fame,
-                account: fingerprint.account,
-                chainId: fingerprint.chainId,
-                functionName: "approve",
-                args: [fingerprint.allowanceTarget, fingerprint.total],
-              }),
+              writeContractAsync(galleryApprovalContractRequest(fingerprint)),
             simulateFill: async (fingerprint) => {
-              await publicClient.simulateContract({
-                abi: closedLoopGallerySwapAbi,
-                address: gallery,
-                account: fingerprint.account,
-                functionName: "fill",
-                args: [fingerprint.tokenId, fingerprint.recipient],
-              });
+              await publicClient.simulateContract(
+                galleryFillContractRequest(fingerprint),
+              );
               return null;
             },
             writeFill: (_prepared, fingerprint) =>
-              writeContractAsync({
-                abi: closedLoopGallerySwapAbi,
-                address: gallery,
-                account: fingerprint.account,
-                chainId: fingerprint.chainId,
-                functionName: "fill",
-                args: [fingerprint.tokenId, fingerprint.recipient],
-              }),
-            waitForReceipt: async ({
-              hash,
-              confirmations,
-              onReplaced,
-            }) => {
+              writeContractAsync(galleryFillContractRequest(fingerprint)),
+            waitForReceipt: async ({ hash, confirmations, onReplaced }) => {
               const receipt = await publicClient.waitForTransactionReceipt({
                 hash,
                 confirmations,
@@ -373,12 +348,7 @@ export function useGalleryPurchase() {
       items.push({ kind: "gallery purchase" });
     }
     return items;
-  }, [
-    state.approvalHash,
-    state.fillHash,
-    state.status,
-    state.transactionKind,
-  ]);
+  }, [state.approvalHash, state.fillHash, state.status, state.transactionKind]);
 
   return {
     state,

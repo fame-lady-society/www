@@ -40,6 +40,42 @@ export function createGalleryDiscoveryProvenance(): GalleryDiscoveryProvenance {
   };
 }
 
+export function mergeGalleryRecoveryCandidates(
+  current: GalleryDiscoveryCache | null,
+  tokenIds: readonly bigint[],
+  now = Date.now(),
+) {
+  const provenance = createGalleryDiscoveryProvenance();
+  const base =
+    current ??
+    ({
+      schemaVersion: DISCOVERY_CACHE_SCHEMA_VERSION,
+      provenance,
+      candidateTokenIds: [...provenance.checkpointCandidateTokenIds],
+      cursor: {
+        blockNumber: provenance.checkpointBlock,
+        blockHash: provenance.checkpointHash,
+      },
+      updatedAt: now,
+    } satisfies GalleryDiscoveryCache);
+  const candidates = [...base.candidateTokenIds.map(BigInt), ...tokenIds].sort(
+    (left, right) => (left < right ? -1 : left > right ? 1 : 0),
+  );
+  const record: GalleryDiscoveryCache = {
+    ...base,
+    candidateTokenIds: [...new Set(candidates)].map(String),
+    updatedAt: now,
+  };
+  const parsed = parseGalleryDiscoveryCache(
+    serializeGalleryDiscoveryCache(record),
+    provenance,
+  );
+  if (!parsed) {
+    throw new Error("Recovery candidates do not fit the discovery cache");
+  }
+  return parsed;
+}
+
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)

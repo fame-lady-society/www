@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { Address } from "viem";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
-import {
-  GalleryPurchaseModalContent,
-  GalleryViewContent,
-} from "./GalleryView";
+import { GalleryPurchaseModalContent, GalleryViewContent } from "./GalleryView";
 import { ListingCardView } from "./ListingCard";
 import {
   galleryPurchaseReducer,
   initialGalleryPurchaseState,
   type GalleryAcquiredNft,
 } from "../transactions/purchaseQueue";
-import { AcquiredNftResultView } from "./AcquiredNftResult";
+import {
+  acquiredNftLatestOwner,
+  AcquiredNftResultView,
+} from "./AcquiredNftResult";
 
 describe("TEST gallery public view", () => {
   it("distinguishes loading, failed, verified-empty, and incomplete discovery", () => {
@@ -125,5 +126,22 @@ describe("TEST gallery public view", () => {
     assert.match(html, /Artwork unavailable/);
     assert.match(html, /View verified purchase/);
     assert.doesNotMatch(html, /export|report/i);
+  });
+
+  it("does not label a pre-receipt token projection as the current owner", () => {
+    const owner = "0x2222222222222222222222222222222222222222" as Address;
+    const projection = {
+      status: "success" as const,
+      blockNumber: 99n,
+      data: {
+        tokenId: 7n,
+        listing: { premium: 0n, active: false },
+        owner,
+        tokenUri: "",
+      },
+    };
+
+    assert.equal(acquiredNftLatestOwner(projection, 100n), null);
+    assert.equal(acquiredNftLatestOwner(projection, 99n), owner);
   });
 });

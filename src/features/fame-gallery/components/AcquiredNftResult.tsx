@@ -17,6 +17,17 @@ import {
 } from "../metadata/testMetadata";
 import type { GalleryAcquiredNft } from "../transactions/purchaseQueue";
 import { formatTestAmount } from "../format";
+import type { GalleryHookProjection, GalleryTokenState } from "../types";
+
+export function acquiredNftLatestOwner(
+  projection: GalleryHookProjection<GalleryTokenState>,
+  receiptBlockNumber: bigint,
+) {
+  return projection.status === "success" &&
+    projection.blockNumber >= receiptBlockNumber
+    ? projection.data.owner
+    : null;
+}
 
 export function AcquiredNftResultView({
   result,
@@ -60,14 +71,14 @@ export function AcquiredNftResultView({
             </Typography>
           ) : null}
           <Divider />
-          <Typography variant="body2">
-            Recipient: {result.recipient}
-          </Typography>
+          <Typography variant="body2">Recipient: {result.recipient}</Typography>
           <Typography variant="body2">
             Owner at end of receipt block: {result.currentOwner}
           </Typography>
           {latestOwner ? (
-            <Typography variant="body2">Current owner: {latestOwner}</Typography>
+            <Typography variant="body2">
+              Current owner: {latestOwner}
+            </Typography>
           ) : null}
           <Typography variant="body2">
             NFT unit: {formatTestAmount(result.unit)} TEST
@@ -91,13 +102,12 @@ export function AcquiredNftResultView({
   );
 }
 
-export function AcquiredNftResult({
-  result,
-}: {
-  result: GalleryAcquiredNft;
-}) {
+export function AcquiredNftResult({ result }: { result: GalleryAcquiredNft }) {
   const headingRef = useRef<HTMLDivElement | null>(null);
-  const current = useGalleryTokenState(result.tokenId, { enabled: true });
+  const current = useGalleryTokenState(result.tokenId, {
+    enabled: true,
+    refetchOnMount: true,
+  });
   usePageAttentionRefresh(current.refresh);
 
   useEffect(() => {
@@ -105,10 +115,10 @@ export function AcquiredNftResult({
   }, []);
 
   const metadata = decodeTestGalleryMetadata(result.tokenUri ?? "");
-  const latestOwner =
-    current.projection.status === "success"
-      ? current.projection.data.owner
-      : null;
+  const latestOwner = acquiredNftLatestOwner(
+    current.projection,
+    result.receiptBlockNumber,
+  );
 
   return (
     <div ref={headingRef} tabIndex={-1}>

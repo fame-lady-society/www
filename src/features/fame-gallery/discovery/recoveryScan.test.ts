@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
 import {
+  createGalleryRecoveryScanGate,
   scanGalleryRecoveryInventory,
   type GalleryRecoveryScanSource,
 } from "./recoveryScan";
@@ -10,6 +11,18 @@ const gallery = "0x1111111111111111111111111111111111111111" as Address;
 const outside = "0x2222222222222222222222222222222222222222" as Address;
 
 describe("gallery recovery scan", () => {
+  it("allows only one scan owner to start and finish", () => {
+    const gate = createGalleryRecoveryScanGate();
+    const first = gate.start();
+
+    assert.ok(first);
+    assert.equal(gate.start(), null);
+    assert.equal(gate.finish(new AbortController()), false);
+    assert.equal(gate.start(), null);
+    assert.equal(gate.finish(first), true);
+    assert.ok(gate.start());
+  });
+
   it("pins all 888 owner reads, caps batches at 64 and concurrency at two, then reconciles custody changes", async () => {
     let blockReads = 0;
     let activeOwnerReads = 0;
@@ -30,7 +43,7 @@ describe("gallery recovery scan", () => {
         return new Map(
           tokenIds.map((tokenId) => [
             tokenId,
-            tokenId === 1n ? gallery : outside,
+            tokenId === 1n || tokenId === 3n ? gallery : outside,
           ]),
         );
       },
@@ -46,8 +59,8 @@ describe("gallery recovery scan", () => {
             tokenId,
             {
               tokenId,
-              owner: tokenId === 2n ? gallery : outside,
-              listingActive: tokenId === 2n,
+              owner: tokenId === 2n || tokenId === 3n ? gallery : outside,
+              listingActive: tokenId === 2n || tokenId === 3n,
             },
           ]),
         );
@@ -59,8 +72,8 @@ describe("gallery recovery scan", () => {
     assert.equal(ownerBatchSizes.length, 14);
     assert.ok(ownerBatchSizes.every((size) => size <= 64));
     assert.ok(maxOwnerConcurrency <= 2);
-    assert.deepEqual(result.galleryOwnedTokenIds, [2n]);
-    assert.deepEqual(result.activeListingTokenIds, [2n]);
+    assert.deepEqual(result.galleryOwnedTokenIds, [2n, 3n]);
+    assert.deepEqual(result.activeListingTokenIds, [2n, 3n]);
     assert.deepEqual(result.affectedTokenIds, [1n, 2n]);
   });
 

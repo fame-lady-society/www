@@ -8,7 +8,11 @@ import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
 } from "../queryKeys";
-import { readGalleryPoolState, type GalleryMulticallClient } from "../reads";
+import {
+  readGalleryPoolCandidates,
+  readGalleryPoolState,
+  type GalleryMulticallClient,
+} from "../reads";
 import type {
   GalleryHookProjection,
   GalleryPoolKind,
@@ -69,5 +73,43 @@ export function useGalleryPoolState({
     projection,
     isRefreshing: query.isFetching && !query.isPending,
     refresh,
+  };
+}
+
+export function useGalleryPoolCandidates({
+  kind,
+  enabled,
+}: {
+  kind: GalleryPoolKind;
+  enabled: boolean;
+}) {
+  const publicClient = usePublicClient({
+    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+  });
+  const query = useQuery({
+    queryKey: galleryQueryKeys.poolCandidates(identity, kind),
+    queryFn: () =>
+      readGalleryPoolCandidates(
+        publicClient as unknown as GalleryMulticallClient,
+        kind,
+      ),
+    enabled: enabled && Boolean(publicClient),
+    ...GALLERY_CANONICAL_QUERY_OPTIONS,
+  });
+
+  const projection: GalleryHookProjection<GalleryPoolState> = !enabled
+    ? { status: "idle" }
+    : !publicClient || query.isPending
+      ? { status: "loading" }
+      : query.data ?? {
+          status: "failure",
+          blockNumber: null,
+          message: "Gallery pool candidates are unavailable",
+        };
+
+  return {
+    projection,
+    isRefreshing: query.isFetching && !query.isPending,
+    refresh: query.refetch,
   };
 }

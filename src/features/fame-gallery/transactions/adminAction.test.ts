@@ -27,9 +27,7 @@ describe("gallery admin actions", () => {
     );
 
     for (const value of ["", "-1", "1e3", "1.2.3", "1.".padEnd(82, "0")]) {
-      assert.throws(() =>
-        parseUnsignedTestAmount(value, { allowZero: true }),
-      );
+      assert.throws(() => parseUnsignedTestAmount(value, { allowZero: true }));
     }
     assert.throws(() => parseGalleryPremium("0"));
     assert.throws(() => parseGalleryPremium("1.0000000000000000001"));
@@ -79,13 +77,47 @@ describe("gallery admin actions", () => {
     );
 
     assert.deepEqual(result, { status: "confirmed", hash });
-    assert.deepEqual(calls, [
-      "simulate list",
-      "write",
-      "wait",
-      "refresh list",
-    ]);
+    assert.deepEqual(calls, ["simulate list", "write", "wait", "refresh list"]);
     assert.equal(events.at(-1)?.type, "confirmed");
+  });
+
+  it("keeps a mined action confirmed when canonical refresh fails", async () => {
+    const events: GalleryAdminEvent[] = [];
+    const refreshFailure = new Error("RPC unavailable");
+    const dependencies: GalleryAdminDependencies = {
+      dispatch(event) {
+        events.push(event);
+      },
+      getWalletContext() {
+        return { account, chainId: 84_532 };
+      },
+      async switchChain() {},
+      async simulate() {
+        return null;
+      },
+      async write() {
+        return hash;
+      },
+      async waitForReceipt() {
+        return { status: "success" };
+      },
+      async refresh() {
+        throw refreshFailure;
+      },
+    };
+
+    const result = await executeGalleryAdminAction(
+      { kind: "unlist", tokenId: 7n },
+      84_532,
+      dependencies,
+    );
+
+    assert.deepEqual(result, {
+      status: "confirmed_refreshing",
+      hash,
+      cause: refreshFailure,
+    });
+    assert.equal(events.at(-1)?.type, "confirmed_refreshing");
   });
 
   it("serializes rapid admin submissions", async () => {

@@ -24,18 +24,21 @@ import {
 import { usePublicClient } from "wagmi";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import { displaySafeErrorMessage } from "@/features/fame-swap/solver/diagnostics";
-import {
-  closedLoopGallerySwapAbi,
-  fameMirrorAbi,
-} from "../../../wagmi";
+import { closedLoopGallerySwapAbi, fameMirrorAbi } from "../../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { getBrowserGalleryDiscoveryStorage } from "../discovery/browserStorage";
+import { mergeGalleryRecoveryCandidates } from "../discovery/cache";
 import {
+  createGalleryRecoveryScanGate,
   scanGalleryRecoveryInventory,
   type GalleryRecoveryScanResult,
 } from "../discovery/recoveryScan";
 import { formatTestAmount } from "../format";
 import { useGalleryAdminAction } from "../hooks/useGalleryAdminAction";
-import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
+import {
+  useGalleryPoolCandidates,
+  useGalleryPoolState,
+} from "../hooks/useGalleryPoolState";
 import { useGalleryTokenState } from "../hooks/useGalleryTokenState";
 import {
   decodeTestGalleryMetadata,
@@ -145,6 +148,8 @@ function adminStatusCopy(state: GalleryAdminState) {
       return "Waiting for the gallery action receipt…";
     case "confirmed":
       return "Gallery action confirmed and affected state refreshed.";
+    case "confirmed_refreshing":
+      return "Gallery action confirmed, but affected state could not be refreshed yet.";
     case "outcome_unknown":
       return "The action was broadcast, but its receipt could not be confirmed. Check the transaction before retrying.";
     case "error":
@@ -181,7 +186,7 @@ export function AdminMarketActions({
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] =
     useState<GalleryRecoveryScanResult | null>(null);
-  const scanController = useRef<AbortController | null>(null);
+  const scanGate = useRef(createGalleryRecoveryScanGate());
   const [withdrawRecipient, setWithdrawRecipient] = useState(
     global.status === "success" ? global.data.feeRecipient : "",
   );
@@ -195,17 +200,14 @@ export function AdminMarketActions({
   } | null>(null);
 
   useEffect(() => {
-    if (
-      !withdrawRecipient &&
-      global.status === "success"
-    ) {
+    if (!withdrawRecipient && global.status === "success") {
       setWithdrawRecipient(global.data.feeRecipient);
     }
   }, [global, withdrawRecipient]);
 
   useEffect(
     () => () => {
-      scanController.current?.abort();
+      scanGate.current.cancel();
     },
     [],
   );
@@ -248,7 +250,28 @@ export function AdminMarketActions({
     tokenIds: poolTokenId ? [poolTokenId] : [],
     enabled: rotationMode === "burn" && poolTokenId !== null,
   });
+  const mintCandidates = useGalleryPoolCandidates({
+    kind: "mint",
+    enabled: rotationMode === "mint",
+  });
+  const burnCandidates = useGalleryPoolCandidates({
+    kind: "burn",
+    enabled: rotationMode === "burn",
+  });
   const selectedPool = rotationMode === "mint" ? mintPool : burnPool;
+  const selectedCandidatePool =
+    rotationMode === "mint" ? mintCandidates : burnCandidates;
+  const eligibleCandidates =
+    selectedCandidatePool.projection.status === "success"
+      ? selectedCandidatePool.projection.data.candidates.filter(
+          (candidate) => candidate.eligible,
+        )
+      : [];
+  const selectedCandidateValue = eligibleCandidates.some(
+    (candidate) => candidate.tokenId.toString() === poolTokenInput,
+  )
+    ? poolTokenInput
+    : "";
   const selectedPoolEligibility =
     selectedPool.projection.status === "success"
       ? selectedPool.projection.data.candidates[0]?.eligible
@@ -291,9 +314,9 @@ export function AdminMarketActions({
   };
 
   const startRecoveryScan = async () => {
-    if (!publicClient || scanning) return;
-    const controller = new AbortController();
-    scanController.current = controller;
+    if (!publicClient) return;
+    const controller = scanGate.current.start();
+    if (!controller) return;
     setScanning(true);
     setActionError(null);
     try {
@@ -411,14 +434,23 @@ export function AdminMarketActions({
           },
         },
       });
+      const discoveryStorage = getBrowserGalleryDiscoveryStorage();
+      await discoveryStorage.commit(
+        mergeGalleryRecoveryCandidates(
+          discoveryStorage.restore(),
+          result.galleryOwnedTokenIds,
+        ),
+      );
+      await invalidateGalleryDiscovery(queryClient, identity);
       setScanResult(result);
     } catch (error) {
       if (!controller.signal.aborted) {
         setActionError(error instanceof Error ? error.message : String(error));
       }
     } finally {
-      setScanning(false);
-      scanController.current = null;
+      if (scanGate.current.finish(controller)) {
+        setScanning(false);
+      }
     }
   };
 
@@ -431,6 +463,7 @@ export function AdminMarketActions({
     withdrawReview.amountInput === withdrawAmount;
   const transactionTerminal =
     transaction.state.status === "confirmed" ||
+    transaction.state.status === "confirmed_refreshing" ||
     transaction.state.status === "outcome_unknown" ||
     transaction.state.status === "error";
 
@@ -557,6 +590,46 @@ export function AdminMarketActions({
             />
           ) : (
             <>
+              {selectedCandidatePool.projection.status === "loading" ? (
+                <Typography role="status">
+                  Loading current {rotationMode} pool candidates…
+                </Typography>
+              ) : selectedCandidatePool.projection.status === "failure" ? (
+                <Alert severity="warning">
+                  Candidate discovery is unavailable. Enter a token ID manually;
+                  the contract simulation still decides whether it can be used.
+                </Alert>
+              ) : selectedCandidatePool.projection.status === "success" &&
+                eligibleCandidates.length === 0 ? (
+                <Alert severity="info">
+                  No currently eligible {rotationMode} pool candidate was found.
+                  Manual entry remains available.
+                </Alert>
+              ) : (
+                <FormControl fullWidth>
+                  <InputLabel id="eligible-pool-token-label">
+                    Eligible {rotationMode} pool candidate
+                  </InputLabel>
+                  <Select
+                    labelId="eligible-pool-token-label"
+                    label={`Eligible ${rotationMode} pool candidate`}
+                    value={selectedCandidateValue}
+                    onChange={(event) => {
+                      setPoolTokenInput(event.target.value);
+                      setPreview(null);
+                    }}
+                  >
+                    {eligibleCandidates.map((candidate) => (
+                      <MenuItem
+                        key={candidate.tokenId.toString()}
+                        value={candidate.tokenId.toString()}
+                      >
+                        Token #{candidate.tokenId.toString()}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
               <TextField
                 label={`${rotationMode === "mint" ? "Mint" : "Burn"} pool token ID`}
                 value={poolTokenInput}
@@ -657,20 +730,49 @@ export function AdminMarketActions({
               {scanning ? "Scanning all 888…" : "Scan all 888"}
             </Button>
             {scanning ? (
-              <Button
-                variant="text"
-                onClick={() => scanController.current?.abort()}
-              >
+              <Button variant="text" onClick={() => scanGate.current.cancel()}>
                 Cancel scan
               </Button>
             ) : null}
           </Stack>
           {scanResult ? (
-            <Alert severity="success">
-              Found {scanResult.galleryOwnedTokenIds.length} gallery-owned NFTs
-              at block {scanResult.reconciliationBlock.toString()};{" "}
-              {scanResult.activeListingTokenIds.length} are actively listed.
-            </Alert>
+            <>
+              <Alert severity="success">
+                Found {scanResult.galleryOwnedTokenIds.length} gallery-owned
+                NFTs at block {scanResult.reconciliationBlock.toString()};{" "}
+                {scanResult.activeListingTokenIds.length} are actively listed.
+                Recovery candidates were merged without advancing event history.
+              </Alert>
+              {scanResult.galleryOwnedTokenIds.length > 0 ? (
+                <FormControl fullWidth>
+                  <InputLabel id="recovered-token-label">
+                    Recovered gallery token
+                  </InputLabel>
+                  <Select
+                    labelId="recovered-token-label"
+                    label="Recovered gallery token"
+                    value=""
+                    onChange={(event) => setTokenInput(event.target.value)}
+                    renderValue={() => "Choose a recovered token"}
+                  >
+                    <MenuItem value="" disabled>
+                      Choose a recovered token
+                    </MenuItem>
+                    {scanResult.galleryOwnedTokenIds.map((tokenId) => (
+                      <MenuItem
+                        key={tokenId.toString()}
+                        value={tokenId.toString()}
+                      >
+                        Token #{tokenId.toString()}
+                        {scanResult.activeListingTokenIds.includes(tokenId)
+                          ? " (listed)"
+                          : ""}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : null}
+            </>
           ) : null}
         </Stack>
       </Paper>
@@ -808,16 +910,30 @@ export function AdminMarketActions({
                   ? "error"
                   : transaction.state.status === "outcome_unknown"
                     ? "warning"
-                    : transaction.state.status === "confirmed"
-                      ? "success"
-                      : "info"
+                    : transaction.state.status === "confirmed_refreshing"
+                      ? "warning"
+                      : transaction.state.status === "confirmed"
+                        ? "success"
+                        : "info"
               }
             >
               {adminStatusCopy(transaction.state)}
             </Alert>
+            {transaction.state.status === "confirmed_refreshing" ? (
+              <Button
+                variant="contained"
+                disabled={transaction.isRetryingRefresh}
+                onClick={() => void transaction.retryRefresh()}
+              >
+                {transaction.isRetryingRefresh
+                  ? "Refreshing…"
+                  : "Retry refresh"}
+              </Button>
+            ) : null}
             {transactionTerminal ? (
               <Button
                 variant="outlined"
+                disabled={transaction.isRetryingRefresh}
                 onClick={() => {
                   transaction.reset();
                   transaction.setModalOpen(false);

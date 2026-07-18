@@ -9,7 +9,6 @@ import {
   useSwitchChain,
   useWriteContract,
 } from "wagmi";
-import { closedLoopGallerySwapAbi } from "../../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
   createGalleryAdminSubmissionGate,
@@ -18,8 +17,8 @@ import {
   initialGalleryAdminState,
   type GalleryAdminCall,
 } from "../transactions/adminAction";
+import { galleryAdminContractRequest } from "../transactions/contractRequests";
 
-const gallery = BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery;
 const chainId = BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId;
 
 export function useGalleryAdminAction({
@@ -36,7 +35,9 @@ export function useGalleryAdminAction({
     initialGalleryAdminState,
   );
   const [modalOpen, setModalOpen] = useState(false);
+  const [isRetryingRefresh, setIsRetryingRefresh] = useState(false);
   const gate = useRef(createGalleryAdminSubmissionGate());
+  const refreshInFlight = useRef(false);
 
   const submit = useCallback(
     (call: GalleryAdminCall) => {
@@ -64,114 +65,49 @@ export function useGalleryAdminAction({
           switchChain: (targetChainId) =>
             switchChainAsync({ chainId: targetChainId }),
           simulate: async (exactCall, account) => {
-            const baseRequest = {
-              abi: closedLoopGallerySwapAbi,
-              address: gallery,
-              account,
-            } as const;
-            switch (exactCall.kind) {
+            const request = galleryAdminContractRequest(exactCall, account);
+            switch (request.functionName) {
               case "list":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "list",
-                  args: [exactCall.tokenId, exactCall.premium],
-                });
+                await publicClient.simulateContract(request);
                 break;
-              case "set_premium":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "setPremium",
-                  args: [exactCall.tokenId, exactCall.premium],
-                });
+              case "setPremium":
+                await publicClient.simulateContract(request);
                 break;
               case "unlist":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "unlist",
-                  args: [exactCall.tokenId],
-                });
+                await publicClient.simulateContract(request);
                 break;
-              case "rotate_mint":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "rotateToMintPool",
-                  args: [exactCall.tokenId, exactCall.poolTokenId],
-                });
+              case "rotateToMintPool":
+                await publicClient.simulateContract(request);
                 break;
-              case "rotate_burn":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "rotateToBurnPool",
-                  args: [exactCall.tokenId, exactCall.poolTokenId],
-                });
+              case "rotateToBurnPool":
+                await publicClient.simulateContract(request);
                 break;
-              case "rotate_end_of_mint":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "rotateToEndOfMintPool",
-                  args: [exactCall.tokenId, exactCall.metadataUri],
-                });
+              case "rotateToEndOfMintPool":
+                await publicClient.simulateContract(request);
                 break;
-              case "withdraw_fees":
-                await publicClient.simulateContract({
-                  ...baseRequest,
-                  functionName: "withdrawAccruedFees",
-                  args: [exactCall.recipient, exactCall.amount],
-                });
+              case "withdrawAccruedFees":
+                await publicClient.simulateContract(request);
                 break;
             }
             return null;
           },
           write: (_prepared, exactCall, account) => {
-            const baseRequest = {
-              abi: closedLoopGallerySwapAbi,
-              address: gallery,
-              account,
-              chainId,
-            } as const;
-            switch (exactCall.kind) {
+            const request = galleryAdminContractRequest(exactCall, account);
+            switch (request.functionName) {
               case "list":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "list",
-                  args: [exactCall.tokenId, exactCall.premium],
-                });
-              case "set_premium":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "setPremium",
-                  args: [exactCall.tokenId, exactCall.premium],
-                });
+                return writeContractAsync(request);
+              case "setPremium":
+                return writeContractAsync(request);
               case "unlist":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "unlist",
-                  args: [exactCall.tokenId],
-                });
-              case "rotate_mint":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "rotateToMintPool",
-                  args: [exactCall.tokenId, exactCall.poolTokenId],
-                });
-              case "rotate_burn":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "rotateToBurnPool",
-                  args: [exactCall.tokenId, exactCall.poolTokenId],
-                });
-              case "rotate_end_of_mint":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "rotateToEndOfMintPool",
-                  args: [exactCall.tokenId, exactCall.metadataUri],
-                });
-              case "withdraw_fees":
-                return writeContractAsync({
-                  ...baseRequest,
-                  functionName: "withdrawAccruedFees",
-                  args: [exactCall.recipient, exactCall.amount],
-                });
+                return writeContractAsync(request);
+              case "rotateToMintPool":
+                return writeContractAsync(request);
+              case "rotateToBurnPool":
+                return writeContractAsync(request);
+              case "rotateToEndOfMintPool":
+                return writeContractAsync(request);
+              case "withdrawAccruedFees":
+                return writeContractAsync(request);
             }
           },
           waitForReceipt: async ({ hash, onReplaced }) => {
@@ -187,20 +123,31 @@ export function useGalleryAdminAction({
         }),
       );
     },
-    [
-      config,
-      publicClient,
-      refresh,
-      switchChainAsync,
-      writeContractAsync,
-    ],
+    [config, publicClient, refresh, switchChainAsync, writeContractAsync],
   );
+
+  const retryRefresh = useCallback(async () => {
+    if (!state.call || refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setIsRetryingRefresh(true);
+    try {
+      await refresh(state.call);
+      dispatch({ type: "confirmed" });
+    } catch (cause) {
+      dispatch({ type: "confirmed_refreshing", cause });
+    } finally {
+      refreshInFlight.current = false;
+      setIsRetryingRefresh(false);
+    }
+  }, [refresh, state.call]);
 
   return {
     state,
     submit,
     modalOpen,
     setModalOpen,
+    retryRefresh,
+    isRetryingRefresh,
     reset: () => dispatch({ type: "reset" }),
     transaction: state.call
       ? {

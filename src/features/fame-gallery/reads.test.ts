@@ -7,10 +7,13 @@ import {
   chunkGalleryTokenIds,
 } from "./queryKeys";
 import {
+  GALLERY_POOL_SCAN_BATCH_SIZE,
+  GALLERY_POOL_SCAN_CONCURRENCY,
   createGalleryTokenReadBatcher,
   readGalleryAuthority,
   readGalleryCandidateStates,
   readGalleryGlobalState,
+  readGalleryPoolCandidates,
   type GalleryMulticallClient,
 } from "./reads";
 
@@ -191,5 +194,49 @@ describe("gallery canonical reads", () => {
     if (operator.status === "success") {
       assert.equal(operator.data.authority, "operator");
     }
+  });
+
+  it("loads lazy pool candidates in pinned 64-token batches with two workers", async () => {
+    let active = 0;
+    let maxConcurrency = 0;
+    const calls: CapturedMulticall[] = [];
+    const client: GalleryMulticallClient = {
+      async getBlockNumber() {
+        return 100n;
+      },
+      async multicall(input) {
+        calls.push({
+          blockNumber: input.blockNumber,
+          contracts: input.contracts,
+        });
+        const isBase = input.contracts[0]?.functionName === "getMintPoolStart";
+        if (isBase) {
+          return [131n, 140n, 130n, 888n].map(successfulResult);
+        }
+        active += 1;
+        maxConcurrency = Math.max(maxConcurrency, active);
+        await Promise.resolve();
+        active -= 1;
+        return input.contracts.map((contract) =>
+          successfulResult(BigInt(contract.args?.[0] as bigint) % 2n === 0n),
+        );
+      },
+    };
+
+    const result = await readGalleryPoolCandidates(client, "burn");
+
+    assert.equal(result.status, "success");
+    if (result.status !== "success") return;
+    assert.equal(result.data.candidates.length, 130);
+    assert.equal(result.data.candidates[1]?.eligible, true);
+    assert.ok(maxConcurrency <= GALLERY_POOL_SCAN_CONCURRENCY);
+    assert.ok(maxConcurrency > 1);
+    assert.equal(calls.length, 4);
+    assert.ok(calls.every((call) => call.blockNumber === 100n));
+    assert.ok(
+      calls
+        .slice(1)
+        .every((call) => call.contracts.length <= GALLERY_POOL_SCAN_BATCH_SIZE),
+    );
   });
 });

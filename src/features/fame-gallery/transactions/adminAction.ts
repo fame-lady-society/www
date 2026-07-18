@@ -12,10 +12,7 @@ const MAX_INPUT_LENGTH = 80;
 
 export function parseUnsignedTestAmount(
   value: string,
-  {
-    allowZero,
-    maximum = maxUint256,
-  }: { allowZero: boolean; maximum?: bigint },
+  { allowZero, maximum = maxUint256 }: { allowZero: boolean; maximum?: bigint },
 ) {
   const normalized = value.trim();
   if (
@@ -91,6 +88,7 @@ export type GalleryAdminStatus =
   | "awaiting_wallet"
   | "confirming"
   | "confirmed"
+  | "confirmed_refreshing"
   | "outcome_unknown"
   | "error";
 
@@ -116,6 +114,7 @@ export type GalleryAdminEvent =
   | { type: "broadcast"; hash: Hash }
   | { type: "replacement"; reason: ReplacementReason; hash: Hash }
   | { type: "confirmed" }
+  | { type: "confirmed_refreshing"; cause: unknown }
   | { type: "outcome_unknown"; cause: unknown }
   | { type: "failed"; stage: string; cause: unknown }
   | { type: "reset" };
@@ -143,6 +142,12 @@ export function galleryAdminReducer(
       return { ...state, status: "confirming", hash: event.hash };
     case "confirmed":
       return { ...state, status: "confirmed", failure: null };
+    case "confirmed_refreshing":
+      return {
+        ...state,
+        status: "confirmed_refreshing",
+        failure: { stage: "refresh", cause: event.cause },
+      };
     case "outcome_unknown":
       return {
         ...state,
@@ -184,6 +189,7 @@ export type GalleryAdminDependencies = {
 
 export type GalleryAdminResult =
   | { status: "confirmed"; hash: Hash }
+  | { status: "confirmed_refreshing"; hash: Hash; cause: unknown }
   | { status: "outcome_unknown"; hash: Hash; cause: unknown }
   | { status: "failed"; stage: string; cause: unknown };
 
@@ -235,9 +241,7 @@ export async function executeGalleryAdminAction(
     dependencies.dispatch({ type: "broadcast", hash });
 
     stage = "receipt";
-    let replacement:
-      | { reason: ReplacementReason; hash: Hash }
-      | undefined;
+    let replacement: { reason: ReplacementReason; hash: Hash } | undefined;
     let receipt;
     try {
       receipt = await dependencies.waitForReceipt({
@@ -273,7 +277,12 @@ export async function executeGalleryAdminAction(
     }
 
     stage = "refresh";
-    await dependencies.refresh(call);
+    try {
+      await dependencies.refresh(call);
+    } catch (cause) {
+      dependencies.dispatch({ type: "confirmed_refreshing", cause });
+      return { status: "confirmed_refreshing", hash, cause };
+    }
     dependencies.dispatch({ type: "confirmed" });
     return { status: "confirmed", hash };
   } catch (cause) {

@@ -5,19 +5,13 @@ import { useCallback, useMemo } from "react";
 import { isAddressEqual, parseAbi } from "viem";
 import { usePublicClient } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import {
-  createGalleryDiscoveryProvenance,
-  type GalleryDiscoveryCache,
-} from "../discovery/cache";
+import type { GalleryDiscoveryCache } from "../discovery/cache";
+import { getBrowserGalleryDiscoveryStorage } from "../discovery/browserStorage";
 import {
   discoverGalleryListings,
   type GalleryDiscoveryEvent,
   type GalleryDiscoverySource,
 } from "../discovery/discovery";
-import {
-  createGalleryDiscoveryStorage,
-  type GalleryDiscoveryLock,
-} from "../discovery/storage";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   chunkGalleryTokenIds,
@@ -39,32 +33,6 @@ const lifecycleEvents = parseAbi([
   "event PremiumUpdated(uint256 indexed tokenId, uint256 premium)",
   "event Filled(address indexed buyer, address indexed recipient, uint256 indexed tokenId, uint256 unitAmount, uint256 premium, uint256 inventoryBefore, uint256 inventoryAfter)",
 ]);
-
-function browserLock(): GalleryDiscoveryLock | null {
-  if (typeof navigator === "undefined" || !navigator.locks) return null;
-  return {
-    request(name, callback) {
-      return navigator.locks.request(name, callback);
-    },
-  };
-}
-
-function browserDiscoveryStorage() {
-  const provenance = createGalleryDiscoveryProvenance();
-  let storage: Storage | null = null;
-  if (typeof window !== "undefined") {
-    try {
-      storage = window.localStorage;
-    } catch {
-      storage = null;
-    }
-  }
-  return createGalleryDiscoveryStorage({
-    storage,
-    lock: browserLock(),
-    provenance,
-  });
-}
 
 function discoverySource(
   publicClient: NonNullable<ReturnType<typeof usePublicClient>>,
@@ -114,10 +82,7 @@ function discoverySource(
           verification.set(tokenId, {
             status:
               projection.data.listing.active &&
-              isAddressEqual(
-                projection.data.owner,
-                config.addresses.gallery,
-              )
+              isAddressEqual(projection.data.owner, config.addresses.gallery)
                 ? "active"
                 : "inactive",
           });
@@ -130,7 +95,7 @@ function discoverySource(
 
 export function useGalleryDiscovery() {
   const publicClient = usePublicClient({ chainId: config.chainId });
-  const storage = useMemo(() => browserDiscoveryStorage(), []);
+  const storage = useMemo(() => getBrowserGalleryDiscoveryStorage(), []);
   const source = useMemo(
     () => (publicClient ? discoverySource(publicClient) : null),
     [publicClient],

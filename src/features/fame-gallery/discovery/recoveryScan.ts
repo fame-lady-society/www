@@ -34,6 +34,25 @@ export type GalleryRecoveryScanResult = {
   affectedTokenIds: bigint[];
 };
 
+export function createGalleryRecoveryScanGate() {
+  let current: AbortController | null = null;
+  return {
+    start() {
+      if (current) return null;
+      current = new AbortController();
+      return current;
+    },
+    finish(controller: AbortController) {
+      if (current !== controller) return false;
+      current = null;
+      return true;
+    },
+    cancel() {
+      current?.abort();
+    },
+  };
+}
+
 function tokenChunks(tokenIds: readonly bigint[]) {
   const chunks: bigint[][] = [];
   for (
@@ -119,11 +138,12 @@ export async function scanGalleryRecoveryInventory({
     }
   }
 
+  const finalStateTokenIds = new Set([...galleryOwned, ...affected]);
   const finalStateMaps =
-    affected.size === 0
+    finalStateTokenIds.size === 0
       ? []
       : await mapWithTwoWorkers(
-          tokenChunks(sorted(affected)),
+          tokenChunks(sorted(finalStateTokenIds)),
           signal,
           (chunk) => source.readFinalStates(chunk, scanEndBlock),
         );

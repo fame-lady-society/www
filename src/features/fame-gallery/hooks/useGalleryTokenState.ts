@@ -34,7 +34,10 @@ function tokenBatcher(client: object) {
 
 export function useGalleryTokenState(
   tokenId: bigint,
-  { enabled = true }: { enabled?: boolean } = {},
+  {
+    enabled = true,
+    refetchOnMount = false,
+  }: { enabled?: boolean; refetchOnMount?: boolean } = {},
 ) {
   const publicClient = usePublicClient({
     chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
@@ -52,6 +55,7 @@ export function useGalleryTokenState(
     },
     enabled: enabled && Boolean(batcher),
     ...GALLERY_CANONICAL_QUERY_OPTIONS,
+    refetchOnMount: refetchOnMount ? "always" : false,
   });
   const refresh = useCallback(async () => {
     await query.refetch();

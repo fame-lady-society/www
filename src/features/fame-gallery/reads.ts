@@ -49,6 +49,9 @@ export type GalleryReadAddresses = {
   creatorMagic: Address;
 };
 
+export const GALLERY_POOL_SCAN_BATCH_SIZE = 64;
+export const GALLERY_POOL_SCAN_CONCURRENCY = 2;
+
 const DEFAULT_ADDRESSES: GalleryReadAddresses = {
   gallery: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
   fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
@@ -548,12 +551,11 @@ export async function readGalleryAuthority(
       return failure("Gallery authority is incomplete", blockNumber);
     }
     const [owner, operatorRole, accountRoles] = values;
-    const authority =
-      isAddressEqual(owner, account)
-        ? "owner"
-        : (accountRoles & operatorRole) !== 0n
-          ? "operator"
-          : "denied";
+    const authority = isAddressEqual(owner, account)
+      ? "owner"
+      : (accountRoles & operatorRole) !== 0n
+        ? "operator"
+        : "denied";
     return {
       status: "success",
       blockNumber,
@@ -638,6 +640,146 @@ export async function readGalleryPoolState(
           tokenId,
           eligible: values[index + 4] as boolean,
         })),
+      },
+    };
+  } catch {
+    return failure("Gallery pool state is unavailable", blockNumber);
+  }
+}
+
+function poolCandidateTokenIds(
+  kind: GalleryPoolKind,
+  {
+    mintPoolStart,
+    mintPoolEnd,
+    totalNftSupply,
+  }: Pick<GalleryPoolState, "mintPoolStart" | "mintPoolEnd" | "totalNftSupply">,
+) {
+  const collectionEnd = BigInt(
+    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId,
+  );
+  const first = kind === "mint" ? mintPoolStart : 1n;
+  const exclusiveEnd =
+    kind === "mint"
+      ? mintPoolEnd
+      : totalNftSupply < collectionEnd
+        ? totalNftSupply + 1n
+        : collectionEnd + 1n;
+  const boundedEnd =
+    exclusiveEnd < collectionEnd + 1n ? exclusiveEnd : collectionEnd + 1n;
+  const tokenIds: bigint[] = [];
+  for (let tokenId = first; tokenId < boundedEnd; tokenId += 1n) {
+    tokenIds.push(tokenId);
+  }
+  return tokenIds;
+}
+
+export async function readGalleryPoolCandidates(
+  client: GalleryMulticallClient,
+  kind: GalleryPoolKind,
+  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+): Promise<GalleryProjectionResult<GalleryPoolState>> {
+  let blockNumber: bigint | null = null;
+  try {
+    const capturedBlockNumber = await client.getBlockNumber();
+    blockNumber = capturedBlockNumber;
+    const baseContracts = [
+      {
+        address: addresses.creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "getMintPoolStart",
+      },
+      {
+        address: addresses.creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "getMintPoolEnd",
+      },
+      {
+        address: addresses.creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "getTotalNFTSupply",
+      },
+      {
+        address: addresses.creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "getMaxNFTSupply",
+      },
+    ] as const;
+    const baseResults = await client.multicall({
+      allowFailure: true,
+      blockNumber: capturedBlockNumber,
+      contracts: baseContracts,
+    });
+    const baseValues = successfulValues(baseResults, 4);
+    if (!baseValues || baseValues.some((value) => !isBigint(value))) {
+      return failure("Gallery pool state is incomplete", blockNumber);
+    }
+    const [mintPoolStart, mintPoolEnd, totalNftSupply, maxNftSupply] =
+      baseValues as [bigint, bigint, bigint, bigint];
+    const tokenIds = poolCandidateTokenIds(kind, {
+      mintPoolStart,
+      mintPoolEnd,
+      totalNftSupply,
+    });
+    const chunks: bigint[][] = [];
+    for (
+      let index = 0;
+      index < tokenIds.length;
+      index += GALLERY_POOL_SCAN_BATCH_SIZE
+    ) {
+      chunks.push(tokenIds.slice(index, index + GALLERY_POOL_SCAN_BATCH_SIZE));
+    }
+
+    const candidates = new Array<GalleryPoolState["candidates"][number]>(
+      tokenIds.length,
+    );
+    let nextChunk = 0;
+    const worker = async () => {
+      while (nextChunk < chunks.length) {
+        const chunkIndex = nextChunk;
+        nextChunk += 1;
+        const chunk = chunks[chunkIndex];
+        const results = await client.multicall({
+          allowFailure: true,
+          blockNumber: capturedBlockNumber,
+          contracts: chunk.map((tokenId) => ({
+            address: addresses.creatorMagic,
+            abi: creatorArtistMagicAbi,
+            functionName:
+              kind === "mint" ? "isTokenInMintPool" : "isTokenInBurnedPool",
+            args: [tokenId],
+          })),
+        });
+        const values = successfulValues(results, chunk.length);
+        if (!values || values.some((value) => typeof value !== "boolean")) {
+          throw new Error("Gallery pool candidate state is incomplete");
+        }
+        const start = chunkIndex * GALLERY_POOL_SCAN_BATCH_SIZE;
+        chunk.forEach((tokenId, index) => {
+          candidates[start + index] = {
+            tokenId,
+            eligible: values[index] as boolean,
+          };
+        });
+      }
+    };
+    await Promise.all(
+      Array.from(
+        { length: Math.min(GALLERY_POOL_SCAN_CONCURRENCY, chunks.length) },
+        () => worker(),
+      ),
+    );
+
+    return {
+      status: "success",
+      blockNumber: capturedBlockNumber,
+      data: {
+        kind,
+        mintPoolStart,
+        mintPoolEnd,
+        totalNftSupply,
+        maxNftSupply,
+        candidates,
       },
     };
   } catch {

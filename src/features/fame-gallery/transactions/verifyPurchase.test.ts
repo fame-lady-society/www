@@ -7,10 +7,7 @@ import {
   type Hash,
   type Hex,
 } from "viem";
-import {
-  closedLoopGallerySwapAbi,
-  fameMirrorAbi,
-} from "../../../wagmi";
+import { closedLoopGallerySwapAbi, fameMirrorAbi } from "../../../wagmi";
 import type {
   GalleryPurchaseFingerprint,
   GalleryPurchaseReceipt,
@@ -161,13 +158,7 @@ function filled({
   });
 }
 
-function withdrawn({
-  amount,
-  logIndex,
-}: {
-  amount: bigint;
-  logIndex: number;
-}) {
+function withdrawn({ amount, logIndex }: { amount: bigint; logIndex: number }) {
   return rawLog({
     address: gallery,
     topics: exactTopics(
@@ -334,6 +325,58 @@ describe("gallery purchase verification", () => {
       assert.equal(result.acquiredNft.recipient, recipient);
       assert.equal(result.acquiredNft.currentOwner, laterOwner);
       assert.equal(result.acquiredNft.receiptBlockAccruedFees, 20n);
+    }
+  });
+
+  it("reconciles inventory changes before the target transaction", async () => {
+    const targetLogs = [
+      ...purchaseLogs().slice(0, -1),
+      filled({
+        logIndex: 5,
+        inventoryBefore: 9n,
+        inventoryAfter: 10n,
+      }),
+    ].map((log) => ({ ...log, transactionIndex: 1 }));
+    const logs = [
+      mirrorTransfer({
+        from: gallery,
+        to: laterOwner,
+        id: 88n,
+        logIndex: 0,
+        transactionHash: laterHash,
+        transactionIndex: 0,
+      }),
+      ...targetLogs,
+    ];
+
+    const result = await verifyGalleryPurchase({
+      receipt: receipt(targetLogs),
+      expectedHash: hash,
+      fingerprint,
+      preFillSnapshot: baseline,
+      addresses: { gallery, mirror },
+      dependencies: {
+        async readReceiptBlockState() {
+          return {
+            owner: recipient,
+            listingActive: false,
+            inventory: 10n,
+            accruedProtocolFees: 70n,
+          };
+        },
+        async readReconciliationLogs() {
+          return logs;
+        },
+        async readTokenUri() {
+          return "metadata";
+        },
+      },
+    });
+
+    assert.equal(result.status, "verified");
+    if (result.status === "verified") {
+      assert.equal(result.acquiredNft.inventoryBefore, 9n);
+      assert.equal(result.acquiredNft.receiptBlockInventory, 10n);
     }
   });
 
