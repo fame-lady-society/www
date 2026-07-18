@@ -4,7 +4,6 @@ import {
   fameMetadataFetchUrls,
   imageFromFameMetadata,
   irysGatewayToArweaveUrl,
-  normalizeFameImageUrl,
 } from "./fameMetadata";
 
 describe("fame metadata URL handling", () => {
@@ -27,23 +26,24 @@ describe("fame metadata URL handling", () => {
     );
   });
 
-  it("leaves non-Irys and local image URLs unchanged", () => {
-    assert.equal(
-      normalizeFameImageUrl("https://www.fameladysociety.com/image.png"),
-      "https://www.fameladysociety.com/image.png",
-    );
-    assert.equal(
-      normalizeFameImageUrl("/images/fame/gold-leaf-square.png"),
-      "/images/fame/gold-leaf-square.png",
-    );
-  });
-
-  it("extracts and normalizes the metadata image field", () => {
+  it("preserves image URLs exactly as published in metadata", () => {
     assert.equal(
       imageFromFameMetadata({
         image: "https://gateway.irys.xyz/imageTx",
       }),
-      "https://arweave.net/imageTx",
+      "https://gateway.irys.xyz/imageTx",
+    );
+    assert.equal(
+      imageFromFameMetadata({
+        image: "https://www.fameladysociety.com/image.png",
+      }),
+      "https://www.fameladysociety.com/image.png",
+    );
+    assert.equal(
+      imageFromFameMetadata({
+        image: "/images/fame/gold-leaf-square.png",
+      }),
+      "/images/fame/gold-leaf-square.png",
     );
   });
 
