@@ -20,7 +20,7 @@ export function getBrowserGalleryDiscoveryStorage() {
   if (sharedStorage) return sharedStorage;
 
   let storage: Storage | null = null;
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
     try {
       storage = window.localStorage;
     } catch {
