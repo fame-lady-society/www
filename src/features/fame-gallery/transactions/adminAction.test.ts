@@ -1,87 +1,96 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { maxUint256, type Address, type Hash } from "viem";
+import type { GalleryAdminCall } from "../types";
 import {
-  createGalleryAdminSubmissionGate,
   executeGalleryAdminAction,
+  galleryAdminReducer,
+  initialGalleryAdminState,
+  parseGalleryFeeRecipient,
   parseGalleryPremium,
-  parseGalleryRendererSeed,
-  parseGalleryTokenId,
-  parseUnsignedTestAmount,
   type GalleryAdminDependencies,
   type GalleryAdminEvent,
 } from "./adminAction";
 
 const account = "0x1111111111111111111111111111111111111111" as Address;
+const recipient = "0x2222222222222222222222222222222222222222" as Address;
 const hash = `0x${"a".repeat(64)}` as Hash;
 
 describe("gallery admin actions", () => {
-  it("parses bounded plain-decimal token, seed, premium, and withdrawal inputs", () => {
-    assert.equal(parseGalleryTokenId("888"), 888n);
-    assert.equal(parseGalleryRendererSeed("0"), 0n);
-    assert.equal(parseGalleryRendererSeed(maxUint256.toString()), maxUint256);
+  it("parses ABI-safe premium and required address inputs", () => {
+    const contractRejectedButAbiSafePremium =
+      ((1n << 96n) / 10n ** 18n + 1n).toString();
+    assert.equal(parseGalleryPremium("0"), 0n);
     assert.equal(parseGalleryPremium("1.25"), 1_250_000_000_000_000_000n);
     assert.equal(
-      parseUnsignedTestAmount("0", { allowZero: true, maximum: 10n }),
-      0n,
+      parseGalleryPremium(contractRejectedButAbiSafePremium),
+      BigInt(contractRejectedButAbiSafePremium) * 10n ** 18n,
     );
+    assert.equal(parseGalleryFeeRecipient(recipient), recipient);
 
-    for (const value of ["", "-1", "1e3", "1.2.3", "1.".padEnd(82, "0")]) {
-      assert.throws(() => parseUnsignedTestAmount(value, { allowZero: true }));
+    for (const value of ["", "-1", "1e3", "1.2.3", "1.0000000000000000001"]) {
+      assert.throws(() => parseGalleryPremium(value));
     }
-    assert.throws(() => parseGalleryPremium("0"));
-    assert.throws(() => parseGalleryPremium("1.0000000000000000001"));
-    assert.throws(() =>
-      parseGalleryPremium(((1n << 96n) / 10n ** 18n + 1n).toString()),
-    );
-    assert.throws(() => parseGalleryTokenId("0"));
-    assert.throws(() => parseGalleryTokenId("889"));
-    assert.throws(() => parseGalleryRendererSeed("-1"));
-    assert.throws(() => parseGalleryRendererSeed(`${maxUint256}0`));
+    assert.throws(() => parseGalleryPremium(maxUint256.toString()));
+    assert.throws(() => parseGalleryFeeRecipient(""));
+    assert.throws(() => parseGalleryFeeRecipient("not an address"));
   });
 
-  it("simulates the exact gallery call before one wallet request", async () => {
-    const events: GalleryAdminEvent[] = [];
-    const calls: string[] = [];
-    const dependencies: GalleryAdminDependencies = {
-      dispatch(event) {
-        events.push(event);
-      },
-      getWalletContext() {
-        return { account, chainId: 84_532 };
-      },
-      async switchChain() {
-        calls.push("switch");
-      },
-      async simulate(call) {
-        calls.push(`simulate ${call.kind}`);
-        return call;
-      },
-      async write() {
-        calls.push("write");
-        return hash;
-      },
-      async waitForReceipt() {
-        calls.push("wait");
-        return { status: "success" };
-      },
-      async refresh(call) {
-        calls.push(`refresh ${call.kind}`);
-      },
-    };
+  for (const call of [
+    { kind: "set_premium", premium: 10n },
+    { kind: "set_fee_recipient", feeRecipient: recipient },
+    { kind: "pause" },
+    { kind: "unpause" },
+  ] satisfies GalleryAdminCall[]) {
+    it(`simulates and submits the exact ${call.kind} request before refreshing`, async () => {
+      const events: GalleryAdminEvent[] = [];
+      const calls: unknown[] = [];
+      const prepared = { request: call };
+      const dependencies: GalleryAdminDependencies = {
+        dispatch(event) {
+          events.push(event);
+        },
+        getWalletContext() {
+          return { account, chainId: 84_532 };
+        },
+        async switchChain() {
+          calls.push("switch");
+        },
+        async simulate(exactCall) {
+          calls.push(["simulate", exactCall]);
+          return prepared;
+        },
+        async write(request) {
+          calls.push(["write", request]);
+          return hash;
+        },
+        async waitForReceipt(inputHash) {
+          calls.push(["wait", inputHash, 1]);
+          return { status: "success" };
+        },
+        async refresh(exactCall) {
+          calls.push(["refresh", exactCall]);
+        },
+      };
 
-    const result = await executeGalleryAdminAction(
-      { kind: "list", tokenId: 7n, premium: 10n },
-      84_532,
-      dependencies,
-    );
+      const result = await executeGalleryAdminAction(
+        call,
+        84_532,
+        dependencies,
+      );
 
-    assert.deepEqual(result, { status: "confirmed", hash });
-    assert.deepEqual(calls, ["simulate list", "write", "wait", "refresh list"]);
-    assert.equal(events.at(-1)?.type, "confirmed");
-  });
+      assert.deepEqual(result, { status: "confirmed", hash });
+      assert.deepEqual(calls, [
+        ["simulate", call],
+        ["write", prepared],
+        ["wait", hash, 1],
+        ["refresh", call],
+      ]);
+      assert.equal(events.at(-1)?.type, "confirmed");
+    });
+  }
 
-  it("keeps a mined action confirmed when canonical refresh fails", async () => {
+  it("keeps a mined action confirmed when the canonical reread fails", async () => {
     const events: GalleryAdminEvent[] = [];
     const refreshFailure = new Error("RPC unavailable");
     const dependencies: GalleryAdminDependencies = {
@@ -93,7 +102,7 @@ describe("gallery admin actions", () => {
       },
       async switchChain() {},
       async simulate() {
-        return null;
+        return { request: "prepared" };
       },
       async write() {
         return hash;
@@ -107,7 +116,7 @@ describe("gallery admin actions", () => {
     };
 
     const result = await executeGalleryAdminAction(
-      { kind: "unlist", tokenId: 7n },
+      { kind: "pause" },
       84_532,
       dependencies,
     );
@@ -120,19 +129,60 @@ describe("gallery admin actions", () => {
     assert.equal(events.at(-1)?.type, "confirmed_refreshing");
   });
 
-  it("serializes rapid admin submissions", async () => {
-    const gate = createGalleryAdminSubmissionGate();
-    let release!: () => void;
-    const first = gate.run(
-      () =>
-        new Promise<string>((resolve) => {
-          release = () => resolve("done");
-        }),
+  it("treats wagmi receipt errors as transaction errors without replacement handling", async () => {
+    const receiptFailure = new Error("transaction replaced");
+    const events: GalleryAdminEvent[] = [];
+    const result = await executeGalleryAdminAction(
+      { kind: "unpause" },
+      84_532,
+      {
+        dispatch(event) {
+          events.push(event);
+        },
+        getWalletContext() {
+          return { account, chainId: 84_532 };
+        },
+        async switchChain() {},
+        async simulate() {
+          return { request: "prepared" };
+        },
+        async write() {
+          return hash;
+        },
+        async waitForReceipt() {
+          throw receiptFailure;
+        },
+        async refresh() {
+          assert.fail("refresh must not run without a confirmed receipt");
+        },
+      },
     );
-    assert.deepEqual(await gate.run(async () => "second"), {
-      status: "blocked",
+
+    assert.deepEqual(result, {
+      status: "failed",
+      stage: "receipt",
+      cause: receiptFailure,
     });
-    release();
-    assert.equal(await first, "done");
+    assert.equal(events.at(-1)?.type, "failed");
+    assert.ok(
+      !events.some((event) =>
+        ["replacement", "outcome_unknown"].includes(event.type),
+      ),
+    );
+  });
+
+  it("keeps submitted values out of canonical state", () => {
+    const started = galleryAdminReducer(initialGalleryAdminState, {
+      type: "started",
+      call: { kind: "set_premium", premium: 25n },
+    });
+
+    assert.deepEqual(Object.keys(started).sort(), [
+      "call",
+      "failure",
+      "hash",
+      "status",
+    ]);
+    assert.equal(started.status, "simulating");
   });
 });

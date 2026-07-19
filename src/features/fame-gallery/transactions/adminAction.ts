@@ -1,19 +1,15 @@
 import {
-  isAddressEqual,
+  isAddress,
   maxUint256,
   parseUnits,
   type Address,
   type Hash,
 } from "viem";
-import type { ReplacementReason } from "viem/actions";
+import type { GalleryAdminCall } from "../types";
 
-const UINT96_MAX = (1n << 96n) - 1n;
 const MAX_INPUT_LENGTH = 80;
 
-export function parseUnsignedTestAmount(
-  value: string,
-  { allowZero, maximum = maxUint256 }: { allowZero: boolean; maximum?: bigint },
-) {
+export function parseGalleryPremium(value: string) {
   const normalized = value.trim();
   if (
     normalized.length === 0 ||
@@ -26,60 +22,20 @@ export function parseUnsignedTestAmount(
   if (fraction.length > 18) {
     throw new Error("TEST amounts support at most 18 decimal places.");
   }
-  const parsed = parseUnits(normalized, 18);
-  if ((!allowZero && parsed === 0n) || parsed > maximum) {
-    throw new Error("TEST amount is outside the supported range.");
+  const premium = parseUnits(normalized, 18);
+  if (premium > maxUint256) {
+    throw new Error("TEST premium exceeds a uint256 value.");
   }
-  return parsed;
+  return premium;
 }
 
-export function parseGalleryPremium(value: string) {
-  return parseUnsignedTestAmount(value, {
-    allowZero: false,
-    maximum: UINT96_MAX,
-  });
-}
-
-export function parseGalleryTokenId(value: string) {
+export function parseGalleryFeeRecipient(value: string): Address {
   const normalized = value.trim();
-  if (
-    normalized.length === 0 ||
-    normalized.length > MAX_INPUT_LENGTH ||
-    !/^\d+$/.test(normalized)
-  ) {
-    throw new Error("Token ID must be a plain decimal integer.");
+  if (!isAddress(normalized)) {
+    throw new Error("Enter a valid fee recipient address.");
   }
-  const tokenId = BigInt(normalized);
-  if (tokenId < 1n || tokenId > 888n) {
-    throw new Error("Token ID must be between 1 and 888.");
-  }
-  return tokenId;
+  return normalized;
 }
-
-export function parseGalleryRendererSeed(value: string) {
-  const normalized = value.trim();
-  if (
-    normalized.length === 0 ||
-    normalized.length > 78 ||
-    !/^\d+$/.test(normalized)
-  ) {
-    throw new Error("Renderer seed must be a uint256 decimal integer.");
-  }
-  const seed = BigInt(normalized);
-  if (seed > maxUint256) {
-    throw new Error("Renderer seed exceeds uint256.");
-  }
-  return seed;
-}
-
-export type GalleryAdminCall =
-  | { kind: "list"; tokenId: bigint; premium: bigint }
-  | { kind: "set_premium"; tokenId: bigint; premium: bigint }
-  | { kind: "unlist"; tokenId: bigint }
-  | { kind: "rotate_mint"; tokenId: bigint; poolTokenId: bigint }
-  | { kind: "rotate_burn"; tokenId: bigint; poolTokenId: bigint }
-  | { kind: "rotate_end_of_mint"; tokenId: bigint; metadataUri: string }
-  | { kind: "withdraw_fees"; recipient: Address; amount: bigint };
 
 export type GalleryAdminStatus =
   | "idle"
@@ -89,7 +45,6 @@ export type GalleryAdminStatus =
   | "confirming"
   | "confirmed"
   | "confirmed_refreshing"
-  | "outcome_unknown"
   | "error";
 
 export type GalleryAdminState = {
@@ -112,10 +67,8 @@ export type GalleryAdminEvent =
   | { type: "simulating" }
   | { type: "wallet_requested" }
   | { type: "broadcast"; hash: Hash }
-  | { type: "replacement"; reason: ReplacementReason; hash: Hash }
   | { type: "confirmed" }
   | { type: "confirmed_refreshing"; cause: unknown }
-  | { type: "outcome_unknown"; cause: unknown }
   | { type: "failed"; stage: string; cause: unknown }
   | { type: "reset" };
 
@@ -138,8 +91,6 @@ export function galleryAdminReducer(
       return { ...state, status: "awaiting_wallet" };
     case "broadcast":
       return { ...state, status: "confirming", hash: event.hash };
-    case "replacement":
-      return { ...state, status: "confirming", hash: event.hash };
     case "confirmed":
       return { ...state, status: "confirmed", failure: null };
     case "confirmed_refreshing":
@@ -147,12 +98,6 @@ export function galleryAdminReducer(
         ...state,
         status: "confirmed_refreshing",
         failure: { stage: "refresh", cause: event.cause },
-      };
-    case "outcome_unknown":
-      return {
-        ...state,
-        status: "outcome_unknown",
-        failure: { stage: "receipt", cause: event.cause },
       };
     case "failed":
       return {
@@ -172,25 +117,17 @@ export type GalleryAdminDependencies = {
     | Promise<{ account: Address | null; chainId: number | undefined }>;
   switchChain: (chainId: number) => Promise<unknown>;
   simulate: (call: GalleryAdminCall, account: Address) => Promise<unknown>;
-  write: (
-    prepared: unknown,
-    call: GalleryAdminCall,
-    account: Address,
-  ) => Promise<Hash>;
-  waitForReceipt: (input: {
-    hash: Hash;
-    onReplaced: (replacement: {
-      reason: ReplacementReason;
-      hash: Hash;
-    }) => void;
-  }) => Promise<{ status: "success" | "reverted" }>;
+  write: (preparedRequest: unknown) => Promise<Hash>;
+  waitForReceipt: (
+    hash: Hash,
+    confirmations: 1,
+  ) => Promise<{ status: "success" | "reverted" }>;
   refresh: (call: GalleryAdminCall) => Promise<void>;
 };
 
 export type GalleryAdminResult =
   | { status: "confirmed"; hash: Hash }
   | { status: "confirmed_refreshing"; hash: Hash; cause: unknown }
-  | { status: "outcome_unknown"; hash: Hash; cause: unknown }
   | { status: "failed"; stage: string; cause: unknown };
 
 export async function executeGalleryAdminAction(
@@ -219,59 +156,18 @@ export async function executeGalleryAdminAction(
     if (!wallet.account || wallet.chainId !== targetChainId) {
       return fail(new Error("The wallet did not switch to Base Sepolia."));
     }
-    const account = wallet.account;
 
     stage = "simulation";
     dependencies.dispatch({ type: "simulating" });
-    const prepared = await dependencies.simulate(call, account);
-    const current = await dependencies.getWalletContext();
-    if (
-      !current.account ||
-      current.chainId !== targetChainId ||
-      !isAddressEqual(current.account, account)
-    ) {
-      return fail(
-        new Error("The connected wallet or chain changed before submission."),
-      );
-    }
+    const preparedRequest = await dependencies.simulate(call, wallet.account);
 
     stage = "wallet";
     dependencies.dispatch({ type: "wallet_requested" });
-    hash = await dependencies.write(prepared, call, account);
+    hash = await dependencies.write(preparedRequest);
     dependencies.dispatch({ type: "broadcast", hash });
 
     stage = "receipt";
-    let replacement: { reason: ReplacementReason; hash: Hash } | undefined;
-    let receipt;
-    try {
-      receipt = await dependencies.waitForReceipt({
-        hash,
-        onReplaced(next) {
-          replacement = next;
-          hash = next.hash;
-          dependencies.dispatch({
-            type: "replacement",
-            reason: next.reason,
-            hash: next.hash,
-          });
-        },
-      });
-    } catch (cause) {
-      if (!replacement || replacement.reason === "repriced") {
-        dependencies.dispatch({ type: "outcome_unknown", cause });
-        return { status: "outcome_unknown", hash, cause };
-      }
-      return fail(cause);
-    }
-    if (replacement && replacement.reason !== "repriced") {
-      return fail(
-        new Error(
-          replacement.reason === "cancelled"
-            ? "The replacement cancelled this transaction."
-            : "A different transaction replaced this admin action.",
-        ),
-      );
-    }
+    const receipt = await dependencies.waitForReceipt(hash, 1);
     if (receipt.status === "reverted") {
       return fail(new Error("The admin transaction reverted onchain."));
     }
@@ -290,17 +186,11 @@ export async function executeGalleryAdminAction(
   }
 }
 
-export function createGalleryAdminSubmissionGate() {
-  let active = false;
-  return {
-    async run<T>(operation: () => Promise<T>) {
-      if (active) return { status: "blocked" as const };
-      active = true;
-      try {
-        return await operation();
-      } finally {
-        active = false;
-      }
-    },
-  };
+export function isGalleryAdminActionBusy(state: GalleryAdminState) {
+  return [
+    "switching_chain",
+    "simulating",
+    "awaiting_wallet",
+    "confirming",
+  ].includes(state.status);
 }

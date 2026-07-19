@@ -20,12 +20,12 @@ export function AdminGate({ state }: { state: AdminGateState }) {
     case "disconnected":
       title = "Connect to manage the TEST gallery";
       message =
-        "Connect a wallet so the gallery contract can resolve owner or operator authority.";
+        "Connect a wallet so the marketplace can resolve its current owner.";
       control = state.connectionControl;
       break;
     case "checking":
-      title = "Checking permissions";
-      message = "Reading owner and operator authority from Base Sepolia.";
+      title = "Checking owner access";
+      message = "Reading the current marketplace owner from Base Sepolia.";
       break;
     case "failure":
       title = "Could not check access";
@@ -45,8 +45,7 @@ export function AdminGate({ state }: { state: AdminGateState }) {
       break;
     case "denied":
       title = "Access denied";
-      message =
-        "This wallet is not recognized as the gallery owner or an operator.";
+      message = "This wallet is not the current marketplace owner.";
       break;
   }
 

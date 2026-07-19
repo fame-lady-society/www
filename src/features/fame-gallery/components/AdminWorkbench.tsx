@@ -3,24 +3,21 @@
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Divider from "@mui/material/Divider";
+import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
-import { formatUnits } from "viem";
+import { useEffect } from "react";
 import { baseSepolia } from "viem/chains";
 import { useSwitchChain } from "wagmi";
 import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
 import { useAccount } from "@/hooks/useAccount";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { formatTestAmount } from "../format";
 import { useGalleryAuthority } from "../hooks/useGalleryAuthority";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
-import type {
-  GalleryAuthority,
-  GalleryGlobalState,
-  GalleryHookProjection,
-} from "../types";
+import type { GalleryGlobalState, GalleryHookProjection } from "../types";
 import { AdminGate, type AdminGateState } from "./AdminGate";
 import { AdminMarketActions } from "./AdminMarketActions";
 
@@ -28,7 +25,6 @@ type AuthorizedState = {
   status: "authorized";
   account: `0x${string}`;
   connectedChainId: number | undefined;
-  authority: Exclude<GalleryAuthority, "denied">;
   global: GalleryHookProjection<GalleryGlobalState>;
   isSwitching: boolean;
   onSwitchChain: () => void;
@@ -55,7 +51,7 @@ function AddressRow({ label, address }: { label: string; address: string }) {
   );
 }
 
-function GlobalDiagnostics({
+function MarketplaceSummary({
   global,
 }: {
   global: GalleryHookProjection<GalleryGlobalState>;
@@ -63,36 +59,37 @@ function GlobalDiagnostics({
   if (global.status === "idle" || global.status === "loading") {
     return (
       <Typography role="status" aria-live="polite">
-        Loading gallery state…
+        Loading marketplace state…
       </Typography>
     );
   }
   if (global.status === "failure") {
     return (
       <Alert severity="error" role="alert">
-        Gallery state read failed: {global.message}
+        Marketplace state read failed: {global.message}
       </Alert>
     );
   }
 
+  const { data } = global;
   return (
     <Stack spacing={1.25}>
-      <AddressRow label="TEST token" address={global.data.fame} />
-      <AddressRow label="Society NFT mirror" address={global.data.mirror} />
-      <AddressRow label="CreatorMagic" address={global.data.creatorMagic} />
-      <AddressRow label="TEST renderer" address={global.data.renderer} />
-      <AddressRow label="Fee recipient" address={global.data.feeRecipient} />
-      <Divider />
       <Stack direction="row" justifyContent="space-between" spacing={2}>
-        <Typography color="text.secondary">Gallery inventory</Typography>
-        <Typography>{global.data.inventory.toString()} NFTs</Typography>
-      </Stack>
-      <Stack direction="row" justifyContent="space-between" spacing={2}>
-        <Typography color="text.secondary">Accrued fees</Typography>
-        <Typography>
-          {formatUnits(global.data.accruedProtocolFees, 18)} TEST
+        <Typography color="text.secondary">Status</Typography>
+        <Typography fontWeight={700}>
+          {data.paused ? "Paused" : "Live"}
         </Typography>
       </Stack>
+      <Stack direction="row" justifyContent="space-between" spacing={2}>
+        <Typography color="text.secondary">Premium</Typography>
+        <Typography>{formatTestAmount(data.premium)} TEST</Typography>
+      </Stack>
+      <AddressRow label="Fee recipient" address={data.feeRecipient} />
+      <Stack direction="row" justifyContent="space-between" spacing={2}>
+        <Typography color="text.secondary">Marketplace inventory</Typography>
+        <Typography>{data.inventory.toString()} NFTs</Typography>
+      </Stack>
+      <AddressRow label="Current owner" address={data.owner} />
       <Typography variant="caption" color="text.secondary">
         Canonical read block {global.blockNumber.toString()}
       </Typography>
@@ -109,44 +106,30 @@ export function AdminWorkbenchView({
     return <AdminGate state={state} />;
   }
 
+  const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
   const wrongChain = state.connectedChainId !== baseSepolia.id;
   return (
     <Stack spacing={3}>
       <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
         <Stack spacing={2}>
           <Typography component="h2" variant="h5">
-            Gallery context
+            Marketplace context
           </Typography>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={{ xs: 1, md: 4 }}
+          <AddressRow label="Connected owner" address={state.account} />
+          <AddressRow label="Marketplace" address={config.addresses.gallery} />
+          <Link
+            href={`${config.explorerBaseUrl}/address/${config.addresses.gallery}`}
+            target="_blank"
+            rel="noreferrer"
+            sx={{
+              alignSelf: "flex-start",
+              minHeight: 44,
+              display: "inline-flex",
+              alignItems: "center",
+            }}
           >
-            <div>
-              <Typography variant="caption" color="text.secondary">
-                Recognized authority
-              </Typography>
-              <Typography sx={{ textTransform: "capitalize" }}>
-                {state.authority}
-              </Typography>
-            </div>
-            <div>
-              <Typography variant="caption" color="text.secondary">
-                Connected chain
-              </Typography>
-              <Typography>
-                {state.connectedChainId === baseSepolia.id
-                  ? "Base Sepolia"
-                  : state.connectedChainId
-                    ? `Chain ${state.connectedChainId}`
-                    : "Unknown"}
-              </Typography>
-            </div>
-          </Stack>
-          <AddressRow label="Connected account" address={state.account} />
-          <AddressRow
-            label="Gallery"
-            address={BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery}
-          />
+            View contract on BaseScan
+          </Link>
           {wrongChain ? (
             <Alert
               severity="warning"
@@ -162,8 +145,7 @@ export function AdminWorkbenchView({
                 </Button>
               }
             >
-              Base Sepolia is required before a write. Contract read access
-              remains available.
+              Switching to Base Sepolia for marketplace actions.
             </Alert>
           ) : null}
         </Stack>
@@ -172,16 +154,16 @@ export function AdminWorkbenchView({
       <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
         <Stack spacing={2}>
           <Typography component="h2" variant="h5">
-            Deployed TEST stack
+            Current marketplace state
           </Typography>
-          <GlobalDiagnostics global={state.global} />
+          <MarketplaceSummary global={state.global} />
         </Stack>
       </Paper>
 
       {state.actions ?? (
         <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
-          <Typography color="text.secondary">
-            Market controls are loading…
+          <Typography role="status" color="text.secondary">
+            Marketplace controls are loading…
           </Typography>
         </Paper>
       )}
@@ -194,9 +176,17 @@ export function AdminWorkbench() {
   const authority = useGalleryAuthority(account.address ?? null);
   const isAuthorized =
     authority.projection.status === "success" &&
-    authority.projection.data.authority !== "denied";
+    authority.projection.data.authority === "owner";
   const global = useGalleryGlobalState({ enabled: isAuthorized });
-  const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
+  const { mutate: switchChain, isPending: isSwitching } = useSwitchChain();
+  const shouldSwitch =
+    account.isConnected && account.chainId !== baseSepolia.id;
+
+  useEffect(() => {
+    if (shouldSwitch) {
+      switchChain({ chainId: baseSepolia.id });
+    }
+  }, [shouldSwitch, switchChain]);
 
   usePageAttentionRefresh(async () => {
     await authority.refresh();
@@ -227,17 +217,11 @@ export function AdminWorkbench() {
       status: "authorized",
       account: account.address,
       connectedChainId: account.chainId,
-      authority: authority.projection.data.authority,
       global: global.projection,
       isSwitching,
-      onSwitchChain: () => {
-        void switchChainAsync({ chainId: baseSepolia.id }).catch(
-          () => undefined,
-        );
-      },
+      onSwitchChain: () => switchChain({ chainId: baseSepolia.id }),
       actions: (
         <AdminMarketActions
-          authority={authority.projection.data.authority}
           global={global.projection}
           refreshGlobal={global.refresh}
         />
@@ -253,10 +237,10 @@ export function AdminWorkbench() {
       <Stack spacing={3}>
         <header>
           <Typography component="h1" variant="h3">
-            TEST gallery admin
+            TEST marketplace admin
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Inspect and operate the deployed Base Sepolia market.
+            Operate the Universal Pool Art Marketplace on Base Sepolia.
           </Typography>
         </header>
         <AdminWorkbenchView state={state} />

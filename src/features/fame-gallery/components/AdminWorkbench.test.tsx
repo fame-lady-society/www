@@ -4,12 +4,44 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import { PRIMARY_GALLERY_ADMIN_ACTIONS } from "./AdminMarketActions";
 import { AdminWorkbenchView } from "./AdminWorkbench";
-import { TestBadge } from "./TestBadge";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
+const owner = "0x0000000000000000000000000000000000000001" as const;
+const feeRecipient = "0x0000000000000000000000000000000000000002" as const;
 
-describe("TEST gallery admin access", () => {
-  it("prompts disconnected visitors without rendering diagnostics", () => {
+function authorizedMarkup(paused = false) {
+  return renderToStaticMarkup(
+    <AdminWorkbenchView
+      state={{
+        status: "authorized",
+        account: owner,
+        connectedChainId: 84_532,
+        global: {
+          status: "success",
+          blockNumber: 44_400_000n,
+          data: {
+            marketplace: config.addresses.gallery,
+            fame: config.addresses.fame,
+            mirror: config.addresses.mirror,
+            creatorMagic: config.addresses.creatorMagic,
+            owner,
+            paused,
+            premium: 25n,
+            feeRecipient,
+            inventory: 2n,
+            unit: 1_000_000n,
+          },
+        },
+        isSwitching: false,
+        onSwitchChain: () => undefined,
+        actions: <div>Successor controls</div>,
+      }}
+    />,
+  );
+}
+
+describe("TEST gallery admin workbench", () => {
+  it("prompts disconnected visitors without rendering admin state", () => {
     const html = renderToStaticMarkup(
       <AdminWorkbenchView
         state={{
@@ -23,13 +55,10 @@ describe("TEST gallery admin access", () => {
     assert.doesNotMatch(html, new RegExp(config.addresses.gallery, "i"));
   });
 
-  it("keeps authority read failure distinct from access denial", () => {
+  it("keeps owner read failure distinct from access denial", () => {
     const html = renderToStaticMarkup(
       <AdminWorkbenchView
-        state={{
-          status: "failure",
-          onRetry: () => undefined,
-        }}
+        state={{ status: "failure", onRetry: () => undefined }}
       />,
     );
 
@@ -38,7 +67,7 @@ describe("TEST gallery admin access", () => {
     assert.doesNotMatch(html, /Access denied/);
   });
 
-  it("denies an unrelated wallet without leaking the workbench", () => {
+  it("denies a confirmed non-owner without leaking the workbench", () => {
     const html = renderToStaticMarkup(
       <AdminWorkbenchView state={{ status: "denied" }} />,
     );
@@ -46,65 +75,37 @@ describe("TEST gallery admin access", () => {
     assert.match(html, /Access denied/);
     assert.doesNotMatch(
       html,
-      new RegExp(`${config.addresses.gallery}|accrued fees|inventory`, "i"),
+      new RegExp(`${config.addresses.gallery}|premium|inventory`, "i"),
     );
   });
 
-  it("admits an operator on the wrong wallet chain and requests a switch only for writes", () => {
-    const html = renderToStaticMarkup(
-      <AdminWorkbenchView
-        state={{
-          status: "authorized",
-          account: config.addresses.smokeRecipient,
-          connectedChainId: 1,
-          authority: "operator",
-          global: {
-            status: "success",
-            blockNumber: 44_300_000n,
-            data: {
-              gallery: config.addresses.gallery,
-              fame: config.addresses.fame,
-              mirror: config.addresses.mirror,
-              creatorMagic: config.addresses.creatorMagic,
-              renderer: config.addresses.renderer,
-              feeRecipient: config.addresses.feeRecipient,
-              accruedProtocolFees: 1_000n * 10n ** 18n,
-              unit: 1_000_000n * 10n ** 18n,
-              inventory: 2n,
-            },
-          },
-          isSwitching: false,
-          onSwitchChain: () => undefined,
-        }}
-      />,
-    );
+  it("shows the current owner, live state, premium, recipient, inventory, and explorer", () => {
+    const html = authorizedMarkup();
 
-    assert.match(html, /operator/);
-    assert.match(html, new RegExp(config.addresses.gallery, "i"));
-    assert.match(html, /Switch to Base Sepolia/);
-    assert.match(html, /read access remains available/i);
+    assert.match(html, /Live/);
+    assert.match(html, /25 TEST/);
+    assert.match(html, /2 NFTs/);
+    assert.match(html, new RegExp(owner, "i"));
+    assert.match(html, new RegExp(feeRecipient, "i"));
+    assert.match(html, /View contract on BaseScan/);
+    assert.match(html, /Successor controls/);
   });
 
-  it("renders the compact TEST identity badge", () => {
-    const html = renderToStaticMarkup(<TestBadge />);
-
-    assert.match(html, />TEST</);
+  it("shows paused as canonical lifecycle state", () => {
+    assert.match(authorizedMarkup(true), /Paused/);
   });
 
-  it("keeps the primary workbench scoped to TEST gallery contract actions", () => {
+  it("exposes only the four successor calls across three operational controls", () => {
     assert.deepEqual(PRIMARY_GALLERY_ADMIN_ACTIONS, [
-      "list",
       "set_premium",
-      "unlist",
-      "rotate_mint",
-      "rotate_burn",
-      "rotate_end_of_mint",
-      "withdraw_fees",
-      "scan_all_888",
+      "set_fee_recipient",
+      "pause",
+      "unpause",
     ]);
     assert.ok(
       PRIMARY_GALLERY_ADMIN_ACTIONS.every(
-        (action) => !/art|upload|creator|payment/i.test(action),
+        (action) =>
+          !/list|rotation|withdraw|scan|operator|ownership|rescue/.test(action),
       ),
     );
   });

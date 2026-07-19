@@ -2,7 +2,6 @@
 
 import { getConnection } from "@wagmi/core";
 import { useCallback, useReducer, useRef, useState } from "react";
-import type { Address } from "viem";
 import {
   useConfig,
   usePublicClient,
@@ -11,13 +10,12 @@ import {
 } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
-  createGalleryAdminSubmissionGate,
   executeGalleryAdminAction,
   galleryAdminReducer,
   initialGalleryAdminState,
-  type GalleryAdminCall,
 } from "../transactions/adminAction";
 import { galleryAdminContractRequest } from "../transactions/contractRequests";
+import type { GalleryAdminCall } from "../types";
 
 const chainId = BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId;
 
@@ -28,15 +26,14 @@ export function useGalleryAdminAction({
 }) {
   const config = useConfig();
   const publicClient = usePublicClient({ chainId });
-  const { switchChainAsync } = useSwitchChain();
-  const { writeContractAsync } = useWriteContract();
+  const { mutateAsync: switchChainAsync } = useSwitchChain();
+  const { mutateAsync: writeContractAsync } = useWriteContract();
   const [state, dispatch] = useReducer(
     galleryAdminReducer,
     initialGalleryAdminState,
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [isRetryingRefresh, setIsRetryingRefresh] = useState(false);
-  const gate = useRef(createGalleryAdminSubmissionGate());
   const refreshInFlight = useRef(false);
 
   const submit = useCallback(
@@ -52,76 +49,38 @@ export function useGalleryAdminAction({
         });
       }
 
-      return gate.current.run(() =>
-        executeGalleryAdminAction(call, chainId, {
-          dispatch,
-          getWalletContext: () => {
-            const connection = getConnection(config);
-            return {
-              account: connection.address ?? null,
-              chainId: connection.chainId,
-            };
-          },
-          switchChain: (targetChainId) =>
-            switchChainAsync({ chainId: targetChainId }),
-          simulate: async (exactCall, account) => {
-            const request = galleryAdminContractRequest(exactCall, account);
-            switch (request.functionName) {
-              case "list":
-                await publicClient.simulateContract(request);
-                break;
-              case "setPremium":
-                await publicClient.simulateContract(request);
-                break;
-              case "unlist":
-                await publicClient.simulateContract(request);
-                break;
-              case "rotateToMintPool":
-                await publicClient.simulateContract(request);
-                break;
-              case "rotateToBurnPool":
-                await publicClient.simulateContract(request);
-                break;
-              case "rotateToEndOfMintPool":
-                await publicClient.simulateContract(request);
-                break;
-              case "withdrawAccruedFees":
-                await publicClient.simulateContract(request);
-                break;
-            }
-            return null;
-          },
-          write: (_prepared, exactCall, account) => {
-            const request = galleryAdminContractRequest(exactCall, account);
-            switch (request.functionName) {
-              case "list":
-                return writeContractAsync(request);
-              case "setPremium":
-                return writeContractAsync(request);
-              case "unlist":
-                return writeContractAsync(request);
-              case "rotateToMintPool":
-                return writeContractAsync(request);
-              case "rotateToBurnPool":
-                return writeContractAsync(request);
-              case "rotateToEndOfMintPool":
-                return writeContractAsync(request);
-              case "withdrawAccruedFees":
-                return writeContractAsync(request);
-            }
-          },
-          waitForReceipt: async ({ hash, onReplaced }) => {
-            const receipt = await publicClient.waitForTransactionReceipt({
-              hash,
-              confirmations: 1,
-              onReplaced: ({ reason, transaction }) =>
-                onReplaced({ reason, hash: transaction.hash }),
-            });
-            return { status: receipt.status };
-          },
-          refresh,
-        }),
-      );
+      return executeGalleryAdminAction(call, chainId, {
+        dispatch,
+        getWalletContext: () => {
+          const connection = getConnection(config);
+          return {
+            account: connection.address ?? null,
+            chainId: connection.chainId,
+          };
+        },
+        switchChain: (targetChainId) =>
+          switchChainAsync({ chainId: targetChainId }),
+        simulate: async (exactCall, account) => {
+          const request = galleryAdminContractRequest(exactCall, account);
+          switch (request.functionName) {
+            case "setPremium":
+              return (await publicClient.simulateContract(request)).request;
+            case "setFeeRecipient":
+              return (await publicClient.simulateContract(request)).request;
+            case "pause":
+              return (await publicClient.simulateContract(request)).request;
+            case "unpause":
+              return (await publicClient.simulateContract(request)).request;
+          }
+        },
+        write: (preparedRequest) =>
+          writeContractAsync(
+            preparedRequest as Parameters<typeof writeContractAsync>[0],
+          ),
+        waitForReceipt: (hash, confirmations) =>
+          publicClient.waitForTransactionReceipt({ hash, confirmations }),
+        refresh,
+      });
     },
     [config, publicClient, refresh, switchChainAsync, writeContractAsync],
   );
