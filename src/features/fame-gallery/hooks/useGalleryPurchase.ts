@@ -434,6 +434,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const buy = useCallback(
     (target: GalleryArtworkTarget) => {
       if (activeAttempt.current) return;
+      dispatch({ type: "reset" });
       const displayed = inputsRef.current.globalState;
       if (!displayed) {
         failOutsideQueue(

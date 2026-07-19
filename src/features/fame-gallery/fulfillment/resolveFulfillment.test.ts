@@ -173,7 +173,13 @@ describe("gallery fulfillment resolver", () => {
 
   it("tries another known shell and permits one explicit bounded refresh after exhaustion", async () => {
     const { source, calls } = mockSource({
-      tokens: new Map([[7n, tokenState({ inBurnPool: true })]]),
+      tokens: new Map([
+        [7n, tokenState({ inBurnPool: true })],
+        [
+          20n,
+          tokenState({ owner: marketplace, artworkHash: otherArtwork }),
+        ],
+      ]),
       shellOwners: new Map([
         [19n, elsewhere],
         [20n, marketplace],
@@ -292,6 +298,30 @@ describe("gallery fulfillment resolver", () => {
     assert.deepEqual(resolved, { kind: "held", shellId: 8n });
   });
 
+  it("uses explicit recovery to discover a new held route for the same artwork", async () => {
+    const { source } = mockSource({
+      tokens: new Map([
+        [7n, tokenState({ artworkHash: otherArtwork })],
+        [8n, tokenState({ owner: marketplace })],
+      ]),
+    });
+    let refreshes = 0;
+
+    const resolved = await resolveGalleryFulfillment({
+      terms: frozenTerms(),
+      candidateTokenIds: [7n],
+      knownShellTokenIds: [],
+      source,
+      refreshShellTokenIds: async () => {
+        refreshes += 1;
+        return [8n];
+      },
+    });
+
+    assert.deepEqual(resolved, { kind: "held", shellId: 8n });
+    assert.equal(refreshes, 1);
+  });
+
   it("produces no request when no known or refreshed shell remains", async () => {
     const { source } = mockSource({
       tokens: new Map([[7n, tokenState({ inMintPool: true })]]),
@@ -307,7 +337,7 @@ describe("gallery fulfillment resolver", () => {
         source,
         refreshShellTokenIds: async () => {
           refreshes += 1;
-          return [19n];
+          return [];
         },
       }),
       /no available delivery shell/i,

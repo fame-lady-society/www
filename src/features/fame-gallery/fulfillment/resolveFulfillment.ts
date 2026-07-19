@@ -150,6 +150,12 @@ type ResolutionAttempt =
     }
   | {
       status: "shell_exhausted";
+    }
+  | {
+      status: "artwork_unavailable";
+    }
+  | {
+      status: "artwork_ineligible";
     };
 
 async function resolveAtCurrentBlock({
@@ -213,7 +219,16 @@ async function resolveAtCurrentBlock({
   const matchingArtwork = candidates.filter(
     ({ state }) => state.artworkHash === terms.artworkHash,
   );
-  if (matchingArtwork.length === 0) throw unavailableArtwork();
+  return matchingArtwork.length === 0
+    ? { status: "artwork_unavailable" }
+    : { status: "artwork_ineligible" };
+}
+
+function throwUnresolvedResolution(
+  resolution: Exclude<ResolutionAttempt, { status: "resolved" }>,
+): never {
+  if (resolution.status === "shell_exhausted") throw unavailableShell();
+  if (resolution.status === "artwork_unavailable") throw unavailableArtwork();
   throw ineligibleArtwork();
 }
 
@@ -241,17 +256,22 @@ export async function resolveGalleryFulfillment({
     source,
   });
 
-  if (resolution.status === "shell_exhausted" && refreshShellTokenIds) {
+  if (resolution.status !== "resolved" && refreshShellTokenIds) {
     const refreshedShellIds = await refreshShellTokenIds();
     resolution = await resolveAtCurrentBlock({
       terms,
-      candidateTokenIds,
+      candidateTokenIds: uniqueTokenIds([
+        ...candidateTokenIds,
+        ...refreshedShellIds,
+      ]),
       shellTokenIds: refreshedShellIds,
       source,
     });
   }
 
-  if (resolution.status === "shell_exhausted") throw unavailableShell();
+  if (resolution.status !== "resolved") {
+    throwUnresolvedResolution(resolution);
+  }
 
   return resolution.route;
 }

@@ -118,6 +118,22 @@ function harness(allowances: bigint[]) {
 }
 
 describe("gallery purchase queue", () => {
+  it("reset clears frozen terms before a new purchase preflight", () => {
+    const prior = galleryPurchaseReducer(initialGalleryPurchaseState, {
+      type: "started",
+      terms,
+    });
+    const reset = galleryPurchaseReducer(prior, { type: "reset" });
+    const failed = galleryPurchaseReducer(reset, {
+      type: "failed",
+      stage: "switch_chain",
+      cause: new Error("rejected"),
+    });
+
+    assert.equal(failed.terms, null);
+    assert.equal(failed.status, "error");
+  });
+
   it("skips approval when a fresh allowance covers the frozen maximum", async () => {
     const test = harness([1_025n]);
     const result = await executeGalleryPurchase({
