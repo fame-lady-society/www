@@ -64,7 +64,7 @@ export function govSocietyFromNetwork(
 export function creatorArtistMagicAddress(chainId: typeof base.id) {
   switch (chainId) {
     case base.id:
-      return "0x8091D00A25ebE87A2A1Ef19e1d33689FCAdC3fA5" as const;
+      return "0xC8268c2aa571F3C88044C2959F73DdB8eB9e139F" as const;
     default:
       throw new Error("Invalid chainId");
   }

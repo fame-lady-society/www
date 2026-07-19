@@ -23,10 +23,6 @@ export function fameMetadataFetchUrls(uri: string): string[] {
   return [arweaveUrl, uri];
 }
 
-export function normalizeFameImageUrl(image: string): string {
-  return irysGatewayToArweaveUrl(image) ?? image;
-}
-
 export function imageFromFameMetadata(metadata: unknown): string {
   if (
     metadata === null ||
@@ -41,5 +37,5 @@ export function imageFromFameMetadata(metadata: unknown): string {
     throw new Error("FAME metadata image must be a non-empty string");
   }
 
-  return normalizeFameImageUrl(image);
+  return image;
 }

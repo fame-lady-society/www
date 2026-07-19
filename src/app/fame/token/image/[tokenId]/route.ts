@@ -1,62 +1,89 @@
-import { createClient as createKvClient } from "@vercel/kv";
 import { client as baseClient } from "@/viem/base-client";
-import { type NextRequest, NextResponse } from "next/server";
-import { erc721Abi } from "viem";
-import { IMetadata } from "@/utils/metadata";
-import {
-  creatorArtistMagicAddress,
-  societyFromNetwork,
-} from "@/features/fame/contract";
+import { imageFromFameMetadata } from "@/service/fameMetadata";
+import { creatorArtistMagicAddress } from "@/features/fame/contract";
+import { unstable_cache } from "next/cache";
 import { base } from "viem/chains";
 import { creatorArtistMagicAbi } from "@/wagmi";
 
-async function fetchMetadata({
-  client,
-  tokenId,
-}: {
-  client: typeof baseClient;
-  tokenId: bigint;
-}) {
-  return client
-    .readContract({
+const TOKEN_IMAGE_REVALIDATE_SECONDS = 60 * 60;
+const UPSTREAM_TIMEOUT_MS = 10_000;
+
+type TokenImageDependencies = {
+  readTokenUri: (tokenId: bigint) => Promise<string>;
+  fetchResource: typeof fetch;
+};
+
+const defaultDependencies: TokenImageDependencies = {
+  readTokenUri: (tokenId) =>
+    baseClient.readContract({
       abi: creatorArtistMagicAbi,
       address: creatorArtistMagicAddress(base.id),
       functionName: "tokenURI",
-      args: [BigInt(tokenId)],
-    })
-    .then(async (tokenUri) => {
-      const metadataResponse = await fetch(tokenUri);
-      const metadata: IMetadata = await metadataResponse.json();
-      return metadata;
-    });
+      args: [tokenId],
+    }),
+  fetchResource: fetch,
+};
+
+async function resolveTokenImageUrl(
+  tokenId: string,
+  dependencies: TokenImageDependencies,
+) {
+  const tokenUri = await dependencies.readTokenUri(BigInt(tokenId));
+  const metadataResponse = await dependencies.fetchResource(tokenUri, {
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+  });
+  if (!metadataResponse.ok) {
+    throw new Error(
+      `Metadata request failed with ${metadataResponse.status} ${metadataResponse.statusText}`,
+    );
+  }
+
+  return imageFromFameMetadata(await metadataResponse.json());
 }
 
-export async function GET(request: NextRequest, props: { params: Promise<{ tokenId: string }> }) {
-  const params = await props.params;
-  const kv = createKvClient({
-    token: process.env.KV_REST_API_TOKEN,
-    url: process.env.KV_REST_API_URL,
-  });
+const resolveCachedTokenImageUrl = unstable_cache(
+  (tokenId: string) => resolveTokenImageUrl(tokenId, defaultDependencies),
+  ["fame-token-image-url"],
+  { revalidate: TOKEN_IMAGE_REVALIDATE_SECONDS },
+);
 
-  const tokenImageKey = `token-image-${params.tokenId}`;
-  // let tokenImage: string | null = null;
-  let tokenImage = await kv.get<string | null>(tokenImageKey);
-  if (!tokenImage) {
-    const metadata = await fetchMetadata({
-      client: baseClient,
-      tokenId: BigInt(params.tokenId),
-    });
-    tokenImage = metadata.image;
-    await kv.set(tokenImageKey, tokenImage);
-  }
-  const fetchImage = await fetch(tokenImage, {
+async function fetchTokenImage(
+  tokenImageUrl: string,
+  fetchResource: typeof fetch,
+) {
+  const imageResponse = await fetchResource(tokenImageUrl, {
     next: {
       revalidate: 0,
     },
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   });
-  return new Response(fetchImage.body, {
+  if (!imageResponse.ok) {
+    throw new Error(
+      `Image request failed with ${imageResponse.status} ${imageResponse.statusText}`,
+    );
+  }
+
+  return new Response(imageResponse.body, {
     headers: {
-      "Content-Type": fetchImage.headers.get("Content-Type") || "",
+      "Cache-Control": `public, s-maxage=${TOKEN_IMAGE_REVALIDATE_SECONDS}, stale-while-revalidate=86400`,
+      "Content-Type": imageResponse.headers.get("Content-Type") || "",
     },
   });
+}
+
+export async function handleTokenImageRequest(
+  tokenId: string,
+  dependencies: TokenImageDependencies = defaultDependencies,
+) {
+  const tokenImageUrl = await resolveTokenImageUrl(tokenId, dependencies);
+  return fetchTokenImage(tokenImageUrl, dependencies.fetchResource);
+}
+
+export async function GET(
+  _request: Request,
+  props: { params: Promise<{ tokenId: string }> },
+) {
+  const params = await props.params;
+  const tokenImageUrl = await resolveCachedTokenImageUrl(params.tokenId);
+  return fetchTokenImage(tokenImageUrl, defaultDependencies.fetchResource);
 }
