@@ -1,17 +1,43 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { Address } from "viem";
+import type { Address, Hash } from "viem";
+import {
+  fameAbi,
+  universalPoolArtMarketplaceAbi,
+} from "../../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import type { GalleryPurchaseFingerprint } from "./purchaseQueue";
+import type {
+  GalleryFrozenBuyerTerms,
+  GalleryFulfillmentRoute,
+} from "../types";
 import {
   galleryAdminContractRequest,
   galleryApprovalContractRequest,
-  galleryFillContractRequest,
+  galleryPurchaseContractRequest,
 } from "./contractRequests";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 const account = "0x1111111111111111111111111111111111111111" as Address;
-const recipient = "0x2222222222222222222222222222222222222222" as Address;
+const recipient = account;
+const feeRecipient =
+  "0x2222222222222222222222222222222222222222" as Address;
+const artworkHash =
+  "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
+
+const terms: GalleryFrozenBuyerTerms = {
+  chainId: config.chainId,
+  account,
+  recipient,
+  selectedTarget: {
+    targetId: "pool:mint:7",
+    tokenId: 7n,
+  },
+  artworkHash,
+  unit: 1_000n,
+  maxPremium: 25n,
+  maximumSpend: 1_025n,
+  allowanceTarget: config.addresses.gallery,
+};
 
 function requestFacts(request: {
   address: Address;
@@ -19,6 +45,7 @@ function requestFacts(request: {
   chainId: number;
   functionName: string;
   args: readonly unknown[];
+  value?: bigint;
 }) {
   return {
     address: request.address,
@@ -26,106 +53,106 @@ function requestFacts(request: {
     chainId: request.chainId,
     functionName: request.functionName,
     args: request.args,
+    value: request.value ?? 0n,
   };
 }
 
 describe("gallery contract requests", () => {
-  it("maps the frozen purchase to exact TEST approval and fill requests", () => {
-    const fingerprint: GalleryPurchaseFingerprint = {
-      chainId: config.chainId,
-      account,
-      recipient,
-      tokenId: 7n,
-      unit: 1_000n,
-      premium: 25n,
-      total: 1_025n,
-      allowanceTarget: config.addresses.gallery,
-      fillCalldata: "0x1234",
-    };
-
-    assert.deepEqual(
-      requestFacts(galleryApprovalContractRequest(fingerprint)),
-      {
-        address: config.addresses.fame,
-        account,
-        chainId: config.chainId,
-        functionName: "approve",
-        args: [config.addresses.gallery, 1_025n],
-      },
-    );
-    assert.deepEqual(requestFacts(galleryFillContractRequest(fingerprint)), {
-      address: config.addresses.gallery,
+  it("approves exactly the frozen unit plus displayed premium", () => {
+    const request = galleryApprovalContractRequest(terms);
+    assert.strictEqual(request.abi, fameAbi);
+    assert.deepEqual(requestFacts(request), {
+      address: config.addresses.fame,
       account,
       chainId: config.chainId,
-      functionName: "fill",
-      args: [7n, recipient],
+      functionName: "approve",
+      args: [config.addresses.gallery, 1_025n],
+      value: 0n,
     });
   });
 
-  it("maps every admin action to the exact gallery request", () => {
+  it("maps a held route to the exact successor request", () => {
+    const route: GalleryFulfillmentRoute = {
+      kind: "held",
+      shellId: 19n,
+    };
+
+    const request = galleryPurchaseContractRequest(terms, route);
+    assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
+    assert.deepEqual(
+      requestFacts(request),
+      {
+        address: config.addresses.gallery,
+        account,
+        chainId: config.chainId,
+        functionName: "purchaseHeld",
+        args: [19n, artworkHash, 25n, 0n, recipient],
+        value: 0n,
+      },
+    );
+  });
+
+  for (const poolKind of ["mint", "burn"] as const) {
+    it(`maps a ${poolKind} route to the exact successor request`, () => {
+      const route: GalleryFulfillmentRoute = {
+        kind: "pool",
+        poolKind,
+        shellId: 19n,
+        sourceId: 7n,
+      };
+
+      const request = galleryPurchaseContractRequest(terms, route);
+      assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
+      assert.deepEqual(
+        requestFacts(request),
+        {
+          address: config.addresses.gallery,
+          account,
+          chainId: config.chainId,
+          functionName: "purchasePool",
+          args: [19n, 7n, artworkHash, 25n, 0n, recipient],
+          value: 0n,
+        },
+      );
+    });
+  }
+
+  it("maps only the successor owner operations", () => {
     const cases = [
       {
-        call: { kind: "list", tokenId: 1n, premium: 2n } as const,
-        functionName: "list",
-        args: [1n, 2n],
-      },
-      {
-        call: { kind: "set_premium", tokenId: 3n, premium: 4n } as const,
+        call: { kind: "set_premium", premium: 30n } as const,
         functionName: "setPremium",
-        args: [3n, 4n],
+        args: [30n],
       },
       {
-        call: { kind: "unlist", tokenId: 5n } as const,
-        functionName: "unlist",
-        args: [5n],
+        call: { kind: "set_fee_recipient", feeRecipient } as const,
+        functionName: "setFeeRecipient",
+        args: [feeRecipient],
       },
       {
-        call: {
-          kind: "rotate_mint",
-          tokenId: 6n,
-          poolTokenId: 7n,
-        } as const,
-        functionName: "rotateToMintPool",
-        args: [6n, 7n],
+        call: { kind: "pause" } as const,
+        functionName: "pause",
+        args: [],
       },
       {
-        call: {
-          kind: "rotate_burn",
-          tokenId: 8n,
-          poolTokenId: 9n,
-        } as const,
-        functionName: "rotateToBurnPool",
-        args: [8n, 9n],
-      },
-      {
-        call: {
-          kind: "rotate_end_of_mint",
-          tokenId: 10n,
-          metadataUri: "data:application/json;base64,e30=",
-        } as const,
-        functionName: "rotateToEndOfMintPool",
-        args: [10n, "data:application/json;base64,e30="],
-      },
-      {
-        call: {
-          kind: "withdraw_fees",
-          recipient,
-          amount: 11n,
-        } as const,
-        functionName: "withdrawAccruedFees",
-        args: [recipient, 11n],
+        call: { kind: "unpause" } as const,
+        functionName: "unpause",
+        args: [],
       },
     ];
 
     for (const testCase of cases) {
+      const request = galleryAdminContractRequest(testCase.call, account);
+      assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
       assert.deepEqual(
-        requestFacts(galleryAdminContractRequest(testCase.call, account)),
+        requestFacts(request),
         {
           address: config.addresses.gallery,
           account,
           chainId: config.chainId,
           functionName: testCase.functionName,
           args: testCase.args,
+          value: 0n,
         },
       );
     }

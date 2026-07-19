@@ -1,0 +1,268 @@
+import { isAddressEqual, type Address, type Hash } from "viem";
+import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { galleryPurchaseContractRequest } from "../transactions/contractRequests";
+import type {
+  GalleryFrozenBuyerTerms,
+  GalleryFulfillmentRoute,
+} from "../types";
+
+const marketplace = BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery;
+
+export type GalleryFulfillmentTokenState = Readonly<{
+  owner: Address;
+  artworkHash: Hash;
+  inArtPool: boolean;
+  inMintPool: boolean;
+  inBurnPool: boolean;
+}>;
+
+export type GalleryFulfillmentReadSource = {
+  captureBlockNumber: () => Promise<bigint>;
+  readPremium: (blockNumber: bigint) => Promise<bigint>;
+  readTokenState: (
+    tokenId: bigint,
+    blockNumber: bigint,
+  ) => Promise<GalleryFulfillmentTokenState>;
+  readShellOwner: (
+    tokenId: bigint,
+    blockNumber: bigint,
+  ) => Promise<Address>;
+};
+
+type FreezeGalleryBuyerTermsInput = {
+  chainId: number;
+  account: Address;
+  selectedTarget: {
+    targetId: string;
+    tokenId: bigint;
+  };
+  artworkHash: Hash;
+  unit: bigint;
+  displayedPremium: bigint;
+  allowanceTarget: Address;
+};
+
+export function freezeGalleryBuyerTerms({
+  chainId,
+  account,
+  selectedTarget,
+  artworkHash,
+  unit,
+  displayedPremium,
+  allowanceTarget,
+}: FreezeGalleryBuyerTermsInput): GalleryFrozenBuyerTerms {
+  return Object.freeze({
+    chainId,
+    account,
+    recipient: account,
+    selectedTarget: Object.freeze({ ...selectedTarget }),
+    artworkHash,
+    unit,
+    maxPremium: displayedPremium,
+    maximumSpend: unit + displayedPremium,
+    allowanceTarget,
+  });
+}
+
+function uniqueTokenIds(values: readonly bigint[]) {
+  return [...new Set(values)];
+}
+
+function unavailableArtwork() {
+  return new Error("This artwork is no longer available.");
+}
+
+function ineligibleArtwork() {
+  return new Error("This artwork is not eligible for purchase.");
+}
+
+function unavailableShell() {
+  return new Error("The gallery has no available delivery shell.");
+}
+
+function priceChanged() {
+  return new Error("The gallery price changed. Choose Buy again to continue.");
+}
+
+type CanonicalCandidate = {
+  tokenId: bigint;
+  state: GalleryFulfillmentTokenState;
+};
+
+async function readCanonicalCandidates(
+  source: GalleryFulfillmentReadSource,
+  tokenIds: readonly bigint[],
+  blockNumber: bigint,
+) {
+  return Promise.all(
+    tokenIds.map(async (tokenId): Promise<CanonicalCandidate> => ({
+      tokenId,
+      state: await source.readTokenState(tokenId, blockNumber),
+    })),
+  );
+}
+
+function heldRoute(
+  terms: GalleryFrozenBuyerTerms,
+  candidates: readonly CanonicalCandidate[],
+): GalleryFulfillmentRoute | null {
+  const candidate = candidates.find(
+    ({ state }) =>
+      state.artworkHash === terms.artworkHash &&
+      isAddressEqual(state.owner, marketplace),
+  );
+  return candidate
+    ? Object.freeze({ kind: "held" as const, shellId: candidate.tokenId })
+    : null;
+}
+
+function poolCandidates(
+  terms: GalleryFrozenBuyerTerms,
+  candidates: readonly CanonicalCandidate[],
+) {
+  return candidates.flatMap(({ tokenId, state }) => {
+    if (state.artworkHash !== terms.artworkHash || state.inArtPool) return [];
+    if (state.inMintPool === state.inBurnPool) return [];
+    return [
+      {
+        tokenId,
+        poolKind: state.inMintPool ? ("mint" as const) : ("burn" as const),
+      },
+    ];
+  });
+}
+
+async function verifiedShell(
+  source: GalleryFulfillmentReadSource,
+  shellTokenIds: readonly bigint[],
+  sourceId: bigint,
+  blockNumber: bigint,
+) {
+  for (const shellId of uniqueTokenIds(shellTokenIds)) {
+    if (shellId === sourceId) continue;
+    const owner = await source.readShellOwner(shellId, blockNumber);
+    if (isAddressEqual(owner, marketplace)) return shellId;
+  }
+  return null;
+}
+
+type ResolutionAttempt =
+  | {
+      status: "resolved";
+      route: GalleryFulfillmentRoute;
+      currentPremium: bigint;
+      resolutionBlock: bigint;
+    }
+  | {
+      status: "shell_exhausted";
+    };
+
+async function resolveAtCurrentBlock({
+  terms,
+  candidateTokenIds,
+  shellTokenIds,
+  source,
+}: {
+  terms: GalleryFrozenBuyerTerms;
+  candidateTokenIds: readonly bigint[];
+  shellTokenIds: readonly bigint[];
+  source: GalleryFulfillmentReadSource;
+}): Promise<ResolutionAttempt> {
+  const resolutionBlock = await source.captureBlockNumber();
+  const allCandidateIds = uniqueTokenIds([
+    terms.selectedTarget.tokenId,
+    ...candidateTokenIds,
+  ]);
+  const [currentPremium, candidates] = await Promise.all([
+    source.readPremium(resolutionBlock),
+    readCanonicalCandidates(source, allCandidateIds, resolutionBlock),
+  ]);
+
+  if (currentPremium > terms.maxPremium) throw priceChanged();
+
+  const currentHeldRoute = heldRoute(terms, candidates);
+  if (currentHeldRoute) {
+    return {
+      status: "resolved",
+      route: currentHeldRoute,
+      currentPremium,
+      resolutionBlock,
+    };
+  }
+
+  const currentPoolCandidates = poolCandidates(terms, candidates);
+  for (const candidate of currentPoolCandidates) {
+    const shellId = await verifiedShell(
+      source,
+      shellTokenIds,
+      candidate.tokenId,
+      resolutionBlock,
+    );
+    if (shellId !== null) {
+      return {
+        status: "resolved",
+        route: Object.freeze({
+          kind: "pool" as const,
+          poolKind: candidate.poolKind,
+          shellId,
+          sourceId: candidate.tokenId,
+        }),
+        currentPremium,
+        resolutionBlock,
+      };
+    }
+  }
+
+  if (currentPoolCandidates.length > 0) return { status: "shell_exhausted" };
+
+  const matchingArtwork = candidates.filter(
+    ({ state }) => state.artworkHash === terms.artworkHash,
+  );
+  if (matchingArtwork.length === 0) throw unavailableArtwork();
+  throw ineligibleArtwork();
+}
+
+export async function resolveGalleryFulfillment({
+  terms,
+  candidateTokenIds,
+  knownShellTokenIds,
+  source,
+  refreshShellTokenIds,
+}: {
+  terms: GalleryFrozenBuyerTerms;
+  candidateTokenIds: readonly bigint[];
+  knownShellTokenIds: readonly bigint[];
+  source: GalleryFulfillmentReadSource;
+  /**
+   * Supplied only for a caller-authorized stale-shell recovery. The callback
+   * owns the bounded custody refresh; this resolver invokes it at most once.
+   */
+  refreshShellTokenIds?: () => Promise<readonly bigint[]>;
+}) {
+  let resolution = await resolveAtCurrentBlock({
+    terms,
+    candidateTokenIds,
+    shellTokenIds: knownShellTokenIds,
+    source,
+  });
+
+  if (resolution.status === "shell_exhausted" && refreshShellTokenIds) {
+    const refreshedShellIds = await refreshShellTokenIds();
+    resolution = await resolveAtCurrentBlock({
+      terms,
+      candidateTokenIds,
+      shellTokenIds: refreshedShellIds,
+      source,
+    });
+  }
+
+  if (resolution.status === "shell_exhausted") throw unavailableShell();
+
+  return Object.freeze({
+    terms,
+    route: resolution.route,
+    currentPremium: resolution.currentPremium,
+    resolutionBlock: resolution.resolutionBlock,
+    request: galleryPurchaseContractRequest(terms, resolution.route),
+  });
+}

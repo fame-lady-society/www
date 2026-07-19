@@ -94,3 +94,40 @@ export type GalleryCanonicalBlock = {
   number: bigint;
   hash: Hash;
 };
+
+/**
+ * Buyer-visible consent captured when Buy begins. Fulfillment may be
+ * re-resolved, but these terms must not change during the active flow.
+ */
+export type GalleryFrozenBuyerTerms = Readonly<{
+  chainId: number;
+  account: Address;
+  recipient: Address;
+  selectedTarget: Readonly<{
+    targetId: string;
+    tokenId: bigint;
+  }>;
+  artworkHash: Hash;
+  unit: bigint;
+  maxPremium: bigint;
+  maximumSpend: bigint;
+  allowanceTarget: Address;
+}>;
+
+export type GalleryFulfillmentRoute =
+  | Readonly<{
+      kind: "held";
+      shellId: bigint;
+    }>
+  | Readonly<{
+      kind: "pool";
+      poolKind: "mint" | "burn";
+      shellId: bigint;
+      sourceId: bigint;
+    }>;
+
+export type GalleryAdminCall =
+  | Readonly<{ kind: "set_premium"; premium: bigint }>
+  | Readonly<{ kind: "set_fee_recipient"; feeRecipient: Address }>
+  | Readonly<{ kind: "pause" }>
+  | Readonly<{ kind: "unpause" }>;

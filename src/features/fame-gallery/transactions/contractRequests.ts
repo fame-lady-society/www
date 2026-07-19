@@ -1,34 +1,66 @@
 import type { Address } from "viem";
-import { closedLoopGallerySwapAbi, fameAbi } from "../../../wagmi";
+import {
+  fameAbi,
+  universalPoolArtMarketplaceAbi,
+} from "../../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import type { GalleryAdminCall } from "./adminAction";
-import type { GalleryPurchaseFingerprint } from "./purchaseQueue";
+import type {
+  GalleryAdminCall,
+  GalleryFrozenBuyerTerms,
+  GalleryFulfillmentRoute,
+} from "../types";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 
 export function galleryApprovalContractRequest(
-  fingerprint: GalleryPurchaseFingerprint,
+  terms: GalleryFrozenBuyerTerms,
 ) {
   return {
     abi: fameAbi,
     address: config.addresses.fame,
-    account: fingerprint.account,
-    chainId: config.chainId,
+    account: terms.account,
+    chainId: terms.chainId,
     functionName: "approve",
-    args: [fingerprint.allowanceTarget, fingerprint.total],
+    args: [config.addresses.gallery, terms.unit + terms.maxPremium],
   } as const;
 }
 
-export function galleryFillContractRequest(
-  fingerprint: GalleryPurchaseFingerprint,
+export function galleryPurchaseContractRequest(
+  terms: GalleryFrozenBuyerTerms,
+  route: GalleryFulfillmentRoute,
 ) {
-  return {
-    abi: closedLoopGallerySwapAbi,
+  const baseRequest = {
+    abi: universalPoolArtMarketplaceAbi,
     address: config.addresses.gallery,
-    account: fingerprint.account,
-    chainId: config.chainId,
-    functionName: "fill",
-    args: [fingerprint.tokenId, fingerprint.recipient],
+    account: terms.account,
+    chainId: terms.chainId,
+  } as const;
+
+  if (route.kind === "held") {
+    return {
+      ...baseRequest,
+      functionName: "purchaseHeld",
+      args: [
+        route.shellId,
+        terms.artworkHash,
+        terms.maxPremium,
+        0n,
+        terms.recipient,
+      ],
+    } as const;
+  }
+
+  return {
+    ...baseRequest,
+    functionName: "purchasePool",
+    args: [
+      route.shellId,
+      route.sourceId,
+      terms.artworkHash,
+      terms.maxPremium,
+      0n,
+      terms.recipient,
+    ],
   } as const;
 }
 
@@ -37,54 +69,36 @@ export function galleryAdminContractRequest(
   account: Address,
 ) {
   const baseRequest = {
-    abi: closedLoopGallerySwapAbi,
+    abi: universalPoolArtMarketplaceAbi,
     address: config.addresses.gallery,
     account,
     chainId: config.chainId,
   } as const;
 
   switch (call.kind) {
-    case "list":
-      return {
-        ...baseRequest,
-        functionName: "list",
-        args: [call.tokenId, call.premium],
-      } as const;
     case "set_premium":
       return {
         ...baseRequest,
         functionName: "setPremium",
-        args: [call.tokenId, call.premium],
+        args: [call.premium],
       } as const;
-    case "unlist":
+    case "set_fee_recipient":
       return {
         ...baseRequest,
-        functionName: "unlist",
-        args: [call.tokenId],
+        functionName: "setFeeRecipient",
+        args: [call.feeRecipient],
       } as const;
-    case "rotate_mint":
+    case "pause":
       return {
         ...baseRequest,
-        functionName: "rotateToMintPool",
-        args: [call.tokenId, call.poolTokenId],
+        functionName: "pause",
+        args: [],
       } as const;
-    case "rotate_burn":
+    case "unpause":
       return {
         ...baseRequest,
-        functionName: "rotateToBurnPool",
-        args: [call.tokenId, call.poolTokenId],
-      } as const;
-    case "rotate_end_of_mint":
-      return {
-        ...baseRequest,
-        functionName: "rotateToEndOfMintPool",
-        args: [call.tokenId, call.metadataUri],
-      } as const;
-    case "withdraw_fees":
-      return {
-        ...baseRequest,
-        functionName: "withdrawAccruedFees",
-        args: [call.recipient, call.amount],
+        functionName: "unpause",
+        args: [],
       } as const;
   }
 }
