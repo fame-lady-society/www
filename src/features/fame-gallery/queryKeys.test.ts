@@ -1,107 +1,90 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { QueryClient } from "@tanstack/react-query";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
-  GALLERY_VISIBLE_TOKEN_BATCH_LIMIT,
-  chunkGalleryTokenIds,
   galleryQueryKeys,
-  invalidateGalleryToken,
+  type GalleryQueryIdentity,
 } from "./queryKeys";
 
-const identity = {
+const identity: GalleryQueryIdentity = {
   chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  galleryAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-} as const;
+  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
+  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
+  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
+};
 
-describe("gallery query keys", () => {
-  it("isolates global, token, account, authority, and pool projections", () => {
-    const firstAccount = BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.admin;
-    const secondAccount =
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.smokeRecipient;
+describe("successor gallery query keys", () => {
+  it("separates projection kind, pinned block, token, and account", () => {
+    const account =
+      "0x0000000000000000000000000000000000000001" as const;
+    assert.notDeepEqual(
+      galleryQueryKeys.global(identity, 100n),
+      galleryQueryKeys.pool(identity, 100n),
+    );
+    assert.notDeepEqual(
+      galleryQueryKeys.global(identity, 100n),
+      galleryQueryKeys.global(identity, 101n),
+    );
+    assert.notDeepEqual(
+      galleryQueryKeys.token(identity, 100n, 1n),
+      galleryQueryKeys.token(identity, 100n, 2n),
+    );
+    assert.notDeepEqual(
+      galleryQueryKeys.account(identity, 100n, account),
+      galleryQueryKeys.authority(identity, 100n, account),
+    );
+  });
 
+  it("separates chain, marketplace, and deployment identities", () => {
+    const base = galleryQueryKeys.global(identity, 100n);
     assert.notDeepEqual(
-      galleryQueryKeys.global(identity),
-      galleryQueryKeys.token(identity, 1n),
+      base,
+      galleryQueryKeys.global({ ...identity, chainId: 1 }, 100n),
     );
     assert.notDeepEqual(
-      galleryQueryKeys.token(identity, 1n),
-      galleryQueryKeys.token(identity, 2n),
+      base,
+      galleryQueryKeys.global(
+        { ...identity, manifestVersion: identity.manifestVersion + 1 },
+        100n,
+      ),
     );
     assert.notDeepEqual(
-      galleryQueryKeys.account(identity, firstAccount),
-      galleryQueryKeys.account(identity, secondAccount),
+      base,
+      galleryQueryKeys.global(
+        {
+          ...identity,
+          marketplaceAddress:
+            "0x0000000000000000000000000000000000000004",
+        },
+        100n,
+      ),
     );
     assert.notDeepEqual(
-      galleryQueryKeys.authority(identity, firstAccount),
-      galleryQueryKeys.authority(identity, secondAccount),
-    );
-    assert.notDeepEqual(
-      galleryQueryKeys.account(identity, firstAccount),
-      galleryQueryKeys.account(
-        { ...identity, chainId: identity.chainId + 1 },
-        firstAccount,
+      base,
+      galleryQueryKeys.global(
+        { ...identity, deploymentBlock: identity.deploymentBlock + 1n },
+        100n,
       ),
     );
   });
 
-  it("invalidates only the requested token", async () => {
-    const queryClient = new QueryClient();
-    const globalKey = galleryQueryKeys.global(identity);
-    const firstTokenKey = galleryQueryKeys.token(identity, 1n);
-    const secondTokenKey = galleryQueryKeys.token(identity, 2n);
-    queryClient.setQueryData(globalKey, "global");
-    queryClient.setQueryData(firstTokenKey, "first");
-    queryClient.setQueryData(secondTokenKey, "second");
-
-    await invalidateGalleryToken(queryClient, identity, 1n);
-
-    assert.equal(queryClient.getQueryState(firstTokenKey)?.isInvalidated, true);
-    assert.equal(
-      queryClient.getQueryState(secondTokenKey)?.isInvalidated,
-      false,
-    );
-    assert.equal(queryClient.getQueryState(globalKey)?.isInvalidated, false);
-    queryClient.clear();
+  it("normalizes every bigint key field to a string", () => {
+    const key = galleryQueryKeys.token(identity, 100n, 888n);
+    assert.equal(key.includes(100n), false);
+    assert.equal(key.includes(888n), false);
+    assert.equal(key.includes(identity.deploymentBlock), false);
+    assert.equal(key.includes("100"), true);
+    assert.equal(key.includes("888"), true);
+    assert.equal(key.includes(identity.deploymentBlock.toString()), true);
   });
 
-  it("deduplicates equivalent in-flight reads through QueryClient", async () => {
-    const queryClient = new QueryClient();
-    let reads = 0;
-    let release: (() => void) | undefined;
-    const queryFn = async () => {
-      reads += 1;
-      await new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      return "complete";
-    };
-    const queryKey = galleryQueryKeys.global(identity);
-
-    const first = queryClient.fetchQuery({ queryKey, queryFn });
-    const second = queryClient.fetchQuery({ queryKey, queryFn });
-    assert.equal(reads, 1);
-    release?.();
-    assert.deepEqual(await Promise.all([first, second]), [
-      "complete",
-      "complete",
-    ]);
-    queryClient.clear();
-  });
-
-  it("caps visible token batches and disables scheduled refresh", () => {
-    const chunks = chunkGalleryTokenIds(
-      Array.from({ length: 49 }, (_, index) => BigInt(index + 1)),
-    );
-
-    assert.deepEqual(
-      chunks.map((chunk) => chunk.length),
-      [GALLERY_VISIBLE_TOKEN_BATCH_LIMIT, GALLERY_VISIBLE_TOKEN_BATCH_LIMIT, 1],
-    );
+  it("keeps canonical queries quiet until explicitly advanced", () => {
     assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.staleTime, Infinity);
     assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.refetchInterval, false);
+    assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.refetchOnMount, false);
     assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.refetchOnWindowFocus, false);
     assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.refetchOnReconnect, false);
+    assert.equal(GALLERY_CANONICAL_QUERY_OPTIONS.retry, false);
   });
 });

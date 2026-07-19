@@ -1,79 +1,89 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
+  type GalleryQueryIdentity,
 } from "../queryKeys";
 import {
-  createGalleryTokenReadBatcher,
+  captureGalleryBlock,
+  readGalleryTokenState,
   type GalleryMulticallClient,
-  type GalleryTokenReadBatcher,
 } from "../reads";
 import type { GalleryHookProjection, GalleryTokenState } from "../types";
 
-const identity = {
+const identity: GalleryQueryIdentity = {
   chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  galleryAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-} as const;
-
-const batchers = new WeakMap<object, GalleryTokenReadBatcher>();
-
-function tokenBatcher(client: object) {
-  const existing = batchers.get(client);
-  if (existing) return existing;
-  const batcher = createGalleryTokenReadBatcher(
-    client as GalleryMulticallClient,
-  );
-  batchers.set(client, batcher);
-  return batcher;
-}
+  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
+  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
+  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
+};
 
 export function useGalleryTokenState(
   tokenId: bigint,
   {
     enabled = true,
-    refetchOnMount = false,
   }: { enabled?: boolean; refetchOnMount?: boolean } = {},
 ) {
   const publicClient = usePublicClient({
     chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
   });
-  const batcher = useMemo(
-    () => (publicClient ? tokenBatcher(publicClient) : null),
-    [publicClient],
-  );
+  const client = publicClient as unknown as GalleryMulticallClient | undefined;
+  const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
+
+  const capture = useCallback(async () => {
+    if (!client || !enabled) return;
+    setBlockNumber(await captureGalleryBlock(client));
+  }, [client, enabled]);
+
+  useEffect(() => {
+    let active = true;
+    if (!client || !enabled) {
+      setBlockNumber(null);
+      return;
+    }
+    void captureGalleryBlock(client).then((block) => {
+      if (active) setBlockNumber(block);
+    });
+    return () => {
+      active = false;
+    };
+  }, [client, enabled, tokenId]);
+
   const query = useQuery({
-    queryKey: galleryQueryKeys.token(identity, tokenId),
+    queryKey: galleryQueryKeys.token(
+      identity,
+      blockNumber ?? 0n,
+      tokenId,
+    ),
     queryFn: () => {
-      if (!batcher)
+      if (!client || blockNumber === null) {
         throw new Error("Base Sepolia public client is unavailable");
-      return batcher.load(tokenId);
+      }
+      return readGalleryTokenState(client, blockNumber, tokenId);
     },
-    enabled: enabled && Boolean(batcher),
+    enabled: enabled && Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,
-    refetchOnMount: refetchOnMount ? "always" : false,
   });
-  const refresh = useCallback(async () => {
-    await query.refetch();
-  }, [query]);
 
   const projection: GalleryHookProjection<GalleryTokenState> = !enabled
     ? { status: "idle" }
-    : !batcher || query.isPending
+    : !client || blockNumber === null || query.isPending
       ? { status: "loading" }
       : query.data ?? {
           status: "failure",
-          blockNumber: null,
+          blockNumber,
           message: `Gallery token ${tokenId} state is unavailable`,
         };
 
   return {
     projection,
+    blockNumber,
     isRefreshing: query.isFetching && !query.isPending,
-    refresh,
+    refresh: capture,
   };
 }

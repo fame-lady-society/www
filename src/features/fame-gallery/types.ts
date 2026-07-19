@@ -22,33 +22,52 @@ export type GalleryHookProjection<T> =
   | GalleryProjectionResult<T>;
 
 export type GalleryGlobalState = {
-  gallery: Address;
+  marketplace: Address;
   fame: Address;
   mirror: Address;
   creatorMagic: Address;
-  renderer: Address;
+  owner: Address;
+  paused: boolean;
+  premium: bigint;
   feeRecipient: Address;
-  accruedProtocolFees: bigint;
-  unit: bigint;
   inventory: bigint;
+  unit: bigint;
 };
 
-export type GalleryListing = {
-  premium: bigint;
-  active: boolean;
+export type GalleryTargetKind = "held" | "mint" | "burn";
+
+/**
+ * Canonical contract data used to resolve a purchase. This identity is kept
+ * separate from the decoded metadata shown by artwork cards.
+ */
+export type GalleryArtworkTarget = {
+  targetId: string;
+  kind: GalleryTargetKind;
+  tokenId: bigint;
+  artworkHash: Hash | null;
+  tokenUri: string | null;
+  artworkError: string | null;
+};
+
+export type GalleryArtworkPresentation = {
+  name: string | null;
+  image: string | null;
+  description: string | null;
 };
 
 export type GalleryTokenState = {
   tokenId: bigint;
-  listing: GalleryListing;
   owner: Address;
-  tokenUri: string;
+  marketplaceHeld: boolean;
+  artworkHash: Hash | null;
+  tokenUri: string | null;
+  artworkError: string | null;
 };
 
-export type GalleryCandidateState = {
+export type GalleryCustodyState = {
   tokenId: bigint;
-  listing: GalleryListing;
   owner: Address;
+  marketplaceHeld: boolean;
 };
 
 export type GalleryAccountState = {
@@ -57,30 +76,18 @@ export type GalleryAccountState = {
   allowance: bigint;
 };
 
-export type GalleryAuthority = "owner" | "operator" | "denied";
+export type GalleryAuthority = "owner" | "denied";
 
 export type GalleryAuthorityState = {
   account: Address;
   owner: Address;
-  operatorRole: bigint;
-  accountRoles: bigint;
   authority: GalleryAuthority;
 };
 
-export type GalleryPoolKind = "mint" | "burn";
-
-export type GalleryPoolCandidate = {
-  tokenId: bigint;
-  eligible: boolean;
-};
-
 export type GalleryPoolState = {
-  kind: GalleryPoolKind;
-  mintPoolStart: bigint;
-  mintPoolEnd: bigint;
-  totalNftSupply: bigint;
-  maxNftSupply: bigint;
-  candidates: readonly GalleryPoolCandidate[];
+  targets: readonly GalleryArtworkTarget[];
+  failedMembershipTokenIds: readonly bigint[];
+  ambiguousTokenIds: readonly bigint[];
 };
 
 export type GalleryCanonicalBlock = {

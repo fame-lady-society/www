@@ -1,24 +1,27 @@
-import { isAddress, isAddressEqual, type Address } from "viem";
 import {
-  closedLoopGallerySwapAbi,
+  isAddress,
+  isAddressEqual,
+  isHash,
+  type Address,
+  type Hash,
+} from "viem";
+import {
   creatorArtistMagicAbi,
   fameAbi,
   fameMirrorAbi,
+  universalPoolArtMarketplaceAbi,
 } from "../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
-import {
-  GALLERY_VISIBLE_TOKEN_BATCH_LIMIT,
-  chunkGalleryTokenIds,
-} from "./queryKeys";
 import type {
   GalleryAccountState,
+  GalleryArtworkTarget,
   GalleryAuthorityState,
-  GalleryCandidateState,
+  GalleryCustodyState,
   GalleryGlobalState,
-  GalleryPoolKind,
   GalleryPoolState,
   GalleryProjectionFailure,
   GalleryProjectionResult,
+  GalleryTargetKind,
   GalleryTokenState,
 } from "./types";
 
@@ -43,7 +46,7 @@ export type GalleryMulticallClient = {
 };
 
 export type GalleryReadAddresses = {
-  gallery: Address;
+  marketplace: Address;
   fame: Address;
   mirror: Address;
   creatorMagic: Address;
@@ -53,7 +56,7 @@ export const GALLERY_POOL_SCAN_BATCH_SIZE = 64;
 export const GALLERY_POOL_SCAN_CONCURRENCY = 2;
 
 const DEFAULT_ADDRESSES: GalleryReadAddresses = {
-  gallery: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
+  marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
   fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
   mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
   creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
@@ -63,26 +66,11 @@ function failure(
   message: string,
   blockNumber: bigint | null,
 ): GalleryProjectionFailure {
-  return {
-    status: "failure",
-    blockNumber,
-    message,
-  };
+  return { status: "failure", blockNumber, message };
 }
 
-function successfulValues(
-  results: readonly GalleryMulticallResult[],
-  expectedLength: number,
-) {
-  if (
-    results.length !== expectedLength ||
-    results.some((result) => result.status !== "success")
-  ) {
-    return null;
-  }
-  return results.map((result) =>
-    result.status === "success" ? result.result : undefined,
-  );
+function successfulResult(result: GalleryMulticallResult | undefined) {
+  return result?.status === "success" ? result.result : null;
 }
 
 function isAddressValue(value: unknown): value is Address {
@@ -93,109 +81,111 @@ function isBigint(value: unknown): value is bigint {
   return typeof value === "bigint";
 }
 
-async function captureMulticall(
-  client: GalleryMulticallClient,
-  contracts: readonly GalleryMulticallContract[],
-) {
-  const blockNumber = await client.getBlockNumber();
-  const results = await client.multicall({
-    allowFailure: true,
-    blockNumber,
-    contracts,
-  });
-  return { blockNumber, results };
+function isHashValue(value: unknown): value is Hash {
+  return typeof value === "string" && isHash(value);
+}
+
+export async function captureGalleryBlock(client: GalleryMulticallClient) {
+  return client.getBlockNumber();
 }
 
 export async function readGalleryGlobalState(
   client: GalleryMulticallClient,
+  blockNumber: bigint,
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ): Promise<GalleryProjectionResult<GalleryGlobalState>> {
-  let blockNumber: bigint | null = null;
   try {
-    const captured = await captureMulticall(client, [
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "fame",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "mirror",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "creatorMagic",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "childRenderer",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "feeRecipient",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "accruedProtocolFees",
-      },
-      {
-        address: addresses.fame,
-        abi: fameAbi,
-        functionName: "unit",
-      },
-      {
-        address: addresses.mirror,
-        abi: fameMirrorAbi,
-        functionName: "balanceOf",
-        args: [addresses.gallery],
-      },
-    ]);
-    blockNumber = captured.blockNumber;
-    const values = successfulValues(captured.results, 8);
-    if (!values) {
-      return failure("Gallery global state is incomplete", blockNumber);
-    }
+    const results = await client.multicall({
+      allowFailure: true,
+      blockNumber,
+      contracts: [
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "fame",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "mirror",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "creatorMagic",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "owner",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "paused",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "premium",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "feeRecipient",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "inventory",
+        },
+        {
+          address: addresses.fame,
+          abi: fameAbi,
+          functionName: "unit",
+        },
+      ],
+    });
+    const values = results.map(successfulResult);
     const [
       fame,
       mirror,
       creatorMagic,
-      renderer,
+      owner,
+      paused,
+      premium,
       feeRecipient,
-      accruedProtocolFees,
-      unit,
       inventory,
+      unit,
     ] = values;
     if (
+      values.length !== 9 ||
       !isAddressValue(fame) ||
       !isAddressValue(mirror) ||
       !isAddressValue(creatorMagic) ||
-      !isAddressValue(renderer) ||
+      !isAddressValue(owner) ||
+      typeof paused !== "boolean" ||
+      !isBigint(premium) ||
       !isAddressValue(feeRecipient) ||
-      !isBigint(accruedProtocolFees) ||
-      !isBigint(unit) ||
-      !isBigint(inventory)
+      !isBigint(inventory) ||
+      !isBigint(unit)
     ) {
-      return failure("Gallery global state is malformed", blockNumber);
+      return failure("Gallery global state is incomplete", blockNumber);
     }
-
     return {
       status: "success",
       blockNumber,
       data: {
-        gallery: addresses.gallery,
+        marketplace: addresses.marketplace,
         fame,
         mirror,
         creatorMagic,
-        renderer,
+        owner,
+        paused,
+        premium,
         feeRecipient,
-        accruedProtocolFees,
-        unit,
         inventory,
+        unit,
       },
     };
   } catch {
@@ -203,204 +193,230 @@ export async function readGalleryGlobalState(
   }
 }
 
-function tokenContracts(
-  tokenIds: readonly bigint[],
-  addresses: GalleryReadAddresses,
-): GalleryMulticallContract[] {
-  return tokenIds.flatMap((tokenId) => [
-    {
-      address: addresses.gallery,
-      abi: closedLoopGallerySwapAbi,
-      functionName: "listings",
-      args: [tokenId],
-    },
-    {
-      address: addresses.mirror,
-      abi: fameMirrorAbi,
-      functionName: "ownerAt",
-      args: [tokenId],
-    },
-    {
-      address: addresses.mirror,
-      abi: fameMirrorAbi,
-      functionName: "tokenURI",
-      args: [tokenId],
-    },
-  ]);
+function chunkIds(tokenIds: readonly bigint[], size: number) {
+  const chunks: bigint[][] = [];
+  for (let index = 0; index < tokenIds.length; index += size) {
+    chunks.push(tokenIds.slice(index, index + size));
+  }
+  return chunks;
 }
 
-function tokenResult(
-  tokenId: bigint,
+async function runBatchedReads(
+  client: GalleryMulticallClient,
   blockNumber: bigint,
-  results: readonly GalleryMulticallResult[],
-): GalleryProjectionResult<GalleryTokenState> {
-  const values = successfulValues(results, 3);
-  if (!values) {
-    return failure(`Gallery token ${tokenId} state is incomplete`, blockNumber);
-  }
-  const [listing, owner, tokenUri] = values;
-  if (
-    !Array.isArray(listing) ||
-    !isBigint(listing[0]) ||
-    typeof listing[1] !== "boolean" ||
-    !isAddressValue(owner) ||
-    typeof tokenUri !== "string"
-  ) {
-    return failure(`Gallery token ${tokenId} state is malformed`, blockNumber);
-  }
-
-  return {
-    status: "success",
-    blockNumber,
-    data: {
+  tokenIds: readonly bigint[],
+  contractsFor: (tokenId: bigint) => readonly GalleryMulticallContract[],
+) {
+  const chunks = chunkIds(tokenIds, GALLERY_POOL_SCAN_BATCH_SIZE);
+  const results = new Array<readonly GalleryMulticallResult[]>(chunks.length);
+  let nextChunk = 0;
+  const worker = async () => {
+    while (nextChunk < chunks.length) {
+      const index = nextChunk;
+      nextChunk += 1;
+      const chunk = chunks[index] ?? [];
+      results[index] = await client.multicall({
+        allowFailure: true,
+        blockNumber,
+        contracts: chunk.flatMap(contractsFor),
+      });
+    }
+  };
+  await Promise.all(
+    Array.from(
+      { length: Math.min(GALLERY_POOL_SCAN_CONCURRENCY, chunks.length) },
+      worker,
+    ),
+  );
+  return chunks.flatMap((chunk, index) => {
+    const width = chunk.length === 0 ? 0 : contractsFor(chunk[0]!).length;
+    const chunkResults = results[index] ?? [];
+    return chunk.map((tokenId, tokenIndex) => ({
       tokenId,
-      listing: {
-        premium: listing[0],
-        active: listing[1],
-      },
-      owner,
-      tokenUri,
-    },
+      results: chunkResults.slice(
+        tokenIndex * width,
+        tokenIndex * width + width,
+      ),
+    }));
+  });
+}
+
+function poolTarget(
+  kind: Extract<GalleryTargetKind, "mint" | "burn">,
+  tokenId: bigint,
+  results: readonly GalleryMulticallResult[],
+): GalleryArtworkTarget {
+  const rawHash = successfulResult(results[0]);
+  const rawTokenUri = successfulResult(results[1]);
+  const artworkHash = isHashValue(rawHash) ? rawHash : null;
+  const tokenUri = typeof rawTokenUri === "string" ? rawTokenUri : null;
+  const artworkError =
+    artworkHash === null
+      ? "Artwork identity is unavailable"
+      : tokenUri === null
+        ? "Artwork metadata is unavailable"
+        : null;
+  return {
+    targetId: `pool:${kind}:${tokenId.toString()}`,
+    kind,
+    tokenId,
+    artworkHash,
+    tokenUri,
+    artworkError,
   };
 }
 
-export async function readGalleryTokenStates(
-  client: GalleryMulticallClient,
-  tokenIds: readonly bigint[],
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-) {
-  if (
-    tokenIds.length === 0 ||
-    tokenIds.length > GALLERY_VISIBLE_TOKEN_BATCH_LIMIT
-  ) {
-    throw new Error(
-      `Gallery token reads require between 1 and ${GALLERY_VISIBLE_TOKEN_BATCH_LIMIT} token IDs`,
-    );
-  }
-
-  let blockNumber: bigint | null = null;
-  try {
-    const captured = await captureMulticall(
-      client,
-      tokenContracts(tokenIds, addresses),
-    );
-    blockNumber = captured.blockNumber;
-    const projections = new Map<
-      bigint,
-      GalleryProjectionResult<GalleryTokenState>
-    >();
-    tokenIds.forEach((tokenId, index) => {
-      projections.set(
-        tokenId,
-        tokenResult(
-          tokenId,
-          captured.blockNumber,
-          captured.results.slice(index * 3, index * 3 + 3),
-        ),
-      );
-    });
-    return projections;
-  } catch {
-    return new Map(
-      tokenIds.map((tokenId) => [
-        tokenId,
-        failure(`Gallery token ${tokenId} state is unavailable`, blockNumber),
-      ]),
-    );
-  }
-}
-
-export async function readGalleryTokenState(
-  client: GalleryMulticallClient,
-  tokenId: bigint,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-) {
-  const results = await readGalleryTokenStates(client, [tokenId], addresses);
-  return (
-    results.get(tokenId) ??
-    failure(`Gallery token ${tokenId} state is unavailable`, null)
+function fixedCollectionTokenIds() {
+  const ids: bigint[] = [];
+  const first = BigInt(
+    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.firstTokenId,
   );
+  const last = BigInt(BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId);
+  for (let tokenId = first; tokenId <= last; tokenId += 1n) {
+    ids.push(tokenId);
+  }
+  return ids;
 }
 
-export async function readGalleryCandidateStates(
+export async function readGalleryPoolState(
   client: GalleryMulticallClient,
-  tokenIds: readonly bigint[],
+  blockNumber: bigint,
+  tokenIds: readonly bigint[] = fixedCollectionTokenIds(),
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-) {
-  if (
-    tokenIds.length === 0 ||
-    tokenIds.length > GALLERY_VISIBLE_TOKEN_BATCH_LIMIT
-  ) {
-    throw new Error(
-      `Gallery candidate reads require between 1 and ${GALLERY_VISIBLE_TOKEN_BATCH_LIMIT} token IDs`,
-    );
-  }
-
-  let blockNumber: bigint | null = null;
+): Promise<GalleryProjectionResult<GalleryPoolState>> {
   try {
-    const captured = await captureMulticall(
+    const membership = await runBatchedReads(
       client,
-      tokenIds.flatMap((tokenId) => [
+      blockNumber,
+      tokenIds,
+      (tokenId) => [
         {
-          address: addresses.gallery,
-          abi: closedLoopGallerySwapAbi,
-          functionName: "listings",
+          address: addresses.creatorMagic,
+          abi: creatorArtistMagicAbi,
+          functionName: "isTokenInMintPool",
           args: [tokenId],
         },
+        {
+          address: addresses.creatorMagic,
+          abi: creatorArtistMagicAbi,
+          functionName: "isTokenInBurnedPool",
+          args: [tokenId],
+        },
+      ],
+    );
+    const eligible: {
+      tokenId: bigint;
+      kind: Extract<GalleryTargetKind, "mint" | "burn">;
+    }[] = [];
+    const failedMembershipTokenIds: bigint[] = [];
+    const ambiguousTokenIds: bigint[] = [];
+    for (const candidate of membership) {
+      const mint = successfulResult(candidate.results[0]);
+      const burn = successfulResult(candidate.results[1]);
+      if (typeof mint !== "boolean" || typeof burn !== "boolean") {
+        failedMembershipTokenIds.push(candidate.tokenId);
+      } else if (mint && burn) {
+        ambiguousTokenIds.push(candidate.tokenId);
+      } else if (mint || burn) {
+        eligible.push({
+          tokenId: candidate.tokenId,
+          kind: mint ? "mint" : "burn",
+        });
+      }
+    }
+
+    const hydration = await runBatchedReads(
+      client,
+      blockNumber,
+      eligible.map(({ tokenId }) => tokenId),
+      (tokenId) => [
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "artworkHash",
+          args: [tokenId],
+        },
+        {
+          address: addresses.creatorMagic,
+          abi: creatorArtistMagicAbi,
+          functionName: "tokenURI",
+          args: [tokenId],
+        },
+      ],
+    );
+    const targets = eligible.map(({ kind, tokenId }, index) =>
+      poolTarget(kind, tokenId, hydration[index]?.results ?? []),
+    );
+    return {
+      status: "success",
+      blockNumber,
+      data: { targets, failedMembershipTokenIds, ambiguousTokenIds },
+    };
+  } catch {
+    return failure("Gallery pool state is unavailable", blockNumber);
+  }
+}
+
+export async function readGalleryCustodyStates(
+  client: GalleryMulticallClient,
+  blockNumber: bigint,
+  tokenIds: readonly bigint[],
+  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+) {
+  try {
+    const ownership = await runBatchedReads(
+      client,
+      blockNumber,
+      tokenIds,
+      (tokenId) => [
         {
           address: addresses.mirror,
           abi: fameMirrorAbi,
           functionName: "ownerAt",
           args: [tokenId],
         },
-      ]),
+      ],
     );
-    blockNumber = captured.blockNumber;
-    return new Map<bigint, GalleryProjectionResult<GalleryCandidateState>>(
-      tokenIds.map((tokenId, index) => {
-        const values = successfulValues(
-          captured.results.slice(index * 2, index * 2 + 2),
-          2,
-        );
-        const [listing, owner] = values ?? [];
-        if (
-          !values ||
-          !Array.isArray(listing) ||
-          !isBigint(listing[0]) ||
-          typeof listing[1] !== "boolean" ||
-          !isAddressValue(owner)
-        ) {
-          return [
-            tokenId,
-            failure(
-              `Gallery candidate ${tokenId} state is incomplete`,
-              blockNumber,
-            ),
-          ];
-        }
-        return [
-          tokenId,
-          {
-            status: "success" as const,
-            blockNumber: captured.blockNumber,
-            data: {
+    return new Map<
+      bigint,
+      GalleryProjectionResult<GalleryCustodyState>
+    >(
+      ownership.map(({ tokenId, results }) => {
+        const owner = successfulResult(results[0]);
+        return isAddressValue(owner)
+          ? [
               tokenId,
-              listing: {
-                premium: listing[0],
-                active: listing[1],
+              {
+                status: "success" as const,
+                blockNumber,
+                data: {
+                  tokenId,
+                  owner,
+                  marketplaceHeld: isAddressEqual(
+                    owner,
+                    addresses.marketplace,
+                  ),
+                },
               },
-              owner,
-            },
-          },
-        ];
+            ]
+          : [
+              tokenId,
+              failure(
+                `Gallery token ${tokenId} ownership is unavailable`,
+                blockNumber,
+              ),
+            ];
       }),
     );
   } catch {
-    return new Map<bigint, GalleryProjectionResult<GalleryCandidateState>>(
+    return new Map<
+      bigint,
+      GalleryProjectionResult<GalleryCustodyState>
+    >(
       tokenIds.map((tokenId) => [
         tokenId,
         failure(
-          `Gallery candidate ${tokenId} state is unavailable`,
+          `Gallery token ${tokenId} ownership is unavailable`,
           blockNumber,
         ),
       ]),
@@ -408,107 +424,142 @@ export async function readGalleryCandidateStates(
   }
 }
 
-export interface GalleryTokenReadBatcher {
-  load: (
-    tokenId: bigint,
-  ) => Promise<GalleryProjectionResult<GalleryTokenState>>;
+export async function readGalleryTokenStates(
+  client: GalleryMulticallClient,
+  blockNumber: bigint,
+  tokenIds: readonly bigint[],
+  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+) {
+  const custody = await readGalleryCustodyStates(
+    client,
+    blockNumber,
+    tokenIds,
+    addresses,
+  );
+  const heldIds = tokenIds.filter((tokenId) => {
+    const state = custody.get(tokenId);
+    return state?.status === "success" && state.data.marketplaceHeld;
+  });
+  let hydration: Awaited<ReturnType<typeof runBatchedReads>> = [];
+  try {
+    hydration = await runBatchedReads(
+      client,
+      blockNumber,
+      heldIds,
+      (tokenId) => [
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "artworkHash",
+          args: [tokenId],
+        },
+        {
+          address: addresses.creatorMagic,
+          abi: creatorArtistMagicAbi,
+          functionName: "tokenURI",
+          args: [tokenId],
+        },
+      ],
+    );
+  } catch {
+    hydration = [];
+  }
+  const hydrated = new Map(hydration.map((entry) => [entry.tokenId, entry]));
+  return new Map<bigint, GalleryProjectionResult<GalleryTokenState>>(
+    tokenIds.map((tokenId) => {
+      const custodyState = custody.get(tokenId);
+      if (!custodyState || custodyState.status === "failure") {
+        return [
+          tokenId,
+          custodyState ??
+            failure(
+              `Gallery token ${tokenId} ownership is unavailable`,
+              blockNumber,
+            ),
+        ];
+      }
+      const raw = hydrated.get(tokenId)?.results ?? [];
+      const artworkHash = isHashValue(successfulResult(raw[0]))
+        ? (successfulResult(raw[0]) as Hash)
+        : null;
+      const rawTokenUri = successfulResult(raw[1]);
+      const tokenUri = typeof rawTokenUri === "string" ? rawTokenUri : null;
+      const artworkError = !custodyState.data.marketplaceHeld
+        ? null
+        : artworkHash === null
+          ? "Artwork identity is unavailable"
+          : tokenUri === null
+            ? "Artwork metadata is unavailable"
+            : null;
+      return [
+        tokenId,
+        {
+          status: "success" as const,
+          blockNumber,
+          data: {
+            ...custodyState.data,
+            artworkHash,
+            tokenUri,
+            artworkError,
+          },
+        },
+      ];
+    }),
+  );
 }
 
-export function createGalleryTokenReadBatcher(
+export async function readGalleryTokenState(
   client: GalleryMulticallClient,
+  blockNumber: bigint,
+  tokenId: bigint,
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-): GalleryTokenReadBatcher {
-  const pending = new Map<
-    bigint,
-    {
-      promise: Promise<GalleryProjectionResult<GalleryTokenState>>;
-      resolve: (result: GalleryProjectionResult<GalleryTokenState>) => void;
-    }
-  >();
-  let scheduled = false;
-
-  const flush = async () => {
-    scheduled = false;
-    const requests = [...pending.entries()];
-    pending.clear();
-    const entries = new Map(requests);
-    const chunks = chunkGalleryTokenIds(requests.map(([tokenId]) => tokenId));
-
-    await Promise.all(
-      chunks.map(async (chunk) => {
-        const results = await readGalleryTokenStates(client, chunk, addresses);
-        chunk.forEach((tokenId) => {
-          entries
-            .get(tokenId)
-            ?.resolve(
-              results.get(tokenId) ??
-                failure(`Gallery token ${tokenId} state is unavailable`, null),
-            );
-        });
-      }),
-    );
-  };
-
-  return {
-    load(tokenId) {
-      const existing = pending.get(tokenId);
-      if (existing) return existing.promise;
-
-      let resolve!: (
-        result: GalleryProjectionResult<GalleryTokenState>,
-      ) => void;
-      const promise = new Promise<GalleryProjectionResult<GalleryTokenState>>(
-        (resolvePromise) => {
-          resolve = resolvePromise;
-        },
-      );
-      pending.set(tokenId, { promise, resolve });
-
-      if (!scheduled) {
-        scheduled = true;
-        queueMicrotask(() => {
-          void flush();
-        });
-      }
-      return promise;
-    },
-  };
+) {
+  const states = await readGalleryTokenStates(
+    client,
+    blockNumber,
+    [tokenId],
+    addresses,
+  );
+  return (
+    states.get(tokenId) ??
+    failure(`Gallery token ${tokenId} state is unavailable`, blockNumber)
+  );
 }
 
 export async function readGalleryAccountState(
   client: GalleryMulticallClient,
+  blockNumber: bigint,
   account: Address,
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ): Promise<GalleryProjectionResult<GalleryAccountState>> {
-  let blockNumber: bigint | null = null;
   try {
-    const captured = await captureMulticall(client, [
-      {
-        address: addresses.fame,
-        abi: fameAbi,
-        functionName: "balanceOf",
-        args: [account],
-      },
-      {
-        address: addresses.fame,
-        abi: fameAbi,
-        functionName: "allowance",
-        args: [account, addresses.gallery],
-      },
-    ]);
-    blockNumber = captured.blockNumber;
-    const values = successfulValues(captured.results, 2);
-    if (!values || !isBigint(values[0]) || !isBigint(values[1])) {
+    const results = await client.multicall({
+      allowFailure: true,
+      blockNumber,
+      contracts: [
+        {
+          address: addresses.fame,
+          abi: fameAbi,
+          functionName: "balanceOf",
+          args: [account],
+        },
+        {
+          address: addresses.fame,
+          abi: fameAbi,
+          functionName: "allowance",
+          args: [account, addresses.marketplace],
+        },
+      ],
+    });
+    const balance = successfulResult(results[0]);
+    const allowance = successfulResult(results[1]);
+    if (!isBigint(balance) || !isBigint(allowance)) {
       return failure("Gallery account state is incomplete", blockNumber);
     }
     return {
       status: "success",
       blockNumber,
-      data: {
-        account,
-        balance: values[0],
-        allowance: values[1],
-      },
+      data: { account, balance, allowance },
     };
   } catch {
     return failure("Gallery account state is unavailable", blockNumber);
@@ -517,272 +568,36 @@ export async function readGalleryAccountState(
 
 export async function readGalleryAuthority(
   client: GalleryMulticallClient,
+  blockNumber: bigint,
   account: Address,
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ): Promise<GalleryProjectionResult<GalleryAuthorityState>> {
-  let blockNumber: bigint | null = null;
   try {
-    const captured = await captureMulticall(client, [
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "owner",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "roleOperator",
-      },
-      {
-        address: addresses.gallery,
-        abi: closedLoopGallerySwapAbi,
-        functionName: "rolesOf",
-        args: [account],
-      },
-    ]);
-    blockNumber = captured.blockNumber;
-    const values = successfulValues(captured.results, 3);
-    if (
-      !values ||
-      !isAddressValue(values[0]) ||
-      !isBigint(values[1]) ||
-      !isBigint(values[2])
-    ) {
-      return failure("Gallery authority is incomplete", blockNumber);
+    const results = await client.multicall({
+      allowFailure: true,
+      blockNumber,
+      contracts: [
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "owner",
+        },
+      ],
+    });
+    const owner = successfulResult(results[0]);
+    if (!isAddressValue(owner)) {
+      return failure("Gallery owner is unavailable", blockNumber);
     }
-    const [owner, operatorRole, accountRoles] = values;
-    const authority = isAddressEqual(owner, account)
-      ? "owner"
-      : (accountRoles & operatorRole) !== 0n
-        ? "operator"
-        : "denied";
     return {
       status: "success",
       blockNumber,
       data: {
         account,
         owner,
-        operatorRole,
-        accountRoles,
-        authority,
+        authority: isAddressEqual(owner, account) ? "owner" : "denied",
       },
     };
   } catch {
-    return failure("Gallery authority is unavailable", blockNumber);
-  }
-}
-
-export async function readGalleryPoolState(
-  client: GalleryMulticallClient,
-  kind: GalleryPoolKind,
-  tokenIds: readonly bigint[],
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-): Promise<GalleryProjectionResult<GalleryPoolState>> {
-  if (tokenIds.length > GALLERY_VISIBLE_TOKEN_BATCH_LIMIT) {
-    throw new Error(
-      `Gallery pool reads accept at most ${GALLERY_VISIBLE_TOKEN_BATCH_LIMIT} candidates`,
-    );
-  }
-
-  let blockNumber: bigint | null = null;
-  try {
-    const captured = await captureMulticall(client, [
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMintPoolStart",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMintPoolEnd",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getTotalNFTSupply",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMaxNFTSupply",
-      },
-      ...tokenIds.map((tokenId) => ({
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName:
-          kind === "mint" ? "isTokenInMintPool" : "isTokenInBurnedPool",
-        args: [tokenId],
-      })),
-    ]);
-    blockNumber = captured.blockNumber;
-    const values = successfulValues(captured.results, 4 + tokenIds.length);
-    if (
-      !values ||
-      !isBigint(values[0]) ||
-      !isBigint(values[1]) ||
-      !isBigint(values[2]) ||
-      !isBigint(values[3]) ||
-      values.slice(4).some((value) => typeof value !== "boolean")
-    ) {
-      return failure("Gallery pool state is incomplete", blockNumber);
-    }
-    return {
-      status: "success",
-      blockNumber,
-      data: {
-        kind,
-        mintPoolStart: values[0],
-        mintPoolEnd: values[1],
-        totalNftSupply: values[2],
-        maxNftSupply: values[3],
-        candidates: tokenIds.map((tokenId, index) => ({
-          tokenId,
-          eligible: values[index + 4] as boolean,
-        })),
-      },
-    };
-  } catch {
-    return failure("Gallery pool state is unavailable", blockNumber);
-  }
-}
-
-function poolCandidateTokenIds(
-  kind: GalleryPoolKind,
-  {
-    mintPoolStart,
-    mintPoolEnd,
-    totalNftSupply,
-  }: Pick<GalleryPoolState, "mintPoolStart" | "mintPoolEnd" | "totalNftSupply">,
-) {
-  const collectionEnd = BigInt(
-    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId,
-  );
-  const first = kind === "mint" ? mintPoolStart : 1n;
-  const exclusiveEnd =
-    kind === "mint"
-      ? mintPoolEnd
-      : totalNftSupply < collectionEnd
-        ? totalNftSupply + 1n
-        : collectionEnd + 1n;
-  const boundedEnd =
-    exclusiveEnd < collectionEnd + 1n ? exclusiveEnd : collectionEnd + 1n;
-  const tokenIds: bigint[] = [];
-  for (let tokenId = first; tokenId < boundedEnd; tokenId += 1n) {
-    tokenIds.push(tokenId);
-  }
-  return tokenIds;
-}
-
-export async function readGalleryPoolCandidates(
-  client: GalleryMulticallClient,
-  kind: GalleryPoolKind,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
-): Promise<GalleryProjectionResult<GalleryPoolState>> {
-  let blockNumber: bigint | null = null;
-  try {
-    const capturedBlockNumber = await client.getBlockNumber();
-    blockNumber = capturedBlockNumber;
-    const baseContracts = [
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMintPoolStart",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMintPoolEnd",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getTotalNFTSupply",
-      },
-      {
-        address: addresses.creatorMagic,
-        abi: creatorArtistMagicAbi,
-        functionName: "getMaxNFTSupply",
-      },
-    ] as const;
-    const baseResults = await client.multicall({
-      allowFailure: true,
-      blockNumber: capturedBlockNumber,
-      contracts: baseContracts,
-    });
-    const baseValues = successfulValues(baseResults, 4);
-    if (!baseValues || baseValues.some((value) => !isBigint(value))) {
-      return failure("Gallery pool state is incomplete", blockNumber);
-    }
-    const [mintPoolStart, mintPoolEnd, totalNftSupply, maxNftSupply] =
-      baseValues as [bigint, bigint, bigint, bigint];
-    const tokenIds = poolCandidateTokenIds(kind, {
-      mintPoolStart,
-      mintPoolEnd,
-      totalNftSupply,
-    });
-    const chunks: bigint[][] = [];
-    for (
-      let index = 0;
-      index < tokenIds.length;
-      index += GALLERY_POOL_SCAN_BATCH_SIZE
-    ) {
-      chunks.push(tokenIds.slice(index, index + GALLERY_POOL_SCAN_BATCH_SIZE));
-    }
-
-    const candidates = new Array<GalleryPoolState["candidates"][number]>(
-      tokenIds.length,
-    );
-    let nextChunk = 0;
-    const worker = async () => {
-      while (nextChunk < chunks.length) {
-        const chunkIndex = nextChunk;
-        nextChunk += 1;
-        const chunk = chunks[chunkIndex];
-        const results = await client.multicall({
-          allowFailure: true,
-          blockNumber: capturedBlockNumber,
-          contracts: chunk.map((tokenId) => ({
-            address: addresses.creatorMagic,
-            abi: creatorArtistMagicAbi,
-            functionName:
-              kind === "mint" ? "isTokenInMintPool" : "isTokenInBurnedPool",
-            args: [tokenId],
-          })),
-        });
-        const values = successfulValues(results, chunk.length);
-        if (!values || values.some((value) => typeof value !== "boolean")) {
-          throw new Error("Gallery pool candidate state is incomplete");
-        }
-        const start = chunkIndex * GALLERY_POOL_SCAN_BATCH_SIZE;
-        chunk.forEach((tokenId, index) => {
-          candidates[start + index] = {
-            tokenId,
-            eligible: values[index] as boolean,
-          };
-        });
-      }
-    };
-    await Promise.all(
-      Array.from(
-        { length: Math.min(GALLERY_POOL_SCAN_CONCURRENCY, chunks.length) },
-        () => worker(),
-      ),
-    );
-
-    return {
-      status: "success",
-      blockNumber: capturedBlockNumber,
-      data: {
-        kind,
-        mintPoolStart,
-        mintPoolEnd,
-        totalNftSupply,
-        maxNftSupply,
-        candidates,
-      },
-    };
-  } catch {
-    return failure("Gallery pool state is unavailable", blockNumber);
+    return failure("Gallery owner is unavailable", blockNumber);
   }
 }

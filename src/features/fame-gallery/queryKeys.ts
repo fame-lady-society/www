@@ -1,18 +1,21 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { Address } from "viem";
-import type { GalleryPoolKind } from "./types";
 
 export const GALLERY_VISIBLE_TOKEN_BATCH_LIMIT = 24;
 
 export type GalleryQueryIdentity = {
   chainId: number;
-  galleryAddress: Address;
+  manifestVersion: number;
+  marketplaceAddress: Address;
+  deploymentBlock: bigint;
 };
 
 function normalizedIdentity(identity: GalleryQueryIdentity) {
   return [
     identity.chainId,
-    identity.galleryAddress.toLowerCase() as Address,
+    identity.manifestVersion,
+    identity.marketplaceAddress.toLowerCase() as Address,
+    identity.deploymentBlock.toString(),
   ] as const;
 }
 
@@ -21,33 +24,59 @@ export const galleryQueryKeys = {
   stack(identity: GalleryQueryIdentity) {
     return ["fame-gallery", ...normalizedIdentity(identity)] as const;
   },
-  global(identity: GalleryQueryIdentity) {
-    return [...this.stack(identity), "global"] as const;
-  },
-  discovery(identity: GalleryQueryIdentity) {
-    return [...this.stack(identity), "discovery"] as const;
-  },
-  tokens(identity: GalleryQueryIdentity) {
-    return [...this.stack(identity), "token"] as const;
-  },
-  token(identity: GalleryQueryIdentity, tokenId: bigint) {
-    return [...this.tokens(identity), tokenId.toString()] as const;
-  },
-  accounts(identity: GalleryQueryIdentity) {
-    return [...this.stack(identity), "account"] as const;
-  },
-  account(identity: GalleryQueryIdentity, account: Address) {
+  projection(
+    identity: GalleryQueryIdentity,
+    kind: string,
+    blockNumber: bigint,
+  ) {
     return [
-      ...this.accounts(identity),
+      ...this.stack(identity),
+      kind,
+      blockNumber.toString(),
+    ] as const;
+  },
+  global(identity: GalleryQueryIdentity, blockNumber: bigint) {
+    return this.projection(identity, "global", blockNumber);
+  },
+  discovery(identity: GalleryQueryIdentity, blockNumber: bigint) {
+    return this.projection(identity, "discovery", blockNumber);
+  },
+  tokens(identity: GalleryQueryIdentity, blockNumber: bigint) {
+    return this.projection(identity, "token", blockNumber);
+  },
+  token(
+    identity: GalleryQueryIdentity,
+    blockNumber: bigint,
+    tokenId: bigint,
+  ) {
+    return [
+      ...this.tokens(identity, blockNumber),
+      tokenId.toString(),
+    ] as const;
+  },
+  accounts(identity: GalleryQueryIdentity, blockNumber: bigint) {
+    return this.projection(identity, "account", blockNumber);
+  },
+  account(
+    identity: GalleryQueryIdentity,
+    blockNumber: bigint,
+    account: Address,
+  ) {
+    return [
+      ...this.accounts(identity, blockNumber),
       account.toLowerCase() as Address,
     ] as const;
   },
-  authorities(identity: GalleryQueryIdentity) {
-    return [...this.stack(identity), "authority"] as const;
+  authorities(identity: GalleryQueryIdentity, blockNumber: bigint) {
+    return this.projection(identity, "authority", blockNumber);
   },
-  authority(identity: GalleryQueryIdentity, account: Address) {
+  authority(
+    identity: GalleryQueryIdentity,
+    blockNumber: bigint,
+    account: Address,
+  ) {
     return [
-      ...this.authorities(identity),
+      ...this.authorities(identity, blockNumber),
       account.toLowerCase() as Address,
     ] as const;
   },
@@ -56,23 +85,22 @@ export const galleryQueryKeys = {
   },
   pool(
     identity: GalleryQueryIdentity,
-    kind: GalleryPoolKind,
-    tokenIds: readonly bigint[],
+    blockNumber: bigint,
+    tokenIds?: readonly bigint[],
   ) {
     return [
-      ...this.pools(identity),
-      kind,
-      tokenIds.map((tokenId) => tokenId.toString()),
+      ...this.projection(identity, "pool", blockNumber),
+      ...(tokenIds
+        ? [tokenIds.map((tokenId) => tokenId.toString())]
+        : ["collection"]),
     ] as const;
-  },
-  poolCandidates(identity: GalleryQueryIdentity, kind: GalleryPoolKind) {
-    return [...this.pools(identity), kind, "candidates"] as const;
   },
 };
 
 export const GALLERY_CANONICAL_QUERY_OPTIONS = {
   staleTime: Infinity,
   refetchInterval: false,
+  refetchOnMount: false,
   refetchOnWindowFocus: false,
   refetchOnReconnect: false,
   retry: false,
@@ -83,7 +111,6 @@ export function chunkGalleryTokenIds(tokenIds: readonly bigint[]) {
     left < right ? -1 : left > right ? 1 : 0,
   );
   const chunks: bigint[][] = [];
-
   for (
     let index = 0;
     index < unique.length;
@@ -99,8 +126,7 @@ export async function invalidateGalleryGlobal(
   identity: GalleryQueryIdentity,
 ) {
   await queryClient.invalidateQueries({
-    queryKey: galleryQueryKeys.global(identity),
-    exact: true,
+    queryKey: [...galleryQueryKeys.stack(identity), "global"],
   });
 }
 
@@ -110,8 +136,14 @@ export async function invalidateGalleryToken(
   tokenId: bigint,
 ) {
   await queryClient.invalidateQueries({
-    queryKey: galleryQueryKeys.token(identity, tokenId),
-    exact: true,
+    predicate: ({ queryKey }) => {
+      const prefix = galleryQueryKeys.stack(identity);
+      return (
+        prefix.every((value, index) => queryKey[index] === value) &&
+        queryKey[prefix.length] === "token" &&
+        queryKey.at(-1) === tokenId.toString()
+      );
+    },
   });
 }
 
@@ -120,9 +152,16 @@ export async function invalidateGalleryAccount(
   identity: GalleryQueryIdentity,
   account: Address,
 ) {
+  const normalized = account.toLowerCase();
   await queryClient.invalidateQueries({
-    queryKey: galleryQueryKeys.account(identity, account),
-    exact: true,
+    predicate: ({ queryKey }) => {
+      const prefix = galleryQueryKeys.stack(identity);
+      return (
+        prefix.every((value, index) => queryKey[index] === value) &&
+        queryKey[prefix.length] === "account" &&
+        queryKey.at(-1) === normalized
+      );
+    },
   });
 }
 
@@ -131,7 +170,6 @@ export async function invalidateGalleryDiscovery(
   identity: GalleryQueryIdentity,
 ) {
   await queryClient.invalidateQueries({
-    queryKey: galleryQueryKeys.discovery(identity),
-    exact: true,
+    queryKey: [...galleryQueryKeys.stack(identity), "discovery"],
   });
 }
