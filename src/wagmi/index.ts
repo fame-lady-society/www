@@ -734,669 +734,6 @@ export const claimToFameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ClosedLoopGallerySwap
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const closedLoopGallerySwapAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: 'fame_', internalType: 'address payable', type: 'address' },
-      { name: 'creatorMagic_', internalType: 'address', type: 'address' },
-      { name: 'initialFeeRecipient', internalType: 'address', type: 'address' },
-      { name: 'initialOwner', internalType: 'address', type: 'address' },
-      { name: 'initialOperator', internalType: 'address', type: 'address' },
-    ],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'accruedProtocolFees',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'cancelOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'completeOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'creatorMagic',
-    outputs: [
-      {
-        name: '',
-        internalType: 'contract CreatorArtistMagic',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'creatorMagicArtPoolManagerRole',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'creatorMagicBanisherRole',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'creatorMagicCreatorRole',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'fame',
-    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'feeRecipient',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'recipient', internalType: 'address', type: 'address' },
-    ],
-    name: 'fill',
-    outputs: [
-      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
-      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'grantRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAllRoles',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAnyRole',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'premium', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'list',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    name: 'listings',
-    outputs: [
-      { name: 'premium', internalType: 'uint96', type: 'uint96' },
-      { name: 'active', internalType: 'bool', type: 'bool' },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'mirror',
-    outputs: [
-      { name: '', internalType: 'contract FameMirror', type: 'address' },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '', internalType: 'address', type: 'address' },
-      { name: '', internalType: 'address', type: 'address' },
-      { name: '', internalType: 'uint256', type: 'uint256' },
-      { name: '', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'onERC721Received',
-    outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'owner',
-    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'ownershipHandoverExpiresAt',
-    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    name: 'renounceRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'requestOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'requiredCreatorMagicRoles',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'token', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'amount', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'rescueERC20',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'token', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'rescueERC721',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'revokeRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'roleOperator',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
-    name: 'rolesOf',
-    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'newMetadataUrl', internalType: 'string', type: 'string' },
-    ],
-    name: 'rotateToArtPool',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'poolTokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'rotateToBurnPool',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'newMetadataUrl', internalType: 'string', type: 'string' },
-    ],
-    name: 'rotateToEndOfMintPool',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'poolTokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'rotateToMintPool',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'newFeeRecipient', internalType: 'address', type: 'address' },
-    ],
-    name: 'setFeeRecipient',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'premium', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'setPremium',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'unlist',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'amount', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'withdrawAccruedFees',
-    outputs: [
-      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
-      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'amount',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'inventoryBefore',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'inventoryAfter',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'AccruedFeesWithdrawn',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'feeRecipient',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'FeeRecipientUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'buyer',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'recipient',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'unitAmount',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'premium',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'inventoryBefore',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'inventoryAfter',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'Filled',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'premium',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'Listed',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'kind',
-        internalType: 'enum ClosedLoopGallerySwap.RotationKind',
-        type: 'uint8',
-        indexed: true,
-      },
-      {
-        name: 'poolTokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'MetadataRotated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverCanceled',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverRequested',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'oldOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'newOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipTransferred',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'premium',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'PremiumUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'token',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'amount',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'RescueERC20',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'token',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'RescueERC721',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'roles',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'RolesUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Unlisted',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  { type: 'error', inputs: [], name: 'FameRescueBlocked' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'requested', internalType: 'uint256', type: 'uint256' },
-      { name: 'available', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InsufficientAccruedFees',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'beforeBalance', internalType: 'uint256', type: 'uint256' },
-      { name: 'afterBalance', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InventoryInvariantBroken',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ListedTokenRescueBlocked',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ListingInactive',
-  },
-  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
-  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'NotVaultOwner',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'premium', internalType: 'uint256', type: 'uint256' }],
-    name: 'PremiumTooLarge',
-  },
-  { type: 'error', inputs: [], name: 'Reentrancy' },
-  { type: 'error', inputs: [], name: 'SettlementInProgress' },
-  { type: 'error', inputs: [], name: 'TransferFailed' },
-  { type: 'error', inputs: [], name: 'Unauthorized' },
-  {
-    type: 'error',
-    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
-    name: 'UnsupportedNFT',
-  },
-  { type: 'error', inputs: [], name: 'ZeroAddress' },
-  { type: 'error', inputs: [], name: 'ZeroPremium' },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CreatorArtistMagic
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7515,16 +6852,16 @@ export const iBalanceOfAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IERC721RescueTarget
+// IERC721MarketplaceRescue
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const ierc721RescueTargetAbi = [
+export const ierc721MarketplaceRescueAbi = [
   {
     type: 'function',
     inputs: [
       { name: 'from', internalType: 'address', type: 'address' },
       { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'id', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'safeTransferFrom',
     outputs: [],
@@ -9452,6 +8789,561 @@ export const societyNftAuctionAbi = [
   { type: 'error', inputs: [], name: 'UnexpectedEth' },
   { type: 'error', inputs: [], name: 'UnexpectedNftReceipt' },
   { type: 'error', inputs: [], name: 'ZeroAddress' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UniversalPoolArtMarketplace
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const universalPoolArtMarketplaceAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'fame_', internalType: 'address payable', type: 'address' },
+      { name: 'creatorMagic_', internalType: 'address', type: 'address' },
+      { name: 'initialPremium', internalType: 'uint256', type: 'uint256' },
+      { name: 'initialFeeRecipient', internalType: 'address', type: 'address' },
+      { name: 'initialOwner', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'artworkHash',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'creatorMagic',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract CreatorArtistMagic',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fame',
+    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'feeRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'inventory',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'mirror',
+    outputs: [
+      { name: '', internalType: 'contract FameMirror', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'onERC721Received',
+    outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'pause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'premium',
+    outputs: [{ name: '', internalType: 'uint96', type: 'uint96' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'purchaseHeld',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'sourceId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'purchasePool',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rescueERC20',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rescueERC721',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newFeeRecipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'setFeeRecipient',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newPremium', internalType: 'uint256', type: 'uint256' }],
+    name: 'setPremium',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'unpause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'buyer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'shellId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'path',
+        internalType: 'enum UniversalPoolArtMarketplace.FulfillmentPath',
+        type: 'uint8',
+        indexed: false,
+      },
+      {
+        name: 'sourceId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'artwork',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'unitAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'premiumAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'inventoryBefore',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'inventoryAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ArtworkPurchased',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'FeeRecipientUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'MarketPaused',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'MarketUnpaused',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousPremium',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'newPremium',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'PremiumUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'RescueERC20',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RescueERC721',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'AmbiguousPoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ArtPoolSourceExcluded',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expected', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'actual', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'ArtworkMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'minimum', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BuyerMirrorBalanceTooLow',
+  },
+  { type: 'error', inputs: [], name: 'CoreAssetRescueBlocked' },
+  {
+    type: 'error',
+    inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
+    name: 'FeeRecipientNotSkippingNFT',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'IneligiblePoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'dependency', internalType: 'address', type: 'address' }],
+    name: 'InvalidDependency',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
+    name: 'InvalidFeeRecipient',
+  },
+  { type: 'error', inputs: [], name: 'InvalidRecipient' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'beforeBalance', internalType: 'uint256', type: 'uint256' },
+      { name: 'afterBalance', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InventoryInvariantBroken',
+  },
+  { type: 'error', inputs: [], name: 'MarketAlreadyPaused' },
+  { type: 'error', inputs: [], name: 'MarketNotPaused' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'OwnershipRenunciationDisabled' },
+  { type: 'error', inputs: [], name: 'PaymentTransferFailed' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'currentPremium', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximumPremium', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'PremiumExceedsMaximum',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'premium', internalType: 'uint256', type: 'uint256' }],
+    name: 'PremiumTooLarge',
+  },
+  { type: 'error', inputs: [], name: 'PurchasesPaused' },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
+  { type: 'error', inputs: [], name: 'SettlementInProgress' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'SourceEqualsShell',
+  },
+  { type: 'error', inputs: [], name: 'StackMismatch' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'shellId', internalType: 'uint256', type: 'uint256' }],
+    name: 'UnavailableShell',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'UnsupportedNFT',
+  },
+  { type: 'error', inputs: [], name: 'ZeroAddress' },
+  { type: 'error', inputs: [], name: 'ZeroPremium' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11947,661 +11839,6 @@ export const useWatchClaimToFameRolesUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: claimToFameAbi,
     eventName: 'RolesUpdated',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__
- */
-export const useReadClosedLoopGallerySwap = /*#__PURE__*/ createUseReadContract(
-  { abi: closedLoopGallerySwapAbi },
-)
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"accruedProtocolFees"`
- */
-export const useReadClosedLoopGallerySwapAccruedProtocolFees =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'accruedProtocolFees',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"creatorMagic"`
- */
-export const useReadClosedLoopGallerySwapCreatorMagic =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'creatorMagic',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"creatorMagicArtPoolManagerRole"`
- */
-export const useReadClosedLoopGallerySwapCreatorMagicArtPoolManagerRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'creatorMagicArtPoolManagerRole',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"creatorMagicBanisherRole"`
- */
-export const useReadClosedLoopGallerySwapCreatorMagicBanisherRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'creatorMagicBanisherRole',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"creatorMagicCreatorRole"`
- */
-export const useReadClosedLoopGallerySwapCreatorMagicCreatorRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'creatorMagicCreatorRole',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"fame"`
- */
-export const useReadClosedLoopGallerySwapFame =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'fame',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"feeRecipient"`
- */
-export const useReadClosedLoopGallerySwapFeeRecipient =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'feeRecipient',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"hasAllRoles"`
- */
-export const useReadClosedLoopGallerySwapHasAllRoles =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'hasAllRoles',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"hasAnyRole"`
- */
-export const useReadClosedLoopGallerySwapHasAnyRole =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'hasAnyRole',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"listings"`
- */
-export const useReadClosedLoopGallerySwapListings =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'listings',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"mirror"`
- */
-export const useReadClosedLoopGallerySwapMirror =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'mirror',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"onERC721Received"`
- */
-export const useReadClosedLoopGallerySwapOnErc721Received =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'onERC721Received',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"owner"`
- */
-export const useReadClosedLoopGallerySwapOwner =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'owner',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
- */
-export const useReadClosedLoopGallerySwapOwnershipHandoverExpiresAt =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'ownershipHandoverExpiresAt',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"requiredCreatorMagicRoles"`
- */
-export const useReadClosedLoopGallerySwapRequiredCreatorMagicRoles =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'requiredCreatorMagicRoles',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"roleOperator"`
- */
-export const useReadClosedLoopGallerySwapRoleOperator =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'roleOperator',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rolesOf"`
- */
-export const useReadClosedLoopGallerySwapRolesOf =
-  /*#__PURE__*/ createUseReadContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rolesOf',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__
- */
-export const useWriteClosedLoopGallerySwap =
-  /*#__PURE__*/ createUseWriteContract({ abi: closedLoopGallerySwapAbi })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
- */
-export const useWriteClosedLoopGallerySwapCancelOwnershipHandover =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'cancelOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"completeOwnershipHandover"`
- */
-export const useWriteClosedLoopGallerySwapCompleteOwnershipHandover =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'completeOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"fill"`
- */
-export const useWriteClosedLoopGallerySwapFill =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'fill',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"grantRoles"`
- */
-export const useWriteClosedLoopGallerySwapGrantRoles =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'grantRoles',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"list"`
- */
-export const useWriteClosedLoopGallerySwapList =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'list',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"renounceOwnership"`
- */
-export const useWriteClosedLoopGallerySwapRenounceOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'renounceOwnership',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"renounceRoles"`
- */
-export const useWriteClosedLoopGallerySwapRenounceRoles =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'renounceRoles',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"requestOwnershipHandover"`
- */
-export const useWriteClosedLoopGallerySwapRequestOwnershipHandover =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'requestOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rescueERC20"`
- */
-export const useWriteClosedLoopGallerySwapRescueErc20 =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rescueERC20',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rescueERC721"`
- */
-export const useWriteClosedLoopGallerySwapRescueErc721 =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rescueERC721',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"revokeRoles"`
- */
-export const useWriteClosedLoopGallerySwapRevokeRoles =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'revokeRoles',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToArtPool"`
- */
-export const useWriteClosedLoopGallerySwapRotateToArtPool =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToArtPool',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToBurnPool"`
- */
-export const useWriteClosedLoopGallerySwapRotateToBurnPool =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToBurnPool',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToEndOfMintPool"`
- */
-export const useWriteClosedLoopGallerySwapRotateToEndOfMintPool =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToEndOfMintPool',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToMintPool"`
- */
-export const useWriteClosedLoopGallerySwapRotateToMintPool =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToMintPool',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"setFeeRecipient"`
- */
-export const useWriteClosedLoopGallerySwapSetFeeRecipient =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'setFeeRecipient',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"setPremium"`
- */
-export const useWriteClosedLoopGallerySwapSetPremium =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'setPremium',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"transferOwnership"`
- */
-export const useWriteClosedLoopGallerySwapTransferOwnership =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'transferOwnership',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"unlist"`
- */
-export const useWriteClosedLoopGallerySwapUnlist =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'unlist',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"withdrawAccruedFees"`
- */
-export const useWriteClosedLoopGallerySwapWithdrawAccruedFees =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'withdrawAccruedFees',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__
- */
-export const useSimulateClosedLoopGallerySwap =
-  /*#__PURE__*/ createUseSimulateContract({ abi: closedLoopGallerySwapAbi })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
- */
-export const useSimulateClosedLoopGallerySwapCancelOwnershipHandover =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'cancelOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"completeOwnershipHandover"`
- */
-export const useSimulateClosedLoopGallerySwapCompleteOwnershipHandover =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'completeOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"fill"`
- */
-export const useSimulateClosedLoopGallerySwapFill =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'fill',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"grantRoles"`
- */
-export const useSimulateClosedLoopGallerySwapGrantRoles =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'grantRoles',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"list"`
- */
-export const useSimulateClosedLoopGallerySwapList =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'list',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"renounceOwnership"`
- */
-export const useSimulateClosedLoopGallerySwapRenounceOwnership =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'renounceOwnership',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"renounceRoles"`
- */
-export const useSimulateClosedLoopGallerySwapRenounceRoles =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'renounceRoles',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"requestOwnershipHandover"`
- */
-export const useSimulateClosedLoopGallerySwapRequestOwnershipHandover =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'requestOwnershipHandover',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rescueERC20"`
- */
-export const useSimulateClosedLoopGallerySwapRescueErc20 =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rescueERC20',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rescueERC721"`
- */
-export const useSimulateClosedLoopGallerySwapRescueErc721 =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rescueERC721',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"revokeRoles"`
- */
-export const useSimulateClosedLoopGallerySwapRevokeRoles =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'revokeRoles',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToArtPool"`
- */
-export const useSimulateClosedLoopGallerySwapRotateToArtPool =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToArtPool',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToBurnPool"`
- */
-export const useSimulateClosedLoopGallerySwapRotateToBurnPool =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToBurnPool',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToEndOfMintPool"`
- */
-export const useSimulateClosedLoopGallerySwapRotateToEndOfMintPool =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToEndOfMintPool',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"rotateToMintPool"`
- */
-export const useSimulateClosedLoopGallerySwapRotateToMintPool =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'rotateToMintPool',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"setFeeRecipient"`
- */
-export const useSimulateClosedLoopGallerySwapSetFeeRecipient =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'setFeeRecipient',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"setPremium"`
- */
-export const useSimulateClosedLoopGallerySwapSetPremium =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'setPremium',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"transferOwnership"`
- */
-export const useSimulateClosedLoopGallerySwapTransferOwnership =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'transferOwnership',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"unlist"`
- */
-export const useSimulateClosedLoopGallerySwapUnlist =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'unlist',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `functionName` set to `"withdrawAccruedFees"`
- */
-export const useSimulateClosedLoopGallerySwapWithdrawAccruedFees =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: closedLoopGallerySwapAbi,
-    functionName: 'withdrawAccruedFees',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__
- */
-export const useWatchClosedLoopGallerySwapEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({ abi: closedLoopGallerySwapAbi })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"AccruedFeesWithdrawn"`
- */
-export const useWatchClosedLoopGallerySwapAccruedFeesWithdrawnEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'AccruedFeesWithdrawn',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
- */
-export const useWatchClosedLoopGallerySwapFeeRecipientUpdatedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'FeeRecipientUpdated',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"Filled"`
- */
-export const useWatchClosedLoopGallerySwapFilledEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'Filled',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"Listed"`
- */
-export const useWatchClosedLoopGallerySwapListedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'Listed',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"MetadataRotated"`
- */
-export const useWatchClosedLoopGallerySwapMetadataRotatedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'MetadataRotated',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
- */
-export const useWatchClosedLoopGallerySwapOwnershipHandoverCanceledEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'OwnershipHandoverCanceled',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
- */
-export const useWatchClosedLoopGallerySwapOwnershipHandoverRequestedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'OwnershipHandoverRequested',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"OwnershipTransferred"`
- */
-export const useWatchClosedLoopGallerySwapOwnershipTransferredEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'OwnershipTransferred',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"PremiumUpdated"`
- */
-export const useWatchClosedLoopGallerySwapPremiumUpdatedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'PremiumUpdated',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"RescueERC20"`
- */
-export const useWatchClosedLoopGallerySwapRescueErc20Event =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'RescueERC20',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"RescueERC721"`
- */
-export const useWatchClosedLoopGallerySwapRescueErc721Event =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'RescueERC721',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"RolesUpdated"`
- */
-export const useWatchClosedLoopGallerySwapRolesUpdatedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'RolesUpdated',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link closedLoopGallerySwapAbi}__ and `eventName` set to `"Unlisted"`
- */
-export const useWatchClosedLoopGallerySwapUnlistedEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: closedLoopGallerySwapAbi,
-    eventName: 'Unlisted',
   })
 
 /**
@@ -20458,33 +19695,32 @@ export const useReadIBalanceOfBalanceOf = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721RescueTargetAbi}__
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__
  */
-export const useWriteIerc721RescueTarget = /*#__PURE__*/ createUseWriteContract(
-  { abi: ierc721RescueTargetAbi },
-)
+export const useWriteIerc721MarketplaceRescue =
+  /*#__PURE__*/ createUseWriteContract({ abi: ierc721MarketplaceRescueAbi })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721RescueTargetAbi}__ and `functionName` set to `"safeTransferFrom"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__ and `functionName` set to `"safeTransferFrom"`
  */
-export const useWriteIerc721RescueTargetSafeTransferFrom =
+export const useWriteIerc721MarketplaceRescueSafeTransferFrom =
   /*#__PURE__*/ createUseWriteContract({
-    abi: ierc721RescueTargetAbi,
+    abi: ierc721MarketplaceRescueAbi,
     functionName: 'safeTransferFrom',
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721RescueTargetAbi}__
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__
  */
-export const useSimulateIerc721RescueTarget =
-  /*#__PURE__*/ createUseSimulateContract({ abi: ierc721RescueTargetAbi })
+export const useSimulateIerc721MarketplaceRescue =
+  /*#__PURE__*/ createUseSimulateContract({ abi: ierc721MarketplaceRescueAbi })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721RescueTargetAbi}__ and `functionName` set to `"safeTransferFrom"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__ and `functionName` set to `"safeTransferFrom"`
  */
-export const useSimulateIerc721RescueTargetSafeTransferFrom =
+export const useSimulateIerc721MarketplaceRescueSafeTransferFrom =
   /*#__PURE__*/ createUseSimulateContract({
-    abi: ierc721RescueTargetAbi,
+    abi: ierc721MarketplaceRescueAbi,
     functionName: 'safeTransferFrom',
   })
 
@@ -22949,6 +22185,457 @@ export const useWatchSocietyNftAuctionProceedsWithdrawnEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: societyNftAuctionAbi,
     eventName: 'ProceedsWithdrawn',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useReadUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseReadContract({ abi: universalPoolArtMarketplaceAbi })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"artworkHash"`
+ */
+export const useReadUniversalPoolArtMarketplaceArtworkHash =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'artworkHash',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"creatorMagic"`
+ */
+export const useReadUniversalPoolArtMarketplaceCreatorMagic =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'creatorMagic',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"fame"`
+ */
+export const useReadUniversalPoolArtMarketplaceFame =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'fame',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"feeRecipient"`
+ */
+export const useReadUniversalPoolArtMarketplaceFeeRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'feeRecipient',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"inventory"`
+ */
+export const useReadUniversalPoolArtMarketplaceInventory =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'inventory',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"mirror"`
+ */
+export const useReadUniversalPoolArtMarketplaceMirror =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'mirror',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useReadUniversalPoolArtMarketplaceOnErc721Received =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'onERC721Received',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadUniversalPoolArtMarketplaceOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadUniversalPoolArtMarketplaceOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"paused"`
+ */
+export const useReadUniversalPoolArtMarketplacePaused =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'paused',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"premium"`
+ */
+export const useReadUniversalPoolArtMarketplacePremium =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'premium',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useWriteUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseWriteContract({ abi: universalPoolArtMarketplaceAbi })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"pause"`
+ */
+export const useWriteUniversalPoolArtMarketplacePause =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'pause',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeld"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchaseHeld =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeld',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePool"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchasePool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC20"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRescueErc20 =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC20',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC721"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRescueErc721 =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC721',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetFeeRecipient =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setPremium"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetPremium =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setPremium',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteUniversalPoolArtMarketplaceTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"unpause"`
+ */
+export const useWriteUniversalPoolArtMarketplaceUnpause =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useSimulateUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"pause"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePause =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'pause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeld"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchaseHeld =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeld',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePool"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchasePool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC20"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRescueErc20 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC20',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC721"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRescueErc721 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC721',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetFeeRecipient =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setPremium"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetPremium =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setPremium',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"unpause"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceUnpause =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useWatchUniversalPoolArtMarketplaceEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"ArtworkPurchased"`
+ */
+export const useWatchUniversalPoolArtMarketplaceArtworkPurchasedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'ArtworkPurchased',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplaceFeeRecipientUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'FeeRecipientUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"MarketPaused"`
+ */
+export const useWatchUniversalPoolArtMarketplaceMarketPausedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'MarketPaused',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"MarketUnpaused"`
+ */
+export const useWatchUniversalPoolArtMarketplaceMarketUnpausedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'MarketUnpaused',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"PremiumUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplacePremiumUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'PremiumUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"RescueERC20"`
+ */
+export const useWatchUniversalPoolArtMarketplaceRescueErc20Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'RescueERC20',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"RescueERC721"`
+ */
+export const useWatchUniversalPoolArtMarketplaceRescueErc721Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'RescueERC721',
   })
 
 /**

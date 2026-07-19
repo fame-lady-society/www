@@ -134,7 +134,7 @@ export default defineConfig({
         "LingerieDreams.sol/**",
         "FUNKNLOVE.sol/**",
         "CreatorArtistMagic.sol/**",
-        "ClosedLoopGallerySwap.sol/**",
+        "UniversalPoolArtMarketplace.sol/**",
         "SimpleOffchainReveal.sol/**",
         "SocietyNftAuction.sol/**",
       ],
