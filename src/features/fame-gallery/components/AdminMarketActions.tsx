@@ -62,6 +62,48 @@ function CurrentValue({ children }: { children: React.ReactNode }) {
   );
 }
 
+export function MarketplaceLifecycleControl({
+  paused,
+  busy,
+  onToggle,
+}: {
+  paused: boolean | null;
+  busy: boolean;
+  onToggle: (call: { kind: "pause" } | { kind: "unpause" }) => void;
+}) {
+  const nextCall = paused
+    ? ({ kind: "unpause" } as const)
+    : ({ kind: "pause" } as const);
+
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+      <Stack spacing={2}>
+        <div>
+          <Typography component="h2" variant="h5">
+            Marketplace lifecycle
+          </Typography>
+          <CurrentValue>
+            {paused === null ? "unavailable" : paused ? "Paused" : "Live"}
+          </CurrentValue>
+        </div>
+        <Button
+          type="button"
+          variant="contained"
+          disabled={busy || paused === null}
+          onClick={() => onToggle(nextCall)}
+          sx={{ minHeight: 44, alignSelf: "flex-start" }}
+        >
+          {paused === null
+            ? "Pause / unpause marketplace"
+            : paused
+              ? "Unpause marketplace"
+              : "Pause marketplace"}
+        </Button>
+      </Stack>
+    </Paper>
+  );
+}
+
 export function AdminMarketActions({
   global,
   refreshGlobal,
@@ -100,6 +142,12 @@ export function AdminMarketActions({
 
   return (
     <Stack spacing={3}>
+      <MarketplaceLifecycleControl
+        paused={canonical?.paused ?? null}
+        busy={busy}
+        onToggle={(call) => run(() => call)}
+      />
+
       <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
         <Stack
           component="form"
@@ -175,47 +223,6 @@ export function AdminMarketActions({
           >
             Set fee recipient
           </Button>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack spacing={2}>
-          <div>
-            <Typography component="h2" variant="h5">
-              Marketplace lifecycle
-            </Typography>
-            <CurrentValue>
-              {canonical
-                ? canonical.paused
-                  ? "Paused"
-                  : "Live"
-                : "unavailable"}
-            </CurrentValue>
-          </div>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-            {!canonical || !canonical.paused ? (
-              <Button
-                type="button"
-                variant="contained"
-                disabled={busy}
-                onClick={() => run(() => ({ kind: "pause" }))}
-                sx={{ minHeight: 44 }}
-              >
-                Pause marketplace
-              </Button>
-            ) : null}
-            {!canonical || canonical.paused ? (
-              <Button
-                type="button"
-                variant="contained"
-                disabled={busy}
-                onClick={() => run(() => ({ kind: "unpause" }))}
-                sx={{ minHeight: 44 }}
-              >
-                Unpause marketplace
-              </Button>
-            ) : null}
-          </Stack>
         </Stack>
       </Paper>
 

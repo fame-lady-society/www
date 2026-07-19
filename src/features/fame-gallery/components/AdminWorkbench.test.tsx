@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import { PRIMARY_GALLERY_ADMIN_ACTIONS } from "./AdminMarketActions";
+import {
+  MarketplaceLifecycleControl,
+  PRIMARY_GALLERY_ADMIN_ACTIONS,
+} from "./AdminMarketActions";
 import { AdminWorkbenchView } from "./AdminWorkbench";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
@@ -93,6 +96,37 @@ describe("TEST gallery admin workbench", () => {
 
   it("shows paused as canonical lifecycle state", () => {
     assert.match(authorizedMarkup(true), /Paused/);
+  });
+
+  it("renders one lifecycle toggle matching canonical state", () => {
+    const live = renderToStaticMarkup(
+      <MarketplaceLifecycleControl
+        paused={false}
+        busy={false}
+        onToggle={() => undefined}
+      />,
+    );
+    const paused = renderToStaticMarkup(
+      <MarketplaceLifecycleControl
+        paused
+        busy={false}
+        onToggle={() => undefined}
+      />,
+    );
+    const unavailable = renderToStaticMarkup(
+      <MarketplaceLifecycleControl
+        paused={null}
+        busy={false}
+        onToggle={() => undefined}
+      />,
+    );
+
+    assert.equal(live.match(/<button/g)?.length, 1);
+    assert.match(live, /Pause marketplace/);
+    assert.doesNotMatch(live, /Unpause marketplace/);
+    assert.equal(paused.match(/<button/g)?.length, 1);
+    assert.match(paused, /Unpause marketplace/);
+    assert.match(unavailable, /disabled=""/);
   });
 
   it("exposes only the four successor calls across three operational controls", () => {
