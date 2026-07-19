@@ -126,6 +126,18 @@ export type GalleryFulfillmentRoute =
       sourceId: bigint;
     }>;
 
+export type GalleryVerifiedAcquisition = Readonly<{
+  transactionHash: Hash;
+  receiptBlockNumber: bigint;
+  deliveredShellId: bigint;
+  artworkHash: Hash;
+  unit: bigint;
+  premium: bigint;
+  total: bigint;
+  recipient: Address;
+  affectedTokenIds: readonly bigint[];
+}>;
+
 export type GalleryAdminCall =
   | Readonly<{ kind: "set_premium"; premium: bigint }>
   | Readonly<{ kind: "set_fee_recipient"; feeRecipient: Address }>

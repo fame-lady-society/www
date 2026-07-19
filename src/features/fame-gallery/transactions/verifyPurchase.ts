@@ -1,483 +1,304 @@
 import {
   decodeEventLog,
-  isAddress as isViemAddress,
+  encodeEventTopics,
+  isAddress,
   type Address,
   type Hash,
   type Hex,
 } from "viem";
-import { closedLoopGallerySwapAbi, fameMirrorAbi } from "../../../wagmi";
+import {
+  fameMirrorAbi,
+  universalPoolArtMarketplaceAbi,
+} from "../../../wagmi";
 import type {
-  GalleryAcquiredNft,
-  GalleryPurchaseFingerprint,
-  GalleryPurchaseReceipt,
-  GalleryPurchaseSnapshot,
-  GalleryTransactionLog,
-} from "./purchaseQueue";
+  GalleryFrozenBuyerTerms,
+  GalleryFulfillmentRoute,
+  GalleryVerifiedAcquisition,
+} from "../types";
+
+export type GalleryReceiptLog = {
+  address: Address;
+  data: Hex;
+  topics: readonly Hex[];
+  logIndex: number;
+};
+
+export type GalleryPurchaseReceipt = {
+  status: "success" | "reverted";
+  blockNumber?: bigint;
+  transactionHash?: Hash;
+  logs?: readonly GalleryReceiptLog[];
+};
 
 export type GalleryPurchaseVerificationAddresses = {
-  gallery: Address;
+  marketplace: Address;
   mirror: Address;
 };
 
-export type GalleryReceiptBlockState = {
-  owner: Address;
-  listingActive: boolean;
-  inventory: bigint;
-  accruedProtocolFees: bigint;
-};
-
-export type GalleryPurchaseReceiptProof = {
-  transactionHash: Hash;
-  blockNumber: bigint;
-  buyer: Address;
-  recipient: Address;
-  tokenId: bigint;
-  unit: bigint;
-  premium: bigint;
-  inventoryBefore: bigint;
-  inventoryAfter: bigint;
-  transferLogIndex: number;
-  unlistedLogIndex: number;
-  filledLogIndex: number;
+export type GalleryPurchaseVerificationDependencies = {
+  readOwnerAt: (blockNumber: bigint, shellId: bigint) => Promise<Address>;
+  readArtworkHash: (blockNumber: bigint, shellId: bigint) => Promise<Hash>;
 };
 
 export type GalleryPurchaseVerificationResult =
-  | { status: "verified"; acquiredNft: GalleryAcquiredNft }
-  | { status: "confirmed_refreshing"; cause: unknown }
+  | { status: "verified"; acquisition: GalleryVerifiedAcquisition }
   | { status: "confirmed_unverified"; reason: string };
 
-export type GalleryPurchaseVerificationDependencies = {
-  readReceiptBlockState: (
-    blockNumber: bigint,
-    tokenId: bigint,
-  ) => Promise<GalleryReceiptBlockState>;
-  readReconciliationLogs: (
-    fromBlock: bigint,
-    toBlock: bigint,
-  ) => Promise<readonly GalleryTransactionLog[]>;
-  readTokenUri: (blockNumber: bigint, tokenId: bigint) => Promise<string>;
-};
-
-type DecodedLog = {
-  log: GalleryTransactionLog;
+type DecodedEvent = {
   eventName: string;
   args: Record<string, unknown>;
 };
 
-function sameAddress(left: Address, right: Address) {
+const artworkPurchasedTopic = encodeEventTopics({
+  abi: universalPoolArtMarketplaceAbi,
+  eventName: "ArtworkPurchased",
+})[0];
+
+const mirrorTransferTopic = encodeEventTopics({
+  abi: fameMirrorAbi,
+  eventName: "Transfer",
+})[0];
+
+function sameHex(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-function isAddress(value: unknown): value is Address {
-  return typeof value === "string" && isViemAddress(value, { strict: false });
+function sameAddress(left: Address, right: Address) {
+  return sameHex(left, right);
+}
+
+function asAddress(value: unknown): Address | null {
+  return typeof value === "string" && isAddress(value, { strict: false })
+    ? value
+    : null;
 }
 
 function asBigint(value: unknown) {
   return typeof value === "bigint" ? value : null;
 }
 
-function decodeLog(
-  log: GalleryTransactionLog,
+function asNumber(value: unknown) {
+  if (typeof value === "number" && Number.isSafeInteger(value)) return value;
+  if (
+    typeof value === "bigint" &&
+    value >= 0n &&
+    value <= BigInt(Number.MAX_SAFE_INTEGER)
+  ) {
+    return Number(value);
+  }
+  return null;
+}
+
+function asHash(value: unknown): Hash | null {
+  return typeof value === "string" && /^0x[0-9a-fA-F]{64}$/.test(value)
+    ? (value as Hash)
+    : null;
+}
+
+function decodeStrictEvent(
+  log: GalleryReceiptLog,
   abi: readonly unknown[],
-): DecodedLog | null {
+): DecodedEvent | null {
   if (log.topics.length === 0) return null;
+
   try {
-    const decoded = decodeEventLog({
+    return decodeEventLog({
       abi,
       data: log.data,
       topics: log.topics as [Hex, ...Hex[]],
       strict: true,
-    }) as {
-      eventName: string;
-      args: Record<string, unknown>;
-    };
-    return { log, eventName: decoded.eventName, args: decoded.args };
+    }) as DecodedEvent;
   } catch {
     return null;
   }
 }
 
-function decodedAtAddress(
-  logs: readonly GalleryTransactionLog[],
-  address: Address,
-  abi: readonly unknown[],
+function matchingTopicLogs(
+  logs: readonly GalleryReceiptLog[],
+  emitter: Address,
+  topic: Hex,
 ) {
-  return logs
-    .filter((log) => sameAddress(log.address, address))
-    .map((log) => decodeLog(log, abi))
-    .filter((log): log is DecodedLog => log !== null);
+  return logs.filter(
+    (log) =>
+      sameAddress(log.address, emitter) &&
+      typeof log.topics[0] === "string" &&
+      sameHex(log.topics[0], topic),
+  );
 }
 
 function unverified(reason: string): GalleryPurchaseVerificationResult {
   return { status: "confirmed_unverified", reason };
 }
 
-export function decodeGalleryPurchaseReceiptProof({
-  receipt,
-  expectedHash,
-  fingerprint,
-  preFillSnapshot,
-  addresses,
-}: {
-  receipt: GalleryPurchaseReceipt;
-  expectedHash: Hash;
-  fingerprint: GalleryPurchaseFingerprint;
-  preFillSnapshot: GalleryPurchaseSnapshot;
-  addresses: GalleryPurchaseVerificationAddresses;
-}):
-  | { status: "proof"; proof: GalleryPurchaseReceiptProof }
-  | { status: "confirmed_unverified"; reason: string } {
-  if (
-    receipt.status !== "success" ||
-    receipt.transactionHash !== expectedHash ||
-    typeof receipt.blockNumber !== "bigint" ||
-    !receipt.logs
-  ) {
+function expectedRouteFacts(route: GalleryFulfillmentRoute) {
+  if (route.kind === "held") {
     return {
-      status: "confirmed_unverified",
-      reason:
-        "The mined fill receipt is incomplete or does not match its canonical hash.",
-    };
-  }
-
-  const galleryEvents = decodedAtAddress(
-    receipt.logs,
-    addresses.gallery,
-    closedLoopGallerySwapAbi,
-  );
-  const filledEvents = galleryEvents.filter(
-    (event) => event.eventName === "Filled",
-  );
-  if (filledEvents.length !== 1) {
-    return {
-      status: "confirmed_unverified",
-      reason: "The receipt must contain exactly one gallery Filled event.",
-    };
-  }
-
-  const filled = filledEvents[0];
-  const buyer = filled.args.buyer;
-  const recipient = filled.args.recipient;
-  const tokenId = asBigint(filled.args.tokenId);
-  const unit = asBigint(filled.args.unitAmount);
-  const premium = asBigint(filled.args.premium);
-  const inventoryBefore = asBigint(filled.args.inventoryBefore);
-  const inventoryAfter = asBigint(filled.args.inventoryAfter);
-  if (
-    !isAddress(buyer) ||
-    !isAddress(recipient) ||
-    tokenId === null ||
-    unit === null ||
-    premium === null ||
-    inventoryBefore === null ||
-    inventoryAfter === null ||
-    !sameAddress(buyer, fingerprint.account) ||
-    !sameAddress(recipient, fingerprint.recipient) ||
-    tokenId !== fingerprint.tokenId ||
-    unit !== fingerprint.unit ||
-    premium !== fingerprint.premium ||
-    unit + premium !== fingerprint.total ||
-    inventoryAfter < inventoryBefore
-  ) {
-    return {
-      status: "confirmed_unverified",
-      reason: "The Filled event does not match the frozen purchase facts.",
-    };
-  }
-
-  const unlisted = galleryEvents.filter(
-    (event) =>
-      event.eventName === "Unlisted" &&
-      asBigint(event.args.tokenId) === fingerprint.tokenId &&
-      event.log.logIndex < filled.log.logIndex,
-  );
-  if (unlisted.length !== 1) {
-    return {
-      status: "confirmed_unverified",
-      reason: "The receipt is missing the matching preceding Unlisted event.",
-    };
-  }
-
-  const mirrorEvents = decodedAtAddress(
-    receipt.logs,
-    addresses.mirror,
-    fameMirrorAbi,
-  );
-  const transfers = mirrorEvents.filter(
-    (event) =>
-      event.eventName === "Transfer" &&
-      isAddress(event.args.from) &&
-      isAddress(event.args.to) &&
-      sameAddress(event.args.from, addresses.gallery) &&
-      sameAddress(event.args.to, fingerprint.recipient) &&
-      asBigint(event.args.id) === fingerprint.tokenId &&
-      event.log.logIndex < filled.log.logIndex,
-  );
-  if (transfers.length !== 1) {
-    return {
-      status: "confirmed_unverified",
-      reason:
-        "The receipt is missing the matching gallery-to-recipient mirror Transfer.",
+      path: 0,
+      sourceId: 0n,
+      affectedTokenIds: [route.shellId] as readonly bigint[],
     };
   }
 
   return {
-    status: "proof",
-    proof: {
-      transactionHash: receipt.transactionHash,
-      blockNumber: receipt.blockNumber,
-      buyer,
-      recipient,
-      tokenId,
-      unit,
-      premium,
-      inventoryBefore,
-      inventoryAfter,
-      transferLogIndex: transfers[0].log.logIndex,
-      unlistedLogIndex: unlisted[0].log.logIndex,
-      filledLogIndex: filled.log.logIndex,
-    },
-  };
-}
-
-function compareLogs(
-  left: GalleryTransactionLog,
-  right: GalleryTransactionLog,
-) {
-  const block = (left.blockNumber ?? 0n) - (right.blockNumber ?? 0n);
-  if (block !== 0n) return block < 0n ? -1 : 1;
-  const transaction =
-    (left.transactionIndex ?? 0) - (right.transactionIndex ?? 0);
-  if (transaction !== 0) return transaction;
-  return left.logIndex - right.logIndex;
-}
-
-function isProofLog(
-  event: DecodedLog,
-  proof: GalleryPurchaseReceiptProof,
-  eventName: string,
-  logIndex: number,
-) {
-  return (
-    event.eventName === eventName &&
-    event.log.transactionHash === proof.transactionHash &&
-    event.log.logIndex === logIndex
-  );
-}
-
-export function reconcileGalleryPurchase({
-  proof,
-  fingerprint,
-  preFillSnapshot,
-  receiptBlockState,
-  logs,
-  tokenUri,
-  addresses,
-}: {
-  proof: GalleryPurchaseReceiptProof;
-  fingerprint: GalleryPurchaseFingerprint;
-  preFillSnapshot: GalleryPurchaseSnapshot;
-  receiptBlockState: GalleryReceiptBlockState;
-  logs: readonly GalleryTransactionLog[];
-  tokenUri: string | null;
-  addresses: GalleryPurchaseVerificationAddresses;
-}): GalleryPurchaseVerificationResult {
-  const ordered = [...logs].sort(compareLogs);
-  let inventory = preFillSnapshot.inventory;
-  let accruedFees = preFillSnapshot.accruedProtocolFees;
-  let targetTransactionStarted = false;
-  let targetTransferSeen = false;
-  let targetFillSeen = false;
-  let expectedOwner: Address | null = null;
-  let expectedListingActive = false;
-
-  for (const log of ordered) {
-    if (
-      log.transactionHash === proof.transactionHash &&
-      !targetTransactionStarted
-    ) {
-      if (inventory !== proof.inventoryBefore) {
-        return unverified(
-          "The receipt inventory-before value does not reconcile from the pre-fill baseline.",
-        );
-      }
-      targetTransactionStarted = true;
-    }
-
-    const mirrorEvent = sameAddress(log.address, addresses.mirror)
-      ? decodeLog(log, fameMirrorAbi)
-      : null;
-    if (mirrorEvent?.eventName === "Transfer") {
-      const from = mirrorEvent.args.from;
-      const to = mirrorEvent.args.to;
-      const tokenId = asBigint(mirrorEvent.args.id);
-      if (!isAddress(from) || !isAddress(to) || tokenId === null) {
-        return unverified(
-          "A mirror Transfer in the reconciliation range is malformed.",
-        );
-      }
-
-      if (isProofLog(mirrorEvent, proof, "Transfer", proof.transferLogIndex)) {
-        targetTransferSeen = true;
-      }
-
-      if (
-        sameAddress(from, addresses.gallery) &&
-        !sameAddress(to, addresses.gallery)
-      ) {
-        if (inventory === 0n) {
-          return unverified("Gallery inventory reconciliation underflowed.");
-        }
-        inventory -= 1n;
-      } else if (
-        !sameAddress(from, addresses.gallery) &&
-        sameAddress(to, addresses.gallery)
-      ) {
-        inventory += 1n;
-      }
-
-      if (targetTransferSeen && tokenId === fingerprint.tokenId) {
-        expectedOwner = to;
-      }
-    }
-
-    const galleryEvent = sameAddress(log.address, addresses.gallery)
-      ? decodeLog(log, closedLoopGallerySwapAbi)
-      : null;
-    if (!galleryEvent) continue;
-
-    if (galleryEvent.eventName === "Filled") {
-      const eventPremium = asBigint(galleryEvent.args.premium);
-      if (eventPremium === null) {
-        return unverified(
-          "A Filled event in the reconciliation range is malformed.",
-        );
-      }
-      accruedFees += eventPremium;
-      if (isProofLog(galleryEvent, proof, "Filled", proof.filledLogIndex)) {
-        if (!targetTransferSeen || inventory !== proof.inventoryAfter) {
-          return unverified(
-            "The target fill inventory does not reconcile with its ordered mirror transfer.",
-          );
-        }
-        targetFillSeen = true;
-        expectedListingActive = false;
-      } else if (
-        targetFillSeen &&
-        asBigint(galleryEvent.args.tokenId) === fingerprint.tokenId
-      ) {
-        expectedListingActive = false;
-      }
-    } else if (galleryEvent.eventName === "AccruedFeesWithdrawn") {
-      const amount = asBigint(galleryEvent.args.amount);
-      if (amount === null || amount > accruedFees) {
-        return unverified("Accrued fee reconciliation is malformed.");
-      }
-      accruedFees -= amount;
-    } else if (
-      targetFillSeen &&
-      asBigint(galleryEvent.args.tokenId) === fingerprint.tokenId
-    ) {
-      if (galleryEvent.eventName === "Listed") {
-        expectedListingActive = true;
-      } else if (galleryEvent.eventName === "Unlisted") {
-        expectedListingActive = false;
-      }
-    }
-  }
-
-  if (!targetTransferSeen || !targetFillSeen || !expectedOwner) {
-    return unverified(
-      "The canonical block logs do not contain the ordered purchase proof.",
-    );
-  }
-  if (
-    inventory !== receiptBlockState.inventory ||
-    accruedFees !== receiptBlockState.accruedProtocolFees ||
-    !sameAddress(expectedOwner, receiptBlockState.owner) ||
-    expectedListingActive !== receiptBlockState.listingActive
-  ) {
-    return unverified(
-      "Receipt-block ownership, listing, inventory, or fees do not reconcile with ordered events.",
-    );
-  }
-
-  return {
-    status: "verified",
-    acquiredNft: {
-      transactionHash: proof.transactionHash,
-      receiptBlockNumber: proof.blockNumber,
-      buyer: proof.buyer,
-      recipient: proof.recipient,
-      tokenId: proof.tokenId,
-      unit: proof.unit,
-      premium: proof.premium,
-      total: proof.unit + proof.premium,
-      inventoryBefore: proof.inventoryBefore,
-      inventoryAfter: proof.inventoryAfter,
-      receiptBlockInventory: receiptBlockState.inventory,
-      receiptBlockAccruedFees: receiptBlockState.accruedProtocolFees,
-      currentOwner: receiptBlockState.owner,
-      listingActive: receiptBlockState.listingActive,
-      tokenUri,
-    },
+    path: route.poolKind === "mint" ? 1 : 2,
+    sourceId: route.sourceId,
+    affectedTokenIds: [route.shellId, route.sourceId] as readonly bigint[],
   };
 }
 
 export async function verifyGalleryPurchase({
   receipt,
   expectedHash,
-  fingerprint,
-  preFillSnapshot,
+  terms,
+  route,
   addresses,
   dependencies,
 }: {
   receipt: GalleryPurchaseReceipt;
   expectedHash: Hash;
-  fingerprint: GalleryPurchaseFingerprint;
-  preFillSnapshot: GalleryPurchaseSnapshot;
+  terms: GalleryFrozenBuyerTerms;
+  route: GalleryFulfillmentRoute;
   addresses: GalleryPurchaseVerificationAddresses;
   dependencies: GalleryPurchaseVerificationDependencies;
 }): Promise<GalleryPurchaseVerificationResult> {
-  const decoded = decodeGalleryPurchaseReceiptProof({
-    receipt,
-    expectedHash,
-    fingerprint,
-    preFillSnapshot,
-    addresses,
-  });
-  if (decoded.status === "confirmed_unverified") return decoded;
-  if (decoded.proof.blockNumber <= preFillSnapshot.blockNumber) {
+  if (
+    receipt.status !== "success" ||
+    typeof receipt.transactionHash !== "string" ||
+    !sameHex(receipt.transactionHash, expectedHash) ||
+    typeof receipt.blockNumber !== "bigint" ||
+    !Array.isArray(receipt.logs)
+  ) {
     return unverified(
-      "The fill receipt block does not follow the pre-fill baseline.",
+      "The purchase receipt is incomplete or does not match its transaction.",
     );
   }
 
-  try {
-    const [receiptBlockState, logs, tokenUri] = await Promise.all([
-      dependencies.readReceiptBlockState(
-        decoded.proof.blockNumber,
-        fingerprint.tokenId,
-      ),
-      dependencies.readReconciliationLogs(
-        preFillSnapshot.blockNumber + 1n,
-        decoded.proof.blockNumber,
-      ),
-      dependencies
-        .readTokenUri(decoded.proof.blockNumber, fingerprint.tokenId)
-        .catch(() => null),
-    ]);
-
-    return reconcileGalleryPurchase({
-      proof: decoded.proof,
-      fingerprint,
-      preFillSnapshot,
-      receiptBlockState,
-      logs,
-      tokenUri,
-      addresses,
-    });
-  } catch (cause) {
-    return { status: "confirmed_refreshing", cause };
+  const purchaseLogs = matchingTopicLogs(
+    receipt.logs,
+    addresses.marketplace,
+    artworkPurchasedTopic,
+  );
+  if (purchaseLogs.length !== 1) {
+    return unverified(
+      "The receipt must contain exactly one marketplace ArtworkPurchased event.",
+    );
   }
+
+  const purchase = decodeStrictEvent(
+    purchaseLogs[0],
+    universalPoolArtMarketplaceAbi,
+  );
+  if (!purchase || purchase.eventName !== "ArtworkPurchased") {
+    return unverified("The marketplace ArtworkPurchased event is malformed.");
+  }
+
+  const buyer = asAddress(purchase.args.buyer);
+  const recipient = asAddress(purchase.args.recipient);
+  const shellId = asBigint(purchase.args.shellId);
+  const path = asNumber(purchase.args.path);
+  const sourceId = asBigint(purchase.args.sourceId);
+  const artwork = asHash(purchase.args.artwork);
+  const unit = asBigint(purchase.args.unitAmount);
+  const premium = asBigint(purchase.args.premiumAmount);
+  const inventoryBefore = asBigint(purchase.args.inventoryBefore);
+  const inventoryAfter = asBigint(purchase.args.inventoryAfter);
+  const expectedRoute = expectedRouteFacts(route);
+
+  if (
+    buyer === null ||
+    recipient === null ||
+    shellId === null ||
+    path === null ||
+    sourceId === null ||
+    artwork === null ||
+    unit === null ||
+    premium === null ||
+    inventoryBefore === null ||
+    inventoryAfter === null ||
+    !sameAddress(buyer, terms.account) ||
+    !sameAddress(recipient, terms.recipient) ||
+    shellId !== route.shellId ||
+    path !== expectedRoute.path ||
+    sourceId !== expectedRoute.sourceId ||
+    !sameHex(artwork, terms.artworkHash) ||
+    unit !== terms.unit ||
+    premium > terms.maxPremium ||
+    inventoryAfter < inventoryBefore
+  ) {
+    return unverified(
+      "The ArtworkPurchased event does not match the submitted purchase.",
+    );
+  }
+
+  const transferLogs = matchingTopicLogs(
+    receipt.logs,
+    addresses.mirror,
+    mirrorTransferTopic,
+  );
+  const decodedTransfers: DecodedEvent[] = [];
+  for (const log of transferLogs) {
+    const decoded = decodeStrictEvent(log, fameMirrorAbi);
+    if (!decoded || decoded.eventName !== "Transfer") {
+      return unverified("A mirror Transfer event is malformed.");
+    }
+    decodedTransfers.push(decoded);
+  }
+
+  const matchingTransfers = decodedTransfers.filter((transfer) => {
+    const from = asAddress(transfer.args.from);
+    const to = asAddress(transfer.args.to);
+    const id = asBigint(transfer.args.id);
+    return (
+      from !== null &&
+      to !== null &&
+      id !== null &&
+      sameAddress(from, addresses.marketplace) &&
+      sameAddress(to, terms.recipient) &&
+      id === route.shellId
+    );
+  });
+  if (matchingTransfers.length !== 1) {
+    return unverified(
+      "The receipt must contain exactly one matching marketplace-to-recipient mirror Transfer.",
+    );
+  }
+
+  let receiptBlockOwner: unknown;
+  let receiptBlockArtwork: unknown;
+  try {
+    [receiptBlockOwner, receiptBlockArtwork] = await Promise.all([
+      dependencies.readOwnerAt(receipt.blockNumber, route.shellId),
+      dependencies.readArtworkHash(receipt.blockNumber, route.shellId),
+    ]);
+  } catch {
+    return unverified("Receipt-block purchase state could not be verified.");
+  }
+
+  const verifiedOwner = asAddress(receiptBlockOwner);
+  const verifiedArtwork = asHash(receiptBlockArtwork);
+  if (
+    verifiedOwner === null ||
+    verifiedArtwork === null ||
+    !sameAddress(verifiedOwner, terms.recipient) ||
+    !sameHex(verifiedArtwork, terms.artworkHash)
+  ) {
+    return unverified(
+      "Receipt-block owner or artwork does not match the purchase.",
+    );
+  }
+
+  return {
+    status: "verified",
+    acquisition: {
+      transactionHash: receipt.transactionHash,
+      receiptBlockNumber: receipt.blockNumber,
+      deliveredShellId: route.shellId,
+      artworkHash: artwork,
+      unit,
+      premium,
+      total: unit + premium,
+      recipient,
+      affectedTokenIds: expectedRoute.affectedTokenIds,
+    },
+  };
 }

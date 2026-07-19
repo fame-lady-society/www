@@ -7,23 +7,62 @@ import {
   type Hash,
   type Hex,
 } from "viem";
-import { closedLoopGallerySwapAbi, fameMirrorAbi } from "../../../wagmi";
+import {
+  fameMirrorAbi,
+  universalPoolArtMarketplaceAbi,
+} from "../../../wagmi";
 import type {
-  GalleryPurchaseFingerprint,
-  GalleryPurchaseReceipt,
-  GalleryPurchaseSnapshot,
-  GalleryTransactionLog,
-} from "./purchaseQueue";
-import { verifyGalleryPurchase } from "./verifyPurchase";
+  GalleryFrozenBuyerTerms,
+  GalleryFulfillmentRoute,
+} from "../types";
+import {
+  verifyGalleryPurchase,
+  type GalleryPurchaseReceipt,
+  type GalleryReceiptLog,
+} from "./verifyPurchase";
 
-const gallery = "0x1111111111111111111111111111111111111111" as Address;
+const marketplace =
+  "0x1111111111111111111111111111111111111111" as Address;
 const mirror = "0x2222222222222222222222222222222222222222" as Address;
 const buyer = "0x3333333333333333333333333333333333333333" as Address;
-const recipient = "0x4444444444444444444444444444444444444444" as Address;
-const laterOwner = "0x5555555555555555555555555555555555555555" as Address;
-const zero = "0x0000000000000000000000000000000000000000" as Address;
-const hash = `0x${"a".repeat(64)}` as Hash;
-const laterHash = `0x${"b".repeat(64)}` as Hash;
+const recipient =
+  "0x4444444444444444444444444444444444444444" as Address;
+const stranger = "0x5555555555555555555555555555555555555555" as Address;
+const transactionHash = `0x${"a".repeat(64)}` as Hash;
+const artworkHash = `0x${"b".repeat(64)}` as Hash;
+const otherArtworkHash = `0x${"c".repeat(64)}` as Hash;
+
+const terms: GalleryFrozenBuyerTerms = {
+  chainId: 84_532,
+  account: buyer,
+  recipient,
+  selectedTarget: {
+    targetId: "mint:31",
+    tokenId: 31n,
+  },
+  artworkHash,
+  unit: 1_000n,
+  maxPremium: 75n,
+  maximumSpend: 1_075n,
+  allowanceTarget: marketplace,
+};
+
+const heldRoute: GalleryFulfillmentRoute = {
+  kind: "held",
+  shellId: 7n,
+};
+const mintRoute: GalleryFulfillmentRoute = {
+  kind: "pool",
+  poolKind: "mint",
+  shellId: 8n,
+  sourceId: 31n,
+};
+const burnRoute: GalleryFulfillmentRoute = {
+  kind: "pool",
+  poolKind: "burn",
+  shellId: 9n,
+  sourceId: 41n,
+};
 
 function exactTopics(
   topics: ReturnType<typeof encodeEventTopics>,
@@ -31,69 +70,115 @@ function exactTopics(
   return topics as unknown as readonly Hex[];
 }
 
-const fingerprint: GalleryPurchaseFingerprint = {
-  chainId: 84_532,
-  account: buyer,
-  recipient,
-  tokenId: 7n,
-  unit: 1_000n,
-  premium: 50n,
-  total: 1_050n,
-  allowanceTarget: gallery,
-  fillCalldata: "0x1234",
-};
-
-const baseline: GalleryPurchaseSnapshot = {
-  blockNumber: 100n,
-  allowance: 1_050n,
-  inventory: 10n,
-  accruedProtocolFees: 20n,
-  fingerprint,
-};
+function mirrorTransferTopic() {
+  return exactTopics(
+    encodeEventTopics({
+      abi: fameMirrorAbi,
+      eventName: "Transfer",
+    }),
+  )[0] as Hex;
+}
 
 function rawLog({
   address,
   topics,
   data = "0x",
   logIndex,
-  transactionHash = hash,
-  transactionIndex = 0,
 }: {
   address: Address;
   topics: readonly Hex[];
   data?: Hex;
   logIndex: number;
-  transactionHash?: Hash;
-  transactionIndex?: number;
-}): GalleryTransactionLog {
+}): GalleryReceiptLog {
   return {
     address,
     topics,
     data,
-    blockNumber: 101n,
-    transactionHash,
-    transactionIndex,
     logIndex,
   };
 }
 
-function mirrorTransfer({
-  from,
-  to,
-  id,
-  logIndex,
-  transactionHash,
-  transactionIndex,
+function purchased({
+  route,
+  emitter = marketplace,
+  eventBuyer = buyer,
+  eventRecipient = recipient,
+  eventArtwork = artworkHash,
+  unit = 1_000n,
+  premium = 50n,
+  inventoryBefore = 10n,
+  inventoryAfter = 10n,
+  logIndex = 2,
 }: {
-  from: Address;
-  to: Address;
-  id: bigint;
-  logIndex: number;
-  transactionHash?: Hash;
-  transactionIndex?: number;
+  route: GalleryFulfillmentRoute;
+  emitter?: Address;
+  eventBuyer?: Address;
+  eventRecipient?: Address;
+  eventArtwork?: Hash;
+  unit?: bigint;
+  premium?: bigint;
+  inventoryBefore?: bigint;
+  inventoryAfter?: bigint;
+  logIndex?: number;
+}) {
+  const path =
+    route.kind === "held" ? 0 : route.poolKind === "mint" ? 1 : 2;
+  const sourceId = route.kind === "held" ? 0n : route.sourceId;
+
+  return rawLog({
+    address: emitter,
+    topics: exactTopics(
+      encodeEventTopics({
+        abi: universalPoolArtMarketplaceAbi,
+        eventName: "ArtworkPurchased",
+        args: {
+          buyer: eventBuyer,
+          recipient: eventRecipient,
+          shellId: route.shellId,
+        },
+      }),
+    ),
+    data: encodeAbiParameters(
+      [
+        { type: "uint8", name: "path" },
+        { type: "uint256", name: "sourceId" },
+        { type: "bytes32", name: "artwork" },
+        { type: "uint256", name: "unitAmount" },
+        { type: "uint256", name: "premiumAmount" },
+        { type: "uint256", name: "inventoryBefore" },
+        { type: "uint256", name: "inventoryAfter" },
+      ],
+      [
+        path,
+        sourceId,
+        eventArtwork,
+        unit,
+        premium,
+        inventoryBefore,
+        inventoryAfter,
+      ],
+    ),
+    logIndex,
+  });
+}
+
+function transfer({
+  route,
+  emitter = mirror,
+  from = marketplace,
+  to = recipient,
+  id = route.shellId,
+  logIndex = 1,
+}: {
+  route: GalleryFulfillmentRoute;
+  emitter?: Address;
+  from?: Address;
+  to?: Address;
+  id?: bigint;
+  logIndex?: number;
 }) {
   return rawLog({
-    address: mirror,
+    address: emitter,
     topics: exactTopics(
       encodeEventTopics({
         abi: fameMirrorAbi,
@@ -102,336 +187,264 @@ function mirrorTransfer({
       }),
     ),
     logIndex,
-    transactionHash,
-    transactionIndex,
   });
-}
-
-function unlisted(logIndex: number) {
-  return rawLog({
-    address: gallery,
-    topics: exactTopics(
-      encodeEventTopics({
-        abi: closedLoopGallerySwapAbi,
-        eventName: "Unlisted",
-        args: { tokenId: 7n },
-      }),
-    ),
-    logIndex,
-  });
-}
-
-function filled({
-  logIndex,
-  eventRecipient = recipient,
-  inventoryBefore = 10n,
-  inventoryAfter = 11n,
-}: {
-  logIndex: number;
-  eventRecipient?: Address;
-  inventoryBefore?: bigint;
-  inventoryAfter?: bigint;
-}) {
-  return rawLog({
-    address: gallery,
-    topics: exactTopics(
-      encodeEventTopics({
-        abi: closedLoopGallerySwapAbi,
-        eventName: "Filled",
-        args: {
-          buyer,
-          recipient: eventRecipient,
-          tokenId: 7n,
-        },
-      }),
-    ),
-    data: encodeAbiParameters(
-      [
-        { type: "uint256", name: "unitAmount" },
-        { type: "uint256", name: "premium" },
-        { type: "uint256", name: "inventoryBefore" },
-        { type: "uint256", name: "inventoryAfter" },
-      ],
-      [1_000n, 50n, inventoryBefore, inventoryAfter],
-    ),
-    logIndex,
-  });
-}
-
-function withdrawn({ amount, logIndex }: { amount: bigint; logIndex: number }) {
-  return rawLog({
-    address: gallery,
-    topics: exactTopics(
-      encodeEventTopics({
-        abi: closedLoopGallerySwapAbi,
-        eventName: "AccruedFeesWithdrawn",
-        args: { to: buyer },
-      }),
-    ),
-    data: encodeAbiParameters(
-      [
-        { type: "uint256", name: "amount" },
-        { type: "uint256", name: "inventoryBefore" },
-        { type: "uint256", name: "inventoryAfter" },
-      ],
-      [amount, 11n, 11n],
-    ),
-    logIndex,
-    transactionHash: laterHash,
-    transactionIndex: 1,
-  });
-}
-
-function purchaseLogs() {
-  return [
-    mirrorTransfer({ from: zero, to: gallery, id: 99n, logIndex: 1 }),
-    mirrorTransfer({ from: zero, to: gallery, id: 100n, logIndex: 2 }),
-    mirrorTransfer({
-      from: gallery,
-      to: recipient,
-      id: 7n,
-      logIndex: 3,
-    }),
-    unlisted(4),
-    filled({ logIndex: 5 }),
-  ];
 }
 
 function receipt(
-  logs: readonly GalleryTransactionLog[] = purchaseLogs(),
+  route: GalleryFulfillmentRoute,
+  logs: readonly GalleryReceiptLog[] = [
+    transfer({ route }),
+    purchased({ route }),
+  ],
 ): GalleryPurchaseReceipt {
   return {
     status: "success",
     blockNumber: 101n,
-    transactionHash: hash,
+    transactionHash,
     logs,
   };
 }
 
-describe("gallery purchase verification", () => {
-  it("verifies ordered receipt proof and receipt-block contract state", async () => {
-    const logs = purchaseLogs();
-    const result = await verifyGalleryPurchase({
-      receipt: receipt(logs),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies: {
-        async readReceiptBlockState() {
-          return {
-            owner: recipient,
-            listingActive: false,
-            inventory: 11n,
-            accruedProtocolFees: 70n,
-          };
-        },
-        async readReconciliationLogs() {
-          return logs;
-        },
-        async readTokenUri() {
-          return "data:application/json;base64,e30=";
-        },
-      },
-    });
+function dependencies({
+  route,
+  owner = recipient,
+  artwork = artworkHash,
+}: {
+  route: GalleryFulfillmentRoute;
+  owner?: Address;
+  artwork?: Hash;
+}) {
+  return {
+    async readOwnerAt(blockNumber: bigint, shellId: bigint) {
+      assert.equal(blockNumber, 101n);
+      assert.equal(shellId, route.shellId);
+      return owner;
+    },
+    async readArtworkHash(blockNumber: bigint, shellId: bigint) {
+      assert.equal(blockNumber, 101n);
+      assert.equal(shellId, route.shellId);
+      return artwork;
+    },
+  };
+}
 
-    assert.equal(result.status, "verified");
-    if (result.status !== "verified") return;
-    assert.equal(result.acquiredNft.tokenId, 7n);
-    assert.equal(result.acquiredNft.recipient, recipient);
-    assert.equal(result.acquiredNft.total, 1_050n);
-    assert.equal(result.acquiredNft.currentOwner, recipient);
-    assert.equal(result.acquiredNft.listingActive, false);
+describe("successor gallery purchase verification", () => {
+  for (const [name, route, affectedTokenIds] of [
+    ["held", heldRoute, [heldRoute.shellId]],
+    ["mint", mintRoute, [mintRoute.shellId, mintRoute.sourceId]],
+    ["burn", burnRoute, [burnRoute.shellId, burnRoute.sourceId]],
+  ] as const) {
+    it(`verifies a strict ${name} receipt`, async () => {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(route),
+        expectedHash: transactionHash,
+        terms,
+        route,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route }),
+      });
+
+      assert.equal(result.status, "verified");
+      if (result.status !== "verified") return;
+      assert.deepEqual(result.acquisition, {
+        transactionHash,
+        receiptBlockNumber: 101n,
+        deliveredShellId: route.shellId,
+        artworkHash,
+        unit: 1_000n,
+        premium: 50n,
+        total: 1_050n,
+        recipient,
+        affectedTokenIds,
+      });
+    });
+  }
+
+  it("rejects incomplete, reverted, or hash-mismatched receipts", async () => {
+    const cases: GalleryPurchaseReceipt[] = [
+      { ...receipt(heldRoute), status: "reverted" },
+      { ...receipt(heldRoute), blockNumber: undefined },
+      { ...receipt(heldRoute), transactionHash: undefined },
+      { ...receipt(heldRoute), logs: undefined },
+    ];
+
+    for (const candidate of cases) {
+      const result = await verifyGalleryPurchase({
+        receipt: candidate,
+        expectedHash: transactionHash,
+        terms,
+        route: heldRoute,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route: heldRoute }),
+      });
+      assert.equal(result.status, "confirmed_unverified");
+    }
+
+    const wrongHash = await verifyGalleryPurchase({
+      receipt: receipt(heldRoute),
+      expectedHash: otherArtworkHash,
+      terms,
+      route: heldRoute,
+      addresses: { marketplace, mirror },
+      dependencies: dependencies({ route: heldRoute }),
+    });
+    assert.equal(wrongHash.status, "confirmed_unverified");
   });
 
-  it("rejects a receipt with the wrong recipient or duplicate Filled event", async () => {
-    const wrongRecipient = [
-      ...purchaseLogs().slice(0, -1),
-      filled({ logIndex: 5, eventRecipient: laterOwner }),
-    ];
-    const duplicate = [...purchaseLogs(), filled({ logIndex: 6 })];
-    const dependencies = {
-      async readReceiptBlockState() {
-        throw new Error("should not read");
-      },
-      async readReconciliationLogs() {
-        throw new Error("should not read");
-      },
-      async readTokenUri() {
-        throw new Error("should not read");
-      },
+  it("rejects wrong emitters, malformed logs, and missing or duplicate events", async () => {
+    const malformedPurchase = {
+      ...purchased({ route: heldRoute }),
+      data: "0x12" as Hex,
     };
-
-    const wrong = await verifyGalleryPurchase({
-      receipt: receipt(wrongRecipient),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies,
-    });
-    const doubled = await verifyGalleryPurchase({
-      receipt: receipt(duplicate),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies,
-    });
-
-    assert.equal(wrong.status, "confirmed_unverified");
-    assert.equal(doubled.status, "confirmed_unverified");
-  });
-
-  it("reconciles a later same-block transfer and fee withdrawal", async () => {
-    const logs = [
-      ...purchaseLogs(),
-      mirrorTransfer({
-        from: recipient,
-        to: laterOwner,
-        id: 7n,
-        logIndex: 0,
-        transactionHash: laterHash,
-        transactionIndex: 1,
-      }),
-      withdrawn({ amount: 50n, logIndex: 1 }),
-    ];
-    const result = await verifyGalleryPurchase({
-      receipt: receipt(purchaseLogs()),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies: {
-        async readReceiptBlockState() {
-          return {
-            owner: laterOwner,
-            listingActive: false,
-            inventory: 11n,
-            accruedProtocolFees: 20n,
-          };
-        },
-        async readReconciliationLogs() {
-          return logs;
-        },
-        async readTokenUri() {
-          return "metadata";
-        },
-      },
-    });
-
-    assert.equal(result.status, "verified");
-    if (result.status === "verified") {
-      assert.equal(result.acquiredNft.recipient, recipient);
-      assert.equal(result.acquiredNft.currentOwner, laterOwner);
-      assert.equal(result.acquiredNft.receiptBlockAccruedFees, 20n);
-    }
-  });
-
-  it("reconciles inventory changes before the target transaction", async () => {
-    const targetLogs = [
-      ...purchaseLogs().slice(0, -1),
-      filled({
-        logIndex: 5,
-        inventoryBefore: 9n,
-        inventoryAfter: 10n,
-      }),
-    ].map((log) => ({ ...log, transactionIndex: 1 }));
-    const logs = [
-      mirrorTransfer({
-        from: gallery,
-        to: laterOwner,
-        id: 88n,
-        logIndex: 0,
-        transactionHash: laterHash,
-        transactionIndex: 0,
-      }),
-      ...targetLogs,
+    const cases = [
+      [
+        transfer({ route: heldRoute }),
+        purchased({ route: heldRoute, emitter: stranger }),
+      ],
+      [
+        transfer({ route: heldRoute, emitter: stranger }),
+        purchased({ route: heldRoute }),
+      ],
+      [transfer({ route: heldRoute }), malformedPurchase],
+      [
+        { ...transfer({ route: heldRoute }), topics: [mirrorTransferTopic()] },
+        purchased({ route: heldRoute }),
+      ],
+      [transfer({ route: heldRoute })],
+      [purchased({ route: heldRoute })],
+      [
+        transfer({ route: heldRoute }),
+        purchased({ route: heldRoute }),
+        purchased({ route: heldRoute, logIndex: 3 }),
+      ],
+      [
+        transfer({ route: heldRoute }),
+        transfer({ route: heldRoute, logIndex: 2 }),
+        purchased({ route: heldRoute, logIndex: 3 }),
+      ],
     ];
 
-    const result = await verifyGalleryPurchase({
-      receipt: receipt(targetLogs),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies: {
-        async readReceiptBlockState() {
-          return {
-            owner: recipient,
-            listingActive: false,
-            inventory: 10n,
-            accruedProtocolFees: 70n,
-          };
-        },
-        async readReconciliationLogs() {
-          return logs;
-        },
-        async readTokenUri() {
-          return "metadata";
-        },
-      },
-    });
-
-    assert.equal(result.status, "verified");
-    if (result.status === "verified") {
-      assert.equal(result.acquiredNft.inventoryBefore, 9n);
-      assert.equal(result.acquiredNft.receiptBlockInventory, 10n);
+    for (const logs of cases) {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(heldRoute, logs),
+        expectedHash: transactionHash,
+        terms,
+        route: heldRoute,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route: heldRoute }),
+      });
+      assert.equal(result.status, "confirmed_unverified");
     }
   });
 
-  it("keeps metadata failure independent from acquisition verification", async () => {
-    const logs = purchaseLogs();
-    const result = await verifyGalleryPurchase({
-      receipt: receipt(logs),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
-      dependencies: {
-        async readReceiptBlockState() {
-          return {
-            owner: recipient,
-            listingActive: false,
-            inventory: 11n,
-            accruedProtocolFees: 70n,
-          };
-        },
-        async readReconciliationLogs() {
-          return logs;
-        },
-        async readTokenUri() {
-          throw new Error("metadata unavailable");
-        },
-      },
-    });
+  it("rejects mismatched buyer, recipient, route, artwork, and settlement", async () => {
+    const cases = [
+      purchased({ route: mintRoute, eventBuyer: stranger }),
+      purchased({ route: mintRoute, eventRecipient: stranger }),
+      purchased({ route: { kind: "held", shellId: 88n } }),
+      purchased({ route: mintRoute, eventArtwork: otherArtworkHash }),
+      purchased({ route: mintRoute, unit: 999n }),
+      purchased({ route: mintRoute, premium: 76n }),
+      purchased({ route: mintRoute, inventoryBefore: 11n, inventoryAfter: 10n }),
+    ];
 
-    assert.equal(result.status, "verified");
-    if (result.status === "verified") {
-      assert.equal(result.acquiredNft.tokenUri, null);
+    for (const event of cases) {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(mintRoute, [
+          transfer({ route: mintRoute }),
+          event,
+        ]),
+        expectedHash: transactionHash,
+        terms,
+        route: mintRoute,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route: mintRoute }),
+      });
+      assert.equal(result.status, "confirmed_unverified");
     }
   });
 
-  it("remains confirmed and refreshing when receipt-block reads fail", async () => {
+  it("requires the exact submitted pool path and source", async () => {
+    const wrongPath = purchased({
+      route: { ...burnRoute, poolKind: "mint" },
+    });
+    const wrongSource = purchased({
+      route: { ...burnRoute, sourceId: burnRoute.sourceId + 1n },
+    });
+
+    for (const event of [wrongPath, wrongSource]) {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(burnRoute, [
+          transfer({ route: burnRoute }),
+          event,
+        ]),
+        expectedHash: transactionHash,
+        terms,
+        route: burnRoute,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route: burnRoute }),
+      });
+      assert.equal(result.status, "confirmed_unverified");
+    }
+  });
+
+  it("requires the exact marketplace-to-recipient shell transfer", async () => {
+    const cases = [
+      transfer({ route: heldRoute, from: stranger }),
+      transfer({ route: heldRoute, to: stranger }),
+      transfer({ route: heldRoute, id: heldRoute.shellId + 1n }),
+    ];
+
+    for (const event of cases) {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(heldRoute, [
+          event,
+          purchased({ route: heldRoute }),
+        ]),
+        expectedHash: transactionHash,
+        terms,
+        route: heldRoute,
+        addresses: { marketplace, mirror },
+        dependencies: dependencies({ route: heldRoute }),
+      });
+      assert.equal(result.status, "confirmed_unverified");
+    }
+  });
+
+  it("rejects receipt-block owner and artwork mismatches", async () => {
+    for (const deps of [
+      dependencies({ route: heldRoute, owner: stranger }),
+      dependencies({ route: heldRoute, artwork: otherArtworkHash }),
+    ]) {
+      const result = await verifyGalleryPurchase({
+        receipt: receipt(heldRoute),
+        expectedHash: transactionHash,
+        terms,
+        route: heldRoute,
+        addresses: { marketplace, mirror },
+        dependencies: deps,
+      });
+      assert.equal(result.status, "confirmed_unverified");
+    }
+  });
+
+  it("does not turn receipt-block read failures into a verified result", async () => {
     const result = await verifyGalleryPurchase({
-      receipt: receipt(),
-      expectedHash: hash,
-      fingerprint,
-      preFillSnapshot: baseline,
-      addresses: { gallery, mirror },
+      receipt: receipt(heldRoute),
+      expectedHash: transactionHash,
+      terms,
+      route: heldRoute,
+      addresses: { marketplace, mirror },
       dependencies: {
-        async readReceiptBlockState() {
+        async readOwnerAt() {
           throw new Error("archive read unavailable");
         },
-        async readReconciliationLogs() {
-          return purchaseLogs();
-        },
-        async readTokenUri() {
-          return "metadata";
+        async readArtworkHash() {
+          return artworkHash;
         },
       },
     });
 
-    assert.equal(result.status, "confirmed_refreshing");
+    assert.equal(result.status, "confirmed_unverified");
   });
 });
