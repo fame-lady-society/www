@@ -1,160 +1,52 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
-  DISCOVERY_CACHE_MAX_BYTES,
-  createGalleryDiscoveryProvenance,
-  mergeGalleryDiscoveryCaches,
-  mergeGalleryRecoveryCandidates,
-  parseGalleryDiscoveryCache,
-  serializeGalleryDiscoveryCache,
-  type GalleryDiscoveryCache,
+  createGalleryCustodyCacheIdentity,
+  createGalleryCustodyHintCache,
+  parseGalleryCustodyHintCache,
+  serializeGalleryCustodyHintCache,
 } from "./cache";
 
-const provenance = createGalleryDiscoveryProvenance();
+const identity = createGalleryCustodyCacheIdentity();
 
-function validCache(
-  overrides: Partial<GalleryDiscoveryCache> = {},
-): GalleryDiscoveryCache {
-  return {
-    schemaVersion: 1,
-    provenance,
-    candidateTokenIds: ["1", "2"],
-    cursor: {
-      blockNumber:
-        BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockNumber.toString(),
-      blockHash: BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockHash,
-    },
-    updatedAt: 1_000,
-    ...overrides,
-  };
-}
+describe("gallery custody hint cache", () => {
+  it("restores bounded, ascending held-ID hints for the exact deployment", () => {
+    const cache = createGalleryCustodyHintCache([1n, 888n], 123);
 
-describe("gallery discovery cache", () => {
-  it("restores a bounded provenance-matching record", () => {
     assert.deepEqual(
-      parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(validCache()),
-        provenance,
+      parseGalleryCustodyHintCache(
+        serializeGalleryCustodyHintCache(cache),
+        identity,
       ),
-      validCache(),
+      cache,
     );
   });
 
-  it("rejects identity drift, missing manifest candidates, and future cursors", () => {
-    const wrongGallery = validCache({
-      provenance: {
-        ...provenance,
-        galleryAddress:
-          BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame.toLowerCase(),
-      },
-    });
-    const missingManifestCandidate = validCache({
-      candidateTokenIds: ["2"],
-    });
-    const futureCursor = validCache({
-      cursor: {
-        blockNumber: "44268000",
-        blockHash: BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockHash,
-      },
-    });
+  it("rejects deployment drift, duplicates, and out-of-range IDs", () => {
+    const valid = createGalleryCustodyHintCache([1n, 2n], 123);
+    const serialized = JSON.parse(
+      serializeGalleryCustodyHintCache(valid),
+    ) as Record<string, unknown>;
 
     assert.equal(
-      parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(wrongGallery),
-        provenance,
+      parseGalleryCustodyHintCache(
+        JSON.stringify({
+          ...serialized,
+          identity: { ...identity, deploymentBlock: "1" },
+        }),
+        identity,
       ),
       null,
     );
-    assert.equal(
-      parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(missingManifestCandidate),
-        provenance,
-      ),
-      null,
-    );
-    assert.equal(
-      parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(futureCursor),
-        provenance,
-        { maxCursorBlock: 44_267_999n },
-      ),
-      null,
-    );
-  });
 
-  it("rejects poisoned or amplifying records", () => {
-    for (const candidateTokenIds of [
-      ["1", "1"],
-      ["0", "1"],
-      ["1", "889"],
-      ["0000000000000000000000000000000000000001"],
-    ]) {
+    for (const heldTokenIds of [["1", "1"], ["0"], ["889"], ["2", "1"]]) {
       assert.equal(
-        parseGalleryDiscoveryCache(
-          serializeGalleryDiscoveryCache(validCache({ candidateTokenIds })),
-          provenance,
+        parseGalleryCustodyHintCache(
+          JSON.stringify({ ...serialized, heldTokenIds }),
+          identity,
         ),
         null,
       );
     }
-
-    assert.equal(
-      parseGalleryDiscoveryCache(
-        "x".repeat(DISCOVERY_CACHE_MAX_BYTES + 1),
-        provenance,
-      ),
-      null,
-    );
-    assert.equal(
-      parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(
-          validCache({
-            cursor: {
-              blockNumber: (
-                BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockNumber - 1n
-              ).toString(),
-              blockHash: BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockHash,
-            },
-          }),
-        ),
-        provenance,
-      ),
-      null,
-    );
-  });
-
-  it("merges candidate unions without allowing an older cursor to win", () => {
-    const older = validCache({
-      candidateTokenIds: ["1", "2"],
-      updatedAt: 2_000,
-    });
-    const newer = validCache({
-      candidateTokenIds: ["1", "3"],
-      cursor: {
-        blockNumber: "44268000",
-        blockHash:
-          "0x1111111111111111111111111111111111111111111111111111111111111111",
-      },
-      updatedAt: 3_000,
-    });
-
-    assert.deepEqual(mergeGalleryDiscoveryCaches(newer, older), {
-      ...newer,
-      candidateTokenIds: ["1", "2", "3"],
-    });
-  });
-
-  it("adds recovery candidates without advancing the discovery cursor", () => {
-    const current = validCache({
-      candidateTokenIds: ["1", "2"],
-      updatedAt: 2_000,
-    });
-
-    assert.deepEqual(mergeGalleryRecoveryCandidates(current, [3n], 3_000), {
-      ...current,
-      candidateTokenIds: ["1", "2", "3"],
-      updatedAt: 3_000,
-    });
   });
 });

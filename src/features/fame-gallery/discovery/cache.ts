@@ -1,110 +1,96 @@
-import { isHash, type Hash } from "viem";
+import type { GalleryQueryIdentity } from "../queryKeys";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 
-export const DISCOVERY_CACHE_SCHEMA_VERSION = 1;
-export const DISCOVERY_CACHE_MAX_BYTES = 65_536;
-export const DISCOVERY_CACHE_MAX_CANDIDATES = 888;
+export const CUSTODY_HINT_CACHE_SCHEMA_VERSION = 1;
+export const CUSTODY_HINT_CACHE_MAX_BYTES = 16_384;
 const MAX_DECIMAL_CHARACTERS = 20;
 
-export type GalleryDiscoveryProvenance = {
+export type GalleryCustodyCacheIdentity = {
   chainId: number;
-  galleryAddress: string;
+  manifestVersion: number;
+  marketplaceAddress: string;
   deploymentBlock: string;
-  checkpointBlock: string;
-  checkpointHash: Hash;
-  checkpointCandidateTokenIds: readonly string[];
+  firstTokenId: string;
+  lastTokenId: string;
 };
 
-export type GalleryDiscoveryCache = {
-  schemaVersion: typeof DISCOVERY_CACHE_SCHEMA_VERSION;
-  provenance: GalleryDiscoveryProvenance;
-  candidateTokenIds: string[];
-  cursor: {
-    blockNumber: string;
-    blockHash: Hash;
-  };
+export type GalleryCustodyHintCache = {
+  schemaVersion: typeof CUSTODY_HINT_CACHE_SCHEMA_VERSION;
+  identity: GalleryCustodyCacheIdentity;
+  heldTokenIds: string[];
   updatedAt: number;
 };
 
-export function createGalleryDiscoveryProvenance(): GalleryDiscoveryProvenance {
-  const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-  return {
-    chainId: config.chainId,
-    galleryAddress: config.addresses.gallery.toLowerCase(),
-    deploymentBlock: config.deployment.blockNumber.toString(),
-    checkpointBlock: config.checkpoint.blockNumber.toString(),
-    checkpointHash: config.checkpoint.blockHash,
-    checkpointCandidateTokenIds: config.checkpoint.candidateTokenIds.map(
-      (tokenId) => tokenId.toString(),
+const defaultQueryIdentity: GalleryQueryIdentity = {
+  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
+  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
+  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
+};
+
+export function createGalleryCustodyCacheIdentity(
+  identity: GalleryQueryIdentity = defaultQueryIdentity,
+  bounds: { firstTokenId: bigint; lastTokenId: bigint } = {
+    firstTokenId: BigInt(
+      BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.firstTokenId,
     ),
+    lastTokenId: BigInt(
+      BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId,
+    ),
+  },
+): GalleryCustodyCacheIdentity {
+  return {
+    chainId: identity.chainId,
+    manifestVersion: identity.manifestVersion,
+    marketplaceAddress: identity.marketplaceAddress.toLowerCase(),
+    deploymentBlock: identity.deploymentBlock.toString(),
+    firstTokenId: bounds.firstTokenId.toString(),
+    lastTokenId: bounds.lastTokenId.toString(),
   };
 }
 
-export function mergeGalleryRecoveryCandidates(
-  current: GalleryDiscoveryCache | null,
-  tokenIds: readonly bigint[],
-  now = Date.now(),
-) {
-  const provenance = createGalleryDiscoveryProvenance();
-  const base =
-    current ??
-    ({
-      schemaVersion: DISCOVERY_CACHE_SCHEMA_VERSION,
-      provenance,
-      candidateTokenIds: [...provenance.checkpointCandidateTokenIds],
-      cursor: {
-        blockNumber: provenance.checkpointBlock,
-        blockHash: provenance.checkpointHash,
-      },
-      updatedAt: now,
-    } satisfies GalleryDiscoveryCache);
-  const candidates = [...base.candidateTokenIds.map(BigInt), ...tokenIds].sort(
-    (left, right) => (left < right ? -1 : left > right ? 1 : 0),
+function sortedUniqueTokenIds(tokenIds: readonly bigint[]) {
+  return [...new Set(tokenIds)].sort((left, right) =>
+    left < right ? -1 : left > right ? 1 : 0,
   );
-  const record: GalleryDiscoveryCache = {
-    ...base,
-    candidateTokenIds: [...new Set(candidates)].map(String),
-    updatedAt: now,
-  };
-  const parsed = parseGalleryDiscoveryCache(
-    serializeGalleryDiscoveryCache(record),
-    provenance,
-  );
-  if (!parsed) {
-    throw new Error("Recovery candidates do not fit the discovery cache");
-  }
-  return parsed;
 }
 
-function record(value: unknown): Record<string, unknown> | null {
+export function createGalleryCustodyHintCache(
+  heldTokenIds: readonly bigint[],
+  updatedAt = Date.now(),
+  identity = createGalleryCustodyCacheIdentity(),
+): GalleryCustodyHintCache {
+  return {
+    schemaVersion: CUSTODY_HINT_CACHE_SCHEMA_VERSION,
+    identity,
+    heldTokenIds: sortedUniqueTokenIds(heldTokenIds).map(String),
+    updatedAt,
+  };
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
 }
 
-function provenanceMatches(
+function identityMatches(
   value: unknown,
-  expected: GalleryDiscoveryProvenance,
+  expected: GalleryCustodyCacheIdentity,
 ) {
-  const candidate = record(value);
-  if (!candidate) return false;
+  const candidate = objectRecord(value);
   return (
+    candidate !== null &&
     candidate.chainId === expected.chainId &&
-    candidate.galleryAddress === expected.galleryAddress &&
+    candidate.manifestVersion === expected.manifestVersion &&
+    candidate.marketplaceAddress === expected.marketplaceAddress &&
     candidate.deploymentBlock === expected.deploymentBlock &&
-    candidate.checkpointBlock === expected.checkpointBlock &&
-    candidate.checkpointHash === expected.checkpointHash &&
-    Array.isArray(candidate.checkpointCandidateTokenIds) &&
-    candidate.checkpointCandidateTokenIds.length ===
-      expected.checkpointCandidateTokenIds.length &&
-    candidate.checkpointCandidateTokenIds.every(
-      (tokenId, index) =>
-        tokenId === expected.checkpointCandidateTokenIds[index],
-    )
+    candidate.firstTokenId === expected.firstTokenId &&
+    candidate.lastTokenId === expected.lastTokenId
   );
 }
 
-function parseDecimal(value: unknown) {
+function decimal(value: unknown) {
   if (
     typeof value !== "string" ||
     value.length === 0 ||
@@ -120,77 +106,25 @@ function parseDecimal(value: unknown) {
   }
 }
 
-function parseCandidateTokenIds(
-  value: unknown,
-  provenance: GalleryDiscoveryProvenance,
-) {
-  if (!Array.isArray(value) || value.length > DISCOVERY_CACHE_MAX_CANDIDATES) {
-    return null;
-  }
-
-  const candidateTokenIds: string[] = [];
-  let previous = 0n;
-  for (const rawTokenId of value) {
-    const tokenId = parseDecimal(rawTokenId);
-    if (
-      tokenId === null ||
-      tokenId < 1n ||
-      tokenId > BigInt(DISCOVERY_CACHE_MAX_CANDIDATES) ||
-      tokenId <= previous
-    ) {
-      return null;
-    }
-    previous = tokenId;
-    candidateTokenIds.push(tokenId.toString());
-  }
-
-  if (
-    provenance.checkpointCandidateTokenIds.some(
-      (required) => !candidateTokenIds.includes(required),
-    )
-  ) {
-    return null;
-  }
-  return candidateTokenIds;
-}
-
-export function parseGalleryDiscoveryCache(
+export function parseGalleryCustodyHintCache(
   serialized: string | null,
-  provenance: GalleryDiscoveryProvenance,
-  { maxCursorBlock }: { maxCursorBlock?: bigint } = {},
-): GalleryDiscoveryCache | null {
+  identity: GalleryCustodyCacheIdentity,
+): GalleryCustodyHintCache | null {
   if (
     serialized === null ||
-    new TextEncoder().encode(serialized).byteLength > DISCOVERY_CACHE_MAX_BYTES
+    new TextEncoder().encode(serialized).byteLength >
+      CUSTODY_HINT_CACHE_MAX_BYTES
   ) {
     return null;
   }
 
   try {
-    const parsed = record(JSON.parse(serialized));
+    const parsed = objectRecord(JSON.parse(serialized));
     if (
       !parsed ||
-      parsed.schemaVersion !== DISCOVERY_CACHE_SCHEMA_VERSION ||
-      !provenanceMatches(parsed.provenance, provenance)
-    ) {
-      return null;
-    }
-
-    const candidateTokenIds = parseCandidateTokenIds(
-      parsed.candidateTokenIds,
-      provenance,
-    );
-    const cursor = record(parsed.cursor);
-    const cursorBlock = parseDecimal(cursor?.blockNumber);
-    const checkpointBlock = BigInt(provenance.checkpointBlock);
-    if (
-      !candidateTokenIds ||
-      !cursor ||
-      cursorBlock === null ||
-      cursorBlock < checkpointBlock ||
-      (maxCursorBlock !== undefined && cursorBlock > maxCursorBlock) ||
-      typeof cursor.blockHash !== "string" ||
-      !isHash(cursor.blockHash) ||
+      parsed.schemaVersion !== CUSTODY_HINT_CACHE_SCHEMA_VERSION ||
+      !identityMatches(parsed.identity, identity) ||
+      !Array.isArray(parsed.heldTokenIds) ||
       typeof parsed.updatedAt !== "number" ||
       !Number.isFinite(parsed.updatedAt) ||
       parsed.updatedAt < 0
@@ -198,14 +132,28 @@ export function parseGalleryDiscoveryCache(
       return null;
     }
 
+    const firstTokenId = BigInt(identity.firstTokenId);
+    const lastTokenId = BigInt(identity.lastTokenId);
+    const heldTokenIds: string[] = [];
+    let previous: bigint | null = null;
+    for (const rawTokenId of parsed.heldTokenIds) {
+      const tokenId = decimal(rawTokenId);
+      if (
+        tokenId === null ||
+        tokenId < firstTokenId ||
+        tokenId > lastTokenId ||
+        (previous !== null && tokenId <= previous)
+      ) {
+        return null;
+      }
+      previous = tokenId;
+      heldTokenIds.push(tokenId.toString());
+    }
+
     return {
-      schemaVersion: DISCOVERY_CACHE_SCHEMA_VERSION,
-      provenance,
-      candidateTokenIds,
-      cursor: {
-        blockNumber: cursorBlock.toString(),
-        blockHash: cursor.blockHash,
-      },
+      schemaVersion: CUSTODY_HINT_CACHE_SCHEMA_VERSION,
+      identity,
+      heldTokenIds,
       updatedAt: parsed.updatedAt,
     };
   } catch {
@@ -213,47 +161,15 @@ export function parseGalleryDiscoveryCache(
   }
 }
 
-export function serializeGalleryDiscoveryCache(
-  cache: GalleryDiscoveryCache,
-): string {
+export function serializeGalleryCustodyHintCache(
+  cache: GalleryCustodyHintCache,
+) {
   const serialized = JSON.stringify(cache);
   if (
-    new TextEncoder().encode(serialized).byteLength > DISCOVERY_CACHE_MAX_BYTES
+    new TextEncoder().encode(serialized).byteLength >
+    CUSTODY_HINT_CACHE_MAX_BYTES
   ) {
-    throw new Error("Gallery discovery cache exceeds its storage budget");
+    throw new Error("Gallery custody hints exceed their storage budget");
   }
   return serialized;
-}
-
-export function mergeGalleryDiscoveryCaches(
-  first: GalleryDiscoveryCache,
-  second: GalleryDiscoveryCache,
-): GalleryDiscoveryCache {
-  if (JSON.stringify(first.provenance) !== JSON.stringify(second.provenance)) {
-    throw new Error("Cannot merge discovery caches from different provenance");
-  }
-
-  const candidates = [...first.candidateTokenIds, ...second.candidateTokenIds]
-    .map(BigInt)
-    .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
-  const uniqueCandidates = [...new Set(candidates)];
-  if (uniqueCandidates.length > DISCOVERY_CACHE_MAX_CANDIDATES) {
-    throw new Error("Merged discovery cache exceeds the collection bound");
-  }
-
-  const firstCursor = BigInt(first.cursor.blockNumber);
-  const secondCursor = BigInt(second.cursor.blockNumber);
-  if (
-    firstCursor === secondCursor &&
-    first.cursor.blockHash !== second.cursor.blockHash
-  ) {
-    throw new Error("Cannot merge conflicting discovery cursor hashes");
-  }
-  const newest = firstCursor >= secondCursor ? first : second;
-
-  return {
-    ...newest,
-    candidateTokenIds: uniqueCandidates.map(String),
-    updatedAt: Math.max(first.updatedAt, second.updatedAt),
-  };
 }

@@ -1,159 +1,156 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import type { Address, Hash } from "viem";
+import type { GalleryArtworkTarget } from "../types";
+import { createGalleryCustodyHintCache } from "./cache";
 import {
-  discoverGalleryListings,
-  type GalleryCandidateVerification,
-  type GalleryDiscoveryEvent,
-  type GalleryDiscoverySource,
+  createInitialGalleryScanRegistry,
+  discoverGalleryHoldings,
+  revalidateGalleryHeldTokenIds,
+  type GalleryCustodyDiscoverySource,
 } from "./discovery";
-import {
-  createGalleryDiscoveryProvenance,
-  type GalleryDiscoveryCache,
-} from "./cache";
 
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-const provenance = createGalleryDiscoveryProvenance();
+const marketplace =
+  "0x1111111111111111111111111111111111111111" as Address;
+const outside = "0x2222222222222222222222222222222222222222" as Address;
+const hash =
+  "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
 
-function cache(
-  candidates: string[],
-  blockNumber = config.checkpoint.blockNumber,
-): GalleryDiscoveryCache {
+function target(tokenId: bigint): GalleryArtworkTarget {
   return {
-    schemaVersion: 1,
-    provenance,
-    candidateTokenIds: candidates,
-    cursor: {
-      blockNumber: blockNumber.toString(),
-      blockHash:
-        blockNumber === config.checkpoint.blockNumber
-          ? config.checkpoint.blockHash
-          : "0x1111111111111111111111111111111111111111111111111111111111111111",
-    },
-    updatedAt: 1,
+    targetId: `held:${tokenId}`,
+    kind: "held",
+    tokenId,
+    artworkHash: hash,
+    tokenUri: `data:application/json,${tokenId}`,
+    artworkError: null,
   };
 }
 
 function source(options?: {
-  head?: bigint;
-  events?: GalleryDiscoveryEvent[];
-  failRangeContaining?: bigint;
-  inactive?: readonly bigint[];
-  checkpointMismatch?: boolean;
-}) {
-  const eventCalls: { fromBlock: bigint; toBlock: bigint }[] = [];
-  const hash = (blockNumber: bigint) => {
-    if (blockNumber === config.deployment.blockNumber) {
-      return config.deployment.blockHash;
-    }
-    if (blockNumber === config.checkpoint.blockNumber) {
-      if (options?.checkpointMismatch) {
-        return "0x3333333333333333333333333333333333333333333333333333333333333333";
+  held?: readonly bigint[];
+  failScan?: boolean;
+}): GalleryCustodyDiscoverySource {
+  const held = new Set(options?.held ?? []);
+  return {
+    getBlockNumber: async () => 100n,
+    async readCustodyStates(tokenIds, blockNumber) {
+      if (options?.failScan && tokenIds.length > 2) {
+        throw new Error("rpc unavailable");
       }
-      return config.checkpoint.blockHash;
-    }
-    return "0x1111111111111111111111111111111111111111111111111111111111111111" as const;
-  };
-  const discoverySource: GalleryDiscoverySource = {
-    getBlockNumber: async () => options?.head ?? config.checkpoint.blockNumber,
-    getBlockHash: async (blockNumber) => hash(blockNumber),
-    getEvents: async (fromBlock, toBlock) => {
-      eventCalls.push({ fromBlock, toBlock });
-      if (
-        options?.failRangeContaining !== undefined &&
-        fromBlock <= options.failRangeContaining &&
-        toBlock >= options.failRangeContaining
-      ) {
-        throw new Error("range unavailable");
-      }
-      return (options?.events ?? []).filter(
-        (event) =>
-          event.blockNumber >= fromBlock && event.blockNumber <= toBlock,
-      );
-    },
-    verifyCandidates: async (tokenIds) =>
-      new Map<bigint, GalleryCandidateVerification>(
+      return new Map(
         tokenIds.map((tokenId) => [
           tokenId,
-          options?.inactive?.includes(tokenId)
-            ? { status: "inactive" }
-            : { status: "active" },
+          {
+            status: "success" as const,
+            blockNumber,
+            data: {
+              tokenId,
+              owner: held.has(tokenId) ? marketplace : outside,
+              marketplaceHeld: held.has(tokenId),
+            },
+          },
         ]),
-      ),
+      );
+    },
+    getAffectedTokenIds: async () => [],
+    async readTokenStates(tokenIds, blockNumber) {
+      return new Map(
+        tokenIds.map((tokenId) => [
+          tokenId,
+          held.has(tokenId)
+            ? {
+                status: "success" as const,
+                blockNumber,
+                data: {
+                  tokenId,
+                  owner: marketplace,
+                  marketplaceHeld: true,
+                  artworkHash: hash,
+                  tokenUri: `data:application/json,${tokenId}`,
+                  artworkError: null,
+                },
+              }
+            : {
+                status: "success" as const,
+                blockNumber,
+                data: {
+                  tokenId,
+                  owner: outside,
+                  marketplaceHeld: false,
+                  artworkHash: null,
+                  tokenUri: null,
+                  artworkError: null,
+                },
+              },
+        ]),
+      );
+    },
   };
-  return { discoverySource, eventCalls };
 }
 
-describe("gallery listing discovery", () => {
-  it("replays overlap, verifies candidates, and advances only after catch-up", async () => {
-    const head = config.checkpoint.blockNumber + 10n;
-    const listedAtHead: GalleryDiscoveryEvent = {
-      eventName: "Listed",
-      tokenId: 2n,
-      blockNumber: head,
-    };
-    const mock = source({ head, events: [listedAtHead] });
-    const commits: GalleryDiscoveryCache[] = [];
-
-    const result = await discoverGalleryListings({
-      source: mock.discoverySource,
-      restoredCache: cache(["1"]),
-      persist: async (record) => {
-        commits.push(record);
+describe("gallery custody discovery", () => {
+  it("shows only revalidated hints, then still completes the full scan", async () => {
+    const stages: { kind: string; tokenIds: bigint[] }[] = [];
+    const result = await discoverGalleryHoldings({
+      source: source({ held: [1n, 3n] }),
+      marketplace,
+      restoredHints: createGalleryCustodyHintCache([1n, 2n], 1),
+      persist: async () => undefined,
+      onTargets: (kind, targets) => {
+        stages.push({ kind, tokenIds: targets.map(({ tokenId }) => tokenId) });
       },
-      now: () => 5_000,
     });
 
-    assert.equal(result.status, "complete");
-    assert.deepEqual(result.activeTokenIds, [1n, 2n]);
-    assert.equal(mock.eventCalls[0]?.fromBlock, config.deployment.blockNumber);
-    assert.equal(commits[0]?.cursor.blockNumber, head.toString());
+    assert.deepEqual(stages, [
+      { kind: "hints", tokenIds: [1n] },
+      { kind: "scan", tokenIds: [1n, 3n] },
+    ]);
+    assert.deepEqual(result.targets.map(({ tokenId }) => tokenId), [1n, 3n]);
   });
 
-  it("rebuilds from deployment history when cache provenance is unusable", async () => {
-    const mock = source({
-      checkpointMismatch: true,
-      events: [
-        {
-          eventName: "Filled",
-          tokenId: 1n,
-          blockNumber: config.checkpoint.blockNumber,
-        },
-      ],
-    });
-
-    const result = await discoverGalleryListings({
-      source: mock.discoverySource,
-      restoredCache: null,
+  it("keeps discovery silent when the full scan cannot produce holdings", async () => {
+    const result = await discoverGalleryHoldings({
+      source: source({ held: [1n], failScan: true }),
+      marketplace,
+      restoredHints: null,
       persist: async () => undefined,
     });
 
-    assert.equal(result.status, "complete");
-    assert.equal(mock.eventCalls[0]?.fromBlock, config.deployment.blockNumber);
-    assert.deepEqual(result.candidateTokenIds, [1n]);
+    assert.deepEqual(result.targets, []);
+    assert.equal(result.scanCompleted, false);
+    assert.equal("error" in result, false);
   });
 
-  it("preserves the prior cursor and revalidates retained candidates after a middle chunk failure", async () => {
-    const priorCursor = config.checkpoint.blockNumber + 100n;
-    const head = priorCursor + 20_000n;
-    const mock = source({
-      head,
-      failRangeContaining: priorCursor + 10_500n,
-      inactive: [1n],
-    });
-    let persisted = false;
-
-    const result = await discoverGalleryListings({
-      source: mock.discoverySource,
-      restoredCache: cache(["1", "2"], priorCursor),
-      persist: async () => {
-        persisted = true;
+  it("revalidates only requested affected IDs without starting a collection scan", async () => {
+    const calls: bigint[][] = [];
+    const base = source({ held: [2n] });
+    const wrapped: GalleryCustodyDiscoverySource = {
+      ...base,
+      async readTokenStates(tokenIds, blockNumber) {
+        calls.push([...tokenIds]);
+        return base.readTokenStates(tokenIds, blockNumber);
       },
-    });
+    };
 
-    assert.equal(result.status, "discovery_incomplete");
-    assert.equal(result.cursor.blockNumber, priorCursor);
-    assert.deepEqual(result.activeTokenIds, [2n]);
-    assert.equal(persisted, false);
+    const targets = await revalidateGalleryHeldTokenIds(wrapped, [2n, 3n]);
+
+    assert.deepEqual(calls, [[2n, 3n]]);
+    assert.deepEqual(targets, [target(2n)]);
+  });
+
+  it("reuses one initial automatic attempt across consumers and later triggers", async () => {
+    const registry = createInitialGalleryScanRegistry();
+    let scans = 0;
+    const run = () =>
+      registry.run("deployment", async () => {
+        scans += 1;
+        return scans;
+      });
+
+    assert.equal(await run(), 1);
+    assert.equal(await run(), 1);
+    assert.equal(await run(), 1);
+    assert.equal(scans, 1);
   });
 });

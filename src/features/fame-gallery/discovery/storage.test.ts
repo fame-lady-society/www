@@ -1,37 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
-  createGalleryDiscoveryProvenance,
-  parseGalleryDiscoveryCache,
-  type GalleryDiscoveryCache,
+  createGalleryCustodyCacheIdentity,
+  createGalleryCustodyHintCache,
 } from "./cache";
 import {
-  createGalleryDiscoveryStorage,
+  createGalleryCustodyHintStorage,
+  type GalleryCustodyStorageLike,
   type GalleryDiscoveryLock,
-  type GalleryDiscoveryStorageLike,
 } from "./storage";
 
-const provenance = createGalleryDiscoveryProvenance();
+const identity = createGalleryCustodyCacheIdentity();
 
-function cache(
-  candidateTokenIds: string[],
-  blockNumber: bigint,
-  blockHash: `0x${string}`,
-): GalleryDiscoveryCache {
-  return {
-    schemaVersion: 1,
-    provenance,
-    candidateTokenIds,
-    cursor: {
-      blockNumber: blockNumber.toString(),
-      blockHash,
-    },
-    updatedAt: Number(blockNumber),
-  };
-}
-
-function memoryStorage(): GalleryDiscoveryStorageLike & {
+function memoryStorage(): GalleryCustodyStorageLike & {
   values: Map<string, string>;
 } {
   const values = new Map<string, string>();
@@ -44,93 +25,36 @@ function memoryStorage(): GalleryDiscoveryStorageLike & {
   };
 }
 
-function serializedLock(): GalleryDiscoveryLock {
-  let tail = Promise.resolve();
-  return {
-    request(_name, callback) {
-      const result = tail.then(callback);
-      tail = result.then(
-        () => undefined,
-        () => undefined,
-      );
-      return result;
-    },
-  };
-}
+const lock: GalleryDiscoveryLock = {
+  request: async (_name, callback) => callback(),
+};
 
-describe("gallery discovery storage", () => {
-  it("serializes, re-reads, and merges concurrent tab writes", async () => {
-    const storage = memoryStorage();
-    const lock = serializedLock();
-    const first = createGalleryDiscoveryStorage({
-      storage,
+describe("gallery custody hint storage", () => {
+  it("uses a deployment-scoped key and replaces stale hints after a full scan", async () => {
+    const browser = memoryStorage();
+    const storage = createGalleryCustodyHintStorage({
+      storage: browser,
       lock,
-      provenance,
+      identity,
     });
-    const second = createGalleryDiscoveryStorage({
-      storage,
-      lock,
-      provenance,
-    });
-    const newer = cache(
-      ["1", "3"],
-      44_268_000n,
-      "0x1111111111111111111111111111111111111111111111111111111111111111",
-    );
-    const older = cache(
-      ["1", "2"],
-      44_267_900n,
-      "0x2222222222222222222222222222222222222222222222222222222222222222",
-    );
 
-    await Promise.all([first.commit(newer), second.commit(older)]);
-    const stored = parseGalleryDiscoveryCache(
-      [...storage.values.values()][0] ?? "",
-      provenance,
-    );
+    await storage.commit(createGalleryCustodyHintCache([1n, 2n], 1));
+    await storage.commit(createGalleryCustodyHintCache([2n, 3n], 2));
 
-    assert.equal(stored?.cursor.blockNumber, "44268000");
-    assert.deepEqual(stored?.candidateTokenIds, ["1", "2", "3"]);
+    assert.match(storage.key, /84532/);
+    assert.match(storage.key, /44329992/);
+    assert.deepEqual(storage.restore()?.heldTokenIds, ["2", "3"]);
   });
 
-  it("keeps session state and skips persistent writes without Web Locks", async () => {
-    const storage = memoryStorage();
-    const discoveryStorage = createGalleryDiscoveryStorage({
-      storage,
+  it("falls back to session memory when browser persistence is unavailable", async () => {
+    const storage = createGalleryCustodyHintStorage({
+      storage: null,
       lock: null,
-      provenance,
+      identity,
     });
-    const record = cache(
-      ["1"],
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockNumber,
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockHash,
-    );
+    const cache = createGalleryCustodyHintCache([4n], 1);
 
-    const result = await discoveryStorage.commit(record);
-
-    assert.equal(result.status, "memory_only");
-    assert.equal(storage.values.size, 0);
-    assert.deepEqual(discoveryStorage.restore(), record);
-  });
-
-  it("survives storage quota failures without claiming persistence", async () => {
-    const discoveryStorage = createGalleryDiscoveryStorage({
-      storage: {
-        getItem: () => null,
-        setItem: () => {
-          throw new Error("quota");
-        },
-      },
-      lock: serializedLock(),
-      provenance,
-    });
-    const record = cache(
-      ["1"],
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockNumber,
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.checkpoint.blockHash,
-    );
-
-    assert.equal((await discoveryStorage.commit(record)).status, "memory_only");
-    assert.deepEqual(discoveryStorage.restore(), record);
+    assert.equal((await storage.commit(cache)).status, "memory_only");
+    assert.deepEqual(storage.restore(), cache);
   });
 });

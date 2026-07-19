@@ -1,139 +1,151 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
-import { isAddressEqual, parseAbi } from "viem";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { parseAbiItem } from "viem";
 import { usePublicClient } from "wagmi";
+import {
+  appendGalleryCatalogTargets,
+  createGalleryCatalog,
+  reconcileGalleryCatalogTargets,
+} from "../catalog/catalogAssembler";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import type { GalleryDiscoveryCache } from "../discovery/cache";
-import { getBrowserGalleryDiscoveryStorage } from "../discovery/browserStorage";
+import { getBrowserGalleryCustodyHintStorage } from "../discovery/browserStorage";
 import {
-  discoverGalleryListings,
-  type GalleryDiscoveryEvent,
-  type GalleryDiscoverySource,
+  discoverGalleryHoldings,
+  revalidateGalleryHeldTokenIds,
+  runInitialGalleryScan,
+  type GalleryCustodyDiscoverySource,
 } from "../discovery/discovery";
+import type { GalleryQueryIdentity } from "../queryKeys";
 import {
-  GALLERY_CANONICAL_QUERY_OPTIONS,
-  chunkGalleryTokenIds,
-  galleryQueryKeys,
-} from "../queryKeys";
-import {
-  readGalleryCandidateStates,
+  readGalleryCustodyStates,
+  readGalleryTokenStates,
   type GalleryMulticallClient,
 } from "../reads";
+import type { GalleryArtworkTarget } from "../types";
 
 const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-const identity = {
+const identity: GalleryQueryIdentity = {
   chainId: config.chainId,
-  galleryAddress: config.addresses.gallery,
-} as const;
-const lifecycleEvents = parseAbi([
-  "event Listed(uint256 indexed tokenId, uint256 premium)",
-  "event Unlisted(uint256 indexed tokenId)",
-  "event PremiumUpdated(uint256 indexed tokenId, uint256 premium)",
-  "event Filled(address indexed buyer, address indexed recipient, uint256 indexed tokenId, uint256 unitAmount, uint256 premium, uint256 inventoryBefore, uint256 inventoryAfter)",
-]);
+  manifestVersion: config.schemaVersion,
+  marketplaceAddress: config.addresses.gallery,
+  deploymentBlock: config.deployment.blockNumber,
+};
+const transferEvent = parseAbiItem(
+  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
+);
+const deploymentKey = [
+  identity.chainId,
+  identity.manifestVersion,
+  identity.marketplaceAddress.toLowerCase(),
+  identity.deploymentBlock.toString(),
+].join(":");
 
 function discoverySource(
   publicClient: NonNullable<ReturnType<typeof usePublicClient>>,
-): GalleryDiscoverySource {
+): GalleryCustodyDiscoverySource {
+  const multicallClient = publicClient as unknown as GalleryMulticallClient;
   return {
     getBlockNumber: () => publicClient.getBlockNumber(),
-    async getBlockHash(blockNumber) {
-      const block = await publicClient.getBlock({ blockNumber });
-      if (!block.hash) {
-        throw new Error(`Base Sepolia block ${blockNumber} has no hash`);
-      }
-      return block.hash;
-    },
-    async getEvents(fromBlock, toBlock) {
+    readCustodyStates: (tokenIds, blockNumber) =>
+      readGalleryCustodyStates(multicallClient, blockNumber, tokenIds),
+    readTokenStates: (tokenIds, blockNumber) =>
+      readGalleryTokenStates(multicallClient, blockNumber, tokenIds),
+    async getAffectedTokenIds(fromBlock, toBlock) {
       const logs = await publicClient.getLogs({
-        address: config.addresses.gallery,
-        events: lifecycleEvents,
+        address: config.addresses.mirror,
+        event: transferEvent,
         fromBlock,
         toBlock,
         strict: true,
       });
-      return logs.map(
-        (log) =>
-          ({
-            eventName: log.eventName,
-            tokenId: log.args.tokenId,
-            blockNumber: log.blockNumber,
-          }) as GalleryDiscoveryEvent,
-      );
-    },
-    async verifyCandidates(tokenIds) {
-      const verification = new Map<
-        bigint,
-        { status: "active" | "inactive" | "unavailable" }
-      >();
-      for (const chunk of chunkGalleryTokenIds(tokenIds)) {
-        const projections = await readGalleryCandidateStates(
-          publicClient as unknown as GalleryMulticallClient,
-          chunk,
-        );
-        chunk.forEach((tokenId) => {
-          const projection = projections.get(tokenId);
-          if (projection?.status !== "success") {
-            verification.set(tokenId, { status: "unavailable" });
-            return;
-          }
-          verification.set(tokenId, {
-            status:
-              projection.data.listing.active &&
-              isAddressEqual(projection.data.owner, config.addresses.gallery)
-                ? "active"
-                : "inactive",
-          });
-        });
-      }
-      return verification;
+      return logs.map(({ args }) => args.tokenId);
     },
   };
 }
 
-export function useGalleryDiscovery() {
+export function useGalleryDiscovery({
+  poolTargets = [],
+}: {
+  poolTargets?: readonly GalleryArtworkTarget[];
+} = {}) {
   const publicClient = usePublicClient({ chainId: config.chainId });
-  const storage = useMemo(() => getBrowserGalleryDiscoveryStorage(), []);
   const source = useMemo(
     () => (publicClient ? discoverySource(publicClient) : null),
     [publicClient],
   );
-  const query = useQuery({
-    queryKey: galleryQueryKeys.discovery(identity),
-    queryFn: () => {
-      if (!source) throw new Error("Base Sepolia public client is unavailable");
-      return discoverGalleryListings({
-        source,
-        restoredCache: storage.restore(),
-        persist: (record: GalleryDiscoveryCache) => storage.commit(record),
-      });
-    },
-    enabled: Boolean(source),
-    ...GALLERY_CANONICAL_QUERY_OPTIONS,
-  });
-  const refresh = useCallback(async () => {
-    await query.refetch();
-  }, [query]);
+  const storage = useMemo(() => getBrowserGalleryCustodyHintStorage(), []);
+  const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
+  const [isScanning, setIsScanning] = useState(Boolean(source));
+  const [scanCompleted, setScanCompleted] = useState(false);
 
-  const projection =
-    !source || query.isPending
-      ? ({ status: "loading" } as const)
-      : query.error
-        ? ({
-            status: "failure",
-            message: "Gallery discovery is unavailable",
-          } as const)
-        : query.data ??
-          ({
-            status: "failure",
-            message: "Gallery discovery is unavailable",
-          } as const);
+  useEffect(() => {
+    if (!source) {
+      setIsScanning(false);
+      return;
+    }
+    let active = true;
+    setIsScanning(true);
+    void runInitialGalleryScan(deploymentKey, () =>
+      discoverGalleryHoldings({
+        source,
+        marketplace: config.addresses.gallery,
+        restoredHints: storage.restore(),
+        persist: (record) => storage.commit(record),
+        onTargets: (_kind, targets) => {
+          if (!active) return;
+          setHeldTargets((current) =>
+            appendGalleryCatalogTargets(current, targets),
+          );
+        },
+      }),
+    ).then((result) => {
+      if (!active) return;
+      setHeldTargets((current) =>
+        reconcileGalleryCatalogTargets(current, result.targets),
+      );
+      setScanCompleted(result.scanCompleted);
+      setIsScanning(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [source, storage]);
+
+  const revalidateAffectedTokenIds = useCallback(
+    async (tokenIds: readonly bigint[]) => {
+      if (!source) return [];
+      const targets = await revalidateGalleryHeldTokenIds(source, tokenIds, {
+        marketplace: config.addresses.gallery,
+      });
+      setHeldTargets((current) => {
+        const affected = new Set(
+          tokenIds.map((tokenId) => `held:${tokenId.toString()}`),
+        );
+        const retained = current.filter(
+          ({ targetId }) => !affected.has(targetId),
+        );
+        return appendGalleryCatalogTargets(retained, targets);
+      });
+      return targets;
+    },
+    [source],
+  );
+
+  const catalog = useMemo(
+    () =>
+      appendGalleryCatalogTargets(
+        createGalleryCatalog(poolTargets),
+        heldTargets,
+      ),
+    [heldTargets, poolTargets],
+  );
 
   return {
-    projection,
-    isRefreshing: query.isFetching && !query.isPending,
-    refresh,
+    catalog,
+    heldTargets,
+    isScanning,
+    scanCompleted,
+    revalidateAffectedTokenIds,
   };
 }

@@ -1,12 +1,11 @@
 import {
-  mergeGalleryDiscoveryCaches,
-  parseGalleryDiscoveryCache,
-  serializeGalleryDiscoveryCache,
-  type GalleryDiscoveryCache,
-  type GalleryDiscoveryProvenance,
+  parseGalleryCustodyHintCache,
+  serializeGalleryCustodyHintCache,
+  type GalleryCustodyCacheIdentity,
+  type GalleryCustodyHintCache,
 } from "./cache";
 
-export type GalleryDiscoveryStorageLike = {
+export type GalleryCustodyStorageLike = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
 };
@@ -15,43 +14,53 @@ export type GalleryDiscoveryLock = {
   request<T>(name: string, callback: () => Promise<T>): Promise<T>;
 };
 
-export type GalleryDiscoveryStorage = {
+export type GalleryCustodyHintStorage = {
   key: string;
-  restore: () => GalleryDiscoveryCache | null;
-  commit: (record: GalleryDiscoveryCache) => Promise<{
+  restore: () => GalleryCustodyHintCache | null;
+  commit: (record: GalleryCustodyHintCache) => Promise<{
     status: "persisted" | "memory_only";
-    record: GalleryDiscoveryCache;
+    record: GalleryCustodyHintCache;
   }>;
 };
 
-function provenanceSuffix(provenance: GalleryDiscoveryProvenance) {
+function identitySuffix(identity: GalleryCustodyCacheIdentity) {
   return [
-    provenance.chainId,
-    provenance.galleryAddress,
-    provenance.deploymentBlock,
-    provenance.checkpointBlock,
-    provenance.checkpointHash,
+    identity.chainId,
+    identity.manifestVersion,
+    identity.marketplaceAddress,
+    identity.deploymentBlock,
+    identity.firstTokenId,
+    identity.lastTokenId,
   ].join(":");
 }
 
-export function createGalleryDiscoveryStorage({
+export function createGalleryCustodyHintStorage({
   storage,
   lock,
-  provenance,
+  identity,
 }: {
-  storage: GalleryDiscoveryStorageLike | null;
+  storage: GalleryCustodyStorageLike | null;
   lock: GalleryDiscoveryLock | null;
-  provenance: GalleryDiscoveryProvenance;
-}): GalleryDiscoveryStorage {
-  const suffix = provenanceSuffix(provenance);
-  const key = `fame-gallery:discovery:${suffix}`;
-  const lockName = `fame-gallery:discovery-lock:${suffix}`;
-  let memory: GalleryDiscoveryCache | null = null;
+  identity: GalleryCustodyCacheIdentity;
+}): GalleryCustodyHintStorage {
+  const suffix = identitySuffix(identity);
+  const key = `fame-gallery:custody-hints:${suffix}`;
+  const lockName = `fame-gallery:custody-hints-lock:${suffix}`;
+  let memory: GalleryCustodyHintCache | null = null;
+
+  const normalize = (record: GalleryCustodyHintCache) => {
+    const parsed = parseGalleryCustodyHintCache(
+      serializeGalleryCustodyHintCache(record),
+      identity,
+    );
+    if (!parsed) throw new Error("Invalid gallery custody hint record");
+    return parsed;
+  };
 
   const restorePersistent = () => {
     if (!storage) return null;
     try {
-      return parseGalleryDiscoveryCache(storage.getItem(key), provenance);
+      return parseGalleryCustodyHintCache(storage.getItem(key), identity);
     } catch {
       return null;
     }
@@ -63,48 +72,23 @@ export function createGalleryDiscoveryStorage({
       return memory ?? restorePersistent();
     },
     async commit(record) {
-      const normalized = parseGalleryDiscoveryCache(
-        serializeGalleryDiscoveryCache(record),
-        provenance,
-      );
-      if (!normalized) {
-        throw new Error(
-          "Refusing to commit an invalid gallery discovery cache",
-        );
-      }
-      memory = memory
-        ? mergeGalleryDiscoveryCaches(memory, normalized)
-        : normalized;
-
+      memory = normalize(record);
       if (!storage || !lock) {
-        return {
-          status: "memory_only",
-          record: memory,
-        };
+        return { status: "memory_only", record: memory };
       }
 
       try {
         const persisted = await lock.request(lockName, async () => {
-          const current = restorePersistent();
-          const merged = current
-            ? mergeGalleryDiscoveryCaches(current, normalized)
-            : normalized;
-          storage.setItem(key, serializeGalleryDiscoveryCache(merged));
-          return merged;
+          storage.setItem(key, serializeGalleryCustodyHintCache(memory!));
+          return memory!;
         });
-        memory = memory
-          ? mergeGalleryDiscoveryCaches(memory, persisted)
-          : persisted;
-        return {
-          status: "persisted",
-          record: memory,
-        };
+        memory = persisted;
+        return { status: "persisted", record: memory };
       } catch {
-        return {
-          status: "memory_only",
-          record: memory,
-        };
+        return { status: "memory_only", record: memory };
       }
     },
   };
 }
+
+export type GalleryDiscoveryStorage = GalleryCustodyHintStorage;

@@ -1,11 +1,11 @@
-import { createGalleryDiscoveryProvenance } from "./cache";
+import { createGalleryCustodyCacheIdentity } from "./cache";
 import {
-  createGalleryDiscoveryStorage,
+  createGalleryCustodyHintStorage,
+  type GalleryCustodyHintStorage,
   type GalleryDiscoveryLock,
-  type GalleryDiscoveryStorage,
 } from "./storage";
 
-let sharedStorage: GalleryDiscoveryStorage | null = null;
+let sharedStorage: GalleryCustodyHintStorage | null = null;
 
 function browserLock(): GalleryDiscoveryLock | null {
   if (typeof navigator === "undefined" || !navigator.locks) return null;
@@ -16,7 +16,7 @@ function browserLock(): GalleryDiscoveryLock | null {
   };
 }
 
-export function getBrowserGalleryDiscoveryStorage() {
+export function getBrowserGalleryCustodyHintStorage() {
   if (sharedStorage) return sharedStorage;
 
   let storage: Storage | null = null;
@@ -27,10 +27,10 @@ export function getBrowserGalleryDiscoveryStorage() {
       storage = null;
     }
   }
-  sharedStorage = createGalleryDiscoveryStorage({
+  sharedStorage = createGalleryCustodyHintStorage({
     storage,
     lock: browserLock(),
-    provenance: createGalleryDiscoveryProvenance(),
+    identity: createGalleryCustodyCacheIdentity(),
   });
   return sharedStorage;
 }

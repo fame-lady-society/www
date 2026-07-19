@@ -1,110 +1,158 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { Address } from "viem";
+import type { Address, Hash } from "viem";
 import {
-  createGalleryRecoveryScanGate,
-  scanGalleryRecoveryInventory,
-  type GalleryRecoveryScanSource,
+  scanGalleryCustody,
+  type GalleryCustodyScanSource,
 } from "./recoveryScan";
 
-const gallery = "0x1111111111111111111111111111111111111111" as Address;
+const marketplace =
+  "0x1111111111111111111111111111111111111111" as Address;
 const outside = "0x2222222222222222222222222222222222222222" as Address;
+const artworkHash =
+  "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
 
-describe("gallery recovery scan", () => {
-  it("allows only one scan owner to start and finish", () => {
-    const gate = createGalleryRecoveryScanGate();
-    const first = gate.start();
+function successCustody(tokenId: bigint, held: boolean, blockNumber: bigint) {
+  return {
+    status: "success" as const,
+    blockNumber,
+    data: {
+      tokenId,
+      owner: held ? marketplace : outside,
+      marketplaceHeld: held,
+    },
+  };
+}
 
-    assert.ok(first);
-    assert.equal(gate.start(), null);
-    assert.equal(gate.finish(new AbortController()), false);
-    assert.equal(gate.start(), null);
-    assert.equal(gate.finish(first), true);
-    assert.ok(gate.start());
-  });
+function successToken(tokenId: bigint, blockNumber: bigint) {
+  return {
+    status: "success" as const,
+    blockNumber,
+    data: {
+      tokenId,
+      owner: marketplace,
+      marketplaceHeld: true,
+      artworkHash,
+      tokenUri: `data:application/json,${tokenId}`,
+      artworkError: null,
+    },
+  };
+}
 
-  it("pins all 888 owner reads, caps batches at 64 and concurrency at two, then reconciles custody changes", async () => {
-    let blockReads = 0;
-    let activeOwnerReads = 0;
-    let maxOwnerConcurrency = 0;
-    const ownerBatchSizes: number[] = [];
-    const source: GalleryRecoveryScanSource = {
-      async getBlockNumber() {
-        blockReads += 1;
-        return blockReads === 1 ? 100n : 102n;
-      },
-      async readOwners(tokenIds, blockNumber) {
-        assert.equal(blockNumber, 100n);
-        ownerBatchSizes.push(tokenIds.length);
-        activeOwnerReads += 1;
-        maxOwnerConcurrency = Math.max(maxOwnerConcurrency, activeOwnerReads);
+describe("gallery custody scan", () => {
+  it("includes IDs 1 and 888, caps batches at 64 and concurrency at two, and isolates owner failures", async () => {
+    const batchSizes: number[] = [];
+    let active = 0;
+    let maxActive = 0;
+    const source: GalleryCustodyScanSource = {
+      getBlockNumber: async () => 100n,
+      async readCustodyStates(tokenIds, blockNumber) {
+        batchSizes.push(tokenIds.length);
+        active += 1;
+        maxActive = Math.max(maxActive, active);
         await Promise.resolve();
-        activeOwnerReads -= 1;
+        active -= 1;
+        return new Map(
+          tokenIds
+            .filter((tokenId) => tokenId !== 2n)
+            .map((tokenId) => [
+              tokenId,
+              successCustody(
+                tokenId,
+                tokenId === 1n || tokenId === 888n,
+                blockNumber,
+              ),
+            ]),
+        );
+      },
+      getAffectedTokenIds: async () => [],
+      async readTokenStates(tokenIds, blockNumber) {
         return new Map(
           tokenIds.map((tokenId) => [
             tokenId,
-            tokenId === 1n || tokenId === 3n ? gallery : outside,
+            successToken(tokenId, blockNumber),
+          ]),
+        );
+      },
+    };
+
+    const result = await scanGalleryCustody({ source, marketplace });
+
+    assert.equal(batchSizes.length, 14);
+    assert.ok(batchSizes.every((size) => size <= 64));
+    assert.ok(maxActive <= 2);
+    assert.deepEqual(result.heldTokenIds, [1n, 888n]);
+    assert.deepEqual(result.failedTokenIds, [2n]);
+    assert.deepEqual(
+      result.targets.map(({ tokenId }) => tokenId),
+      [1n, 888n],
+    );
+  });
+
+  it("reconciles transfers between pinned scan start and end with final owner reads", async () => {
+    let blockRead = 0;
+    const reconciled: bigint[][] = [];
+    const source: GalleryCustodyScanSource = {
+      getBlockNumber: async () => (++blockRead === 1 ? 100n : 102n),
+      async readCustodyStates(tokenIds, blockNumber) {
+        if (blockNumber === 102n) reconciled.push([...tokenIds]);
+        return new Map(
+          tokenIds.map((tokenId) => [
+            tokenId,
+            successCustody(
+              tokenId,
+              blockNumber === 100n
+                ? tokenId === 1n
+                : tokenId === 2n,
+              blockNumber,
+            ),
           ]),
         );
       },
       async getAffectedTokenIds(fromBlock, toBlock) {
-        assert.equal(fromBlock, 100n);
-        assert.equal(toBlock, 102n);
+        assert.deepEqual([fromBlock, toBlock], [100n, 102n]);
         return [1n, 2n];
       },
-      async readFinalStates(tokenIds, blockNumber) {
-        assert.equal(blockNumber, 102n);
+      async readTokenStates(tokenIds, blockNumber) {
         return new Map(
           tokenIds.map((tokenId) => [
             tokenId,
-            {
-              tokenId,
-              owner: tokenId === 2n || tokenId === 3n ? gallery : outside,
-              listingActive: tokenId === 2n || tokenId === 3n,
-            },
+            successToken(tokenId, blockNumber),
           ]),
         );
       },
     };
 
-    const result = await scanGalleryRecoveryInventory({ source, gallery });
+    const result = await scanGalleryCustody({ source, marketplace });
 
-    assert.equal(ownerBatchSizes.length, 14);
-    assert.ok(ownerBatchSizes.every((size) => size <= 64));
-    assert.ok(maxOwnerConcurrency <= 2);
-    assert.deepEqual(result.galleryOwnedTokenIds, [2n, 3n]);
-    assert.deepEqual(result.activeListingTokenIds, [2n, 3n]);
+    assert.deepEqual(reconciled, [[1n, 2n]]);
     assert.deepEqual(result.affectedTokenIds, [1n, 2n]);
+    assert.deepEqual(result.heldTokenIds, [2n]);
+    assert.equal(result.reconciliationBlock, 102n);
   });
 
-  it("cancels before starting later batches", async () => {
+  it("supports cancellation between batches", async () => {
     const controller = new AbortController();
-    let ownerCalls = 0;
-    const source: GalleryRecoveryScanSource = {
-      async getBlockNumber() {
-        return 100n;
-      },
-      async readOwners(tokenIds) {
-        ownerCalls += 1;
+    let calls = 0;
+    const source: GalleryCustodyScanSource = {
+      getBlockNumber: async () => 100n,
+      async readCustodyStates() {
+        calls += 1;
         controller.abort();
-        return new Map(tokenIds.map((tokenId) => [tokenId, outside]));
-      },
-      async getAffectedTokenIds() {
-        return [];
-      },
-      async readFinalStates() {
         return new Map();
       },
+      getAffectedTokenIds: async () => [],
+      readTokenStates: async () => new Map(),
     };
 
     await assert.rejects(
-      scanGalleryRecoveryInventory({
+      scanGalleryCustody({
         source,
-        gallery,
+        marketplace,
         signal: controller.signal,
       }),
-      /cancelled/,
+      /cancelled/i,
     );
-    assert.ok(ownerCalls <= 2);
+    assert.ok(calls <= 2);
   });
 });

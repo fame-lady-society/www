@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getBrowserGalleryDiscoveryStorage } from "./browserStorage";
+import { getBrowserGalleryCustodyHintStorage } from "./browserStorage";
 
-describe("browser gallery discovery storage", () => {
-  it("shares memory between discovery and recovery scan callers", () => {
+describe("browser gallery custody hint storage", () => {
+  it("shares one deployment-scoped storage instance between callers", () => {
     assert.equal(
-      getBrowserGalleryDiscoveryStorage(),
-      getBrowserGalleryDiscoveryStorage(),
+      getBrowserGalleryCustodyHintStorage(),
+      getBrowserGalleryCustodyHintStorage(),
     );
   });
 });
