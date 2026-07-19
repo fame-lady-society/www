@@ -1,22 +1,38 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Address } from "viem";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
-import { GalleryPurchaseModalContent, GalleryViewContent } from "./GalleryView";
-import { ListingCardView } from "./ListingCard";
+import { ArtworkCard } from "./ArtworkCard";
 import {
-  galleryPurchaseReducer,
-  initialGalleryPurchaseState,
-  type GalleryAcquiredNft,
-} from "../transactions/purchaseQueue";
-import {
-  acquiredNftLatestOwner,
-  AcquiredNftResultView,
-} from "./AcquiredNftResult";
+  GalleryArtworkGrid,
+  GalleryViewContent,
+  type PresentedGalleryArtwork,
+} from "./GalleryView";
+
+function dataUri(mime: string, value: string) {
+  return `data:${mime};base64,${Buffer.from(value).toString("base64")}`;
+}
+
+function readyMetadata(name: string) {
+  return decodeTestGalleryMetadata(
+    dataUri(
+      "application/json",
+      JSON.stringify({
+        name,
+        description: "On-chain test art",
+        image: dataUri(
+          "image/svg+xml",
+          '<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>',
+        ),
+      }),
+    ),
+  );
+}
+
+const price = 1_001_000n * 10n ** 18n;
 
 describe("TEST gallery public view", () => {
-  it("distinguishes loading, failed, verified-empty, and incomplete discovery", () => {
+  it("distinguishes loading, failed, and successful-empty catalog states", () => {
     const loading = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "loading" }} />,
     );
@@ -29,119 +45,96 @@ describe("TEST gallery public view", () => {
     const empty = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "empty" }} />,
     );
-    const incomplete = renderToStaticMarkup(
-      <GalleryViewContent
-        state={{ status: "incomplete" }}
-        onRefresh={() => undefined}
-      >
-        <div>Verified token #2</div>
-      </GalleryViewContent>,
-    );
 
     assert.match(loading, /Loading TEST gallery/);
     assert.doesNotMatch(loading, /Buy with TEST/);
-    assert.match(failed, /RPC unavailable|Try again/);
-    assert.match(empty, /No active TEST listings/);
-    assert.match(incomplete, /Discovery is incomplete/);
-    assert.match(incomplete, /Verified token #2/);
+    assert.match(failed, /RPC unavailable/);
+    assert.match(failed, /Try again/);
+    assert.match(empty, /No artwork is available right now/);
+    assert.doesNotMatch(empty, /listing|inventory|pool/i);
   });
 
-  it("shows canonical payment facts while metadata uses fallback art", () => {
+  it("presents artwork and one global TEST price without route mechanics", () => {
+    const artworks: PresentedGalleryArtwork[] = [
+      { stableKey: "one", metadata: readyMetadata("Sunrise") },
+      { stableKey: "two", metadata: readyMetadata("Sunrise") },
+    ];
     const html = renderToStaticMarkup(
-      <ListingCardView
-        tokenId={7n}
-        unit={1_000_000n * 10n ** 18n}
-        premium={1_000n * 10n ** 18n}
+      <GalleryViewContent state={{ status: "ready" }}>
+        <GalleryArtworkGrid
+          artworks={artworks}
+          totalPrice={price}
+          purchaseEnabled
+          onBuy={() => undefined}
+          onRetry={() => undefined}
+        />
+      </GalleryViewContent>,
+    );
+
+    assert.equal(html.match(/1,001,000 TEST/g)?.length, 1);
+    assert.equal(html.match(/Buy with TEST/g)?.length, 2);
+    assert.equal(html.match(/Sunrise/g)?.length, 4);
+    assert.doesNotMatch(
+      html,
+      /token\s*#|token id|recipient|premium|unit|listing|inventory|mint pool|burn pool|held:/i,
+    );
+  });
+
+  it("shows retryable unavailable artwork without a Buy action", () => {
+    const html = renderToStaticMarkup(
+      <ArtworkCard
         metadata={decodeTestGalleryMetadata("bad uri")}
+        purchaseLocked={false}
+        purchaseEnabled
         onBuy={() => undefined}
+        onRetry={() => undefined}
       />,
     );
 
-    assert.match(html, /Society NFT #7/);
-    assert.match(html, /1,000,000 TEST/);
-    assert.match(html, /1,000 TEST/);
-    assert.match(html, /1,001,000 TEST/);
     assert.match(html, /Artwork unavailable/);
-    assert.match(html, /Buy with TEST/);
-    assert.match(html, /Recipient \(optional\)/);
-    assert.doesNotMatch(html, /eligible|allowlist|deployment flag/i);
+    assert.match(html, /Retry/);
+    assert.doesNotMatch(html, /Buy with TEST/);
+    assert.doesNotMatch(html, /token|route|source|pool|inventory/i);
   });
 
-  it("keeps a broadcast transaction visible when receipt lookup is unknown", () => {
-    const hash = `0x${"a".repeat(64)}` as `0x${string}`;
-    const broadcast = galleryPurchaseReducer(initialGalleryPurchaseState, {
-      type: "broadcast",
-      kind: "fill",
-      hash,
-    });
-    const unknown = galleryPurchaseReducer(broadcast, {
-      type: "outcome_unknown",
-      kind: "fill",
-      cause: new Error("RPC unavailable"),
-    });
+  it("locks every artwork while a purchase is active", () => {
     const html = renderToStaticMarkup(
-      <GalleryPurchaseModalContent
-        state={unknown}
-        onDone={() => undefined}
-        onRetryVerification={() => undefined}
+      <GalleryArtworkGrid
+        artworks={[
+          { stableKey: "one", metadata: readyMetadata("Sunrise") },
+          { stableKey: "two", metadata: readyMetadata("Moonlight") },
+        ]}
+        totalPrice={price}
+        purchaseEnabled
+        purchaseLocked
+        activeArtworkKey="one"
+        onBuy={() => undefined}
+        onRetry={() => undefined}
       />,
     );
 
-    assert.match(html, /receipt could not be confirmed/);
-    assert.match(html, /View gallery purchase/);
-    assert.match(html, /Done/);
+    assert.equal(html.match(/disabled=""/g)?.length, 2);
+    assert.match(html, /Purchase in progress/);
   });
 
-  it("shows the verified NFT outcome even when artwork metadata fails", () => {
-    const acquiredNft: GalleryAcquiredNft = {
-      transactionHash: `0x${"a".repeat(64)}`,
-      receiptBlockNumber: 101n,
-      buyer: "0x1111111111111111111111111111111111111111",
-      recipient: "0x2222222222222222222222222222222222222222",
-      tokenId: 7n,
-      unit: 1_000n * 10n ** 18n,
-      premium: 50n * 10n ** 18n,
-      total: 1_050n * 10n ** 18n,
-      inventoryBefore: 10n,
-      inventoryAfter: 11n,
-      receiptBlockInventory: 11n,
-      receiptBlockAccruedFees: 70n,
-      currentOwner: "0x3333333333333333333333333333333333333333",
-      listingActive: false,
-      tokenUri: null,
-    };
+  it("keeps browsing available while purchases are paused", () => {
     const html = renderToStaticMarkup(
-      <AcquiredNftResultView
-        result={acquiredNft}
-        metadata={decodeTestGalleryMetadata("")}
-        latestOwner="0x4444444444444444444444444444444444444444"
-      />,
+      <GalleryViewContent state={{ status: "ready" }} paused>
+        <GalleryArtworkGrid
+          artworks={[
+            { stableKey: "one", metadata: readyMetadata("Sunrise") },
+          ]}
+          totalPrice={price}
+          purchaseEnabled
+          purchaseLocked
+          onBuy={() => undefined}
+          onRetry={() => undefined}
+        />
+      </GalleryViewContent>,
     );
 
-    assert.match(html, /Society NFT #7/);
-    assert.match(html, /Recipient:/);
-    assert.match(html, /Owner at end of receipt block:/);
-    assert.match(html, /Current owner:/);
-    assert.match(html, /Paid: 1,050 TEST/);
-    assert.match(html, /Artwork unavailable/);
-    assert.match(html, /View verified purchase/);
-    assert.doesNotMatch(html, /export|report/i);
-  });
-
-  it("does not label a pre-receipt token projection as the current owner", () => {
-    const owner = "0x2222222222222222222222222222222222222222" as Address;
-    const projection = {
-      status: "success" as const,
-      blockNumber: 99n,
-      data: {
-        tokenId: 7n,
-        listing: { premium: 0n, active: false },
-        owner,
-        tokenUri: "",
-      },
-    };
-
-    assert.equal(acquiredNftLatestOwner(projection, 100n), null);
-    assert.equal(acquiredNftLatestOwner(projection, 99n), owner);
+    assert.match(html, /Purchases are temporarily paused/);
+    assert.match(html, /Sunrise/);
+    assert.match(html, /disabled=""/);
   });
 });

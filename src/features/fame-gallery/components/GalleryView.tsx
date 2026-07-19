@@ -3,37 +3,56 @@
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { TransactionsModal } from "@/components/TransactionsModal";
-import { displaySafeErrorMessage } from "@/features/fame-swap/solver/diagnostics";
-import { useCallback, type ReactNode } from "react";
 import NextLink from "next/link";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from "react";
+import { isAddressEqual } from "viem";
 import { baseSepolia } from "viem/chains";
-import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
-import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
+import { useConnection, useSwitchChain } from "wagmi";
 import { formatTestAmount } from "../format";
+import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
-import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
-import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
-import { AcquiredNftResult } from "./AcquiredNftResult";
-import { ListingCard } from "./ListingCard";
+import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
+import {
+  decodeTestGalleryMetadata,
+  type GalleryMetadataResult,
+} from "../metadata/testMetadata";
+import type { GalleryArtworkTarget } from "../types";
+import { ArtworkCard } from "./ArtworkCard";
 
 export type GalleryViewContentState =
   | { status: "loading" }
   | { status: "failure"; message: string }
   | { status: "empty" }
-  | { status: "ready" }
-  | { status: "incomplete" };
+  | { status: "ready" };
+
+export type PresentedGalleryArtwork = {
+  stableKey: string;
+  metadata: GalleryMetadataResult;
+};
+
+export type GalleryPurchaseController = {
+  enabled: boolean;
+  locked: boolean;
+  activeArtworkKey?: string | null;
+  buy: (target: GalleryArtworkTarget) => void | Promise<void>;
+};
 
 export function GalleryViewContent({
   state,
+  paused = false,
   onRefresh,
   children,
 }: {
   state: GalleryViewContentState;
+  paused?: boolean;
   onRefresh?: () => void;
   children?: ReactNode;
 }) {
@@ -46,6 +65,7 @@ export function GalleryViewContent({
       </Paper>
     );
   }
+
   if (state.status === "failure") {
     return (
       <Alert
@@ -68,14 +88,15 @@ export function GalleryViewContent({
       </Alert>
     );
   }
+
   if (state.status === "empty") {
     return (
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Typography component="h2" variant="h5">
-          No active TEST listings
+          No artwork is available right now
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>
-          Discovery completed and no gallery-owned token is currently listed.
+          Try again later.
         </Typography>
       </Paper>
     );
@@ -83,24 +104,9 @@ export function GalleryViewContent({
 
   return (
     <Stack spacing={3}>
-      {state.status === "incomplete" ? (
-        <Alert
-          severity="warning"
-          action={
-            onRefresh ? (
-              <Button
-                type="button"
-                color="inherit"
-                onClick={onRefresh}
-                sx={{ minHeight: 44 }}
-              >
-                Retry catch-up
-              </Button>
-            ) : undefined
-          }
-        >
-          Discovery is incomplete. Only listings revalidated against current
-          contract state are shown.
+      {paused ? (
+        <Alert severity="warning">
+          Purchases are temporarily paused. You can still browse the artwork.
         </Alert>
       ) : null}
       {children}
@@ -108,196 +114,152 @@ export function GalleryViewContent({
   );
 }
 
-function purchaseStatusCopy(state: GalleryPurchaseState) {
-  switch (state.status) {
-    case "idle":
-      return "Choose a listing to begin.";
-    case "preparing":
-      return "Reading current TEST price and allowance…";
-    case "switching_chain":
-      return "Switching your wallet to Base Sepolia…";
-    case "simulating":
-      return state.transactionKind === "approval"
-        ? "Checking the exact TEST approval…"
-        : "Checking the gallery purchase with the contract…";
-    case "awaiting_wallet":
-      return state.transactionKind === "approval"
-        ? "Approve the exact TEST total in your wallet."
-        : "Confirm the gallery purchase in your wallet.";
-    case "confirming_approval":
-      return "Waiting for the TEST approval to be confirmed…";
-    case "approval_confirmed":
-      return `Approval confirmed ${state.approvalConfirmations} block${
-        state.approvalConfirmations === 1 ? "" : "s"
-      } deep.`;
-    case "confirming_fill":
-      return "Waiting for the gallery purchase to be confirmed…";
-    case "fill_receipt_confirmed":
-      return "Gallery purchase confirmed. Verifying what you acquired…";
-    case "verifying":
-      return "Verifying the receipt events and receipt-block contract state…";
-    case "verified":
-      return "Purchase verified.";
-    case "confirmed_refreshing":
-      return "The fill is confirmed. Follow-up contract reads are still unavailable, so verification can be retried.";
-    case "confirmed_unverified":
-      return (
-        state.unverifiedReason ??
-        "The fill is confirmed, but its acquisition proof did not reconcile."
-      );
-    case "outcome_unknown":
-      return "The transaction was broadcast, but its receipt could not be confirmed. Check the explorer before trying again.";
-    case "error":
-      return state.failure
-        ? displaySafeErrorMessage(state.failure.cause)
-        : "The gallery transaction failed.";
-  }
-}
-
-export function GalleryPurchaseModalContent({
-  state,
-  onDone,
-  onRetryVerification,
+export function GalleryArtworkGrid({
+  artworks,
+  totalPrice,
+  purchaseEnabled,
+  purchaseLocked = false,
+  activeArtworkKey = null,
+  scanning = false,
+  onBuy,
+  onRetry,
 }: {
-  state: GalleryPurchaseState;
-  onDone: () => void;
-  onRetryVerification: () => void;
+  artworks: readonly PresentedGalleryArtwork[];
+  totalPrice: bigint;
+  purchaseEnabled: boolean;
+  purchaseLocked?: boolean;
+  activeArtworkKey?: string | null;
+  scanning?: boolean;
+  onBuy: (stableKey: string) => void;
+  onRetry: (stableKey: string) => void;
 }) {
-  const terminal =
-    state.status === "verified" ||
-    state.status === "confirmed_refreshing" ||
-    state.status === "confirmed_unverified" ||
-    state.status === "outcome_unknown" ||
-    state.status === "error";
-  const severity =
-    state.status === "error"
-      ? "error"
-      : state.status === "verified"
-        ? "success"
-        : state.status === "outcome_unknown" ||
-            state.status === "confirmed_refreshing" ||
-            state.status === "confirmed_unverified"
-          ? "warning"
-          : "info";
-
   return (
-    <Stack spacing={2} sx={{ mb: 2 }}>
-      <Alert severity={severity}>{purchaseStatusCopy(state)}</Alert>
-      {state.status === "verified" && state.acquiredNft ? (
-        <AcquiredNftResult result={state.acquiredNft} />
-      ) : null}
-      {state.fingerprint ? (
-        <Stack spacing={0.5}>
-          <Typography variant="body2" color="text.secondary">
-            Token #{state.fingerprint.tokenId.toString()} to{" "}
-            {state.fingerprint.recipient}
+    <Stack spacing={3}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={1}
+        >
+          <Typography component="h2" variant="h5">
+            Every artwork
           </Typography>
-          <Typography variant="body2">
-            Exact total: {formatTestAmount(state.fingerprint.total)} TEST
+          <Typography variant="h5" fontWeight={700}>
+            {formatTestAmount(totalPrice)} TEST
           </Typography>
         </Stack>
-      ) : null}
-      {state.approvalHash ? (
-        <Link
-          href={`${baseSepolia.blockExplorers.default.url}/tx/${state.approvalHash}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          View TEST approval
-        </Link>
-      ) : null}
-      {state.fillHash ? (
-        <Link
-          href={`${baseSepolia.blockExplorers.default.url}/tx/${state.fillHash}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          View gallery purchase
-        </Link>
-      ) : null}
-      {terminal ? (
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          {state.status === "confirmed_refreshing" ? (
-            <Button
-              type="button"
-              variant="contained"
-              onClick={onRetryVerification}
-            >
-              Retry verification
-            </Button>
-          ) : null}
-          <Button type="button" variant="outlined" onClick={onDone}>
-            Done
-          </Button>
-        </Stack>
+      </Paper>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {artworks.map((artwork) => (
+          <ArtworkCard
+            key={artwork.stableKey}
+            metadata={artwork.metadata}
+            purchaseEnabled={purchaseEnabled}
+            purchaseLocked={purchaseLocked}
+            purchaseInProgress={
+              purchaseLocked && activeArtworkKey === artwork.stableKey
+            }
+            onBuy={() => onBuy(artwork.stableKey)}
+            onRetry={() => onRetry(artwork.stableKey)}
+          />
+        ))}
+      </div>
+      {scanning ? (
+        <Typography color="text.secondary" role="status" aria-live="polite">
+          Finding more artwork…
+        </Typography>
       ) : null}
     </Stack>
   );
 }
 
-export function GalleryView() {
-  const global = useGalleryGlobalState();
-  const discovery = useGalleryDiscovery();
-  const purchase = useGalleryPurchase();
-  const refresh = useCallback(async () => {
-    await Promise.all([global.refresh(), discovery.refresh()]);
-  }, [discovery, global]);
+function useBaseSepoliaOnPageLoad() {
+  const connection = useConnection();
+  const { mutate: switchChain } = useSwitchChain();
+  const shouldSwitch =
+    connection.isConnected && connection.chainId !== baseSepolia.id;
 
-  usePageAttentionRefresh(refresh);
+  useEffect(() => {
+    if (shouldSwitch) {
+      switchChain({ chainId: baseSepolia.id });
+    }
+  }, [shouldSwitch, switchChain]);
+}
+
+export function GalleryView({
+  purchase,
+}: {
+  purchase?: GalleryPurchaseController;
+}) {
+  useBaseSepoliaOnPageLoad();
+  const connection = useConnection();
+  const global = useGalleryGlobalState();
+  const pool = useGalleryPoolState();
+  const poolTargets =
+    pool.projection.status === "success" ? pool.projection.data.targets : [];
+  const discovery = useGalleryDiscovery({ poolTargets });
+
+  const refresh = useCallback(async () => {
+    await Promise.all([global.refresh(), pool.refresh()]);
+  }, [global, pool]);
+
+  const targetsByKey = useMemo(
+    () =>
+      new Map(discovery.catalog.map((target) => [target.targetId, target])),
+    [discovery.catalog],
+  );
+  const artworks = useMemo<PresentedGalleryArtwork[]>(
+    () =>
+      discovery.catalog.map((target) => ({
+        stableKey: target.targetId,
+        metadata: decodeTestGalleryMetadata(target.tokenUri ?? ""),
+      })),
+    [discovery.catalog],
+  );
 
   let state: GalleryViewContentState;
-  let listings: ReactNode = null;
-  if (
+  if (global.projection.status === "failure") {
+    state = { status: "failure", message: global.projection.message };
+  } else if (pool.projection.status === "failure") {
+    state = { status: "failure", message: pool.projection.message };
+  } else if (
     global.projection.status === "idle" ||
     global.projection.status === "loading" ||
-    discovery.projection.status === "loading"
+    pool.projection.status === "idle" ||
+    pool.projection.status === "loading" ||
+    (artworks.length === 0 && discovery.isScanning)
   ) {
     state = { status: "loading" };
-  } else if (global.projection.status === "failure") {
-    state = { status: "failure", message: global.projection.message };
-  } else if (discovery.projection.status === "failure") {
-    state = { status: "failure", message: discovery.projection.message };
-  } else if (
-    discovery.projection.status === "complete" &&
-    discovery.projection.activeTokenIds.length === 0
-  ) {
+  } else if (artworks.length === 0) {
     state = { status: "empty" };
   } else {
-    const unit = global.projection.data.unit;
-    state = {
-      status:
-        discovery.projection.status === "discovery_incomplete"
-          ? "incomplete"
-          : "ready",
-    };
-    listings =
-      discovery.projection.activeTokenIds.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {discovery.projection.activeTokenIds.map((tokenId) => (
-            <ListingCard
-              key={tokenId.toString()}
-              tokenId={tokenId}
-              unit={unit}
-              onBuy={(exactTokenId, recipient) => {
-                void purchase.start(exactTokenId, recipient).then((result) => {
-                  if (
-                    result.status === "verified" ||
-                    result.status === "confirmed_refreshing" ||
-                    result.status === "confirmed_unverified"
-                  ) {
-                    return refresh();
-                  }
-                });
-              }}
-            />
-          ))}
-        </div>
-      ) : (
-        <Typography color="text.secondary">
-          No currently verified active listing is available.
-        </Typography>
-      );
+    state = { status: "ready" };
   }
+
+  const globalState =
+    global.projection.status === "success" ? global.projection.data : null;
+  const connectedOwner =
+    Boolean(connection.address && globalState) &&
+    isAddressEqual(connection.address!, globalState!.owner);
+  const totalPrice = globalState
+    ? globalState.unit + globalState.premium
+    : 0n;
+
+  const retryArtwork = (stableKey: string) => {
+    const target = targetsByKey.get(stableKey);
+    if (!target) return;
+    if (target.kind === "held") {
+      void discovery.revalidateAffectedTokenIds([target.tokenId]);
+      return;
+    }
+    void pool.refresh();
+  };
+
+  const buyArtwork = (stableKey: string) => {
+    const target = targetsByKey.get(stableKey);
+    if (target) void purchase?.buy(target);
+  };
 
   return (
     <Container
@@ -316,55 +278,40 @@ export function GalleryView() {
               TEST gallery
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
-              Buy Society NFTs from the deployed Base Sepolia gallery using
-              TEST. Wallet connection is only needed when you buy.
+              Choose an artwork and buy it with TEST. Wallet connection is only
+              needed when you buy.
             </Typography>
           </div>
-          <Button
-            component={NextLink}
-            href="/fame/gallery/test/admin"
-            variant="text"
-          >
-            Open admin
-          </Button>
+          {connectedOwner ? (
+            <Button
+              component={NextLink}
+              href="/fame/gallery/test/admin"
+              variant="text"
+            >
+              Open admin
+            </Button>
+          ) : null}
         </Stack>
-
-        {purchase.state.status !== "idle" && !purchase.modalOpen ? (
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => purchase.setModalOpen(true)}
-            sx={{ alignSelf: "flex-start" }}
-          >
-            View purchase
-          </Button>
-        ) : null}
 
         <GalleryViewContent
           state={state}
-          onRefresh={() => void refresh().catch(() => undefined)}
+          paused={globalState?.paused}
+          onRefresh={() => void refresh()}
         >
-          {listings}
+          {state.status === "ready" && globalState ? (
+            <GalleryArtworkGrid
+              artworks={artworks}
+              totalPrice={totalPrice}
+              purchaseEnabled={purchase?.enabled ?? false}
+              purchaseLocked={globalState.paused || purchase?.locked}
+              activeArtworkKey={purchase?.activeArtworkKey}
+              scanning={discovery.isScanning}
+              onBuy={buyArtwork}
+              onRetry={retryArtwork}
+            />
+          ) : null}
         </GalleryViewContent>
       </Stack>
-      <TransactionsModal
-        open={purchase.modalOpen}
-        onClose={() => purchase.setModalOpen(false)}
-        transactions={purchase.transactions}
-        onTransactionConfirmed={() => undefined}
-        topContent={
-          <GalleryPurchaseModalContent
-            state={purchase.state}
-            onRetryVerification={() => {
-              void purchase.retryVerification().finally(() => refresh());
-            }}
-            onDone={() => {
-              purchase.reset();
-              purchase.setModalOpen(false);
-            }}
-          />
-        }
-      />
     </Container>
   );
 }
