@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseAbiItem } from "viem";
 import { usePublicClient } from "wagmi";
 import {
@@ -78,6 +78,9 @@ export function useGalleryDiscovery({
   const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
   const [isScanning, setIsScanning] = useState(Boolean(source));
   const [scanCompleted, setScanCompleted] = useState(false);
+  const initialScan = useRef<ReturnType<typeof discoverGalleryHoldings> | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!source) {
@@ -86,7 +89,7 @@ export function useGalleryDiscovery({
     }
     let active = true;
     setIsScanning(true);
-    void runInitialGalleryScan(deploymentKey, () =>
+    const scan = runInitialGalleryScan(deploymentKey, () =>
       discoverGalleryHoldings({
         source,
         marketplace: config.addresses.gallery,
@@ -99,13 +102,16 @@ export function useGalleryDiscovery({
           );
         },
       }),
-    ).then((result) => {
+    );
+    initialScan.current = scan;
+    void scan.then((result) => {
       if (!active) return;
       setHeldTargets((current) =>
         reconcileGalleryCatalogTargets(current, result.targets),
       );
       setScanCompleted(result.scanCompleted);
       setIsScanning(false);
+      if (initialScan.current === scan) initialScan.current = null;
     });
     return () => {
       active = false;
@@ -132,6 +138,29 @@ export function useGalleryDiscovery({
     [source],
   );
 
+  const recoverHeldTokenIds = useCallback(async () => {
+    if (!source) return [];
+    const pendingInitialScan = initialScan.current;
+    if (pendingInitialScan) {
+      const result = await pendingInitialScan;
+      return result.targets.map(({ tokenId }) => tokenId);
+    }
+    setIsScanning(true);
+    try {
+      const result = await discoverGalleryHoldings({
+        source,
+        marketplace: config.addresses.gallery,
+        restoredHints: storage.restore(),
+        persist: (record) => storage.commit(record),
+      });
+      setHeldTargets(result.targets);
+      setScanCompleted(result.scanCompleted);
+      return result.targets.map(({ tokenId }) => tokenId);
+    } finally {
+      setIsScanning(false);
+    }
+  }, [source, storage]);
+
   const catalog = useMemo(
     () =>
       appendGalleryCatalogTargets(
@@ -147,5 +176,6 @@ export function useGalleryDiscovery({
     isScanning,
     scanCompleted,
     revalidateAffectedTokenIds,
+    recoverHeldTokenIds,
   };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
@@ -7,79 +8,77 @@ import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { baseSepolia } from "viem/chains";
-import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
-import { useGalleryTokenState } from "../hooks/useGalleryTokenState";
-import {
-  decodeTestGalleryMetadata,
-  type GalleryMetadataResult,
-} from "../metadata/testMetadata";
-import type { GalleryAcquiredNft } from "../transactions/purchaseQueue";
 import { formatTestAmount } from "../format";
-import type { GalleryHookProjection, GalleryTokenState } from "../types";
+import type { GalleryMetadataResult } from "../metadata/testMetadata";
+import type { GalleryVerifiedAcquisition } from "../types";
 
-export function acquiredNftLatestOwner(
-  projection: GalleryHookProjection<GalleryTokenState>,
-  receiptBlockNumber: bigint,
-) {
-  return projection.status === "success" &&
-    projection.blockNumber >= receiptBlockNumber
-    ? projection.data.owner
-    : null;
-}
-
-export function AcquiredNftResultView({
+export function AcquiredNftResult({
   result,
   metadata,
-  latestOwner,
 }: {
-  result: GalleryAcquiredNft;
+  result: GalleryVerifiedAcquisition;
   metadata: GalleryMetadataResult;
-  latestOwner: string | null;
 }) {
-  const name =
-    metadata.status === "ready" && metadata.name
-      ? metadata.name
-      : `Society NFT #${result.tokenId}`;
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const [imageAttempt, setImageAttempt] = useState(0);
+  const [imageFailed, setImageFailed] = useState(false);
+  const ready = metadata.status === "ready";
+  const name = ready && metadata.name ? metadata.name : "Acquired artwork";
+
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
   return (
     <Card variant="outlined">
-      <CardMedia
-        component="img"
-        image={metadata.image}
-        alt={
-          metadata.status === "ready"
-            ? `${name} artwork`
-            : `Fallback artwork for acquired Society NFT #${result.tokenId}`
-        }
-        sx={{ aspectRatio: "1 / 1", objectFit: "cover", bgcolor: "grey.900" }}
-      />
+      {!imageFailed ? (
+        <CardMedia
+          key={imageAttempt}
+          component="img"
+          image={metadata.image}
+          alt={ready ? `${name} artwork` : "Acquired artwork unavailable"}
+          onError={() => setImageFailed(true)}
+          sx={{ aspectRatio: "1 / 1", objectFit: "cover", bgcolor: "grey.900" }}
+        />
+      ) : null}
       <CardContent>
         <Stack spacing={1.5}>
           <div>
-            <Typography component="h2" variant="h5">
+            <Typography
+              ref={headingRef}
+              tabIndex={-1}
+              component="h2"
+              variant="h5"
+            >
               You got {name}
             </Typography>
             <Typography color="text.secondary">
-              Token #{result.tokenId.toString()}
+              Delivered token #{result.deliveredShellId.toString()}
             </Typography>
           </div>
-          {metadata.status !== "ready" ? (
-            <Typography color="text.secondary">
-              Artwork unavailable. The receipt-backed acquisition facts remain
-              verified.
-            </Typography>
+          {!ready || imageFailed ? (
+            <Stack spacing={1} alignItems="flex-start">
+              <Typography color="text.secondary">
+                The artwork image could not be shown. Your verified purchase
+                details are still available.
+              </Typography>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => {
+                  setImageFailed(false);
+                  setImageAttempt((attempt) => attempt + 1);
+                }}
+                sx={{ minHeight: 44 }}
+              >
+                Retry image
+              </Button>
+            </Stack>
           ) : null}
           <Divider />
           <Typography variant="body2">Recipient: {result.recipient}</Typography>
-          <Typography variant="body2">
-            Owner at end of receipt block: {result.currentOwner}
-          </Typography>
-          {latestOwner ? (
-            <Typography variant="body2">
-              Current owner: {latestOwner}
-            </Typography>
-          ) : null}
           <Typography variant="body2">
             NFT unit: {formatTestAmount(result.unit)} TEST
           </Typography>
@@ -94,39 +93,10 @@ export function AcquiredNftResultView({
             target="_blank"
             rel="noreferrer"
           >
-            View verified purchase
+            View purchase transaction
           </Link>
         </Stack>
       </CardContent>
     </Card>
-  );
-}
-
-export function AcquiredNftResult({ result }: { result: GalleryAcquiredNft }) {
-  const headingRef = useRef<HTMLDivElement | null>(null);
-  const current = useGalleryTokenState(result.tokenId, {
-    enabled: true,
-    refetchOnMount: true,
-  });
-  usePageAttentionRefresh(current.refresh);
-
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, []);
-
-  const metadata = decodeTestGalleryMetadata(result.tokenUri ?? "");
-  const latestOwner = acquiredNftLatestOwner(
-    current.projection,
-    result.receiptBlockNumber,
-  );
-
-  return (
-    <div ref={headingRef} tabIndex={-1}>
-      <AcquiredNftResultView
-        result={result}
-        metadata={metadata}
-        latestOwner={latestOwner}
-      />
-    </div>
   );
 }
