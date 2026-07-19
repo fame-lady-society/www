@@ -1,8 +1,5 @@
 import { client as baseClient } from "@/viem/base-client";
-import {
-  fameMetadataFetchUrls,
-  imageFromFameMetadata,
-} from "@/service/fameMetadata";
+import { imageFromFameMetadata } from "@/service/fameMetadata";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { unstable_cache } from "next/cache";
 import { base } from "viem/chains";
@@ -32,28 +29,16 @@ async function resolveTokenImageUrl(
   dependencies: TokenImageDependencies,
 ) {
   const tokenUri = await dependencies.readTokenUri(BigInt(tokenId));
-  let lastError: unknown;
-
-  for (const metadataUrl of fameMetadataFetchUrls(tokenUri)) {
-    try {
-      const metadataResponse = await dependencies.fetchResource(metadataUrl, {
-        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      });
-      if (!metadataResponse.ok) {
-        throw new Error(
-          `Metadata request failed with ${metadataResponse.status} ${metadataResponse.statusText}`,
-        );
-      }
-
-      return imageFromFameMetadata(await metadataResponse.json());
-    } catch (error) {
-      lastError = error;
-    }
+  const metadataResponse = await dependencies.fetchResource(tokenUri, {
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+  });
+  if (!metadataResponse.ok) {
+    throw new Error(
+      `Metadata request failed with ${metadataResponse.status} ${metadataResponse.statusText}`,
+    );
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Failed to resolve token image");
+  return imageFromFameMetadata(await metadataResponse.json());
 }
 
 const resolveCachedTokenImageUrl = unstable_cache(

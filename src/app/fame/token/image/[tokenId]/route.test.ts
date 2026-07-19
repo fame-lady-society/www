@@ -35,36 +35,4 @@ describe("/fame/token/image/[tokenId]", () => {
       "https://images.example/645.png",
     ]);
   });
-
-  it("falls back to Irys when the matching Arweave URL fails", async () => {
-    const requests: string[] = [];
-    const response = await handleTokenImageRequest("646", {
-      readTokenUri: async () =>
-        "https://gateway.irys.xyz/transaction/metadata.json",
-      fetchResource: async (input) => {
-        const url = input.toString();
-        requests.push(url);
-
-        if (url.startsWith("https://arweave.net/")) {
-          return new Response("gateway unavailable", { status: 503 });
-        }
-        if (url.startsWith("https://gateway.irys.xyz/")) {
-          return Response.json({
-            image: "https://images.example/646.png",
-          });
-        }
-
-        return new Response("image-bytes", {
-          headers: { "Content-Type": "image/png" },
-        });
-      },
-    });
-
-    assert.equal(response.status, 200);
-    assert.deepEqual(requests, [
-      "https://arweave.net/transaction/metadata.json",
-      "https://gateway.irys.xyz/transaction/metadata.json",
-      "https://images.example/646.png",
-    ]);
-  });
 });
