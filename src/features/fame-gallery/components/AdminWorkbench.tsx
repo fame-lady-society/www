@@ -13,6 +13,7 @@ import { baseSepolia } from "viem/chains";
 import { useSwitchChain } from "wagmi";
 import { usePageAttentionRefresh } from "@/features/society-nft-auction/hooks/usePageAttentionRefresh";
 import { useAccount } from "@/hooks/useAccount";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import { formatTestAmount } from "../format";
 import { useGalleryAuthority } from "../hooks/useGalleryAuthority";
@@ -179,8 +180,11 @@ export function AdminWorkbench() {
     authority.projection.data.authority === "owner";
   const global = useGalleryGlobalState({ enabled: isAuthorized });
   const { mutate: switchChain, isPending: isSwitching } = useSwitchChain();
-  const shouldSwitch =
-    account.isConnected && account.chainId !== baseSepolia.id;
+  const shouldSwitch = needsConnectedChainSwitch({
+    isConnected: account.isConnected,
+    connectedChainId: account.chainId,
+    targetChainId: baseSepolia.id,
+  });
 
   useEffect(() => {
     if (shouldSwitch) {

@@ -103,7 +103,7 @@ describe("gallery fulfillment resolver", () => {
     assert.equal(Object.isFrozen(terms.selectedTarget), true);
   });
 
-  it("prefers a fresh held route and returns its exact request", async () => {
+  it("prefers a fresh held route", async () => {
     const { source } = mockSource({
       tokens: new Map([[7n, tokenState({ owner: marketplace })]]),
     });
@@ -115,17 +115,7 @@ describe("gallery fulfillment resolver", () => {
       source,
     });
 
-    assert.deepEqual(resolved.route, { kind: "held", shellId: 7n });
-    assert.equal(resolved.currentPremium, 25n);
-    assert.equal(resolved.resolutionBlock, 500n);
-    assert.equal(resolved.request.functionName, "purchaseHeld");
-    assert.deepEqual(resolved.request.args, [
-      7n,
-      selectedArtwork,
-      25n,
-      0n,
-      buyer,
-    ]);
+    assert.deepEqual(resolved, { kind: "held", shellId: 7n });
   });
 
   for (const [poolKind, membership] of [
@@ -145,21 +135,12 @@ describe("gallery fulfillment resolver", () => {
         source,
       });
 
-      assert.deepEqual(resolved.route, {
+      assert.deepEqual(resolved, {
         kind: "pool",
         poolKind,
         shellId: 19n,
         sourceId: 7n,
       });
-      assert.equal(resolved.request.functionName, "purchasePool");
-      assert.deepEqual(resolved.request.args, [
-        19n,
-        7n,
-        selectedArtwork,
-        25n,
-        0n,
-        buyer,
-      ]);
     });
   }
 
@@ -186,10 +167,8 @@ describe("gallery fulfillment resolver", () => {
       source: poolToHeld.source,
     });
 
-    assert.equal(first.route.kind, "pool");
-    assert.equal(second.route.kind, "held");
-    assert.strictEqual(first.terms, terms);
-    assert.strictEqual(second.terms, terms);
+    assert.equal(first.kind, "pool");
+    assert.equal(second.kind, "held");
   });
 
   it("tries another known shell and permits one explicit bounded refresh after exhaustion", async () => {
@@ -213,7 +192,7 @@ describe("gallery fulfillment resolver", () => {
       },
     });
 
-    assert.deepEqual(resolved.route, {
+    assert.deepEqual(resolved, {
       kind: "pool",
       poolKind: "burn",
       shellId: 20n,
@@ -242,14 +221,7 @@ describe("gallery fulfillment resolver", () => {
       knownShellTokenIds: [],
       source: lower.source,
     });
-    assert.equal(resolved.currentPremium, 24n);
-    assert.deepEqual(resolved.request.args, [
-      7n,
-      selectedArtwork,
-      25n,
-      0n,
-      buyer,
-    ]);
+    assert.deepEqual(resolved, { kind: "held", shellId: 7n });
 
     await assert.rejects(
       resolveGalleryFulfillment({
@@ -317,7 +289,7 @@ describe("gallery fulfillment resolver", () => {
       source,
     });
 
-    assert.deepEqual(resolved.route, { kind: "held", shellId: 8n });
+    assert.deepEqual(resolved, { kind: "held", shellId: 8n });
   });
 
   it("produces no request when no known or refreshed shell remains", async () => {

@@ -85,8 +85,7 @@ export type GalleryPurchaseEvent =
       acquisition: GalleryVerifiedAcquisition;
       cause: unknown;
     }
-  | { type: "failed"; stage: GalleryPurchaseErrorStage; cause: unknown }
-  | { type: "reset" };
+  | { type: "failed"; stage: GalleryPurchaseErrorStage; cause: unknown };
 
 export function galleryPurchaseReducer(
   state: GalleryPurchaseState,
@@ -154,8 +153,6 @@ export function galleryPurchaseReducer(
         status: "error",
         failure: { stage: event.stage, cause: event.cause },
       };
-    case "reset":
-      return initialGalleryPurchaseState;
   }
 }
 

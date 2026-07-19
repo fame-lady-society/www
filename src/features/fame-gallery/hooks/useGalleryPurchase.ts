@@ -346,7 +346,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                   ? latest.recoverHeldTokenIds
                   : undefined,
               });
-              return { route: resolved.route };
+              return { route: resolved };
             },
             async simulatePurchase(frozen, route) {
               if (route.kind === "held") {
@@ -499,12 +499,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     void executeAttempt(true);
   }, [executeAttempt, state.terms]);
 
-  const reset = useCallback(() => {
-    if (activeAttempt.current) return;
-    dispatch({ type: "reset" });
-    setTransactionModalOpen(false);
-  }, []);
-
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];
     if (state.approvalHash) {
@@ -531,7 +525,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     transactions,
     buy,
     retry,
-    reset,
     modalOpen: transactionModalOpen,
     setModalOpen: setTransactionModalOpen,
     locked: activeArtworkKey !== null,

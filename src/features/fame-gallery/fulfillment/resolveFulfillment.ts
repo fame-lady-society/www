@@ -1,6 +1,5 @@
 import { isAddressEqual, type Address, type Hash } from "viem";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
-import { galleryPurchaseContractRequest } from "../transactions/contractRequests";
 import type {
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
@@ -254,11 +253,5 @@ export async function resolveGalleryFulfillment({
 
   if (resolution.status === "shell_exhausted") throw unavailableShell();
 
-  return Object.freeze({
-    terms,
-    route: resolution.route,
-    currentPremium: resolution.currentPremium,
-    resolutionBlock: resolution.resolutionBlock,
-    request: galleryPurchaseContractRequest(terms, resolution.route),
-  });
+  return resolution.route;
 }

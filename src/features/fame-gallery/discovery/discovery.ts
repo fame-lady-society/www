@@ -9,6 +9,7 @@ import {
   type GalleryCustodyHintCache,
 } from "./cache";
 import {
+  galleryHeldTarget,
   mapGalleryCustodyChunks,
   scanGalleryCustody,
   type GalleryCustodyScanSource,
@@ -20,17 +21,6 @@ export type GalleryCustodyDiscoveryResult = {
   targets: GalleryArtworkTarget[];
   scanCompleted: boolean;
 };
-
-function heldTarget(state: GalleryTokenState): GalleryArtworkTarget {
-  return {
-    targetId: `held:${state.tokenId.toString()}`,
-    kind: "held",
-    tokenId: state.tokenId,
-    artworkHash: state.artworkHash,
-    tokenUri: state.tokenUri,
-    artworkError: state.artworkError,
-  };
-}
 
 export async function revalidateGalleryHeldTokenIds(
   source: GalleryCustodyDiscoverySource,
@@ -71,7 +61,7 @@ export async function revalidateGalleryHeldTokenIds(
       ) {
         continue;
       }
-      targets.push(heldTarget(projection.data));
+      targets.push(galleryHeldTarget(projection.data));
     }
   }
   return targets;

@@ -64,7 +64,6 @@ describe("TEST gallery public view", () => {
         <GalleryArtworkGrid
           artworks={artworks}
           totalPrice={price}
-          purchaseEnabled
           onBuy={() => undefined}
           onRetry={() => undefined}
         />
@@ -85,7 +84,6 @@ describe("TEST gallery public view", () => {
       <ArtworkCard
         metadata={decodeTestGalleryMetadata("bad uri")}
         purchaseLocked={false}
-        purchaseEnabled
         onBuy={() => undefined}
         onRetry={() => undefined}
       />,
@@ -105,7 +103,6 @@ describe("TEST gallery public view", () => {
           { stableKey: "two", metadata: readyMetadata("Moonlight") },
         ]}
         totalPrice={price}
-        purchaseEnabled
         purchaseLocked
         activeArtworkKey="one"
         onBuy={() => undefined}
@@ -125,7 +122,6 @@ describe("TEST gallery public view", () => {
             { stableKey: "one", metadata: readyMetadata("Sunrise") },
           ]}
           totalPrice={price}
-          purchaseEnabled
           purchaseLocked
           onBuy={() => undefined}
           onRetry={() => undefined}

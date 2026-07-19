@@ -91,7 +91,9 @@ export async function mapGalleryCustodyChunks<T>(
   }));
 }
 
-function heldTarget(state: GalleryTokenState): GalleryArtworkTarget {
+export function galleryHeldTarget(
+  state: GalleryTokenState,
+): GalleryArtworkTarget {
   return {
     targetId: `held:${state.tokenId.toString()}`,
     kind: "held",
@@ -231,7 +233,7 @@ export async function scanGalleryCustody({
         projection.data.marketplaceHeld &&
         isAddressEqual(projection.data.owner, marketplace)
       ) {
-        targets.push(heldTarget(projection.data));
+        targets.push(galleryHeldTarget(projection.data));
       } else {
         failed.add(tokenId);
         if (projection?.status === "success") held.delete(tokenId);

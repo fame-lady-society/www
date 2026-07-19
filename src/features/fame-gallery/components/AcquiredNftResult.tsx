@@ -9,7 +9,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
-import { baseSepolia } from "viem/chains";
+import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import { formatTestAmount } from "../format";
 import type { GalleryMetadataResult } from "../metadata/testMetadata";
 import type { GalleryVerifiedAcquisition } from "../types";
@@ -54,9 +54,6 @@ export function AcquiredNftResult({
             >
               You got {name}
             </Typography>
-            <Typography color="text.secondary">
-              Delivered token #{result.deliveredShellId.toString()}
-            </Typography>
           </div>
           {!ready || imageFailed ? (
             <Stack spacing={1} alignItems="flex-start">
@@ -89,7 +86,7 @@ export function AcquiredNftResult({
             Paid: {formatTestAmount(result.total)} TEST
           </Typography>
           <Link
-            href={`${baseSepolia.blockExplorers.default.url}/tx/${result.transactionHash}`}
+            href={`${BASE_SEPOLIA_TEST_GALLERY_CONFIG.explorerBaseUrl}/tx/${result.transactionHash}`}
             target="_blank"
             rel="noreferrer"
           >

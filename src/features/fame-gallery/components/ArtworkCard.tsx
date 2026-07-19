@@ -12,14 +12,12 @@ import type { GalleryMetadataResult } from "../metadata/testMetadata";
 
 export function ArtworkCard({
   metadata,
-  purchaseEnabled,
   purchaseLocked,
   purchaseInProgress = false,
   onBuy,
   onRetry,
 }: {
   metadata: GalleryMetadataResult;
-  purchaseEnabled: boolean;
   purchaseLocked: boolean;
   purchaseInProgress?: boolean;
   onBuy: () => void;
@@ -44,6 +42,8 @@ export function ArtworkCard({
         component="img"
         image={metadata.image}
         alt={artworkReady ? `${displayName} artwork` : "Artwork unavailable"}
+        loading="lazy"
+        decoding="async"
         sx={{ aspectRatio: "1 / 1", objectFit: "cover", bgcolor: "grey.900" }}
       />
       <CardContent sx={{ flexGrow: 1 }}>
@@ -68,7 +68,7 @@ export function ArtworkCard({
             type="button"
             variant="contained"
             fullWidth
-            disabled={!purchaseEnabled || purchaseLocked}
+            disabled={purchaseLocked}
             onClick={onBuy}
             sx={{ minHeight: 48 }}
           >

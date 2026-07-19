@@ -42,12 +42,14 @@ describe("acquired NFT result", () => {
     );
 
     assert.match(html, /You got Sunrise/);
-    assert.match(html, /Delivered token #19/);
     assert.match(html, /NFT unit: 1,000 TEST/);
     assert.match(html, /Premium: 25 TEST/);
     assert.match(html, /Paid: 1,025 TEST/);
     assert.match(html, new RegExp(transactionHash));
-    assert.doesNotMatch(html, /mint|burn|held|source|route|path/i);
+    assert.doesNotMatch(
+      html,
+      /token\s*#|token id|mint|burn|held|source|route|path/i,
+    );
   });
 
   it("keeps verified facts and an accessible retry when artwork is unavailable", () => {

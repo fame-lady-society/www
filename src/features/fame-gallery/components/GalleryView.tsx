@@ -7,10 +7,18 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
-import { useCallback, useEffect, useMemo, type ReactNode } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import { isAddressEqual } from "viem";
 import { baseSepolia } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { formatTestAmount } from "../format";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
@@ -105,10 +113,9 @@ export function GalleryViewContent({
   );
 }
 
-export function GalleryArtworkGrid({
+export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   artworks,
   totalPrice,
-  purchaseEnabled,
   purchaseLocked = false,
   activeArtworkKey = null,
   scanning = false,
@@ -117,7 +124,6 @@ export function GalleryArtworkGrid({
 }: {
   artworks: readonly PresentedGalleryArtwork[];
   totalPrice: bigint;
-  purchaseEnabled: boolean;
   purchaseLocked?: boolean;
   activeArtworkKey?: string | null;
   scanning?: boolean;
@@ -146,7 +152,6 @@ export function GalleryArtworkGrid({
           <ArtworkCard
             key={artwork.stableKey}
             metadata={artwork.metadata}
-            purchaseEnabled={purchaseEnabled}
             purchaseLocked={purchaseLocked}
             purchaseInProgress={
               purchaseLocked && activeArtworkKey === artwork.stableKey
@@ -163,13 +168,16 @@ export function GalleryArtworkGrid({
       ) : null}
     </Stack>
   );
-}
+});
 
 function useBaseSepoliaOnPageLoad() {
   const connection = useConnection();
   const { mutate: switchChain } = useSwitchChain();
-  const shouldSwitch =
-    connection.isConnected && connection.chainId !== baseSepolia.id;
+  const shouldSwitch = needsConnectedChainSwitch({
+    isConnected: connection.isConnected,
+    connectedChainId: connection.chainId,
+    targetChainId: baseSepolia.id,
+  });
 
   useEffect(() => {
     if (shouldSwitch) {
@@ -201,17 +209,33 @@ export function GalleryView() {
     revalidateAffectedTokenIds: discovery.revalidateAffectedTokenIds,
     recoverHeldTokenIds: discovery.recoverHeldTokenIds,
   });
+  const revalidateAffectedTokenIds = discovery.revalidateAffectedTokenIds;
+  const refreshPool = pool.refresh;
+  const buy = purchase.buy;
+  const metadataCache = useRef(new Map<string, GalleryMetadataResult>());
 
   const targetsByKey = useMemo(
     () => new Map(discovery.catalog.map((target) => [target.targetId, target])),
     [discovery.catalog],
   );
   const artworks = useMemo<PresentedGalleryArtwork[]>(
-    () =>
-      discovery.catalog.map((target) => ({
-        stableKey: target.targetId,
-        metadata: decodeTestGalleryMetadata(target.tokenUri ?? ""),
-      })),
+    () => {
+      const activeUris = new Set<string>();
+      const presented = discovery.catalog.map((target) => {
+        const tokenUri = target.tokenUri ?? "";
+        activeUris.add(tokenUri);
+        let metadata = metadataCache.current.get(tokenUri);
+        if (!metadata) {
+          metadata = decodeTestGalleryMetadata(tokenUri);
+          metadataCache.current.set(tokenUri, metadata);
+        }
+        return { stableKey: target.targetId, metadata };
+      });
+      for (const tokenUri of metadataCache.current.keys()) {
+        if (!activeUris.has(tokenUri)) metadataCache.current.delete(tokenUri);
+      }
+      return presented;
+    },
     [discovery.catalog],
   );
 
@@ -239,20 +263,26 @@ export function GalleryView() {
     isAddressEqual(connection.address!, globalState!.owner);
   const totalPrice = globalState ? globalState.unit + globalState.premium : 0n;
 
-  const retryArtwork = (stableKey: string) => {
-    const target = targetsByKey.get(stableKey);
-    if (!target) return;
-    if (target.kind === "held") {
-      void discovery.revalidateAffectedTokenIds([target.tokenId]);
-      return;
-    }
-    void pool.refresh();
-  };
+  const retryArtwork = useCallback(
+    (stableKey: string) => {
+      const target = targetsByKey.get(stableKey);
+      if (!target) return;
+      if (target.kind === "held") {
+        void revalidateAffectedTokenIds([target.tokenId]);
+        return;
+      }
+      void refreshPool();
+    },
+    [refreshPool, revalidateAffectedTokenIds, targetsByKey],
+  );
 
-  const buyArtwork = (stableKey: string) => {
-    const target = targetsByKey.get(stableKey);
-    if (target) purchase.buy(target);
-  };
+  const buyArtwork = useCallback(
+    (stableKey: string) => {
+      const target = targetsByKey.get(stableKey);
+      if (target) buy(target);
+    },
+    [buy, targetsByKey],
+  );
 
   return (
     <Container
@@ -295,7 +325,6 @@ export function GalleryView() {
             <GalleryArtworkGrid
               artworks={artworks}
               totalPrice={totalPrice}
-              purchaseEnabled
               purchaseLocked={globalState.paused || purchase.locked}
               activeArtworkKey={purchase.activeArtworkKey}
               scanning={discovery.isScanning}

@@ -2,6 +2,7 @@ import {
   decodeEventLog,
   encodeEventTopics,
   isAddress,
+  isAddressEqual,
   type Address,
   type Hash,
   type Hex,
@@ -63,10 +64,6 @@ function sameHex(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-function sameAddress(left: Address, right: Address) {
-  return sameHex(left, right);
-}
-
 function asAddress(value: unknown): Address | null {
   return typeof value === "string" && isAddress(value, { strict: false })
     ? value
@@ -120,7 +117,7 @@ function matchingTopicLogs(
 ) {
   return logs.filter(
     (log) =>
-      sameAddress(log.address, emitter) &&
+      isAddressEqual(log.address, emitter) &&
       typeof log.topics[0] === "string" &&
       sameHex(log.topics[0], topic),
   );
@@ -215,8 +212,8 @@ export async function verifyGalleryPurchase({
     premium === null ||
     inventoryBefore === null ||
     inventoryAfter === null ||
-    !sameAddress(buyer, terms.account) ||
-    !sameAddress(recipient, terms.recipient) ||
+    !isAddressEqual(buyer, terms.account) ||
+    !isAddressEqual(recipient, terms.recipient) ||
     shellId !== route.shellId ||
     path !== expectedRoute.path ||
     sourceId !== expectedRoute.sourceId ||
@@ -252,8 +249,8 @@ export async function verifyGalleryPurchase({
       from !== null &&
       to !== null &&
       id !== null &&
-      sameAddress(from, addresses.marketplace) &&
-      sameAddress(to, terms.recipient) &&
+      isAddressEqual(from, addresses.marketplace) &&
+      isAddressEqual(to, terms.recipient) &&
       id === route.shellId
     );
   });
@@ -279,7 +276,7 @@ export async function verifyGalleryPurchase({
   if (
     verifiedOwner === null ||
     verifiedArtwork === null ||
-    !sameAddress(verifiedOwner, terms.recipient) ||
+    !isAddressEqual(verifiedOwner, terms.recipient) ||
     !sameHex(verifiedArtwork, terms.artworkHash)
   ) {
     return unverified(
