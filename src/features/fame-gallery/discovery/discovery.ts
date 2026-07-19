@@ -56,8 +56,7 @@ export async function revalidateGalleryHeldTokenIds(
       if (
         projection?.status !== "success" ||
         !projection.data.marketplaceHeld ||
-        (marketplace &&
-          !isAddressEqual(projection.data.owner, marketplace))
+        (marketplace && !isAddressEqual(projection.data.owner, marketplace))
       ) {
         continue;
       }
@@ -132,13 +131,37 @@ export async function discoverGalleryHoldings({
     if (fullDomainFailed) {
       return { targets: hintedTargets, scanCompleted: false };
     }
+    const failedTokenIds = new Set(result.failedTokenIds);
+    const preservedHintTargets = hintedTargets.filter(({ tokenId }) =>
+      failedTokenIds.has(tokenId),
+    );
+    const targetsById = new Map(
+      result.targets.map((target) => [target.targetId, target]),
+    );
+    for (const target of preservedHintTargets) {
+      if (!targetsById.has(target.targetId)) {
+        targetsById.set(target.targetId, target);
+      }
+    }
+    const targets = [...targetsById.values()].sort((left, right) =>
+      left.tokenId < right.tokenId ? -1 : left.tokenId > right.tokenId ? 1 : 0,
+    );
+    const heldTokenIds = [
+      ...new Set([
+        ...result.heldTokenIds,
+        ...preservedHintTargets.map(({ tokenId }) => tokenId),
+      ]),
+    ];
     try {
-      await persist(createGalleryCustodyHintCache(result.heldTokenIds));
+      await persist(createGalleryCustodyHintCache(heldTokenIds));
     } catch {
       // Browser persistence is an optimization, never catalog availability.
     }
-    onTargets?.("scan", result.targets);
-    return { targets: result.targets, scanCompleted: true };
+    onTargets?.("scan", targets);
+    return {
+      targets,
+      scanCompleted: result.failedTokenIds.length === 0,
+    };
   }
   return { targets: hintedTargets, scanCompleted: false };
 }

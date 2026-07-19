@@ -7,10 +7,7 @@ import {
   type Hash,
   type Hex,
 } from "viem";
-import {
-  fameMirrorAbi,
-  universalPoolArtMarketplaceAbi,
-} from "../../../wagmi";
+import { fameMirrorAbi, universalPoolArtMarketplaceAbi } from "../../../wagmi";
 import type {
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
@@ -37,13 +34,17 @@ export type GalleryPurchaseVerificationAddresses = {
 };
 
 export type GalleryPurchaseVerificationDependencies = {
-  readOwnerAt: (blockNumber: bigint, shellId: bigint) => Promise<Address>;
-  readArtworkHash: (blockNumber: bigint, shellId: bigint) => Promise<Hash>;
+  readOwnerAt: (shellId: bigint) => Promise<Address>;
+  readArtworkHash: (shellId: bigint) => Promise<Hash>;
 };
 
 export type GalleryPurchaseVerificationResult =
   | { status: "verified"; acquisition: GalleryVerifiedAcquisition }
-  | { status: "confirmed_unverified"; reason: string };
+  | {
+      status: "confirmed_unverified";
+      reason: string;
+      cause?: unknown;
+    };
 
 type DecodedEvent = {
   eventName: string;
@@ -123,8 +124,13 @@ function matchingTopicLogs(
   );
 }
 
-function unverified(reason: string): GalleryPurchaseVerificationResult {
-  return { status: "confirmed_unverified", reason };
+function unverified(
+  reason: string,
+  cause?: unknown,
+): GalleryPurchaseVerificationResult {
+  return cause === undefined
+    ? { status: "confirmed_unverified", reason }
+    : { status: "confirmed_unverified", reason, cause };
 }
 
 function expectedRouteFacts(route: GalleryFulfillmentRoute) {
@@ -260,27 +266,34 @@ export async function verifyGalleryPurchase({
     );
   }
 
-  let receiptBlockOwner: unknown;
-  let receiptBlockArtwork: unknown;
+  let currentOwner: unknown;
+  let currentArtwork: unknown;
   try {
-    [receiptBlockOwner, receiptBlockArtwork] = await Promise.all([
-      dependencies.readOwnerAt(receipt.blockNumber, route.shellId),
-      dependencies.readArtworkHash(receipt.blockNumber, route.shellId),
+    [currentOwner, currentArtwork] = await Promise.all([
+      dependencies.readOwnerAt(route.shellId),
+      dependencies.readArtworkHash(route.shellId),
     ]);
-  } catch {
-    return unverified("Receipt-block purchase state could not be verified.");
+  } catch (cause) {
+    return unverified("Current purchase state could not be verified.", cause);
   }
 
-  const verifiedOwner = asAddress(receiptBlockOwner);
-  const verifiedArtwork = asHash(receiptBlockArtwork);
+  const verifiedOwner = asAddress(currentOwner);
+  const verifiedArtwork = asHash(currentArtwork);
   if (
     verifiedOwner === null ||
     verifiedArtwork === null ||
     !isAddressEqual(verifiedOwner, terms.recipient) ||
     !sameHex(verifiedArtwork, terms.artworkHash)
   ) {
+    const reason = "Current owner or artwork does not match the purchase.";
     return unverified(
-      "Receipt-block owner or artwork does not match the purchase.",
+      reason,
+      Object.assign(new Error(reason), {
+        expectedOwner: terms.recipient,
+        observedOwner: currentOwner,
+        expectedArtwork: terms.artworkHash,
+        observedArtwork: currentArtwork,
+      }),
     );
   }
 

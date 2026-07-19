@@ -22,6 +22,7 @@ export type GalleryPurchaseStatus =
   | "awaiting_purchase_wallet"
   | "confirming_purchase"
   | "verifying"
+  | "confirmed_unverified"
   | "refreshing"
   | "verified"
   | "error";
@@ -78,6 +79,7 @@ export type GalleryPurchaseEvent =
   | { type: "awaiting_purchase_wallet" }
   | { type: "purchase_submitted"; hash: Hash }
   | { type: "verifying" }
+  | { type: "verification_failed"; cause: unknown }
   | { type: "refreshing"; acquisition: GalleryVerifiedAcquisition }
   | { type: "verified"; acquisition: GalleryVerifiedAcquisition }
   | {
@@ -124,6 +126,12 @@ export function galleryPurchaseReducer(
         status: "confirming_purchase",
         purchaseHash: event.hash,
         failure: null,
+      };
+    case "verification_failed":
+      return {
+        ...state,
+        status: "confirmed_unverified",
+        failure: { stage: "verification", cause: event.cause },
       };
     case "refreshing":
       return {
@@ -200,6 +208,7 @@ export type GalleryPurchaseDependencies = {
 
 export type GalleryPurchaseExecutionResult =
   | { status: "verified"; acquisition: GalleryVerifiedAcquisition }
+  | { status: "confirmed_unverified"; cause: unknown }
   | { status: "failed"; stage: GalleryPurchaseErrorStage; cause: unknown };
 
 function failure(
@@ -209,6 +218,14 @@ function failure(
 ): GalleryPurchaseExecutionResult {
   dependencies.dispatch({ type: "failed", stage, cause });
   return { status: "failed", stage, cause };
+}
+
+function verificationFailure(
+  dependencies: GalleryPurchaseDependencies,
+  cause: unknown,
+): GalleryPurchaseExecutionResult {
+  dependencies.dispatch({ type: "verification_failed", cause });
+  return { status: "confirmed_unverified", cause };
 }
 
 function revertedTransaction(kind: "approval" | "purchase") {
@@ -252,40 +269,17 @@ export async function executeGalleryPurchase({
       return failure(dependencies, "approval_wallet", cause);
     }
 
-    for (const confirmations of [1, 2, 3] as const) {
-      let receipt: GalleryPurchaseReceipt;
-      try {
-        receipt = await dependencies.waitForReceipt(
-          approvalHash,
-          confirmations,
-        );
-      } catch (cause) {
-        return failure(dependencies, "approval_receipt", cause);
-      }
-      if (receipt.status !== "success") {
-        return failure(
-          dependencies,
-          "approval_receipt",
-          revertedTransaction("approval"),
-        );
-      }
-
-      try {
-        dependencies.dispatch({ type: "checking_allowance" });
-        allowance = await dependencies.readAllowance(terms);
-      } catch (cause) {
-        return failure(dependencies, "allowance", cause);
-      }
-      if (allowance >= terms.maximumSpend) break;
+    let approvalReceipt: GalleryPurchaseReceipt;
+    try {
+      approvalReceipt = await dependencies.waitForReceipt(approvalHash, 2);
+    } catch (cause) {
+      return failure(dependencies, "approval_receipt", cause);
     }
-
-    if (allowance < terms.maximumSpend) {
+    if (approvalReceipt.status !== "success") {
       return failure(
         dependencies,
-        "allowance",
-        new Error(
-          "The confirmed TEST approval is not visible after three blocks.",
-        ),
+        "approval_receipt",
+        revertedTransaction("approval"),
       );
     }
   }
@@ -320,7 +314,7 @@ export async function executeGalleryPurchase({
 
   let purchaseReceipt: GalleryPurchaseReceipt;
   try {
-    purchaseReceipt = await dependencies.waitForReceipt(purchaseHash, 1);
+    purchaseReceipt = await dependencies.waitForReceipt(purchaseHash, 2);
   } catch (cause) {
     return failure(dependencies, "purchase_receipt", cause);
   }
@@ -342,13 +336,12 @@ export async function executeGalleryPurchase({
       route: resolved.route,
     });
   } catch (cause) {
-    return failure(dependencies, "verification", cause);
+    return verificationFailure(dependencies, cause);
   }
   if (verification.status !== "verified") {
-    return failure(
+    return verificationFailure(
       dependencies,
-      "verification",
-      new Error(verification.reason),
+      verification.cause ?? new Error(verification.reason),
     );
   }
 

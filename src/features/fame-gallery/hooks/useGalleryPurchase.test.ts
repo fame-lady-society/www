@@ -8,7 +8,9 @@ import type {
 import {
   galleryCandidateTokenIdsForArtwork,
   isTokenInGalleryArtPool,
+  logGalleryPurchaseError,
   refreshGalleryAfterPurchase,
+  shouldAutoCloseGalleryPurchaseModal,
 } from "./useGalleryPurchase";
 
 const acquisition: GalleryVerifiedAcquisition = {
@@ -24,6 +26,35 @@ const acquisition: GalleryVerifiedAcquisition = {
 };
 
 describe("gallery purchase hook adapter", () => {
+  it("auto-closes only after a verified purchase", () => {
+    assert.equal(shouldAutoCloseGalleryPurchaseModal("refreshing"), true);
+    assert.equal(shouldAutoCloseGalleryPurchaseModal("verified"), true);
+    assert.equal(
+      shouldAutoCloseGalleryPurchaseModal("confirmed_unverified"),
+      false,
+    );
+    assert.equal(shouldAutoCloseGalleryPurchaseModal("error"), false);
+  });
+
+  it("logs the original purchase error object with its queue stage", () => {
+    const cause = new Error("RPC request failed");
+    const calls: unknown[][] = [];
+    const originalConsoleError = console.error;
+    console.error = (...values: unknown[]) => {
+      calls.push(values);
+    };
+
+    try {
+      logGalleryPurchaseError("verification", cause);
+    } finally {
+      console.error = originalConsoleError;
+    }
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], "[TEST gallery purchase:verification]");
+    assert.strictEqual(calls[0][1], cause);
+  });
+
   it("resolves only same-artwork candidates while retaining duplicate valid routes", () => {
     const selectedHash = acquisition.artworkHash;
     const otherHash = `0x${"c".repeat(64)}` as Hash;

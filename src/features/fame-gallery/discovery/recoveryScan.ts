@@ -54,9 +54,7 @@ export function chunkGalleryCustodyTokenIds(tokenIds: readonly bigint[]) {
     index < tokenIds.length;
     index += GALLERY_CUSTODY_SCAN_BATCH_SIZE
   ) {
-    chunks.push(
-      tokenIds.slice(index, index + GALLERY_CUSTODY_SCAN_BATCH_SIZE),
-    );
+    chunks.push(tokenIds.slice(index, index + GALLERY_CUSTODY_SCAN_BATCH_SIZE));
   }
   return chunks;
 }
@@ -116,10 +114,7 @@ async function readCustodyWithIsolation(
       try {
         return await source.readCustodyStates(chunk, blockNumber);
       } catch {
-        return new Map<
-          bigint,
-          GalleryProjectionResult<GalleryCustodyState>
-        >();
+        return new Map<bigint, GalleryProjectionResult<GalleryCustodyState>>();
       }
     },
     signal,
@@ -161,11 +156,7 @@ export async function scanGalleryCustody({
   assertNotCancelled(signal);
   const scanStartBlock = await source.getBlockNumber();
   const universe: bigint[] = [];
-  for (
-    let tokenId = firstTokenId;
-    tokenId <= lastTokenId;
-    tokenId += 1n
-  ) {
+  for (let tokenId = firstTokenId; tokenId <= lastTokenId; tokenId += 1n) {
     universe.push(tokenId);
   }
 
@@ -193,9 +184,7 @@ export async function scanGalleryCustody({
     await source.getAffectedTokenIds(scanStartBlock, scanEndBlock),
   );
   if (
-    affected.some(
-      (tokenId) => tokenId < firstTokenId || tokenId > lastTokenId,
-    )
+    affected.some((tokenId) => tokenId < firstTokenId || tokenId > lastTokenId)
   ) {
     throw new Error("Gallery custody transfer is outside collection bounds.");
   }
@@ -228,15 +217,18 @@ export async function scanGalleryCustody({
   )) {
     for (const tokenId of tokenIds) {
       const projection = result.get(tokenId);
+      if (projection?.status !== "success") {
+        failed.add(tokenId);
+        continue;
+      }
+      failed.delete(tokenId);
       if (
-        projection?.status === "success" &&
         projection.data.marketplaceHeld &&
         isAddressEqual(projection.data.owner, marketplace)
       ) {
         targets.push(galleryHeldTarget(projection.data));
       } else {
-        failed.add(tokenId);
-        if (projection?.status === "success") held.delete(tokenId);
+        held.delete(tokenId);
       }
     }
   }

@@ -35,6 +35,8 @@ import {
   galleryPurchaseReducer,
   initialGalleryPurchaseState,
   type GalleryPurchaseErrorStage,
+  type GalleryPurchaseEvent,
+  type GalleryPurchaseStatus,
 } from "../transactions/purchaseQueue";
 import {
   galleryApprovalContractRequest,
@@ -91,6 +93,13 @@ function connectionError() {
   return new Error("Connect a wallet to buy with TEST.");
 }
 
+export function logGalleryPurchaseError(
+  stage: GalleryPurchaseErrorStage,
+  cause: unknown,
+) {
+  console.error(`[TEST gallery purchase:${stage}]`, cause);
+}
+
 export function galleryCandidateTokenIdsForArtwork(
   catalog: readonly GalleryArtworkTarget[],
   artworkHash: Hash,
@@ -107,6 +116,12 @@ export function isTokenInGalleryArtPool(
   endIndex: bigint,
 ) {
   return tokenId >= startIndex && tokenId <= endIndex;
+}
+
+export function shouldAutoCloseGalleryPurchaseModal(
+  status: GalleryPurchaseStatus,
+) {
+  return status === "refreshing" || status === "verified";
 }
 
 export async function refreshGalleryAfterPurchase(
@@ -148,16 +163,27 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const inputsRef = useRef(inputs);
   inputsRef.current = inputs;
 
+  const queueDispatch = useCallback((event: GalleryPurchaseEvent) => {
+    if (event.type === "failed") {
+      logGalleryPurchaseError(event.stage, event.cause);
+    } else if (event.type === "verification_failed") {
+      logGalleryPurchaseError("verification", event.cause);
+    } else if (event.type === "refresh_failed") {
+      logGalleryPurchaseError("refresh", event.cause);
+    }
+    dispatch(event);
+  }, []);
+
   const failOutsideQueue = useCallback(
     (stage: GalleryPurchaseErrorStage, cause: unknown) => {
-      dispatch({ type: "failed", stage, cause });
+      queueDispatch({ type: "failed", stage, cause });
       setTransactionModalOpen(true);
       activeAttempt.current = null;
       waitingForConnection.current = false;
       sawConnectModalOpen.current = false;
       setActiveArtworkKey(null);
     },
-    [],
+    [queueDispatch],
   );
 
   const executeAttempt = useCallback(
@@ -311,7 +337,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
           terms,
           allowShellRecovery,
           dependencies: {
-            dispatch,
+            dispatch: queueDispatch,
             readAllowance: (frozen) =>
               publicClient.readContract({
                 abi: fameAbi,
@@ -391,21 +417,19 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 route,
                 addresses: { marketplace, mirror },
                 dependencies: {
-                  readOwnerAt: (blockNumber, shellId) =>
+                  readOwnerAt: (shellId) =>
                     publicClient.readContract({
                       abi: fameMirrorAbi,
                       address: mirror,
                       functionName: "ownerAt",
                       args: [shellId],
-                      blockNumber,
                     }),
-                  readArtworkHash: (blockNumber, shellId) =>
+                  readArtworkHash: (shellId) =>
                     publicClient.readContract({
                       abi: universalPoolArtMarketplaceAbi,
                       address: marketplace,
                       functionName: "artworkHash",
                       args: [shellId],
-                      blockNumber,
                     }),
                 },
               }),
@@ -425,6 +449,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     [
       failOutsideQueue,
       publicClient,
+      queueDispatch,
       switchChainAsync,
       wagmiConfig,
       writeContract,
@@ -480,7 +505,14 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     }
   }, [connectModal, connection.address, executeAttempt, failOutsideQueue]);
 
+  useEffect(() => {
+    if (shouldAutoCloseGalleryPurchaseModal(state.status)) {
+      setTransactionModalOpen(false);
+    }
+  }, [state.status]);
+
   const retry = useCallback(() => {
+    if (state.purchaseHash) return;
     const target =
       activeAttempt.current?.target ??
       selectedTarget.current ??
@@ -498,7 +530,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     };
     setActiveArtworkKey(target.targetId);
     void executeAttempt(true);
-  }, [executeAttempt, state.terms]);
+  }, [executeAttempt, state.purchaseHash, state.terms]);
 
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];

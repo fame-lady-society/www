@@ -10,8 +10,7 @@ import {
   type GalleryCustodyDiscoverySource,
 } from "./discovery";
 
-const marketplace =
-  "0x1111111111111111111111111111111111111111" as Address;
+const marketplace = "0x1111111111111111111111111111111111111111" as Address;
 const outside = "0x2222222222222222222222222222222222222222" as Address;
 const hash =
   "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
@@ -30,8 +29,10 @@ function target(tokenId: bigint): GalleryArtworkTarget {
 function source(options?: {
   held?: readonly bigint[];
   failScan?: boolean;
+  failCustody?: readonly bigint[];
 }): GalleryCustodyDiscoverySource {
   const held = new Set(options?.held ?? []);
+  const failedCustody = new Set(options?.failCustody ?? []);
   return {
     getBlockNumber: async () => 100n,
     async readCustodyStates(tokenIds, blockNumber) {
@@ -39,18 +40,20 @@ function source(options?: {
         throw new Error("rpc unavailable");
       }
       return new Map(
-        tokenIds.map((tokenId) => [
-          tokenId,
-          {
-            status: "success" as const,
-            blockNumber,
-            data: {
-              tokenId,
-              owner: held.has(tokenId) ? marketplace : outside,
-              marketplaceHeld: held.has(tokenId),
+        tokenIds
+          .filter((tokenId) => !failedCustody.has(tokenId))
+          .map((tokenId) => [
+            tokenId,
+            {
+              status: "success" as const,
+              blockNumber,
+              data: {
+                tokenId,
+                owner: held.has(tokenId) ? marketplace : outside,
+                marketplaceHeld: held.has(tokenId),
+              },
             },
-          },
-        ]),
+          ]),
       );
     },
     getAffectedTokenIds: async () => [],
@@ -106,7 +109,10 @@ describe("gallery custody discovery", () => {
       { kind: "hints", tokenIds: [1n] },
       { kind: "scan", tokenIds: [1n, 3n] },
     ]);
-    assert.deepEqual(result.targets.map(({ tokenId }) => tokenId), [1n, 3n]);
+    assert.deepEqual(
+      result.targets.map(({ tokenId }) => tokenId),
+      [1n, 3n],
+    );
   });
 
   it("keeps discovery silent when the full scan cannot produce holdings", async () => {
@@ -120,6 +126,109 @@ describe("gallery custody discovery", () => {
     assert.deepEqual(result.targets, []);
     assert.equal(result.scanCompleted, false);
     assert.equal("error" in result, false);
+  });
+
+  it("preserves revalidated holdings when their full-scan reads fail", async () => {
+    const stages: { kind: string; tokenIds: bigint[] }[] = [];
+    let persistedIds: string[] = [];
+    const result = await discoverGalleryHoldings({
+      source: source({ held: [1n], failCustody: [1n] }),
+      marketplace,
+      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      persist: async (record) => {
+        persistedIds = record.heldTokenIds;
+      },
+      onTargets: (kind, targets) => {
+        stages.push({ kind, tokenIds: targets.map(({ tokenId }) => tokenId) });
+      },
+    });
+
+    assert.deepEqual(stages, [
+      { kind: "hints", tokenIds: [1n] },
+      { kind: "scan", tokenIds: [1n] },
+    ]);
+    assert.deepEqual(result.targets, [target(1n)]);
+    assert.equal(result.scanCompleted, false);
+    assert.deepEqual(persistedIds, ["1"]);
+  });
+
+  it("does not duplicate a held target when only its reconciliation read fails", async () => {
+    const base = source({ held: [1n] });
+    let blockReads = 0;
+    const reconciliationFailure: GalleryCustodyDiscoverySource = {
+      ...base,
+      getBlockNumber: async () => (++blockReads === 1 ? 100n : 101n),
+      getAffectedTokenIds: async () => [1n],
+      readCustodyStates: (tokenIds, blockNumber) =>
+        blockNumber === 101n
+          ? Promise.resolve(new Map())
+          : base.readCustodyStates(tokenIds, blockNumber),
+    };
+
+    const result = await discoverGalleryHoldings({
+      source: reconciliationFailure,
+      marketplace,
+      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      persist: async () => undefined,
+    });
+
+    assert.deepEqual(
+      result.targets.map(({ tokenId }) => tokenId),
+      [1n],
+    );
+    assert.equal(result.scanCompleted, true);
+  });
+
+  it("drops a hint when final hydration proves the token is no longer held", async () => {
+    const base = source({ held: [1n] });
+    let blockReads = 0;
+    let tokenStateReads = 0;
+    let persistedIds: string[] = [];
+    const finallyNotHeld: GalleryCustodyDiscoverySource = {
+      ...base,
+      getBlockNumber: async () => (++blockReads === 1 ? 100n : 101n),
+      getAffectedTokenIds: async () => [1n],
+      readCustodyStates: (tokenIds, blockNumber) =>
+        blockNumber === 101n
+          ? Promise.resolve(new Map())
+          : base.readCustodyStates(tokenIds, blockNumber),
+      async readTokenStates(tokenIds, blockNumber) {
+        tokenStateReads += 1;
+        if (tokenStateReads === 1) {
+          return base.readTokenStates(tokenIds, blockNumber);
+        }
+        return new Map(
+          tokenIds.map((tokenId) => [
+            tokenId,
+            {
+              status: "success" as const,
+              blockNumber,
+              data: {
+                tokenId,
+                owner: outside,
+                marketplaceHeld: false,
+                artworkHash: null,
+                tokenUri: null,
+                artworkError: null,
+              },
+            },
+          ]),
+        );
+      },
+    };
+
+    const result = await discoverGalleryHoldings({
+      source: finallyNotHeld,
+      marketplace,
+      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      persist: async (record) => {
+        persistedIds = record.heldTokenIds;
+      },
+    });
+
+    assert.deepEqual(result.targets, []);
+    assert.deepEqual(persistedIds, []);
+    assert.equal(result.scanCompleted, true);
   });
 
   it("revalidates only requested affected IDs without starting a collection scan", async () => {

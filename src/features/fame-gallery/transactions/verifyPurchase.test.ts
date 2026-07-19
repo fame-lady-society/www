@@ -7,10 +7,7 @@ import {
   type Hash,
   type Hex,
 } from "viem";
-import {
-  fameMirrorAbi,
-  universalPoolArtMarketplaceAbi,
-} from "../../../wagmi";
+import { fameMirrorAbi, universalPoolArtMarketplaceAbi } from "../../../wagmi";
 import type {
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
@@ -21,12 +18,10 @@ import {
   type GalleryReceiptLog,
 } from "./verifyPurchase";
 
-const marketplace =
-  "0x1111111111111111111111111111111111111111" as Address;
+const marketplace = "0x1111111111111111111111111111111111111111" as Address;
 const mirror = "0x2222222222222222222222222222222222222222" as Address;
 const buyer = "0x3333333333333333333333333333333333333333" as Address;
-const recipient =
-  "0x4444444444444444444444444444444444444444" as Address;
+const recipient = "0x4444444444444444444444444444444444444444" as Address;
 const stranger = "0x5555555555555555555555555555555555555555" as Address;
 const transactionHash = `0x${"a".repeat(64)}` as Hash;
 const artworkHash = `0x${"b".repeat(64)}` as Hash;
@@ -121,8 +116,7 @@ function purchased({
   inventoryAfter?: bigint;
   logIndex?: number;
 }) {
-  const path =
-    route.kind === "held" ? 0 : route.poolKind === "mint" ? 1 : 2;
+  const path = route.kind === "held" ? 0 : route.poolKind === "mint" ? 1 : 2;
   const sourceId = route.kind === "held" ? 0n : route.sourceId;
 
   return rawLog({
@@ -215,13 +209,11 @@ function dependencies({
   artwork?: Hash;
 }) {
   return {
-    async readOwnerAt(blockNumber: bigint, shellId: bigint) {
-      assert.equal(blockNumber, 101n);
+    async readOwnerAt(shellId: bigint) {
       assert.equal(shellId, route.shellId);
       return owner;
     },
-    async readArtworkHash(blockNumber: bigint, shellId: bigint) {
-      assert.equal(blockNumber, 101n);
+    async readArtworkHash(shellId: bigint) {
       assert.equal(shellId, route.shellId);
       return artwork;
     },
@@ -345,15 +337,16 @@ describe("successor gallery purchase verification", () => {
       purchased({ route: mintRoute, eventArtwork: otherArtworkHash }),
       purchased({ route: mintRoute, unit: 999n }),
       purchased({ route: mintRoute, premium: 76n }),
-      purchased({ route: mintRoute, inventoryBefore: 11n, inventoryAfter: 10n }),
+      purchased({
+        route: mintRoute,
+        inventoryBefore: 11n,
+        inventoryAfter: 10n,
+      }),
     ];
 
     for (const event of cases) {
       const result = await verifyGalleryPurchase({
-        receipt: receipt(mintRoute, [
-          transfer({ route: mintRoute }),
-          event,
-        ]),
+        receipt: receipt(mintRoute, [transfer({ route: mintRoute }), event]),
         expectedHash: transactionHash,
         terms,
         route: mintRoute,
@@ -374,10 +367,7 @@ describe("successor gallery purchase verification", () => {
 
     for (const event of [wrongPath, wrongSource]) {
       const result = await verifyGalleryPurchase({
-        receipt: receipt(burnRoute, [
-          transfer({ route: burnRoute }),
-          event,
-        ]),
+        receipt: receipt(burnRoute, [transfer({ route: burnRoute }), event]),
         expectedHash: transactionHash,
         terms,
         route: burnRoute,
@@ -397,10 +387,7 @@ describe("successor gallery purchase verification", () => {
 
     for (const event of cases) {
       const result = await verifyGalleryPurchase({
-        receipt: receipt(heldRoute, [
-          event,
-          purchased({ route: heldRoute }),
-        ]),
+        receipt: receipt(heldRoute, [event, purchased({ route: heldRoute })]),
         expectedHash: transactionHash,
         terms,
         route: heldRoute,
@@ -411,11 +398,19 @@ describe("successor gallery purchase verification", () => {
     }
   });
 
-  it("rejects receipt-block owner and artwork mismatches", async () => {
-    for (const deps of [
-      dependencies({ route: heldRoute, owner: stranger }),
-      dependencies({ route: heldRoute, artwork: otherArtworkHash }),
-    ]) {
+  it("rejects current owner and artwork mismatches", async () => {
+    for (const [deps, observedOwner, observedArtwork] of [
+      [
+        dependencies({ route: heldRoute, owner: stranger }),
+        stranger,
+        artworkHash,
+      ],
+      [
+        dependencies({ route: heldRoute, artwork: otherArtworkHash }),
+        recipient,
+        otherArtworkHash,
+      ],
+    ] as const) {
       const result = await verifyGalleryPurchase({
         receipt: receipt(heldRoute),
         expectedHash: transactionHash,
@@ -425,10 +420,29 @@ describe("successor gallery purchase verification", () => {
         dependencies: deps,
       });
       assert.equal(result.status, "confirmed_unverified");
+      if (result.status !== "confirmed_unverified") continue;
+      assert.ok(result.cause instanceof Error);
+      assert.equal(
+        (result.cause as Error & { expectedOwner: Address }).expectedOwner,
+        recipient,
+      );
+      assert.equal(
+        (result.cause as Error & { expectedArtwork: Hash }).expectedArtwork,
+        artworkHash,
+      );
+      assert.equal(
+        (result.cause as Error & { observedOwner: Address }).observedOwner,
+        observedOwner,
+      );
+      assert.equal(
+        (result.cause as Error & { observedArtwork: Hash }).observedArtwork,
+        observedArtwork,
+      );
     }
   });
 
-  it("does not turn receipt-block read failures into a verified result", async () => {
+  it("does not turn current-state read failures into a verified result", async () => {
+    const currentStateReadFailure = new Error("current state read unavailable");
     const result = await verifyGalleryPurchase({
       receipt: receipt(heldRoute),
       expectedHash: transactionHash,
@@ -437,7 +451,7 @@ describe("successor gallery purchase verification", () => {
       addresses: { marketplace, mirror },
       dependencies: {
         async readOwnerAt() {
-          throw new Error("archive read unavailable");
+          throw currentStateReadFailure;
         },
         async readArtworkHash() {
           return artworkHash;
@@ -446,5 +460,13 @@ describe("successor gallery purchase verification", () => {
     });
 
     assert.equal(result.status, "confirmed_unverified");
+    assert.equal(
+      result.status === "confirmed_unverified" && result.reason,
+      "Current purchase state could not be verified.",
+    );
+    assert.strictEqual(
+      result.status === "confirmed_unverified" && result.cause,
+      currentStateReadFailure,
+    );
   });
 });

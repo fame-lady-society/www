@@ -147,14 +147,24 @@ describe("gallery purchase queue", () => {
       "resolve:false",
       "simulate purchase",
       "write purchase",
-      "wait purchase 1",
+      "wait purchase 2",
       "verify",
       "refresh",
     ]);
   });
 
+  it("waits for two purchase confirmations before verifying current state", async () => {
+    const test = harness([1_025n]);
+    await executeGalleryPurchase({ terms, dependencies: test.dependencies });
+
+    assert.ok(test.calls.includes("wait purchase 2"));
+    assert.ok(
+      test.calls.indexOf("verify") > test.calls.indexOf("wait purchase 2"),
+    );
+  });
+
   it("passes the exact simulation requests to both wagmi writes", async () => {
-    const test = harness([0n, 1_025n]);
+    const test = harness([0n]);
     await executeGalleryPurchase({ terms, dependencies: test.dependencies });
 
     const written = test.written();
@@ -162,50 +172,27 @@ describe("gallery purchase queue", () => {
     assert.strictEqual(written.writtenPurchase, test.purchaseRequest);
   });
 
-  for (const visibleAtDepth of [1, 2, 3] as const) {
-    it(`continues when approval becomes visible at depth ${visibleAtDepth}`, async () => {
-      const test = harness([
-        0n,
-        ...Array.from({ length: visibleAtDepth - 1 }, () => 0n),
-        1_025n,
-      ]);
-      const result = await executeGalleryPurchase({
-        terms,
-        dependencies: test.dependencies,
-      });
-
-      assert.equal(result.status, "verified");
-      assert.equal(
-        test.calls.filter((call) => call.startsWith("wait approval")).length,
-        visibleAtDepth,
-      );
-    });
-  }
-
-  it("stops after depth three without simulating a purchase", async () => {
-    const test = harness([0n, 0n, 0n, 0n]);
+  it("trusts a successful approval receipt without rereading allowance", async () => {
+    const test = harness([0n]);
     const result = await executeGalleryPurchase({
       terms,
       dependencies: test.dependencies,
     });
 
-    assert.deepEqual(result.status, "failed");
-    assert.equal(result.status === "failed" && result.stage, "allowance");
-    assert.ok(!test.calls.includes("simulate purchase"));
-  });
-
-  it("resolves fulfillment only after the confirmed approval is visible", async () => {
-    const test = harness([0n, 1_025n]);
-    await executeGalleryPurchase({ terms, dependencies: test.dependencies });
-
+    assert.equal(result.status, "verified");
+    assert.equal(test.calls.filter((call) => call === "allowance").length, 1);
+    assert.deepEqual(
+      test.calls.filter((call) => call.startsWith("wait approval")),
+      ["wait approval 2"],
+    );
     assert.ok(
       test.calls.indexOf("resolve:false") >
-        test.calls.indexOf("wait approval 1"),
+        test.calls.indexOf("wait approval 2"),
     );
   });
 
   it("a retry rechecks allowance and does not repeat a sufficient approval", async () => {
-    const first = harness([0n, 1_025n]);
+    const first = harness([0n]);
     first.dependencies.resolveFulfillment = async () => {
       throw new Error("no shell");
     };
@@ -242,11 +229,13 @@ describe("gallery purchase queue", () => {
     );
   });
 
-  it("verification failure unlocks through the normal error state and shows no result", async () => {
+  it("keeps a mined purchase distinct from a retryable write failure", async () => {
     const test = harness([1_025n]);
+    const archiveReadFailure = new Error("archive read unavailable");
     test.dependencies.verifyPurchase = async () => ({
       status: "confirmed_unverified",
-      reason: "receipt mismatch",
+      reason: "Current purchase state could not be verified.",
+      cause: archiveReadFailure,
     });
     const result = await executeGalleryPurchase({
       terms,
@@ -257,8 +246,15 @@ describe("gallery purchase queue", () => {
       initialGalleryPurchaseState,
     );
 
-    assert.equal(result.status, "failed");
-    assert.equal(state.status, "error");
+    assert.equal(result.status, "confirmed_unverified");
+    assert.equal(state.status, "confirmed_unverified");
+    assert.equal(state.purchaseHash, purchaseHash);
+    assert.equal(state.failure?.stage, "verification");
+    assert.strictEqual(state.failure?.cause, archiveReadFailure);
     assert.equal(state.acquisition, null);
+    assert.equal(
+      test.calls.filter((call) => call === "write purchase").length,
+      1,
+    );
   });
 });

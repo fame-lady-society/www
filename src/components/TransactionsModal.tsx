@@ -13,7 +13,7 @@ export type Transaction<S = string, T = unknown> = {
   context?: T;
 };
 
-const TransactionItem: FC<{
+export const TransactionItem: FC<{
   transaction: Transaction;
   onConfirmed: (tx: Transaction) => void;
 }> = ({ transaction, onConfirmed: doConfirmed }) => {
@@ -22,9 +22,8 @@ const TransactionItem: FC<{
   }, [doConfirmed, transaction]);
   return (
     <>
-      -
       <Typography ml={1} mb={1} variant="body2" color="text.secondary">
-        {`${transaction.hash ? "Submitting" : "Awaiting"} ${transaction.kind} transaction`}
+        {`${transaction.hash ? "Submitted" : "Awaiting"} ${transaction.kind} transaction`}
       </Typography>
       {transaction.hash && (
         <TransactionProgress
@@ -42,7 +41,17 @@ export const TransactionsModal: FC<{
   transactions?: Transaction[];
   onTransactionConfirmed: (tx: Transaction) => void;
   topContent?: ReactNode;
-}> = ({ open, onClose, transactions, onTransactionConfirmed, topContent }) => {
+  bottomContent?: ReactNode;
+  title?: ReactNode;
+}> = ({
+  open,
+  onClose,
+  transactions,
+  onTransactionConfirmed,
+  topContent,
+  bottomContent,
+  title = "Submitting Transaction",
+}) => {
   return (
     <Dialog open={open} onClose={onClose}>
       <Card
@@ -59,7 +68,7 @@ export const TransactionsModal: FC<{
           },
         }}
       >
-        <CardHeader avatar={<UploadIcon />} title="Submitting Transaction" />
+        <CardHeader avatar={<UploadIcon />} title={title} />
         <CardContent>
           {topContent}
           {transactions?.map((tx) => (
@@ -69,6 +78,7 @@ export const TransactionsModal: FC<{
               onConfirmed={onTransactionConfirmed}
             />
           ))}
+          {bottomContent}
         </CardContent>
       </Card>
     </Dialog>
