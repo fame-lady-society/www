@@ -30,7 +30,6 @@ export type GalleryFulfillmentReadSource = {
 };
 
 type FreezeGalleryBuyerTermsInput = {
-  chainId: number;
   account: Address;
   selectedTarget: {
     targetId: string;
@@ -39,20 +38,17 @@ type FreezeGalleryBuyerTermsInput = {
   artworkHash: Hash;
   unit: bigint;
   displayedPremium: bigint;
-  allowanceTarget: Address;
 };
 
 export function freezeGalleryBuyerTerms({
-  chainId,
   account,
   selectedTarget,
   artworkHash,
   unit,
   displayedPremium,
-  allowanceTarget,
 }: FreezeGalleryBuyerTermsInput): GalleryFrozenBuyerTerms {
   return Object.freeze({
-    chainId,
+    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
     account,
     recipient: account,
     selectedTarget: Object.freeze({ ...selectedTarget }),
@@ -60,7 +56,7 @@ export function freezeGalleryBuyerTerms({
     unit,
     maxPremium: displayedPremium,
     maximumSpend: unit + displayedPremium,
-    allowanceTarget,
+    allowanceTarget: marketplace,
   });
 }
 

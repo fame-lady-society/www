@@ -70,7 +70,6 @@ function mockSource({
 
 function frozenTerms(displayedPremium = 25n) {
   return freezeGalleryBuyerTerms({
-    chainId: config.chainId,
     account: buyer,
     selectedTarget: {
       targetId: "pool:mint:7",
@@ -79,7 +78,6 @@ function frozenTerms(displayedPremium = 25n) {
     artworkHash: selectedArtwork,
     unit: 1_000n,
     displayedPremium,
-    allowanceTarget: marketplace,
   });
 }
 
