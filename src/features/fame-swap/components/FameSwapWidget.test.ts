@@ -11,6 +11,7 @@ import {
   FameSwapHeading,
   fameSwapErrorDetails,
   fameSwapErrorSummary,
+  fameSwapPresentation,
   quoteSummary,
 } from "./FameSwapWidget";
 
@@ -26,6 +27,49 @@ describe("FameSwapWidget focus target", () => {
     assert.match(html, /id="fame-swap-heading"/);
     assert.match(html, /tabindex="-1"/);
     assert.match(html, />FAME swap<\/h4>/);
+  });
+
+  it("uses a smaller heading in compact mode", () => {
+    const html = renderToStaticMarkup(
+      createElement(FameSwapHeading, { compact: true }),
+    );
+    assert.match(html, />FAME swap<\/h5>/);
+  });
+});
+
+describe("FameSwapWidget presentation contract", () => {
+  it("compact mode is buy-FAME only with essential status and no sell/advanced/route-map/diagnostics", () => {
+    const compact = fameSwapPresentation("compact");
+
+    assert.equal(compact.mode, "compact");
+    assert.equal(compact.forceBuyMode, true);
+    assert.equal(compact.showModeTabs, false);
+    assert.equal(compact.showSwapSideToggle, false);
+    assert.equal(compact.showAdvancedControls, false);
+    assert.equal(compact.showRouteMap, false);
+    assert.equal(compact.showDiagnostics, false);
+    assert.equal(compact.showAmountInput, true);
+    assert.equal(compact.showQuotePanel, true);
+    assert.equal(compact.showTransactionTimeline, true);
+    assert.equal(compact.maxWidth, 480);
+    assert.equal(compact.headingVariant, "h5");
+  });
+
+  it("full mode retains all existing controls and behavior", () => {
+    const full = fameSwapPresentation("full");
+
+    assert.equal(full.mode, "full");
+    assert.equal(full.forceBuyMode, false);
+    assert.equal(full.showModeTabs, true);
+    assert.equal(full.showSwapSideToggle, true);
+    assert.equal(full.showAdvancedControls, true);
+    assert.equal(full.showRouteMap, true);
+    assert.equal(full.showDiagnostics, true);
+    assert.equal(full.showAmountInput, true);
+    assert.equal(full.showQuotePanel, true);
+    assert.equal(full.showTransactionTimeline, true);
+    assert.equal(full.maxWidth, 760);
+    assert.equal(full.headingVariant, "h4");
   });
 });
 
