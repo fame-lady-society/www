@@ -246,12 +246,8 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
             </Stack>
 
             <Typography variant="body2" color="text.secondary">
-              Rotation bound is calculated automatically as the target&apos;s
-              current zero-based FIFO index plus one (
-              <Typography component="span" fontWeight={700}>
-                maxRotations = {resolution.maxRotations}
-              </Typography>
-              ). It is not user-editable. The paired FAME unit remains conserved.
+              Thie NFT is {resolution.maxRotations}{" "}
+              away.
             </Typography>
 
             {/* Wallet recovery */}
