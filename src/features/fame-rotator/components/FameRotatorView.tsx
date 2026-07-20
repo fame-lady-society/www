@@ -28,7 +28,7 @@ export type FameRotatorWalletStatus =
 export interface FameRotatorViewProps {
   resolution: BurnPoolTargetResolution;
   walletStatus: FameRotatorWalletStatus;
-  walletMessage: string;
+  walletMessage?: string;
   walletControl?: ReactNode;
   /** Complete owned inventory when selectable. */
   ownedIds: readonly number[];
@@ -245,11 +245,6 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
               />
             </Stack>
 
-            <Typography variant="body2" color="text.secondary">
-              This NFT is {resolution.maxRotations}{" "}rotation
-              {resolution.maxRotations === 1 ? "" : "s"} away from being minted.
-            </Typography>
-
             {/* Wallet recovery */}
             <Stack
               component="section"
@@ -258,9 +253,11 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
               data-testid="wallet-region"
               data-wallet-status={walletStatus}
             >
-              <Typography variant="body2" color="text.secondary">
-                {walletMessage}
-              </Typography>
+              {walletMessage ? (
+                <Typography variant="body2" color="text.secondary">
+                  {walletMessage}
+                </Typography>
+              ) : null}
               {walletControl}
             </Stack>
 
@@ -271,8 +268,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                 data-testid="disconnected-guidance"
               >
                 Connect a Base wallet to choose an offered Society NFT and
-                complete approval or rotation. You can inspect this target while
-                disconnected.
+                complete approval or rotation.
               </Typography>
             ) : null}
 
@@ -284,7 +280,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                 data-preserved-target={resolution.tokenId}
               >
                 Switch to Base to continue rotating for Society #
-                {resolution.tokenId}. Your target selection is preserved.
+                {resolution.tokenId}.
               </Typography>
             ) : null}
 
@@ -321,9 +317,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                   Choose the Society NFT you will offer
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  You must explicitly select one owned NFT. Owning an offered
-                  NFT is enough for rotation even when your FAME balance is
-                  below one unit or skip mode is on.
+                  Select one owned NFT.
                 </Typography>
                 <Stack
                   direction="row"
@@ -438,7 +432,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                   </Button>
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  Approval and rotation are separate actions. After approval
+                  After approval
                   succeeds, confirm rotation with a fresh pool snapshot and
                   bound.
                 </Typography>

@@ -147,7 +147,7 @@ export type FameRotatorExecutionEnvironment =
   | {
       status: "ready";
       canExecute: true;
-      message: "Wallet is ready.";
+      message: undefined;
     };
 
 export interface ResolveFameRotatorExecutionEnvironmentInput {
@@ -217,7 +217,7 @@ export function resolveFameRotatorExecutionEnvironment({
     };
   }
 
-  return { status: "ready", canExecute: true, message: "Wallet is ready." };
+  return { status: "ready", canExecute: true, message: undefined };
 }
 
 export interface UseFameRotatorExecutionEnvironmentInput {

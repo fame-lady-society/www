@@ -37,7 +37,7 @@ export type FameRotatorPreflight =
       canSelectOffered: true;
       canRotate: false;
       ownedIds: readonly number[];
-      message: string;
+      message: undefined;
     }
   | {
       status: "needs_skip_repair";
@@ -162,8 +162,7 @@ export function projectFameRotatorPreflight({
       canSelectOffered: true,
       canRotate: false,
       ownedIds: ownership.ownedIds,
-      message:
-        "Select the exact Society NFT you will offer. Approval and rotation stay separate.",
+      message: undefined,
     };
   }
 

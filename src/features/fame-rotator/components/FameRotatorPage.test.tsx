@@ -266,7 +266,7 @@ describe("FameRotatorView", () => {
   it("exposes bound, keyboard-friendly controls, and mobile stacking hooks", () => {
     const html = renderView();
     assert.match(html, /data-max-rotations="3"/);
-    assert.match(html, /3\s*rotations?\s*away from being minted/i);
+    assert.match(html, /FIFO position 3 · bound 3/);
     assert.match(html, /aria-label="Approve offered Society NFT for rotator"/);
     assert.match(html, /aria-label="Rotate offered Society NFT for target"/);
     assert.match(html, /aria-pressed="true"/);
