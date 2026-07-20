@@ -455,8 +455,9 @@ export function projectRotationOwnershipProof({
 }
 
 /**
- * Whether a mined transaction may inherit the frozen rotation intent.
- * Only exact matching sender, destination, zero value, function, and args.
+ * Whether a mined transaction may inherit the frozen intent.
+ * Only exact matching sender, destination (mirror for approve, rotator for
+ * rotate), zero value, function, and args.
  */
 export function minedTransactionMatchesFrozenIntent({
   from,
@@ -474,7 +475,9 @@ export function minedTransactionMatchesFrozenIntent({
   expectedInput: Hex;
 }): boolean {
   if (from.toLowerCase() !== frozen.account.toLowerCase()) return false;
-  if (!to || to.toLowerCase() !== frozen.rotator.toLowerCase()) return false;
+  const expectedTo =
+    frozen.action === "approve" ? frozen.mirror : frozen.rotator;
+  if (!to || to.toLowerCase() !== expectedTo.toLowerCase()) return false;
   if (value !== 0n) return false;
   if (input.toLowerCase() !== expectedInput.toLowerCase()) return false;
   return true;
