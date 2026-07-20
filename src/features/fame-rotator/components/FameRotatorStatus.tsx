@@ -206,6 +206,13 @@ export function FameRotatorStatus({
     state.error?.retryable &&
     !state.error.blockRetryWrite &&
     onRetry;
+  // Never offer Dismiss while a mined write still needs ownership proof or
+  // when blockRetryWrite forbids another mutation (R21 / KTD12).
+  const writeBlocked =
+    state.error?.blockRetryWrite === true ||
+    state.status === "verification_pending" ||
+    state.status === "mined_pending_proof";
+  const showDismiss = Boolean(onReset) && !writeBlocked;
   const explorerHash = state.effectiveHash ?? state.hash;
 
   return (
@@ -251,7 +258,7 @@ export function FameRotatorStatus({
           </Link>
         </Typography>
       ) : null}
-      {showVerificationRetry || showRetry || onReset ? (
+      {showVerificationRetry || showRetry || showDismiss ? (
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {showVerificationRetry ? (
             <Button
@@ -275,7 +282,7 @@ export function FameRotatorStatus({
               Try again
             </Button>
           ) : null}
-          {onReset ? (
+          {showDismiss ? (
             <Button
               type="button"
               size="small"

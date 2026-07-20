@@ -391,6 +391,28 @@ describe("executeRotatorTransaction — rotation", () => {
     );
   });
 
+  it("getTransaction failure after a successful receipt enters mined/verifying without re-arming writes", async () => {
+    const { events, deps } = baseDeps({
+      getTransaction: async () => {
+        throw new Error("RPC pruned transaction");
+      },
+    });
+    const result = await executeRotatorTransaction(rotationRequest, deps);
+    assert.equal(result.status, "verification_pending");
+    assert.equal(
+      events.some((e) => e.type === "mined"),
+      true,
+    );
+    assert.equal(
+      events.some((e) => e.type === "verification_pending"),
+      true,
+    );
+    assert.equal(
+      events.some((e) => e.type === "failed"),
+      false,
+    );
+  });
+
   it("historical read failure enters mined/verifying; retry path is without another write", async () => {
     const { events, deps } = baseDeps({
       readRotationOwnershipAtBlock: async () => ({

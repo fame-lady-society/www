@@ -193,5 +193,28 @@ describe("FameRotatorStatus", () => {
     );
     assert.match(html, /Retry ownership proof/);
     assert.doesNotMatch(html, />Try again</);
+    // Dismiss would re-arm writes and wipe pending proof — must stay hidden.
+    assert.doesNotMatch(html, /Dismiss/);
+  });
+
+  it("hides Dismiss when ownership mismatch blocks another write", () => {
+    const html = renderToStaticMarkup(
+      createElement(FameRotatorStatus, {
+        state: state({
+          status: "failed",
+          hash: HASH,
+          effectiveHash: HASH,
+          error: {
+            kind: "ownership_mismatch",
+            message: "Ownership does not match.",
+            retryable: false,
+            shouldRefresh: true,
+            blockRetryWrite: true,
+          },
+        }),
+        onReset: () => undefined,
+      }),
+    );
+    assert.doesNotMatch(html, /Dismiss/);
   });
 });

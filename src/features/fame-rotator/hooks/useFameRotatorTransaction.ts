@@ -197,8 +197,26 @@ export async function executeRotatorTransaction(
     const effectiveHash =
       replacement.current?.hash ?? receipt.transactionHash ?? hash;
 
+    // Receipt already mined: identity/proof failures must never re-arm writes
+    // as a bare receipt_failure (R21 / KTD12).
+    let minedTx: RotatorMinedTransaction;
+    try {
+      minedTx = await dependencies.getTransaction(effectiveHash);
+    } catch {
+      dependencies.dispatch({
+        type: "mined",
+        hash: effectiveHash,
+        blockNumber: receipt.blockNumber,
+      });
+      dependencies.dispatch({ type: "verification_pending" });
+      return {
+        status: "verification_pending",
+        hash: effectiveHash,
+        blockNumber: receipt.blockNumber,
+      };
+    }
+
     // Effective mined transaction must match frozen sender/destination/calldata.
-    const minedTx = await dependencies.getTransaction(effectiveHash);
     const matches = minedTransactionMatchesFrozenIntent({
       from: minedTx.from,
       to: minedTx.to,
@@ -230,8 +248,16 @@ export async function executeRotatorTransaction(
     stage = "verification";
 
     if (action === "approve") {
-      const authorized =
-        (await dependencies.confirmApprovalAuthorization?.()) ?? true;
+      if (!dependencies.confirmApprovalAuthorization) {
+        // Fail closed: never mark approval verified without a re-read callback.
+        dependencies.dispatch({ type: "verification_pending" });
+        return {
+          status: "verification_pending",
+          hash: effectiveHash,
+          blockNumber: receipt.blockNumber,
+        };
+      }
+      const authorized = await dependencies.confirmApprovalAuthorization();
       if (!authorized) {
         const error = approvalNotConfirmedError();
         dependencies.dispatch({ type: "failed", error });
