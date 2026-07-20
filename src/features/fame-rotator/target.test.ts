@@ -173,5 +173,7 @@ describe("resolveBurnPoolTarget", () => {
     assert.match(ROTATION_EXCHANGE_EXPLANATION, /reverts/i);
     assert.match(ROTATION_EXCHANGE_EXPLANATION, /keep your NFT/i);
     assert.match(ROTATION_EXCHANGE_EXPLANATION, /burn-pool target/i);
+    assert.match(ROTATION_EXCHANGE_EXPLANATION, /bound/i);
+    assert.match(ROTATION_EXCHANGE_EXPLANATION, /FAME unit/i);
   });
 });

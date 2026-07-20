@@ -246,8 +246,8 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
             </Stack>
 
             <Typography variant="body2" color="text.secondary">
-              Thie NFT is {resolution.maxRotations}{" "}
-              away.
+              This NFT is {resolution.maxRotations}{" "}rotation
+              {resolution.maxRotations === 1 ? "" : "s"} away from being minted.
             </Typography>
 
             {/* Wallet recovery */}
