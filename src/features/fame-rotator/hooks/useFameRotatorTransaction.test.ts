@@ -5,6 +5,7 @@ import { encodeFunctionData } from "viem";
 import { fameBurnPoolRotatorAbi, fameMirrorAbi } from "@/wagmi";
 import {
   executeRotatorTransaction,
+  waitForOfferedAuthorization,
   type ExecuteRotatorTransactionDependencies,
   type ExecuteRotatorTransactionResult,
 } from "./useFameRotatorTransaction";
@@ -123,6 +124,39 @@ function baseDeps(
   return { events, deps };
 }
 
+describe("waitForOfferedAuthorization", () => {
+  it("returns true once ownership and authorization become visible", async () => {
+    let attempt = 0;
+    const ok = await waitForOfferedAuthorization({
+      attempts: 5,
+      delayMs: 0,
+      read: async () => {
+        attempt += 1;
+        return {
+          owned: true,
+          authorized: attempt >= 3,
+        };
+      },
+    });
+    assert.equal(ok, true);
+    assert.equal(attempt, 3);
+  });
+
+  it("returns false after exhausting attempts without authorization", async () => {
+    let attempt = 0;
+    const ok = await waitForOfferedAuthorization({
+      attempts: 3,
+      delayMs: 0,
+      read: async () => {
+        attempt += 1;
+        return { owned: true, authorized: false };
+      },
+    });
+    assert.equal(ok, false);
+    assert.equal(attempt, 3);
+  });
+});
+
 describe("executeRotatorTransaction — approval", () => {
   it("progresses through simulation, wallet, broadcast, receipt, and verified authorization", async () => {
     const order: string[] = [];
@@ -148,8 +182,9 @@ describe("executeRotatorTransaction — approval", () => {
           transactionHash: HASH,
         };
       },
-      confirmApprovalAuthorization: async () => {
+      confirmApprovalAuthorization: async ({ blockNumber }) => {
         order.push("confirmAuth");
+        assert.equal(blockNumber, 42n);
         return true;
       },
       refreshLatest: async () => {
@@ -172,6 +207,54 @@ describe("executeRotatorTransaction — approval", () => {
       "started>wallet_requested>broadcast>mined>verified",
     );
     assert.equal(events[0]?.type === "started" && events[0].action, "approve");
+  });
+
+  it("does not error when authorization is not yet readable — waits then verifies", async () => {
+    let reads = 0;
+    const { events, deps } = baseDeps({
+      expectedInput: approvalInput,
+      frozenIntent: frozenApprove(),
+      getTransaction: async () => matchingTx(approvalInput, MIRROR),
+      // The hook's confirm callback owns polling; here we emulate a polled
+      // confirm that only becomes true after stale reads.
+      confirmApprovalAuthorization: async () =>
+        waitForOfferedAuthorization({
+          attempts: 5,
+          delayMs: 0,
+          read: async () => {
+            reads += 1;
+            return { owned: true, authorized: reads >= 3 };
+          },
+        }),
+    });
+
+    const result = await executeRotatorTransaction(approvalRequest, deps);
+    assert.equal(result.status, "verified");
+    assert.equal(reads, 3);
+    assert.equal(
+      events.some((e) => e.type === "failed"),
+      false,
+    );
+  });
+
+  it("keeps authorization unreadable after approval as verification_pending, not a hard error", async () => {
+    const { events, deps } = baseDeps({
+      expectedInput: approvalInput,
+      frozenIntent: frozenApprove(),
+      getTransaction: async () => matchingTx(approvalInput, MIRROR),
+      confirmApprovalAuthorization: async () => false,
+    });
+
+    const result = await executeRotatorTransaction(approvalRequest, deps);
+    assert.equal(result.status, "verification_pending");
+    assert.equal(
+      events.some((e) => e.type === "failed"),
+      false,
+    );
+    assert.equal(
+      events.some((e) => e.type === "verification_pending"),
+      true,
+    );
   });
 
   it("keeps rejected, reverted, cancelled, and replaced approvals distinct", async () => {

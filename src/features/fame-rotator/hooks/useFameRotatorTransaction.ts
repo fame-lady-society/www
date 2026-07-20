@@ -80,9 +80,14 @@ export interface ExecuteRotatorTransactionDependencies {
   /**
    * After a successful approval receipt: re-read ownership + authorization.
    * Return true only when the initiating account still owns the NFT and the
-   * rotator is authorized.
+   * rotator is authorized. Called with the receipt block so the read can pin
+   * to mined state; implementations should poll until visible rather than
+   * failing on the first stale RPC response.
    */
-  confirmApprovalAuthorization?: () => Promise<boolean>;
+  confirmApprovalAuthorization?: (context: {
+    blockNumber: bigint;
+    hash: Hash;
+  }) => Promise<boolean>;
   /**
    * After a successful rotation receipt: read ownerAt at the receipt block.
    * Null owners mean historical read failure → verification_pending.
@@ -132,16 +137,6 @@ function ownershipMismatchError(): RotatorTransactionError {
     retryable: false,
     shouldRefresh: true,
     blockRetryWrite: true,
-  };
-}
-
-function approvalNotConfirmedError(): RotatorTransactionError {
-  return {
-    kind: "contract_reverted",
-    message:
-      "Approval mined, but the rotator is still not authorized for this NFT. Try approving again.",
-    retryable: true,
-    shouldRefresh: true,
   };
 }
 
@@ -257,11 +252,21 @@ export async function executeRotatorTransaction(
           blockNumber: receipt.blockNumber,
         };
       }
-      const authorized = await dependencies.confirmApprovalAuthorization();
+      // Stay in mined_pending_proof while the callback polls — do not fail on
+      // the first stale post-mine read (RPC lag after approval lands).
+      const authorized = await dependencies.confirmApprovalAuthorization({
+        blockNumber: receipt.blockNumber,
+        hash: effectiveHash,
+      });
       if (!authorized) {
-        const error = approvalNotConfirmedError();
-        dependencies.dispatch({ type: "failed", error });
-        return { status: "failed", error };
+        // Durable pending proof: do not re-arm a second approve write while the
+        // receipt is known; user can retry the authorization read.
+        dependencies.dispatch({ type: "verification_pending" });
+        return {
+          status: "verification_pending",
+          hash: effectiveHash,
+          blockNumber: receipt.blockNumber,
+        };
       }
       dependencies.dispatch({ type: "verified" });
       // Discard prior rotation prep and re-read ownership after approval proof.
@@ -369,35 +374,44 @@ export async function readOfferedOwnershipAndAuthorization(
     rotator,
     account,
     offeredId,
+    blockNumber,
   }: {
     mirror: Address;
     rotator: Address;
     account: Address;
     offeredId: bigint;
+    /** When set, pin ownership/approval reads to this block. */
+    blockNumber?: bigint;
   },
 ): Promise<{
   owned: boolean;
   authorized: boolean;
   owner: Address | null;
 }> {
+  const block =
+    blockNumber === undefined ? {} : ({ blockNumber } as const);
+
   const [owner, getApproved, isApprovedForAll] = await Promise.all([
     client.readContract({
       address: mirror,
       abi: fameMirrorAbi,
       functionName: "ownerAt",
       args: [offeredId],
+      ...block,
     }),
     client.readContract({
       address: mirror,
       abi: fameMirrorAbi,
       functionName: "getApproved",
       args: [offeredId],
+      ...block,
     }),
     client.readContract({
       address: mirror,
       abi: fameMirrorAbi,
       functionName: "isApprovedForAll",
       args: [account, rotator],
+      ...block,
     }),
   ]);
 
@@ -418,6 +432,45 @@ export async function readOfferedOwnershipAndAuthorization(
     authorized,
     owner: typeof owner === "string" && isAddress(owner) ? owner : null,
   };
+}
+
+/**
+ * Poll until ownership + rotator authorization are visible after an approval
+ * receipt. First reads pin to the receipt block; later attempts also try
+ * `latest` so lagging archive/indexers can catch up.
+ */
+export async function waitForOfferedAuthorization({
+  read,
+  attempts = 10,
+  delayMs = 800,
+}: {
+  read: (attempt: number) => Promise<{ owned: boolean; authorized: boolean }>;
+  attempts?: number;
+  delayMs?: number;
+}): Promise<boolean> {
+  if (!Number.isInteger(attempts) || attempts < 1) {
+    throw new Error("waitForOfferedAuthorization attempts must be >= 1");
+  }
+  if (!Number.isFinite(delayMs) || delayMs < 0) {
+    throw new Error("waitForOfferedAuthorization delayMs must be >= 0");
+  }
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const auth = await read(attempt);
+      if (auth.owned && auth.authorized) {
+        return true;
+      }
+    } catch {
+      // RPC blip — keep polling until attempts are exhausted.
+    }
+    if (attempt < attempts - 1) {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, delayMs);
+      });
+    }
+  }
+  return false;
 }
 
 export async function readRotationOwnershipAtBlock(
@@ -528,6 +581,9 @@ export interface PendingRotationProof {
   offeredId: bigint;
   recipient: Address;
   mirror: Address;
+  rotator: Address;
+  account: Address;
+  kind: "rotation" | "approval";
 }
 
 export interface UseFameRotatorTransactionInput {
@@ -575,6 +631,8 @@ function isWritePending(status: RotatorTransactionState["status"]): boolean {
     status === "broadcast" ||
     status === "confirming" ||
     status === "mined_pending_proof"
+    // verification_pending is not a write — user may retry proof — but
+    // gate.pending stays true while still inside approve()/rotate() polling.
   );
 }
 
@@ -757,14 +815,45 @@ export function useFameRotatorTransaction({
           getTransaction,
           expectedInput,
           frozenIntent,
-          confirmApprovalAuthorization: async () => {
-            const auth = await readOfferedOwnershipAndAuthorization(client, {
-              mirror: context.mirror,
-              rotator: context.rotator,
-              account: context.account,
-              offeredId: context.offeredId,
+          confirmApprovalAuthorization: async ({ blockNumber }) => {
+            // Do not fail on the first post-mine read — public RPCs often lag
+            // the receipt by a few hundred ms. Poll receipt block, then latest.
+            return waitForOfferedAuthorization({
+              attempts: 12,
+              delayMs: 750,
+              read: async (attempt) => {
+                // Early attempts pin to the receipt block; later ones also try
+                // latest so non-archive nodes that lag historical state can
+                // still observe the landed approval.
+                const preferLatest = attempt >= 3;
+                if (!preferLatest) {
+                  return readOfferedOwnershipAndAuthorization(client, {
+                    mirror: context.mirror,
+                    rotator: context.rotator,
+                    account: context.account,
+                    offeredId: context.offeredId,
+                    blockNumber,
+                  });
+                }
+                const atBlock = await readOfferedOwnershipAndAuthorization(
+                  client,
+                  {
+                    mirror: context.mirror,
+                    rotator: context.rotator,
+                    account: context.account,
+                    offeredId: context.offeredId,
+                    blockNumber,
+                  },
+                );
+                if (atBlock.owned && atBlock.authorized) return atBlock;
+                return readOfferedOwnershipAndAuthorization(client, {
+                  mirror: context.mirror,
+                  rotator: context.rotator,
+                  account: context.account,
+                  offeredId: context.offeredId,
+                });
+              },
             });
-            return auth.owned && auth.authorized;
           },
           // Discard prior rotation prep after approval proof; refresh inventory.
           refreshLatest: async () => {
@@ -772,6 +861,22 @@ export function useFameRotatorTransaction({
             await refresh();
           },
         });
+
+        if (result.status === "verification_pending") {
+          pendingProofRef.current = {
+            kind: "approval",
+            hash: result.hash,
+            blockNumber: result.blockNumber,
+            targetId: 0n,
+            offeredId: context.offeredId,
+            recipient: context.account,
+            mirror: context.mirror,
+            rotator: context.rotator,
+            account: context.account,
+          };
+        } else if (result.status === "verified") {
+          pendingProofRef.current = null;
+        }
 
         return result;
       });
@@ -911,12 +1016,15 @@ export function useFameRotatorTransaction({
 
         if (result.status === "verification_pending") {
           pendingProofRef.current = {
+            kind: "rotation",
             hash: result.hash,
             blockNumber: result.blockNumber,
             targetId: frozen.context.targetId,
             offeredId: frozen.context.offeredId,
             recipient: frozen.context.recipient,
             mirror: frozen.context.mirror,
+            rotator: frozen.context.rotator,
+            account: frozen.context.account,
           };
         } else if (result.status === "verified") {
           pendingProofRef.current = null;
@@ -944,6 +1052,51 @@ export function useFameRotatorTransaction({
     const client = frozenClientRef.current ?? publicClient;
     if (!pending || !client) {
       return { status: "blocked" as const };
+    }
+
+    if (pending.kind === "approval") {
+      const authorized = await waitForOfferedAuthorization({
+        attempts: 8,
+        delayMs: 500,
+        read: async (attempt) => {
+          const preferLatest = attempt >= 2;
+          const baseArgs = {
+            mirror: pending.mirror,
+            rotator: pending.rotator,
+            account: pending.account,
+            offeredId: pending.offeredId,
+          };
+          if (!preferLatest) {
+            return readOfferedOwnershipAndAuthorization(client, {
+              ...baseArgs,
+              blockNumber: pending.blockNumber,
+            });
+          }
+          const atBlock = await readOfferedOwnershipAndAuthorization(client, {
+            ...baseArgs,
+            blockNumber: pending.blockNumber,
+          });
+          if (atBlock.owned && atBlock.authorized) return atBlock;
+          return readOfferedOwnershipAndAuthorization(client, baseArgs);
+        },
+      });
+      if (!authorized) {
+        dispatch({ type: "verification_pending" });
+        return {
+          status: "verification_pending" as const,
+          hash: pending.hash,
+          blockNumber: pending.blockNumber,
+        };
+      }
+      pendingProofRef.current = null;
+      dispatch({ type: "verified" });
+      onApprovalVerified?.();
+      try {
+        await refresh();
+      } catch {
+        // Keep verified; inventory refresh is best-effort after proof.
+      }
+      return { status: "verified" as const, hash: pending.hash };
     }
 
     try {
@@ -993,7 +1146,7 @@ export function useFameRotatorTransaction({
         blockNumber: pending.blockNumber,
       };
     }
-  }, [publicClient, refresh]);
+  }, [onApprovalVerified, publicClient, refresh]);
 
   const reset = useCallback(() => {
     pendingProofRef.current = null;
@@ -1002,8 +1155,9 @@ export function useFameRotatorTransaction({
 
   return {
     state,
-    // Gate pending is mirrored by non-idle reducer statuses during a run.
-    isPending: isWritePending(state.status),
+    // Include gate.pending so UI stays disabled while approval authorization
+    // is still being polled after the receipt (status may already be mined).
+    isPending: isWritePending(state.status) || gate.current.pending,
     pendingProof: pendingProofRef.current,
     approve,
     rotate,

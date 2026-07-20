@@ -278,12 +278,25 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
       (transaction.state.status === "refresh_failed_after_verified" &&
         transaction.state.action === "approve"));
 
-  // Approval needed when not yet authorized; rotate when authorized.
+  // Authorization still loading (or settling after a just-mined approval).
+  // Do not offer Approve/Rotate until the read resolves — avoids flashing an
+  // error or re-prompting approve while the receipt is still catching up.
+  const authorizationSettled =
+    authorizationQuery.isFetched && !authorizationQuery.isFetching;
+
+  // Approval needed when not yet authorized; rotate only after a settled
+  // true authorization read (R14: receipt + fresh auth before rotate).
   const canApprove =
-    writeBase && authorized === false && writeStatusAllowsAction;
+    writeBase &&
+    authorizationSettled &&
+    authorized === false &&
+    writeStatusAllowsAction;
 
   const canRotate =
-    writeBase && authorized === true && writeStatusAllowsAction;
+    writeBase &&
+    authorizationSettled &&
+    authorized === true &&
+    writeStatusAllowsAction;
 
   const inventoryMessage = useMemo(() => {
     if (preflight.preflight.status === "incomplete_inventory") {
@@ -314,8 +327,14 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
 
   const handleApprove = () => {
     if (selectedOfferedId === null) return;
-    void transaction.approve(selectedOfferedId).then(() => {
-      void authorizationQuery.refetch();
+    void transaction.approve(selectedOfferedId).then(async (result) => {
+      // Only expose Rotate after a verified approval and a fresh true auth read.
+      if (result.status === "verified") {
+        await authorizationQuery.refetch();
+      } else if (result.status === "verification_pending") {
+        // Keep polling auth without re-arming writes; Rotate stays disabled.
+        await authorizationQuery.refetch();
+      }
     });
   };
 

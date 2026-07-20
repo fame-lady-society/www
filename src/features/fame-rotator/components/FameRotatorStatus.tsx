@@ -82,10 +82,15 @@ export function rotatorTransactionStatusCopy(
       };
     case "verification_pending":
       return {
-        title: "Mined — ownership proof pending",
+        title:
+          state.action === "approve"
+            ? "Mined — waiting for approval to land"
+            : "Mined — ownership proof pending",
         detail:
           state.error?.message ??
-          "The transaction mined, but ownership could not be verified yet. Retry proof without sending another transaction.",
+          (state.action === "approve"
+            ? "Approval mined. Waiting for authorization to become readable, then you can rotate. Retry the check without sending another transaction."
+            : "The transaction mined, but ownership could not be verified yet. Retry proof without sending another transaction."),
         icon: <HourglassTopIcon fontSize="small" />,
         assertive: false,
       };
