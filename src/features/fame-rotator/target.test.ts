@@ -171,7 +171,7 @@ describe("resolveBurnPoolTarget", () => {
   it("exposes the R3 exchange explanation for the page shell", () => {
     assert.match(ROTATION_EXCHANGE_EXPLANATION, /explicitly select/i);
     assert.match(ROTATION_EXCHANGE_EXPLANATION, /reverts/i);
-    assert.match(ROTATION_EXCHANGE_EXPLANATION, /bound/i);
-    assert.match(ROTATION_EXCHANGE_EXPLANATION, /FAME unit/i);
+    assert.match(ROTATION_EXCHANGE_EXPLANATION, /keep your NFT/i);
+    assert.match(ROTATION_EXCHANGE_EXPLANATION, /burn-pool target/i);
   });
 });
