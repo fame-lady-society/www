@@ -19,6 +19,8 @@ import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { Main } from "@/layouts/Main";
 import { fameMirrorAbi } from "@/wagmi";
+import { getFameTokenImage } from "@/service/fame";
+import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
 import {
   FAME_BURN_POOL_ROTATOR_BASE_ADDRESS,
   getFameRotatorConfig,
@@ -66,6 +68,45 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
   const [approvalEpoch, setApprovalEpoch] = useState(0);
 
   const ownedIds = preflight.preflight.ownedIds;
+  const selectableOwnedIds = preflight.preflight.canSelectOffered
+    ? ownedIds
+    : [];
+
+  // Presentation-only: load artwork for confirmed owned IDs. Failures fall back
+  // so the token remains selectable by ID (plan R6 / shared metadata fallback).
+  const ownedImagesQuery = useQuery({
+    queryKey: [
+      "fame-rotator",
+      "owned-token-images",
+      execution.account,
+      selectableOwnedIds.join(","),
+    ],
+    enabled: selectableOwnedIds.length > 0,
+    staleTime: 60_000,
+    queryFn: async (): Promise<Record<number, string>> => {
+      const entries = await Promise.all(
+        selectableOwnedIds.map(async (tokenId) => {
+          try {
+            const image = await getFameTokenImage(tokenId);
+            return [tokenId, image] as const;
+          } catch {
+            return [tokenId, FAME_METADATA_FALLBACK_IMAGE] as const;
+          }
+        }),
+      );
+      return Object.fromEntries(entries);
+    },
+  });
+
+  const ownedTokenImages = useMemo(() => {
+    const loaded = ownedImagesQuery.data ?? {};
+    // Ensure every selectable id has a renderable src while images load.
+    const images: Record<number, string> = {};
+    for (const tokenId of selectableOwnedIds) {
+      images[tokenId] = loaded[tokenId] ?? FAME_METADATA_FALLBACK_IMAGE;
+    }
+    return images;
+  }, [ownedImagesQuery.data, selectableOwnedIds]);
 
   // Invalidate selection when account/ownership changes remove the offered id.
   useEffect(() => {
@@ -303,7 +344,8 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
       walletStatus={walletStatus}
       walletMessage={walletMessage}
       walletControl={walletControl}
-      ownedIds={preflight.preflight.canSelectOffered ? ownedIds : []}
+      ownedIds={selectableOwnedIds}
+      ownedTokenImages={ownedTokenImages}
       selectedOfferedId={selectedOfferedId}
       onSelectOffered={setSelectedOfferedId}
       authorized={authorized}

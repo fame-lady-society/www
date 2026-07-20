@@ -32,6 +32,11 @@ export interface FameRotatorViewProps {
   walletControl?: ReactNode;
   /** Complete owned inventory when selectable. */
   ownedIds: readonly number[];
+  /**
+   * Presentation images for owned token IDs. Missing entries use the shared
+   * fallback so identity remains selectable even when metadata fails.
+   */
+  ownedTokenImages?: Readonly<Record<number, string>>;
   selectedOfferedId: number | null;
   onSelectOffered?: (tokenId: number) => void;
   /** Whether rotator is already authorized for the selected offered NFT. */
@@ -61,6 +66,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
   walletMessage,
   walletControl,
   ownedIds,
+  ownedTokenImages = {},
   selectedOfferedId,
   onSelectOffered,
   authorized,
@@ -227,7 +233,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                 tokenId={selectedOfferedId}
                 image={
                   selectedOfferedId !== null
-                    ? FAME_METADATA_FALLBACK_IMAGE
+                    ? ownedTokenImage(selectedOfferedId, ownedTokenImages)
                     : null
                 }
                 meta={
@@ -327,11 +333,13 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                   direction="row"
                   flexWrap="wrap"
                   useFlexGap
-                  spacing={1}
-                  sx={{ gap: 1 }}
+                  spacing={1.5}
+                  sx={{ gap: 1.5 }}
+                  data-testid="offered-inventory-grid"
                 >
                   {ownedIds.map((tokenId) => {
                     const selected = selectedOfferedId === tokenId;
+                    const image = ownedTokenImage(tokenId, ownedTokenImages);
                     return (
                       <Button
                         key={tokenId}
@@ -343,13 +351,44 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                         disabled={isPending}
                         data-offered-option={tokenId}
                         data-selected={selected ? "true" : "false"}
+                        data-offered-image={image}
                         sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          gap: 1,
+                          p: 1,
                           minHeight: 44,
-                          minWidth: 88,
+                          minWidth: 112,
+                          maxWidth: 140,
                           fontWeight: 700,
+                          textTransform: "none",
+                          borderWidth: selected ? 2 : 1,
                         }}
                       >
-                        #{tokenId}
+                        <NextImage
+                          src={image}
+                          alt={`Society NFT ${tokenId}`}
+                          width={120}
+                          height={120}
+                          sizes="120px"
+                          style={{
+                            width: "100%",
+                            height: "auto",
+                            aspectRatio: "1",
+                            objectFit: "cover",
+                            borderRadius: 8,
+                            display: "block",
+                          }}
+                        />
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          fontWeight={700}
+                          textAlign="center"
+                        >
+                          #{tokenId}
+                        </Typography>
                       </Button>
                     );
                   })}
@@ -434,6 +473,18 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
     </Container>
   );
 };
+
+/** Resolve owned-token artwork; metadata failure never removes selectability. */
+export function ownedTokenImage(
+  tokenId: number,
+  images: Readonly<Record<number, string>>,
+): string {
+  const image = images[tokenId];
+  if (typeof image === "string" && image.length > 0) {
+    return image;
+  }
+  return FAME_METADATA_FALLBACK_IMAGE;
+}
 
 function TokenCard({
   label,

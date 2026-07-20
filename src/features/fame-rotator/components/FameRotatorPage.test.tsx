@@ -97,20 +97,43 @@ describe("FameRotatorView", () => {
   it("complete inventory renders selectable offered cards paired against the target", () => {
     const html = renderView({
       ownedIds: [7, 12, 88],
+      ownedTokenImages: {
+        7: "https://images.example/7.png",
+        12: "https://images.example/12.png",
+        88: "https://images.example/88.png",
+      },
       selectedOfferedId: 12,
     });
 
     assert.match(html, /data-testid="offered-inventory"/);
+    assert.match(html, /data-testid="offered-inventory-grid"/);
     assert.match(html, /data-count="3"/);
     assert.match(html, /data-offered-option="7"/);
     assert.match(html, /data-offered-option="12"/);
     assert.match(html, /data-offered-option="88"/);
+    assert.match(html, /data-offered-image="https:\/\/images\.example\/12\.png"/);
     assert.match(html, /data-selected="true"/);
     assert.match(html, /data-testid="target-offered-comparison"/);
     assert.match(html, /data-token-card="target"/);
     assert.match(html, /data-token-card="you-offer"/);
     assert.match(html, /data-token-id="12"/);
     assert.match(html, /aria-label="Offer Society NFT 12"/);
+    // Image artwork is present for each selectable option.
+    assert.match(html, /alt="Society NFT 7"/);
+    assert.match(html, /alt="Society NFT 12"/);
+    assert.match(html, /alt="Society NFT 88"/);
+  });
+
+  it("keeps offered tokens selectable when metadata images fall back", () => {
+    const html = renderView({
+      ownedIds: [7],
+      ownedTokenImages: {},
+      selectedOfferedId: 7,
+    });
+
+    assert.match(html, /data-offered-option="7"/);
+    assert.match(html, /data-offered-image="\/images\/fame\/gold-leaf-square\.png"/);
+    assert.match(html, /aria-label="Offer Society NFT 7"/);
   });
 
   it("approval completion preserves target/offered selection while requiring separate Rotate", () => {
