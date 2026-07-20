@@ -65,6 +65,7 @@ type GalleryPurchaseInputs = {
   revalidateAffectedTokenIds: (
     tokenIds: readonly bigint[],
   ) => Promise<readonly GalleryArtworkTarget[]>;
+  getPendingInitialHeldTokenIds: () => Promise<readonly bigint[]> | null;
   recoverHeldTokenIds: () => Promise<readonly bigint[]>;
 };
 
@@ -358,6 +359,9 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
               allowShellRecovery: recover,
             }) {
               const latest = inputsRef.current;
+              const pendingInitialScan = recover
+                ? null
+                : latest.getPendingInitialHeldTokenIds();
               const resolved = await resolveGalleryFulfillment({
                 terms: frozen,
                 candidateTokenIds: galleryCandidateTokenIdsForArtwork(
@@ -370,7 +374,9 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 source: fulfillmentSource,
                 refreshShellTokenIds: recover
                   ? latest.recoverHeldTokenIds
-                  : undefined,
+                  : pendingInitialScan
+                    ? () => pendingInitialScan
+                    : undefined,
               });
               return { route: resolved };
             },

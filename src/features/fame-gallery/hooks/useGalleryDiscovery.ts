@@ -41,6 +41,13 @@ const deploymentKey = [
   identity.deploymentBlock.toString(),
 ].join(":");
 
+export function isCurrentGalleryScan(
+  scanGeneration: number,
+  currentGeneration: number,
+) {
+  return scanGeneration === currentGeneration;
+}
+
 function discoverySource(
   publicClient: NonNullable<ReturnType<typeof usePublicClient>>,
 ): GalleryCustodyDiscoverySource {
@@ -81,6 +88,7 @@ export function useGalleryDiscovery({
   const initialScan = useRef<ReturnType<typeof discoverGalleryHoldings> | null>(
     null,
   );
+  const scanGeneration = useRef(0);
 
   useEffect(() => {
     if (!source) {
@@ -89,6 +97,7 @@ export function useGalleryDiscovery({
     }
     let active = true;
     setIsScanning(true);
+    const scanGenerationAtStart = scanGeneration.current;
     const scan = runInitialGalleryScan(deploymentKey, () =>
       discoverGalleryHoldings({
         source,
@@ -96,7 +105,12 @@ export function useGalleryDiscovery({
         restoredHints: storage.restore(),
         persist: (record) => storage.commit(record),
         onTargets: (_kind, targets) => {
-          if (!active) return;
+          if (
+            !active ||
+            !isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)
+          ) {
+            return;
+          }
           setHeldTargets((current) =>
             appendGalleryCatalogTargets(current, targets),
           );
@@ -106,9 +120,11 @@ export function useGalleryDiscovery({
     initialScan.current = scan;
     void scan.then((result) => {
       if (!active) return;
-      setHeldTargets((current) =>
-        reconcileGalleryCatalogTargets(current, result.targets),
-      );
+      if (isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)) {
+        setHeldTargets((current) =>
+          reconcileGalleryCatalogTargets(current, result.targets),
+        );
+      }
       setScanCompleted(result.scanCompleted);
       setIsScanning(false);
       if (initialScan.current === scan) initialScan.current = null;
@@ -124,6 +140,7 @@ export function useGalleryDiscovery({
       const targets = await revalidateGalleryHeldTokenIds(source, tokenIds, {
         marketplace: config.addresses.gallery,
       });
+      scanGeneration.current += 1;
       setHeldTargets((current) => {
         const affected = new Set(
           tokenIds.map((tokenId) => `held:${tokenId.toString()}`),
@@ -138,13 +155,19 @@ export function useGalleryDiscovery({
     [source],
   );
 
+  const getPendingInitialHeldTokenIds = useCallback(() => {
+    const pendingInitialScan = initialScan.current;
+    return pendingInitialScan
+      ? pendingInitialScan.then((result) =>
+          result.targets.map(({ tokenId }) => tokenId),
+        )
+      : null;
+  }, []);
+
   const recoverHeldTokenIds = useCallback(async () => {
     if (!source) return [];
-    const pendingInitialScan = initialScan.current;
-    if (pendingInitialScan) {
-      const result = await pendingInitialScan;
-      return result.targets.map(({ tokenId }) => tokenId);
-    }
+    const pendingInitialScan = getPendingInitialHeldTokenIds();
+    if (pendingInitialScan) return pendingInitialScan;
     setIsScanning(true);
     try {
       const result = await discoverGalleryHoldings({
@@ -159,7 +182,7 @@ export function useGalleryDiscovery({
     } finally {
       setIsScanning(false);
     }
-  }, [source, storage]);
+  }, [getPendingInitialHeldTokenIds, source, storage]);
 
   const catalog = useMemo(
     () =>
@@ -176,6 +199,7 @@ export function useGalleryDiscovery({
     isScanning,
     scanCompleted,
     revalidateAffectedTokenIds,
+    getPendingInitialHeldTokenIds,
     recoverHeldTokenIds,
   };
 }

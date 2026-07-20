@@ -32,7 +32,7 @@ function readyMetadata(name: string) {
 const price = 1_001_000n * 10n ** 18n;
 
 describe("TEST gallery public view", () => {
-  it("distinguishes loading, failed, and successful-empty catalog states", () => {
+  it("distinguishes loading, failed, incomplete, and successful-empty catalog states", () => {
     const loading = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "loading" }} />,
     );
@@ -45,6 +45,9 @@ describe("TEST gallery public view", () => {
     const empty = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "empty" }} />,
     );
+    const incomplete = renderToStaticMarkup(
+      <GalleryViewContent state={{ status: "incomplete" }} />,
+    );
 
     assert.match(loading, /Loading TEST gallery/);
     assert.doesNotMatch(loading, /Buy with TEST/);
@@ -52,6 +55,9 @@ describe("TEST gallery public view", () => {
     assert.match(failed, /Try again/);
     assert.match(empty, /No artwork is available right now/);
     assert.doesNotMatch(empty, /listing|inventory|pool/i);
+    assert.match(incomplete, /Artwork availability could not be confirmed/);
+    assert.match(incomplete, /Reload this page to try again/);
+    assert.doesNotMatch(incomplete, /No artwork is available right now/);
   });
 
   it("presents artwork and one global TEST price without route mechanics", () => {

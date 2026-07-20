@@ -36,6 +36,7 @@ import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
 export type GalleryViewContentState =
   | { status: "loading" }
   | { status: "failure"; message: string }
+  | { status: "incomplete" }
   | { status: "empty" }
   | { status: "ready" };
 
@@ -96,6 +97,19 @@ export function GalleryViewContent({
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>
           Try again later.
+        </Typography>
+      </Paper>
+    );
+  }
+
+  if (state.status === "incomplete") {
+    return (
+      <Paper variant="outlined" sx={{ p: 4 }} role="status">
+        <Typography component="h2" variant="h5">
+          Artwork availability could not be confirmed
+        </Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Reload this page to try again.
         </Typography>
       </Paper>
     );
@@ -207,6 +221,7 @@ export function GalleryView() {
     refreshGlobal: global.refresh,
     refreshPool: pool.refresh,
     revalidateAffectedTokenIds: discovery.revalidateAffectedTokenIds,
+    getPendingInitialHeldTokenIds: discovery.getPendingInitialHeldTokenIds,
     recoverHeldTokenIds: discovery.recoverHeldTokenIds,
   });
   const revalidateAffectedTokenIds = discovery.revalidateAffectedTokenIds;
@@ -252,6 +267,8 @@ export function GalleryView() {
     (artworks.length === 0 && discovery.isScanning)
   ) {
     state = { status: "loading" };
+  } else if (artworks.length === 0 && !discovery.scanCompleted) {
+    state = { status: "incomplete" };
   } else if (artworks.length === 0) {
     state = { status: "empty" };
   } else {

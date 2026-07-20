@@ -180,11 +180,13 @@ export function AdminWorkbench() {
     authority.projection.data.authority === "owner";
   const global = useGalleryGlobalState({ enabled: isAuthorized });
   const { mutate: switchChain, isPending: isSwitching } = useSwitchChain();
-  const shouldSwitch = needsConnectedChainSwitch({
-    isConnected: account.isConnected,
-    connectedChainId: account.chainId,
-    targetChainId: baseSepolia.id,
-  });
+  const shouldSwitch =
+    isAuthorized &&
+    needsConnectedChainSwitch({
+      isConnected: account.isConnected,
+      connectedChainId: account.chainId,
+      targetChainId: baseSepolia.id,
+    });
 
   useEffect(() => {
     if (shouldSwitch) {
