@@ -14,7 +14,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import type { FC, SyntheticEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Address, Hash } from "viem";
 import { parseUnits } from "viem";
 import { base } from "viem/chains";
 import { useSwitchChain } from "wagmi";
@@ -23,7 +24,10 @@ import { getFameSwapConfig } from "../config";
 import { useFameSwapBalance } from "../hooks/useFameSwapBalance";
 import { useFameSwapQuote } from "../hooks/useFameSwapQuote";
 import { useFameSwapReadiness } from "../hooks/useFameSwapReadiness";
-import { useFameSwapTransaction } from "../hooks/useFameSwapTransaction";
+import {
+  nextSwapConfirmedEmission,
+  useFameSwapTransaction,
+} from "../hooks/useFameSwapTransaction";
 import { DEFAULT_FAME_SWAP_DEADLINE_MINUTES } from "../solver/deadline";
 import { formatTokenAmount } from "../solver/format";
 import type { FameSwapQuote } from "../solver/types";
@@ -53,8 +57,57 @@ import { FameSwapTransactionTimeline } from "./TransactionTimeline";
 
 export type FameSwapWidgetMode = "full" | "compact";
 
+export interface FameSwapConfirmedPayload {
+  hash: Hash;
+  account: Address;
+}
+
 export interface FameSwapWidgetProps {
   mode?: FameSwapWidgetMode;
+  /**
+   * Fires exactly once per effective confirmed swap hash for the initiating
+   * account. Not called on rejection, revert, account change, or other accounts.
+   */
+  onSwapConfirmed?: (payload: FameSwapConfirmedPayload) => void;
+}
+
+/**
+ * Pure presentation contract for full vs compact swap modes (KTD4).
+ * Compact is buy-FAME-only with essential quote/action/status; full keeps every control.
+ */
+export interface FameSwapPresentationContract {
+  mode: FameSwapWidgetMode;
+  forceBuyMode: boolean;
+  showModeTabs: boolean;
+  showSwapSideToggle: boolean;
+  showAdvancedControls: boolean;
+  showRouteMap: boolean;
+  showDiagnostics: boolean;
+  showTransactionTimeline: boolean;
+  showQuotePanel: boolean;
+  showAmountInput: boolean;
+  maxWidth: number;
+  headingVariant: "h4" | "h5";
+}
+
+export function fameSwapPresentation(
+  mode: FameSwapWidgetMode = "full",
+): FameSwapPresentationContract {
+  const compact = mode === "compact";
+  return {
+    mode,
+    forceBuyMode: compact,
+    showModeTabs: !compact,
+    showSwapSideToggle: !compact,
+    showAdvancedControls: !compact,
+    showRouteMap: !compact,
+    showDiagnostics: !compact,
+    showTransactionTimeline: true,
+    showQuotePanel: true,
+    showAmountInput: true,
+    maxWidth: compact ? 480 : 760,
+    headingVariant: compact ? "h5" : "h4",
+  };
 }
 
 export const FAME_SWAP_HEADING_ID = "fame-swap-heading";
@@ -211,7 +264,10 @@ const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
   );
 };
 
-export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
+export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
+  mode = "full",
+  onSwapConfirmed,
+}) => {
   const { address, isConnected, chainId: connectedChainId } = useAccount();
   const {
     switchChainAsync,
@@ -228,9 +284,22 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     DEFAULT_FAME_SWAP_DEADLINE_MINUTES,
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const presentation = useMemo(() => fameSwapPresentation(mode), [mode]);
   const compact = mode === "compact";
+  const swapConfirmedEmitKey = useRef<string | null>(null);
   const onBase = isConnected && connectedChainId === base.id;
-  const pair = useMemo(() => deriveFameSwapPair(trade), [trade]);
+  // Compact is buy-only: never allow sell mode even if local state was flipped.
+  const effectiveTrade = useMemo(
+    () =>
+      presentation.forceBuyMode
+        ? { ...trade, mode: "buy" as const }
+        : trade,
+    [presentation.forceBuyMode, trade],
+  );
+  const pair = useMemo(
+    () => deriveFameSwapPair(effectiveTrade),
+    [effectiveTrade],
+  );
   const inputBalance = useFameSwapBalance(address, pair.inputToken);
   const config = useMemo(
     () => ({
@@ -279,6 +348,37 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     () => fameSwapQuoteView(quote, pair.outputToken, transaction),
     [pair.outputToken, quote, transaction],
   );
+
+  // One-shot confirmed-swap callback for the initiating account only.
+  useEffect(() => {
+    if (!onSwapConfirmed) return;
+
+    const candidate =
+      transaction.swapConfirmed &&
+      transaction.confirmedSwapHash &&
+      transaction.confirmedSwapAccount
+        ? {
+            hash: transaction.confirmedSwapHash,
+            account: transaction.confirmedSwapAccount,
+          }
+        : null;
+
+    const emission = nextSwapConfirmedEmission(
+      swapConfirmedEmitKey.current,
+      candidate,
+      address,
+    );
+    if (!emission) return;
+
+    swapConfirmedEmitKey.current = emission.key;
+    onSwapConfirmed(emission.payload);
+  }, [
+    address,
+    onSwapConfirmed,
+    transaction.confirmedSwapAccount,
+    transaction.confirmedSwapHash,
+    transaction.swapConfirmed,
+  ]);
 
   const state = fameSwapWidgetState({
     connected: isConnected,
@@ -350,13 +450,14 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
 
   const handleModeChange = useCallback(
     (_event: SyntheticEvent, value: FameSwapTradeMode | null) => {
+      if (presentation.forceBuyMode) return;
       if (!value || value === trade.mode) return;
       setTrade((current) => ({
         ...current,
         mode: value,
       }));
     },
-    [trade.mode],
+    [presentation.forceBuyMode, trade.mode],
   );
 
   const handlePresetClick = useCallback(
@@ -406,38 +507,49 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
     <Box
       component="section"
       aria-labelledby={FAME_SWAP_HEADING_ID}
+      data-fame-swap-mode={presentation.mode}
       sx={{
         width: "100%",
-        maxWidth: compact ? 480 : 760,
+        maxWidth: presentation.maxWidth,
         mx: "auto",
         px: { xs: 2, sm: 3 },
-        py: { xs: 3, sm: 4 },
+        py: compact ? { xs: 2, sm: 2.5 } : { xs: 3, sm: 4 },
       }}
     >
-      <Stack spacing={2.25}>
+      <Stack spacing={compact ? 1.75 : 2.25}>
         <div>
           <FameSwapHeading compact={compact} />
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            via preferred liquidity
+            {compact ? "Buy FAME via preferred liquidity" : "via preferred liquidity"}
           </Typography>
         </div>
 
         <Stack spacing={1.5}>
-          <Tabs
-            value={trade.mode}
-            onChange={handleModeChange}
-            aria-label="FAME swap mode"
-            variant="fullWidth"
-          >
-            <Tab value="buy" label="Buy FAME" />
-            <Tab value="sell" label="Sell FAME" />
-          </Tabs>
+          {presentation.showModeTabs ? (
+            <Tabs
+              value={effectiveTrade.mode}
+              onChange={handleModeChange}
+              aria-label="FAME swap mode"
+              variant="fullWidth"
+            >
+              <Tab value="buy" label="Buy FAME" />
+              <Tab value="sell" label="Sell FAME" />
+            </Tabs>
+          ) : (
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              aria-label="FAME swap mode"
+            >
+              Buy FAME
+            </Typography>
+          )}
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
             <FameSwapTokenSelect
               id="fame-swap-opposite-asset"
-              label={trade.mode === "buy" ? "Pay with" : "Receive"}
-              value={trade.asset}
+              label={effectiveTrade.mode === "buy" ? "Pay with" : "Receive"}
+              value={effectiveTrade.asset}
               tokens={FAME_SWAP_OPPOSITE_ASSETS}
               disabled={state.tokenSelectDisabled}
               onChange={(asset) => {
@@ -447,73 +559,81 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
                 }));
               }}
             />
-            <Tooltip title="Swap side">
-              <span>
-                <IconButton
+            {presentation.showSwapSideToggle ? (
+              <Tooltip title="Swap side">
+                <span>
+                  <IconButton
+                    type="button"
+                    aria-label="Swap side"
+                    disabled={state.tokenSelectDisabled}
+                    onClick={() =>
+                      setTrade((current) => flipFameSwapMode(current))
+                    }
+                    sx={{
+                      alignSelf: { xs: "stretch", sm: "center" },
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      minHeight: 44,
+                    }}
+                  >
+                    <SwapVertIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            ) : null}
+          </Stack>
+        </Stack>
+
+        {presentation.showAmountInput ? (
+          <Stack spacing={1}>
+            <FameSwapAmountField
+              label={pair.inputLabel}
+              value={amount}
+              token={pair.inputToken}
+              helperText={amountHelper}
+              error={amountBlocked}
+              disabled={state.amountDisabled}
+              onChange={setAmount}
+            />
+
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {FAME_SWAP_PERCENT_PRESETS.map((percent) => (
+                <Button
+                  key={percent}
                   type="button"
-                  aria-label="Swap side"
-                  disabled={state.tokenSelectDisabled}
-                  onClick={() =>
-                    setTrade((current) => flipFameSwapMode(current))
+                  size="small"
+                  variant="outlined"
+                  disabled={
+                    state.amountDisabled ||
+                    inputBalance.balance === null ||
+                    availablePresetBalance === 0n
                   }
-                  sx={{
-                    alignSelf: { xs: "stretch", sm: "center" },
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
-                    minHeight: 44,
-                  }}
+                  onClick={() => handlePresetClick(percent)}
+                  sx={{ minWidth: 56 }}
                 >
-                  <SwapVertIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
+                  {percent}%
+                </Button>
+              ))}
+            </Stack>
           </Stack>
-        </Stack>
+        ) : null}
 
-        <Stack spacing={1}>
-          <FameSwapAmountField
-            label={pair.inputLabel}
-            value={amount}
-            token={pair.inputToken}
-            helperText={amountHelper}
-            error={amountBlocked}
-            disabled={state.amountDisabled}
-            onChange={setAmount}
+        {presentation.showQuotePanel ? (
+          <FameSwapQuotePanel view={quoteView} />
+        ) : null}
+
+        {presentation.showAdvancedControls ? (
+          <AdvancedSwapControls
+            open={advancedOpen}
+            disabled={state.amountDisabled || transaction.submitting}
+            slippageBps={slippageBps}
+            deadlineMinutes={deadlineMinutes}
+            onToggle={() => setAdvancedOpen((current) => !current)}
+            onSlippageBpsChange={setSlippageBps}
+            onDeadlineMinutesChange={setDeadlineMinutes}
           />
-
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            {FAME_SWAP_PERCENT_PRESETS.map((percent) => (
-              <Button
-                key={percent}
-                type="button"
-                size="small"
-                variant="outlined"
-                disabled={
-                  state.amountDisabled ||
-                  inputBalance.balance === null ||
-                  availablePresetBalance === 0n
-                }
-                onClick={() => handlePresetClick(percent)}
-                sx={{ minWidth: 56 }}
-              >
-                {percent}%
-              </Button>
-            ))}
-          </Stack>
-        </Stack>
-
-        <FameSwapQuotePanel view={quoteView} />
-
-        <AdvancedSwapControls
-          open={advancedOpen}
-          disabled={state.amountDisabled || transaction.submitting}
-          slippageBps={slippageBps}
-          deadlineMinutes={deadlineMinutes}
-          onToggle={() => setAdvancedOpen((current) => !current)}
-          onSlippageBpsChange={setSlippageBps}
-          onDeadlineMinutesChange={setDeadlineMinutes}
-        />
+        ) : null}
 
         {isConnected ? (
           <Button
@@ -554,7 +674,10 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           <ConnectKitButton />
         )}
 
-        <Alert severity={alertSeverity(state.kind, amountBlocked)}>
+        <Alert
+          severity={alertSeverity(state.kind, amountBlocked)}
+          data-fame-swap-status={state.kind}
+        >
           <Typography fontWeight={700}>{state.title}</Typography>
           <Typography variant="body2">{alertMessage}</Typography>
           <Typography variant="body2" sx={{ mt: 0.75 }}>
@@ -568,11 +691,13 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           ))}
         </Alert>
 
-        <FameSwapTransactionTimeline
-          quoteReady={quoteReady}
-          approvalRequired={approvalRequired}
-          transaction={transaction}
-        />
+        {presentation.showTransactionTimeline ? (
+          <FameSwapTransactionTimeline
+            quoteReady={quoteReady}
+            approvalRequired={approvalRequired}
+            transaction={transaction}
+          />
+        ) : null}
 
         {quoteReady ? (
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -589,7 +714,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           </Stack>
         ) : null}
 
-        <FameSwapRouteMap routeMap={quoteView.routeMap} />
+        {presentation.showRouteMap ? (
+          <FameSwapRouteMap routeMap={quoteView.routeMap} />
+        ) : null}
 
         {state.fallbackVisible ? (
           <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
@@ -607,10 +734,12 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
           </Stack>
         ) : null}
 
-        <RouteDiagnostics
-          quote={quote}
-          defaultOpen={state.diagnosticsVisible}
-        />
+        {presentation.showDiagnostics ? (
+          <RouteDiagnostics
+            quote={quote}
+            defaultOpen={state.diagnosticsVisible}
+          />
+        ) : null}
       </Stack>
     </Box>
   );
