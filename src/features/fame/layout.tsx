@@ -42,18 +42,10 @@ import {
 import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 import { SocietyNftReadinessRail } from "@/features/society-nft-readiness/components/SocietyNftReadinessRail";
-
-const BASE_URL = "https://fame.support/thumb/";
-function ImageForToken({ tokenId }: { tokenId: bigint }) {
-  return (
-    <NextImage
-      src={`${BASE_URL}${tokenId.toString()}`}
-      alt={`Burned token ${tokenId.toString()}`}
-      width={400}
-      height={400}
-    />
-  );
-}
+import {
+  BurnPoolImage,
+  type BurnPoolToken,
+} from "@/features/fame/burnPoolImage";
 
 const AnimatedBox = animated(Box);
 
@@ -211,7 +203,7 @@ const CopyButton = styled(Button)({
 });
 
 const Content: FC<{
-  burnPool: number[];
+  burnPool: BurnPoolToken[];
   unrevealed: string[];
 }> = ({ burnPool, unrevealed }) => {
   const theme = useTheme();
@@ -627,9 +619,9 @@ const Content: FC<{
           </Typography>
         </Grid2>
       )}
-      {burnPool.map((tokenId) => (
-        <Grid2 xs={6} md={3} key={tokenId}>
-          <ImageForToken tokenId={BigInt(tokenId)} />
+      {burnPool.map((token) => (
+        <Grid2 xs={6} md={3} key={token.tokenId}>
+          <BurnPoolImage {...token} />
         </Grid2>
       ))}
       {unrevealed.length > 0 && (
@@ -1076,7 +1068,7 @@ const Content: FC<{
   );
 };
 
-const Header: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
+const Header: FC<{ burnPool: BurnPoolToken[]; unrevealed: string[] }> = ({
   burnPool,
   unrevealed,
 }) => {
@@ -1127,7 +1119,7 @@ const Header: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
   );
 };
 
-export const Layout: FC<{ burnPool: number[]; unrevealed: string[] }> = ({
+export const Layout: FC<{ burnPool: BurnPoolToken[]; unrevealed: string[] }> = ({
   burnPool,
   unrevealed,
 }) => {

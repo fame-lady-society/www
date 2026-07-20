@@ -3,6 +3,7 @@ import { Layout } from "@/features/fame/layout";
 import { fetchMetadata } from "frames.js/next";
 import { baseUrl } from "@/app/frames/frames";
 import { getFamePools } from "@/service/fame";
+import type { BurnPoolToken } from "@/features/fame/burnPoolImage";
 
 export async function generateMetadata(): Promise<Metadata> {
   let frameMetadata;
@@ -25,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page({}: {}) {
-  let burnPool: Array<{ tokenId: number }> = [];
+  let burnPool: BurnPoolToken[] = [];
   let mintPool: Array<{ image: string }> = [];
 
   try {
@@ -38,7 +39,7 @@ export default async function Page({}: {}) {
 
   return (
     <Layout
-      burnPool={burnPool.map(({ tokenId }) => tokenId)}
+      burnPool={burnPool}
       unrevealed={mintPool.map(({ image }) => image)}
     />
   );
