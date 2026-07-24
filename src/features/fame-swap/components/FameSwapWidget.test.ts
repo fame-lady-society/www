@@ -7,8 +7,10 @@ import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
 import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
 import { fameSwapQuoteView } from "../ui/quoteView";
+import { FAME_SWAP_OPPOSITE_ASSETS } from "../ui/tradeModel";
 import {
   FameSwapHeading,
+  confirmedSwapReceiptToNotify,
   fameSwapErrorDetails,
   fameSwapErrorSummary,
   quoteSummary,
@@ -26,6 +28,47 @@ describe("FameSwapWidget focus target", () => {
     assert.match(html, /id="fame-swap-heading"/);
     assert.match(html, /tabindex="-1"/);
     assert.match(html, />FAME swap<\/h4>/);
+  });
+});
+
+describe("FameSwapWidget confirmation callback", () => {
+  const receipt =
+    "0x1111111111111111111111111111111111111111111111111111111111111111";
+
+  it("emits a confirmed swap receipt exactly once", () => {
+    assert.equal(
+      confirmedSwapReceiptToNotify({
+        swapConfirmed: false,
+        hash: receipt,
+        lastNotifiedHash: null,
+      }),
+      null,
+    );
+    assert.equal(
+      confirmedSwapReceiptToNotify({
+        swapConfirmed: true,
+        hash: receipt,
+        lastNotifiedHash: null,
+      }),
+      receipt,
+    );
+    assert.equal(
+      confirmedSwapReceiptToNotify({
+        swapConfirmed: true,
+        hash: receipt,
+        lastNotifiedHash: receipt,
+      }),
+      null,
+    );
+  });
+});
+
+describe("FameSwapWidget buy choices", () => {
+  it("retains USDC, WETH, and native ETH funding", () => {
+    assert.deepEqual(
+      FAME_SWAP_OPPOSITE_ASSETS.map(({ symbol }) => symbol),
+      ["USDC", "WETH", "ETH"],
+    );
   });
 });
 

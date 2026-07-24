@@ -14,8 +14,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import type { FC, SyntheticEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
-import { parseUnits } from "viem";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { parseUnits, type Hash } from "viem";
 import { base } from "viem/chains";
 import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
@@ -55,9 +55,22 @@ export type FameSwapWidgetMode = "full" | "compact";
 
 export interface FameSwapWidgetProps {
   mode?: FameSwapWidgetMode;
+  onSwapConfirmed?: (receiptHash: Hash) => void | Promise<void>;
 }
 
 export const FAME_SWAP_HEADING_ID = "fame-swap-heading";
+
+export function confirmedSwapReceiptToNotify({
+  swapConfirmed,
+  hash,
+  lastNotifiedHash,
+}: {
+  swapConfirmed: boolean;
+  hash: Hash | null;
+  lastNotifiedHash: Hash | null;
+}) {
+  return swapConfirmed && hash && hash !== lastNotifiedHash ? hash : null;
+}
 
 export const FameSwapHeading: FC<{ compact: boolean }> = ({ compact }) => (
   <Typography
@@ -211,7 +224,10 @@ const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
   );
 };
 
-export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
+export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
+  mode = "full",
+  onSwapConfirmed,
+}) => {
   const { address, isConnected, chainId: connectedChainId } = useAccount();
   const {
     switchChainAsync,
@@ -275,6 +291,17 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({ mode = "full" }) => {
   });
 
   const transaction = useFameSwapTransaction(quote, address);
+  const lastNotifiedSwapHash = useRef<Hash | null>(null);
+  useEffect(() => {
+    const receiptHash = confirmedSwapReceiptToNotify({
+      swapConfirmed: transaction.swapConfirmed,
+      hash: transaction.hash,
+      lastNotifiedHash: lastNotifiedSwapHash.current,
+    });
+    if (!receiptHash || !onSwapConfirmed) return;
+    lastNotifiedSwapHash.current = receiptHash;
+    void onSwapConfirmed(receiptHash);
+  }, [onSwapConfirmed, transaction.hash, transaction.swapConfirmed]);
   const quoteView = useMemo(
     () => fameSwapQuoteView(quote, pair.outputToken, transaction),
     [pair.outputToken, quote, transaction],

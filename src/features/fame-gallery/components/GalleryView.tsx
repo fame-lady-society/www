@@ -18,6 +18,7 @@ import {
 import { isAddressEqual } from "viem";
 import { useConnection, useSwitchChain } from "wagmi";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
+import { FameSwapWidget } from "@/features/fame-swap/components/FameSwapWidget";
 import { formatTestAmount } from "../format";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
@@ -44,6 +45,22 @@ export type PresentedGalleryArtwork = {
   stableKey: string;
   metadata: GalleryMetadataResult;
 };
+
+export function shouldShowGalleryFunding(chainId: number) {
+  return chainId === 8_453;
+}
+
+export async function refreshGalleryAfterFunding({
+  refreshGlobal,
+  refreshPool,
+  refreshHeldDiscovery,
+}: {
+  refreshGlobal: () => Promise<unknown>;
+  refreshPool: () => Promise<unknown>;
+  refreshHeldDiscovery: () => Promise<unknown>;
+}) {
+  await Promise.all([refreshGlobal(), refreshPool(), refreshHeldDiscovery()]);
+}
 
 export function GalleryViewContent({
   state,
@@ -233,6 +250,13 @@ export function GalleryView() {
   const revalidateAffectedTokenIds = discovery.revalidateAffectedTokenIds;
   const refreshPool = pool.refresh;
   const buy = purchase.buy;
+  const refreshAfterFunding = useCallback(async () => {
+    await refreshGalleryAfterFunding({
+      refreshGlobal: global.refresh,
+      refreshPool: pool.refresh,
+      refreshHeldDiscovery: discovery.recoverHeldTokenIds,
+    });
+  }, [discovery.recoverHeldTokenIds, global.refresh, pool.refresh]);
   const metadataCache = useRef(new Map<string, GalleryMetadataResult>());
 
   const targetsByKey = useMemo(
@@ -334,6 +358,13 @@ export function GalleryView() {
             </Button>
           ) : null}
         </Stack>
+
+        {shouldShowGalleryFunding(config.chainId) ? (
+          <FameSwapWidget
+            mode="compact"
+            onSwapConfirmed={refreshAfterFunding}
+          />
+        ) : null}
 
         <GalleryViewContent
           state={state}

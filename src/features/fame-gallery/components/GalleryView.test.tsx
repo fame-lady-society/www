@@ -6,6 +6,8 @@ import { ArtworkCard } from "./ArtworkCard";
 import {
   GalleryArtworkGrid,
   GalleryViewContent,
+  refreshGalleryAfterFunding,
+  shouldShowGalleryFunding,
   type PresentedGalleryArtwork,
 } from "./GalleryView";
 
@@ -32,6 +34,29 @@ function readyMetadata(name: string) {
 const price = 1_001_000n * 10n ** 18n;
 
 describe("TEST gallery public view", () => {
+  it("shows funding only on the Base mainnet runtime", () => {
+    assert.equal(shouldShowGalleryFunding(8_453), true);
+    assert.equal(shouldShowGalleryFunding(84_532), false);
+  });
+
+  it("refreshes every on-chain gallery projection after funding", async () => {
+    const refreshed: string[] = [];
+    await refreshGalleryAfterFunding({
+      refreshGlobal: async () => {
+        refreshed.push("global");
+      },
+      refreshPool: async () => {
+        refreshed.push("pool");
+      },
+      refreshHeldDiscovery: async () => {
+        refreshed.push("held");
+        return [];
+      },
+    });
+
+    assert.deepEqual(refreshed.sort(), ["global", "held", "pool"]);
+  });
+
   it("distinguishes loading, failed, incomplete, and successful-empty catalog states", () => {
     const loading = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "loading" }} />,
@@ -124,9 +149,7 @@ describe("TEST gallery public view", () => {
     const html = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "ready" }} paused>
         <GalleryArtworkGrid
-          artworks={[
-            { stableKey: "one", metadata: readyMetadata("Sunrise") },
-          ]}
+          artworks={[{ stableKey: "one", metadata: readyMetadata("Sunrise") }]}
           totalPrice={price}
           purchaseLocked
           onBuy={() => undefined}
