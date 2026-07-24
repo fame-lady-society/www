@@ -53,16 +53,54 @@ async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
 ) {
+  const controller = new AbortController();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
-    fetchMetadata(url),
+    fetchMetadata(url, { signal: controller.signal }),
     new Promise<never>((_, reject) => {
-      timeout = setTimeout(
-        () => reject(new Error("Gallery metadata request timed out")),
-        timeoutMs,
-      );
+      timeout = setTimeout(() => {
+        controller.abort();
+        reject(new Error("Gallery metadata request timed out"));
+      }, timeoutMs);
     }),
   ]).finally(() => clearTimeout(timeout));
+}
+
+async function readBoundedResponseText(
+  response: Response,
+  maxBytes: number,
+): Promise<string> {
+  const contentLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw new Error("Gallery metadata response is too large");
+  }
+  if (!response.body) {
+    const body = await response.text();
+    if (new TextEncoder().encode(body).byteLength > maxBytes) {
+      throw new Error("Gallery metadata response is too large");
+    }
+    return body;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytesRead = 0;
+  let body = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > maxBytes) {
+        await reader.cancel();
+        throw new Error("Gallery metadata response is too large");
+      }
+      body += decoder.decode(value, { stream: true });
+    }
+    return body + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export async function loadGalleryMetadata(
@@ -83,20 +121,10 @@ export async function loadGalleryMetadata(
     try {
       const response = await fetchWithTimeout(fetchMetadata, url, timeoutMs);
       if (!response.ok) continue;
-      const contentLength = Number(response.headers.get("content-length"));
-      if (
-        Number.isFinite(contentLength) &&
-        contentLength > GALLERY_REMOTE_METADATA_MAX_BYTES
-      ) {
-        continue;
-      }
-      const body = await response.text();
-      if (
-        new TextEncoder().encode(body).byteLength >
-        GALLERY_REMOTE_METADATA_MAX_BYTES
-      ) {
-        continue;
-      }
+      const body = await readBoundedResponseText(
+        response,
+        GALLERY_REMOTE_METADATA_MAX_BYTES,
+      );
       const parsed: unknown = JSON.parse(body);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         continue;

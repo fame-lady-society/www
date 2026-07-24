@@ -68,17 +68,26 @@ function mockSource({
   return { source, calls };
 }
 
-function frozenTerms(displayedPremium = 25n) {
-  return freezeGalleryBuyerTerms({
-    account: buyer,
-    selectedTarget: {
-      targetId: "pool:mint:7",
-      tokenId: 7n,
+function frozenTerms(
+  displayedPremium = 25n,
+  runtimeMarketplace: Address = marketplace,
+) {
+  return freezeGalleryBuyerTerms(
+    {
+      account: buyer,
+      selectedTarget: {
+        targetId: "pool:mint:7",
+        tokenId: 7n,
+      },
+      artworkHash: selectedArtwork,
+      unit: 1_000n,
+      displayedPremium,
     },
-    artworkHash: selectedArtwork,
-    unit: 1_000n,
-    displayedPremium,
-  });
+    {
+      chainId: config.chainId,
+      marketplace: runtimeMarketplace,
+    },
+  );
 }
 
 describe("gallery fulfillment resolver", () => {
@@ -144,6 +153,29 @@ describe("gallery fulfillment resolver", () => {
     });
   }
 
+  it("verifies pool shells against the frozen runtime marketplace", async () => {
+    const runtimeMarketplace =
+      "0x3333333333333333333333333333333333333333" as Address;
+    const { source } = mockSource({
+      tokens: new Map([[7n, tokenState({ inMintPool: true })]]),
+      shellOwners: new Map([[19n, runtimeMarketplace]]),
+    });
+
+    const resolved = await resolveGalleryFulfillment({
+      terms: frozenTerms(25n, runtimeMarketplace),
+      candidateTokenIds: [7n],
+      knownShellTokenIds: [19n],
+      source,
+    });
+
+    assert.deepEqual(resolved, {
+      kind: "pool",
+      poolKind: "mint",
+      shellId: 19n,
+      sourceId: 7n,
+    });
+  });
+
   it("allows held-to-pool and pool-to-held route changes without changing consent", async () => {
     const terms = frozenTerms();
     const heldToPool = mockSource({
@@ -175,10 +207,7 @@ describe("gallery fulfillment resolver", () => {
     const { source, calls } = mockSource({
       tokens: new Map([
         [7n, tokenState({ inBurnPool: true })],
-        [
-          20n,
-          tokenState({ owner: marketplace, artworkHash: otherArtwork }),
-        ],
+        [20n, tokenState({ owner: marketplace, artworkHash: otherArtwork })],
       ]),
       shellOwners: new Map([
         [19n, elsewhere],

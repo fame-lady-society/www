@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
 import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { isAddressEqual } from "viem";
+import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { FameSwapWidget } from "@/features/fame-swap/components/FameSwapWidget";
@@ -39,7 +40,7 @@ export type PresentedGalleryArtwork = {
 };
 
 export function shouldShowGalleryFunding(chainId: number) {
-  return chainId === 8_453;
+  return chainId === base.id;
 }
 
 export async function refreshGalleryAfterFunding({

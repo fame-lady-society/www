@@ -11,6 +11,8 @@ import {
 } from "../queryKeys";
 import {
   captureGalleryBlock,
+  galleryCollectionTokenIds,
+  galleryReadAddresses,
   readGalleryPoolState,
   type GalleryMulticallClient,
 } from "../reads";
@@ -75,22 +77,13 @@ export function useGalleryPoolState({
         throw new Error("Base Sepolia public client is unavailable");
       }
       const collectionTokenIds =
-        normalizedTokenIds ??
-        Array.from(
-          {
-            length:
-              config.collection.lastTokenId -
-              config.collection.firstTokenId +
-              1,
-          },
-          (_, index) => BigInt(config.collection.firstTokenId + index),
-        );
-      return readGalleryPoolState(client, blockNumber, collectionTokenIds, {
-        marketplace: config.addresses.gallery,
-        fame: config.addresses.fame,
-        mirror: config.addresses.mirror,
-        creatorMagic: config.addresses.creatorMagic,
-      });
+        normalizedTokenIds ?? galleryCollectionTokenIds(config.collection);
+      return readGalleryPoolState(
+        client,
+        blockNumber,
+        collectionTokenIds,
+        galleryReadAddresses(config.addresses),
+      );
     },
     enabled: enabled && Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,

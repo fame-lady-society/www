@@ -1,4 +1,6 @@
-const PUBLIC_BASE_RPC_URL = "https://mainnet.base.org";
+import { base } from "viem/chains";
+
+const PUBLIC_BASE_RPC_URL = base.rpcUrls.default.http[0];
 
 export function fameForkModeEnabled(): boolean {
   return process.env.NEXT_PUBLIC_FAME_FORK_MODE === "1";

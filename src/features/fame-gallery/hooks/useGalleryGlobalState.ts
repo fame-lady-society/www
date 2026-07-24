@@ -11,6 +11,7 @@ import {
 } from "../queryKeys";
 import {
   captureGalleryBlock,
+  galleryReadAddresses,
   readGalleryGlobalState,
   type GalleryMulticallClient,
 } from "../reads";
@@ -57,12 +58,11 @@ export function useGalleryGlobalState({
       if (!client || blockNumber === null) {
         throw new Error("Base Sepolia public client is unavailable");
       }
-      return readGalleryGlobalState(client, blockNumber, {
-        marketplace: config.addresses.gallery,
-        fame: config.addresses.fame,
-        mirror: config.addresses.mirror,
-        creatorMagic: config.addresses.creatorMagic,
-      });
+      return readGalleryGlobalState(
+        client,
+        blockNumber,
+        galleryReadAddresses(config.addresses),
+      );
     },
     enabled: enabled && Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,

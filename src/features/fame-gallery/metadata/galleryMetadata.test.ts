@@ -74,4 +74,22 @@ describe("gallery metadata loader", () => {
       "failure",
     );
   });
+
+  it("aborts a timed-out browser metadata request", async () => {
+    let aborted = false;
+    const result = await loadGalleryMetadata(
+      "https://example.com/metadata.json",
+      (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            aborted = true;
+            reject(new Error("aborted"));
+          });
+        }),
+      1,
+    );
+
+    assert.equal(aborted, true);
+    assert.equal(result.status, "failure");
+  });
 });

@@ -51,7 +51,7 @@ describe("gallery purchase hook adapter", () => {
     }
 
     assert.equal(calls.length, 1);
-    assert.equal(calls[0][0], "[TEST gallery purchase:verification]");
+    assert.equal(calls[0][0], "[gallery purchase:verification]");
     assert.strictEqual(calls[0][1], cause);
   });
 

@@ -23,6 +23,8 @@ describe("gallery metadata query", () => {
       }),
     ).toString("base64")}`;
 
-    assert.equal(galleryMetadataQueryOptions(uri).initialData?.status, "ready");
+    const initialData = galleryMetadataQueryOptions(uri).initialData;
+    assert.equal(typeof initialData, "function");
+    assert.equal(initialData?.().status, "ready");
   });
 });

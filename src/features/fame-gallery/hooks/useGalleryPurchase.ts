@@ -80,19 +80,19 @@ type GalleryPoolPurchaseRequest = Extract<
   { functionName: "purchasePool" }
 >;
 
-function unavailableClientError() {
-  return new Error("Base Sepolia RPC client is unavailable.");
+function unavailableClientError(networkName: string) {
+  return new Error(`${networkName} RPC client is unavailable.`);
 }
 
-function connectionError() {
-  return new Error("Connect a wallet to buy with TEST.");
+function connectionError(tokenSymbol: string) {
+  return new Error(`Connect a wallet to buy with ${tokenSymbol}.`);
 }
 
 export function logGalleryPurchaseError(
   stage: GalleryPurchaseErrorStage,
   cause: unknown,
 ) {
-  console.error(`[TEST gallery purchase:${stage}]`, cause);
+  console.error(`[gallery purchase:${stage}]`, cause);
 }
 
 export function galleryCandidateTokenIdsForArtwork(
@@ -191,7 +191,10 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       const attempt = activeAttempt.current;
       if (!attempt) return;
       if (!publicClient) {
-        failOutsideQueue("connection", unavailableClientError());
+        failOutsideQueue(
+          "connection",
+          unavailableClientError(config.labels.network),
+        );
         return;
       }
 
@@ -200,7 +203,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       try {
         let latestConnection = getConnection(wagmiConfig);
         if (!latestConnection.address) {
-          failOutsideQueue("connection", connectionError());
+          failOutsideQueue("connection", connectionError(config.token.symbol));
           return;
         }
         if (latestConnection.chainId !== config.chainId) {
@@ -215,7 +218,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
         ) {
           failOutsideQueue(
             "switch_chain",
-            new Error("Switch to Base Sepolia to continue."),
+            new Error(`Switch to ${config.labels.network} to continue.`),
           );
           return;
         }
@@ -353,7 +356,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
               }),
             async simulateApproval(frozen) {
               const simulation = await publicClient.simulateContract(
-                galleryApprovalContractRequest(frozen, config.addresses),
+                galleryApprovalContractRequest(frozen, fame),
               );
               return { request: simulation.request };
             },
@@ -377,7 +380,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                   ({ tokenId }) => tokenId,
                 ),
                 source: fulfillmentSource,
-                marketplaceAddress: marketplace,
                 refreshShellTokenIds: recover
                   ? latest.recoverHeldTokenIds
                   : pendingInitialScan
@@ -391,7 +393,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 const request = galleryPurchaseContractRequest(
                   frozen,
                   route,
-                  marketplace,
                 ) as GalleryHeldPurchaseRequest;
                 const simulation = await publicClient.simulateContract(request);
                 return { request: simulation.request };
@@ -399,7 +400,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
               const request = galleryPurchaseContractRequest(
                 frozen,
                 route,
-                marketplace,
               ) as GalleryPoolPurchaseRequest;
               const simulation = await publicClient.simulateContract(request);
               return { request: simulation.request };
@@ -462,6 +462,11 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     },
     [
       failOutsideQueue,
+      config,
+      creatorMagic,
+      fame,
+      marketplace,
+      mirror,
       publicClient,
       queueDispatch,
       switchChainAsync,
@@ -478,7 +483,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       if (!displayed) {
         failOutsideQueue(
           "fulfillment",
-          new Error("The current TEST price is unavailable."),
+          new Error(`The current ${config.token.symbol} price is unavailable.`),
         );
         return;
       }
@@ -501,7 +506,13 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       }
       void executeAttempt(false);
     },
-    [connectModal, executeAttempt, failOutsideQueue, wagmiConfig],
+    [
+      config.token.symbol,
+      connectModal,
+      executeAttempt,
+      failOutsideQueue,
+      wagmiConfig,
+    ],
   );
 
   useEffect(() => {
@@ -515,9 +526,15 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       return;
     }
     if (sawConnectModalOpen.current && !connectModal.open) {
-      failOutsideQueue("connection", connectionError());
+      failOutsideQueue("connection", connectionError(config.token.symbol));
     }
-  }, [connectModal, connection.address, executeAttempt, failOutsideQueue]);
+  }, [
+    config.token.symbol,
+    connectModal,
+    connection.address,
+    executeAttempt,
+    failOutsideQueue,
+  ]);
 
   useEffect(() => {
     if (shouldAutoCloseGalleryPurchaseModal(state.status)) {
@@ -549,12 +566,15 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];
     if (state.approvalHash) {
-      result.push({ kind: "TEST approval", hash: state.approvalHash });
+      result.push({
+        kind: `${config.token.symbol} approval`,
+        hash: state.approvalHash,
+      });
     } else if (
       state.status === "awaiting_approval_wallet" ||
       state.status === "simulating_approval"
     ) {
-      result.push({ kind: "TEST approval" });
+      result.push({ kind: `${config.token.symbol} approval` });
     }
     if (state.purchaseHash) {
       result.push({ kind: "gallery purchase", hash: state.purchaseHash });
@@ -565,7 +585,12 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       result.push({ kind: "gallery purchase" });
     }
     return result;
-  }, [state.approvalHash, state.purchaseHash, state.status]);
+  }, [
+    config.token.symbol,
+    state.approvalHash,
+    state.purchaseHash,
+    state.status,
+  ]);
 
   return {
     state,

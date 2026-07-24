@@ -141,11 +141,12 @@ async function verifiedShell(
   shellTokenIds: readonly bigint[],
   sourceId: bigint,
   blockNumber: bigint,
+  marketplaceAddress: Address,
 ) {
   for (const shellId of uniqueTokenIds(shellTokenIds)) {
     if (shellId === sourceId) continue;
     const owner = await source.readShellOwner(shellId, blockNumber);
-    if (isAddressEqual(owner, marketplace)) return shellId;
+    if (isAddressEqual(owner, marketplaceAddress)) return shellId;
   }
   return null;
 }
@@ -172,13 +173,11 @@ async function resolveAtCurrentBlock({
   candidateTokenIds,
   shellTokenIds,
   source,
-  marketplaceAddress,
 }: {
   terms: GalleryFrozenBuyerTerms;
   candidateTokenIds: readonly bigint[];
   shellTokenIds: readonly bigint[];
   source: GalleryFulfillmentReadSource;
-  marketplaceAddress: Address;
 }): Promise<ResolutionAttempt> {
   const resolutionBlock = await source.captureBlockNumber();
   const allCandidateIds = uniqueTokenIds([
@@ -192,7 +191,7 @@ async function resolveAtCurrentBlock({
 
   if (currentPremium > terms.maxPremium) throw priceChanged();
 
-  const currentHeldRoute = heldRoute(terms, candidates, marketplaceAddress);
+  const currentHeldRoute = heldRoute(terms, candidates, terms.allowanceTarget);
   if (currentHeldRoute) {
     return {
       status: "resolved",
@@ -209,6 +208,7 @@ async function resolveAtCurrentBlock({
       shellTokenIds,
       candidate.tokenId,
       resolutionBlock,
+      terms.allowanceTarget,
     );
     if (shellId !== null) {
       return {
@@ -249,13 +249,11 @@ export async function resolveGalleryFulfillment({
   knownShellTokenIds,
   source,
   refreshShellTokenIds,
-  marketplaceAddress = marketplace,
 }: {
   terms: GalleryFrozenBuyerTerms;
   candidateTokenIds: readonly bigint[];
   knownShellTokenIds: readonly bigint[];
   source: GalleryFulfillmentReadSource;
-  marketplaceAddress?: Address;
   /**
    * Supplied only for a caller-authorized stale-shell recovery. The callback
    * owns the bounded custody refresh; this resolver invokes it at most once.
@@ -267,7 +265,6 @@ export async function resolveGalleryFulfillment({
     candidateTokenIds,
     shellTokenIds: knownShellTokenIds,
     source,
-    marketplaceAddress,
   });
 
   if (resolution.status !== "resolved" && refreshShellTokenIds) {
@@ -280,7 +277,6 @@ export async function resolveGalleryFulfillment({
       ]),
       shellTokenIds: refreshedShellIds,
       source,
-      marketplaceAddress,
     });
   }
 

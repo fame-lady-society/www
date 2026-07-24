@@ -19,6 +19,7 @@ import {
 } from "../discovery/discovery";
 import type { GalleryQueryIdentity } from "../queryKeys";
 import {
+  galleryReadAddresses,
   readGalleryCustodyStates,
   readGalleryTokenStates,
   type GalleryMulticallClient,
@@ -41,22 +42,18 @@ function discoverySource(
   config: ReturnType<typeof useGalleryRuntime>,
 ): GalleryCustodyDiscoverySource {
   const multicallClient = publicClient as unknown as GalleryMulticallClient;
+  const addresses = galleryReadAddresses(config.addresses);
   return {
     getBlockNumber: () => publicClient.getBlockNumber(),
     readCustodyStates: (tokenIds, blockNumber) =>
-      readGalleryCustodyStates(multicallClient, blockNumber, tokenIds, {
-        marketplace: config.addresses.gallery,
-        fame: config.addresses.fame,
-        mirror: config.addresses.mirror,
-        creatorMagic: config.addresses.creatorMagic,
-      }),
+      readGalleryCustodyStates(
+        multicallClient,
+        blockNumber,
+        tokenIds,
+        addresses,
+      ),
     readTokenStates: (tokenIds, blockNumber) =>
-      readGalleryTokenStates(multicallClient, blockNumber, tokenIds, {
-        marketplace: config.addresses.gallery,
-        fame: config.addresses.fame,
-        mirror: config.addresses.mirror,
-        creatorMagic: config.addresses.creatorMagic,
-      }),
+      readGalleryTokenStates(multicallClient, blockNumber, tokenIds, addresses),
     async getAffectedTokenIds(fromBlock, toBlock) {
       const logs = await publicClient.getLogs({
         address: config.addresses.mirror,
@@ -76,6 +73,7 @@ export function useGalleryDiscovery({
   poolTargets?: readonly GalleryArtworkTarget[];
 } = {}) {
   const config = useGalleryRuntime();
+  const marketplace = config.addresses.gallery;
   const identity = useMemo<GalleryQueryIdentity>(
     () => ({
       chainId: config.chainId,
@@ -125,7 +123,7 @@ export function useGalleryDiscovery({
     const scan = runInitialGalleryScan(deploymentKey, () =>
       discoverGalleryHoldings({
         source,
-        marketplace: config.addresses.gallery,
+        marketplace,
         restoredHints: storage.restore(),
         persist: (record) => storage.commit(record),
         onTargets: (_kind, targets) => {
@@ -156,13 +154,13 @@ export function useGalleryDiscovery({
     return () => {
       active = false;
     };
-  }, [source, storage]);
+  }, [deploymentKey, marketplace, source, storage]);
 
   const revalidateAffectedTokenIds = useCallback(
     async (tokenIds: readonly bigint[]) => {
       if (!source) return [];
       const targets = await revalidateGalleryHeldTokenIds(source, tokenIds, {
-        marketplace: config.addresses.gallery,
+        marketplace,
       });
       scanGeneration.current += 1;
       setHeldTargets((current) => {
@@ -176,7 +174,7 @@ export function useGalleryDiscovery({
       });
       return targets;
     },
-    [source],
+    [marketplace, source],
   );
 
   const getPendingInitialHeldTokenIds = useCallback(() => {
@@ -196,7 +194,7 @@ export function useGalleryDiscovery({
     try {
       const result = await discoverGalleryHoldings({
         source,
-        marketplace: config.addresses.gallery,
+        marketplace,
         restoredHints: storage.restore(),
         persist: (record) => storage.commit(record),
       });
@@ -206,7 +204,7 @@ export function useGalleryDiscovery({
     } finally {
       setIsScanning(false);
     }
-  }, [getPendingInitialHeldTokenIds, source, storage]);
+  }, [getPendingInitialHeldTokenIds, marketplace, source, storage]);
 
   const catalog = useMemo(
     () =>

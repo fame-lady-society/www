@@ -1,10 +1,16 @@
 import { getAddress, isAddress, type Address } from "viem";
+import { base } from "viem/chains";
+import {
+  creatorArtistMagicAddress,
+  fameFromNetwork,
+  societyFromNetwork,
+} from "@/features/fame/contract";
 import type { GalleryRuntimeConfig } from "./galleryRuntime";
 
 export const BASE_GALLERY_ADDRESSES = {
-  fame: "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418",
-  mirror: "0xBB5ED04dD7B207592429eb8d599d103CCad646c4",
-  creatorMagic: "0xC8268c2aa571F3C88044C2959F73DdB8eB9e139F",
+  fame: fameFromNetwork(base.id),
+  mirror: societyFromNetwork(base.id),
+  creatorMagic: creatorArtistMagicAddress(base.id),
 } as const;
 
 export function parseBaseMarketplaceAddress(
@@ -21,7 +27,7 @@ export function createBaseGalleryRuntime(
 ): GalleryRuntimeConfig {
   return {
     schemaVersion: 1,
-    chainId: 8_453,
+    chainId: base.id,
     addresses: {
       ...BASE_GALLERY_ADDRESSES,
       gallery: marketplaceAddress,
@@ -39,7 +45,7 @@ export function createBaseGalleryRuntime(
       // only deployment fact the app needs; no manifest or proof is persisted.
       blockNumber: 0n,
     },
-    explorerBaseUrl: "https://basescan.org",
+    explorerBaseUrl: base.blockExplorers.default.url,
     labels: {
       title: "FAME gallery",
       description:

@@ -12,6 +12,7 @@ import {
   universalPoolArtMarketplaceAbi,
 } from "../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
+import type { GalleryRuntimeConfig } from "./config/galleryRuntime";
 import type {
   GalleryAccountState,
   GalleryArtworkTarget,
@@ -61,6 +62,17 @@ const DEFAULT_ADDRESSES: GalleryReadAddresses = {
   mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
   creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
 };
+
+export function galleryReadAddresses(
+  addresses: GalleryRuntimeConfig["addresses"],
+): GalleryReadAddresses {
+  return {
+    marketplace: addresses.gallery,
+    fame: addresses.fame,
+    mirror: addresses.mirror,
+    creatorMagic: addresses.creatorMagic,
+  };
+}
 
 function failure(
   message: string,
@@ -266,7 +278,7 @@ function poolTarget(
   };
 }
 
-function fixedCollectionTokenIds({
+export function galleryCollectionTokenIds({
   firstTokenId,
   lastTokenId,
 }: {
@@ -285,7 +297,7 @@ function fixedCollectionTokenIds({
 export async function readGalleryPoolState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
-  tokenIds: readonly bigint[] = fixedCollectionTokenIds(
+  tokenIds: readonly bigint[] = galleryCollectionTokenIds(
     BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection,
   ),
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,

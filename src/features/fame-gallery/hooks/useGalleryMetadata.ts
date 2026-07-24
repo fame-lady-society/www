@@ -13,7 +13,7 @@ export function galleryMetadataQueryOptions(tokenUri: string) {
     gcTime: 30 * 60 * 1_000,
     retry: 1,
     initialData: tokenUri.trim().startsWith("data:")
-      ? decodeTestGalleryMetadata(tokenUri)
+      ? () => decodeTestGalleryMetadata(tokenUri)
       : undefined,
   };
 }

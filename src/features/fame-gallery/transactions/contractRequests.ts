@@ -11,26 +11,25 @@ const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 
 export function galleryApprovalContractRequest(
   terms: GalleryFrozenBuyerTerms,
-  addresses: { fame: Address; gallery: Address } = config.addresses,
+  fameAddress: Address = config.addresses.fame,
 ) {
   return {
     abi: fameAbi,
-    address: addresses.fame,
+    address: fameAddress,
     account: terms.account,
     chainId: terms.chainId,
     functionName: "approve",
-    args: [addresses.gallery, terms.unit + terms.maxPremium],
+    args: [terms.allowanceTarget, terms.unit + terms.maxPremium],
   } as const;
 }
 
 export function galleryPurchaseContractRequest(
   terms: GalleryFrozenBuyerTerms,
   route: GalleryFulfillmentRoute,
-  galleryAddress: Address = config.addresses.gallery,
 ) {
   const baseRequest = {
     abi: universalPoolArtMarketplaceAbi,
-    address: galleryAddress,
+    address: terms.allowanceTarget,
     account: terms.account,
     chainId: terms.chainId,
   } as const;
