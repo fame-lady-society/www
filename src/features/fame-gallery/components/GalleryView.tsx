@@ -7,14 +7,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  type ReactNode,
-} from "react";
+import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { isAddressEqual } from "viem";
 import { useConnection, useSwitchChain } from "wagmi";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
@@ -23,12 +16,10 @@ import { formatTestAmount } from "../format";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
+import { useGalleryMetadata } from "../hooks/useGalleryMetadata";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
-import {
-  decodeTestGalleryMetadata,
-  type GalleryMetadataResult,
-} from "../metadata/testMetadata";
+import type { GalleryMetadataResult } from "../metadata/testMetadata";
 import type { GalleryArtworkTarget } from "../types";
 import { ArtworkCard } from "./ArtworkCard";
 import { AcquiredNftResult } from "./AcquiredNftResult";
@@ -43,7 +34,8 @@ export type GalleryViewContentState =
 
 export type PresentedGalleryArtwork = {
   stableKey: string;
-  metadata: GalleryMetadataResult;
+  metadata?: GalleryMetadataResult;
+  tokenUri?: string;
 };
 
 export function shouldShowGalleryFunding(chainId: number) {
@@ -183,19 +175,33 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
         </Stack>
       </Paper>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {artworks.map((artwork) => (
-          <ArtworkCard
-            key={artwork.stableKey}
-            metadata={artwork.metadata}
-            purchaseLocked={purchaseLocked}
-            purchaseInProgress={
-              purchaseLocked && activeArtworkKey === artwork.stableKey
-            }
-            onBuy={() => onBuy(artwork.stableKey)}
-            onRetry={() => onRetry(artwork.stableKey)}
-            tokenSymbol={tokenSymbol}
-          />
-        ))}
+        {artworks.map((artwork) =>
+          artwork.metadata ? (
+            <ArtworkCard
+              key={artwork.stableKey}
+              metadata={artwork.metadata}
+              purchaseLocked={purchaseLocked}
+              purchaseInProgress={
+                purchaseLocked && activeArtworkKey === artwork.stableKey
+              }
+              onBuy={() => onBuy(artwork.stableKey)}
+              onRetry={() => onRetry(artwork.stableKey)}
+              tokenSymbol={tokenSymbol}
+            />
+          ) : (
+            <GalleryMetadataArtworkCard
+              key={artwork.stableKey}
+              tokenUri={artwork.tokenUri ?? ""}
+              purchaseLocked={purchaseLocked}
+              purchaseInProgress={
+                purchaseLocked && activeArtworkKey === artwork.stableKey
+              }
+              onBuy={() => onBuy(artwork.stableKey)}
+              onRetry={() => onRetry(artwork.stableKey)}
+              tokenSymbol={tokenSymbol}
+            />
+          ),
+        )}
       </div>
       {scanning ? (
         <Typography color="text.secondary" role="status" aria-live="polite">
@@ -205,6 +211,67 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
     </Stack>
   );
 });
+
+function GalleryMetadataArtworkCard({
+  tokenUri,
+  purchaseLocked,
+  purchaseInProgress,
+  tokenSymbol,
+  onBuy,
+  onRetry,
+}: {
+  tokenUri: string;
+  purchaseLocked: boolean;
+  purchaseInProgress: boolean;
+  tokenSymbol: string;
+  onBuy: () => void;
+  onRetry: () => void;
+}) {
+  const query = useGalleryMetadata(tokenUri);
+  if (query.isLoading) {
+    return (
+      <Paper variant="outlined" sx={{ p: 3 }} role="status">
+        <Typography>Loading artwork…</Typography>
+      </Paper>
+    );
+  }
+
+  return (
+    <ArtworkCard
+      metadata={query.metadata}
+      purchaseLocked={purchaseLocked}
+      purchaseInProgress={purchaseInProgress}
+      tokenSymbol={tokenSymbol}
+      onBuy={onBuy}
+      onRetry={() => {
+        onRetry();
+        void query.retry();
+      }}
+    />
+  );
+}
+
+function AcquiredNftResultWithMetadata({
+  result,
+  tokenUri,
+  tokenSymbol,
+  explorerBaseUrl,
+}: {
+  result: Parameters<typeof AcquiredNftResult>[0]["result"];
+  tokenUri: string;
+  tokenSymbol: string;
+  explorerBaseUrl: string;
+}) {
+  const metadata = useGalleryMetadata(tokenUri);
+  return (
+    <AcquiredNftResult
+      result={result}
+      metadata={metadata.metadata}
+      tokenSymbol={tokenSymbol}
+      explorerBaseUrl={explorerBaseUrl}
+    />
+  );
+}
 
 function useGalleryChainOnPageLoad(targetChainId: number) {
   const connection = useConnection();
@@ -257,29 +324,18 @@ export function GalleryView() {
       refreshHeldDiscovery: discovery.recoverHeldTokenIds,
     });
   }, [discovery.recoverHeldTokenIds, global.refresh, pool.refresh]);
-  const metadataCache = useRef(new Map<string, GalleryMetadataResult>());
-
   const targetsByKey = useMemo(
     () => new Map(discovery.catalog.map((target) => [target.targetId, target])),
     [discovery.catalog],
   );
-  const artworks = useMemo<PresentedGalleryArtwork[]>(() => {
-    const activeUris = new Set<string>();
-    const presented = discovery.catalog.map((target) => {
-      const tokenUri = target.tokenUri ?? "";
-      activeUris.add(tokenUri);
-      let metadata = metadataCache.current.get(tokenUri);
-      if (!metadata) {
-        metadata = decodeTestGalleryMetadata(tokenUri);
-        metadataCache.current.set(tokenUri, metadata);
-      }
-      return { stableKey: target.targetId, metadata };
-    });
-    for (const tokenUri of metadataCache.current.keys()) {
-      if (!activeUris.has(tokenUri)) metadataCache.current.delete(tokenUri);
-    }
-    return presented;
-  }, [discovery.catalog]);
+  const artworks = useMemo<PresentedGalleryArtwork[]>(
+    () =>
+      discovery.catalog.map((target) => ({
+        stableKey: target.targetId,
+        tokenUri: target.tokenUri ?? "",
+      })),
+    [discovery.catalog],
+  );
 
   let state: GalleryViewContentState;
   if (global.projection.status === "failure") {
@@ -387,11 +443,9 @@ export function GalleryView() {
         </GalleryViewContent>
 
         {purchase.state.acquisition && purchase.selectedTarget ? (
-          <AcquiredNftResult
+          <AcquiredNftResultWithMetadata
             result={purchase.state.acquisition}
-            metadata={decodeTestGalleryMetadata(
-              purchase.selectedTarget.tokenUri ?? "",
-            )}
+            tokenUri={purchase.selectedTarget.tokenUri ?? ""}
             tokenSymbol={config.token.symbol}
             explorerBaseUrl={config.explorerBaseUrl}
           />
