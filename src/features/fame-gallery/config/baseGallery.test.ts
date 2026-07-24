@@ -7,6 +7,7 @@ import {
   createBaseGalleryRuntime,
   parseBaseMarketplaceAddress,
 } from "./baseGallery";
+import { BASE_SEPOLIA_GALLERY_RUNTIME } from "./galleryRuntime";
 
 const marketplace = "0x1111111111111111111111111111111111111111";
 
@@ -24,6 +25,11 @@ describe("Base FAME gallery configuration", () => {
     });
     assert.equal(config.token.symbol, "FAME");
     assert.equal(config.labels.network, "Base");
+    assert.equal(config.adminHref, undefined);
+    assert.equal(
+      BASE_SEPOLIA_GALLERY_RUNTIME.adminHref,
+      "/fame/gallery/test/admin",
+    );
     assert.deepEqual(config.collection, {
       firstTokenId: 1,
       lastTokenId: 888,

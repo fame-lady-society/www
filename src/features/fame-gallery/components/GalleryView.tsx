@@ -405,12 +405,8 @@ export function GalleryView() {
               {config.labels.description}
             </Typography>
           </div>
-          {connectedOwner ? (
-            <Button
-              component={NextLink}
-              href="/fame/gallery/test/admin"
-              variant="text"
-            >
+          {connectedOwner && config.adminHref ? (
+            <Button component={NextLink} href={config.adminHref} variant="text">
               Open admin
             </Button>
           ) : null}

@@ -92,4 +92,91 @@ describe("gallery metadata loader", () => {
     assert.equal(aborted, true);
     assert.equal(result.status, "failure");
   });
+
+  it("keeps the timeout active while reading a stalled body", async () => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    const result = await loadGalleryMetadata(
+      "https://example.com/metadata.json",
+      async () => new Response(body, { status: 200 }),
+      1,
+    );
+
+    assert.equal(cancelled, true);
+    assert.equal(result.status, "failure");
+  });
+
+  it("cancels an oversized response before reading its body", async () => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    const result = await loadGalleryMetadata(
+      "https://example.com/metadata.json",
+      async () =>
+        new Response(body, {
+          status: 200,
+          headers: {
+            "content-length": String(GALLERY_REMOTE_METADATA_MAX_BYTES + 1),
+          },
+        }),
+    );
+
+    assert.equal(cancelled, true);
+    assert.equal(result.status, "failure");
+  });
+
+  it("cancels a streamed body when accumulated bytes cross the limit", async () => {
+    let cancelled = false;
+    const oversizedChunk = new Uint8Array(
+      GALLERY_REMOTE_METADATA_MAX_BYTES + 1,
+    );
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(oversizedChunk);
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+
+    const result = await loadGalleryMetadata(
+      "https://example.com/metadata.json",
+      async () => new Response(body, { status: 200 }),
+    );
+
+    assert.equal(cancelled, true);
+    assert.equal(result.status, "failure");
+  });
+
+  it("stops fallback requests when the caller cancels", async () => {
+    const controller = new AbortController();
+    const requested: string[] = [];
+
+    const pending = loadGalleryMetadata(
+      "https://gateway.irys.xyz/example/metadata.json",
+      async (input, init) => {
+        requested.push(String(input));
+        return await new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new Error("aborted"));
+          });
+        });
+      },
+      10_000,
+      controller.signal,
+    );
+    controller.abort(new Error("card unmounted"));
+
+    await assert.rejects(pending);
+    assert.deepEqual(requested, ["https://arweave.net/example/metadata.json"]);
+  });
 });

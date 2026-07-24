@@ -48,30 +48,20 @@ function isHttpsUrl(value: string) {
   }
 }
 
-async function fetchWithTimeout(
-  fetchMetadata: MetadataFetch,
-  url: string,
-  timeoutMs: number,
-) {
-  const controller = new AbortController();
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  return Promise.race([
-    fetchMetadata(url, { signal: controller.signal }),
-    new Promise<never>((_, reject) => {
-      timeout = setTimeout(() => {
-        controller.abort();
-        reject(new Error("Gallery metadata request timed out"));
-      }, timeoutMs);
-    }),
-  ]).finally(() => clearTimeout(timeout));
+function abortError(signal: AbortSignal) {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new Error("Gallery metadata request aborted");
 }
 
 async function readBoundedResponseText(
   response: Response,
   maxBytes: number,
+  signal: AbortSignal,
 ): Promise<string> {
   const contentLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    await response.body?.cancel();
     throw new Error("Gallery metadata response is too large");
   }
   if (!response.body) {
@@ -86,9 +76,14 @@ async function readBoundedResponseText(
   const decoder = new TextDecoder();
   let bytesRead = 0;
   let body = "";
+  const cancelOnAbort = () => {
+    void reader.cancel(signal.reason);
+  };
+  signal.addEventListener("abort", cancelOnAbort, { once: true });
   try {
     while (true) {
       const { done, value } = await reader.read();
+      if (signal.aborted) throw abortError(signal);
       if (done) break;
       bytesRead += value.byteLength;
       if (bytesRead > maxBytes) {
@@ -99,7 +94,40 @@ async function readBoundedResponseText(
     }
     return body + decoder.decode();
   } finally {
+    signal.removeEventListener("abort", cancelOnAbort);
     reader.releaseLock();
+  }
+}
+
+async function fetchBoundedMetadata(
+  fetchMetadata: MetadataFetch,
+  url: string,
+  timeoutMs: number,
+  maxBytes: number,
+  externalSignal?: AbortSignal,
+) {
+  const controller = new AbortController();
+  const abortFromCaller = () => controller.abort(externalSignal?.reason);
+  if (externalSignal?.aborted) {
+    abortFromCaller();
+  } else {
+    externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  }
+  const timeout = setTimeout(
+    () => controller.abort(new Error("Gallery metadata request timed out")),
+    timeoutMs,
+  );
+
+  try {
+    const response = await fetchMetadata(url, { signal: controller.signal });
+    if (!response.ok) {
+      await response.body?.cancel();
+      return null;
+    }
+    return await readBoundedResponseText(response, maxBytes, controller.signal);
+  } finally {
+    clearTimeout(timeout);
+    externalSignal?.removeEventListener("abort", abortFromCaller);
   }
 }
 
@@ -107,6 +135,7 @@ export async function loadGalleryMetadata(
   rawTokenUri: string,
   fetchMetadata: MetadataFetch = fetch,
   timeoutMs = GALLERY_METADATA_TIMEOUT_MS,
+  signal?: AbortSignal,
 ): Promise<GalleryMetadataResult> {
   const tokenUri = rawTokenUri.trim();
   if (tokenUri.startsWith("data:")) {
@@ -119,12 +148,14 @@ export async function loadGalleryMetadata(
   for (const url of fameMetadataFetchUrls(tokenUri)) {
     if (!isHttpsUrl(url)) continue;
     try {
-      const response = await fetchWithTimeout(fetchMetadata, url, timeoutMs);
-      if (!response.ok) continue;
-      const body = await readBoundedResponseText(
-        response,
+      const body = await fetchBoundedMetadata(
+        fetchMetadata,
+        url,
+        timeoutMs,
         GALLERY_REMOTE_METADATA_MAX_BYTES,
+        signal,
       );
+      if (body === null) continue;
       const parsed: unknown = JSON.parse(body);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         continue;
@@ -142,7 +173,8 @@ export async function loadGalleryMetadata(
         attributes: [],
         error: null,
       };
-    } catch {
+    } catch (error) {
+      if (signal?.aborted) throw error;
       // Try the normalized/original HTTPS URL before using fallback artwork.
     }
   }

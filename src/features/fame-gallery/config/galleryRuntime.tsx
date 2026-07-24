@@ -25,6 +25,7 @@ export type GalleryRuntimeConfig = {
     blockNumber: bigint;
   };
   explorerBaseUrl: string;
+  adminHref?: string;
   labels: {
     title: string;
     description: string;
@@ -34,6 +35,7 @@ export type GalleryRuntimeConfig = {
 
 export const BASE_SEPOLIA_GALLERY_RUNTIME: GalleryRuntimeConfig = {
   ...BASE_SEPOLIA_TEST_GALLERY_CONFIG,
+  adminHref: "/fame/gallery/test/admin",
   token: {
     name: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.name,
     symbol: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.symbol,
