@@ -6,13 +6,12 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import NextLink from "next/link";
 import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { isAddressEqual } from "viem";
 import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
+import { LinkButton } from "@/components/LinkButton";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
-import { FameSwapWidget } from "@/features/fame-swap/components/FameSwapWidget";
 import { formatTestAmount } from "../format";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
@@ -39,20 +38,35 @@ export type PresentedGalleryArtwork = {
   tokenUri?: string;
 };
 
-export function shouldShowGalleryFunding(chainId: number) {
-  return chainId === base.id;
-}
+export function GalleryFundingLink({ chainId }: { chainId: number }) {
+  if (chainId !== base.id) return null;
 
-export async function refreshGalleryAfterFunding({
-  refreshGlobal,
-  refreshPool,
-  refreshHeldDiscovery,
-}: {
-  refreshGlobal: () => Promise<unknown>;
-  refreshPool: () => Promise<unknown>;
-  refreshHeldDiscovery: () => Promise<unknown>;
-}) {
-  await Promise.all([refreshGlobal(), refreshPool(), refreshHeldDiscovery()]);
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        spacing={2}
+      >
+        <div>
+          <Typography component="h2" variant="h6">
+            Get FAME
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Buy FAME with ETH, WETH, or USDC on the swap page.
+          </Typography>
+        </div>
+        <LinkButton
+          href="/fame/swap"
+          variant="outlined"
+          sx={{ minHeight: 44, flexShrink: 0 }}
+        >
+          Open FAME swap
+        </LinkButton>
+      </Stack>
+    </Paper>
+  );
 }
 
 export function GalleryViewContent({
@@ -318,13 +332,6 @@ export function GalleryView() {
   const revalidateAffectedTokenIds = discovery.revalidateAffectedTokenIds;
   const refreshPool = pool.refresh;
   const buy = purchase.buy;
-  const refreshAfterFunding = useCallback(async () => {
-    await refreshGalleryAfterFunding({
-      refreshGlobal: global.refresh,
-      refreshPool: pool.refresh,
-      refreshHeldDiscovery: discovery.recoverHeldTokenIds,
-    });
-  }, [discovery.recoverHeldTokenIds, global.refresh, pool.refresh]);
   const targetsByKey = useMemo(
     () => new Map(discovery.catalog.map((target) => [target.targetId, target])),
     [discovery.catalog],
@@ -406,18 +413,13 @@ export function GalleryView() {
             </Typography>
           </div>
           {connectedOwner && config.adminHref ? (
-            <Button component={NextLink} href={config.adminHref} variant="text">
+            <LinkButton href={config.adminHref} variant="text">
               Open admin
-            </Button>
+            </LinkButton>
           ) : null}
         </Stack>
 
-        {shouldShowGalleryFunding(config.chainId) ? (
-          <FameSwapWidget
-            mode="compact"
-            onSwapConfirmed={refreshAfterFunding}
-          />
-        ) : null}
+        <GalleryFundingLink chainId={config.chainId} />
 
         <GalleryViewContent
           state={state}

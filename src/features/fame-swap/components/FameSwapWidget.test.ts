@@ -10,7 +10,6 @@ import { fameSwapQuoteView } from "../ui/quoteView";
 import { FAME_SWAP_OPPOSITE_ASSETS } from "../ui/tradeModel";
 import {
   FameSwapHeading,
-  confirmedSwapReceiptToNotify,
   fameSwapErrorDetails,
   fameSwapErrorSummary,
   quoteSummary,
@@ -21,45 +20,11 @@ const recipient = "0x0000000000000000000000000000000000000abc";
 
 describe("FameSwapWidget focus target", () => {
   it("exposes the existing heading as a stable programmatic focus target", () => {
-    const html = renderToStaticMarkup(
-      createElement(FameSwapHeading, { compact: false }),
-    );
+    const html = renderToStaticMarkup(createElement(FameSwapHeading));
 
     assert.match(html, /id="fame-swap-heading"/);
     assert.match(html, /tabindex="-1"/);
     assert.match(html, />FAME swap<\/h4>/);
-  });
-});
-
-describe("FameSwapWidget confirmation callback", () => {
-  const receipt =
-    "0x1111111111111111111111111111111111111111111111111111111111111111";
-
-  it("emits a confirmed swap receipt exactly once", () => {
-    assert.equal(
-      confirmedSwapReceiptToNotify({
-        swapConfirmed: false,
-        hash: receipt,
-        lastNotifiedHash: null,
-      }),
-      null,
-    );
-    assert.equal(
-      confirmedSwapReceiptToNotify({
-        swapConfirmed: true,
-        hash: receipt,
-        lastNotifiedHash: null,
-      }),
-      receipt,
-    );
-    assert.equal(
-      confirmedSwapReceiptToNotify({
-        swapConfirmed: true,
-        hash: receipt,
-        lastNotifiedHash: receipt,
-      }),
-      null,
-    );
   });
 });
 

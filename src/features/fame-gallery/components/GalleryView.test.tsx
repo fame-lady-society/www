@@ -5,9 +5,8 @@ import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
 import { ArtworkCard } from "./ArtworkCard";
 import {
   GalleryArtworkGrid,
+  GalleryFundingLink,
   GalleryViewContent,
-  refreshGalleryAfterFunding,
-  shouldShowGalleryFunding,
   type PresentedGalleryArtwork,
 } from "./GalleryView";
 
@@ -34,27 +33,17 @@ function readyMetadata(name: string) {
 const price = 1_001_000n * 10n ** 18n;
 
 describe("TEST gallery public view", () => {
-  it("shows funding only on the Base mainnet runtime", () => {
-    assert.equal(shouldShowGalleryFunding(8_453), true);
-    assert.equal(shouldShowGalleryFunding(84_532), false);
-  });
+  it("links Base buyers to the full swap page without embedding a widget", () => {
+    const baseFunding = renderToStaticMarkup(
+      <GalleryFundingLink chainId={8_453} />,
+    );
+    const testnetFunding = renderToStaticMarkup(
+      <GalleryFundingLink chainId={84_532} />,
+    );
 
-  it("refreshes every on-chain gallery projection after funding", async () => {
-    const refreshed: string[] = [];
-    await refreshGalleryAfterFunding({
-      refreshGlobal: async () => {
-        refreshed.push("global");
-      },
-      refreshPool: async () => {
-        refreshed.push("pool");
-      },
-      refreshHeldDiscovery: async () => {
-        refreshed.push("held");
-        return [];
-      },
-    });
-
-    assert.deepEqual(refreshed.sort(), ["global", "held", "pool"]);
+    assert.match(baseFunding, /href="\/fame\/swap"/);
+    assert.match(baseFunding, /Get FAME/);
+    assert.equal(testnetFunding, "");
   });
 
   it("distinguishes loading, failed, incomplete, and successful-empty catalog states", () => {

@@ -14,8 +14,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import type { FC, SyntheticEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { parseUnits, type Hash } from "viem";
+import { useCallback, useMemo, useState } from "react";
+import { parseUnits } from "viem";
 import { base } from "viem/chains";
 import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
@@ -51,33 +51,10 @@ import { FameSwapAmountField } from "./SwapAmountField";
 import { FameSwapTokenSelect } from "./TokenSelect";
 import { FameSwapTransactionTimeline } from "./TransactionTimeline";
 
-export type FameSwapWidgetMode = "full" | "compact";
-
-export interface FameSwapWidgetProps {
-  mode?: FameSwapWidgetMode;
-  onSwapConfirmed?: (receiptHash: Hash) => void | Promise<void>;
-}
-
 export const FAME_SWAP_HEADING_ID = "fame-swap-heading";
 
-export function confirmedSwapReceiptToNotify({
-  swapConfirmed,
-  hash,
-  lastNotifiedHash,
-}: {
-  swapConfirmed: boolean;
-  hash: Hash | null;
-  lastNotifiedHash: Hash | null;
-}) {
-  return swapConfirmed && hash && hash !== lastNotifiedHash ? hash : null;
-}
-
-export const FameSwapHeading: FC<{ compact: boolean }> = ({ compact }) => (
-  <Typography
-    id={FAME_SWAP_HEADING_ID}
-    tabIndex={-1}
-    variant={compact ? "h5" : "h4"}
-  >
+export const FameSwapHeading: FC = () => (
+  <Typography id={FAME_SWAP_HEADING_ID} tabIndex={-1} variant="h4">
     FAME swap
   </Typography>
 );
@@ -224,10 +201,7 @@ const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
   );
 };
 
-export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
-  mode = "full",
-  onSwapConfirmed,
-}) => {
+export const FameSwapWidget: FC = () => {
   const { address, isConnected, chainId: connectedChainId } = useAccount();
   const {
     switchChainAsync,
@@ -244,7 +218,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     DEFAULT_FAME_SWAP_DEADLINE_MINUTES,
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const compact = mode === "compact";
   const onBase = isConnected && connectedChainId === base.id;
   const pair = useMemo(() => deriveFameSwapPair(trade), [trade]);
   const inputBalance = useFameSwapBalance(address, pair.inputToken);
@@ -291,17 +264,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
   });
 
   const transaction = useFameSwapTransaction(quote, address);
-  const lastNotifiedSwapHash = useRef<Hash | null>(null);
-  useEffect(() => {
-    const receiptHash = confirmedSwapReceiptToNotify({
-      swapConfirmed: transaction.swapConfirmed,
-      hash: transaction.hash,
-      lastNotifiedHash: lastNotifiedSwapHash.current,
-    });
-    if (!receiptHash || !onSwapConfirmed) return;
-    lastNotifiedSwapHash.current = receiptHash;
-    void onSwapConfirmed(receiptHash);
-  }, [onSwapConfirmed, transaction.hash, transaction.swapConfirmed]);
   const quoteView = useMemo(
     () => fameSwapQuoteView(quote, pair.outputToken, transaction),
     [pair.outputToken, quote, transaction],
@@ -321,7 +283,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     submitting: transaction.submitting || isSwitchingChain,
     confirmed: transaction.swapConfirmed,
     reverted: transaction.reverted,
-    compact,
   });
 
   const primaryDisabled =
@@ -435,7 +396,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
       aria-labelledby={FAME_SWAP_HEADING_ID}
       sx={{
         width: "100%",
-        maxWidth: compact ? 480 : 760,
+        maxWidth: 760,
         mx: "auto",
         px: { xs: 2, sm: 3 },
         py: { xs: 3, sm: 4 },
@@ -443,7 +404,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     >
       <Stack spacing={2.25}>
         <div>
-          <FameSwapHeading compact={compact} />
+          <FameSwapHeading />
           <Typography color="text.secondary" sx={{ mt: 1 }}>
             via preferred liquidity
           </Typography>

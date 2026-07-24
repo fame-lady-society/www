@@ -12,7 +12,6 @@ const baseInput: FameSwapWidgetStateInput = {
   submitting: false,
   confirmed: false,
   reverted: false,
-  compact: false,
 };
 
 describe("FAME swap widget state", () => {
@@ -85,11 +84,10 @@ describe("FAME swap widget state", () => {
     assert.equal(ready.fallbackVisible, false);
   });
 
-  it("keeps compact critical blocked states visible", () => {
+  it("keeps critical blocked states visible", () => {
     const state = fameSwapWidgetState({
       ...baseInput,
       quoteStatus: "stale_artifact",
-      compact: true,
     });
 
     assert.equal(state.kind, "stale_artifact");
