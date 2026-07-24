@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
@@ -16,18 +16,18 @@ import {
 } from "../reads";
 import type { GalleryGlobalState, GalleryHookProjection } from "../types";
 
-const identity: GalleryQueryIdentity = {
-  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
-  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
-};
-
 export function useGalleryGlobalState({
   enabled = true,
 }: { enabled?: boolean } = {}) {
+  const config = useGalleryRuntime();
+  const identity: GalleryQueryIdentity = {
+    chainId: config.chainId,
+    manifestVersion: config.schemaVersion,
+    marketplaceAddress: config.addresses.gallery,
+    deploymentBlock: config.deployment.blockNumber,
+  };
   const publicClient = usePublicClient({
-    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+    chainId: config.chainId,
   });
   const client = publicClient as unknown as GalleryMulticallClient | undefined;
   const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
@@ -57,7 +57,12 @@ export function useGalleryGlobalState({
       if (!client || blockNumber === null) {
         throw new Error("Base Sepolia public client is unavailable");
       }
-      return readGalleryGlobalState(client, blockNumber);
+      return readGalleryGlobalState(client, blockNumber, {
+        marketplace: config.addresses.gallery,
+        fame: config.addresses.fame,
+        mirror: config.addresses.mirror,
+        creatorMagic: config.addresses.creatorMagic,
+      });
     },
     enabled: enabled && Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,

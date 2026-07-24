@@ -5,7 +5,7 @@ import {
   type GalleryDiscoveryLock,
 } from "./storage";
 
-let sharedStorage: GalleryCustodyHintStorage | null = null;
+const sharedStorage = new Map<string, GalleryCustodyHintStorage>();
 
 function browserLock(): GalleryDiscoveryLock | null {
   if (typeof navigator === "undefined" || !navigator.locks) return null;
@@ -16,8 +16,12 @@ function browserLock(): GalleryDiscoveryLock | null {
   };
 }
 
-export function getBrowserGalleryCustodyHintStorage() {
-  if (sharedStorage) return sharedStorage;
+export function getBrowserGalleryCustodyHintStorage(
+  identity = createGalleryCustodyCacheIdentity(),
+) {
+  const key = JSON.stringify(identity);
+  const current = sharedStorage.get(key);
+  if (current) return current;
 
   let storage: Storage | null = null;
   if (typeof window !== "undefined" && typeof document !== "undefined") {
@@ -27,10 +31,11 @@ export function getBrowserGalleryCustodyHintStorage() {
       storage = null;
     }
   }
-  sharedStorage = createGalleryCustodyHintStorage({
+  const created = createGalleryCustodyHintStorage({
     storage,
     lock: browserLock(),
-    identity: createGalleryCustodyCacheIdentity(),
+    identity,
   });
-  return sharedStorage;
+  sharedStorage.set(key, created);
+  return created;
 }

@@ -27,14 +27,21 @@ function metadataUri(
 
 describe("TEST gallery metadata", () => {
   it("decodes nested Base64 JSON and passive SVG", () => {
-    const result = decodeTestGalleryMetadata(metadataUri());
+    const tokenUri = metadataUri();
+    const parsed = JSON.parse(
+      Buffer.from(
+        tokenUri.slice("data:application/json;base64,".length),
+        "base64",
+      ).toString("utf8"),
+    ) as { image: string };
+    const result = decodeTestGalleryMetadata(tokenUri);
 
     assert.equal(result.status, "ready");
     if (result.status !== "ready") return;
     assert.equal(result.name, "Example Society #1");
     assert.equal(result.description, "On-chain test art");
     assert.equal(result.attributes[0]?.traitType, "Token ID");
-    assert.match(result.image, /^data:image\/svg\+xml;base64,/);
+    assert.equal(result.image, parsed.image);
   });
 
   it("returns a bounded fallback for unavailable metadata", () => {

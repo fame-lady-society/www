@@ -8,8 +8,9 @@ import {
   createGalleryCatalog,
   reconcileGalleryCatalogTargets,
 } from "../catalog/catalogAssembler";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import { getBrowserGalleryCustodyHintStorage } from "../discovery/browserStorage";
+import { createGalleryCustodyCacheIdentity } from "../discovery/cache";
 import {
   discoverGalleryHoldings,
   revalidateGalleryHeldTokenIds,
@@ -24,22 +25,9 @@ import {
 } from "../reads";
 import type { GalleryArtworkTarget } from "../types";
 
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-const identity: GalleryQueryIdentity = {
-  chainId: config.chainId,
-  manifestVersion: config.schemaVersion,
-  marketplaceAddress: config.addresses.gallery,
-  deploymentBlock: config.deployment.blockNumber,
-};
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
 );
-const deploymentKey = [
-  identity.chainId,
-  identity.manifestVersion,
-  identity.marketplaceAddress.toLowerCase(),
-  identity.deploymentBlock.toString(),
-].join(":");
 
 export function isCurrentGalleryScan(
   scanGeneration: number,
@@ -50,14 +38,25 @@ export function isCurrentGalleryScan(
 
 function discoverySource(
   publicClient: NonNullable<ReturnType<typeof usePublicClient>>,
+  config: ReturnType<typeof useGalleryRuntime>,
 ): GalleryCustodyDiscoverySource {
   const multicallClient = publicClient as unknown as GalleryMulticallClient;
   return {
     getBlockNumber: () => publicClient.getBlockNumber(),
     readCustodyStates: (tokenIds, blockNumber) =>
-      readGalleryCustodyStates(multicallClient, blockNumber, tokenIds),
+      readGalleryCustodyStates(multicallClient, blockNumber, tokenIds, {
+        marketplace: config.addresses.gallery,
+        fame: config.addresses.fame,
+        mirror: config.addresses.mirror,
+        creatorMagic: config.addresses.creatorMagic,
+      }),
     readTokenStates: (tokenIds, blockNumber) =>
-      readGalleryTokenStates(multicallClient, blockNumber, tokenIds),
+      readGalleryTokenStates(multicallClient, blockNumber, tokenIds, {
+        marketplace: config.addresses.gallery,
+        fame: config.addresses.fame,
+        mirror: config.addresses.mirror,
+        creatorMagic: config.addresses.creatorMagic,
+      }),
     async getAffectedTokenIds(fromBlock, toBlock) {
       const logs = await publicClient.getLogs({
         address: config.addresses.mirror,
@@ -76,12 +75,37 @@ export function useGalleryDiscovery({
 }: {
   poolTargets?: readonly GalleryArtworkTarget[];
 } = {}) {
+  const config = useGalleryRuntime();
+  const identity = useMemo<GalleryQueryIdentity>(
+    () => ({
+      chainId: config.chainId,
+      manifestVersion: config.schemaVersion,
+      marketplaceAddress: config.addresses.gallery,
+      deploymentBlock: config.deployment.blockNumber,
+    }),
+    [config],
+  );
+  const deploymentKey = [
+    identity.chainId,
+    identity.manifestVersion,
+    identity.marketplaceAddress.toLowerCase(),
+    identity.deploymentBlock.toString(),
+  ].join(":");
   const publicClient = usePublicClient({ chainId: config.chainId });
   const source = useMemo(
-    () => (publicClient ? discoverySource(publicClient) : null),
-    [publicClient],
+    () => (publicClient ? discoverySource(publicClient, config) : null),
+    [config, publicClient],
   );
-  const storage = useMemo(() => getBrowserGalleryCustodyHintStorage(), []);
+  const storage = useMemo(
+    () =>
+      getBrowserGalleryCustodyHintStorage(
+        createGalleryCustodyCacheIdentity(identity, {
+          firstTokenId: BigInt(config.collection.firstTokenId),
+          lastTokenId: BigInt(config.collection.lastTokenId),
+        }),
+      ),
+    [config, identity],
+  );
   const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
   const [isScanning, setIsScanning] = useState(Boolean(source));
   const [scanCompleted, setScanCompleted] = useState(false);

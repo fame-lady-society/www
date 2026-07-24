@@ -16,10 +16,10 @@ import {
   type ReactNode,
 } from "react";
 import { isAddressEqual } from "viem";
-import { baseSepolia } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { formatTestAmount } from "../format";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
@@ -50,17 +50,19 @@ export function GalleryViewContent({
   paused = false,
   onRefresh,
   children,
+  title = "TEST gallery",
 }: {
   state: GalleryViewContentState;
   paused?: boolean;
   onRefresh?: () => void;
   children?: ReactNode;
+  title?: string;
 }) {
   if (state.status === "loading") {
     return (
       <Paper variant="outlined" sx={{ p: 4 }} role="status" aria-live="polite">
         <Typography component="h2" variant="h5">
-          Loading TEST gallery…
+          Loading {title}…
         </Typography>
       </Paper>
     );
@@ -135,6 +137,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   scanning = false,
   onBuy,
   onRetry,
+  tokenSymbol = "TEST",
 }: {
   artworks: readonly PresentedGalleryArtwork[];
   totalPrice: bigint;
@@ -143,6 +146,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   scanning?: boolean;
   onBuy: (stableKey: string) => void;
   onRetry: (stableKey: string) => void;
+  tokenSymbol?: string;
 }) {
   return (
     <Stack spacing={3}>
@@ -157,7 +161,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
             Every artwork
           </Typography>
           <Typography variant="h5" fontWeight={700}>
-            {formatTestAmount(totalPrice)} TEST
+            {formatTestAmount(totalPrice)} {tokenSymbol}
           </Typography>
         </Stack>
       </Paper>
@@ -172,6 +176,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
             }
             onBuy={() => onBuy(artwork.stableKey)}
             onRetry={() => onRetry(artwork.stableKey)}
+            tokenSymbol={tokenSymbol}
           />
         ))}
       </div>
@@ -184,24 +189,25 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   );
 });
 
-function useBaseSepoliaOnPageLoad() {
+function useGalleryChainOnPageLoad(targetChainId: number) {
   const connection = useConnection();
   const { mutate: switchChain } = useSwitchChain();
   const shouldSwitch = needsConnectedChainSwitch({
     isConnected: connection.isConnected,
     connectedChainId: connection.chainId,
-    targetChainId: baseSepolia.id,
+    targetChainId,
   });
 
   useEffect(() => {
     if (shouldSwitch) {
-      switchChain({ chainId: baseSepolia.id });
+      switchChain({ chainId: targetChainId });
     }
-  }, [shouldSwitch, switchChain]);
+  }, [shouldSwitch, switchChain, targetChainId]);
 }
 
 export function GalleryView() {
-  useBaseSepoliaOnPageLoad();
+  const config = useGalleryRuntime();
+  useGalleryChainOnPageLoad(config.chainId);
   const connection = useConnection();
   const global = useGalleryGlobalState();
   const pool = useGalleryPoolState();
@@ -233,26 +239,23 @@ export function GalleryView() {
     () => new Map(discovery.catalog.map((target) => [target.targetId, target])),
     [discovery.catalog],
   );
-  const artworks = useMemo<PresentedGalleryArtwork[]>(
-    () => {
-      const activeUris = new Set<string>();
-      const presented = discovery.catalog.map((target) => {
-        const tokenUri = target.tokenUri ?? "";
-        activeUris.add(tokenUri);
-        let metadata = metadataCache.current.get(tokenUri);
-        if (!metadata) {
-          metadata = decodeTestGalleryMetadata(tokenUri);
-          metadataCache.current.set(tokenUri, metadata);
-        }
-        return { stableKey: target.targetId, metadata };
-      });
-      for (const tokenUri of metadataCache.current.keys()) {
-        if (!activeUris.has(tokenUri)) metadataCache.current.delete(tokenUri);
+  const artworks = useMemo<PresentedGalleryArtwork[]>(() => {
+    const activeUris = new Set<string>();
+    const presented = discovery.catalog.map((target) => {
+      const tokenUri = target.tokenUri ?? "";
+      activeUris.add(tokenUri);
+      let metadata = metadataCache.current.get(tokenUri);
+      if (!metadata) {
+        metadata = decodeTestGalleryMetadata(tokenUri);
+        metadataCache.current.set(tokenUri, metadata);
       }
-      return presented;
-    },
-    [discovery.catalog],
-  );
+      return { stableKey: target.targetId, metadata };
+    });
+    for (const tokenUri of metadataCache.current.keys()) {
+      if (!activeUris.has(tokenUri)) metadataCache.current.delete(tokenUri);
+    }
+    return presented;
+  }, [discovery.catalog]);
 
   let state: GalleryViewContentState;
   if (global.projection.status === "failure") {
@@ -315,11 +318,10 @@ export function GalleryView() {
         >
           <div>
             <Typography component="h1" variant="h3">
-              TEST gallery
+              {config.labels.title}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
-              Choose an artwork and buy it with TEST. Wallet connection is only
-              needed when you buy.
+              {config.labels.description}
             </Typography>
           </div>
           {connectedOwner ? (
@@ -337,6 +339,7 @@ export function GalleryView() {
           state={state}
           paused={globalState?.paused}
           onRefresh={() => void refresh()}
+          title={config.labels.title}
         >
           {state.status === "ready" && globalState ? (
             <GalleryArtworkGrid
@@ -347,6 +350,7 @@ export function GalleryView() {
               scanning={discovery.isScanning}
               onBuy={buyArtwork}
               onRetry={retryArtwork}
+              tokenSymbol={config.token.symbol}
             />
           ) : null}
         </GalleryViewContent>
@@ -357,6 +361,8 @@ export function GalleryView() {
             metadata={decodeTestGalleryMetadata(
               purchase.selectedTarget.tokenUri ?? "",
             )}
+            tokenSymbol={config.token.symbol}
+            explorerBaseUrl={config.explorerBaseUrl}
           />
         ) : null}
 
@@ -380,6 +386,9 @@ export function GalleryView() {
           onClose={() => purchase.setModalOpen(false)}
           onRetry={purchase.retry}
           onDone={() => purchase.setModalOpen(false)}
+          tokenSymbol={config.token.symbol}
+          networkName={config.labels.network}
+          explorerBaseUrl={config.explorerBaseUrl}
         />
       </Stack>
     </Container>

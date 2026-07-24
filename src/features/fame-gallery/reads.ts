@@ -266,12 +266,16 @@ function poolTarget(
   };
 }
 
-function fixedCollectionTokenIds() {
+function fixedCollectionTokenIds({
+  firstTokenId,
+  lastTokenId,
+}: {
+  firstTokenId: number;
+  lastTokenId: number;
+}) {
   const ids: bigint[] = [];
-  const first = BigInt(
-    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.firstTokenId,
-  );
-  const last = BigInt(BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId);
+  const first = BigInt(firstTokenId);
+  const last = BigInt(lastTokenId);
   for (let tokenId = first; tokenId <= last; tokenId += 1n) {
     ids.push(tokenId);
   }
@@ -281,7 +285,9 @@ function fixedCollectionTokenIds() {
 export async function readGalleryPoolState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
-  tokenIds: readonly bigint[] = fixedCollectionTokenIds(),
+  tokenIds: readonly bigint[] = fixedCollectionTokenIds(
+    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection,
+  ),
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ): Promise<GalleryProjectionResult<GalleryPoolState>> {
   try {
@@ -377,10 +383,7 @@ export async function readGalleryCustodyStates(
         },
       ],
     );
-    return new Map<
-      bigint,
-      GalleryProjectionResult<GalleryCustodyState>
-    >(
+    return new Map<bigint, GalleryProjectionResult<GalleryCustodyState>>(
       ownership.map(({ tokenId, results }) => {
         const owner = successfulResult(results[0]);
         return isAddressValue(owner)
@@ -392,10 +395,7 @@ export async function readGalleryCustodyStates(
                 data: {
                   tokenId,
                   owner,
-                  marketplaceHeld: isAddressEqual(
-                    owner,
-                    addresses.marketplace,
-                  ),
+                  marketplaceHeld: isAddressEqual(owner, addresses.marketplace),
                 },
               },
             ]
@@ -409,10 +409,7 @@ export async function readGalleryCustodyStates(
       }),
     );
   } catch {
-    return new Map<
-      bigint,
-      GalleryProjectionResult<GalleryCustodyState>
-    >(
+    return new Map<bigint, GalleryProjectionResult<GalleryCustodyState>>(
       tokenIds.map((tokenId) => [
         tokenId,
         failure(

@@ -9,7 +9,6 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import { formatTestAmount } from "../format";
 import type { GalleryMetadataResult } from "../metadata/testMetadata";
 import type { GalleryVerifiedAcquisition } from "../types";
@@ -17,9 +16,13 @@ import type { GalleryVerifiedAcquisition } from "../types";
 export function AcquiredNftResult({
   result,
   metadata,
+  tokenSymbol = "TEST",
+  explorerBaseUrl = "https://sepolia.basescan.org",
 }: {
   result: GalleryVerifiedAcquisition;
   metadata: GalleryMetadataResult;
+  tokenSymbol?: string;
+  explorerBaseUrl?: string;
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [imageAttempt, setImageAttempt] = useState(0);
@@ -77,16 +80,16 @@ export function AcquiredNftResult({
           <Divider />
           <Typography variant="body2">Recipient: {result.recipient}</Typography>
           <Typography variant="body2">
-            NFT unit: {formatTestAmount(result.unit)} TEST
+            NFT unit: {formatTestAmount(result.unit)} {tokenSymbol}
           </Typography>
           <Typography variant="body2">
-            Premium: {formatTestAmount(result.premium)} TEST
+            Premium: {formatTestAmount(result.premium)} {tokenSymbol}
           </Typography>
           <Typography fontWeight={700}>
-            Paid: {formatTestAmount(result.total)} TEST
+            Paid: {formatTestAmount(result.total)} {tokenSymbol}
           </Typography>
           <Link
-            href={`${BASE_SEPOLIA_TEST_GALLERY_CONFIG.explorerBaseUrl}/tx/${result.transactionHash}`}
+            href={`${explorerBaseUrl}/tx/${result.transactionHash}`}
             target="_blank"
             rel="noreferrer"
           >

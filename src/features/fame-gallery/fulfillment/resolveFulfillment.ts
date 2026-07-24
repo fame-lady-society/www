@@ -22,10 +22,7 @@ export type GalleryFulfillmentReadSource = {
     tokenId: bigint,
     blockNumber: bigint,
   ) => Promise<GalleryFulfillmentTokenState>;
-  readShellOwner: (
-    tokenId: bigint,
-    blockNumber: bigint,
-  ) => Promise<Address>;
+  readShellOwner: (tokenId: bigint, blockNumber: bigint) => Promise<Address>;
 };
 
 type FreezeGalleryBuyerTermsInput = {
@@ -39,15 +36,24 @@ type FreezeGalleryBuyerTermsInput = {
   displayedPremium: bigint;
 };
 
-export function freezeGalleryBuyerTerms({
-  account,
-  selectedTarget,
-  artworkHash,
-  unit,
-  displayedPremium,
-}: FreezeGalleryBuyerTermsInput): GalleryFrozenBuyerTerms {
-  return Object.freeze({
+export function freezeGalleryBuyerTerms(
+  {
+    account,
+    selectedTarget,
+    artworkHash,
+    unit,
+    displayedPremium,
+  }: FreezeGalleryBuyerTermsInput,
+  runtime: {
+    chainId: number;
+    marketplace: Address;
+  } = {
     chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+    marketplace,
+  },
+): GalleryFrozenBuyerTerms {
+  return Object.freeze({
+    chainId: runtime.chainId,
     account,
     recipient: account,
     selectedTarget: Object.freeze({ ...selectedTarget }),
@@ -55,7 +61,7 @@ export function freezeGalleryBuyerTerms({
     unit,
     maxPremium: displayedPremium,
     maximumSpend: unit + displayedPremium,
-    allowanceTarget: marketplace,
+    allowanceTarget: runtime.marketplace,
   });
 }
 
@@ -90,21 +96,24 @@ async function readCanonicalCandidates(
   blockNumber: bigint,
 ) {
   return Promise.all(
-    tokenIds.map(async (tokenId): Promise<CanonicalCandidate> => ({
-      tokenId,
-      state: await source.readTokenState(tokenId, blockNumber),
-    })),
+    tokenIds.map(
+      async (tokenId): Promise<CanonicalCandidate> => ({
+        tokenId,
+        state: await source.readTokenState(tokenId, blockNumber),
+      }),
+    ),
   );
 }
 
 function heldRoute(
   terms: GalleryFrozenBuyerTerms,
   candidates: readonly CanonicalCandidate[],
+  marketplaceAddress: Address,
 ): GalleryFulfillmentRoute | null {
   const candidate = candidates.find(
     ({ state }) =>
       state.artworkHash === terms.artworkHash &&
-      isAddressEqual(state.owner, marketplace),
+      isAddressEqual(state.owner, marketplaceAddress),
   );
   return candidate
     ? Object.freeze({ kind: "held" as const, shellId: candidate.tokenId })
@@ -163,11 +172,13 @@ async function resolveAtCurrentBlock({
   candidateTokenIds,
   shellTokenIds,
   source,
+  marketplaceAddress,
 }: {
   terms: GalleryFrozenBuyerTerms;
   candidateTokenIds: readonly bigint[];
   shellTokenIds: readonly bigint[];
   source: GalleryFulfillmentReadSource;
+  marketplaceAddress: Address;
 }): Promise<ResolutionAttempt> {
   const resolutionBlock = await source.captureBlockNumber();
   const allCandidateIds = uniqueTokenIds([
@@ -181,7 +192,7 @@ async function resolveAtCurrentBlock({
 
   if (currentPremium > terms.maxPremium) throw priceChanged();
 
-  const currentHeldRoute = heldRoute(terms, candidates);
+  const currentHeldRoute = heldRoute(terms, candidates, marketplaceAddress);
   if (currentHeldRoute) {
     return {
       status: "resolved",
@@ -238,11 +249,13 @@ export async function resolveGalleryFulfillment({
   knownShellTokenIds,
   source,
   refreshShellTokenIds,
+  marketplaceAddress = marketplace,
 }: {
   terms: GalleryFrozenBuyerTerms;
   candidateTokenIds: readonly bigint[];
   knownShellTokenIds: readonly bigint[];
   source: GalleryFulfillmentReadSource;
+  marketplaceAddress?: Address;
   /**
    * Supplied only for a caller-authorized stale-shell recovery. The callback
    * owns the bounded custody refresh; this resolver invokes it at most once.
@@ -254,6 +267,7 @@ export async function resolveGalleryFulfillment({
     candidateTokenIds,
     shellTokenIds: knownShellTokenIds,
     source,
+    marketplaceAddress,
   });
 
   if (resolution.status !== "resolved" && refreshShellTokenIds) {
@@ -266,6 +280,7 @@ export async function resolveGalleryFulfillment({
       ]),
       shellTokenIds: refreshedShellIds,
       source,
+      marketplaceAddress,
     });
   }
 

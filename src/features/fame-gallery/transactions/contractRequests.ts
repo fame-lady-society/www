@@ -1,8 +1,5 @@
 import type { Address } from "viem";
-import {
-  fameAbi,
-  universalPoolArtMarketplaceAbi,
-} from "../../../wagmi";
+import { fameAbi, universalPoolArtMarketplaceAbi } from "../../../wagmi";
 import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import type {
   GalleryAdminCall,
@@ -14,24 +11,26 @@ const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 
 export function galleryApprovalContractRequest(
   terms: GalleryFrozenBuyerTerms,
+  addresses: { fame: Address; gallery: Address } = config.addresses,
 ) {
   return {
     abi: fameAbi,
-    address: config.addresses.fame,
+    address: addresses.fame,
     account: terms.account,
     chainId: terms.chainId,
     functionName: "approve",
-    args: [config.addresses.gallery, terms.unit + terms.maxPremium],
+    args: [addresses.gallery, terms.unit + terms.maxPremium],
   } as const;
 }
 
 export function galleryPurchaseContractRequest(
   terms: GalleryFrozenBuyerTerms,
   route: GalleryFulfillmentRoute,
+  galleryAddress: Address = config.addresses.gallery,
 ) {
   const baseRequest = {
     abi: universalPoolArtMarketplaceAbi,
-    address: config.addresses.gallery,
+    address: galleryAddress,
     account: terms.account,
     chainId: terms.chainId,
   } as const;

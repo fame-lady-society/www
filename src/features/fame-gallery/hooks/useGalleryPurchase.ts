@@ -24,7 +24,7 @@ import {
   fameMirrorAbi,
   universalPoolArtMarketplaceAbi,
 } from "../../../wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import {
   freezeGalleryBuyerTerms,
   resolveGalleryFulfillment,
@@ -49,12 +49,6 @@ import type {
   GalleryGlobalState,
   GalleryVerifiedAcquisition,
 } from "../types";
-
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-const marketplace = config.addresses.gallery;
-const fame = config.addresses.fame;
-const mirror = config.addresses.mirror;
-const creatorMagic = config.addresses.creatorMagic;
 
 type GalleryPurchaseInputs = {
   globalState: GalleryGlobalState | null;
@@ -144,6 +138,11 @@ export async function refreshGalleryAfterPurchase(
 }
 
 export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
+  const config = useGalleryRuntime();
+  const marketplace = config.addresses.gallery;
+  const fame = config.addresses.fame;
+  const mirror = config.addresses.mirror;
+  const creatorMagic = config.addresses.creatorMagic;
   const wagmiConfig = useConfig();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: config.chainId });
@@ -231,16 +230,22 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
 
         const terms =
           attempt.terms ??
-          freezeGalleryBuyerTerms({
-            account: latestConnection.address,
-            selectedTarget: {
-              targetId: attempt.target.targetId,
-              tokenId: attempt.target.tokenId,
+          freezeGalleryBuyerTerms(
+            {
+              account: latestConnection.address,
+              selectedTarget: {
+                targetId: attempt.target.targetId,
+                tokenId: attempt.target.tokenId,
+              },
+              artworkHash: attempt.target.artworkHash,
+              unit: attempt.displayedUnit,
+              displayedPremium: attempt.displayedPremium,
             },
-            artworkHash: attempt.target.artworkHash,
-            unit: attempt.displayedUnit,
-            displayedPremium: attempt.displayedPremium,
-          });
+            {
+              chainId: config.chainId,
+              marketplace,
+            },
+          );
         attempt.terms = terms;
 
         const artPoolBoundsByBlock = new Map<
@@ -348,7 +353,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
               }),
             async simulateApproval(frozen) {
               const simulation = await publicClient.simulateContract(
-                galleryApprovalContractRequest(frozen),
+                galleryApprovalContractRequest(frozen, config.addresses),
               );
               return { request: simulation.request };
             },
@@ -372,6 +377,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                   ({ tokenId }) => tokenId,
                 ),
                 source: fulfillmentSource,
+                marketplaceAddress: marketplace,
                 refreshShellTokenIds: recover
                   ? latest.recoverHeldTokenIds
                   : pendingInitialScan
@@ -385,6 +391,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 const request = galleryPurchaseContractRequest(
                   frozen,
                   route,
+                  marketplace,
                 ) as GalleryHeldPurchaseRequest;
                 const simulation = await publicClient.simulateContract(request);
                 return { request: simulation.request };
@@ -392,6 +399,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
               const request = galleryPurchaseContractRequest(
                 frozen,
                 route,
+                marketplace,
               ) as GalleryPoolPurchaseRequest;
               const simulation = await publicClient.simulateContract(request);
               return { request: simulation.request };

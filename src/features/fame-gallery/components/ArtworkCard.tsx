@@ -14,12 +14,14 @@ export function ArtworkCard({
   metadata,
   purchaseLocked,
   purchaseInProgress = false,
+  tokenSymbol = "TEST",
   onBuy,
   onRetry,
 }: {
   metadata: GalleryMetadataResult;
   purchaseLocked: boolean;
   purchaseInProgress?: boolean;
+  tokenSymbol?: string;
   onBuy: () => void;
   onRetry: () => void;
 }) {
@@ -72,7 +74,9 @@ export function ArtworkCard({
             onClick={onBuy}
             sx={{ minHeight: 48 }}
           >
-            {purchaseInProgress ? "Purchase in progress…" : "Buy with TEST"}
+            {purchaseInProgress
+              ? "Purchase in progress…"
+              : `Buy with ${tokenSymbol}`}
           </Button>
         ) : (
           <Button

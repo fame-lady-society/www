@@ -7,7 +7,6 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import { displaySafeErrorMessage } from "@/features/fame-swap/solver/diagnostics";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 
 function isReceiptTimeout(cause: unknown) {
@@ -20,22 +19,26 @@ function isReceiptTimeout(cause: unknown) {
   );
 }
 
-function purchaseStatusCopy(state: GalleryPurchaseState) {
+function purchaseStatusCopy(
+  state: GalleryPurchaseState,
+  tokenSymbol: string,
+  networkName: string,
+) {
   switch (state.status) {
     case "idle":
-      return "Choose an artwork to buy with TEST.";
+      return `Choose an artwork to buy with ${tokenSymbol}.`;
     case "connecting":
       return "Connect a wallet to continue.";
     case "switching_chain":
-      return "Switching to Base Sepolia…";
+      return `Switching to ${networkName}…`;
     case "checking_allowance":
-      return "Checking your current TEST allowance…";
+      return `Checking your current ${tokenSymbol} allowance…`;
     case "simulating_approval":
-      return "Checking the exact TEST approval with the contract…";
+      return `Checking the exact ${tokenSymbol} approval with the contract…`;
     case "awaiting_approval_wallet":
-      return "Approve the exact TEST amount in your wallet.";
+      return `Approve the exact ${tokenSymbol} amount in your wallet.`;
     case "confirming_approval":
-      return "Waiting for two Base Sepolia approval confirmations…";
+      return `Waiting for two ${networkName} approval confirmations…`;
     case "resolving_fulfillment":
       return "Finding a current route for this artwork…";
     case "simulating_purchase":
@@ -43,7 +46,7 @@ function purchaseStatusCopy(state: GalleryPurchaseState) {
     case "awaiting_purchase_wallet":
       return "Confirm the gallery purchase in your wallet.";
     case "confirming_purchase":
-      return "Waiting for two Base Sepolia confirmations…";
+      return `Waiting for two ${networkName} confirmations…`;
     case "verifying":
       return "Verifying the artwork delivered by the purchase…";
     case "confirmed_unverified":
@@ -63,7 +66,7 @@ function purchaseStatusCopy(state: GalleryPurchaseState) {
         state.failure?.stage === "approval_receipt" &&
         isReceiptTimeout(state.failure.cause)
       ) {
-        return "Timed out while waiting for the TEST approval transaction to be confirmed.";
+        return `Timed out while waiting for the ${tokenSymbol} approval transaction to be confirmed.`;
       }
       if (
         state.failure?.stage === "purchase_receipt" &&
@@ -80,9 +83,15 @@ function purchaseStatusCopy(state: GalleryPurchaseState) {
 export function GalleryPurchaseModalContent({
   state,
   transactions,
+  tokenSymbol = "TEST",
+  networkName = "Base Sepolia",
+  explorerBaseUrl = "https://sepolia.basescan.org",
 }: {
   state: GalleryPurchaseState;
   transactions: readonly { kind: string; hash?: `0x${string}` }[];
+  tokenSymbol?: string;
+  networkName?: string;
+  explorerBaseUrl?: string;
 }) {
   const submittedTransactions = transactions.filter(
     (transaction): transaction is { kind: string; hash: `0x${string}` } =>
@@ -104,7 +113,7 @@ export function GalleryPurchaseModalContent({
         role={state.status === "error" ? "alert" : "status"}
         aria-live={state.status === "error" ? "assertive" : "polite"}
       >
-        {purchaseStatusCopy(state)}
+        {purchaseStatusCopy(state, tokenSymbol, networkName)}
       </Alert>
       {submittedTransactions.length > 0 ? (
         <Stack spacing={0.75} sx={{ minWidth: 0 }}>
@@ -112,7 +121,7 @@ export function GalleryPurchaseModalContent({
           {submittedTransactions.map((transaction) => (
             <Link
               key={`${transaction.kind}:${transaction.hash}`}
-              href={`${BASE_SEPOLIA_TEST_GALLERY_CONFIG.explorerBaseUrl}/tx/${transaction.hash}`}
+              href={`${explorerBaseUrl}/tx/${transaction.hash}`}
               target="_blank"
               rel="noreferrer"
               sx={{
@@ -180,6 +189,9 @@ export function GalleryPurchaseModal({
   onClose,
   onRetry,
   onDone,
+  tokenSymbol = "TEST",
+  networkName = "Base Sepolia",
+  explorerBaseUrl = "https://sepolia.basescan.org",
 }: {
   state: GalleryPurchaseState;
   open: boolean;
@@ -187,6 +199,9 @@ export function GalleryPurchaseModal({
   onClose: () => void;
   onRetry: () => void;
   onDone: () => void;
+  tokenSymbol?: string;
+  networkName?: string;
+  explorerBaseUrl?: string;
 }) {
   const terminal =
     state.status === "verified" ||
@@ -203,6 +218,9 @@ export function GalleryPurchaseModal({
         <GalleryPurchaseModalContent
           state={state}
           transactions={transactions}
+          tokenSymbol={tokenSymbol}
+          networkName={networkName}
+          explorerBaseUrl={explorerBaseUrl}
         />
       }
       bottomContent={
