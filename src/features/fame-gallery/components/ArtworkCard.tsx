@@ -53,11 +53,7 @@ export function ArtworkCard({
           <Typography id={titleId} component="h2" variant="h5">
             {artworkReady ? displayName : "Artwork unavailable"}
           </Typography>
-          {artworkReady && metadata.description ? (
-            <Typography color="text.secondary">
-              {metadata.description}
-            </Typography>
-          ) : !artworkReady ? (
+          {!artworkReady ? (
             <Typography color="text.secondary" role="status">
               This artwork could not be loaded.
             </Typography>

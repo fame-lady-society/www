@@ -104,6 +104,7 @@ describe("TEST gallery public view", () => {
     assert.equal(html.match(/1,001,000 TEST/g)?.length, 1);
     assert.equal(html.match(/Buy with TEST/g)?.length, 2);
     assert.equal(html.match(/Sunrise/g)?.length, 4);
+    assert.doesNotMatch(html, /On-chain test art/);
     assert.doesNotMatch(
       html,
       /token\s*#|token id|recipient|premium|unit|listing|inventory|mint pool|burn pool|held:/i,
