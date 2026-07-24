@@ -53,6 +53,7 @@ import type {
   FameSwapQuoteRequest,
   FameSwapReadiness,
 } from "@/features/fame-swap/solver/types";
+import { baseServerRpcUrl, fameForkModeEnabled } from "@/viem/baseRpcUrls";
 
 const MAX_JSON_BODY_BYTES = 4_096;
 const MAX_UINT256 = (1n << 256n) - 1n;
@@ -296,7 +297,7 @@ function displaySafeErrorMessage(error: unknown): string {
 }
 
 function baseRpcUrl(): string | undefined {
-  return process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  return baseServerRpcUrl();
 }
 
 async function withTimeout<T>(
@@ -897,8 +898,13 @@ export async function handleFameSwapQuotePost(
         deps.quoteForRequest || deps.quoteAdapterForRequest
           ? null
           : publicClientForQuote();
-      const quoteApiClientConfig =
-        deps.quoteApiClient === undefined
+      const quoteApiClientConfig = fameForkModeEnabled()
+        ? {
+            client: null,
+            configured: false,
+            reason: "not_configured" as const,
+          }
+        : deps.quoteApiClient === undefined
           ? quoteApiClientConfigFromEnv(requestStartedAtMs)
           : {
               client: deps.quoteApiClient,
