@@ -21,7 +21,12 @@ import {
   fameLadySquadAbi,
 } from "@/wagmi";
 import { useAccount } from "@/hooks/useAccount";
-import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
+import {
+  useReadContract,
+  useReadContracts,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { WriteContractData } from "wagmi/query";
 import { useRouter } from "next/navigation";
 import { WrapCard } from "./WrapCard";
@@ -33,7 +38,9 @@ import { DonationCelebration } from "./DonationCelebration";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { useNotifications } from "@/features/notifications/Context";
 import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
+import { mainnet, sepolia } from "viem/chains";
 import { useNetworkChain } from "../hooks/useNetworkChain";
+import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { WrappedLink } from "@/components/WrappedLink";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
@@ -182,7 +189,21 @@ export const WrapPage: FC<{
 }> = ({ network }) => {
   const router = useRouter();
   const chain = useNetworkChain(network);
-  const { address } = useAccount();
+  const { address, isConnected, chainId: connectedChainId } = useAccount();
+  const { mutate: switchChain } = useSwitchChain();
+  const targetChainId = network === "sepolia" ? sepolia.id : mainnet.id;
+  const shouldSwitchChain = needsConnectedChainSwitch({
+    isConnected,
+    connectedChainId,
+    targetChainId,
+  });
+
+  useEffect(() => {
+    if (shouldSwitchChain) {
+      switchChain({ chainId: targetChainId });
+    }
+  }, [shouldSwitchChain, switchChain, targetChainId]);
+
   const [nonce, setNonce] = useState<number>(0);
   const { addNotification } = useNotifications();
   const theme = useTheme();
