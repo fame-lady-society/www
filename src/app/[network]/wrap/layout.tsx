@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider mainnet base siwe>
       {children}
     </DefaultProvider>
   );

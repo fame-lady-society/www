@@ -1,7 +1,6 @@
 import { AppMain } from "@/layouts/AppMain";
 import { isAddress } from "viem";
 import { RedirectType, redirect } from "next/navigation";
-import { Content as WrapContent } from "@/routes/Wrap";
 import { WrapPage } from "@/features/wrap/components/WrapPage";
 import { Metadata } from "next";
 
@@ -57,7 +56,7 @@ export default async function Home(
   return (
     <>
       <AppMain title="Wrap Your Lady" isWrap>
-        <WrapPage network={network} />
+        <WrapPage network={resolvedNetwork} />
       </AppMain>
     </>
   );

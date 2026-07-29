@@ -33,6 +33,58 @@ export interface FameSwapPreApprovalSimulationError {
   message: string;
 }
 
+export interface FameSwapConfirmedReceipt {
+  hash: Hash;
+  account: Address;
+}
+
+/**
+ * Resolve the effective confirmed swap receipt hash after mining.
+ * Prefers the receipt transaction hash so a repriced replacement is adopted.
+ */
+export function resolveConfirmedSwapReceipt(input: {
+  submissionKind: FameSwapSubmissionKind | null;
+  receiptStatus: "success" | "reverted" | undefined;
+  receiptTransactionHash: Hash | undefined;
+  broadcastHash: Hash | null;
+  initiatingAccount: Address | null;
+}): FameSwapConfirmedReceipt | null {
+  if (input.submissionKind !== "swap") return null;
+  if (input.receiptStatus !== "success") return null;
+  if (!input.initiatingAccount) return null;
+
+  const hash = input.receiptTransactionHash ?? input.broadcastHash;
+  if (!hash) return null;
+
+  return { hash, account: input.initiatingAccount };
+}
+
+/**
+ * One-shot emission gate for confirmed-swap callbacks.
+ * Emits only when the live account still matches the initiating account and the
+ * (account, effective hash) pair has not already been emitted.
+ */
+export function nextSwapConfirmedEmission(
+  lastEmittedKey: string | null,
+  candidate: FameSwapConfirmedReceipt | null,
+  liveAccount: Address | null | undefined,
+): { payload: FameSwapConfirmedReceipt; key: string } | null {
+  if (!candidate || !liveAccount) return null;
+  if (candidate.account.toLowerCase() !== liveAccount.toLowerCase()) {
+    return null;
+  }
+
+  const key = `${candidate.account.toLowerCase()}:${candidate.hash}`;
+  if (lastEmittedKey === key) return null;
+  return { payload: candidate, key };
+}
+
+export function swapConfirmedEmissionKey(
+  payload: FameSwapConfirmedReceipt,
+): string {
+  return `${payload.account.toLowerCase()}:${payload.hash}`;
+}
+
 export interface FameSwapTransactionState {
   requests: FameSwapTransactionRequests;
   submissionKind: FameSwapSubmissionKind | null;
@@ -52,6 +104,10 @@ export interface FameSwapTransactionState {
   protectedSimulationReady: boolean;
   preApprovalSimulationError: FameSwapPreApprovalSimulationError | null;
   hash: Hash | null;
+  /** Effective mined swap hash (includes repriced replacement). */
+  confirmedSwapHash: Hash | null;
+  /** Account that initiated the confirmed swap submission. */
+  confirmedSwapAccount: Address | null;
   error: Error | null;
   submitApproval: () => Promise<Hash | null>;
   submitSwap: () => Promise<Hash | null>;
@@ -106,6 +162,9 @@ export function useFameSwapTransaction(
     useState<FameSwapSubmissionKind | null>(null);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [swapConfirmed, setSwapConfirmed] = useState(false);
+  const [confirmedSwapHash, setConfirmedSwapHash] = useState<Hash | null>(null);
+  const [confirmedSwapAccount, setConfirmedSwapAccount] =
+    useState<Address | null>(null);
   const [localError, setLocalError] = useState<Error | null>(null);
   const [writing, setWriting] = useState(false);
   const [approvalFlowActive, setApprovalFlowActive] = useState(false);
@@ -118,6 +177,19 @@ export function useFameSwapTransaction(
     useState<FameSwapPreApprovalSimulationError | null>(null);
   const autoSwapSubmitted = useRef(false);
   const inFlightSubmission = useRef<FameSwapSubmissionKind | null>(null);
+  const swapInitiatingAccount = useRef<Address | null>(null);
+  const onReplacedRef = useRef(
+    (replacement: {
+      reason: "repriced" | "cancelled" | "replaced";
+      transaction: { hash: Hash };
+    }) => {
+      // Adopt the effective hash for repriced (identical-intent) replacements so
+      // the receipt watcher and UI track the mined transaction.
+      if (replacement.reason === "repriced") {
+        setHash(replacement.transaction.hash);
+      }
+    },
+  );
   const [nowSeconds, setNowSeconds] = useState(() =>
     Math.floor(Date.now() / 1000),
   );
@@ -198,6 +270,12 @@ export function useFameSwapTransaction(
   const receipt = useWaitForTransactionReceipt({
     hash: hash ?? undefined,
     chainId: base.id,
+    onReplaced: (replacement) => {
+      onReplacedRef.current({
+        reason: replacement.reason,
+        transaction: { hash: replacement.transaction.hash },
+      });
+    },
     query: {
       enabled: hash !== null,
     },
@@ -208,6 +286,8 @@ export function useFameSwapTransaction(
     setSubmissionKind(null);
     setApprovalConfirmed(false);
     setSwapConfirmed(false);
+    setConfirmedSwapHash(null);
+    setConfirmedSwapAccount(null);
     setLocalError(null);
     setWriting(false);
     setApprovalFlowActive(false);
@@ -216,6 +296,7 @@ export function useFameSwapTransaction(
     setApprovalSimulationError(null);
     autoSwapSubmitted.current = false;
     inFlightSubmission.current = null;
+    swapInitiatingAccount.current = null;
   }, [executionKey]);
 
   const reset = useCallback(() => {
@@ -223,6 +304,8 @@ export function useFameSwapTransaction(
     setSubmissionKind(null);
     setApprovalConfirmed(false);
     setSwapConfirmed(false);
+    setConfirmedSwapHash(null);
+    setConfirmedSwapAccount(null);
     setLocalError(null);
     setWriting(false);
     setApprovalFlowActive(false);
@@ -231,6 +314,7 @@ export function useFameSwapTransaction(
     setApprovalSimulationError(null);
     autoSwapSubmitted.current = false;
     inFlightSubmission.current = null;
+    swapInitiatingAccount.current = null;
   }, []);
 
   useEffect(() => {
@@ -355,11 +439,29 @@ export function useFameSwapTransaction(
     }
 
     if (submissionKind === "swap") {
+      const confirmed = resolveConfirmedSwapReceipt({
+        submissionKind: "swap",
+        receiptStatus,
+        receiptTransactionHash: receipt.data?.transactionHash,
+        broadcastHash: hash,
+        initiatingAccount: swapInitiatingAccount.current,
+      });
       setSwapConfirmed(true);
+      if (confirmed) {
+        setHash(confirmed.hash);
+        setConfirmedSwapHash(confirmed.hash);
+        setConfirmedSwapAccount(confirmed.account);
+      }
       setApprovalFlowActive(false);
       inFlightSubmission.current = null;
     }
-  }, [receipt.isSuccess, receiptStatus, submissionKind]);
+  }, [
+    hash,
+    receipt.data?.transactionHash,
+    receipt.isSuccess,
+    receiptStatus,
+    submissionKind,
+  ]);
 
   useEffect(() => {
     if (receipt.isError) {
@@ -407,8 +509,10 @@ export function useFameSwapTransaction(
     if (requests.approval && !approvalConfirmed) return null;
     if (!protectedSimulation.data?.request) return null;
     if (inFlightSubmission.current !== null) return null;
+    if (!account) return null;
 
     inFlightSubmission.current = "swap";
+    swapInitiatingAccount.current = account;
     setWriting(true);
     setLocalError(null);
     setSubmissionKind("swap");
@@ -419,6 +523,7 @@ export function useFameSwapTransaction(
       return txHash;
     } catch (error) {
       inFlightSubmission.current = null;
+      swapInitiatingAccount.current = null;
       setSubmissionKind(null);
       setApprovalFlowActive(false);
       setLocalError(
@@ -429,6 +534,7 @@ export function useFameSwapTransaction(
       setWriting(false);
     }
   }, [
+    account,
     approvalConfirmed,
     requests.approval,
     protectedRequests.swap,
@@ -498,6 +604,8 @@ export function useFameSwapTransaction(
       protectedSimulation.isSuccess || approvalSimulationOutput !== null,
     preApprovalSimulationError: approvalSimulationError,
     hash,
+    confirmedSwapHash,
+    confirmedSwapAccount,
     error:
       localError ??
       (protectedSimulation.isError && protectedSimulation.error instanceof Error

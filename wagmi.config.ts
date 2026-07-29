@@ -17,6 +17,10 @@ const fameRouterAddress = {
   [base.id]: "0xAdefa5860389E8936ebf2977e1Fb4a365aA39636",
 } as const satisfies Partial<Record<SupportedChainId, `0x${string}`>>;
 
+const fameBurnPoolRotatorAddress = {
+  [base.id]: "0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc",
+} as const satisfies Partial<Record<SupportedChainId, `0x${string}`>>;
+
 export default defineConfig({
   out: "src/wagmi/index.ts",
   contracts: [],
@@ -122,12 +126,14 @@ export default defineConfig({
       project: "../fame-contracts",
       deployments: {
         FameRouter: fameRouterAddress,
+        FameBurnPoolRotator: fameBurnPoolRotatorAddress,
       },
       include: [
         "ClaimToFame.sol/**",
         "Fame.sol/**",
         "FameRouter.sol/**",
         "FameMirror.sol/**",
+        "FameBurnPoolRotator.sol/**",
         "IBalanceOf.sol/**",
         "FameVesting.sol/**",
         "GovSociety.sol/**",

@@ -3100,6 +3100,111 @@ export const fameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameBurnPoolRotationWorker
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const fameBurnPoolRotationWorkerAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'fame_', internalType: 'contract Fame', type: 'address' },
+      { name: 'mirror_', internalType: 'contract FameMirror', type: 'address' },
+      { name: 'rotator_', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'targetTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'rotate',
+    outputs: [{ name: 'rotations', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyUsed' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fameBalance', internalType: 'uint256', type: 'uint256' },
+      { name: 'nftBalance', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidStartingState',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'TargetNotReached',
+  },
+  { type: 'error', inputs: [], name: 'TransferFailed' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameBurnPoolRotator
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const fameBurnPoolRotatorAbi = [
+  {
+    type: 'constructor',
+    inputs: [{ name: 'fame_', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fame',
+    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'mirror',
+    outputs: [
+      { name: '', internalType: 'contract FameMirror', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'offeredId', internalType: 'uint256', type: 'uint256' },
+      { name: 'targetId', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'rotateTo',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'TargetNotReached' },
+] as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const fameBurnPoolRotatorAddress = {
+  8453: '0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc',
+} as const
+
+/**
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const fameBurnPoolRotatorConfig = {
+  address: fameBurnPoolRotatorAddress,
+  abi: fameBurnPoolRotatorAbi,
+} as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameLadySociety
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15117,6 +15222,116 @@ export const useWatchFameTransferEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: fameAbi,
     eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
+ */
+export const useWriteFameBurnPoolRotationWorker =
+  /*#__PURE__*/ createUseWriteContract({ abi: fameBurnPoolRotationWorkerAbi })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
+ */
+export const useWriteFameBurnPoolRotationWorkerRotate =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameBurnPoolRotationWorkerAbi,
+    functionName: 'rotate',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
+ */
+export const useSimulateFameBurnPoolRotationWorker =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameBurnPoolRotationWorkerAbi,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
+ */
+export const useSimulateFameBurnPoolRotationWorkerRotate =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameBurnPoolRotationWorkerAbi,
+    functionName: 'rotate',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useReadFameBurnPoolRotator = /*#__PURE__*/ createUseReadContract({
+  abi: fameBurnPoolRotatorAbi,
+  address: fameBurnPoolRotatorAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__ and `functionName` set to `"fame"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useReadFameBurnPoolRotatorFame =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameBurnPoolRotatorAbi,
+    address: fameBurnPoolRotatorAddress,
+    functionName: 'fame',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__ and `functionName` set to `"mirror"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useReadFameBurnPoolRotatorMirror =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameBurnPoolRotatorAbi,
+    address: fameBurnPoolRotatorAddress,
+    functionName: 'mirror',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useWriteFameBurnPoolRotator = /*#__PURE__*/ createUseWriteContract(
+  { abi: fameBurnPoolRotatorAbi, address: fameBurnPoolRotatorAddress },
+)
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__ and `functionName` set to `"rotateTo"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useWriteFameBurnPoolRotatorRotateTo =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameBurnPoolRotatorAbi,
+    address: fameBurnPoolRotatorAddress,
+    functionName: 'rotateTo',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useSimulateFameBurnPoolRotator =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameBurnPoolRotatorAbi,
+    address: fameBurnPoolRotatorAddress,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__ and `functionName` set to `"rotateTo"`
+ *
+ * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
+ */
+export const useSimulateFameBurnPoolRotatorRotateTo =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameBurnPoolRotatorAbi,
+    address: fameBurnPoolRotatorAddress,
+    functionName: 'rotateTo',
   })
 
 /**
