@@ -14,7 +14,6 @@ checkout addresses are deliberately omitted.
   `http://127.0.0.1:8545`; no public Base fallback was available.
 - The browser used an explicitly configured, disposable Anvil account with no
   production key.
-- Fork-only metadata fallback was enabled separately from fork wallet mode.
 - Contract baseline: `fame-contracts` `bae7c1f`.
 - Gallery checkout baseline: `fls-www` `fbd2a88`, plus the fork harness and
   browser fixes recorded with this campaign.

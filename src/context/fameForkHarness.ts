@@ -1,19 +1,5 @@
-import { getAddress, isAddress, type Address, type Chain } from "viem";
+import type { Chain } from "viem";
 import { base } from "viem/chains";
-
-export function resolveFameForkAccount({
-  enabled,
-  account,
-}: {
-  enabled: boolean;
-  account: string | undefined;
-}): Address | null {
-  const candidate = account?.trim();
-  if (!enabled || !candidate || !isAddress(candidate, { strict: false })) {
-    return null;
-  }
-  return getAddress(candidate);
-}
 
 export function withFameForkRpc<Chains extends readonly [Chain, ...Chain[]]>(
   chains: Chains,

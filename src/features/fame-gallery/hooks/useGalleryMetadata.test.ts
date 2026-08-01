@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  applyForkMetadataFallback,
-  galleryMetadataQueryOptions,
-} from "./useGalleryMetadata";
+import { galleryMetadataQueryOptions } from "./useGalleryMetadata";
 
 describe("gallery metadata query", () => {
   it("caches each token URI indefinitely and bounds inactive retention", () => {
@@ -29,46 +26,5 @@ describe("gallery metadata query", () => {
     const initialData = galleryMetadataQueryOptions(uri).initialData;
     assert.equal(typeof initialData, "function");
     assert.equal(initialData?.().status, "ready");
-  });
-
-  it("uses an explicit fork-only fallback without changing ready metadata", () => {
-    const unavailable = {
-      status: "failure" as const,
-      image: "/fallback.png",
-      name: null,
-      description: null,
-      attributes: [] as [],
-      error: "unavailable",
-    };
-    const ready = {
-      ...unavailable,
-      status: "ready" as const,
-      error: null,
-    };
-
-    assert.equal(applyForkMetadataFallback(unavailable, false), unavailable);
-    assert.equal(applyForkMetadataFallback(ready, true), ready);
-    assert.deepEqual(applyForkMetadataFallback(unavailable, true), {
-      status: "ready",
-      image: "/images/fame/gold-leaf-square.png",
-      name: "Fork test artwork",
-      description: null,
-      attributes: [],
-      error: null,
-    });
-    assert.deepEqual(
-      galleryMetadataQueryOptions(
-        "https://gateway.irys.xyz/unavailable.json",
-        true,
-      ).initialData?.(),
-      {
-        status: "ready",
-        image: "/images/fame/gold-leaf-square.png",
-        name: "Fork test artwork",
-        description: null,
-        attributes: [],
-        error: null,
-      },
-    );
   });
 });
