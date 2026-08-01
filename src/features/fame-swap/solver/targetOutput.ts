@@ -289,12 +289,23 @@ export async function solveTargetOutput<TTopology, TQuote>(
     const controller = new AbortController();
     const abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
+    if (options.signal?.aborted) abort();
     const timeout = setTimeout(abort, remaining);
+    const aborted = new Promise<{ status: "aborted" }>((resolve) => {
+      controller.signal.addEventListener(
+        "abort",
+        () => resolve({ status: "aborted" }),
+        { once: true },
+      );
+    });
     try {
-      const value = await operation(controller.signal, remaining);
+      const completed = operation(controller.signal, remaining).then(
+        (value) => ({ status: "complete", value }) as const,
+      );
+      const result = await Promise.race([completed, aborted]);
       if (cancelled()) return { status: "cancelled" };
-      if (controller.signal.aborted) return { status: "timeout" };
-      return { status: "complete", value };
+      if (result.status === "aborted") return { status: "timeout" };
+      return result;
     } finally {
       clearTimeout(timeout);
       options.signal?.removeEventListener("abort", abort);

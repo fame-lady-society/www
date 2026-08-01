@@ -14,6 +14,7 @@ import {
   isTokenInGalleryArtPool,
   logGalleryPurchaseError,
   refreshGalleryAfterPurchase,
+  simulateGalleryCheckoutRequest,
   shouldAutoCloseGalleryPurchaseModal,
 } from "./useGalleryPurchase";
 
@@ -143,6 +144,23 @@ describe("gallery purchase hook adapter", () => {
     assert.equal(calls.length, 1);
     assert.equal(calls[0][0], "[gallery purchase:verification]");
     assert.strictEqual(calls[0][1], cause);
+  });
+
+  it("treats checkout simulation failure as a diagnostic and preserves the wallet request", async () => {
+    const request = { functionName: "checkoutHeld", value: 12n } as const;
+    const failure = new Error("fork simulation unavailable");
+    const diagnostics: unknown[] = [];
+
+    const executable = await simulateGalleryCheckoutRequest({
+      request,
+      simulate: async () => {
+        throw failure;
+      },
+      onDiagnostic: (cause) => diagnostics.push(cause),
+    });
+
+    assert.strictEqual(executable, request);
+    assert.deepEqual(diagnostics, [failure]);
   });
 
   it("resolves only same-artwork candidates while retaining duplicate valid routes", () => {

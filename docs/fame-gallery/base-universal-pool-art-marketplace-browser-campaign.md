@@ -1,44 +1,78 @@
-# Base Universal Pool Art Marketplace Browser Campaign
+# Base Fork Marketplace Checkout Browser Campaign
 
-Status: ready for disposable-wallet transaction testing
+Status: passed on a disposable localhost Base fork on 2026-08-01
 
-This is concise evidence for the localhost Base fork campaign. It is not a
-deployment manifest, recovery journal, or production authorization.
+This records browser behavior for the fork-only marketplace checkout. It is not
+a deployment manifest or production authorization. Temporary marketplace and
+checkout addresses are deliberately omitted.
 
-## Proven
+## Run boundary
 
-- `/fame/gallery` renders directly and remains absent from both site menus.
-- The page is bound to chain ID `8453`, temporary marketplace
-  `0x54e7E4F2d439Be599706f51068f7EB2ce2D2a27e`, and the same literal loopback
-  RPC on the browser and server.
-- Explicit fork mode rejects public Base fallbacks and bypasses the external
-  indexed quote helper.
-- On-chain `tokenURI` reads plus direct browser metadata requests render 92
-  purchasable artworks with zero unavailable cards.
-- The compact funding widget retains USDC, WETH, and native ETH choices.
-- Confirmed swap hashes notify the gallery once, and the funding callback
-  refreshes global, pool, and held discovery state.
-- Approval, purchase, fulfillment, and verification requests use the runtime
-  marketplace rather than the Base Sepolia TEST address.
-- The Base owner view cannot link to the Base Sepolia TEST admin route.
-- Remote metadata fetches keep one deadline through body consumption, cancel
-  oversized streams, and stop when TanStack Query cancels an abandoned card.
+- Base fork started at block `49392666`, hash
+  `0x1637485978b2c48bf27782e8e1dc585851a76fc61ff14d125d998bdc41ec7d5d`.
+- Both browser and server RPC transports used literal loopback
+  `http://127.0.0.1:8545`; no public Base fallback was available.
+- The browser used an explicitly configured, disposable Anvil account with no
+  production key.
+- Fork-only metadata fallback was enabled separately from fork wallet mode.
+- Contract baseline: `fame-contracts` `bae7c1f`.
+- Gallery checkout baseline: `fls-www` `fbd2a88`, plus the fork harness and
+  browser fixes recorded with this campaign.
 
-## Observed but not a transaction pass
+## Browser results
 
-Entering a disconnected USDC amount reached the local quote handler with the
-indexed helper disabled. The local optimizer timed out before completing a safe
-route quote. That proves the fork routing decision, not a usable quote or swap.
+| Case                         | Result                                                                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Direct FAME, held inventory  | Passed; exact approval followed by one marketplace purchase                                                                |
+| Native ETH, pool fulfillment | Passed; no approval and one atomic checkout transaction                                                                    |
+| USDC, pool fulfillment       | Passed; exact approval followed by one atomic checkout transaction                                                         |
+| WETH, held fulfillment       | Passed; the existing exact approval was reused and one atomic checkout transaction settled                                 |
+| Transaction UX               | Used the repository transaction modal and Wagmi lifecycle; no automatic transaction retry                                  |
+| Quote UX                     | Showed maximum input, marketplace FAME charge, protected FAME, estimated surplus, and liquidity-dependent FAME refund copy |
+| Post-settlement custody      | Checkout retained zero ETH, FAME, USDC, WETH, and mirror NFTs                                                              |
 
-## Pending disposable-wallet cases
+Campaign purchase transaction hashes from this disposable fork were:
 
-- Direct FAME approval and purchase
-- Native ETH to FAME, followed by the ordinary FAME purchase
-- USDC to FAME, followed by the ordinary FAME purchase
-- WETH route evaluation and purchase if the fork exposes an executable route
-- Receipt, event, ownership, inventory, and one-shell readback after each case
-- Fork teardown and disposable wallet reset
+- Direct FAME held:
+  `0xcb1cf62cdad15177c7828c35757a412db633e645cf84d3398e22ae55f150b572`
+- ETH pool: `0x8fe371095f496e528fd3dbf95fb546a0706c1a51e3d91bd9d33913f0329b663e`
+- USDC pool: `0x0473c7922105197ad0b247d031d831ea7a49b0f8088422b256437b27802da921`
+- WETH held: `0x0c612ba1a7c356f5ed053d6f034062758dd70f76d4b9fa08c0063eb41bfb0550`
 
-These cases are `not executed`. They require the user to connect a disposable
-wallet to chain ID `8453` at `http://127.0.0.1:8545`. No production Base
-transaction is authorized by this document.
+The selected checkout route hashes were:
+
+- ETH: `0x941a35a1a857158ae525d3cb08120682d8b81d2ab88d5cd98ff789167f6448be`
+- USDC: `0x1fdbb62f0ad3e0e13c9d9ae8f947f1a4b8493676de056422fa98cb2ba153c742`
+- WETH: `0x2b80d0a7738f992a1fd2c73089b77ba638c557bd132be07803884aa9cac71593`
+
+Each checkout charged exactly `1,030,000 FAME`. The settlement events reported
+approximately `10,404` to `10,407 FAME` returned to the buyer, with zero unused
+input residue for these three selected routes.
+
+## Campaign findings
+
+- The first USDC simulation exposed a corrupted local fixture: earlier funding
+  had transferred USDC out of an Aerodrome pool without updating its stored
+  reserves. No checkout transaction was sent. Restoring the pool balance and
+  funding the disposable wallet through Anvil storage produced a fresh quote
+  and successful checkout.
+- A WETH attempt selected a held card made stale by earlier inventory
+  consumption. Fulfillment resolution rejected it before purchase submission.
+  Reloading canonical inventory exposed the replacement held card; the fresh
+  selection then settled successfully.
+- Base's well-known Anvil development accounts carry EIP-7702 delegation code
+  in the forked state and are unsafe DN404 NFT recipients. The campaign used a
+  plain, empty-code disposable address instead.
+- React's pending-transaction list exposed an undefined-key warning. The modal
+  now uses a stable kind-and-position key. A separate React 19 `element.ref`
+  warning originates in the existing UI dependency stack and did not affect
+  checkout behavior.
+- After review hardening, the live ETH quote remained available while pinning
+  and checking the marketplace's `authorizedCheckout` at the quote block.
+
+## Teardown
+
+Stop the app and Anvil after the run. Do not copy temporary contract addresses,
+fork funding state, or Foundry `broadcast/` output into tracked configuration.
+Production deployment, funding, activation, and Safe ownership transfer remain
+deferred.

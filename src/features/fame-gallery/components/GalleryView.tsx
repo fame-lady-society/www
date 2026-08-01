@@ -16,13 +16,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { formatUnits, isAddressEqual } from "viem";
+import { isAddressEqual } from "viem";
 import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { formatTestAmount } from "../format";
 import { displaySafeErrorMessage } from "../../fame-swap/solver/diagnostics";
+import { formatTokenAmount } from "../../fame-swap/solver/format";
+import { FAME_SWAP_TOKENS } from "../../fame-swap/tokens";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
 import { useGalleryCheckoutQuote } from "../hooks/useGalleryCheckoutQuote";
@@ -85,10 +87,9 @@ export function GalleryFundingLink({ chainId }: { chainId: number }) {
 }
 
 function formatPaymentAmount(amount: bigint, asset: GalleryPaymentAsset) {
-  const decimals = asset === "USDC" ? 6 : 18;
-  const [whole, fraction = ""] = formatUnits(amount, decimals).split(".");
-  const trimmed = fraction.replace(/0+$/u, "").slice(0, 8);
-  return `${whole}${trimmed ? `.${trimmed}` : ""} ${asset}`;
+  const token = FAME_SWAP_TOKENS.find(({ symbol }) => symbol === asset);
+  if (!token) throw new Error(`Unsupported gallery payment asset: ${asset}`);
+  return formatTokenAmount(amount, token, 8);
 }
 
 function QuoteLine({ label, value }: { label: string; value: string }) {
@@ -124,6 +125,74 @@ export function GalleryPaymentPanel({
   onRefreshQuote: () => void;
 }) {
   const quoteExpired = quote ? quote.expiresAt.getTime() <= Date.now() : false;
+  let paymentDetails: ReactNode;
+  if (paymentAsset === "FAME") {
+    paymentDetails = (
+      <Stack spacing={0.75}>
+        <QuoteLine
+          label="Maximum input funded"
+          value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
+        />
+        <QuoteLine
+          label="Marketplace FAME charge"
+          value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
+        />
+      </Stack>
+    );
+  } else if (quoteLoading) {
+    paymentDetails = (
+      <Alert severity="info">Finding a protected {paymentAsset} route…</Alert>
+    );
+  } else if (quoteError || !quote || quoteExpired) {
+    let errorMessage = "No protected checkout route is available.";
+    if (quoteExpired) {
+      errorMessage = "This checkout quote expired. Refresh it before buying.";
+    } else if (quoteError) {
+      errorMessage = displaySafeErrorMessage(quoteError);
+    }
+    paymentDetails = (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" onClick={onRefreshQuote} disabled={locked}>
+            Refresh quote
+          </Button>
+        }
+      >
+        {errorMessage}
+      </Alert>
+    );
+  } else {
+    paymentDetails = (
+      <Stack spacing={0.75}>
+        <QuoteLine
+          label="Maximum input funded"
+          value={formatPaymentAmount(quote.maximumInput, paymentAsset)}
+        />
+        <QuoteLine
+          label="Marketplace FAME charge"
+          value={`${formatTestAmount(quote.marketplaceFameCharge)} FAME`}
+        />
+        <QuoteLine
+          label="Estimated input residue"
+          value={formatPaymentAmount(quote.estimatedInputResidue, paymentAsset)}
+        />
+        <QuoteLine
+          label="Protected FAME"
+          value={`${formatTestAmount(quote.protectedFame)} FAME`}
+        />
+        <QuoteLine
+          label="Estimated surplus FAME"
+          value={`${formatTestAmount(quote.estimatedSurplusFame)} FAME`}
+        />
+        <Typography color="text.secondary" sx={{ pt: 0.5 }}>
+          Excess swap output is returned to your wallet as FAME. The final
+          refund depends on liquidity when the transaction executes.
+        </Typography>
+      </Stack>
+    );
+  }
+
   return (
     <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
       <Stack spacing={2}>
@@ -157,70 +226,7 @@ export function GalleryPaymentPanel({
           </Select>
         </Stack>
 
-        {paymentAsset === "FAME" ? (
-          <Stack spacing={0.75}>
-            <QuoteLine
-              label="Maximum input funded"
-              value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
-            />
-            <QuoteLine
-              label="Marketplace FAME charge"
-              value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
-            />
-          </Stack>
-        ) : quoteLoading ? (
-          <Alert severity="info">
-            Finding a protected {paymentAsset} route…
-          </Alert>
-        ) : quoteError || !quote || quoteExpired ? (
-          <Alert
-            severity="error"
-            action={
-              <Button
-                color="inherit"
-                onClick={onRefreshQuote}
-                disabled={locked}
-              >
-                Refresh quote
-              </Button>
-            }
-          >
-            {quoteExpired
-              ? "This checkout quote expired. Refresh it before buying."
-              : (quoteError ? displaySafeErrorMessage(quoteError) : null) ??
-                "No protected checkout route is available."}
-          </Alert>
-        ) : (
-          <Stack spacing={0.75}>
-            <QuoteLine
-              label="Maximum input funded"
-              value={formatPaymentAmount(quote.maximumInput, paymentAsset)}
-            />
-            <QuoteLine
-              label="Marketplace FAME charge"
-              value={`${formatTestAmount(quote.marketplaceFameCharge)} FAME`}
-            />
-            <QuoteLine
-              label="Estimated input residue"
-              value={formatPaymentAmount(
-                quote.estimatedInputResidue,
-                paymentAsset,
-              )}
-            />
-            <QuoteLine
-              label="Protected FAME"
-              value={`${formatTestAmount(quote.protectedFame)} FAME`}
-            />
-            <QuoteLine
-              label="Estimated surplus FAME"
-              value={`${formatTestAmount(quote.estimatedSurplusFame)} FAME`}
-            />
-            <Typography color="text.secondary" sx={{ pt: 0.5 }}>
-              Excess swap output is returned to your wallet as FAME. The final
-              refund depends on liquidity when the transaction executes.
-            </Typography>
-          </Stack>
-        )}
+        {paymentDetails}
       </Stack>
     </Paper>
   );
@@ -319,6 +325,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   onBuy,
   onRetry,
   tokenSymbol = "TEST",
+  purchaseTokenSymbol = tokenSymbol,
 }: {
   artworks: readonly PresentedGalleryArtwork[];
   totalPrice: bigint;
@@ -328,6 +335,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
   onBuy: (stableKey: string) => void;
   onRetry: (stableKey: string) => void;
   tokenSymbol?: string;
+  purchaseTokenSymbol?: string;
 }) {
   return (
     <Stack spacing={3}>
@@ -358,7 +366,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
               }
               onBuy={() => onBuy(artwork.stableKey)}
               onRetry={() => onRetry(artwork.stableKey)}
-              tokenSymbol={tokenSymbol}
+              tokenSymbol={purchaseTokenSymbol}
             />
           ) : (
             <GalleryMetadataArtworkCard
@@ -370,7 +378,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
               }
               onBuy={() => onBuy(artwork.stableKey)}
               onRetry={() => onRetry(artwork.stableKey)}
-              tokenSymbol={tokenSymbol}
+              tokenSymbol={purchaseTokenSymbol}
             />
           ),
         )}
@@ -626,6 +634,7 @@ export function GalleryView() {
               onBuy={buyArtwork}
               onRetry={retryArtwork}
               tokenSymbol={config.token.symbol}
+              purchaseTokenSymbol={paymentAsset}
             />
           ) : null}
         </GalleryViewContent>

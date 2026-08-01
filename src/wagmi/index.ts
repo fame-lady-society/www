@@ -4584,6 +4584,7 @@ export const fameMarketplaceCheckoutAbi = [
     ],
     name: 'RefundBalanceMismatch',
   },
+  { type: 'error', inputs: [], name: 'RouterFeeRecipientIsCheckout' },
   {
     type: 'error',
     inputs: [
@@ -7502,6 +7503,13 @@ export const iFameCheckoutRouterAbi = [
       { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
     ],
     stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'feeRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
   },
 ] as const
 
@@ -20670,6 +20678,22 @@ export const useSimulateIerc721MarketplaceRescueSafeTransferFrom =
   /*#__PURE__*/ createUseSimulateContract({
     abi: ierc721MarketplaceRescueAbi,
     functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__
+ */
+export const useReadIFameCheckoutRouter = /*#__PURE__*/ createUseReadContract({
+  abi: iFameCheckoutRouterAbi,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__ and `functionName` set to `"feeRecipient"`
+ */
+export const useReadIFameCheckoutRouterFeeRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: iFameCheckoutRouterAbi,
+    functionName: 'feeRecipient',
   })
 
 /**

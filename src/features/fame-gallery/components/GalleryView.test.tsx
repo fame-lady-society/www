@@ -159,6 +159,23 @@ describe("TEST gallery public view", () => {
     );
   });
 
+  it("keeps the FAME price while labeling the selected checkout asset", () => {
+    const html = renderToStaticMarkup(
+      <GalleryArtworkGrid
+        artworks={[{ stableKey: "one", metadata: readyMetadata("Sunrise") }]}
+        totalPrice={price}
+        onBuy={() => undefined}
+        onRetry={() => undefined}
+        tokenSymbol="FAME"
+        purchaseTokenSymbol="ETH"
+      />,
+    );
+
+    assert.match(html, /1,001,000 FAME/);
+    assert.match(html, /Buy with ETH/);
+    assert.doesNotMatch(html, /1,001,000 ETH/);
+  });
+
   it("shows retryable unavailable artwork without a Buy action", () => {
     const html = renderToStaticMarkup(
       <ArtworkCard

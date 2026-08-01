@@ -7,6 +7,7 @@ import {
   createConfig,
   cookieStorage,
   createStorage,
+  mock,
 } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FC, PropsWithChildren, useMemo } from "react";
@@ -19,6 +20,11 @@ import {
 import { Attribution } from "ox/erc8021";
 import { Chain, Transport } from "viem";
 import { chains as defaultChains } from "./wagmiConfig";
+import { baseRpcUrls, fameForkModeEnabled } from "@/viem/baseRpcUrls";
+import {
+  resolveFameForkAccount,
+  withFameForkRpc,
+} from "./fameForkHarness";
 import {
   clearAuthSession,
   setAuthSession,
@@ -117,10 +123,27 @@ export const Web3Provider: FC<
   }>
 > = ({ children, siwe = false, transports, chains }) => {
   const config = useMemo(() => {
+    const forkMode = fameForkModeEnabled();
+    const forkAccount = resolveFameForkAccount({
+      enabled: forkMode,
+      account: process.env.NEXT_PUBLIC_FAME_FORK_ACCOUNT,
+    });
+    const configuredChains = withFameForkRpc(
+      chains,
+      forkMode ? baseRpcUrls()[0] : null,
+    );
     const connectors =
       typeof window === "undefined"
         ? []
         : [
+            ...(forkAccount
+              ? [
+                  mock({
+                    accounts: [forkAccount],
+                    features: { reconnect: true },
+                  }),
+                ]
+              : []),
             ...getDefaultConnectors({
               app: {
                 name: defaultConfig.appName,
@@ -134,7 +157,7 @@ export const Web3Provider: FC<
     const config = getDefaultConfig({
       ...defaultConfig,
       multiInjectedProviderDiscovery: typeof window !== "undefined",
-      ...(chains && chains.length && { chains }),
+      ...(configuredChains.length && { chains: configuredChains }),
       ...(transports && { transports }),
       connectors,
     });

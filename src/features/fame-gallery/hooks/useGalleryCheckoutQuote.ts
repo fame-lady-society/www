@@ -15,7 +15,10 @@ import { FAME } from "../../fame-swap/tokens";
 import { tokenForAddress, type FameSwapToken } from "../../fame-swap/tokens";
 import { routeCandidatesForPair } from "../../fame-swap/solver/graph/candidates";
 import { createLiveLiquidityQuoteAdapter } from "../../fame-swap/solver/quotes/liveAdapters";
-import { solveFameTargetOutput } from "../../fame-swap/solver/targetOutput";
+import {
+  solveFameTargetOutput,
+  type FameTargetOutputSolverOptions,
+} from "../../fame-swap/solver/targetOutput";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import type {
   GalleryCheckoutQuote,
@@ -60,18 +63,71 @@ function checkoutToken(
 
 type GalleryCheckoutQuoteClient = Pick<
   PublicClient,
-  "getBlockNumber" | "getBlock" | "readContract"
+  "getBlockNumber" | "getBlock" | "multicall" | "readContract"
 >;
 
-export async function quoteGalleryCheckout(input: {
-  client: GalleryCheckoutQuoteClient;
-  chainId: number;
-  marketplace: `0x${string}`;
-  fame: `0x${string}`;
-  checkout: NonNullable<ReturnType<typeof useGalleryRuntime>["checkout"]>;
-  paymentAsset: Exclude<GalleryPaymentAsset, "FAME">;
-  signal?: AbortSignal;
-}): Promise<GalleryCheckoutQuote> {
+type GalleryCheckoutRouteResult =
+  | Readonly<{
+      status: "ready";
+      routeId: string;
+      amountIn: bigint;
+      protectedOutput: bigint;
+      estimatedFameOutput: bigint;
+      routeHash: Hash;
+      route: GalleryCheckoutQuote["route"];
+    }>
+  | Readonly<{ status: "unavailable"; message: string }>;
+
+type GalleryCheckoutRouteSolver = (
+  options: FameTargetOutputSolverOptions,
+) => Promise<GalleryCheckoutRouteResult>;
+
+async function solveGalleryCheckoutRoute(
+  options: FameTargetOutputSolverOptions,
+): Promise<GalleryCheckoutRouteResult> {
+  const solved = await solveFameTargetOutput(options);
+  if (solved.status !== "ready") {
+    return { status: "unavailable", message: solved.message };
+  }
+  return {
+    status: "ready",
+    routeId: solved.topology.id,
+    amountIn: solved.amountIn,
+    protectedOutput: solved.protectedOutput,
+    estimatedFameOutput: solved.quote.plan.netAmountOut,
+    routeHash: solved.quote.routeHash as Hash,
+    route: solved.quote.route,
+  };
+}
+
+type GalleryCheckoutQuoteDependencies = Readonly<{
+  createAdapter: typeof createLiveLiquidityQuoteAdapter;
+  solveRoute: GalleryCheckoutRouteSolver;
+  now: () => number;
+}>;
+
+const defaultQuoteDependencies: GalleryCheckoutQuoteDependencies = {
+  createAdapter: createLiveLiquidityQuoteAdapter,
+  solveRoute: solveGalleryCheckoutRoute,
+  now: Date.now,
+};
+
+export async function quoteGalleryCheckout(
+  input: {
+    client: GalleryCheckoutQuoteClient;
+    chainId: number;
+    marketplace: `0x${string}`;
+    fame: `0x${string}`;
+    checkout: NonNullable<ReturnType<typeof useGalleryRuntime>["checkout"]>;
+    paymentAsset: Exclude<GalleryPaymentAsset, "FAME">;
+    signal?: AbortSignal;
+  },
+  dependencyOverrides: Partial<GalleryCheckoutQuoteDependencies> = {},
+): Promise<GalleryCheckoutQuote> {
+  const dependencies = {
+    ...defaultQuoteDependencies,
+    ...dependencyOverrides,
+  };
   const swapConfig = getFameSwapConfig();
   if (!swapConfig.routerAddress) {
     throw new Error("The FAME router is unavailable for fork checkout.");
@@ -88,66 +144,73 @@ export async function quoteGalleryCheckout(input: {
   rpcReads += 1;
   const [
     block,
-    marketplaceUnit,
-    marketplacePremium,
-    feePpm,
-    checkoutRouter,
-    checkoutMarket,
-    checkoutFame,
-    checkoutUsdc,
-    checkoutWeth,
+    [
+      marketplaceUnit,
+      marketplacePremium,
+      feePpm,
+      authorizedCheckout,
+      checkoutRouter,
+      checkoutMarket,
+      checkoutFame,
+      checkoutUsdc,
+      checkoutWeth,
+    ],
   ] = await Promise.all([
     input.client.getBlock({ blockNumber }),
-    input.client.readContract({
-      abi: fameAbi,
-      address: input.fame,
-      functionName: "unit",
+    input.client.multicall({
+      allowFailure: false,
       blockNumber,
-    }),
-    input.client.readContract({
-      abi: universalPoolArtMarketplaceAbi,
-      address: input.marketplace,
-      functionName: "premium",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameRouterAbi,
-      address: input.checkout.router,
-      functionName: "feePpm",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameMarketplaceCheckoutAbi,
-      address: input.checkout.address,
-      functionName: "router",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameMarketplaceCheckoutAbi,
-      address: input.checkout.address,
-      functionName: "market",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameMarketplaceCheckoutAbi,
-      address: input.checkout.address,
-      functionName: "fame",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameMarketplaceCheckoutAbi,
-      address: input.checkout.address,
-      functionName: "usdc",
-      blockNumber,
-    }),
-    input.client.readContract({
-      abi: fameMarketplaceCheckoutAbi,
-      address: input.checkout.address,
-      functionName: "weth",
-      blockNumber,
+      contracts: [
+        { abi: fameAbi, address: input.fame, functionName: "unit" },
+        {
+          abi: universalPoolArtMarketplaceAbi,
+          address: input.marketplace,
+          functionName: "premium",
+        },
+        {
+          abi: fameRouterAbi,
+          address: input.checkout.router,
+          functionName: "feePpm",
+        },
+        {
+          abi: universalPoolArtMarketplaceAbi,
+          address: input.marketplace,
+          functionName: "authorizedCheckout",
+        },
+        {
+          abi: fameMarketplaceCheckoutAbi,
+          address: input.checkout.address,
+          functionName: "router",
+        },
+        {
+          abi: fameMarketplaceCheckoutAbi,
+          address: input.checkout.address,
+          functionName: "market",
+        },
+        {
+          abi: fameMarketplaceCheckoutAbi,
+          address: input.checkout.address,
+          functionName: "fame",
+        },
+        {
+          abi: fameMarketplaceCheckoutAbi,
+          address: input.checkout.address,
+          functionName: "usdc",
+        },
+        {
+          abi: fameMarketplaceCheckoutAbi,
+          address: input.checkout.address,
+          functionName: "weth",
+        },
+      ],
     }),
   ]);
-  rpcReads += 9;
+  rpcReads += 2;
+  if (!isAddressEqual(authorizedCheckout, input.checkout.address)) {
+    throw new Error(
+      "The fork marketplace has not authorized the configured checkout.",
+    );
+  }
   if (
     !isAddressEqual(checkoutRouter, input.checkout.router) ||
     !isAddressEqual(checkoutMarket, input.marketplace) ||
@@ -173,7 +236,7 @@ export async function quoteGalleryCheckout(input: {
     blockNumber,
     forkUrlLabel: "configured-local-fork",
   } as const;
-  const adapter = await createLiveLiquidityQuoteAdapter({
+  const adapter = await dependencies.createAdapter({
     client: {
       readContract: async (request) => {
         rpcReads += 1;
@@ -188,11 +251,11 @@ export async function quoteGalleryCheckout(input: {
   });
   const range = GALLERY_CHECKOUT_SEARCH_RANGES[input.paymentAsset];
   const targetOutput = marketplaceUnit + marketplacePremium;
-  const wallClockSeconds = BigInt(Math.floor(Date.now() / 1_000));
+  const wallClockSeconds = BigInt(Math.floor(dependencies.now() / 1_000));
   const deadlineBase =
     block.timestamp > wallClockSeconds ? block.timestamp : wallClockSeconds;
   const deadline = deadlineBase + 10n * 60n;
-  const solved = await solveFameTargetOutput({
+  const solved = await dependencies.solveRoute({
     tokenIn,
     tokenOut,
     selectedTopology,
@@ -218,16 +281,16 @@ export async function quoteGalleryCheckout(input: {
     throw new Error(solved.message);
   }
 
-  const estimatedFameOutput = solved.quote.plan.netAmountOut;
+  const estimatedFameOutput = solved.estimatedFameOutput;
   return {
     paymentAsset: input.paymentAsset,
     inputToken: tokenIn.address,
     checkout: input.checkout.address,
     marketplace: input.marketplace,
     quoteBlockNumber: blockNumber,
-    routeId: solved.topology.id,
-    routeHash: solved.quote.routeHash as Hash,
-    route: solved.quote.route,
+    routeId: solved.routeId,
+    routeHash: solved.routeHash,
+    route: solved.route,
     marketplaceUnit,
     marketplacePremium,
     maximumPremium: marketplacePremium,

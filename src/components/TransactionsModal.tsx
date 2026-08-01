@@ -71,9 +71,9 @@ export const TransactionsModal: FC<{
         <CardHeader avatar={<UploadIcon />} title={title} />
         <CardContent>
           {topContent}
-          {transactions?.map((tx) => (
+          {transactions?.map((tx, index) => (
             <TransactionItem
-              key={tx.hash}
+              key={`${tx.kind}:${index}`}
               transaction={tx}
               onConfirmed={onTransactionConfirmed}
             />

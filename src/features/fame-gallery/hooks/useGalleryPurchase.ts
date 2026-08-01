@@ -173,6 +173,23 @@ export function logGalleryPurchaseError(
   console.error(`[gallery purchase:${stage}]`, cause);
 }
 
+export async function simulateGalleryCheckoutRequest<TRequest>(input: {
+  request: TRequest;
+  simulate: (request: TRequest) => Promise<{ request: unknown }>;
+  onDiagnostic: (cause: unknown) => void;
+}): Promise<unknown> {
+  try {
+    return (await input.simulate(input.request)).request;
+  } catch (cause) {
+    input.onDiagnostic(cause);
+    return input.request;
+  }
+}
+
+function logGalleryCheckoutSimulationDiagnostic(cause: unknown) {
+  console.warn("[gallery checkout:purchase_simulation]", cause);
+}
+
 export function galleryCandidateTokenIdsForArtwork(
   catalog: readonly GalleryArtworkTarget[],
   artworkHash: Hash,
@@ -543,13 +560,18 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                   if (checkoutSimulation.current?.key === key) {
                     return { request: checkoutSimulation.current.request };
                   }
-                  const simulation =
-                    await publicClient.simulateContract(request);
+                  const executableRequest =
+                    await simulateGalleryCheckoutRequest({
+                      request,
+                      simulate: (candidate) =>
+                        publicClient.simulateContract(candidate),
+                      onDiagnostic: logGalleryCheckoutSimulationDiagnostic,
+                    });
                   checkoutSimulation.current = {
                     key,
-                    request: simulation.request,
+                    request: executableRequest,
                   };
-                  return { request: simulation.request };
+                  return { request: executableRequest };
                 }
                 const request = galleryCheckoutContractRequest(
                   frozen,
@@ -563,12 +585,17 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 if (checkoutSimulation.current?.key === key) {
                   return { request: checkoutSimulation.current.request };
                 }
-                const simulation = await publicClient.simulateContract(request);
+                const executableRequest = await simulateGalleryCheckoutRequest({
+                  request,
+                  simulate: (candidate) =>
+                    publicClient.simulateContract(candidate),
+                  onDiagnostic: logGalleryCheckoutSimulationDiagnostic,
+                });
                 checkoutSimulation.current = {
                   key,
-                  request: simulation.request,
+                  request: executableRequest,
                 };
-                return { request: simulation.request };
+                return { request: executableRequest };
               }
               if (route.kind === "held") {
                 const request = galleryPurchaseContractRequest(

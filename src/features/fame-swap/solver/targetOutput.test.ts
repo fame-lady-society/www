@@ -264,6 +264,19 @@ describe("target-output solver", () => {
     }
   });
 
+  it("times out even when an evaluator ignores its abort signal", async () => {
+    const startedAt = Date.now();
+    const result = await solveTargetOutput(
+      baseOptions({
+        timeoutMs: 25,
+        evaluate: () => new Promise<TargetOutputEvaluation>(() => undefined),
+      }),
+    );
+
+    assert.equal(result.status, "budget_exhausted");
+    assert.ok(Date.now() - startedAt < 500);
+  });
+
   it("fails closed when fresh materialization drops below the target", async () => {
     const result = await solveTargetOutput(
       baseOptions({
