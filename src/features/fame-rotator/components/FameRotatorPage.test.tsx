@@ -72,7 +72,7 @@ describe("FameRotatorView", () => {
     assert.doesNotMatch(html, /data-testid="approve-button"/);
     assert.doesNotMatch(html, /data-testid="rotate-button"/);
     assert.match(html, /Society #42/);
-    assert.match(html, /FIFO position 3/);
+    assert.match(html, /3 mints away/);
   });
 
   it("wrong-chain rendering offers Base switching and preserves the target", () => {
@@ -263,10 +263,11 @@ describe("FameRotatorView", () => {
     assert.match(noNftPage, /data-acquisition-branch="buy_fame"/);
   });
 
-  it("exposes bound, keyboard-friendly controls, and mobile stacking hooks", () => {
+  it("shows concise distance copy with keyboard-friendly controls and mobile stacking hooks", () => {
     const html = renderView();
     assert.match(html, /data-max-rotations="3"/);
-    assert.match(html, /FIFO position 3 · bound 3/);
+    assert.match(html, /3 mints away/);
+    assert.doesNotMatch(html, /FIFO position 3 · bound 3/);
     assert.match(html, /aria-label="Approve offered Society NFT for rotator"/);
     assert.match(html, /aria-label="Rotate offered Society NFT for target"/);
     assert.match(html, /aria-pressed="true"/);

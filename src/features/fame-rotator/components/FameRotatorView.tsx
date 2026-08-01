@@ -225,7 +225,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                 label="Target"
                 tokenId={resolution.tokenId}
                 image={resolution.image}
-                meta={`FIFO position ${resolution.position} · bound ${resolution.maxRotations}`}
+                meta={`${resolution.position} mint${resolution.position > 1 ? "s" : ""} away`}
                 highlight
               />
               <TokenCard
@@ -431,11 +431,6 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                     Rotate for #{resolution.tokenId}
                   </Button>
                 </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  After approval
-                  succeeds, confirm rotation with a fresh pool snapshot and
-                  bound.
-                </Typography>
               </Stack>
             ) : null}
 
