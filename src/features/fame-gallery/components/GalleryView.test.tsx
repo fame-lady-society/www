@@ -2,10 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
+import { FAME, USDC } from "../../fame-swap/tokens";
+import type { GalleryCheckoutQuote } from "../types";
 import { ArtworkCard } from "./ArtworkCard";
 import {
   GalleryArtworkGrid,
   GalleryFundingLink,
+  GalleryPaymentPanel,
   GalleryViewContent,
   type PresentedGalleryArtwork,
 } from "./GalleryView";
@@ -32,7 +35,63 @@ function readyMetadata(name: string) {
 
 const price = 1_001_000n * 10n ** 18n;
 
+const checkoutQuote: GalleryCheckoutQuote = {
+  paymentAsset: "USDC",
+  inputToken: USDC,
+  checkout: "0x1111111111111111111111111111111111111111",
+  marketplace: "0x2222222222222222222222222222222222222222",
+  quoteBlockNumber: 49_000_000n,
+  routeId: "usdc-route",
+  routeHash: `0x${"33".repeat(32)}`,
+  route: {
+    version: 1,
+    tokenIn: USDC,
+    tokenOut: FAME,
+    amountIn: 12_340_000n,
+    minAmountOutAfterFee: price,
+    recipient: "0x1111111111111111111111111111111111111111",
+    deadline: 1_900_000_000n,
+    legs: [],
+  },
+  marketplaceUnit: 1_000_000n * 10n ** 18n,
+  marketplacePremium: 1_000n * 10n ** 18n,
+  maximumPremium: 1_000n * 10n ** 18n,
+  marketplaceFameCharge: price,
+  maximumInput: 12_340_000n,
+  estimatedInputResidue: 10_000n,
+  protectedFame: price + 100n * 10n ** 18n,
+  estimatedFameOutput: price + 200n * 10n ** 18n,
+  estimatedSurplusFame: 200n * 10n ** 18n,
+  expiresAt: new Date("2030-01-01T00:00:00Z"),
+};
+
 describe("TEST gallery public view", () => {
+  it("shows the funded maximum, FAME charge, residue, protection, and liquidity refund copy", () => {
+    const html = renderToStaticMarkup(
+      <GalleryPaymentPanel
+        paymentAsset="USDC"
+        checkoutEnabled
+        marketplaceFameCharge={price}
+        quote={checkoutQuote}
+        quoteLoading={false}
+        quoteError={null}
+        locked={false}
+        onPaymentAssetChange={() => undefined}
+        onRefreshQuote={() => undefined}
+      />,
+    );
+
+    assert.match(html, /Maximum input funded/);
+    assert.match(html, /12.34 USDC/);
+    assert.match(html, /Marketplace FAME charge/);
+    assert.match(html, /Estimated input residue/);
+    assert.match(html, /Protected FAME/);
+    assert.match(html, /Estimated surplus FAME/);
+    assert.match(html, /returned to your wallet as FAME/);
+    assert.match(html, /depends on liquidity when the transaction executes/);
+    assert.doesNotMatch(html, /warning|high refund|unusual/i);
+  });
+
   it("links Base buyers to the full swap page without embedding a widget", () => {
     const baseFunding = renderToStaticMarkup(
       <GalleryFundingLink chainId={8_453} />,

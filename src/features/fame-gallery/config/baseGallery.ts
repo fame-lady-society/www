@@ -1,37 +1,30 @@
-import { getAddress, isAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import {
-  creatorArtistMagicAddress,
-  fameFromNetwork,
-  societyFromNetwork,
-} from "@/features/fame/contract";
+  BASE_GALLERY_ADDRESSES,
+  BASE_GALLERY_CHECKOUT_DEPENDENCIES,
+  type BaseGalleryForkContracts,
+} from "../contracts";
 import type { GalleryRuntimeConfig } from "./galleryRuntime";
 
-export const BASE_GALLERY_ADDRESSES = {
-  fame: fameFromNetwork(base.id),
-  mirror: societyFromNetwork(base.id),
-  creatorMagic: creatorArtistMagicAddress(base.id),
-} as const;
-
-export function parseBaseMarketplaceAddress(
-  value: string | undefined,
-): Address | null {
-  const candidate = value?.trim();
-  return candidate && isAddress(candidate, { strict: false })
-    ? getAddress(candidate)
-    : null;
-}
+export { BASE_GALLERY_ADDRESSES } from "../contracts";
 
 export function createBaseGalleryRuntime(
-  marketplaceAddress: Address,
+  contracts: BaseGalleryForkContracts,
 ): GalleryRuntimeConfig {
   return {
     schemaVersion: 1,
     chainId: base.id,
     addresses: {
       ...BASE_GALLERY_ADDRESSES,
-      gallery: marketplaceAddress,
+      gallery: contracts.marketplace,
     },
+    checkout: contracts.checkout
+      ? {
+          mode: "fork",
+          address: contracts.checkout,
+          ...BASE_GALLERY_CHECKOUT_DEPENDENCIES,
+        }
+      : null,
     token: {
       name: "Society",
       symbol: "FAME",
@@ -48,8 +41,9 @@ export function createBaseGalleryRuntime(
     explorerBaseUrl: base.blockExplorers.default.url,
     labels: {
       title: "FAME gallery",
-      description:
-        "Choose an artwork and buy it with FAME. Wallet connection is only needed when you buy.",
+      description: contracts.checkout
+        ? "Choose an artwork and buy it with FAME, ETH, USDC, or WETH. Wallet connection is only needed when you buy."
+        : "Choose an artwork and buy it with FAME. Wallet connection is only needed when you buy.",
       network: "Base",
     },
   };

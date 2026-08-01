@@ -4,23 +4,38 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
-import { isAddressEqual } from "viem";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { formatUnits, isAddressEqual } from "viem";
 import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { formatTestAmount } from "../format";
+import { displaySafeErrorMessage } from "../../fame-swap/solver/diagnostics";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { useGalleryDiscovery } from "../hooks/useGalleryDiscovery";
+import { useGalleryCheckoutQuote } from "../hooks/useGalleryCheckoutQuote";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryMetadata } from "../hooks/useGalleryMetadata";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
 import type { GalleryMetadataResult } from "../metadata/testMetadata";
-import type { GalleryArtworkTarget } from "../types";
+import type {
+  GalleryArtworkTarget,
+  GalleryCheckoutQuote,
+  GalleryPaymentAsset,
+} from "../types";
 import { ArtworkCard } from "./ArtworkCard";
 import { AcquiredNftResult } from "./AcquiredNftResult";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
@@ -64,6 +79,148 @@ export function GalleryFundingLink({ chainId }: { chainId: number }) {
         >
           Open FAME swap
         </LinkButton>
+      </Stack>
+    </Paper>
+  );
+}
+
+function formatPaymentAmount(amount: bigint, asset: GalleryPaymentAsset) {
+  const decimals = asset === "USDC" ? 6 : 18;
+  const [whole, fraction = ""] = formatUnits(amount, decimals).split(".");
+  const trimmed = fraction.replace(/0+$/u, "").slice(0, 8);
+  return `${whole}${trimmed ? `.${trimmed}` : ""} ${asset}`;
+}
+
+function QuoteLine({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack direction="row" justifyContent="space-between" spacing={2}>
+      <Typography color="text.secondary">{label}</Typography>
+      <Typography fontWeight={600} textAlign="right">
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
+export function GalleryPaymentPanel({
+  paymentAsset,
+  checkoutEnabled,
+  marketplaceFameCharge,
+  quote,
+  quoteLoading,
+  quoteError,
+  locked,
+  onPaymentAssetChange,
+  onRefreshQuote,
+}: {
+  paymentAsset: GalleryPaymentAsset;
+  checkoutEnabled: boolean;
+  marketplaceFameCharge: bigint;
+  quote: GalleryCheckoutQuote | null;
+  quoteLoading: boolean;
+  quoteError: Error | null;
+  locked: boolean;
+  onPaymentAssetChange: (asset: GalleryPaymentAsset) => void;
+  onRefreshQuote: () => void;
+}) {
+  const quoteExpired = quote ? quote.expiresAt.getTime() <= Date.now() : false;
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+      <Stack spacing={2}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "center" }}
+          spacing={1.5}
+        >
+          <div>
+            <Typography component="h2" variant="h6">
+              Pay with
+            </Typography>
+            <Typography color="text.secondary">
+              FAME is direct. ETH, USDC, and WETH swap and purchase atomically.
+            </Typography>
+          </div>
+          <Select
+            size="small"
+            value={paymentAsset}
+            disabled={locked}
+            onChange={(event) =>
+              onPaymentAssetChange(event.target.value as GalleryPaymentAsset)
+            }
+            sx={{ minWidth: 132 }}
+          >
+            <MenuItem value="FAME">FAME</MenuItem>
+            {checkoutEnabled ? <MenuItem value="ETH">ETH</MenuItem> : null}
+            {checkoutEnabled ? <MenuItem value="USDC">USDC</MenuItem> : null}
+            {checkoutEnabled ? <MenuItem value="WETH">WETH</MenuItem> : null}
+          </Select>
+        </Stack>
+
+        {paymentAsset === "FAME" ? (
+          <Stack spacing={0.75}>
+            <QuoteLine
+              label="Maximum input funded"
+              value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
+            />
+            <QuoteLine
+              label="Marketplace FAME charge"
+              value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
+            />
+          </Stack>
+        ) : quoteLoading ? (
+          <Alert severity="info">
+            Finding a protected {paymentAsset} route…
+          </Alert>
+        ) : quoteError || !quote || quoteExpired ? (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                onClick={onRefreshQuote}
+                disabled={locked}
+              >
+                Refresh quote
+              </Button>
+            }
+          >
+            {quoteExpired
+              ? "This checkout quote expired. Refresh it before buying."
+              : (quoteError ? displaySafeErrorMessage(quoteError) : null) ??
+                "No protected checkout route is available."}
+          </Alert>
+        ) : (
+          <Stack spacing={0.75}>
+            <QuoteLine
+              label="Maximum input funded"
+              value={formatPaymentAmount(quote.maximumInput, paymentAsset)}
+            />
+            <QuoteLine
+              label="Marketplace FAME charge"
+              value={`${formatTestAmount(quote.marketplaceFameCharge)} FAME`}
+            />
+            <QuoteLine
+              label="Estimated input residue"
+              value={formatPaymentAmount(
+                quote.estimatedInputResidue,
+                paymentAsset,
+              )}
+            />
+            <QuoteLine
+              label="Protected FAME"
+              value={`${formatTestAmount(quote.protectedFame)} FAME`}
+            />
+            <QuoteLine
+              label="Estimated surplus FAME"
+              value={`${formatTestAmount(quote.estimatedSurplusFame)} FAME`}
+            />
+            <Typography color="text.secondary" sx={{ pt: 0.5 }}>
+              Excess swap output is returned to your wallet as FAME. The final
+              refund depends on liquidity when the transaction executes.
+            </Typography>
+          </Stack>
+        )}
       </Stack>
     </Paper>
   );
@@ -306,6 +463,7 @@ function useGalleryChainOnPageLoad(targetChainId: number) {
 
 export function GalleryView() {
   const config = useGalleryRuntime();
+  const [paymentAsset, setPaymentAsset] = useState<GalleryPaymentAsset>("FAME");
   useGalleryChainOnPageLoad(config.chainId);
   const connection = useConnection();
   const global = useGalleryGlobalState();
@@ -319,6 +477,10 @@ export function GalleryView() {
   }, [global, pool]);
   const globalState =
     global.projection.status === "success" ? global.projection.data : null;
+  const checkoutQuote = useGalleryCheckoutQuote({
+    paymentAsset,
+    globalState,
+  });
   const purchase = useGalleryPurchase({
     globalState,
     catalog: discovery.catalog,
@@ -328,6 +490,8 @@ export function GalleryView() {
     revalidateAffectedTokenIds: discovery.revalidateAffectedTokenIds,
     getPendingInitialHeldTokenIds: discovery.getPendingInitialHeldTokenIds,
     recoverHeldTokenIds: discovery.recoverHeldTokenIds,
+    paymentAsset,
+    checkoutQuote: checkoutQuote.quote,
   });
   const revalidateAffectedTokenIds = discovery.revalidateAffectedTokenIds;
   const refreshPool = pool.refresh;
@@ -370,6 +534,11 @@ export function GalleryView() {
     Boolean(connection.address && globalState) &&
     isAddressEqual(connection.address!, globalState!.owner);
   const totalPrice = globalState ? globalState.unit + globalState.premium : 0n;
+  const alternativePaymentReady =
+    paymentAsset === "FAME" ||
+    (checkoutQuote.quote !== null &&
+      checkoutQuote.quote.expiresAt.getTime() > Date.now() &&
+      !checkoutQuote.isLoading);
 
   const retryArtwork = useCallback(
     (stableKey: string) => {
@@ -419,7 +588,23 @@ export function GalleryView() {
           ) : null}
         </Stack>
 
-        <GalleryFundingLink chainId={config.chainId} />
+        {config.checkout ? null : (
+          <GalleryFundingLink chainId={config.chainId} />
+        )}
+
+        {globalState ? (
+          <GalleryPaymentPanel
+            paymentAsset={paymentAsset}
+            checkoutEnabled={config.checkout !== null}
+            marketplaceFameCharge={totalPrice}
+            quote={checkoutQuote.quote}
+            quoteLoading={checkoutQuote.isLoading}
+            quoteError={checkoutQuote.error}
+            locked={purchase.locked}
+            onPaymentAssetChange={setPaymentAsset}
+            onRefreshQuote={() => void checkoutQuote.refresh()}
+          />
+        ) : null}
 
         <GalleryViewContent
           state={state}
@@ -431,7 +616,11 @@ export function GalleryView() {
             <GalleryArtworkGrid
               artworks={artworks}
               totalPrice={totalPrice}
-              purchaseLocked={globalState.paused || purchase.locked}
+              purchaseLocked={
+                globalState.paused ||
+                purchase.locked ||
+                !alternativePaymentReady
+              }
               activeArtworkKey={purchase.activeArtworkKey}
               scanning={discovery.isScanning}
               onBuy={buyArtwork}
@@ -468,9 +657,8 @@ export function GalleryView() {
           open={purchase.modalOpen}
           transactions={purchase.transactions}
           onClose={() => purchase.setModalOpen(false)}
-          onRetry={purchase.retry}
           onDone={() => purchase.setModalOpen(false)}
-          tokenSymbol={config.token.symbol}
+          tokenSymbol={paymentAsset}
           networkName={config.labels.network}
           explorerBaseUrl={config.explorerBaseUrl}
         />

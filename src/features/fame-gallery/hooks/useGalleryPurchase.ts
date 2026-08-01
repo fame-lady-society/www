@@ -42,11 +42,20 @@ import {
   galleryApprovalContractRequest,
   galleryPurchaseContractRequest,
 } from "../transactions/contractRequests";
+import {
+  freezeGalleryCheckoutBuyerTerms,
+  galleryCheckoutAllowanceRequest,
+  galleryCheckoutApprovalContractRequest,
+  galleryCheckoutContractRequest,
+} from "../transactions/checkoutRequests";
 import { verifyGalleryPurchase } from "../transactions/verifyPurchase";
 import type {
   GalleryArtworkTarget,
+  GalleryCheckoutQuote,
+  GalleryFulfillmentRoute,
   GalleryFrozenBuyerTerms,
   GalleryGlobalState,
+  GalleryPaymentAsset,
   GalleryVerifiedAcquisition,
 } from "../types";
 
@@ -61,6 +70,8 @@ type GalleryPurchaseInputs = {
   ) => Promise<readonly GalleryArtworkTarget[]>;
   getPendingInitialHeldTokenIds: () => Promise<readonly bigint[]> | null;
   recoverHeldTokenIds: () => Promise<readonly bigint[]>;
+  paymentAsset: GalleryPaymentAsset;
+  checkoutQuote: GalleryCheckoutQuote | null;
 };
 
 type ActiveAttempt = {
@@ -68,6 +79,8 @@ type ActiveAttempt = {
   terms: GalleryFrozenBuyerTerms | null;
   displayedUnit: bigint;
   displayedPremium: bigint;
+  paymentAsset: GalleryPaymentAsset;
+  checkoutQuote: GalleryCheckoutQuote | null;
 };
 
 type GalleryPurchaseRequest = ReturnType<typeof galleryPurchaseContractRequest>;
@@ -79,6 +92,71 @@ type GalleryPoolPurchaseRequest = Extract<
   GalleryPurchaseRequest,
   { functionName: "purchasePool" }
 >;
+type GalleryCheckoutRequest = ReturnType<typeof galleryCheckoutContractRequest>;
+type GalleryHeldCheckoutRequest = Extract<
+  GalleryCheckoutRequest,
+  { functionName: "checkoutHeld" }
+>;
+type GalleryPoolCheckoutRequest = Extract<
+  GalleryCheckoutRequest,
+  { functionName: "checkoutPool" }
+>;
+
+export function isFreshGalleryCheckoutQuote(
+  quote: GalleryCheckoutQuote | null,
+  now = Date.now(),
+) {
+  return quote !== null && quote.expiresAt.getTime() > now;
+}
+
+export function galleryCheckoutSimulationKey(input: {
+  terms: GalleryFrozenBuyerTerms;
+  route: GalleryFulfillmentRoute;
+}) {
+  const checkout = input.terms.checkout;
+  if (!checkout) return null;
+  return [
+    input.terms.chainId,
+    input.terms.account.toLowerCase(),
+    input.terms.selectedTarget.targetId,
+    input.terms.artworkHash.toLowerCase(),
+    input.terms.maxPremium,
+    checkout.paymentAsset,
+    checkout.routeHash.toLowerCase(),
+    input.route.kind,
+    input.route.shellId,
+    input.route.kind === "pool" ? input.route.sourceId : 0n,
+  ].join(":");
+}
+
+export function galleryCheckoutSubmissionError(input: {
+  terms: GalleryFrozenBuyerTerms;
+  quote: GalleryCheckoutQuote | null;
+  connectedAccount: `0x${string}` | undefined;
+  connectedChainId: number | undefined;
+  networkName: string;
+  now?: number;
+}) {
+  if (
+    !input.connectedAccount ||
+    input.connectedAccount.toLowerCase() !==
+      input.terms.account.toLowerCase() ||
+    input.connectedChainId !== input.terms.chainId
+  ) {
+    return new Error(
+      `The connected account or ${input.networkName} chain changed.`,
+    );
+  }
+  if (
+    input.terms.checkout &&
+    !isFreshGalleryCheckoutQuote(input.quote, input.now)
+  ) {
+    return new Error(
+      "The checkout quote expired. Refresh the quote before buying.",
+    );
+  }
+  return null;
+}
 
 function unavailableClientError(networkName: string) {
   return new Error(`${networkName} RPC client is unavailable.`);
@@ -161,6 +239,10 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const waitingForConnection = useRef(false);
   const sawConnectModalOpen = useRef(false);
   const inputsRef = useRef(inputs);
+  const checkoutSimulation = useRef<{
+    key: string;
+    request: unknown;
+  } | null>(null);
   inputsRef.current = inputs;
 
   const queueDispatch = useCallback((event: GalleryPurchaseEvent) => {
@@ -231,24 +313,44 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
           return;
         }
 
+        const checkoutQuote = attempt.checkoutQuote;
+        if (
+          attempt.paymentAsset !== "FAME" &&
+          (!checkoutQuote || !isFreshGalleryCheckoutQuote(checkoutQuote))
+        ) {
+          failOutsideQueue(
+            "purchase_simulation",
+            new Error(
+              "The checkout quote expired. Refresh the quote before buying.",
+            ),
+          );
+          return;
+        }
         const terms =
           attempt.terms ??
-          freezeGalleryBuyerTerms(
-            {
-              account: latestConnection.address,
-              selectedTarget: {
-                targetId: attempt.target.targetId,
-                tokenId: attempt.target.tokenId,
-              },
-              artworkHash: attempt.target.artworkHash,
-              unit: attempt.displayedUnit,
-              displayedPremium: attempt.displayedPremium,
-            },
-            {
-              chainId: config.chainId,
-              marketplace,
-            },
-          );
+          (attempt.paymentAsset === "FAME"
+            ? freezeGalleryBuyerTerms(
+                {
+                  account: latestConnection.address,
+                  selectedTarget: {
+                    targetId: attempt.target.targetId,
+                    tokenId: attempt.target.tokenId,
+                  },
+                  artworkHash: attempt.target.artworkHash,
+                  unit: attempt.displayedUnit,
+                  displayedPremium: attempt.displayedPremium,
+                },
+                {
+                  chainId: config.chainId,
+                  marketplace,
+                },
+              )
+            : freezeGalleryCheckoutBuyerTerms({
+                chainId: config.chainId,
+                account: latestConnection.address,
+                target: attempt.target,
+                quote: checkoutQuote!,
+              }));
         attempt.terms = terms;
 
         const artPoolBoundsByBlock = new Map<
@@ -342,22 +444,50 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
             }),
         };
 
+        let checkoutFulfillmentRoute: GalleryFulfillmentRoute | null = null;
         await executeGalleryPurchase({
           terms,
           allowShellRecovery,
           dependencies: {
             dispatch: queueDispatch,
-            readAllowance: (frozen) =>
-              publicClient.readContract({
+            readBalance: (frozen) => {
+              if (frozen.checkout?.paymentAsset === "ETH") {
+                return publicClient.getBalance({ address: frozen.account });
+              }
+              return publicClient.readContract({
                 abi: fameAbi,
-                address: fame,
-                functionName: "allowance",
-                args: [frozen.account, marketplace],
-              }),
+                address: frozen.checkout?.inputToken ?? fame,
+                functionName: "balanceOf",
+                args: [frozen.account],
+              });
+            },
+            readAllowance: (frozen) => {
+              if (!frozen.checkout) {
+                return publicClient.readContract({
+                  abi: fameAbi,
+                  address: fame,
+                  functionName: "allowance",
+                  args: [frozen.account, marketplace],
+                });
+              }
+              const request = galleryCheckoutAllowanceRequest({
+                owner: frozen.account,
+                quote: checkoutQuote!,
+              });
+              return request
+                ? publicClient.readContract(request)
+                : Promise.resolve(frozen.maximumSpend);
+            },
             async simulateApproval(frozen) {
-              const simulation = await publicClient.simulateContract(
-                galleryApprovalContractRequest(frozen, fame),
-              );
+              const request = frozen.checkout
+                ? galleryCheckoutApprovalContractRequest(frozen, checkoutQuote!)
+                : galleryApprovalContractRequest(frozen, fame);
+              if (!request) {
+                throw new Error(
+                  "Native ETH checkout does not require approval.",
+                );
+              }
+              const simulation = await publicClient.simulateContract(request);
               return { request: simulation.request };
             },
             writeApproval: (request) =>
@@ -386,9 +516,60 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                     ? () => pendingInitialScan
                     : undefined,
               });
+              checkoutFulfillmentRoute = resolved;
               return { route: resolved };
             },
             async simulatePurchase(frozen, route) {
+              const currentConnection = getConnection(wagmiConfig);
+              const submissionError = galleryCheckoutSubmissionError({
+                terms: frozen,
+                quote: checkoutQuote,
+                connectedAccount: currentConnection.address,
+                connectedChainId: currentConnection.chainId,
+                networkName: config.labels.network,
+              });
+              if (submissionError) throw submissionError;
+              if (frozen.checkout) {
+                if (route.kind === "held") {
+                  const request = galleryCheckoutContractRequest(
+                    frozen,
+                    route,
+                    checkoutQuote!,
+                  ) as GalleryHeldCheckoutRequest;
+                  const key = galleryCheckoutSimulationKey({
+                    terms: frozen,
+                    route,
+                  })!;
+                  if (checkoutSimulation.current?.key === key) {
+                    return { request: checkoutSimulation.current.request };
+                  }
+                  const simulation =
+                    await publicClient.simulateContract(request);
+                  checkoutSimulation.current = {
+                    key,
+                    request: simulation.request,
+                  };
+                  return { request: simulation.request };
+                }
+                const request = galleryCheckoutContractRequest(
+                  frozen,
+                  route,
+                  checkoutQuote!,
+                ) as GalleryPoolCheckoutRequest;
+                const key = galleryCheckoutSimulationKey({
+                  terms: frozen,
+                  route,
+                })!;
+                if (checkoutSimulation.current?.key === key) {
+                  return { request: checkoutSimulation.current.request };
+                }
+                const simulation = await publicClient.simulateContract(request);
+                checkoutSimulation.current = {
+                  key,
+                  request: simulation.request,
+                };
+                return { request: simulation.request };
+              }
               if (route.kind === "held") {
                 const request = galleryPurchaseContractRequest(
                   frozen,
@@ -423,33 +604,60 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 })),
               };
             },
-            verifyPurchase: ({ receipt, hash, terms: frozen, route }) =>
-              verifyGalleryPurchase({
-                receipt,
-                expectedHash: hash,
-                terms: frozen,
-                route,
-                addresses: { marketplace, mirror },
-                dependencies: {
-                  readOwnerAt: (shellId) =>
-                    publicClient.readContract({
-                      abi: fameMirrorAbi,
-                      address: mirror,
-                      functionName: "ownerAt",
-                      args: [shellId],
-                    }),
-                  readArtworkHash: (shellId) =>
-                    publicClient.readContract({
-                      abi: universalPoolArtMarketplaceAbi,
-                      address: marketplace,
-                      functionName: "artworkHash",
-                      args: [shellId],
-                    }),
-                },
-              }),
+            verifyPurchase: terms.checkout
+              ? undefined
+              : ({ receipt, hash, terms: frozen, route }) =>
+                  verifyGalleryPurchase({
+                    receipt,
+                    expectedHash: hash,
+                    terms: frozen,
+                    route,
+                    addresses: { marketplace, mirror },
+                    dependencies: {
+                      readOwnerAt: (shellId) =>
+                        publicClient.readContract({
+                          abi: fameMirrorAbi,
+                          address: mirror,
+                          functionName: "ownerAt",
+                          args: [shellId],
+                        }),
+                      readArtworkHash: (shellId) =>
+                        publicClient.readContract({
+                          abi: universalPoolArtMarketplaceAbi,
+                          address: marketplace,
+                          functionName: "artworkHash",
+                          args: [shellId],
+                        }),
+                    },
+                  }),
             async refreshAfterPurchase(acquisition) {
               const latest = inputsRef.current;
               await refreshGalleryAfterPurchase(acquisition, latest);
+            },
+            async refreshAfterReceipt() {
+              if (!checkoutFulfillmentRoute) {
+                throw new Error(
+                  "The checkout fulfillment route is unavailable.",
+                );
+              }
+              const affectedTokenIds =
+                checkoutFulfillmentRoute.kind === "held"
+                  ? [checkoutFulfillmentRoute.shellId]
+                  : [
+                      checkoutFulfillmentRoute.shellId,
+                      checkoutFulfillmentRoute.sourceId,
+                    ];
+              const latest = inputsRef.current;
+              const results = await Promise.allSettled([
+                latest.refreshGlobal(),
+                latest.refreshPool(),
+                latest.revalidateAffectedTokenIds(affectedTokenIds),
+              ]);
+              const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                  result.status === "rejected",
+              );
+              if (failure) throw failure.reason;
             },
           },
         });
@@ -492,6 +700,8 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
         terms: null,
         displayedUnit: displayed.unit,
         displayedPremium: displayed.premium,
+        paymentAsset: inputsRef.current.paymentAsset,
+        checkoutQuote: inputsRef.current.checkoutQuote,
       };
       selectedTarget.current = target;
       setActiveArtworkKey(target.targetId);
@@ -542,39 +752,20 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     }
   }, [state.status]);
 
-  const retry = useCallback(() => {
-    if (state.purchaseHash) return;
-    const target =
-      activeAttempt.current?.target ??
-      selectedTarget.current ??
-      inputsRef.current.catalog.find(
-        ({ targetId }) => targetId === state.terms?.selectedTarget.targetId,
-      );
-    if (!target || activeAttempt.current) return;
-    const displayed = inputsRef.current.globalState;
-    if (!displayed && !state.terms) return;
-    activeAttempt.current = {
-      target,
-      terms: state.terms,
-      displayedUnit: state.terms?.unit ?? displayed!.unit,
-      displayedPremium: state.terms?.maxPremium ?? displayed!.premium,
-    };
-    setActiveArtworkKey(target.targetId);
-    void executeAttempt(true);
-  }, [executeAttempt, state.purchaseHash, state.terms]);
-
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];
+    const approvalSymbol =
+      state.terms?.checkout?.paymentAsset ?? config.token.symbol;
     if (state.approvalHash) {
       result.push({
-        kind: `${config.token.symbol} approval`,
+        kind: `${approvalSymbol} approval`,
         hash: state.approvalHash,
       });
     } else if (
       state.status === "awaiting_approval_wallet" ||
       state.status === "simulating_approval"
     ) {
-      result.push({ kind: `${config.token.symbol} approval` });
+      result.push({ kind: `${approvalSymbol} approval` });
     }
     if (state.purchaseHash) {
       result.push({ kind: "gallery purchase", hash: state.purchaseHash });
@@ -590,13 +781,13 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     state.approvalHash,
     state.purchaseHash,
     state.status,
+    state.terms,
   ]);
 
   return {
     state,
     transactions,
     buy,
-    retry,
     modalOpen: transactionModalOpen,
     setModalOpen: setTransactionModalOpen,
     locked: activeArtworkKey !== null,

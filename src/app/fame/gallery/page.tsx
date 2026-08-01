@@ -3,10 +3,8 @@ import Container from "@mui/material/Container";
 import type { Metadata } from "next";
 import { BaseGalleryShell } from "@/features/fame-gallery/components/BaseGalleryShell";
 import { GalleryView } from "@/features/fame-gallery/components/GalleryView";
-import {
-  createBaseGalleryRuntime,
-  parseBaseMarketplaceAddress,
-} from "@/features/fame-gallery/config/baseGallery";
+import { createBaseGalleryRuntime } from "@/features/fame-gallery/config/baseGallery";
+import { parseBaseGalleryForkContracts } from "@/features/fame-gallery/contracts";
 
 export const metadata: Metadata = {
   title: "FAME gallery",
@@ -14,11 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  const marketplaceAddress = parseBaseMarketplaceAddress(
-    process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS,
-  );
+  const contracts = parseBaseGalleryForkContracts({
+    marketplace: process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS,
+    checkout: process.env.NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS,
+    forkMode: process.env.NEXT_PUBLIC_FAME_FORK_MODE === "1",
+  });
 
-  if (!marketplaceAddress) {
+  if (!contracts) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Alert severity="error">
@@ -29,7 +29,7 @@ export default function Page() {
   }
 
   return (
-    <BaseGalleryShell config={createBaseGalleryRuntime(marketplaceAddress)}>
+    <BaseGalleryShell config={createBaseGalleryRuntime(contracts)}>
       <GalleryView />
     </BaseGalleryShell>
   );

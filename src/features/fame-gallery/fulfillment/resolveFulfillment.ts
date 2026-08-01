@@ -179,6 +179,8 @@ async function resolveAtCurrentBlock({
   shellTokenIds: readonly bigint[];
   source: GalleryFulfillmentReadSource;
 }): Promise<ResolutionAttempt> {
+  const marketplaceAddress =
+    terms.checkout?.marketplace ?? terms.allowanceTarget;
   const resolutionBlock = await source.captureBlockNumber();
   const allCandidateIds = uniqueTokenIds([
     terms.selectedTarget.tokenId,
@@ -191,7 +193,7 @@ async function resolveAtCurrentBlock({
 
   if (currentPremium > terms.maxPremium) throw priceChanged();
 
-  const currentHeldRoute = heldRoute(terms, candidates, terms.allowanceTarget);
+  const currentHeldRoute = heldRoute(terms, candidates, marketplaceAddress);
   if (currentHeldRoute) {
     return {
       status: "resolved",
@@ -208,7 +210,7 @@ async function resolveAtCurrentBlock({
       shellTokenIds,
       candidate.tokenId,
       resolutionBlock,
-      terms.allowanceTarget,
+      marketplaceAddress,
     );
     if (shellId !== null) {
       return {

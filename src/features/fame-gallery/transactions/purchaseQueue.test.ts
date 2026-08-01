@@ -153,6 +153,19 @@ describe("gallery purchase queue", () => {
     ]);
   });
 
+  it("stops before allowance or simulation when the selected balance is insufficient", async () => {
+    const test = harness([1_025n]);
+    test.dependencies.readBalance = async () => 1_024n;
+    const result = await executeGalleryPurchase({
+      terms,
+      dependencies: test.dependencies,
+    });
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.status === "failed" ? result.stage : null, "balance");
+    assert.deepEqual(test.calls, []);
+  });
+
   it("waits for two purchase confirmations before verifying current state", async () => {
     const test = harness([1_025n]);
     await executeGalleryPurchase({ terms, dependencies: test.dependencies });
@@ -227,6 +240,31 @@ describe("gallery purchase queue", () => {
       test.calls.filter((call) => call === "write purchase").length,
       1,
     );
+  });
+
+  it("uses the standard successful receipt for checkout without inventing a second proof", async () => {
+    const test = harness([1_025n]);
+    delete test.dependencies.verifyPurchase;
+    test.dependencies.refreshAfterReceipt = async () => {
+      test.calls.push("refresh receipt");
+    };
+    const result = await executeGalleryPurchase({
+      terms,
+      dependencies: test.dependencies,
+    });
+    const state = test.events.reduce(
+      galleryPurchaseReducer,
+      initialGalleryPurchaseState,
+    );
+
+    assert.deepEqual(result, { status: "verified", acquisition: null });
+    assert.equal(state.status, "verified");
+    assert.equal(state.acquisition, null);
+    assert.ok(!test.calls.includes("verify"));
+    assert.deepEqual(test.calls.slice(-2), [
+      "wait purchase 2",
+      "refresh receipt",
+    ]);
   });
 
   it("keeps a mined purchase distinct from a retryable write failure", async () => {

@@ -144,11 +144,9 @@ export function GalleryPurchaseModalContent({
 
 export function GalleryPurchaseModalActions({
   state,
-  onRetry,
   onDone,
 }: {
   state: GalleryPurchaseState;
-  onRetry: () => void;
   onDone: () => void;
 }) {
   const terminal =
@@ -158,16 +156,6 @@ export function GalleryPurchaseModalActions({
 
   return (
     <Stack spacing={1} sx={{ mt: 2 }}>
-      {state.status === "error" && state.terms && !state.purchaseHash ? (
-        <Button
-          type="button"
-          variant="contained"
-          onClick={onRetry}
-          sx={{ minHeight: 44 }}
-        >
-          Retry purchase
-        </Button>
-      ) : null}
       {terminal ? (
         <Button
           type="button"
@@ -187,7 +175,6 @@ export function GalleryPurchaseModal({
   open,
   transactions,
   onClose,
-  onRetry,
   onDone,
   tokenSymbol = "TEST",
   networkName = "Base Sepolia",
@@ -197,7 +184,6 @@ export function GalleryPurchaseModal({
   open: boolean;
   transactions: readonly { kind: string; hash?: `0x${string}` }[];
   onClose: () => void;
-  onRetry: () => void;
   onDone: () => void;
   tokenSymbol?: string;
   networkName?: string;
@@ -224,11 +210,7 @@ export function GalleryPurchaseModal({
         />
       }
       bottomContent={
-        <GalleryPurchaseModalActions
-          state={state}
-          onRetry={onRetry}
-          onDone={onDone}
-        />
+        <GalleryPurchaseModalActions state={state} onDone={onDone} />
       }
     />
   );

@@ -69,7 +69,6 @@ describe("gallery purchase modal content", () => {
         />
         <GalleryPurchaseModalActions
           state={currentState}
-          onRetry={() => undefined}
           onDone={() => undefined}
         />
       </>,
@@ -94,7 +93,7 @@ describe("gallery purchase modal content", () => {
     assert.match(html, /Done/);
   });
 
-  it("keeps retry available for failures before a purchase was submitted", () => {
+  it("does not offer a transaction retry after a failed simulation", () => {
     const currentState = state({
       status: "error",
       terms: {} as GalleryPurchaseState["terms"],
@@ -106,12 +105,12 @@ describe("gallery purchase modal content", () => {
     const html = renderToStaticMarkup(
       <GalleryPurchaseModalActions
         state={currentState}
-        onRetry={() => undefined}
         onDone={() => undefined}
       />,
     );
 
-    assert.match(html, /Retry purchase/i);
+    assert.doesNotMatch(html, /Retry purchase/i);
+    assert.match(html, /Done/);
   });
 
   it("names an approval receipt timeout without redacting its public hash link", () => {

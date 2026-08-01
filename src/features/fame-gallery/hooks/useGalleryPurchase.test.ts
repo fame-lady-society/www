@@ -3,10 +3,14 @@ import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
 import type {
   GalleryArtworkTarget,
+  GalleryCheckoutQuote,
+  GalleryFrozenBuyerTerms,
   GalleryVerifiedAcquisition,
 } from "../types";
 import {
   galleryCandidateTokenIdsForArtwork,
+  galleryCheckoutSimulationKey,
+  galleryCheckoutSubmissionError,
   isTokenInGalleryArtPool,
   logGalleryPurchaseError,
   refreshGalleryAfterPurchase,
@@ -26,6 +30,92 @@ const acquisition: GalleryVerifiedAcquisition = {
 };
 
 describe("gallery purchase hook adapter", () => {
+  it("keys one diagnostic checkout simulation to quote, account, artwork, and fulfillment", () => {
+    const terms: GalleryFrozenBuyerTerms = {
+      chainId: 8_453,
+      account: acquisition.recipient,
+      recipient: acquisition.recipient,
+      selectedTarget: { targetId: "pool:mint:7", tokenId: 7n },
+      artworkHash: acquisition.artworkHash,
+      unit: 1_000n,
+      maxPremium: 25n,
+      maximumSpend: 12n,
+      allowanceTarget: "0x2222222222222222222222222222222222222222",
+      checkout: {
+        paymentAsset: "USDC" as const,
+        inputToken: "0x3333333333333333333333333333333333333333",
+        checkout: "0x2222222222222222222222222222222222222222",
+        marketplace: "0x4444444444444444444444444444444444444444",
+        maximumInput: 12n,
+        routeHash: `0x${"5".repeat(64)}` as Hash,
+        routeDeadline: 1_900_000_000n,
+        quoteBlockNumber: 49_000_000n,
+      },
+    };
+    const held = galleryCheckoutSimulationKey({
+      terms,
+      route: { kind: "held", shellId: 19n },
+    });
+    const pool = galleryCheckoutSimulationKey({
+      terms,
+      route: { kind: "pool", poolKind: "mint", shellId: 19n, sourceId: 7n },
+    });
+
+    assert.ok(held);
+    assert.ok(pool);
+    assert.notEqual(held, pool);
+  });
+
+  it("rejects an expired quote or changed account before simulation and write", () => {
+    const terms: GalleryFrozenBuyerTerms = {
+      chainId: 8_453,
+      account: acquisition.recipient,
+      recipient: acquisition.recipient,
+      selectedTarget: { targetId: "held:19", tokenId: 19n },
+      artworkHash: acquisition.artworkHash,
+      unit: 1_000n,
+      maxPremium: 25n,
+      maximumSpend: 12n,
+      allowanceTarget: "0x2222222222222222222222222222222222222222",
+      checkout: {
+        paymentAsset: "ETH",
+        inputToken: "0x0000000000000000000000000000000000000000",
+        checkout: "0x2222222222222222222222222222222222222222",
+        marketplace: "0x4444444444444444444444444444444444444444",
+        maximumInput: 12n,
+        routeHash: `0x${"5".repeat(64)}` as Hash,
+        routeDeadline: 1_900_000_000n,
+        quoteBlockNumber: 49_000_000n,
+      },
+    };
+    const quote = {
+      expiresAt: new Date(1_000),
+    } as GalleryCheckoutQuote;
+
+    assert.match(
+      galleryCheckoutSubmissionError({
+        terms,
+        quote,
+        connectedAccount: acquisition.recipient,
+        connectedChainId: 8_453,
+        networkName: "Base",
+        now: 1_001,
+      })?.message ?? "",
+      /expired/u,
+    );
+    assert.match(
+      galleryCheckoutSubmissionError({
+        terms,
+        quote: { ...quote, expiresAt: new Date(2_000) },
+        connectedAccount: "0x9999999999999999999999999999999999999999",
+        connectedChainId: 8_453,
+        networkName: "Base",
+        now: 1_001,
+      })?.message ?? "",
+      /account or Base chain changed/u,
+    );
+  });
+
   it("auto-closes only after a verified purchase", () => {
     assert.equal(shouldAutoCloseGalleryPurchaseModal("refreshing"), true);
     assert.equal(shouldAutoCloseGalleryPurchaseModal("verified"), true);

@@ -1,4 +1,5 @@
 import type { Address, Hash } from "viem";
+import type { FameRoute } from "../fame-swap/router/types";
 
 export type GalleryProjectionFailure = {
   status: "failure";
@@ -112,6 +113,39 @@ export type GalleryFrozenBuyerTerms = Readonly<{
   maxPremium: bigint;
   maximumSpend: bigint;
   allowanceTarget: Address;
+  checkout?: Readonly<{
+    paymentAsset: "ETH" | "USDC" | "WETH";
+    inputToken: Address;
+    checkout: Address;
+    marketplace: Address;
+    maximumInput: bigint;
+    routeHash: Hash;
+    routeDeadline: bigint;
+    quoteBlockNumber: bigint;
+  }>;
+}>;
+
+export type GalleryPaymentAsset = "FAME" | "ETH" | "USDC" | "WETH";
+
+export type GalleryCheckoutQuote = Readonly<{
+  paymentAsset: Exclude<GalleryPaymentAsset, "FAME">;
+  inputToken: Address;
+  checkout: Address;
+  marketplace: Address;
+  quoteBlockNumber: bigint;
+  routeId: string;
+  routeHash: Hash;
+  route: FameRoute;
+  marketplaceUnit: bigint;
+  marketplacePremium: bigint;
+  maximumPremium: bigint;
+  marketplaceFameCharge: bigint;
+  maximumInput: bigint;
+  estimatedInputResidue: bigint;
+  protectedFame: bigint;
+  estimatedFameOutput: bigint;
+  estimatedSurplusFame: bigint;
+  expiresAt: Date;
 }>;
 
 export type GalleryFulfillmentRoute =

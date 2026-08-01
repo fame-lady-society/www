@@ -30,6 +30,7 @@ export type GalleryPurchaseStatus =
 export type GalleryPurchaseErrorStage =
   | "connection"
   | "switch_chain"
+  | "balance"
   | "allowance"
   | "approval_simulation"
   | "approval_wallet"
@@ -81,12 +82,15 @@ export type GalleryPurchaseEvent =
   | { type: "verifying" }
   | { type: "verification_failed"; cause: unknown }
   | { type: "refreshing"; acquisition: GalleryVerifiedAcquisition }
+  | { type: "refreshing_receipt" }
   | { type: "verified"; acquisition: GalleryVerifiedAcquisition }
+  | { type: "verified_receipt" }
   | {
       type: "refresh_failed";
       acquisition: GalleryVerifiedAcquisition;
       cause: unknown;
     }
+  | { type: "refresh_receipt_failed"; cause: unknown }
   | { type: "failed"; stage: GalleryPurchaseErrorStage; cause: unknown }
   | { type: "reset" };
 
@@ -140,6 +144,13 @@ export function galleryPurchaseReducer(
         acquisition: event.acquisition,
         failure: null,
       };
+    case "refreshing_receipt":
+      return {
+        ...state,
+        status: "refreshing",
+        acquisition: null,
+        failure: null,
+      };
     case "verified":
       return {
         ...state,
@@ -148,11 +159,27 @@ export function galleryPurchaseReducer(
         failure: null,
         refreshFailure: null,
       };
+    case "verified_receipt":
+      return {
+        ...state,
+        status: "verified",
+        acquisition: null,
+        failure: null,
+        refreshFailure: null,
+      };
     case "refresh_failed":
       return {
         ...state,
         status: "verified",
         acquisition: event.acquisition,
+        failure: null,
+        refreshFailure: event.cause,
+      };
+    case "refresh_receipt_failed":
+      return {
+        ...state,
+        status: "verified",
+        acquisition: null,
         failure: null,
         refreshFailure: event.cause,
       };
@@ -177,6 +204,7 @@ export type GalleryResolvedPurchase = {
 
 export type GalleryPurchaseDependencies = {
   dispatch: (event: GalleryPurchaseEvent) => void;
+  readBalance?: (terms: GalleryFrozenBuyerTerms) => Promise<bigint>;
   readAllowance: (terms: GalleryFrozenBuyerTerms) => Promise<bigint>;
   simulateApproval: (
     terms: GalleryFrozenBuyerTerms,
@@ -195,7 +223,7 @@ export type GalleryPurchaseDependencies = {
     hash: Hash,
     confirmations: 1 | 2 | 3,
   ) => Promise<GalleryPurchaseReceipt>;
-  verifyPurchase: (input: {
+  verifyPurchase?: (input: {
     receipt: GalleryPurchaseReceipt;
     hash: Hash;
     terms: GalleryFrozenBuyerTerms;
@@ -204,10 +232,14 @@ export type GalleryPurchaseDependencies = {
   refreshAfterPurchase: (
     acquisition: GalleryVerifiedAcquisition,
   ) => Promise<void>;
+  refreshAfterReceipt?: () => Promise<void>;
 };
 
 export type GalleryPurchaseExecutionResult =
-  | { status: "verified"; acquisition: GalleryVerifiedAcquisition }
+  | {
+      status: "verified";
+      acquisition: GalleryVerifiedAcquisition | null;
+    }
   | { status: "confirmed_unverified"; cause: unknown }
   | { status: "failed"; stage: GalleryPurchaseErrorStage; cause: unknown };
 
@@ -242,6 +274,22 @@ export async function executeGalleryPurchase({
   dependencies: GalleryPurchaseDependencies;
 }): Promise<GalleryPurchaseExecutionResult> {
   dependencies.dispatch({ type: "started", terms });
+
+  if (dependencies.readBalance) {
+    let balance: bigint;
+    try {
+      balance = await dependencies.readBalance(terms);
+    } catch (cause) {
+      return failure(dependencies, "balance", cause);
+    }
+    if (balance < terms.maximumSpend) {
+      return failure(
+        dependencies,
+        "balance",
+        new Error("The selected payment balance is below the maximum input."),
+      );
+    }
+  }
 
   let allowance: bigint;
   try {
@@ -324,6 +372,20 @@ export async function executeGalleryPurchase({
       "purchase_receipt",
       revertedTransaction("purchase"),
     );
+  }
+
+  if (!dependencies.verifyPurchase) {
+    dependencies.dispatch({ type: "refreshing_receipt" });
+    try {
+      if (!dependencies.refreshAfterReceipt) {
+        throw new Error("Receipt refresh is not configured.");
+      }
+      await dependencies.refreshAfterReceipt();
+      dependencies.dispatch({ type: "verified_receipt" });
+    } catch (cause) {
+      dependencies.dispatch({ type: "refresh_receipt_failed", cause });
+    }
+    return { status: "verified", acquisition: null };
   }
 
   let verification: GalleryPurchaseVerificationResult;

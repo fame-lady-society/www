@@ -13,6 +13,13 @@ export type GalleryRuntimeConfig = {
     creatorMagic: Address;
     gallery: Address;
   };
+  checkout: null | {
+    mode: "fork";
+    address: Address;
+    router: Address;
+    usdc: Address;
+    weth: Address;
+  };
   token: {
     name: string;
     symbol: string;
@@ -40,6 +47,7 @@ export const BASE_SEPOLIA_GALLERY_RUNTIME: GalleryRuntimeConfig = {
     name: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.name,
     symbol: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.symbol,
   },
+  checkout: null,
   labels: {
     title: "TEST gallery",
     description:
