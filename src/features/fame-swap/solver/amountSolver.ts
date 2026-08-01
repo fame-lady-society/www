@@ -30,7 +30,10 @@ import type {
   FameOptimizerEvidence,
   FameOptimizerMode,
 } from "./optimizer/types";
-import { rankRouteCandidatesAsync } from "./quotes/asyncRankRoutes";
+import {
+  quoteRouteCandidateAsync,
+  rankRouteCandidatesAsync,
+} from "./quotes/asyncRankRoutes";
 import {
   rankRouteCandidates,
   type FameQuotedRoutePlan,
@@ -79,6 +82,21 @@ export interface FameAsyncAmountSolverRequest
   optimizerMode?: FameOptimizerMode;
   optimizerBudgets?: Partial<FameOptimizerBudgets>;
 }
+
+export interface FameLockedCandidateQuoteRequest {
+  candidate: FameRouteCandidate;
+  amountIn: bigint;
+  feePpm: bigint;
+  slippageBps: number;
+  adapter: FameAsyncQuoteAdapter;
+}
+
+export type FameLockedCandidateQuoteResult =
+  | Readonly<{ status: "ready"; plan: FameQuotedRoutePlan }>
+  | Readonly<{
+      status: "unavailable";
+      rejection: FameCandidateRejection;
+    }>;
 
 function sameAddress(left: Address, right: Address): boolean {
   return left.toLowerCase() === right.toLowerCase();
@@ -319,6 +337,29 @@ function readyResult(
   };
 }
 
+export async function quoteFameLockedCandidate(
+  request: FameLockedCandidateQuoteRequest,
+): Promise<FameLockedCandidateQuoteResult> {
+  const quoted = await quoteRouteCandidateAsync(
+    request.candidate,
+    request.amountIn,
+    request.feePpm,
+    request.slippageBps,
+    request.adapter,
+    request.adapter.quoteContext,
+  );
+  return "candidate" in quoted
+    ? { status: "ready", plan: quoted }
+    : { status: "unavailable", rejection: quoted };
+}
+
+export function materializeFameLockedCandidate(
+  request: Omit<FameAmountSolverRequest, "adapter">,
+  plan: FameQuotedRoutePlan,
+): Extract<FameAmountSolverResult, { status: "ready" }> {
+  return readyResult(request, plan, []);
+}
+
 export function solveFameSwapAmount(
   request: FameAmountSolverRequest,
 ): FameAmountSolverResult {
@@ -443,7 +484,7 @@ export async function solveFameSwapAmountAsync(
 
   const optimizerMode = request.candidateFilter
     ? "disabled"
-    : (request.optimizerMode ?? "select");
+    : request.optimizerMode ?? "select";
   if (
     optimizerMode === "disabled" ||
     request.requestedRouteId ||
