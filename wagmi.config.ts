@@ -132,6 +132,7 @@ export default defineConfig({
         "ClaimToFame.sol/**",
         "Fame.sol/**",
         "FameRouter.sol/**",
+        "FameMarketplaceCheckout.sol/**",
         "FameMirror.sol/**",
         "FameBurnPoolRotator.sol/**",
         "IBalanceOf.sol/**",
