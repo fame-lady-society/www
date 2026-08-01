@@ -99,14 +99,14 @@ describe("Base FAME gallery configuration", () => {
     assert.equal(createBaseGalleryRuntime(contracts).checkout, null);
   });
 
-  it("keeps the direct route out of both site menus", () => {
+  it("adds the direct route to both site menus as FAME Marketplace", () => {
     for (const file of [
       "src/features/appbar/components/SiteMenu.tsx",
       "src/features/appbar/components.app/SiteMenu.tsx",
     ]) {
       const source = readFileSync(resolve(process.cwd(), file), "utf8");
-      assert.doesNotMatch(source, /\/fame\/gallery/);
-      assert.doesNotMatch(source, />\s*Gallery\s*</);
+      assert.match(source, /\/fame\/gallery/);
+      assert.match(source, /FAME Marketplace/);
     }
   });
 

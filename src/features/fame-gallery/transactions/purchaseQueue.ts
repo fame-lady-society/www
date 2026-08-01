@@ -319,7 +319,7 @@ export async function executeGalleryPurchase({
 
     let approvalReceipt: GalleryPurchaseReceipt;
     try {
-      approvalReceipt = await dependencies.waitForReceipt(approvalHash, 2);
+      approvalReceipt = await dependencies.waitForReceipt(approvalHash, 1);
     } catch (cause) {
       return failure(dependencies, "approval_receipt", cause);
     }
@@ -362,7 +362,7 @@ export async function executeGalleryPurchase({
 
   let purchaseReceipt: GalleryPurchaseReceipt;
   try {
-    purchaseReceipt = await dependencies.waitForReceipt(purchaseHash, 2);
+    purchaseReceipt = await dependencies.waitForReceipt(purchaseHash, 1);
   } catch (cause) {
     return failure(dependencies, "purchase_receipt", cause);
   }

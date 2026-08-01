@@ -147,7 +147,7 @@ describe("gallery purchase queue", () => {
       "resolve:false",
       "simulate purchase",
       "write purchase",
-      "wait purchase 2",
+      "wait purchase 1",
       "verify",
       "refresh",
     ]);
@@ -166,13 +166,13 @@ describe("gallery purchase queue", () => {
     assert.deepEqual(test.calls, []);
   });
 
-  it("waits for two purchase confirmations before verifying current state", async () => {
+  it("waits for one purchase confirmation before verifying current state", async () => {
     const test = harness([1_025n]);
     await executeGalleryPurchase({ terms, dependencies: test.dependencies });
 
-    assert.ok(test.calls.includes("wait purchase 2"));
+    assert.ok(test.calls.includes("wait purchase 1"));
     assert.ok(
-      test.calls.indexOf("verify") > test.calls.indexOf("wait purchase 2"),
+      test.calls.indexOf("verify") > test.calls.indexOf("wait purchase 1"),
     );
   });
 
@@ -196,15 +196,15 @@ describe("gallery purchase queue", () => {
     assert.equal(test.calls.filter((call) => call === "allowance").length, 1);
     assert.deepEqual(
       test.calls.filter((call) => call.startsWith("wait approval")),
-      ["wait approval 2"],
+      ["wait approval 1"],
     );
     assert.ok(
       test.calls.indexOf("resolve:false") >
-        test.calls.indexOf("wait approval 2"),
+        test.calls.indexOf("wait approval 1"),
     );
   });
 
-  it("a retry rechecks allowance and does not repeat a sufficient approval", async () => {
+  it("a later Buy rechecks allowance and does not repeat a sufficient approval", async () => {
     const first = harness([0n]);
     first.dependencies.resolveFulfillment = async () => {
       throw new Error("no shell");
@@ -215,14 +215,32 @@ describe("gallery purchase queue", () => {
     });
     assert.equal(failed.status, "failed");
 
-    const retry = harness([1_025n]);
+    const laterAttempt = harness([1_025n]);
     await executeGalleryPurchase({
       terms,
       allowShellRecovery: true,
-      dependencies: retry.dependencies,
+      dependencies: laterAttempt.dependencies,
     });
-    assert.ok(!retry.calls.includes("simulate approval"));
-    assert.ok(retry.calls.includes("resolve:true"));
+    assert.ok(!laterAttempt.calls.includes("simulate approval"));
+    assert.ok(laterAttempt.calls.includes("resolve:true"));
+  });
+
+  it("allows caller-authorized shell recovery without adding another write", async () => {
+    const test = harness([1_025n]);
+
+    const result = await executeGalleryPurchase({
+      terms,
+      allowShellRecovery: true,
+      dependencies: test.dependencies,
+    });
+
+    assert.equal(result.status, "verified");
+    assert.ok(test.calls.includes("resolve:true"));
+    assert.ok(!test.calls.includes("write approval"));
+    assert.equal(
+      test.calls.filter((call) => call === "write purchase").length,
+      1,
+    );
   });
 
   it("does not resubmit after a wagmi receipt failure", async () => {
@@ -262,7 +280,7 @@ describe("gallery purchase queue", () => {
     assert.equal(state.acquisition, null);
     assert.ok(!test.calls.includes("verify"));
     assert.deepEqual(test.calls.slice(-2), [
-      "wait purchase 2",
+      "wait purchase 1",
       "refresh receipt",
     ]);
   });

@@ -8,6 +8,7 @@ import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import DollarIcon from "@mui/icons-material/MonetizationOn";
 import PersonIcon from "@mui/icons-material/Person";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { WrappedLink } from "@/components/WrappedLink";
@@ -65,6 +66,18 @@ export const SiteMenu: FC<{
           primary={
             <Typography textAlign="right" color="text.primary">
               $FAME
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/fame/gallery">
+        <ListItemIcon>
+          <StorefrontIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Marketplace
             </Typography>
           }
         />

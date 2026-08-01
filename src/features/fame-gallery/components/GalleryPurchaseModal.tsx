@@ -38,7 +38,7 @@ function purchaseStatusCopy(
     case "awaiting_approval_wallet":
       return `Approve the exact ${tokenSymbol} amount in your wallet.`;
     case "confirming_approval":
-      return `Waiting for two ${networkName} approval confirmations…`;
+      return `Waiting for ${networkName} approval confirmation…`;
     case "resolving_fulfillment":
       return "Finding a current route for this artwork…";
     case "simulating_purchase":
@@ -46,7 +46,7 @@ function purchaseStatusCopy(
     case "awaiting_purchase_wallet":
       return "Confirm the gallery purchase in your wallet.";
     case "confirming_purchase":
-      return `Waiting for two ${networkName} confirmations…`;
+      return `Waiting for ${networkName} confirmation…`;
     case "verifying":
       return "Verifying the artwork delivered by the purchase…";
     case "confirmed_unverified":

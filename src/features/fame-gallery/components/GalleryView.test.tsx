@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
-import { FAME, USDC } from "../../fame-swap/tokens";
+import { FAME, USDC, WETH } from "../../fame-swap/tokens";
 import type { GalleryCheckoutQuote } from "../types";
 import { ArtworkCard } from "./ArtworkCard";
 import {
@@ -34,6 +34,7 @@ function readyMetadata(name: string) {
 }
 
 const price = 1_001_000n * 10n ** 18n;
+const displayedFameCharge = price + 600_000_000_000_000_000n;
 
 const checkoutQuote: GalleryCheckoutQuote = {
   paymentAsset: "USDC",
@@ -56,22 +57,21 @@ const checkoutQuote: GalleryCheckoutQuote = {
   marketplaceUnit: 1_000_000n * 10n ** 18n,
   marketplacePremium: 1_000n * 10n ** 18n,
   maximumPremium: 1_000n * 10n ** 18n,
-  marketplaceFameCharge: price,
-  maximumInput: 12_340_000n,
-  estimatedInputResidue: 10_000n,
+  marketplaceFameCharge: displayedFameCharge,
+  maximumInput: 12_345_678n,
+  estimatedInputResidue: 10_001n,
   protectedFame: price + 100n * 10n ** 18n,
-  estimatedFameOutput: price + 200n * 10n ** 18n,
-  estimatedSurplusFame: 200n * 10n ** 18n,
+  estimatedFameOutput: price + 200_600_000_000_000_000_000n,
+  estimatedSurplusFame: 200_600_000_000_000_000_000n,
   expiresAt: new Date("2030-01-01T00:00:00Z"),
 };
 
 describe("TEST gallery public view", () => {
-  it("shows the funded maximum, FAME charge, residue, protection, and liquidity refund copy", () => {
+  it("shows concise checkout costs and liquidity refund copy", () => {
     const html = renderToStaticMarkup(
       <GalleryPaymentPanel
         paymentAsset="USDC"
         checkoutEnabled
-        marketplaceFameCharge={price}
         quote={checkoutQuote}
         quoteLoading={false}
         quoteError={null}
@@ -84,12 +84,61 @@ describe("TEST gallery public view", () => {
     assert.match(html, /Maximum input funded/);
     assert.match(html, /12.34 USDC/);
     assert.match(html, /Marketplace FAME charge/);
-    assert.match(html, /Estimated input residue/);
-    assert.match(html, /Protected FAME/);
+    assert.match(html, /1,001,001 FAME/);
+    assert.doesNotMatch(html, /Estimated input residue/);
+    assert.doesNotMatch(html, /Protected FAME/);
     assert.match(html, /Estimated surplus FAME/);
+    assert.match(html, /201 FAME/);
     assert.match(html, /returned to your wallet as FAME/);
     assert.match(html, /depends on liquidity when the transaction executes/);
     assert.doesNotMatch(html, /warning|high refund|unusual/i);
+
+    const directHtml = renderToStaticMarkup(
+      <GalleryPaymentPanel
+        paymentAsset="FAME"
+        checkoutEnabled
+        quote={null}
+        quoteLoading={false}
+        quoteError={null}
+        locked={false}
+        onPaymentAssetChange={() => undefined}
+        onRefreshQuote={() => undefined}
+      />,
+    );
+    assert.doesNotMatch(directHtml, /Maximum input funded/);
+    assert.doesNotMatch(directHtml, /Marketplace FAME charge/);
+    assert.doesNotMatch(directHtml, /1,001,001 FAME/);
+  });
+
+  it("limits ETH and WETH checkout amounts to four decimal places", () => {
+    const maximumInput = 119_814_123_456_789_000n;
+    const residue = 1_234_567_890_000n;
+    const renderPayment = (paymentAsset: "ETH" | "WETH") =>
+      renderToStaticMarkup(
+        <GalleryPaymentPanel
+          paymentAsset={paymentAsset}
+          checkoutEnabled
+          quote={{
+            ...checkoutQuote,
+            paymentAsset,
+            inputToken:
+              paymentAsset === "ETH"
+                ? "0x0000000000000000000000000000000000000000"
+                : WETH,
+            maximumInput,
+            estimatedInputResidue: residue,
+          }}
+          quoteLoading={false}
+          quoteError={null}
+          locked={false}
+          onPaymentAssetChange={() => undefined}
+          onRefreshQuote={() => undefined}
+        />,
+      );
+
+    assert.match(renderPayment("ETH"), /0.1198 ETH/);
+    assert.match(renderPayment("WETH"), /0.1198 WETH/);
+    assert.doesNotMatch(renderPayment("ETH"), /0.119814/);
   });
 
   it("links Base buyers to the full swap page without embedding a widget", () => {

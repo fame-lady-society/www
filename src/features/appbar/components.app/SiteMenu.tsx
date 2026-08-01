@@ -8,6 +8,7 @@ import ReloadIcon from "@mui/icons-material/Replay";
 import BankIcon from "@mui/icons-material/AccountBalance";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import PersonIcon from "@mui/icons-material/Person";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 
 import { MenuItem } from "./MenuItem";
 import { NetworkMenuItem } from "./NetworkMenuItem";
@@ -55,6 +56,12 @@ export const SiteMenu: FC<{
         disabled={isFame}
         icon={<ReloadIcon />}
         text="$FAME"
+      />
+      <MenuItem
+        href="/fame/gallery"
+        disabled={false}
+        icon={<StorefrontIcon />}
+        text="FAME Marketplace"
       />
       <MenuItem
         href="/fame/swap"

@@ -286,7 +286,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   );
 
   const executeAttempt = useCallback(
-    async (allowShellRecovery: boolean) => {
+    async () => {
       const attempt = activeAttempt.current;
       if (!attempt) return;
       if (!publicClient) {
@@ -464,7 +464,10 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
         let checkoutFulfillmentRoute: GalleryFulfillmentRoute | null = null;
         await executeGalleryPurchase({
           terms,
-          allowShellRecovery,
+          // A Buy action authorizes one bounded, read-only custody refresh when
+          // the page's shell snapshot is stale. Transaction writes are never
+          // retried by this recovery path.
+          allowShellRecovery: true,
           dependencies: {
             dispatch: queueDispatch,
             readBalance: (frozen) => {
@@ -741,7 +744,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
         connectModal.setOpen(true);
         return;
       }
-      void executeAttempt(false);
+      void executeAttempt();
     },
     [
       config.token.symbol,
@@ -759,7 +762,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       waitingForConnection.current = false;
       sawConnectModalOpen.current = false;
       connectModal.setOpen(false);
-      void executeAttempt(false);
+      void executeAttempt();
       return;
     }
     if (sawConnectModalOpen.current && !connectModal.open) {

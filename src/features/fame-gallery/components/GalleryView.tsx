@@ -89,7 +89,13 @@ export function GalleryFundingLink({ chainId }: { chainId: number }) {
 function formatPaymentAmount(amount: bigint, asset: GalleryPaymentAsset) {
   const token = FAME_SWAP_TOKENS.find(({ symbol }) => symbol === asset);
   if (!token) throw new Error(`Unsupported gallery payment asset: ${asset}`);
-  return formatTokenAmount(amount, token, 8);
+  return formatTokenAmount(amount, token, asset === "USDC" ? 2 : 4);
+}
+
+function formatFameAmount(amount: bigint) {
+  const unit = 10n ** 18n;
+  const roundedAmount = ((amount + unit / 2n) / unit) * unit;
+  return formatTestAmount(roundedAmount);
 }
 
 function QuoteLine({ label, value }: { label: string; value: string }) {
@@ -106,7 +112,6 @@ function QuoteLine({ label, value }: { label: string; value: string }) {
 export function GalleryPaymentPanel({
   paymentAsset,
   checkoutEnabled,
-  marketplaceFameCharge,
   quote,
   quoteLoading,
   quoteError,
@@ -116,7 +121,6 @@ export function GalleryPaymentPanel({
 }: {
   paymentAsset: GalleryPaymentAsset;
   checkoutEnabled: boolean;
-  marketplaceFameCharge: bigint;
   quote: GalleryCheckoutQuote | null;
   quoteLoading: boolean;
   quoteError: Error | null;
@@ -127,18 +131,7 @@ export function GalleryPaymentPanel({
   const quoteExpired = quote ? quote.expiresAt.getTime() <= Date.now() : false;
   let paymentDetails: ReactNode;
   if (paymentAsset === "FAME") {
-    paymentDetails = (
-      <Stack spacing={0.75}>
-        <QuoteLine
-          label="Maximum input funded"
-          value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
-        />
-        <QuoteLine
-          label="Marketplace FAME charge"
-          value={`${formatTestAmount(marketplaceFameCharge)} FAME`}
-        />
-      </Stack>
-    );
+    paymentDetails = null;
   } else if (quoteLoading) {
     paymentDetails = (
       <Alert severity="info">Finding a protected {paymentAsset} route…</Alert>
@@ -171,19 +164,11 @@ export function GalleryPaymentPanel({
         />
         <QuoteLine
           label="Marketplace FAME charge"
-          value={`${formatTestAmount(quote.marketplaceFameCharge)} FAME`}
-        />
-        <QuoteLine
-          label="Estimated input residue"
-          value={formatPaymentAmount(quote.estimatedInputResidue, paymentAsset)}
-        />
-        <QuoteLine
-          label="Protected FAME"
-          value={`${formatTestAmount(quote.protectedFame)} FAME`}
+          value={`${formatFameAmount(quote.marketplaceFameCharge)} FAME`}
         />
         <QuoteLine
           label="Estimated surplus FAME"
-          value={`${formatTestAmount(quote.estimatedSurplusFame)} FAME`}
+          value={`${formatFameAmount(quote.estimatedSurplusFame)} FAME`}
         />
         <Typography color="text.secondary" sx={{ pt: 0.5 }}>
           Excess swap output is returned to your wallet as FAME. The final
@@ -604,7 +589,6 @@ export function GalleryView() {
           <GalleryPaymentPanel
             paymentAsset={paymentAsset}
             checkoutEnabled={config.checkout !== null}
-            marketplaceFameCharge={totalPrice}
             quote={checkoutQuote.quote}
             quoteLoading={checkoutQuote.isLoading}
             quoteError={checkoutQuote.error}

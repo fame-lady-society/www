@@ -26,16 +26,6 @@ export const LinksMenuItems: FC<{}> = ({}) => {
         />
         <MenuItemText>@famelady.society</MenuItemText>
       </MenuItem>
-      <MenuItem href="https://buy.fameladysociety.com">
-        <Image
-          src="/images/logos/reservoir.svg"
-          alt="reservoir"
-          width={25}
-          height={25}
-          className="w-6 h-auto mr-2"
-        />
-        <MenuItemText>Our Marketplace</MenuItemText>
-      </MenuItem>
       <MenuItem href="https://opensea.io/collection/fameladysociety">
         <OpenSeaIcon className="w-5 h-5" />
         <MenuItemText>OpenSea Collection</MenuItemText>

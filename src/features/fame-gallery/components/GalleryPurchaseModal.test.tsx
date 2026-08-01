@@ -25,7 +25,7 @@ function state(overrides: Partial<GalleryPurchaseState>): GalleryPurchaseState {
 }
 
 describe("gallery purchase modal content", () => {
-  it("states the two-confirmation approval wait", () => {
+  it("states the approval confirmation wait", () => {
     const html = renderToStaticMarkup(
       <GalleryPurchaseModalContent
         state={state({ status: "confirming_approval", approvalHash })}
@@ -33,10 +33,10 @@ describe("gallery purchase modal content", () => {
       />,
     );
 
-    assert.match(html, /Waiting for two Base Sepolia approval confirmations/);
+    assert.match(html, /Waiting for Base Sepolia approval confirmation/);
   });
 
-  it("states the two-confirmation purchase wait", () => {
+  it("states the purchase confirmation wait", () => {
     const html = renderToStaticMarkup(
       <GalleryPurchaseModalContent
         state={state({ status: "confirming_purchase", purchaseHash })}
@@ -44,7 +44,7 @@ describe("gallery purchase modal content", () => {
       />,
     );
 
-    assert.match(html, /Waiting for two Base Sepolia confirmations/);
+    assert.match(html, /Waiting for Base Sepolia confirmation/);
   });
 
   it("shows confirmed transaction links without offering another purchase", () => {
