@@ -41,6 +41,7 @@ import type {
 import { ArtworkCard } from "./ArtworkCard";
 import { AcquiredNftResult } from "./AcquiredNftResult";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
+import { SocietyRedemptionAccordion } from "./SocietyRedemptionAccordion";
 
 export type GalleryViewContentState =
   | { status: "loading" }
@@ -580,6 +581,8 @@ export function GalleryView() {
             </LinkButton>
           ) : null}
         </Stack>
+
+        <SocietyRedemptionAccordion />
 
         {config.checkout ? null : (
           <GalleryFundingLink chainId={config.chainId} />

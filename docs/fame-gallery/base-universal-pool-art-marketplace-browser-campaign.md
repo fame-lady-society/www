@@ -1,6 +1,7 @@
 # Base Fork Marketplace Checkout Browser Campaign
 
-Status: passed on a disposable localhost Base fork on 2026-08-01
+Status: purchase checkout passed on a localhost Base fork on 2026-08-01;
+Society redemption browser campaign not executed
 
 This records browser behavior for the fork-only marketplace checkout. It is not
 a deployment manifest or production authorization. Temporary marketplace and
@@ -12,23 +13,24 @@ checkout addresses are deliberately omitted.
   `0x1637485978b2c48bf27782e8e1dc585851a76fc61ff14d125d998bdc41ec7d5d`.
 - Both browser and server RPC transports used literal loopback
   `http://127.0.0.1:8545`; no public Base fallback was available.
-- The browser used an explicitly configured, disposable Anvil account with no
-  production key.
+- The browser used the normal injected-wallet connector with an operator-owned
+  address configured for the local fork RPC. No mock connector or frontend
+  account environment variable was used.
 - Contract baseline: `fame-contracts` `bae7c1f`.
 - Gallery checkout baseline: `fls-www` `fbd2a88`, plus the fork harness and
   browser fixes recorded with this campaign.
 
 ## Browser results
 
-| Case                         | Result                                                                                                                     |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Direct FAME, held inventory  | Passed; exact approval followed by one marketplace purchase                                                                |
-| Native ETH, pool fulfillment | Passed; no approval and one atomic checkout transaction                                                                    |
-| USDC, pool fulfillment       | Passed; exact approval followed by one atomic checkout transaction                                                         |
-| WETH, held fulfillment       | Passed; the existing exact approval was reused and one atomic checkout transaction settled                                 |
-| Transaction UX               | Used the repository transaction modal and Wagmi lifecycle; no automatic transaction retry                                  |
-| Quote UX                     | Showed maximum input, marketplace FAME charge, protected FAME, estimated surplus, and liquidity-dependent FAME refund copy |
-| Post-settlement custody      | Checkout retained zero ETH, FAME, USDC, WETH, and mirror NFTs                                                              |
+| Case                         | Result                                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Direct FAME, held inventory  | Passed; exact approval followed by one marketplace purchase                                                                                                       |
+| Native ETH, pool fulfillment | Passed; no approval and one atomic checkout transaction                                                                                                           |
+| USDC, pool fulfillment       | Passed; exact approval followed by one atomic checkout transaction                                                                                                |
+| WETH, held fulfillment       | Passed; the existing exact approval was reused and one atomic checkout transaction settled                                                                        |
+| Transaction UX               | Used the repository transaction modal and Wagmi lifecycle; no automatic transaction retry                                                                         |
+| Quote UX                     | Showed the selected payment asset and liquidity-dependent FAME refund explanation without duplicated charge, protected-FAME, maximum-input, or input-residue rows |
+| Post-settlement custody      | Checkout retained zero ETH, FAME, USDC, WETH, and mirror NFTs                                                                                                     |
 
 Campaign purchase transaction hashes from this disposable fork were:
 
@@ -45,8 +47,30 @@ The selected checkout route hashes were:
 - WETH: `0x2b80d0a7738f992a1fd2c73089b77ba638c557bd132be07803884aa9cac71593`
 
 Each checkout charged exactly `1,030,000 FAME`. The settlement events reported
-approximately `10,404` to `10,407 FAME` returned to the buyer, with zero unused
-input residue for these three selected routes.
+approximately `10,404` to `10,407 FAME` returned to the buyer.
+
+## Society redemption campaign
+
+The deterministic WWW coverage and latest-state contract fork coverage are not
+a substitute for wallet and rendered-UX evidence. The browser campaign below
+remains `not executed` until an operator starts a fresh fork, seeds a normal
+owned wallet, and follows the contract runbook:
+
+| Case                                                               | Status                  |
+| ------------------------------------------------------------------ | ----------------------- |
+| Owned-ID full read and same-block range fallback                   | Not executed in browser |
+| One selected ID to ETH, WETH, and USDC                             | Not executed in browser |
+| Multiple selected IDs to ETH, WETH, and USDC                       | Not executed in browser |
+| Pre-funded checkout bonus copy and settlement                      | Not executed in browser |
+| One-time operator approval followed by explicit burn review        | Not executed in browser |
+| 32-ID redemption and receipt gas                                   | Not executed in browser |
+| Success refresh of ownership, checkout balance, and output balance | Not executed in browser |
+
+The automated Base-fork contract gate passed one-ID redemption for all three
+outputs, a three-ID USDC redemption with a directly donated NFT bonus, and a
+32-ID WETH redemption at block `49426944`. The 32-ID call used `1,192,182` gas
+against that fork block's `400,000,000` gas limit. These results prove the live
+pool route and gas boundary only; they do not mark this browser matrix green.
 
 ## Campaign findings
 
@@ -59,9 +83,9 @@ input residue for these three selected routes.
   consumption. Fulfillment resolution rejected it before purchase submission.
   Reloading canonical inventory exposed the replacement held card; the fresh
   selection then settled successfully.
-- Base's well-known Anvil development accounts carry EIP-7702 delegation code
-  in the forked state and are unsafe DN404 NFT recipients. The campaign used a
-  plain, empty-code disposable address instead.
+- The wallet must stay on the literal loopback Base RPC for the complete run.
+  Chain ID `8453` cannot distinguish the fork from Base mainnet, so the operator
+  verifies the wallet RPC endpoint before every campaign.
 - React's pending-transaction list exposed an undefined-key warning. The modal
   now uses a stable kind-and-position key. A separate React 19 `element.ref`
   warning originates in the existing UI dependency stack and did not affect

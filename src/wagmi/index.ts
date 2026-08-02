@@ -4348,6 +4348,76 @@ export const fameMarketplaceCheckoutAbi = [
   },
   {
     type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'startTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'endExclusive', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'ownedSocietyTokenIds',
+    outputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'redeemSociety',
+    outputs: [
+      { name: 'actualFameInput', internalType: 'uint256', type: 'uint256' },
+      { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [],
     name: 'router',
     outputs: [{ name: '', internalType: 'address', type: 'address' }],
@@ -4460,6 +4530,61 @@ export const fameMarketplaceCheckoutAbi = [
     name: 'CheckoutSettled',
   },
   {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'caller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'outputAsset',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenIdsHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'tokenCount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'quotedFameInput',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'actualFameInput',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'executedRouteHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'netAmountOut',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'SocietyRedeemed',
+  },
+  {
     type: 'error',
     inputs: [
       { name: 'asset', internalType: 'address', type: 'address' },
@@ -4533,6 +4658,32 @@ export const fameMarketplaceCheckoutAbi = [
     inputs: [{ name: 'dependency', internalType: 'address', type: 'address' }],
     name: 'InvalidDependency',
   },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fameInputLegCount', internalType: 'uint256', type: 'uint256' },
+      { name: 'fameInputLegIndex', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidRedemptionFameLeg',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenCount', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidSocietyTokenCount',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidSocietyTokenId',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'startTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'endExclusive', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidSocietyTokenRange',
+  },
   { type: 'error', inputs: [], name: 'MarketPaused' },
   {
     type: 'error',
@@ -4574,6 +4725,32 @@ export const fameMarketplaceCheckoutAbi = [
     ],
     name: 'ProtectedOutputTooLow',
   },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actualAmountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'quotedAmountIn', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RedemptionActualInputBelowQuote',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'RedemptionFameBalanceNotZero',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'RedemptionMirrorBalanceNotZero',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'quotedAmountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenBasis', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RedemptionQuoteBelowTokenBasis',
+  },
   { type: 'error', inputs: [], name: 'Reentrancy' },
   {
     type: 'error',
@@ -4592,6 +4769,14 @@ export const fameMarketplaceCheckoutAbi = [
       { name: 'measured', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'RouterOutputMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'previousTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'currentTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'SocietyTokenIdsNotStrictlyAscending',
   },
   {
     type: 'error',
@@ -4621,6 +4806,11 @@ export const fameMarketplaceCheckoutAbi = [
   },
   {
     type: 'error',
+    inputs: [{ name: 'asset', internalType: 'address', type: 'address' }],
+    name: 'UnsupportedRedemptionOutputAsset',
+  },
+  {
+    type: 'error',
     inputs: [
       { name: 'actual', internalType: 'address', type: 'address' },
       { name: 'expected', internalType: 'address', type: 'address' },
@@ -4633,9 +4823,18 @@ export const fameMarketplaceCheckoutAbi = [
       { name: 'actual', internalType: 'address', type: 'address' },
       { name: 'expected', internalType: 'address', type: 'address' },
     ],
+    name: 'WrongRedemptionInputAsset',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'address', type: 'address' },
+      { name: 'expected', internalType: 'address', type: 'address' },
+    ],
     name: 'WrongRouteRecipient',
   },
   { type: 'error', inputs: [], name: 'ZeroInputAmount' },
+  { type: 'error', inputs: [], name: 'ZeroSocietyOwner' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17435,6 +17634,15 @@ export const useReadFameMarketplaceCheckoutMarket =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"ownedSocietyTokenIds"`
+ */
+export const useReadFameMarketplaceCheckoutOwnedSocietyTokenIds =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'ownedSocietyTokenIds',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"router"`
  */
 export const useReadFameMarketplaceCheckoutRouter =
@@ -17486,6 +17694,15 @@ export const useWriteFameMarketplaceCheckoutCheckoutPool =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"redeemSociety"`
+ */
+export const useWriteFameMarketplaceCheckoutRedeemSociety =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'redeemSociety',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
  */
 export const useSimulateFameMarketplaceCheckout =
@@ -17510,6 +17727,15 @@ export const useSimulateFameMarketplaceCheckoutCheckoutPool =
   })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"redeemSociety"`
+ */
+export const useSimulateFameMarketplaceCheckoutRedeemSociety =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'redeemSociety',
+  })
+
+/**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
  */
 export const useWatchFameMarketplaceCheckoutEvent =
@@ -17531,6 +17757,15 @@ export const useWatchFameMarketplaceCheckoutCheckoutSettledEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: fameMarketplaceCheckoutAbi,
     eventName: 'CheckoutSettled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `eventName` set to `"SocietyRedeemed"`
+ */
+export const useWatchFameMarketplaceCheckoutSocietyRedeemedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMarketplaceCheckoutAbi,
+    eventName: 'SocietyRedeemed',
   })
 
 /**

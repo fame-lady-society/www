@@ -148,6 +148,28 @@ export type GalleryCheckoutQuote = Readonly<{
   expiresAt: Date;
 }>;
 
+export type GalleryRedemptionOutputAsset = Exclude<GalleryPaymentAsset, "FAME">;
+
+export type GalleryRedemptionQuote = Readonly<{
+  account: Address;
+  chainId: number;
+  tokenIds: readonly bigint[];
+  outputAsset: GalleryRedemptionOutputAsset;
+  outputToken: Address;
+  checkout: Address;
+  quoteBlockNumber: bigint;
+  fameUnit: bigint;
+  selectedBacking: bigint;
+  checkoutBonus: bigint;
+  quoteBasis: bigint;
+  estimatedOutput: bigint;
+  minimumOutput: bigint;
+  routeHash: Hash;
+  route: FameRoute;
+  deadline: bigint;
+  expiresAt: Date;
+}>;
+
 export type GalleryFulfillmentRoute =
   | Readonly<{
       kind: "held";
