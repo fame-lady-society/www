@@ -36,7 +36,6 @@ export function GalleryStakeDepositContent({
   busy,
   walletControl,
   onToggle,
-  onApprove,
   onDeposit,
   onRetry,
   renderToken,
@@ -49,7 +48,6 @@ export function GalleryStakeDepositContent({
   busy: boolean;
   walletControl?: ReactNode;
   onToggle: (tokenId: bigint) => void;
-  onApprove: () => void;
   onDeposit: () => void;
   onRetry?: () => void;
   renderToken?: (
@@ -217,26 +215,16 @@ export function GalleryStakeDepositContent({
             Do not transfer Society NFTs or FAME directly to the marketplace
             address. Raw transfers are uncredited donations.
           </Typography>
-          {!operatorApproved ? (
-            <Button
-              variant="contained"
-              disabled={busy || capReached || selectedIds.length === 0}
-              onClick={onApprove}
-              sx={{ minHeight: 48 }}
-            >
-              Approve Society NFTs
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              disabled={busy || capReached || selectedIds.length === 0}
-              onClick={onDeposit}
-              sx={{ minHeight: 48 }}
-            >
-              Stake {selectedIds.length} Society{" "}
-              {selectedIds.length === 1 ? "NFT" : "NFTs"}
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            disabled={busy || capReached || selectedIds.length === 0}
+            onClick={onDeposit}
+            sx={{ minHeight: 48 }}
+          >
+            {operatorApproved ? "Stake" : "Approve and stake"}{" "}
+            {selectedIds.length} Society{" "}
+            {selectedIds.length === 1 ? "NFT" : "NFTs"}
+          </Button>
         </Stack>
       </Paper>
     </Stack>
@@ -339,7 +327,6 @@ export function GalleryStakeDepositView() {
           busy={transaction.busy}
           walletControl={<ConnectKitButton />}
           onToggle={toggle}
-          onApprove={() => transaction.submit({ kind: "deposit_approval" })}
           onDeposit={() =>
             transaction.submit({ kind: "deposit", tokenIds: selectedIds })
           }

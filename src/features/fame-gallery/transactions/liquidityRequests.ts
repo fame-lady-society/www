@@ -151,16 +151,9 @@ export function galleryLiquidityContractRequest(
   call: GalleryLiquidityCall,
   account: Address,
   chainId: number,
-  addresses: { mirror: Address; fame: Address; marketplace: Address },
+  addresses: { fame: Address; marketplace: Address },
 ) {
   switch (call.kind) {
-    case "deposit_approval":
-      return galleryLiquidityDepositApprovalRequest(
-        account,
-        chainId,
-        addresses.mirror,
-        addresses.marketplace,
-      );
     case "deposit":
       return galleryLiquidityDepositRequest(
         account,

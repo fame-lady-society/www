@@ -16,6 +16,12 @@ function statusCopy(state: GalleryLiquidityActionState) {
       return "Choose a liquidity action.";
     case "switching_chain":
       return "Switching to the gallery network…";
+    case "simulating_approval":
+      return "Checking the Society NFT staking approval with the contract…";
+    case "awaiting_approval_wallet":
+      return "Confirm the Society NFT staking approval in your wallet.";
+    case "confirming_approval":
+      return "Waiting for one network approval confirmation…";
     case "simulating":
       return "Checking the exact liquidity action with the contract…";
     case "awaiting_wallet":

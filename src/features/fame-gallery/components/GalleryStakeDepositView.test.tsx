@@ -23,7 +23,6 @@ describe("gallery stake deposit view", () => {
         busy={false}
         walletControl={<button>Connect wallet</button>}
         onToggle={() => undefined}
-        onApprove={() => undefined}
         onDeposit={() => undefined}
       />,
     );
@@ -47,7 +46,6 @@ describe("gallery stake deposit view", () => {
         operatorApproved={false}
         busy={false}
         onToggle={() => undefined}
-        onApprove={() => undefined}
         onDeposit={() => undefined}
         renderToken={(token, selected) => (
           <div>{`Society #${token.tokenId} ${selected ? "selected" : ""}`}</div>
@@ -56,8 +54,7 @@ describe("gallery stake deposit view", () => {
     );
     assert.match(html, /2 selected \/ 8 maximum/);
     assert.match(html, /40 FAME per marketplace sale/);
-    assert.match(html, /Approve Society NFTs/);
-    assert.doesNotMatch(html, />Stake 2 Society NFTs</);
+    assert.match(html, /Approve and stake 2 Society NFTs/);
   });
 
   it("uses one atomic batch action after operator approval", () => {
@@ -73,7 +70,6 @@ describe("gallery stake deposit view", () => {
         operatorApproved
         busy={false}
         onToggle={() => undefined}
-        onApprove={() => undefined}
         onDeposit={() => undefined}
         renderToken={() => <div>Society #1</div>}
       />,

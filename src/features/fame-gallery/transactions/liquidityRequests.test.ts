@@ -97,14 +97,8 @@ describe("gallery liquidity transaction requests", () => {
   });
 
   it("dispatches every liquidity call to its ABI-backed contract request", () => {
-    const addresses = { mirror, fame, marketplace };
+    const addresses = { fame, marketplace };
     const requests = [
-      galleryLiquidityContractRequest(
-        { kind: "deposit_approval" },
-        account,
-        8_453,
-        addresses,
-      ),
       galleryLiquidityContractRequest(
         { kind: "deposit", tokenIds: [2n] },
         account,
@@ -134,7 +128,6 @@ describe("gallery liquidity transaction requests", () => {
     assert.deepEqual(
       requests.map(({ functionName }) => functionName),
       [
-        "setApprovalForAll",
         "depositInventoryBatch",
         "approve",
         "withdrawInventory",
