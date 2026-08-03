@@ -162,7 +162,7 @@ export function GalleryStakeDepositContent({
           <Typography color="text.secondary" variant="body2">
             This is the resulting current per-sale provider share for your
             credited units after the selected batch, using current contract
-            state and integer division.
+            state.
           </Typography>
         </Stack>
       </Paper>

@@ -43,7 +43,7 @@ import type {
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
-import { GalleryLiquidityEducationCard } from "./GalleryLiquidityOverview";
+import { GalleryLiquidityCta } from "./GalleryLiquidityOverview";
 import { SocietyRedemptionAccordion } from "./SocietyRedemptionAccordion";
 
 export type GalleryViewContentState =
@@ -583,7 +583,7 @@ export function GalleryView() {
           ) : null}
         </Stack>
 
-        <GalleryLiquidityEducationCard global={globalState} />
+        <GalleryLiquidityCta />
 
         <SocietyRedemptionAccordion />
 

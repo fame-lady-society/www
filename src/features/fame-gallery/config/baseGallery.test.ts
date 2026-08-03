@@ -126,7 +126,7 @@ describe("Base FAME gallery configuration", () => {
         ),
         "utf8",
       ),
-      /<GalleryLiquidityEducationCard global=\{globalState\} \/>/,
+      /<GalleryLiquidityCta \/>/,
     );
     assert.doesNotMatch(source, /\/api\//);
   });

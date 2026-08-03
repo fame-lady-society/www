@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { GalleryGlobalState } from "../types";
 import {
+  GalleryLiquidityCta,
   GalleryLiquidityEducationCard,
   GalleryProviderPositionCard,
 } from "./GalleryLiquidityOverview";
@@ -26,25 +27,28 @@ const global: GalleryGlobalState = {
 };
 
 describe("gallery liquidity overview", () => {
-  it("educates everyone with live stats, equal benefits, and no APY claims", () => {
-    const html = renderToStaticMarkup(
-      <GalleryLiquidityEducationCard global={global} />,
-    );
+  it("keeps the gallery liquidity prompt compact", () => {
+    const html = renderToStaticMarkup(<GalleryLiquidityCta />);
     assert.match(html, /Back marketplace liquidity/);
     assert.match(html, /Stake your Society NFTs/);
-    assert.match(html, /market liquidity/i);
-    assert.match(html, /equal-weight share/i);
+    assert.doesNotMatch(html, /Pool inventory/i);
+    assert.doesNotMatch(html, /equal-weight share/i);
+    assert.doesNotMatch(html, /original token ID is not reserved/i);
+    assert.doesNotMatch(html, /irreversible, uncredited donations/i);
+  });
+
+  it("keeps the live liquidity numbers on the staking overview", () => {
+    const html = renderToStaticMarkup(
+      <GalleryLiquidityEducationCard global={global} showCta={false} />,
+    );
+    assert.match(html, /Pool inventory/i);
     assert.match(html, /5 Society NFTs/);
     assert.match(html, /2 \/ 88/);
-    assert.match(html, /3/);
     assert.match(html, /30 FAME/);
     assert.match(html, /20 FAME/);
     assert.match(html, /10 FAME/);
     assert.match(html, /5 FAME per marketplace sale/);
-    assert.match(html, /pseudorandom current pool Society/i);
-    assert.match(html, /original token ID is not reserved/i);
-    assert.match(html, /irreversible, uncredited donations/i);
-    assert.doesNotMatch(html, /APY|guaranteed yield/i);
+    assert.doesNotMatch(html, /Stake your Society NFTs/);
   });
 
   it("shows a connected provider's credited units and current per-sale share", () => {

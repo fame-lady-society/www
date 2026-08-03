@@ -30,6 +30,30 @@ function FameAmount({ amount }: { amount: bigint }) {
   return <>{formatTestAmount(amount)} FAME</>;
 }
 
+export function GalleryLiquidityCta() {
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5 } }}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "stretch", md: "center" }}
+        spacing={2}
+      >
+        <Typography component="h2" variant="h5">
+          Back marketplace liquidity.
+        </Typography>
+        <LinkButton
+          href="/fame/gallery/stake"
+          variant="contained"
+          sx={{ minHeight: 40, flexShrink: 0 }}
+        >
+          Stake your Society NFTs
+        </LinkButton>
+      </Stack>
+    </Paper>
+  );
+}
+
 export function GalleryLiquidityEducationCard({
   global,
   showCta = true,
@@ -136,12 +160,12 @@ export function GalleryLiquidityEducationCard({
             FAME.
           </Typography>
           <Typography color="warning.main" fontWeight={700}>
-            Direct raw Society or FAME transfers to the marketplace are
+            Direct Society NFT transfers to the marketplace are
             irreversible, uncredited donations. Use only the staking actions on
             these pages.
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Shares shown here use current contract state and integer division.
+            Shares shown here use current contract state.
             They are per marketplace transaction, not a promise of future sales
             or earnings.
           </Typography>
