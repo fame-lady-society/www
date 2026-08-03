@@ -1,43 +1,17 @@
-import {
-  isAddress,
-  maxUint256,
-  parseUnits,
-  type Address,
-  type Hash,
-} from "viem";
-import type { GalleryAdminCall } from "../types";
+import type { Address, Hash } from "viem";
 
-const MAX_INPUT_LENGTH = 80;
+export type GalleryLiquidityCall =
+  | Readonly<{ kind: "deposit_approval" }>
+  | Readonly<{ kind: "deposit"; tokenIds: readonly bigint[] }>
+  | Readonly<{ kind: "selected_withdrawal_approval"; amount: bigint }>
+  | Readonly<{ kind: "random_withdrawal" }>
+  | Readonly<{
+      kind: "selected_withdrawal";
+      tokenId: bigint;
+      maxPremium: bigint;
+    }>;
 
-export function parseGalleryFee(value: string) {
-  const normalized = value.trim();
-  if (
-    normalized.length === 0 ||
-    normalized.length > MAX_INPUT_LENGTH ||
-    !/^\d+(?:\.\d+)?$/.test(normalized)
-  ) {
-    throw new Error("Enter a plain unsigned TEST amount.");
-  }
-  const fraction = normalized.split(".")[1] ?? "";
-  if (fraction.length > 18) {
-    throw new Error("TEST amounts support at most 18 decimal places.");
-  }
-  const fee = parseUnits(normalized, 18);
-  if (fee > maxUint256) {
-    throw new Error("TEST fee exceeds a uint256 value.");
-  }
-  return fee;
-}
-
-export function parseGalleryFeeRecipient(value: string): Address {
-  const normalized = value.trim();
-  if (!isAddress(normalized)) {
-    throw new Error("Enter a valid fee recipient address.");
-  }
-  return normalized;
-}
-
-export type GalleryAdminStatus =
+export type GalleryLiquidityActionStatus =
   | "idle"
   | "switching_chain"
   | "simulating"
@@ -47,22 +21,22 @@ export type GalleryAdminStatus =
   | "confirmed_refreshing"
   | "error";
 
-export type GalleryAdminState = {
-  status: GalleryAdminStatus;
-  call: GalleryAdminCall | null;
+export type GalleryLiquidityActionState = Readonly<{
+  status: GalleryLiquidityActionStatus;
+  call: GalleryLiquidityCall | null;
   hash: Hash | null;
   failure: { stage: string; cause: unknown } | null;
-};
+}>;
 
-export const initialGalleryAdminState: GalleryAdminState = {
+export const initialGalleryLiquidityActionState: GalleryLiquidityActionState = {
   status: "idle",
   call: null,
   hash: null,
   failure: null,
 };
 
-export type GalleryAdminEvent =
-  | { type: "started"; call: GalleryAdminCall }
+export type GalleryLiquidityEvent =
+  | { type: "started"; call: GalleryLiquidityCall }
   | { type: "switching_chain" }
   | { type: "simulating" }
   | { type: "wallet_requested" }
@@ -72,14 +46,14 @@ export type GalleryAdminEvent =
   | { type: "failed"; stage: string; cause: unknown }
   | { type: "reset" };
 
-export function galleryAdminReducer(
-  state: GalleryAdminState,
-  event: GalleryAdminEvent,
-): GalleryAdminState {
+export function galleryLiquidityActionReducer(
+  state: GalleryLiquidityActionState,
+  event: GalleryLiquidityEvent,
+): GalleryLiquidityActionState {
   switch (event.type) {
     case "started":
       return {
-        ...initialGalleryAdminState,
+        ...initialGalleryLiquidityActionState,
         status: "simulating",
         call: event.call,
       };
@@ -106,47 +80,47 @@ export function galleryAdminReducer(
         failure: { stage: event.stage, cause: event.cause },
       };
     case "reset":
-      return initialGalleryAdminState;
+      return initialGalleryLiquidityActionState;
   }
 }
 
-export type GalleryAdminDependencies = {
-  dispatch: (event: GalleryAdminEvent) => void;
+type GalleryLiquidityActionDependencies = Readonly<{
+  dispatch: (event: GalleryLiquidityEvent) => void;
   getWalletContext: () =>
     | { account: Address | null; chainId: number | undefined }
     | Promise<{ account: Address | null; chainId: number | undefined }>;
   switchChain: (chainId: number) => Promise<unknown>;
-  simulate: (call: GalleryAdminCall, account: Address) => Promise<unknown>;
+  simulate: (call: GalleryLiquidityCall, account: Address) => Promise<unknown>;
   write: (preparedRequest: unknown) => Promise<Hash>;
   waitForReceipt: (
     hash: Hash,
     confirmations: 1,
   ) => Promise<{ status: "success" | "reverted" }>;
-  refresh: (call: GalleryAdminCall) => Promise<void>;
-};
+  refresh: (call: GalleryLiquidityCall) => Promise<void>;
+}>;
 
-export type GalleryAdminResult =
+export type GalleryLiquidityActionResult =
   | { status: "confirmed"; hash: Hash }
   | { status: "confirmed_refreshing"; hash: Hash; cause: unknown }
   | { status: "failed"; stage: string; cause: unknown };
 
-export async function executeGalleryAdminAction(
-  call: GalleryAdminCall,
+export async function executeGalleryLiquidityAction(
+  call: GalleryLiquidityCall,
   targetChainId: number,
-  dependencies: GalleryAdminDependencies,
-): Promise<GalleryAdminResult> {
+  dependencies: GalleryLiquidityActionDependencies,
+): Promise<GalleryLiquidityActionResult> {
   dependencies.dispatch({ type: "started", call });
   let stage = "connection";
-  let hash: Hash | null = null;
 
-  const fail = (cause: unknown): GalleryAdminResult => {
+  const fail = (cause: unknown): GalleryLiquidityActionResult => {
     dependencies.dispatch({ type: "failed", stage, cause });
     return { status: "failed", stage, cause };
   };
 
   try {
     let wallet = await dependencies.getWalletContext();
-    if (!wallet.account) return fail(new Error("Connect an admin wallet."));
+    if (!wallet.account)
+      return fail(new Error("Connect a wallet to continue."));
     if (wallet.chainId !== targetChainId) {
       stage = "switch_chain";
       dependencies.dispatch({ type: "switching_chain" });
@@ -154,22 +128,24 @@ export async function executeGalleryAdminAction(
       wallet = await dependencies.getWalletContext();
     }
     if (!wallet.account || wallet.chainId !== targetChainId) {
-      return fail(new Error("The wallet did not switch to Base Sepolia."));
+      return fail(
+        new Error("The wallet did not switch to the gallery network."),
+      );
     }
 
     stage = "simulation";
     dependencies.dispatch({ type: "simulating" });
-    const preparedRequest = await dependencies.simulate(call, wallet.account);
+    const prepared = await dependencies.simulate(call, wallet.account);
 
     stage = "wallet";
     dependencies.dispatch({ type: "wallet_requested" });
-    hash = await dependencies.write(preparedRequest);
+    const hash = await dependencies.write(prepared);
     dependencies.dispatch({ type: "broadcast", hash });
 
     stage = "receipt";
     const receipt = await dependencies.waitForReceipt(hash, 1);
     if (receipt.status === "reverted") {
-      return fail(new Error("The admin transaction reverted onchain."));
+      return fail(new Error("The liquidity transaction reverted onchain."));
     }
 
     stage = "refresh";
@@ -186,11 +162,19 @@ export async function executeGalleryAdminAction(
   }
 }
 
-export function isGalleryAdminActionBusy(state: GalleryAdminState) {
+export function isGalleryLiquidityActionBusy(
+  state: GalleryLiquidityActionState,
+) {
   return [
     "switching_chain",
     "simulating",
     "awaiting_wallet",
     "confirming",
   ].includes(state.status);
+}
+
+export function isGalleryLiquidityActionTerminal(
+  state: GalleryLiquidityActionState,
+) {
+  return ["confirmed", "confirmed_refreshing", "error"].includes(state.status);
 }

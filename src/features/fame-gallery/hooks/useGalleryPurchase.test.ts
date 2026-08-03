@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { QueryClient } from "@tanstack/react-query";
 import type { Address, Hash } from "viem";
 import type {
   GalleryArtworkTarget,
@@ -11,11 +12,11 @@ import {
   galleryCandidateTokenIdsForArtwork,
   galleryCheckoutSimulationKey,
   galleryCheckoutSubmissionError,
+  invalidateOwnedSocietyAfterPurchase,
   isTokenInGalleryArtPool,
   logGalleryPurchaseError,
   refreshGalleryAfterPurchase,
   simulateGalleryCheckoutRequest,
-  shouldAutoCloseGalleryPurchaseModal,
 } from "./useGalleryPurchase";
 
 const acquisition: GalleryVerifiedAcquisition = {
@@ -117,16 +118,6 @@ describe("gallery purchase hook adapter", () => {
     );
   });
 
-  it("auto-closes only after a verified purchase", () => {
-    assert.equal(shouldAutoCloseGalleryPurchaseModal("refreshing"), true);
-    assert.equal(shouldAutoCloseGalleryPurchaseModal("verified"), true);
-    assert.equal(
-      shouldAutoCloseGalleryPurchaseModal("confirmed_unverified"),
-      false,
-    );
-    assert.equal(shouldAutoCloseGalleryPurchaseModal("error"), false);
-  });
-
   it("logs the original purchase error object with its queue stage", () => {
     const cause = new Error("RPC request failed");
     const calls: unknown[][] = [];
@@ -225,5 +216,18 @@ describe("gallery purchase hook adapter", () => {
     releaseGlobal();
     await pending;
     assert.deepEqual(calls, ["global", "pool", "tokens:19,7"]);
+  });
+
+  it("invalidates only the owned Society query family after purchase", async () => {
+    const queryClient = new QueryClient();
+    const ownedKey = ["gallery-redemption-owned", 8453, "0x123"];
+    const unrelatedKey = ["gallery-redemption-quote", 8453, "0x123"];
+    queryClient.setQueryData(ownedKey, [199n]);
+    queryClient.setQueryData(unrelatedKey, { output: 1n });
+
+    await invalidateOwnedSocietyAfterPurchase(queryClient);
+
+    assert.equal(queryClient.getQueryState(ownedKey)?.isInvalidated, true);
+    assert.equal(queryClient.getQueryState(unrelatedKey)?.isInvalidated, false);
   });
 });

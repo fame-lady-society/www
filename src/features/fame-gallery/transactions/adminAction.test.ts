@@ -6,8 +6,8 @@ import {
   executeGalleryAdminAction,
   galleryAdminReducer,
   initialGalleryAdminState,
+  parseGalleryFee,
   parseGalleryFeeRecipient,
-  parseGalleryPremium,
   type GalleryAdminDependencies,
   type GalleryAdminEvent,
 } from "./adminAction";
@@ -17,27 +17,30 @@ const recipient = "0x2222222222222222222222222222222222222222" as Address;
 const hash = `0x${"a".repeat(64)}` as Hash;
 
 describe("gallery admin actions", () => {
-  it("parses ABI-safe premium and required address inputs", () => {
-    const contractRejectedButAbiSafePremium =
-      ((1n << 96n) / 10n ** 18n + 1n).toString();
-    assert.equal(parseGalleryPremium("0"), 0n);
-    assert.equal(parseGalleryPremium("1.25"), 1_250_000_000_000_000_000n);
+  it("parses ABI-safe fees and required address inputs", () => {
+    const contractRejectedButAbiSafeFee = (
+      (1n << 96n) / 10n ** 18n +
+      1n
+    ).toString();
+    assert.equal(parseGalleryFee("0"), 0n);
+    assert.equal(parseGalleryFee("1.25"), 1_250_000_000_000_000_000n);
     assert.equal(
-      parseGalleryPremium(contractRejectedButAbiSafePremium),
-      BigInt(contractRejectedButAbiSafePremium) * 10n ** 18n,
+      parseGalleryFee(contractRejectedButAbiSafeFee),
+      BigInt(contractRejectedButAbiSafeFee) * 10n ** 18n,
     );
     assert.equal(parseGalleryFeeRecipient(recipient), recipient);
 
     for (const value of ["", "-1", "1e3", "1.2.3", "1.0000000000000000001"]) {
-      assert.throws(() => parseGalleryPremium(value));
+      assert.throws(() => parseGalleryFee(value));
     }
-    assert.throws(() => parseGalleryPremium(maxUint256.toString()));
+    assert.throws(() => parseGalleryFee(maxUint256.toString()));
     assert.throws(() => parseGalleryFeeRecipient(""));
     assert.throws(() => parseGalleryFeeRecipient("not an address"));
   });
 
   for (const call of [
-    { kind: "set_premium", premium: 10n },
+    { kind: "set_community_fee", fee: 10n },
+    { kind: "set_provider_fee", fee: 10n },
     { kind: "set_fee_recipient", feeRecipient: recipient },
     { kind: "pause" },
     { kind: "unpause" },
@@ -174,7 +177,7 @@ describe("gallery admin actions", () => {
   it("keeps submitted values out of canonical state", () => {
     const started = galleryAdminReducer(initialGalleryAdminState, {
       type: "started",
-      call: { kind: "set_premium", premium: 25n },
+      call: { kind: "set_provider_fee", fee: 25n },
     });
 
     assert.deepEqual(Object.keys(started).sort(), [

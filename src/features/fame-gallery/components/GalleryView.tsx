@@ -8,11 +8,13 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useRouter } from "next/navigation";
 import {
   memo,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -38,9 +40,10 @@ import type {
   GalleryCheckoutQuote,
   GalleryPaymentAsset,
 } from "../types";
+import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
-import { AcquiredNftResult } from "./AcquiredNftResult";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
+import { GalleryLiquidityEducationCard } from "./GalleryLiquidityOverview";
 import { SocietyRedemptionAccordion } from "./SocietyRedemptionAccordion";
 
 export type GalleryViewContentState =
@@ -55,6 +58,12 @@ export type PresentedGalleryArtwork = {
   metadata?: GalleryMetadataResult;
   tokenUri?: string;
 };
+
+export function galleryPurchaseReceiptHref(state: GalleryPurchaseState) {
+  return state.status === "verified" && state.purchaseHash
+    ? `/fame/gallery/purchase/${state.purchaseHash}`
+    : null;
+}
 
 export function GalleryFundingLink({ chainId }: { chainId: number }) {
   if (chainId !== base.id) return null;
@@ -417,28 +426,6 @@ function GalleryMetadataArtworkCard({
   );
 }
 
-function AcquiredNftResultWithMetadata({
-  result,
-  tokenUri,
-  tokenSymbol,
-  explorerBaseUrl,
-}: {
-  result: Parameters<typeof AcquiredNftResult>[0]["result"];
-  tokenUri: string;
-  tokenSymbol: string;
-  explorerBaseUrl: string;
-}) {
-  const metadata = useGalleryMetadata(tokenUri);
-  return (
-    <AcquiredNftResult
-      result={result}
-      metadata={metadata.metadata}
-      tokenSymbol={tokenSymbol}
-      explorerBaseUrl={explorerBaseUrl}
-    />
-  );
-}
-
 function useGalleryChainOnPageLoad(targetChainId: number) {
   const connection = useConnection();
   const { mutate: switchChain } = useSwitchChain();
@@ -457,6 +444,8 @@ function useGalleryChainOnPageLoad(targetChainId: number) {
 
 export function GalleryView() {
   const config = useGalleryRuntime();
+  const router = useRouter();
+  const openedPurchaseReceipt = useRef<string | null>(null);
   const [paymentAsset, setPaymentAsset] = useState<GalleryPaymentAsset>("FAME");
   useGalleryChainOnPageLoad(config.chainId);
   const connection = useConnection();
@@ -533,6 +522,18 @@ export function GalleryView() {
     (checkoutQuote.quote !== null &&
       checkoutQuote.quote.expiresAt.getTime() > Date.now() &&
       !checkoutQuote.isLoading);
+  const purchaseReceiptHref = galleryPurchaseReceiptHref(purchase.state);
+
+  useEffect(() => {
+    if (
+      purchaseReceiptHref === null ||
+      openedPurchaseReceipt.current === purchaseReceiptHref
+    ) {
+      return;
+    }
+    openedPurchaseReceipt.current = purchaseReceiptHref;
+    router.push(purchaseReceiptHref);
+  }, [purchaseReceiptHref, router]);
 
   const retryArtwork = useCallback(
     (stableKey: string) => {
@@ -582,6 +583,8 @@ export function GalleryView() {
           ) : null}
         </Stack>
 
+        <GalleryLiquidityEducationCard global={globalState} />
+
         <SocietyRedemptionAccordion />
 
         {config.checkout ? null : (
@@ -625,28 +628,6 @@ export function GalleryView() {
             />
           ) : null}
         </GalleryViewContent>
-
-        {purchase.state.acquisition && purchase.selectedTarget ? (
-          <AcquiredNftResultWithMetadata
-            result={purchase.state.acquisition}
-            tokenUri={purchase.selectedTarget.tokenUri ?? ""}
-            tokenSymbol={config.token.symbol}
-            explorerBaseUrl={config.explorerBaseUrl}
-          />
-        ) : null}
-
-        {purchase.state.status !== "idle" && !purchase.modalOpen ? (
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => purchase.setModalOpen(true)}
-            sx={{ minHeight: 44, alignSelf: "flex-start" }}
-          >
-            {purchase.state.status === "verified"
-              ? "View purchase"
-              : "View purchase transaction"}
-          </Button>
-        ) : null}
 
         <GalleryPurchaseModal
           state={purchase.state}

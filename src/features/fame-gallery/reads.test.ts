@@ -22,8 +22,7 @@ type CapturedMulticall = {
 };
 
 const owner = "0x0000000000000000000000000000000000000001" as Address;
-const feeRecipient =
-  "0x0000000000000000000000000000000000000002" as Address;
+const feeRecipient = "0x0000000000000000000000000000000000000002" as Address;
 const other = "0x0000000000000000000000000000000000000003" as Address;
 const artwork = `0x${"ab".repeat(32)}` as Hash;
 
@@ -70,6 +69,16 @@ function standardResult(functionName: string, tokenId: bigint | null) {
       return success(false);
     case "premium":
       return success(25n);
+    case "communityFee":
+      return success(10n);
+    case "providerFee":
+      return success(15n);
+    case "totalProviderUnits":
+      return success(6n);
+    case "activeProviderCount":
+      return success(4n);
+    case "activeProviderCap":
+      return success(88n);
     case "feeRecipient":
       return success(feeRecipient);
     case "inventory":
@@ -85,9 +94,7 @@ function standardResult(functionName: string, tokenId: bigint | null) {
     case "tokenURI":
       return success(`data:token/${tokenId}`);
     case "ownerAt":
-      return success(
-        tokenId === 2n ? config.addresses.gallery : feeRecipient,
-      );
+      return success(tokenId === 2n ? config.addresses.gallery : feeRecipient);
     case "balanceOf":
       return success(8_000_000n);
     case "allowance":
@@ -109,11 +116,15 @@ describe("successor gallery canonical reads", () => {
         marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
         fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
         mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
-        creatorMagic:
-          BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
+        creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
         owner,
         paused: false,
         premium: 25n,
+        communityFee: 10n,
+        providerFee: 15n,
+        totalProviderUnits: 6n,
+        activeProviderCount: 4n,
+        activeProviderCap: 88n,
         feeRecipient,
         inventory: 2n,
         unit: 1_000_000n,
@@ -130,6 +141,11 @@ describe("successor gallery canonical reads", () => {
         "owner",
         "paused",
         "premium",
+        "communityFee",
+        "providerFee",
+        "totalProviderUnits",
+        "activeProviderCount",
+        "activeProviderCap",
         "feeRecipient",
         "inventory",
         "unit",
@@ -220,11 +236,11 @@ describe("successor gallery canonical reads", () => {
       }
       return standardResult(functionName, tokenId);
     });
-    const states = await readGalleryTokenStates(
-      mock.client,
-      503n,
-      [1n, 2n, 3n],
-    );
+    const states = await readGalleryTokenStates(mock.client, 503n, [
+      1n,
+      2n,
+      3n,
+    ]);
 
     assert.equal(states.get(1n)?.status, "success");
     assert.deepEqual(states.get(2n), {
@@ -261,11 +277,7 @@ describe("successor gallery canonical reads", () => {
 
   it("pins buyer balance and marketplace allowance to one account block", async () => {
     const mock = createClient(standardResult);
-    const result = await readGalleryAccountState(
-      mock.client,
-      650n,
-      other,
-    );
+    const result = await readGalleryAccountState(mock.client, 650n, other);
 
     assert.deepEqual(result, {
       status: "success",

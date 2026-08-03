@@ -1,6 +1,7 @@
 "use client";
 
 import { getConnection } from "@wagmi/core";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useModal } from "connectkit";
 import {
   useCallback,
@@ -208,12 +209,6 @@ export function isTokenInGalleryArtPool(
   return tokenId >= startIndex && tokenId <= endIndex;
 }
 
-export function shouldAutoCloseGalleryPurchaseModal(
-  status: GalleryPurchaseStatus,
-) {
-  return status === "refreshing" || status === "verified";
-}
-
 export async function refreshGalleryAfterPurchase(
   acquisition: GalleryVerifiedAcquisition,
   dependencies: Pick<
@@ -232,6 +227,14 @@ export async function refreshGalleryAfterPurchase(
   if (failure) throw failure.reason;
 }
 
+export function invalidateOwnedSocietyAfterPurchase(
+  queryClient: Pick<QueryClient, "invalidateQueries">,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: ["gallery-redemption-owned"],
+  });
+}
+
 export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const config = useGalleryRuntime();
   const marketplace = config.addresses.gallery;
@@ -241,6 +244,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const wagmiConfig = useConfig();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: config.chainId });
+  const queryClient = useQueryClient();
   const { switchChainAsync } = useSwitchChain();
   const { mutateAsync: writeContract } = useWriteContract();
   type ExactWagmiWriteRequest = Parameters<typeof writeContract>[0];
@@ -260,6 +264,10 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     key: string;
     request: unknown;
   } | null>(null);
+  const refreshOwnedSociety = useCallback(
+    () => invalidateOwnedSocietyAfterPurchase(queryClient),
+    [queryClient],
+  );
   inputsRef.current = inputs;
 
   const queueDispatch = useCallback((event: GalleryPurchaseEvent) => {
@@ -662,7 +670,10 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                   }),
             async refreshAfterPurchase(acquisition) {
               const latest = inputsRef.current;
-              await refreshGalleryAfterPurchase(acquisition, latest);
+              await Promise.all([
+                refreshGalleryAfterPurchase(acquisition, latest),
+                refreshOwnedSociety(),
+              ]);
             },
             async refreshAfterReceipt() {
               if (!checkoutFulfillmentRoute) {
@@ -682,6 +693,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 latest.refreshGlobal(),
                 latest.refreshPool(),
                 latest.revalidateAffectedTokenIds(affectedTokenIds),
+                refreshOwnedSociety(),
               ]);
               const failure = results.find(
                 (result): result is PromiseRejectedResult =>
@@ -707,6 +719,7 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       mirror,
       publicClient,
       queueDispatch,
+      refreshOwnedSociety,
       switchChainAsync,
       wagmiConfig,
       writeContract,
@@ -775,12 +788,6 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     executeAttempt,
     failOutsideQueue,
   ]);
-
-  useEffect(() => {
-    if (shouldAutoCloseGalleryPurchaseModal(state.status)) {
-      setTransactionModalOpen(false);
-    }
-  }, [state.status]);
 
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];

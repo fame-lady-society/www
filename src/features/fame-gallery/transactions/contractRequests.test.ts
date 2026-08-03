@@ -127,9 +127,14 @@ describe("gallery contract requests", () => {
   it("maps only the successor owner operations", () => {
     const cases = [
       {
-        call: { kind: "set_premium", premium: 30n } as const,
-        functionName: "setPremium",
-        args: [30n],
+        call: { kind: "set_community_fee", fee: 10n } as const,
+        functionName: "setCommunityFee",
+        args: [10n],
+      },
+      {
+        call: { kind: "set_provider_fee", fee: 20n } as const,
+        functionName: "setProviderFee",
+        args: [20n],
       },
       {
         call: { kind: "set_fee_recipient", feeRecipient } as const,

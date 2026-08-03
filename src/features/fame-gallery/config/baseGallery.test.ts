@@ -118,6 +118,69 @@ describe("Base FAME gallery configuration", () => {
     assert.match(source, /NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS/);
     assert.match(source, /NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS/);
     assert.match(source, /<GalleryView \/>/);
+    assert.match(
+      readFileSync(
+        resolve(
+          process.cwd(),
+          "src/features/fame-gallery/components/GalleryView.tsx",
+        ),
+        "utf8",
+      ),
+      /<GalleryLiquidityEducationCard global=\{globalState\} \/>/,
+    );
     assert.doesNotMatch(source, /\/api\//);
+  });
+
+  it("uses one site-navigation shell for the gallery and purchase receipt", () => {
+    const shell = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/features/fame-gallery/components/BaseGalleryShell.tsx",
+      ),
+      "utf8",
+    );
+    assert.match(shell, /<Main/);
+    assert.match(shell, /<SiteMenu \/>/);
+    assert.match(shell, /<LinksMenuItems \/>/);
+
+    const appBar = readFileSync(
+      resolve(process.cwd(), "src/features/appbar/components/appBar.tsx"),
+      "utf8",
+    );
+    assert.match(appBar, /<IconButton/);
+    assert.match(appBar, /aria-label="Open navigation menu"/);
+
+    for (const file of [
+      "src/app/fame/gallery/page.tsx",
+      "src/app/fame/gallery/purchase/[transactionHash]/page.tsx",
+    ]) {
+      const source = readFileSync(resolve(process.cwd(), file), "utf8");
+      assert.match(source, /<BaseGalleryShell/);
+    }
+
+    const stakeLayout = readFileSync(
+      resolve(process.cwd(), "src/app/fame/gallery/stake/layout.tsx"),
+      "utf8",
+    );
+    assert.match(stakeLayout, /<BaseGalleryShell/);
+  });
+
+  it("mounts every liquidity interaction as a real gallery route", () => {
+    const routes = [
+      ["src/app/fame/gallery/stake/page.tsx", "GalleryStakeView"],
+      [
+        "src/app/fame/gallery/stake/deposit/page.tsx",
+        "GalleryStakeDepositView",
+      ],
+      [
+        "src/app/fame/gallery/stake/unstake/page.tsx",
+        "GalleryStakeUnstakeView",
+      ],
+    ] as const;
+    for (const [file, component] of routes) {
+      const source = readFileSync(resolve(process.cwd(), file), "utf8");
+      assert.match(source, new RegExp(`<${component} \\/>`));
+      assert.doesNotMatch(source, /\/api\//);
+    }
   });
 });

@@ -6,7 +6,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { AppBar as MuiAppBar, Toolbar, Box, Typography } from "@mui/material";
+import { AppBar as MuiAppBar, Toolbar, Box, IconButton } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { HomeMenu } from "./HomeMenu";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -32,7 +32,18 @@ export const AppBar: FC<{
     <>
       <MuiAppBar color="default">
         <Toolbar>
-          {menu && <MenuIcon onClick={handleMenu} />}
+          {menu && (
+            <IconButton
+              aria-label="Open navigation menu"
+              aria-haspopup="menu"
+              color="inherit"
+              edge="start"
+              onClick={handleMenu}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           {title}
           <Box sx={{ flexGrow: 1 }} component="span" />
           {right}

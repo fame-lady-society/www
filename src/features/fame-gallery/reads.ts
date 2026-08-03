@@ -144,6 +144,31 @@ export async function readGalleryGlobalState(
         {
           address: addresses.marketplace,
           abi: universalPoolArtMarketplaceAbi,
+          functionName: "communityFee",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "providerFee",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "totalProviderUnits",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "activeProviderCount",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "activeProviderCap",
+        },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
           functionName: "feeRecipient",
         },
         {
@@ -166,18 +191,28 @@ export async function readGalleryGlobalState(
       owner,
       paused,
       premium,
+      communityFee,
+      providerFee,
+      totalProviderUnits,
+      activeProviderCount,
+      activeProviderCap,
       feeRecipient,
       inventory,
       unit,
     ] = values;
     if (
-      values.length !== 9 ||
+      values.length !== 14 ||
       !isAddressValue(fame) ||
       !isAddressValue(mirror) ||
       !isAddressValue(creatorMagic) ||
       !isAddressValue(owner) ||
       typeof paused !== "boolean" ||
       !isBigint(premium) ||
+      !isBigint(communityFee) ||
+      !isBigint(providerFee) ||
+      !isBigint(totalProviderUnits) ||
+      !isBigint(activeProviderCount) ||
+      !isBigint(activeProviderCap) ||
       !isAddressValue(feeRecipient) ||
       !isBigint(inventory) ||
       !isBigint(unit)
@@ -195,6 +230,11 @@ export async function readGalleryGlobalState(
         owner,
         paused,
         premium,
+        communityFee,
+        providerFee,
+        totalProviderUnits,
+        activeProviderCount,
+        activeProviderCap,
         feeRecipient,
         inventory,
         unit,
@@ -213,7 +253,7 @@ function chunkIds(tokenIds: readonly bigint[], size: number) {
   return chunks;
 }
 
-async function runBatchedReads(
+export async function runGalleryBatchedReads(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   tokenIds: readonly bigint[],
@@ -303,7 +343,7 @@ export async function readGalleryPoolState(
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ): Promise<GalleryProjectionResult<GalleryPoolState>> {
   try {
-    const membership = await runBatchedReads(
+    const membership = await runGalleryBatchedReads(
       client,
       blockNumber,
       tokenIds,
@@ -343,7 +383,7 @@ export async function readGalleryPoolState(
       }
     }
 
-    const hydration = await runBatchedReads(
+    const hydration = await runGalleryBatchedReads(
       client,
       blockNumber,
       eligible.map(({ tokenId }) => tokenId),
@@ -382,7 +422,7 @@ export async function readGalleryCustodyStates(
   addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
 ) {
   try {
-    const ownership = await runBatchedReads(
+    const ownership = await runGalleryBatchedReads(
       client,
       blockNumber,
       tokenIds,
@@ -449,9 +489,9 @@ export async function readGalleryTokenStates(
     const state = custody.get(tokenId);
     return state?.status === "success" && state.data.marketplaceHeld;
   });
-  let hydration: Awaited<ReturnType<typeof runBatchedReads>> = [];
+  let hydration: Awaited<ReturnType<typeof runGalleryBatchedReads>> = [];
   try {
-    hydration = await runBatchedReads(
+    hydration = await runGalleryBatchedReads(
       client,
       blockNumber,
       heldIds,

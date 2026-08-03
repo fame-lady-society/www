@@ -9644,11 +9644,41 @@ export const universalPoolArtMarketplaceAbi = [
     inputs: [
       { name: 'fame_', internalType: 'address payable', type: 'address' },
       { name: 'creatorMagic_', internalType: 'address', type: 'address' },
-      { name: 'initialPremium', internalType: 'uint256', type: 'uint256' },
+      { name: 'initialCommunityFee', internalType: 'uint256', type: 'uint256' },
+      { name: 'initialProviderFee', internalType: 'uint256', type: 'uint256' },
       { name: 'initialFeeRecipient', internalType: 'address', type: 'address' },
       { name: 'initialOwner', internalType: 'address', type: 'address' },
+      { name: 'activeProviderCap_', internalType: 'uint256', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'MAX_INVENTORY_BATCH_SIZE',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
+    name: 'activeProviderAt',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'activeProviderCap',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'activeProviderCount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -9673,6 +9703,13 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
+    inputs: [],
+    name: 'communityFee',
+    outputs: [{ name: '', internalType: 'uint96', type: 'uint96' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'pendingOwner', internalType: 'address', type: 'address' },
     ],
@@ -9692,6 +9729,22 @@ export const universalPoolArtMarketplaceAbi = [
       },
     ],
     stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'depositInventory',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'depositInventoryBatch',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -9769,7 +9822,31 @@ export const universalPoolArtMarketplaceAbi = [
     type: 'function',
     inputs: [],
     name: 'premium',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'providerFee',
     outputs: [{ name: '', internalType: 'uint96', type: 'uint96' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'providerPosition',
+    outputs: [
+      { name: 'unitCount', internalType: 'uint256', type: 'uint256' },
+      { name: 'indexPlusOne', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'buyer', internalType: 'address', type: 'address' }],
+    name: 'purchaseCharge',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
@@ -9899,6 +9976,13 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: 'newFee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setCommunityFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'newFeeRecipient', internalType: 'address', type: 'address' },
     ],
@@ -9908,10 +9992,17 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'newPremium', internalType: 'uint256', type: 'uint256' }],
-    name: 'setPremium',
+    inputs: [{ name: 'newFee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setProviderFee',
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalProviderUnits',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -9926,6 +10017,37 @@ export const universalPoolArtMarketplaceAbi = [
     name: 'unpause',
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawInventory',
+    outputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'withdrawInventorySelected',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawalCursor',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'withdrawalNonce',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     type: 'event',
@@ -10018,6 +10140,25 @@ export const universalPoolArtMarketplaceAbi = [
     anonymous: false,
     inputs: [
       {
+        name: 'previousFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'newFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'CommunityFeeUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
         name: 'previousRecipient',
         internalType: 'address',
         type: 'address',
@@ -10031,6 +10172,94 @@ export const universalPoolArtMarketplaceAbi = [
       },
     ],
     name: 'FeeRecipientUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenIds',
+        internalType: 'uint256[]',
+        type: 'uint256[]',
+        indexed: false,
+      },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryBatchDeposited',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryDeposited',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'selected', internalType: 'bool', type: 'bool', indexed: false },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'premiumAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'scanSteps',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryWithdrawn',
   },
   {
     type: 'event',
@@ -10108,19 +10337,19 @@ export const universalPoolArtMarketplaceAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'previousPremium',
+        name: 'previousFee',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
       },
       {
-        name: 'newPremium',
+        name: 'newFee',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
       },
     ],
-    name: 'PremiumUpdated',
+    name: 'ProviderFeeUpdated',
   },
   {
     type: 'event',
@@ -10162,6 +10391,11 @@ export const universalPoolArtMarketplaceAbi = [
     ],
     name: 'RescueERC721',
   },
+  {
+    type: 'error',
+    inputs: [{ name: 'cap', internalType: 'uint256', type: 'uint256' }],
+    name: 'ActiveProviderCapReached',
+  },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   {
     type: 'error',
@@ -10193,13 +10427,31 @@ export const universalPoolArtMarketplaceAbi = [
   { type: 'error', inputs: [], name: 'CoreAssetRescueBlocked' },
   {
     type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'DuplicateInventoryToken',
+  },
+  {
+    type: 'error',
     inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
     name: 'FeeRecipientNotSkippingNFT',
   },
   {
     type: 'error',
+    inputs: [
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FeeTooLarge',
+  },
+  {
+    type: 'error',
     inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
     name: 'IneligiblePoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'cap', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidActiveProviderCap',
   },
   {
     type: 'error',
@@ -10210,6 +10462,14 @@ export const universalPoolArtMarketplaceAbi = [
     type: 'error',
     inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
     name: 'InvalidFeeRecipient',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'size', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidInventoryBatchSize',
   },
   { type: 'error', inputs: [], name: 'InvalidRecipient' },
   {
@@ -10224,6 +10484,12 @@ export const universalPoolArtMarketplaceAbi = [
   { type: 'error', inputs: [], name: 'MarketNotPaused' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'NoPooledInventory' },
+  {
+    type: 'error',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'NoProviderPosition',
+  },
   { type: 'error', inputs: [], name: 'OwnershipRenunciationDisabled' },
   { type: 'error', inputs: [], name: 'PaymentTransferFailed' },
   {
@@ -10233,11 +10499,6 @@ export const universalPoolArtMarketplaceAbi = [
       { name: 'maximumPremium', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'PremiumExceedsMaximum',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'premium', internalType: 'uint256', type: 'uint256' }],
-    name: 'PremiumTooLarge',
   },
   { type: 'error', inputs: [], name: 'PurchasesPaused' },
   { type: 'error', inputs: [], name: 'Reentrancy' },
@@ -10265,7 +10526,6 @@ export const universalPoolArtMarketplaceAbi = [
     name: 'UnsupportedNFT',
   },
   { type: 'error', inputs: [], name: 'ZeroAddress' },
-  { type: 'error', inputs: [], name: 'ZeroPremium' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23432,6 +23692,42 @@ export const useReadUniversalPoolArtMarketplace =
   /*#__PURE__*/ createUseReadContract({ abi: universalPoolArtMarketplaceAbi })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"MAX_INVENTORY_BATCH_SIZE"`
+ */
+export const useReadUniversalPoolArtMarketplaceMaxInventoryBatchSize =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'MAX_INVENTORY_BATCH_SIZE',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderAt"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderCap"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderCap =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderCap',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderCount"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderCount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderCount',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"artworkHash"`
  */
 export const useReadUniversalPoolArtMarketplaceArtworkHash =
@@ -23447,6 +23743,15 @@ export const useReadUniversalPoolArtMarketplaceAuthorizedCheckout =
   /*#__PURE__*/ createUseReadContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'authorizedCheckout',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"communityFee"`
+ */
+export const useReadUniversalPoolArtMarketplaceCommunityFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'communityFee',
   })
 
 /**
@@ -23540,6 +23845,60 @@ export const useReadUniversalPoolArtMarketplacePremium =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"providerFee"`
+ */
+export const useReadUniversalPoolArtMarketplaceProviderFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'providerFee',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"providerPosition"`
+ */
+export const useReadUniversalPoolArtMarketplaceProviderPosition =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'providerPosition',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseCharge"`
+ */
+export const useReadUniversalPoolArtMarketplacePurchaseCharge =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseCharge',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"totalProviderUnits"`
+ */
+export const useReadUniversalPoolArtMarketplaceTotalProviderUnits =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'totalProviderUnits',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalCursor"`
+ */
+export const useReadUniversalPoolArtMarketplaceWithdrawalCursor =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawalCursor',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalNonce"`
+ */
+export const useReadUniversalPoolArtMarketplaceWithdrawalNonce =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawalNonce',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
  */
 export const useWriteUniversalPoolArtMarketplace =
@@ -23561,6 +23920,24 @@ export const useWriteUniversalPoolArtMarketplaceCompleteOwnershipHandover =
   /*#__PURE__*/ createUseWriteContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventory"`
+ */
+export const useWriteUniversalPoolArtMarketplaceDepositInventory =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventory',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventoryBatch"`
+ */
+export const useWriteUniversalPoolArtMarketplaceDepositInventoryBatch =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventoryBatch',
   })
 
 /**
@@ -23654,6 +24031,15 @@ export const useWriteUniversalPoolArtMarketplaceSetAuthorizedCheckout =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setCommunityFee"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetCommunityFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setCommunityFee',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
  */
 export const useWriteUniversalPoolArtMarketplaceSetFeeRecipient =
@@ -23663,12 +24049,12 @@ export const useWriteUniversalPoolArtMarketplaceSetFeeRecipient =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setPremium"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setProviderFee"`
  */
-export const useWriteUniversalPoolArtMarketplaceSetPremium =
+export const useWriteUniversalPoolArtMarketplaceSetProviderFee =
   /*#__PURE__*/ createUseWriteContract({
     abi: universalPoolArtMarketplaceAbi,
-    functionName: 'setPremium',
+    functionName: 'setProviderFee',
   })
 
 /**
@@ -23687,6 +24073,24 @@ export const useWriteUniversalPoolArtMarketplaceUnpause =
   /*#__PURE__*/ createUseWriteContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventory"`
+ */
+export const useWriteUniversalPoolArtMarketplaceWithdrawInventory =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventory',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventorySelected"`
+ */
+export const useWriteUniversalPoolArtMarketplaceWithdrawInventorySelected =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventorySelected',
   })
 
 /**
@@ -23713,6 +24117,24 @@ export const useSimulateUniversalPoolArtMarketplaceCompleteOwnershipHandover =
   /*#__PURE__*/ createUseSimulateContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventory"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceDepositInventory =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventory',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventoryBatch"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceDepositInventoryBatch =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventoryBatch',
   })
 
 /**
@@ -23806,6 +24228,15 @@ export const useSimulateUniversalPoolArtMarketplaceSetAuthorizedCheckout =
   })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setCommunityFee"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetCommunityFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setCommunityFee',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
  */
 export const useSimulateUniversalPoolArtMarketplaceSetFeeRecipient =
@@ -23815,12 +24246,12 @@ export const useSimulateUniversalPoolArtMarketplaceSetFeeRecipient =
   })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setPremium"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setProviderFee"`
  */
-export const useSimulateUniversalPoolArtMarketplaceSetPremium =
+export const useSimulateUniversalPoolArtMarketplaceSetProviderFee =
   /*#__PURE__*/ createUseSimulateContract({
     abi: universalPoolArtMarketplaceAbi,
-    functionName: 'setPremium',
+    functionName: 'setProviderFee',
   })
 
 /**
@@ -23839,6 +24270,24 @@ export const useSimulateUniversalPoolArtMarketplaceUnpause =
   /*#__PURE__*/ createUseSimulateContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventory"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceWithdrawInventory =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventory',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventorySelected"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceWithdrawInventorySelected =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventorySelected',
   })
 
 /**
@@ -23868,12 +24317,48 @@ export const useWatchUniversalPoolArtMarketplaceAuthorizedCheckoutChangedEvent =
   })
 
 /**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"CommunityFeeUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplaceCommunityFeeUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'CommunityFeeUpdated',
+  })
+
+/**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
  */
 export const useWatchUniversalPoolArtMarketplaceFeeRecipientUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: universalPoolArtMarketplaceAbi,
     eventName: 'FeeRecipientUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryBatchDeposited"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryBatchDepositedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryBatchDeposited',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryDeposited"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryDepositedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryDeposited',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryWithdrawn"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryWithdrawnEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryWithdrawn',
   })
 
 /**
@@ -23922,12 +24407,12 @@ export const useWatchUniversalPoolArtMarketplaceOwnershipTransferredEvent =
   })
 
 /**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"PremiumUpdated"`
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"ProviderFeeUpdated"`
  */
-export const useWatchUniversalPoolArtMarketplacePremiumUpdatedEvent =
+export const useWatchUniversalPoolArtMarketplaceProviderFeeUpdatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: universalPoolArtMarketplaceAbi,
-    eventName: 'PremiumUpdated',
+    eventName: 'ProviderFeeUpdated',
   })
 
 /**

@@ -74,11 +74,17 @@ export function galleryAdminContractRequest(
   } as const;
 
   switch (call.kind) {
-    case "set_premium":
+    case "set_community_fee":
       return {
         ...baseRequest,
-        functionName: "setPremium",
-        args: [call.premium],
+        functionName: "setCommunityFee",
+        args: [call.fee],
+      } as const;
+    case "set_provider_fee":
+      return {
+        ...baseRequest,
+        functionName: "setProviderFee",
+        args: [call.fee],
       } as const;
     case "set_fee_recipient":
       return {

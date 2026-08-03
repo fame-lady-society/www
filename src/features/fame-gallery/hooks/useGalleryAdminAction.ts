@@ -63,7 +63,9 @@ export function useGalleryAdminAction({
         simulate: async (exactCall, account) => {
           const request = galleryAdminContractRequest(exactCall, account);
           switch (request.functionName) {
-            case "setPremium":
+            case "setCommunityFee":
+              return (await publicClient.simulateContract(request)).request;
+            case "setProviderFee":
               return (await publicClient.simulateContract(request)).request;
             case "setFeeRecipient":
               return (await publicClient.simulateContract(request)).request;

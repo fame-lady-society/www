@@ -30,6 +30,11 @@ function authorizedMarkup(paused = false) {
             owner,
             paused,
             premium: 25n,
+            communityFee: 10n,
+            providerFee: 15n,
+            totalProviderUnits: 0n,
+            activeProviderCount: 0n,
+            activeProviderCap: 88n,
             feeRecipient,
             inventory: 2n,
             unit: 1_000_000n,
@@ -129,9 +134,10 @@ describe("TEST gallery admin workbench", () => {
     assert.match(unavailable, /disabled=""/);
   });
 
-  it("exposes only the four successor calls across three operational controls", () => {
+  it("exposes only the five successor calls across operational controls", () => {
     assert.deepEqual(PRIMARY_GALLERY_ADMIN_ACTIONS, [
-      "set_premium",
+      "set_community_fee",
+      "set_provider_fee",
       "set_fee_recipient",
       "pause",
       "unpause",

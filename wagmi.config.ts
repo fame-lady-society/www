@@ -123,7 +123,10 @@ export default defineConfig({
       ],
     }),
     foundry({
-      project: "../fame-contracts",
+      project: process.env.FAME_CONTRACTS_ROOT ?? "../fame-contracts",
+      forge: process.env.FAME_CONTRACTS_ROOT
+        ? { build: false, rebuild: false }
+        : undefined,
       deployments: {
         FameRouter: fameRouterAddress,
         FameBurnPoolRotator: fameBurnPoolRotatorAddress,

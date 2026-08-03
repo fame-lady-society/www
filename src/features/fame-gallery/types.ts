@@ -30,6 +30,11 @@ export type GalleryGlobalState = {
   owner: Address;
   paused: boolean;
   premium: bigint;
+  communityFee: bigint;
+  providerFee: bigint;
+  totalProviderUnits: bigint;
+  activeProviderCount: bigint;
+  activeProviderCap: bigint;
   feeRecipient: Address;
   inventory: bigint;
   unit: bigint;
@@ -195,7 +200,8 @@ export type GalleryVerifiedAcquisition = Readonly<{
 }>;
 
 export type GalleryAdminCall =
-  | Readonly<{ kind: "set_premium"; premium: bigint }>
+  | Readonly<{ kind: "set_community_fee"; fee: bigint }>
+  | Readonly<{ kind: "set_provider_fee"; fee: bigint }>
   | Readonly<{ kind: "set_fee_recipient"; feeRecipient: Address }>
   | Readonly<{ kind: "pause" }>
   | Readonly<{ kind: "unpause" }>;

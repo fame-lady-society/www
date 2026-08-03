@@ -14,8 +14,8 @@ import { formatTestAmount } from "../format";
 import { useGalleryAdminAction } from "../hooks/useGalleryAdminAction";
 import {
   isGalleryAdminActionBusy,
+  parseGalleryFee,
   parseGalleryFeeRecipient,
-  parseGalleryPremium,
   type GalleryAdminState,
 } from "../transactions/adminAction";
 import type {
@@ -25,7 +25,8 @@ import type {
 } from "../types";
 
 export const PRIMARY_GALLERY_ADMIN_ACTIONS = [
-  "set_premium",
+  "set_community_fee",
+  "set_provider_fee",
   "set_fee_recipient",
   "pause",
   "unpause",
@@ -104,6 +105,60 @@ export function MarketplaceLifecycleControl({
   );
 }
 
+function MarketplaceFeeControl({
+  title,
+  inputLabel,
+  current,
+  busy,
+  onSubmit,
+}: {
+  title: string;
+  inputLabel: string;
+  current: bigint | null;
+  busy: boolean;
+  onSubmit: (fee: bigint) => void;
+}) {
+  const [input, setInput] = useState("");
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+      <Stack
+        component="form"
+        spacing={2}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit(parseGalleryFee(input));
+        }}
+      >
+        <div>
+          <Typography component="h2" variant="h5">
+            {title}
+          </Typography>
+          <CurrentValue>
+            {current === null
+              ? "unavailable"
+              : `${formatTestAmount(current)} TEST`}
+          </CurrentValue>
+        </div>
+        <TextField
+          required
+          label={inputLabel}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          inputProps={{ inputMode: "decimal" }}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={busy}
+          sx={{ minHeight: 44, alignSelf: "flex-start" }}
+        >
+          Set fee
+        </Button>
+      </Stack>
+    </Paper>
+  );
+}
+
 export function AdminMarketActions({
   global,
   refreshGlobal,
@@ -111,7 +166,6 @@ export function AdminMarketActions({
   global: GalleryHookProjection<GalleryGlobalState>;
   refreshGlobal: () => Promise<void>;
 }) {
-  const [premiumInput, setPremiumInput] = useState("");
   const [feeRecipientInput, setFeeRecipientInput] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const transaction = useGalleryAdminAction({
@@ -148,45 +202,21 @@ export function AdminMarketActions({
         onToggle={(call) => run(() => call)}
       />
 
-      <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
-        <Stack
-          component="form"
-          spacing={2}
-          onSubmit={(event) => {
-            event.preventDefault();
-            run(() => ({
-              kind: "set_premium",
-              premium: parseGalleryPremium(premiumInput),
-            }));
-          }}
-        >
-          <div>
-            <Typography component="h2" variant="h5">
-              Marketplace premium
-            </Typography>
-            <CurrentValue>
-              {canonical
-                ? `${formatTestAmount(canonical.premium)} TEST`
-                : "unavailable"}
-            </CurrentValue>
-          </div>
-          <TextField
-            required
-            label="Proposed premium in TEST"
-            value={premiumInput}
-            onChange={(event) => setPremiumInput(event.target.value)}
-            inputProps={{ inputMode: "decimal" }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={busy}
-            sx={{ minHeight: 44, alignSelf: "flex-start" }}
-          >
-            Set premium
-          </Button>
-        </Stack>
-      </Paper>
+      <MarketplaceFeeControl
+        title="Community premium portion"
+        inputLabel="Proposed community fee in TEST"
+        current={canonical?.communityFee ?? null}
+        busy={busy}
+        onSubmit={(fee) => run(() => ({ kind: "set_community_fee", fee }))}
+      />
+
+      <MarketplaceFeeControl
+        title="Provider premium portion"
+        inputLabel="Proposed provider fee in TEST"
+        current={canonical?.providerFee ?? null}
+        busy={busy}
+        onSubmit={(fee) => run(() => ({ kind: "set_provider_fee", fee }))}
+      />
 
       <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
         <Stack

@@ -4,12 +4,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
 import { FAME, USDC, WETH } from "../../fame-swap/tokens";
 import type { GalleryCheckoutQuote } from "../types";
+import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
 import {
   GalleryArtworkGrid,
   GalleryFundingLink,
   GalleryPaymentPanel,
   GalleryViewContent,
+  galleryPurchaseReceiptHref,
   type PresentedGalleryArtwork,
 } from "./GalleryView";
 
@@ -35,6 +37,7 @@ function readyMetadata(name: string) {
 
 const price = 1_001_000n * 10n ** 18n;
 const displayedFameCharge = price + 600_000_000_000_000_000n;
+const purchaseHash = `0x${"44".repeat(32)}` as const;
 
 const checkoutQuote: GalleryCheckoutQuote = {
   paymentAsset: "USDC",
@@ -65,6 +68,49 @@ const checkoutQuote: GalleryCheckoutQuote = {
   estimatedSurplusFame: 200_600_000_000_000_000_000n,
   expiresAt: new Date("2030-01-01T00:00:00Z"),
 };
+
+describe("gallery purchase navigation", () => {
+  it("links a verified checkout purchase to its transaction receipt page", () => {
+    const state: GalleryPurchaseState = {
+      status: "verified",
+      terms: {
+        chainId: 8453,
+        account: "0x1111111111111111111111111111111111111111",
+        recipient: "0x1111111111111111111111111111111111111111",
+        selectedTarget: { targetId: "mint:7", tokenId: 7n },
+        artworkHash: `0x${"55".repeat(32)}`,
+        unit: 1_000_000n,
+        maxPremium: 30_000n,
+        maximumSpend: 1n,
+        allowanceTarget: "0x2222222222222222222222222222222222222222",
+        checkout: {
+          paymentAsset: "ETH",
+          inputToken: "0x0000000000000000000000000000000000000000",
+          checkout: "0x3333333333333333333333333333333333333333",
+          marketplace: "0x2222222222222222222222222222222222222222",
+          maximumInput: 1n,
+          routeHash: `0x${"66".repeat(32)}`,
+          routeDeadline: 1_900_000_000n,
+          quoteBlockNumber: 49_000_000n,
+        },
+      },
+      approvalHash: null,
+      purchaseHash,
+      failure: null,
+      acquisition: null,
+      refreshFailure: null,
+    };
+
+    assert.equal(
+      galleryPurchaseReceiptHref(state),
+      `/fame/gallery/purchase/${purchaseHash}`,
+    );
+    assert.equal(
+      galleryPurchaseReceiptHref({ ...state, status: "refreshing" }),
+      null,
+    );
+  });
+});
 
 describe("TEST gallery public view", () => {
   it("shows concise checkout costs and liquidity refund copy", () => {
