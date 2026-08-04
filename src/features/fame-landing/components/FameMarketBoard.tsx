@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type {
+  LandingMarketPresentation,
   LandingPriceRow,
-  LandingPrices,
   PriceValue,
 } from "../pricePresentation";
 
@@ -11,26 +11,30 @@ const RETRY_MS = 5_000;
 const INITIAL_RETRY_MS = 500;
 
 type RetryTimer = ReturnType<typeof setTimeout>;
-type PriceRequest = (signal: AbortSignal) => Promise<LandingPrices | null>;
-
-async function requestLandingPrices(
+type MarketRequest = (
   signal: AbortSignal,
-): Promise<LandingPrices | null> {
+) => Promise<LandingMarketPresentation | null>;
+
+async function requestLandingMarket(
+  signal: AbortSignal,
+): Promise<LandingMarketPresentation | null> {
   const response = await fetch("/api/fame/market-prices", {
     cache: "no-store",
     signal,
   });
-  return response.ok ? ((await response.json()) as LandingPrices) : null;
+  return response.ok
+    ? ((await response.json()) as LandingMarketPresentation)
+    : null;
 }
 
-export function startPriceRefresh({
-  onPrices,
-  request = requestLandingPrices,
+export function startMarketRefresh({
+  onMarket,
+  request = requestLandingMarket,
   schedule = (run, delayMs) => setTimeout(run, delayMs),
   cancel = (timer) => clearTimeout(timer),
 }: {
-  onPrices: (prices: LandingPrices) => void;
-  request?: PriceRequest;
+  onMarket: (market: LandingMarketPresentation) => void;
+  request?: MarketRequest;
   schedule?: (run: () => Promise<void>, delayMs: number) => RetryTimer;
   cancel?: (timer: RetryTimer) => void;
 }): () => void {
@@ -42,9 +46,9 @@ export function startPriceRefresh({
     if (stopped) return;
     try {
       const next = await request(controller.signal);
-      if (next && !stopped) onPrices(next);
+      if (next && !stopped) onMarket(next);
     } catch {
-      // The activity indicator remains while the next retry is scheduled.
+      // Keep the activity indicator moving and try again.
     } finally {
       if (!stopped) timer = schedule(refresh, RETRY_MS);
     }
@@ -68,10 +72,10 @@ function Loading() {
   );
 }
 
-function Value({ price }: { price: PriceValue }) {
-  return price.value ? (
+function Value({ value }: { value: PriceValue }) {
+  return value.value ? (
     <span className="font-semibold tabular-nums text-[#fff5d8]">
-      {price.value}
+      {value.value}
     </span>
   ) : (
     <Loading />
@@ -80,8 +84,8 @@ function Value({ price }: { price: PriceValue }) {
 
 function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
   return (
-    <article className="border border-[#8e762c] p-5">
-      <h2 className="text-lg font-semibold text-[#f5d46d]">{title}</h2>
+    <article className="border border-[#8e762c] bg-black/30 p-5">
+      <h3 className="text-lg font-semibold text-[#f5d46d]">{title}</h3>
       <div className="mt-4 text-2xl font-semibold tabular-nums">
         {row.fame ?? <Loading />}
       </div>
@@ -89,13 +93,13 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
         <div className="flex min-h-6 items-center justify-between gap-4">
           <dt className="text-[#c6b98b]">USDC</dt>
           <dd>
-            <Value price={row.USDC} />
+            <Value value={row.USDC} />
           </dd>
         </div>
         <div className="flex min-h-6 items-center justify-between gap-4">
           <dt className="text-[#c6b98b]">ETH</dt>
           <dd>
-            <Value price={row.ETH} />
+            <Value value={row.ETH} />
           </dd>
         </div>
       </dl>
@@ -103,61 +107,97 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
   );
 }
 
-function missing(prices: LandingPrices): boolean {
-  return Object.values(prices).some(
-    (row) => !row.fame || !row.USDC.value || !row.ETH.value,
+const METRIC_LABELS = {
+  marketCap: "Market cap",
+  liquidity: "Liquidity",
+  buyDepth: "Buy depth",
+  sellDepth: "Sell depth",
+} as const;
+
+function missing(market: LandingMarketPresentation): boolean {
+  return (
+    Object.values(market.prices).some(
+      (row) => !row.fame || !row.USDC.value || !row.ETH.value,
+    ) || Object.values(market.metrics).some((item) => !item.value)
   );
 }
 
-export function mergeLandingPrices(
-  current: LandingPrices,
-  next: LandingPrices,
-): LandingPrices {
-  let changed = false;
-  const merged = Object.fromEntries(
-    (Object.keys(current) as Array<keyof LandingPrices>).map((key) => {
-      const oldRow = current[key];
-      const newRow = next[key];
-      const fame = newRow.fame ?? oldRow.fame;
-      const usdc = newRow.USDC.value ?? oldRow.USDC.value;
-      const eth = newRow.ETH.value ?? oldRow.ETH.value;
-      changed ||= fame !== oldRow.fame;
-      changed ||= usdc !== oldRow.USDC.value;
-      changed ||= eth !== oldRow.ETH.value;
-      return [
+export function mergeLandingMarket(
+  current: LandingMarketPresentation,
+  next: LandingMarketPresentation,
+): LandingMarketPresentation {
+  const prices = Object.fromEntries(
+    (Object.keys(current.prices) as Array<keyof typeof current.prices>).map(
+      (key) => {
+        const oldRow = current.prices[key];
+        const newRow = next.prices[key];
+        return [
+          key,
+          {
+            fame: newRow.fame ?? oldRow.fame,
+            USDC: { value: newRow.USDC.value ?? oldRow.USDC.value },
+            ETH: { value: newRow.ETH.value ?? oldRow.ETH.value },
+          },
+        ];
+      },
+    ),
+  ) as LandingMarketPresentation["prices"];
+  const metrics = Object.fromEntries(
+    (Object.keys(current.metrics) as Array<keyof typeof current.metrics>).map(
+      (key) => [
         key,
-        {
-          fame,
-          USDC: { value: usdc },
-          ETH: { value: eth },
-        },
-      ];
-    }),
-  ) as LandingPrices;
-  return changed ? merged : current;
+        { value: next.metrics[key].value ?? current.metrics[key].value },
+      ],
+    ),
+  ) as LandingMarketPresentation["metrics"];
+  const merged = { prices, metrics };
+  return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
 }
 
 export function FameMarketBoard({
-  initialPrices,
+  initialMarket,
 }: {
-  initialPrices: LandingPrices;
+  initialMarket: LandingMarketPresentation;
 }) {
-  const [prices, setPrices] = useState(initialPrices);
-  const needsPrices = missing(prices);
+  const [market, setMarket] = useState(initialMarket);
+  const needsMarket = missing(market);
 
   useEffect(() => {
-    if (!needsPrices) return;
-    return startPriceRefresh({
-      onPrices: (next) =>
-        setPrices((current) => mergeLandingPrices(current, next)),
+    if (!needsMarket) return;
+    return startMarketRefresh({
+      onMarket: (next) =>
+        setMarket((current) => mergeLandingMarket(current, next)),
     });
-  }, [needsPrices]);
+  }, [needsMarket]);
 
   return (
-    <section aria-label="FAME prices" className="grid gap-3 lg:grid-cols-3">
-      <PriceCard title="DeFi buy" row={prices.defiBuy} />
-      <PriceCard title="DeFi sell" row={prices.defiSell} />
-      <PriceCard title="NFT buy" row={prices.nftBuy} />
+    <section aria-label="FAME market">
+      <h2 className="mb-4 text-center text-3xl font-semibold">Prices</h2>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <PriceCard title="DeFi buy" row={market.prices.defiBuy} />
+        <PriceCard title="DeFi sell" row={market.prices.defiSell} />
+        <PriceCard title="Marketplace" row={market.prices.nftBuy} />
+      </div>
+      <div
+        aria-label="FAME stats"
+        className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        {(Object.keys(METRIC_LABELS) as Array<keyof typeof METRIC_LABELS>).map(
+          (key) => (
+            <article
+              key={key}
+              className="border border-[#685a2b] bg-black/30 p-4"
+            >
+              <h3 className="text-xs uppercase tracking-wide text-[#c6b98b]">
+                {METRIC_LABELS[key]}
+              </h3>
+              <p className="mt-2 min-h-6 font-semibold">
+                <Value value={market.metrics[key]} />
+              </p>
+            </article>
+          ),
+        )}
+      </div>
     </section>
   );
 }

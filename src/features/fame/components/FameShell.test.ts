@@ -7,9 +7,9 @@ const source = (path: string) =>
   readFileSync(resolve(process.cwd(), path), "utf8");
 
 describe("FAME route shell", () => {
-  it("wraps the landing, gallery, and rotator in the shared shell", () => {
+  it("uses the restored landing and the shared shell on new FAME routes", () => {
+    assert.match(source("src/app/fame/page.tsx"), /<Layout/);
     for (const path of [
-      "src/app/fame/page.tsx",
       "src/app/fame/gallery/page.tsx",
       "src/app/fame/rotate/page.tsx",
     ]) {
@@ -25,13 +25,31 @@ describe("FAME route shell", () => {
     assert.doesNotMatch(shell, /<Main/);
   });
 
-  it("has one normal menu and no landing-only menu", () => {
+  it("keeps the normal menu, links, addresses, and copy controls", () => {
     const shell = source("src/features/fame/components/FameShell.tsx");
-    const landing = source(
-      "src/features/fame-landing/components/FameLandingPage.tsx",
-    );
+    const landing = source("src/features/fame/layout.tsx");
     assert.match(shell, /<LinksMenuItems/);
     assert.match(shell, /<SiteMenu/);
-    assert.doesNotMatch(landing, /FameLandingMenu/);
+    assert.match(landing, /<LinksMenuItems/);
+    assert.match(landing, /<SiteMenu/);
+    assert.equal((landing.match(/<CopyToClipboard/g) ?? []).length, 2);
+    assert.match(landing, /fameFromNetwork\(8453\)/);
+    assert.match(landing, /0xbb5ed04dd7b207592429eb8d599d103ccad646c4/);
+    assert.match(landing, /\/fame\/swap/);
+    assert.match(landing, /\/fame\/market/);
+    assert.match(landing, /\/fame\/rotate/);
+    assert.match(landing, /dexscreener\.com/);
+    assert.match(landing, /opensea\.io/);
+    assert.match(landing, /t\.me\/famesocietybase/);
+    assert.match(landing, /warpcast\.com\/fameladysociety/);
+  });
+
+  it("removes only the old token gallery from the landing", () => {
+    const landing = source("src/features/fame/layout.tsx");
+    assert.doesNotMatch(landing, /BurnPoolImage|burnPool|unrevealed/);
+    assert.doesNotMatch(landing, /href="\/fame\/gallery"/);
+    assert.match(landing, /1 million \$FAME = 1 Society NFT/);
+    assert.match(landing, /<SingleTokenChecker/);
+    assert.match(landing, /<FameFAQ/);
   });
 });

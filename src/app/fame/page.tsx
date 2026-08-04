@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { FameLandingPage } from "@/features/fame-landing/components/FameLandingPage";
+import { Layout } from "@/features/fame/layout";
 import { getCachedMarketStats } from "@/features/fame-landing/cachedMarketStats";
-import { FameShell } from "@/features/fame/components/FameShell";
+import { presentLandingMarket } from "@/features/fame-landing/pricePresentation";
 
 export const revalidate = 300;
 
@@ -22,9 +22,5 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const stats = await getCachedMarketStats();
-  return (
-    <FameShell>
-      <FameLandingPage stats={stats} />
-    </FameShell>
-  );
+  return <Layout market={presentLandingMarket(stats)} />;
 }

@@ -1,132 +1,116 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { LandingMarketPresentation } from "../pricePresentation";
 import {
   FameMarketBoard,
-  mergeLandingPrices,
-  startPriceRefresh,
+  mergeLandingMarket,
+  startMarketRefresh,
 } from "./FameMarketBoard";
 
+const market: LandingMarketPresentation = {
+  prices: {
+    defiBuy: {
+      fame: "1,000,000 FAME",
+      USDC: { value: "12.34 USDC" },
+      ETH: { value: "0.005 ETH" },
+    },
+    defiSell: {
+      fame: "1,000,000 FAME",
+      USDC: { value: "11.90 USDC" },
+      ETH: { value: "0.0048 ETH" },
+    },
+    nftBuy: {
+      fame: "1,050,000 FAME",
+      USDC: { value: "12.95 USDC" },
+      ETH: { value: "0.0052 ETH" },
+    },
+  },
+  metrics: {
+    marketCap: { value: "10,762.56 USDC" },
+    liquidity: { value: "8,000,000 FAME" },
+    buyDepth: { value: "5,000 USDC" },
+    sellDepth: { value: "4,500 USDC" },
+  },
+};
+
 describe("FAME market board", () => {
-  it("shows the three unique prices without repeating NFT sell", () => {
+  it("shows prices and DeFi stats without repeating NFT sell", () => {
     const markup = renderToStaticMarkup(
-      <FameMarketBoard
-        initialPrices={{
-          defiBuy: {
-            fame: "1,000,000 FAME",
-            USDC: { value: "12.34 USDC" },
-            ETH: { value: "0.005 ETH" },
-          },
-          defiSell: {
-            fame: "1,000,000 FAME",
-            USDC: { value: "11.90 USDC" },
-            ETH: { value: "0.0048 ETH" },
-          },
-          nftBuy: {
-            fame: "1,050,000 FAME",
-            USDC: { value: "12.95 USDC" },
-            ETH: { value: "0.0052 ETH" },
-          },
-        }}
-      />,
+      <FameMarketBoard initialMarket={market} />,
     );
 
     assert.match(markup, /DeFi buy/);
     assert.match(markup, /DeFi sell/);
-    assert.match(markup, /NFT buy/);
+    assert.match(markup, /Marketplace/);
     assert.doesNotMatch(markup, /NFT sell/);
-    assert.equal((markup.match(/1,000,000 FAME/g) ?? []).length, 2);
-    assert.equal((markup.match(/1,050,000 FAME/g) ?? []).length, 1);
+    assert.match(markup, /Market cap/);
+    assert.match(markup, /Liquidity/);
+    assert.match(markup, /Buy depth/);
+    assert.match(markup, /Sell depth/);
     assert.doesNotMatch(markup, /cache|route|validation|slippage|unavailable/i);
   });
 
-  it("shows an activity indicator for each missing price", () => {
+  it("shows activity indicators for missing prices and stats", () => {
+    const empty: LandingMarketPresentation = {
+      prices: {
+        defiBuy: {
+          fame: "1,000,000 FAME",
+          USDC: { value: null },
+          ETH: { value: null },
+        },
+        defiSell: {
+          fame: "1,000,000 FAME",
+          USDC: { value: null },
+          ETH: { value: null },
+        },
+        nftBuy: {
+          fame: null,
+          USDC: { value: null },
+          ETH: { value: null },
+        },
+      },
+      metrics: {
+        marketCap: { value: null },
+        liquidity: { value: null },
+        buyDepth: { value: null },
+        sellDepth: { value: null },
+      },
+    };
     const markup = renderToStaticMarkup(
-      <FameMarketBoard
-        initialPrices={{
-          defiBuy: {
-            fame: "1,000,000 FAME",
-            USDC: { value: null },
-            ETH: { value: null },
-          },
-          defiSell: {
-            fame: "1,000,000 FAME",
-            USDC: { value: null },
-            ETH: { value: null },
-          },
-          nftBuy: {
-            fame: null,
-            USDC: { value: null },
-            ETH: { value: null },
-          },
-        }}
-      />,
+      <FameMarketBoard initialMarket={empty} />,
     );
 
-    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 7);
+    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 11);
     assert.doesNotMatch(markup, /Unavailable|error|failed/i);
   });
 
-  it("does not rerender when a retry adds no price", () => {
-    const current = {
-      defiBuy: {
-        fame: "1,000,000 FAME",
-        USDC: { value: "12 USDC" },
-        ETH: { value: null },
-      },
-      defiSell: {
-        fame: "1,000,000 FAME",
-        USDC: { value: "11 USDC" },
-        ETH: { value: "0.004 ETH" },
-      },
-      nftBuy: {
-        fame: "1,050,000 FAME",
-        USDC: { value: "13 USDC" },
-        ETH: { value: "0.005 ETH" },
-      },
-    } as const;
-
-    assert.equal(mergeLandingPrices(current, current), current);
-    const merged = mergeLandingPrices(current, {
-      ...current,
-      defiBuy: { ...current.defiBuy, ETH: { value: "0.0045 ETH" } },
-    });
+  it("keeps loaded values while retries fill gaps", () => {
+    assert.equal(mergeLandingMarket(market, market), market);
+    const current: LandingMarketPresentation = {
+      ...market,
+      metrics: { ...market.metrics, buyDepth: { value: null } },
+    };
+    const merged = mergeLandingMarket(current, market);
     assert.notEqual(merged, current);
-    assert.equal(merged.defiBuy.ETH.value, "0.0045 ETH");
+    assert.equal(merged.metrics.buyDepth.value, "5,000 USDC");
   });
 
-  it("retries missing prices and stops cleanly", async () => {
-    const current = {
-      defiBuy: {
-        fame: "1,000,000 FAME",
-        USDC: { value: null },
-        ETH: { value: null },
-      },
-      defiSell: {
-        fame: "1,000,000 FAME",
-        USDC: { value: null },
-        ETH: { value: null },
-      },
-      nftBuy: { fame: null, USDC: { value: null }, ETH: { value: null } },
-    } as const;
-    const next = {
-      ...current,
-      defiBuy: { ...current.defiBuy, USDC: { value: "12 USDC" } },
-    };
+  it("retries missing market data and stops cleanly", async () => {
     const jobs: Array<{ run: () => Promise<void>; delayMs: number }> = [];
     const canceled: unknown[] = [];
     const signals: AbortSignal[] = [];
     let requests = 0;
-    let prices = current;
+    let loaded: LandingMarketPresentation | null = null;
 
-    const stop = startPriceRefresh({
+    const stop = startMarketRefresh({
       request: async (signal) => {
         signals.push(signal);
         requests += 1;
-        return requests === 1 ? null : next;
+        return requests === 1 ? null : market;
       },
-      onPrices: (loaded) => {
-        prices = mergeLandingPrices(prices, loaded) as typeof current;
+      onMarket: (next) => {
+        loaded = next;
       },
       schedule: (run, delayMs) => {
         jobs.push({ run, delayMs });
@@ -139,7 +123,7 @@ describe("FAME market board", () => {
     await jobs[0]!.run();
     assert.equal(jobs[1]?.delayMs, 5_000);
     await jobs[1]!.run();
-    assert.equal(prices.defiBuy.USDC.value, "12 USDC");
+    assert.equal(loaded, market);
 
     stop();
     assert.equal(signals[0]?.aborted, true);

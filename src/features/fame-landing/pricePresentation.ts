@@ -4,6 +4,7 @@ import type {
   MarketProjectionState,
   MarketplacePriceDto,
 } from "./cachedMarketStats";
+import { DEFI_FAME_AMOUNT, type DepthDto } from "./cachedMarketStats";
 
 export type PriceValue = Readonly<{ value: string | null }>;
 export type LandingPriceRow = Readonly<{
@@ -15,6 +16,16 @@ export type LandingPrices = Readonly<{
   defiBuy: LandingPriceRow;
   defiSell: LandingPriceRow;
   nftBuy: LandingPriceRow;
+}>;
+export type LandingMetrics = Readonly<{
+  marketCap: PriceValue;
+  liquidity: PriceValue;
+  buyDepth: PriceValue;
+  sellDepth: PriceValue;
+}>;
+export type LandingMarketPresentation = Readonly<{
+  prices: LandingPrices;
+  metrics: LandingMetrics;
 }>;
 
 const DEFI_FAME_LABEL = "1,000,000 FAME";
@@ -88,11 +99,85 @@ export function presentLandingPrices(stats: LandingMarketStats): LandingPrices {
   };
 }
 
+function metric(value: string | null): PriceValue {
+  return { value };
+}
+
+function depthValue(
+  state: MarketProjectionState<DepthDto>,
+  decimals: number,
+  symbol: "FAME" | "USDC",
+): PriceValue {
+  if (state.status !== "available") return metric(null);
+  const value = formatPrice(BigInt(state.value.data.amount), decimals, symbol);
+  return metric(state.value.data.atLeast ? `${value}+` : value);
+}
+
+export function presentLandingMetrics(
+  stats: LandingMarketStats,
+): LandingMetrics {
+  const market =
+    stats.marketplace.status === "available"
+      ? stats.marketplace.value.data
+      : null;
+  const buyUsdc =
+    stats.defiBuyUsdc.status === "available"
+      ? BigInt(stats.defiBuyUsdc.value.data.amount)
+      : null;
+  const sellUsdc =
+    stats.defiSellUsdc.status === "available"
+      ? BigInt(stats.defiSellUsdc.value.data.amount)
+      : null;
+  const marketCap =
+    market && buyUsdc !== null && sellUsdc !== null
+      ? ((buyUsdc + sellUsdc) * BigInt(market.totalSupply)) /
+        (2n * DEFI_FAME_AMOUNT)
+      : null;
+  const liquidity = market
+    ? BigInt(market.totalProviderUnits) * BigInt(market.unit)
+    : null;
+
+  return {
+    marketCap: metric(
+      marketCap === null ? null : formatPrice(marketCap, 6, "USDC"),
+    ),
+    liquidity: metric(
+      market && liquidity !== null
+        ? formatPrice(liquidity, market.decimals, "FAME")
+        : null,
+    ),
+    buyDepth: depthValue(stats.buyDepth, 6, "USDC"),
+    sellDepth: depthValue(stats.sellDepth, 6, "USDC"),
+  };
+}
+
+export function presentLandingMarket(
+  stats: LandingMarketStats,
+): LandingMarketPresentation {
+  return {
+    prices: presentLandingPrices(stats),
+    metrics: presentLandingMetrics(stats),
+  };
+}
+
 export function emptyLandingPrices(): LandingPrices {
   const empty = { value: null };
   return {
     defiBuy: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
     defiSell: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
     nftBuy: { fame: null, USDC: empty, ETH: empty },
+  };
+}
+
+export function emptyLandingMarket(): LandingMarketPresentation {
+  const empty = { value: null };
+  return {
+    prices: emptyLandingPrices(),
+    metrics: {
+      marketCap: empty,
+      liquidity: empty,
+      buyDepth: empty,
+      sellDepth: empty,
+    },
   };
 }
