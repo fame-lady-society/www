@@ -143,9 +143,15 @@ describe("Base FAME gallery configuration", () => {
       ),
       "utf8",
     );
-    assert.match(shell, /<Main/);
-    assert.match(shell, /<SiteMenu \/>/);
-    assert.match(shell, /<LinksMenuItems \/>/);
+    assert.match(shell, /<FameMain/);
+
+    const fameShell = readFileSync(
+      resolve(process.cwd(), "src/features/fame/components/FameShell.tsx"),
+      "utf8",
+    );
+    assert.match(fameShell, /<Main/);
+    assert.match(fameShell, /<SiteMenu isFame \/>/);
+    assert.match(fameShell, /<LinksMenuItems \/>/);
 
     const appBar = readFileSync(
       resolve(process.cwd(), "src/features/appbar/components/appBar.tsx"),

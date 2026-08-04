@@ -14,7 +14,7 @@ export type FameRotatorIndexPageProps =
 /** Server-rendered, visual-only selector for the current ordered burn pool. */
 export function FameRotatorIndexPage(props: FameRotatorIndexPageProps) {
   return (
-    <main className="min-h-screen bg-black px-4 py-8 text-amber-50 sm:px-6">
+    <div className="min-h-screen bg-black px-4 py-8 text-amber-50 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Link
           href="/fame"
@@ -85,6 +85,6 @@ export function FameRotatorIndexPage(props: FameRotatorIndexPageProps) {
           </section>
         ) : null}
       </div>
-    </main>
+    </div>
   );
 }

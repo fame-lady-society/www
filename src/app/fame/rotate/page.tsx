@@ -4,6 +4,7 @@ import {
   withRotatorSelectorReadDeadline,
 } from "@/features/fame-rotator/selector";
 import { getOrderedBurnPoolTokenIds } from "@/service/fame";
+import { FameShell } from "@/features/fame/components/FameShell";
 
 export default async function Page() {
   let status: "empty" | "error" | "ready" = "error";
@@ -25,5 +26,9 @@ export default async function Page() {
     status = "error";
   }
 
-  return <FameRotatorIndexPage status={status} targets={targets} />;
+  return (
+    <FameShell title="FAME Rotator">
+      <FameRotatorIndexPage status={status} targets={targets} />
+    </FameShell>
+  );
 }

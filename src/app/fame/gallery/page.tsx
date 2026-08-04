@@ -5,7 +5,11 @@ import {
   presentFameGalleryStatuses,
 } from "@/features/fame-gallery/cachedStatus";
 import { isFreshFameGalleryMembership } from "@/features/fame-gallery/membership";
-import { FameGalleryPage, FameGalleryUnavailable } from "@/features/fame-gallery/components/FameGalleryPage";
+import {
+  FameGalleryPage,
+  FameGalleryUnavailable,
+} from "@/features/fame-gallery/components/FameGalleryPage";
+import { FameShell } from "@/features/fame/components/FameShell";
 
 async function readGalleryPresentation() {
   try {
@@ -16,7 +20,10 @@ async function readGalleryPresentation() {
         membership.visibleTokenIds,
         membership.fingerprint,
       );
-      const presentation = presentFameGalleryStatuses(status, membership.fingerprint);
+      const presentation = presentFameGalleryStatuses(
+        status,
+        membership.fingerprint,
+      );
       return {
         tokenIds: membership.visibleTokenIds,
         ...presentation,
@@ -35,6 +42,13 @@ async function readGalleryPresentation() {
 export default async function Page() {
   await connection();
   const presentation = await readGalleryPresentation();
-  if (!presentation) return <FameGalleryUnavailable />;
-  return <FameGalleryPage {...presentation} />;
+  return (
+    <FameShell title="FAME Gallery">
+      {presentation ? (
+        <FameGalleryPage {...presentation} />
+      ) : (
+        <FameGalleryUnavailable />
+      )}
+    </FameShell>
+  );
 }

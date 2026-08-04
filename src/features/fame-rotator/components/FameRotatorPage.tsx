@@ -1,8 +1,6 @@
 "use client";
 
 import Button from "@mui/material/Button";
-import MenuList from "@mui/material/MenuList";
-import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import {
   useCallback,
@@ -14,10 +12,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { base } from "viem/chains";
 import { usePublicClient, useSwitchChain } from "wagmi";
-import { DefaultProvider } from "@/context/default";
-import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
-import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { Main } from "@/layouts/Main";
+import { FameShell } from "@/features/fame/components/FameShell";
 import { fameMirrorAbi } from "@/wagmi";
 import { getFameTokenImage } from "@/service/fame";
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
@@ -36,7 +31,10 @@ import {
   type FameRotatorWalletStatus,
 } from "./FameRotatorView";
 
-export type { FameRotatorWalletStatus, FameRotatorViewProps } from "./FameRotatorView";
+export type {
+  FameRotatorWalletStatus,
+  FameRotatorViewProps,
+} from "./FameRotatorView";
 export { FameRotatorView } from "./FameRotatorView";
 
 export interface FameRotatorPageProps {
@@ -393,26 +391,16 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
  */
 export function FameRotatorPage({ resolution }: FameRotatorPageProps) {
   return (
-    <DefaultProvider base>
-      <Main
-        menu={
-          <MenuList dense disablePadding>
-            <LinksMenuItems />
-            <SiteMenu isFame />
-          </MenuList>
-        }
-        title={
-          <Typography variant="h5" component="h1" marginLeft={2}>
-            {resolution.status === "available" ||
-            resolution.status === "unavailable" ||
-            resolution.status === "retryable_read_failure"
-              ? `Rotate #${resolution.tokenId}`
-              : "Rotate"}
-          </Typography>
-        }
-      >
-        <FameRotatorExperience resolution={resolution} />
-      </Main>
-    </DefaultProvider>
+    <FameShell
+      title={
+        resolution.status === "available" ||
+        resolution.status === "unavailable" ||
+        resolution.status === "retryable_read_failure"
+          ? `Rotate #${resolution.tokenId}`
+          : "Rotate"
+      }
+    >
+      <FameRotatorExperience resolution={resolution} />
+    </FameShell>
   );
 }
