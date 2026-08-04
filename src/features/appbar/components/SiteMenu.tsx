@@ -70,7 +70,7 @@ export const SiteMenu: FC<{
           }
         />
       </MenuItem>
-      <MenuItem component={WrappedLink} href="/fame/gallery">
+      <MenuItem component={WrappedLink} href="/fame/market">
         <ListItemIcon>
           <StorefrontIcon />
         </ListItemIcon>
@@ -82,11 +82,31 @@ export const SiteMenu: FC<{
           }
         />
       </MenuItem>
-      <MenuItem
-        component={WrappedLink}
-        href="/fame/swap"
-        disabled={isFameSwap}
-      >
+      <MenuItem component={WrappedLink} href="/fame/gallery">
+        <ListItemIcon>
+          <AutoStoriesIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Gallery
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/fame/rotate">
+        <ListItemIcon>
+          <UpdateIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Rotator
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem component={WrappedLink} href="/fame/swap" disabled={isFameSwap}>
         <ListItemIcon>
           <ExchangeIcon />
         </ListItemIcon>

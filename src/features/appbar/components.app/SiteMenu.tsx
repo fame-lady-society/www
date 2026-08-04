@@ -58,10 +58,22 @@ export const SiteMenu: FC<{
         text="$FAME"
       />
       <MenuItem
-        href="/fame/gallery"
+        href="/fame/market"
         disabled={false}
         icon={<StorefrontIcon />}
         text="FAME Marketplace"
+      />
+      <MenuItem
+        href="/fame/gallery"
+        disabled={false}
+        icon={<AutoStoriesIcon />}
+        text="FAME Gallery"
+      />
+      <MenuItem
+        href="/fame/rotate"
+        disabled={false}
+        icon={<ReloadIcon />}
+        text="FAME Rotator"
       />
       <MenuItem
         href="/fame/swap"

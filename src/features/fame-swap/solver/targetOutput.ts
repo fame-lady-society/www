@@ -136,7 +136,12 @@ export interface FameTargetOutputSolverOptions {
   feePpm: bigint;
   slippageBps: number;
   adapter: FameAsyncQuoteAdapter;
-  expectedContext: Extract<FameQuoteContext, { source: "fork" }>;
+  /**
+   * The adapter context selected for this bounded run.  This is deliberately
+   * not fork-only: server quotes use a live, block-pinned adapter while fork
+   * checkout tests retain their locked-fork context.
+   */
+  expectedContext: FameQuoteContext;
   timeoutMs: number;
   materializationReserveMs?: number;
   maxEvaluations?: number;
@@ -619,7 +624,9 @@ export async function solveFameTargetOutput(
         status: "unavailable",
         reason: "stale_context",
         message:
-          "The browser quote adapter is not pinned to the locked fork block.",
+          options.expectedContext.source === "fork"
+            ? "The quote adapter is not pinned to the locked fork block."
+            : "The quote adapter is not pinned to the selected quote context.",
       };
     }
     const result = await quoteFameLockedCandidate({

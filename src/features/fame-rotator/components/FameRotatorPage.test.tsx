@@ -111,7 +111,10 @@ describe("FameRotatorView", () => {
     assert.match(html, /data-offered-option="7"/);
     assert.match(html, /data-offered-option="12"/);
     assert.match(html, /data-offered-option="88"/);
-    assert.match(html, /data-offered-image="https:\/\/images\.example\/12\.png"/);
+    assert.match(
+      html,
+      /data-offered-image="https:\/\/images\.example\/12\.png"/,
+    );
     assert.match(html, /data-selected="true"/);
     assert.match(html, /data-testid="target-offered-comparison"/);
     assert.match(html, /data-token-card="target"/);
@@ -132,7 +135,10 @@ describe("FameRotatorView", () => {
     });
 
     assert.match(html, /data-offered-option="7"/);
-    assert.match(html, /data-offered-image="\/images\/fame\/gold-leaf-square\.png"/);
+    assert.match(
+      html,
+      /data-offered-image="\/images\/fame\/gold-leaf-square\.png"/,
+    );
     assert.match(html, /aria-label="Offer Society NFT 7"/);
   });
 
@@ -168,7 +174,7 @@ describe("FameRotatorView", () => {
       status: "unavailable",
       tokenId: 42,
       raw: "42",
-      returnHref: "/fame",
+      returnHref: "/fame/rotate",
     };
     const unavailableHtml = renderToStaticMarkup(
       createElement(FameRotatorView, {
@@ -186,7 +192,8 @@ describe("FameRotatorView", () => {
     );
     assert.match(unavailableHtml, /data-resolution="unavailable"/);
     assert.match(unavailableHtml, /not in the burn pool/);
-    assert.match(unavailableHtml, /Return to the burn pool/);
+    assert.match(unavailableHtml, /Choose another target/);
+    assert.match(unavailableHtml, /href="\/fame\/rotate"/);
     assert.doesNotMatch(unavailableHtml, /data-testid="write-actions"/);
 
     const transferred = renderView({

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const GENERATED_PATH = resolve(
   process.cwd(),
-  "src/features/fame-gallery/config/baseSepoliaTestGallery.generated.ts",
+  "src/features/fame-market/config/baseSepoliaTestGallery.generated.ts",
 );
 
 export function buildBaseSepoliaTestGalleryManifest() {

@@ -1,10 +1,14 @@
 import { isAddress, isAddressEqual, type Address } from "viem";
+import {
+  FAME_COLLECTION_FIRST_TOKEN_ID,
+  FAME_COLLECTION_LAST_TOKEN_ID,
+  FAME_COLLECTION_TOKEN_COUNT,
+} from "@/features/fame/collection";
 
 /** Fixed Society collection size on Base (token IDs 1 through 888). */
-export const SOCIETY_TOKEN_ID_MIN = 1;
-export const SOCIETY_TOKEN_ID_MAX = 888;
-export const SOCIETY_TOKEN_ID_COUNT =
-  SOCIETY_TOKEN_ID_MAX - SOCIETY_TOKEN_ID_MIN + 1;
+export const SOCIETY_TOKEN_ID_MIN = FAME_COLLECTION_FIRST_TOKEN_ID;
+export const SOCIETY_TOKEN_ID_MAX = FAME_COLLECTION_LAST_TOKEN_ID;
+export const SOCIETY_TOKEN_ID_COUNT = FAME_COLLECTION_TOKEN_COUNT;
 
 export type OwnedTokenScanStatus =
   | "complete"

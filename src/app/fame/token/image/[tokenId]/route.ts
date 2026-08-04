@@ -4,6 +4,7 @@ import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { unstable_cache } from "next/cache";
 import { base } from "viem/chains";
 import { creatorArtistMagicAbi } from "@/wagmi";
+import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
 
 const TOKEN_IMAGE_REVALIDATE_SECONDS = 60 * 60;
 const UPSTREAM_TIMEOUT_MS = 10_000;
@@ -80,10 +81,14 @@ export async function handleTokenImageRequest(
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   props: { params: Promise<{ tokenId: string }> },
 ) {
   const params = await props.params;
-  const tokenImageUrl = await resolveCachedTokenImageUrl(params.tokenId);
-  return fetchTokenImage(tokenImageUrl, defaultDependencies.fetchResource);
+  try {
+    const tokenImageUrl = await resolveCachedTokenImageUrl(params.tokenId);
+    return await fetchTokenImage(tokenImageUrl, defaultDependencies.fetchResource);
+  } catch {
+    return Response.redirect(new URL(FAME_METADATA_FALLBACK_IMAGE, request.url), 307);
+  }
 }

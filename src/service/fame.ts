@@ -221,7 +221,7 @@ export async function readOrderedBurnPoolTokenIds(
 
 /**
  * Focused ordered burn-pool IDs with optional brief display caching.
- * Default cache mode is `"display"` for `/fame` and route SSR.
+ * Default cache mode is `"display"` for the `/fame/rotate` selector and route SSR.
  * Pass `{ cache: "execution" }` immediately before rotation simulation.
  */
 export async function getOrderedBurnPoolTokenIds(

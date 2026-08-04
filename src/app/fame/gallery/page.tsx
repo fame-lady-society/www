@@ -1,36 +1,40 @@
-import Alert from "@mui/material/Alert";
-import Container from "@mui/material/Container";
-import type { Metadata } from "next";
-import { BaseGalleryShell } from "@/features/fame-gallery/components/BaseGalleryShell";
-import { GalleryView } from "@/features/fame-gallery/components/GalleryView";
-import { createBaseGalleryRuntime } from "@/features/fame-gallery/config/baseGallery";
-import { parseBaseGalleryForkContracts } from "@/features/fame-gallery/contracts";
+import { connection } from "next/server";
+import { getCachedFameGalleryMembership } from "@/features/fame-gallery/cachedMembership";
+import {
+  getCachedFameGalleryStatuses,
+  presentFameGalleryStatuses,
+} from "@/features/fame-gallery/cachedStatus";
+import { isFreshFameGalleryMembership } from "@/features/fame-gallery/membership";
+import { FameGalleryPage, FameGalleryUnavailable } from "@/features/fame-gallery/components/FameGalleryPage";
 
-export const metadata: Metadata = {
-  title: "FAME gallery",
-  description: "Browse the FAME artwork gallery on Base.",
-};
-
-export default function Page() {
-  const contracts = parseBaseGalleryForkContracts({
-    marketplace: process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS,
-    checkout: process.env.NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS,
-    forkMode: process.env.NEXT_PUBLIC_FAME_FORK_MODE === "1",
-  });
-
-  if (!contracts) {
-    return (
-      <Container maxWidth="md" sx={{ py: 6 }}>
-        <Alert severity="error">
-          The Base gallery marketplace address is not configured.
-        </Alert>
-      </Container>
-    );
+async function readGalleryPresentation() {
+  try {
+    const membership = await getCachedFameGalleryMembership();
+    if (!isFreshFameGalleryMembership(membership)) return null;
+    try {
+      const status = await getCachedFameGalleryStatuses(
+        membership.visibleTokenIds,
+        membership.fingerprint,
+      );
+      const presentation = presentFameGalleryStatuses(status, membership.fingerprint);
+      return {
+        tokenIds: membership.visibleTokenIds,
+        ...presentation,
+      };
+    } catch {
+      return {
+        tokenIds: membership.visibleTokenIds,
+        ...presentFameGalleryStatuses(null, membership.fingerprint),
+      };
+    }
+  } catch {
+    return null;
   }
+}
 
-  return (
-    <BaseGalleryShell config={createBaseGalleryRuntime(contracts)}>
-      <GalleryView />
-    </BaseGalleryShell>
-  );
+export default async function Page() {
+  await connection();
+  const presentation = await readGalleryPresentation();
+  if (!presentation) return <FameGalleryUnavailable />;
+  return <FameGalleryPage {...presentation} />;
 }

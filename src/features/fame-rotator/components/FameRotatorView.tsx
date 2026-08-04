@@ -96,8 +96,13 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
     >
       <Stack spacing={{ xs: 3, md: 4 }}>
         <Typography variant="body2">
-          <Link component={NextLink} href="/fame" underline="hover" color="inherit">
-            ← Back to $FAME
+          <Link
+            component={NextLink}
+            href="/fame/rotate"
+            underline="hover"
+            color="inherit"
+          >
+            ← Choose another target
           </Link>
         </Typography>
 
@@ -119,8 +124,8 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
               </Typography>{" "}
               is not a valid target id.
             </Typography>
-            <Link component={NextLink} href="/fame" underline="hover">
-              Return to the burn pool
+            <Link component={NextLink} href="/fame/rotate" underline="hover">
+              Choose another target
             </Link>
           </Stack>
         ) : null}
@@ -149,7 +154,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
               href={resolution.returnHref}
               underline="hover"
             >
-              Return to the burn pool
+              Choose another target
             </Link>
           </Stack>
         ) : null}
@@ -180,8 +185,8 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
               >
                 Retry this target
               </Link>
-              <Link component={NextLink} href="/fame" underline="hover">
-                Return to the burn pool
+              <Link component={NextLink} href="/fame/rotate" underline="hover">
+                Choose another target
               </Link>
             </Stack>
           </Stack>
@@ -510,7 +515,12 @@ function TokenCard({
           alt={`Society NFT ${tokenId}`}
           width={200}
           height={200}
-          style={{ width: "100%", maxWidth: 200, height: "auto", borderRadius: 8 }}
+          style={{
+            width: "100%",
+            maxWidth: 200,
+            height: "auto",
+            borderRadius: 8,
+          }}
         />
       ) : (
         <Stack
@@ -541,4 +551,3 @@ function TokenCard({
     </Stack>
   );
 }
-

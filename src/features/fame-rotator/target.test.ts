@@ -109,7 +109,7 @@ describe("resolveBurnPoolTarget", () => {
     assert.deepEqual(resolution, { status: "invalid_id", raw: "012" });
   });
 
-  it("marks a valid token absent from the pool as unavailable with /fame return", () => {
+  it("marks a valid token absent from the pool as unavailable with selector return", () => {
     const resolution = resolveBurnPoolTarget({
       rawTargetId: "99",
       snapshot: sampleSnapshot,
@@ -118,7 +118,7 @@ describe("resolveBurnPoolTarget", () => {
       status: "unavailable",
       tokenId: 99,
       raw: "99",
-      returnHref: "/fame",
+      returnHref: "/fame/rotate",
     });
   });
 
