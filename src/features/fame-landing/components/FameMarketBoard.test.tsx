@@ -5,7 +5,7 @@ import type { LandingMarketPresentation } from "../pricePresentation";
 import {
   FameMarketBoard,
   mergeLandingMarket,
-  startMarketRetry,
+  startMarketRefresh,
 } from "./FameMarketBoard";
 
 const market: LandingMarketPresentation = {
@@ -117,23 +117,28 @@ describe("FAME market board", () => {
     assert.equal(merged.marketplaceSupply, "888M FAME");
   });
 
-  it("makes one recovery request, settles a failure, and stops cleanly", async () => {
+  it("polls with bounded backoff until every market value is available", async () => {
     const jobs: Array<{ run: () => Promise<void>; delayMs: number }> = [];
     const canceled: unknown[] = [];
     const signals: AbortSignal[] = [];
-    let completed = 0;
-    let loaded: LandingMarketPresentation | null = null;
+    let requests = 0;
+    const loaded: LandingMarketPresentation[] = [];
 
-    const stop = startMarketRetry({
+    const stop = startMarketRefresh({
       request: async (signal) => {
         signals.push(signal);
-        throw new Error("timeout");
+        requests += 1;
+        if (requests === 1) throw new Error("timeout");
+        return requests < 5
+          ? {
+              ...market,
+              marketCap: { ...market.marketCap, ETH: { value: null } },
+            }
+          : market;
       },
       onMarket: (next) => {
-        loaded = next;
-      },
-      onComplete: () => {
-        completed += 1;
+        loaded.push(next);
+        return next === market;
       },
       schedule: (run, delayMs) => {
         jobs.push({ run, delayMs });
@@ -142,11 +147,19 @@ describe("FAME market board", () => {
       cancel: (timer) => canceled.push(timer),
     });
 
-    assert.equal(jobs[0]?.delayMs, 500);
+    assert.equal(jobs[0]?.delayMs, 5_000);
     await jobs[0]!.run();
-    assert.equal(loaded, null);
-    assert.equal(completed, 1);
-    assert.equal(jobs.length, 1);
+    assert.equal(jobs[1]?.delayMs, 10_000);
+    await jobs[1]!.run();
+    assert.equal(jobs[2]?.delayMs, 20_000);
+    await jobs[2]!.run();
+    assert.equal(jobs[3]?.delayMs, 30_000);
+    await jobs[3]!.run();
+    assert.equal(jobs[4]?.delayMs, 30_000);
+    await jobs[4]!.run();
+    assert.equal(loaded.length, 4);
+    assert.equal(loaded.at(-1), market);
+    assert.equal(jobs.length, 5);
 
     stop();
     assert.equal(signals[0]?.aborted, true);

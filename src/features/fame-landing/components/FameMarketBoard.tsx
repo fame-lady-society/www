@@ -7,7 +7,7 @@ import type {
   LandingPriceRow,
 } from "../pricePresentation";
 
-const INITIAL_RETRY_MS = 500;
+const RETRY_DELAYS_MS = [5_000, 10_000, 20_000, 30_000] as const;
 
 type RetryTimer = ReturnType<typeof setTimeout>;
 type MarketRequest = (
@@ -26,36 +26,42 @@ async function requestLandingMarket(
     : null;
 }
 
-export function startMarketRetry({
+export function startMarketRefresh({
   onMarket,
-  onComplete,
   request = requestLandingMarket,
   schedule = (run, delayMs) => setTimeout(run, delayMs),
   cancel = (timer) => clearTimeout(timer),
 }: {
-  onMarket: (market: LandingMarketPresentation) => void;
-  onComplete: () => void;
+  onMarket: (market: LandingMarketPresentation) => boolean;
   request?: MarketRequest;
   schedule?: (run: () => Promise<void>, delayMs: number) => RetryTimer;
   cancel?: (timer: RetryTimer) => void;
 }): () => void {
   let stopped = false;
   let timer: RetryTimer | undefined;
+  let attempt = 0;
   const controller = new AbortController();
 
   const refresh = async () => {
     if (stopped) return;
+    let complete = false;
     try {
       const next = await request(controller.signal);
-      if (next && !stopped) onMarket(next);
+      if (next && !stopped) complete = onMarket(next);
     } catch {
-      // The board settles into its unavailable state after this single retry.
+      // A later attempt can recover from a transient quote-service failure.
     } finally {
-      if (!stopped) onComplete();
+      if (!stopped && !complete) {
+        attempt += 1;
+        timer = schedule(
+          refresh,
+          RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]!,
+        );
+      }
     }
   };
 
-  timer = schedule(refresh, INITIAL_RETRY_MS);
+  timer = schedule(refresh, RETRY_DELAYS_MS[attempt]);
   return () => {
     stopped = true;
     controller.abort();
@@ -63,11 +69,7 @@ export function startMarketRetry({
   };
 }
 
-function Loading({ unavailable = false }: { unavailable?: boolean }) {
-  if (unavailable) {
-    return <span aria-label="Unavailable">—</span>;
-  }
-
+function Loading() {
   return (
     <span
       aria-label="Loading"
@@ -80,11 +82,9 @@ function Loading({ unavailable = false }: { unavailable?: boolean }) {
 function PriceCard({
   title,
   row,
-  unavailable,
 }: {
   title: string;
   row: LandingPriceRow;
-  unavailable: boolean;
 }) {
   return (
     <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -93,7 +93,7 @@ function PriceCard({
           {title}
         </p>
         <div className="fame-display mt-3 text-2xl tabular-nums">
-          {row.fame ?? <Loading unavailable={unavailable} />}
+          {row.fame ?? <Loading />}
         </div>
       </div>
       <dl className="grid min-w-44 gap-2 text-sm">
@@ -103,7 +103,7 @@ function PriceCard({
             {row.USDC.value ? (
               <span className="font-medium tabular-nums">{row.USDC.value}</span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -113,7 +113,7 @@ function PriceCard({
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -124,10 +124,8 @@ function PriceCard({
 
 function MarketplaceCard({
   row,
-  unavailable,
 }: {
   row: LandingPriceRow;
-  unavailable: boolean;
 }) {
   return (
     <article className="flex h-full min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8">
@@ -146,7 +144,7 @@ function MarketplaceCard({
             {row.fame ? (
               <span className="font-medium tabular-nums">{row.fame}</span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -156,7 +154,7 @@ function MarketplaceCard({
             {row.USDC.value ? (
               <span className="font-medium tabular-nums">{row.USDC.value}</span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -166,7 +164,7 @@ function MarketplaceCard({
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -178,11 +176,9 @@ function MarketplaceCard({
 function MarketCapCard({
   values,
   supply,
-  unavailable,
 }: {
   values: LandingCurrencyValues;
   supply: string | null;
-  unavailable: boolean;
 }) {
   return (
     <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
@@ -191,7 +187,7 @@ function MarketCapCard({
           Market cap
         </p>
         <div className="fame-display mt-3 text-2xl tabular-nums">
-          {supply ?? <Loading unavailable={unavailable} />}
+          {supply ?? <Loading />}
         </div>
       </div>
       <dl className="grid min-w-44 gap-2 text-sm">
@@ -203,7 +199,7 @@ function MarketCapCard({
                 {values.USDC.value}
               </span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -215,7 +211,7 @@ function MarketCapCard({
                 {values.ETH.value}
               </span>
             ) : (
-              <Loading unavailable={unavailable} />
+              <Loading />
             )}
           </dd>
         </div>
@@ -276,19 +272,19 @@ export function FameMarketBoard({
   initialMarket: LandingMarketPresentation;
 }) {
   const [market, setMarket] = useState(initialMarket);
-  const [retryFinished, setRetryFinished] = useState(false);
   const needsMarket = missing(market);
 
   useEffect(() => {
-    if (!needsMarket || retryFinished) return;
-    return startMarketRetry({
-      onMarket: (next) =>
-        setMarket((current) => mergeLandingMarket(current, next)),
-      onComplete: () => setRetryFinished(true),
+    if (!needsMarket) return;
+    let latestMarket = initialMarket;
+    return startMarketRefresh({
+      onMarket: (next) => {
+        latestMarket = mergeLandingMarket(latestMarket, next);
+        setMarket(latestMarket);
+        return !missing(latestMarket);
+      },
     });
-  }, [needsMarket, retryFinished]);
-
-  const unavailable = needsMarket && retryFinished;
+  }, [initialMarket, needsMarket]);
 
   return (
     <section
@@ -308,27 +304,15 @@ export function FameMarketBoard({
       </header>
       <div className="grid gap-6 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-5">
-          <MarketplaceCard
-            row={market.prices.nftBuy}
-            unavailable={unavailable}
-          />
+          <MarketplaceCard row={market.prices.nftBuy} />
         </div>
         <div className="lg:col-span-7">
           <MarketCapCard
             values={market.marketCap}
             supply={market.marketplaceSupply}
-            unavailable={unavailable}
           />
-          <PriceCard
-            title="DeFi buy"
-            row={market.prices.defiBuy}
-            unavailable={unavailable}
-          />
-          <PriceCard
-            title="DeFi sell"
-            row={market.prices.defiSell}
-            unavailable={unavailable}
-          />
+          <PriceCard title="DeFi buy" row={market.prices.defiBuy} />
+          <PriceCard title="DeFi sell" row={market.prices.defiSell} />
         </div>
       </div>
     </section>
