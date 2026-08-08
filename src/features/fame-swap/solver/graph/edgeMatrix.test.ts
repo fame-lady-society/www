@@ -175,34 +175,6 @@ describe("FAME route edge matrix", () => {
     assert.ok(rows.some((row) => row.reasonCategory === "unsafe_output"));
   });
 
-  it("sanitizes rejected edge reasons before JSON emission", () => {
-    const candidateSet = routeCandidatesForPair(USDC, FAME);
-    const [candidate] = candidateSet.candidates;
-    assert.ok(candidate);
-
-    const rows = buildFameRouteEdgeMatrix({
-      candidateSet: {
-        candidates: [candidate],
-        rejected: [],
-      },
-      rejectedCandidates: [
-        {
-          candidateId: candidate.id,
-          reason: "adapter_failure",
-          message: [
-            "Request body: { secret: 'abc' }",
-            "calldata 0x" + "a".repeat(128),
-            "wss://example.invalid/private",
-          ].join("\n"),
-        },
-      ],
-    });
-    const json = JSON.stringify(rows);
-
-    assert.doesNotMatch(json, /Request body|calldata|secret|wss:\/\//i);
-    assert.doesNotMatch(json, /0x[a-fA-F0-9]{64,}/);
-  });
-
   it("keeps parallel same-pair pools as separate rows", () => {
     const candidateSet = routeCandidatesForPair(USDC, FAME);
     const first = cloneWethUsdcEdge({

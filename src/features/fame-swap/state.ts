@@ -28,7 +28,6 @@ export interface FameSwapWidgetStateInput {
   submitting: boolean;
   confirmed: boolean;
   reverted: boolean;
-  compact: boolean;
 }
 
 export interface FameSwapWidgetState {

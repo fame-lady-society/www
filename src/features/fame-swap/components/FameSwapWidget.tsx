@@ -55,7 +55,7 @@ import { FameSwapAmountField } from "./SwapAmountField";
 import { FameSwapTokenSelect } from "./TokenSelect";
 import { FameSwapTransactionTimeline } from "./TransactionTimeline";
 
-export type FameSwapWidgetMode = "full" | "compact";
+export type FameSwapWidgetMode = "full" | "compact" | "embedded";
 
 export interface FameSwapConfirmedPayload {
   hash: Hash;
@@ -72,8 +72,9 @@ export interface FameSwapWidgetProps {
 }
 
 /**
- * Pure presentation contract for full vs compact swap modes (KTD4).
- * Compact is buy-FAME-only with essential quote/action/status; full keeps every control.
+ * Pure presentation contract for full, compact, and embedded swap modes.
+ * Compact is buy-FAME-only; embedded keeps the execution surface but removes
+ * full-page controls and diagnostics.
  */
 export interface FameSwapPresentationContract {
   mode: FameSwapWidgetMode;
@@ -86,6 +87,10 @@ export interface FameSwapPresentationContract {
   showTransactionTimeline: boolean;
   showQuotePanel: boolean;
   showAmountInput: boolean;
+  showDescription: boolean;
+  showQuoteDetails: boolean;
+  showExternalFallbacks: boolean;
+  showErrorDetails: boolean;
   maxWidth: number;
   headingVariant: "h4" | "h5";
 }
@@ -94,20 +99,50 @@ export function fameSwapPresentation(
   mode: FameSwapWidgetMode = "full",
 ): FameSwapPresentationContract {
   const compact = mode === "compact";
+  const embedded = mode === "embedded";
   return {
     mode,
     forceBuyMode: compact,
     showModeTabs: !compact,
     showSwapSideToggle: !compact,
-    showAdvancedControls: !compact,
-    showRouteMap: !compact,
-    showDiagnostics: !compact,
+    showAdvancedControls: mode === "full",
+    showRouteMap: mode === "full",
+    showDiagnostics: mode === "full",
     showTransactionTimeline: true,
     showQuotePanel: true,
     showAmountInput: true,
-    maxWidth: compact ? 480 : 760,
-    headingVariant: compact ? "h5" : "h4",
+    showDescription: !embedded,
+    showQuoteDetails: !embedded,
+    showExternalFallbacks: !embedded,
+    showErrorDetails: !embedded,
+    maxWidth: compact || embedded ? 480 : 760,
+    headingVariant: compact || embedded ? "h5" : "h4",
   };
+}
+
+export function fameSwapEmbeddedConfirmationCopy(
+  stateKind: ReturnType<typeof fameSwapWidgetState>["kind"],
+): string | null {
+  if (stateKind === "confirmed") return "Swap confirmed on Base.";
+  if (stateKind === "submitting") {
+    return "Confirm in your wallet and wait for confirmation on Base.";
+  }
+  return null;
+}
+
+function needsEmbeddedFullPageFallback(
+  stateKind: ReturnType<typeof fameSwapWidgetState>["kind"],
+): boolean {
+  return [
+    "reverted",
+    "quote_expired",
+    "quote_adapter_failure",
+    "simulation_failure",
+    "not_live_ready",
+    "stale_artifact",
+    "no_safe_route",
+    "unsupported_route",
+  ].includes(stateKind);
 }
 
 export const FAME_SWAP_HEADING_ID = "fame-swap-heading";
@@ -225,7 +260,10 @@ function balanceHelperText(
   return balanceStatus.status === "stale" ? `${label} (stale)` : label;
 }
 
-const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
+const AlertErrorLine: FC<{ error: Error; showDetails: boolean }> = ({
+  error,
+  showDetails,
+}) => {
   const summary = fameSwapErrorSummary(error);
   const details = fameSwapErrorDetails(error);
 
@@ -239,7 +277,7 @@ const AlertErrorLine: FC<{ error: Error }> = ({ error }) => {
       <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }}>
         {summary}
       </Typography>
-      {details ? (
+      {showDetails && details ? (
         <Tooltip title="Copy full wallet error details" arrow>
           <Button
             type="button"
@@ -286,14 +324,13 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const presentation = useMemo(() => fameSwapPresentation(mode), [mode]);
   const compact = mode === "compact";
+  const embedded = mode === "embedded";
   const swapConfirmedEmitKey = useRef<string | null>(null);
   const onBase = isConnected && connectedChainId === base.id;
   // Compact is buy-only: never allow sell mode even if local state was flipped.
   const effectiveTrade = useMemo(
     () =>
-      presentation.forceBuyMode
-        ? { ...trade, mode: "buy" as const }
-        : trade,
+      presentation.forceBuyMode ? { ...trade, mode: "buy" as const } : trade,
     [presentation.forceBuyMode, trade],
   );
   const pair = useMemo(
@@ -394,7 +431,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     submitting: transaction.submitting || isSwitchingChain,
     confirmed: transaction.swapConfirmed,
     reverted: transaction.reverted,
-    compact,
   });
 
   const primaryDisabled =
@@ -412,7 +448,9 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     ? "Checking router"
     : isSwitchingChain
       ? "Switching to Base"
-      : state.ctaLabel;
+      : embedded && state.kind === "reverted"
+        ? "Swap failed"
+        : state.ctaLabel;
 
   const ensureBaseChain = useCallback(async () => {
     if (onBase) return true;
@@ -473,24 +511,6 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
     [inputBalance.balance, pair.inputToken],
   );
 
-  const alertMessage = amountExceedsBalance
-    ? "The entered amount is above the spendable balance."
-    : state.message;
-  const alertRecovery = amountBlocked
-    ? "Choose a preset or lower the amount."
-    : state.recoveryAction;
-  const alertDetail =
-    state.kind === "confirmed"
-      ? transaction.protectedMinimum !== null
-        ? `Protected minimum used: ${quoteView.protectedMinimumLabel}.`
-        : "Swap receipt confirmed on Base."
-      : quoteLoading
-        ? "Fetching live liquidity and route diagnostics."
-        : quoteView.blockedReason ?? quoteSummary(quote);
-  const quoteReady = quote?.status === "ready";
-  const approvalRequired = Boolean(
-    quoteReady && quote.approval !== null && !transaction.approvalConfirmed,
-  );
   const alertErrors = [
     switchChainError,
     transaction.error,
@@ -501,6 +521,38 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
       errors.findIndex(
         (entry) => errorMessage(entry) === errorMessage(error),
       ) === index,
+  );
+  const embeddedRecoveryRequired =
+    embedded &&
+    (needsEmbeddedFullPageFallback(state.kind) || uniqueAlertErrors.length > 0);
+  const embeddedConfirmationCopy = fameSwapEmbeddedConfirmationCopy(state.kind);
+  const embeddedFailureMessage =
+    embedded && state.kind === "reverted"
+      ? "The transaction did not complete."
+      : null;
+  const alertMessage = amountExceedsBalance
+    ? "The entered amount is above the spendable balance."
+    : embeddedFailureMessage ?? embeddedConfirmationCopy ?? state.message;
+  const alertRecovery = amountBlocked
+    ? "Choose a preset or lower the amount."
+    : embeddedRecoveryRequired
+      ? "Adjust the amount or pair, then try again."
+      : state.recoveryAction;
+  const alertDetail =
+    state.kind === "confirmed"
+      ? transaction.protectedMinimum !== null
+        ? `Protected minimum used: ${quoteView.protectedMinimumLabel}.`
+        : embedded
+          ? "Swap confirmed on Base."
+          : "Swap receipt confirmed on Base."
+      : quoteLoading
+        ? embedded
+          ? "Fetching the current quote."
+          : "Fetching live liquidity and route diagnostics."
+        : quoteView.blockedReason ?? quoteSummary(quote);
+  const quoteReady = quote?.status === "ready";
+  const approvalRequired = Boolean(
+    quoteReady && quote.approval !== null && !transaction.approvalConfirmed,
   );
 
   return (
@@ -513,15 +565,24 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
         maxWidth: presentation.maxWidth,
         mx: "auto",
         px: { xs: 2, sm: 3 },
-        py: compact ? { xs: 2, sm: 2.5 } : { xs: 3, sm: 4 },
+        py: compact || embedded ? { xs: 2, sm: 2.5 } : { xs: 3, sm: 4 },
+        border: "1px solid",
+        borderColor: "divider",
+        backgroundColor: "rgba(22, 20, 15, 0.82)",
+        boxShadow: "inset 0 1px 0 rgba(244, 238, 226, 0.04)",
+        backdropFilter: "blur(16px)",
       }}
     >
-      <Stack spacing={compact ? 1.75 : 2.25}>
+      <Stack spacing={compact || embedded ? 1.75 : 2.25}>
         <div>
-          <FameSwapHeading compact={compact} />
-          <Typography color="text.secondary" sx={{ mt: 1 }}>
-            {compact ? "Buy FAME via preferred liquidity" : "via preferred liquidity"}
-          </Typography>
+          <FameSwapHeading compact={compact || embedded} />
+          {presentation.showDescription ? (
+            <Typography color="text.secondary" sx={{ mt: 1 }}>
+              {compact
+                ? "Buy FAME via preferred liquidity"
+                : "via preferred liquidity"}
+            </Typography>
+          ) : null}
         </div>
 
         <Stack spacing={1.5}>
@@ -687,8 +748,17 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
             {alertRecovery}
           </Typography>
           {uniqueAlertErrors.map((error) => (
-            <AlertErrorLine key={errorMessage(error)} error={error} />
+            <AlertErrorLine
+              key={errorMessage(error)}
+              error={error}
+              showDetails={presentation.showErrorDetails}
+            />
           ))}
+          {embeddedRecoveryRequired ? (
+            <Link href="/fame/swap" underline="hover" sx={{ mt: 0.75 }}>
+              Continue on the full swap page
+            </Link>
+          ) : null}
         </Alert>
 
         {presentation.showTransactionTimeline ? (
@@ -699,7 +769,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
           />
         ) : null}
 
-        {quoteReady ? (
+        {quoteReady && presentation.showQuoteDetails ? (
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {quoteView.feeLabel ? (
               <Typography variant="caption" color="text.secondary">
@@ -718,7 +788,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
           <FameSwapRouteMap routeMap={quoteView.routeMap} />
         ) : null}
 
-        {state.fallbackVisible ? (
+        {state.fallbackVisible && presentation.showExternalFallbacks ? (
           <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
             {fallbackLinks.map((link) => (
               <Link

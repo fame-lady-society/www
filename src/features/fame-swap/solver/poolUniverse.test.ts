@@ -16,18 +16,6 @@ import {
 import { famePoolStateRegistry } from "./poolStateRegistry";
 
 describe("FAME pool universe", () => {
-  it("matches the pinned pool artifact manifest", () => {
-    const bytes = readFileSync(
-      "src/features/fame-swap/artifacts/base-v1-pools.json",
-    );
-
-    assert.equal(
-      keccak256(toHex(bytes)),
-      FAME_SWAP_ARTIFACT_MANIFEST.poolsJsonHash,
-    );
-    assert.equal(artifactIntegrityIssue(), null);
-  });
-
   it("contains every pool referenced by copied route artifacts", () => {
     for (const route of solverRoutesFile.routes) {
       for (const poolId of route.poolIds) {

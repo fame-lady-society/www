@@ -3100,52 +3100,6 @@ export const fameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FameBurnPoolRotationWorker
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const fameBurnPoolRotationWorkerAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: 'fame_', internalType: 'contract Fame', type: 'address' },
-      { name: 'mirror_', internalType: 'contract FameMirror', type: 'address' },
-      { name: 'rotator_', internalType: 'address', type: 'address' },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'targetTokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
-      { name: 'recipient', internalType: 'address', type: 'address' },
-    ],
-    name: 'rotate',
-    outputs: [{ name: 'rotations', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'nonpayable',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyUsed' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'fameBalance', internalType: 'uint256', type: 'uint256' },
-      { name: 'nftBalance', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InvalidStartingState',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'TargetNotReached',
-  },
-  { type: 'error', inputs: [], name: 'TransferFailed' },
-  { type: 'error', inputs: [], name: 'Unauthorized' },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameBurnPoolRotator
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4167,6 +4121,686 @@ export const fameLadySquadConfig = {
   address: fameLadySquadAddress,
   abi: fameLadySquadAbi,
 } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FameMarketplaceCheckout
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const fameMarketplaceCheckoutAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'router_', internalType: 'address', type: 'address' },
+      { name: 'market_', internalType: 'address', type: 'address' },
+      { name: 'fame_', internalType: 'address payable', type: 'address' },
+      { name: 'usdc_', internalType: 'address', type: 'address' },
+      { name: 'weth_', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'receive', stateMutability: 'payable' },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'checkoutHeld',
+    outputs: [
+      { name: 'routerFameOutput', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'marketplaceFameCharge',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'fameRefund', internalType: 'uint256', type: 'uint256' },
+      { name: 'inputRefund', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'sourceId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'checkoutPool',
+    outputs: [
+      { name: 'routerFameOutput', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'marketplaceFameCharge',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'fameRefund', internalType: 'uint256', type: 'uint256' },
+      { name: 'inputRefund', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fame',
+    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'market',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract UniversalPoolArtMarketplace',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'startTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'endExclusive', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'ownedSocietyTokenIds',
+    outputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'redeemSociety',
+    outputs: [
+      { name: 'actualFameInput', internalType: 'uint256', type: 'uint256' },
+      { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'router',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'usdc',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'weth',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'buyer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'asset',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'AssetRefunded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'buyer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'inputAsset',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'shellId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'routeHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'fulfillmentPath',
+        internalType: 'enum UniversalPoolArtMarketplace.FulfillmentPath',
+        type: 'uint8',
+        indexed: false,
+      },
+      {
+        name: 'sourceId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'artwork',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'inputAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'inputRefund',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'routerFameOutput',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'marketplaceFameCharge',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'fameRefund',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'CheckoutSettled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'caller',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'outputAsset',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenIdsHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'tokenCount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'quotedFameInput',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'actualFameInput',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'submittedRouteHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'executedRouteHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'netAmountOut',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'SocietyRedeemed',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'AmbiguousPoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ArtPoolSourceExcluded',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expected', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'actual', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'ArtworkMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'version', internalType: 'uint16', type: 'uint16' }],
+    name: 'BadRouteVersion',
+  },
+  { type: 'error', inputs: [], name: 'CheckoutIsFeeRecipient' },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'CheckoutMirrorBalanceNotZero',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'configuredCheckout', internalType: 'address', type: 'address' },
+    ],
+    name: 'CheckoutNotAuthorized',
+  },
+  { type: 'error', inputs: [], name: 'CheckoutSkipNFTDisabled' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+      { name: 'timestamp', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'DeadlineExpired',
+  },
+  { type: 'error', inputs: [], name: 'EmptyRoute' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'routerOutput', internalType: 'uint256', type: 'uint256' },
+      { name: 'marketplaceCharge', internalType: 'uint256', type: 'uint256' },
+      { name: 'fameRefund', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FameAccountingMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'IneligiblePoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InputTransferMismatch',
+  },
+  { type: 'error', inputs: [], name: 'InvalidAssetConfiguration' },
+  {
+    type: 'error',
+    inputs: [{ name: 'dependency', internalType: 'address', type: 'address' }],
+    name: 'InvalidDependency',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fameInputLegCount', internalType: 'uint256', type: 'uint256' },
+      { name: 'fameInputLegIndex', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidRedemptionFameLeg',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenCount', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidSocietyTokenCount',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidSocietyTokenId',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'startTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'endExclusive', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidSocietyTokenRange',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'MarketplaceChargeMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'NativeValueMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'currentPremium', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximumPremium', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'PremiumExceedsMaximum',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'protectedOutput', internalType: 'uint256', type: 'uint256' },
+      { name: 'requiredOutput', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'ProtectedOutputTooLow',
+  },
+  { type: 'error', inputs: [], name: 'PurchasesPaused' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actualAmountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'quotedAmountIn', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RedemptionActualInputBelowQuote',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'RedemptionFameBalanceNotZero',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'RedemptionMirrorBalanceNotZero',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'quotedAmountIn', internalType: 'uint256', type: 'uint256' },
+      { name: 'tokenBasis', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RedemptionQuoteBelowTokenBasis',
+  },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'asset', internalType: 'address', type: 'address' },
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RefundBalanceMismatch',
+  },
+  { type: 'error', inputs: [], name: 'RouterFeeRecipientIsCheckout' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'reported', internalType: 'uint256', type: 'uint256' },
+      { name: 'measured', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'RouterOutputMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'previousTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'currentTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'SocietyTokenIdsNotStrictlyAscending',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'SourceEqualsShell',
+  },
+  { type: 'error', inputs: [], name: 'StackMismatch' },
+  {
+    type: 'error',
+    inputs: [{ name: 'legCount', internalType: 'uint256', type: 'uint256' }],
+    name: 'TooManyRouteLegs',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'shellId', internalType: 'uint256', type: 'uint256' }],
+    name: 'UnavailableShell',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'actual', internalType: 'uint256', type: 'uint256' }],
+    name: 'UnexpectedNativeValue',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'asset', internalType: 'address', type: 'address' }],
+    name: 'UnsupportedInputAsset',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'asset', internalType: 'address', type: 'address' }],
+    name: 'UnsupportedRedemptionOutputAsset',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'address', type: 'address' },
+      { name: 'expected', internalType: 'address', type: 'address' },
+    ],
+    name: 'WrongOutputAsset',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'address', type: 'address' },
+      { name: 'expected', internalType: 'address', type: 'address' },
+    ],
+    name: 'WrongRedemptionInputAsset',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'actual', internalType: 'address', type: 'address' },
+      { name: 'expected', internalType: 'address', type: 'address' },
+    ],
+    name: 'WrongRouteRecipient',
+  },
+  { type: 'error', inputs: [], name: 'ZeroInputAmount' },
+  { type: 'error', inputs: [], name: 'ZeroSocietyOwner' },
+] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameMirror
@@ -6957,161 +7591,71 @@ export const iBalanceOfAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ISocietyNftMirror
+// IFameCheckoutRouter
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const iSocietyNftMirrorAbi = [
+export const iFameCheckoutRouterAbi = [
   {
     type: 'function',
     inputs: [
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'route',
+        internalType: 'struct FameRouterTypes.Route',
+        type: 'tuple',
+        components: [
+          { name: 'version', internalType: 'uint16', type: 'uint16' },
+          { name: 'tokenIn', internalType: 'address', type: 'address' },
+          { name: 'tokenOut', internalType: 'address', type: 'address' },
+          { name: 'amountIn', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'minAmountOutAfterFee',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+          { name: 'recipient', internalType: 'address', type: 'address' },
+          { name: 'deadline', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'legs',
+            internalType: 'struct FameRouterTypes.Leg[]',
+            type: 'tuple[]',
+            components: [
+              { name: 'tokenIn', internalType: 'address', type: 'address' },
+              { name: 'tokenOut', internalType: 'address', type: 'address' },
+              {
+                name: 'venue',
+                internalType: 'enum FameRouterTypes.VenueFamily',
+                type: 'uint8',
+              },
+              {
+                name: 'amountMode',
+                internalType: 'enum FameRouterTypes.AmountMode',
+                type: 'uint8',
+              },
+              { name: 'amount', internalType: 'uint256', type: 'uint256' },
+              {
+                name: 'minAmountOut',
+                internalType: 'uint256',
+                type: 'uint256',
+              },
+              { name: 'target', internalType: 'address', type: 'address' },
+              { name: 'data', internalType: 'bytes', type: 'bytes' },
+            ],
+          },
+        ],
+      },
     ],
-    name: 'approve',
-    outputs: [],
-    stateMutability: 'nonpayable',
+    name: 'executeRoute',
+    outputs: [
+      { name: 'netAmountOut', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'payable',
   },
   {
     type: 'function',
-    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    inputs: [],
+    name: 'feeRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
     stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getApproved',
-    outputs: [{ name: 'operator', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'owner', internalType: 'address', type: 'address' },
-      { name: 'operator', internalType: 'address', type: 'address' },
-    ],
-    name: 'isApprovedForAll',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ownerOf',
-    outputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'data', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'operator', internalType: 'address', type: 'address' },
-      { name: 'approved', internalType: 'bool', type: 'bool' },
-    ],
-    name: 'setApprovalForAll',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
-    name: 'supportsInterface',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'transferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'approved',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Approval',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'operator',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'approved', internalType: 'bool', type: 'bool', indexed: false },
-    ],
-    name: 'ApprovalForAll',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address', indexed: true },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Transfer',
   },
 ] as const
 
@@ -8875,6 +9419,885 @@ export const societyNftAuctionAbi = [
   { type: 'error', inputs: [], name: 'Unauthorized' },
   { type: 'error', inputs: [], name: 'UnexpectedEth' },
   { type: 'error', inputs: [], name: 'UnexpectedNftReceipt' },
+  { type: 'error', inputs: [], name: 'ZeroAddress' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UniversalPoolArtMarketplace
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const universalPoolArtMarketplaceAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      { name: 'fame_', internalType: 'address payable', type: 'address' },
+      { name: 'creatorMagic_', internalType: 'address', type: 'address' },
+      { name: 'initialCommunityFee', internalType: 'uint256', type: 'uint256' },
+      { name: 'initialProviderFee', internalType: 'uint256', type: 'uint256' },
+      { name: 'initialFeeRecipient', internalType: 'address', type: 'address' },
+      { name: 'initialOwner', internalType: 'address', type: 'address' },
+      { name: 'activeProviderCap_', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'MAX_INVENTORY_BATCH_SIZE',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'WITHDRAWAL_PREMIUM_DECAY_PERIOD',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
+    name: 'activeProviderAt',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'activeProviderCap',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'activeProviderCount',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'artworkHash',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'authorizedCheckout',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'communityFee',
+    outputs: [{ name: '', internalType: 'uint96', type: 'uint96' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'creatorMagic',
+    outputs: [
+      {
+        name: '',
+        internalType: 'contract CreatorArtistMagic',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'depositInventory',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenIds', internalType: 'uint256[]', type: 'uint256[]' },
+    ],
+    name: 'depositInventoryBatch',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'fame',
+    outputs: [{ name: '', internalType: 'contract Fame', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'feeRecipient',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'inventory',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'mirror',
+    outputs: [
+      { name: '', internalType: 'contract FameMirror', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'onERC721Received',
+    outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'pause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'premium',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'providerFee',
+    outputs: [{ name: '', internalType: 'uint96', type: 'uint96' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'providerPosition',
+    outputs: [
+      { name: 'unitCount', internalType: 'uint256', type: 'uint256' },
+      { name: 'indexPlusOne', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'address', type: 'address' }],
+    name: 'purchaseCharge',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'purchaseHeld',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'buyer', internalType: 'address', type: 'address' },
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'purchaseHeldFor',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'sourceId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      { name: 'recipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'purchasePool',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'buyer', internalType: 'address', type: 'address' },
+      { name: 'shellId', internalType: 'uint256', type: 'uint256' },
+      { name: 'sourceId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expectedArtworkHash', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'minBuyerMirrorBalanceAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+    ],
+    name: 'purchasePoolFor',
+    outputs: [
+      { name: 'inventoryBefore', internalType: 'uint256', type: 'uint256' },
+      { name: 'inventoryAfter', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rescueERC20',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'rescueERC721',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newCheckout', internalType: 'address', type: 'address' }],
+    name: 'setAuthorizedCheckout',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newFee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setCommunityFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'newFeeRecipient', internalType: 'address', type: 'address' },
+    ],
+    name: 'setFeeRecipient',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newFee', internalType: 'uint256', type: 'uint256' }],
+    name: 'setProviderFee',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'totalProviderUnits',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'unpause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'withdrawInventory',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'withdrawalPremium',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'buyer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'shellId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'path',
+        internalType: 'enum UniversalPoolArtMarketplace.FulfillmentPath',
+        type: 'uint8',
+        indexed: false,
+      },
+      {
+        name: 'sourceId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'artwork',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
+        name: 'unitAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'grossPremiumAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'inventoryBefore',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'inventoryAfter',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ArtworkPurchased',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousCheckout',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newCheckout',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'AuthorizedCheckoutChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'newFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'CommunityFeeUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newRecipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'FeeRecipientUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenIds',
+        internalType: 'uint256[]',
+        type: 'uint256[]',
+        indexed: false,
+      },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryBatchDeposited',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryDeposited',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'provider',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'providerUnits',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'grossPremiumAmount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InventoryWithdrawn',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'MarketPaused',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'account',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'MarketUnpaused',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'previousFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'newFee',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ProviderFeeUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'RescueERC20',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'token',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RescueERC721',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'cap', internalType: 'uint256', type: 'uint256' }],
+    name: 'ActiveProviderCapReached',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'AmbiguousPoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ArtPoolSourceExcluded',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'expected', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'actual', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'ArtworkMismatch',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'minimum', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BuyerMirrorBalanceTooLow',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'checkout', internalType: 'address', type: 'address' }],
+    name: 'CheckoutIsFeeRecipient',
+  },
+  { type: 'error', inputs: [], name: 'CoreAssetRescueBlocked' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'DuplicateInventoryToken',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'fee', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'FeeTooLarge',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'IneligiblePoolSource',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'cap', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidActiveProviderCap',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'dependency', internalType: 'address', type: 'address' }],
+    name: 'InvalidDependency',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
+    name: 'InvalidFeeRecipient',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'size', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximum', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidInventoryBatchSize',
+  },
+  { type: 'error', inputs: [], name: 'InvalidRecipient' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'beforeBalance', internalType: 'uint256', type: 'uint256' },
+      { name: 'afterBalance', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InventoryInvariantBroken',
+  },
+  { type: 'error', inputs: [], name: 'MarketAlreadyPaused' },
+  { type: 'error', inputs: [], name: 'MarketNotPaused' },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  {
+    type: 'error',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'NoProviderPosition',
+  },
+  { type: 'error', inputs: [], name: 'OwnershipRenunciationDisabled' },
+  { type: 'error', inputs: [], name: 'PaymentTransferFailed' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'currentPremium', internalType: 'uint256', type: 'uint256' },
+      { name: 'maximumPremium', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'PremiumExceedsMaximum',
+  },
+  { type: 'error', inputs: [], name: 'PurchasesPaused' },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
+  { type: 'error', inputs: [], name: 'SettlementInProgress' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'SourceEqualsShell',
+  },
+  { type: 'error', inputs: [], name: 'StackMismatch' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  {
+    type: 'error',
+    inputs: [{ name: 'caller', internalType: 'address', type: 'address' }],
+    name: 'UnauthorizedCheckout',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'shellId', internalType: 'uint256', type: 'uint256' }],
+    name: 'UnavailableShell',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'token', internalType: 'address', type: 'address' }],
+    name: 'UnsupportedNFT',
+  },
   { type: 'error', inputs: [], name: 'ZeroAddress' },
 ] as const
 
@@ -14652,38 +16075,6 @@ export const useWatchFameTransferEvent =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
- */
-export const useWriteFameBurnPoolRotationWorker =
-  /*#__PURE__*/ createUseWriteContract({ abi: fameBurnPoolRotationWorkerAbi })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
- */
-export const useWriteFameBurnPoolRotationWorkerRotate =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-    functionName: 'rotate',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
- */
-export const useSimulateFameBurnPoolRotationWorker =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
- */
-export const useSimulateFameBurnPoolRotationWorkerRotate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-    functionName: 'rotate',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
@@ -16217,6 +17608,165 @@ export const useWatchFameLadySquadTransferEvent =
     abi: fameLadySquadAbi,
     address: fameLadySquadAddress,
     eventName: 'Transfer',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
+ */
+export const useReadFameMarketplaceCheckout =
+  /*#__PURE__*/ createUseReadContract({ abi: fameMarketplaceCheckoutAbi })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"fame"`
+ */
+export const useReadFameMarketplaceCheckoutFame =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'fame',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"market"`
+ */
+export const useReadFameMarketplaceCheckoutMarket =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'market',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"ownedSocietyTokenIds"`
+ */
+export const useReadFameMarketplaceCheckoutOwnedSocietyTokenIds =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'ownedSocietyTokenIds',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"router"`
+ */
+export const useReadFameMarketplaceCheckoutRouter =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'router',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"usdc"`
+ */
+export const useReadFameMarketplaceCheckoutUsdc =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'usdc',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"weth"`
+ */
+export const useReadFameMarketplaceCheckoutWeth =
+  /*#__PURE__*/ createUseReadContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'weth',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
+ */
+export const useWriteFameMarketplaceCheckout =
+  /*#__PURE__*/ createUseWriteContract({ abi: fameMarketplaceCheckoutAbi })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"checkoutHeld"`
+ */
+export const useWriteFameMarketplaceCheckoutCheckoutHeld =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'checkoutHeld',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"checkoutPool"`
+ */
+export const useWriteFameMarketplaceCheckoutCheckoutPool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'checkoutPool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"redeemSociety"`
+ */
+export const useWriteFameMarketplaceCheckoutRedeemSociety =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'redeemSociety',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
+ */
+export const useSimulateFameMarketplaceCheckout =
+  /*#__PURE__*/ createUseSimulateContract({ abi: fameMarketplaceCheckoutAbi })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"checkoutHeld"`
+ */
+export const useSimulateFameMarketplaceCheckoutCheckoutHeld =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'checkoutHeld',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"checkoutPool"`
+ */
+export const useSimulateFameMarketplaceCheckoutCheckoutPool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'checkoutPool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `functionName` set to `"redeemSociety"`
+ */
+export const useSimulateFameMarketplaceCheckoutRedeemSociety =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: fameMarketplaceCheckoutAbi,
+    functionName: 'redeemSociety',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__
+ */
+export const useWatchFameMarketplaceCheckoutEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({ abi: fameMarketplaceCheckoutAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `eventName` set to `"AssetRefunded"`
+ */
+export const useWatchFameMarketplaceCheckoutAssetRefundedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMarketplaceCheckoutAbi,
+    eventName: 'AssetRefunded',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `eventName` set to `"CheckoutSettled"`
+ */
+export const useWatchFameMarketplaceCheckoutCheckoutSettledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMarketplaceCheckoutAbi,
+    eventName: 'CheckoutSettled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link fameMarketplaceCheckoutAbi}__ and `eventName` set to `"SocietyRedeemed"`
+ */
+export const useWatchFameMarketplaceCheckoutSocietyRedeemedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: fameMarketplaceCheckoutAbi,
+    eventName: 'SocietyRedeemed',
   })
 
 /**
@@ -19337,173 +20887,50 @@ export const useReadIBalanceOfBalanceOf = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__
  */
-export const useReadISocietyNftMirror = /*#__PURE__*/ createUseReadContract({
-  abi: iSocietyNftMirrorAbi,
+export const useReadIFameCheckoutRouter = /*#__PURE__*/ createUseReadContract({
+  abi: iFameCheckoutRouterAbi,
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"balanceOf"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__ and `functionName` set to `"feeRecipient"`
  */
-export const useReadISocietyNftMirrorBalanceOf =
+export const useReadIFameCheckoutRouterFeeRecipient =
   /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'balanceOf',
+    abi: iFameCheckoutRouterAbi,
+    functionName: 'feeRecipient',
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"getApproved"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__
  */
-export const useReadISocietyNftMirrorGetApproved =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'getApproved',
-  })
+export const useWriteIFameCheckoutRouter = /*#__PURE__*/ createUseWriteContract(
+  { abi: iFameCheckoutRouterAbi },
+)
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"isApprovedForAll"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__ and `functionName` set to `"executeRoute"`
  */
-export const useReadISocietyNftMirrorIsApprovedForAll =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'isApprovedForAll',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"ownerOf"`
- */
-export const useReadISocietyNftMirrorOwnerOf =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'ownerOf',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"supportsInterface"`
- */
-export const useReadISocietyNftMirrorSupportsInterface =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'supportsInterface',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useWriteISocietyNftMirror = /*#__PURE__*/ createUseWriteContract({
-  abi: iSocietyNftMirrorAbi,
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"approve"`
- */
-export const useWriteISocietyNftMirrorApprove =
+export const useWriteIFameCheckoutRouterExecuteRoute =
   /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'approve',
+    abi: iFameCheckoutRouterAbi,
+    functionName: 'executeRoute',
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__
  */
-export const useWriteISocietyNftMirrorSafeTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'safeTransferFrom',
-  })
+export const useSimulateIFameCheckoutRouter =
+  /*#__PURE__*/ createUseSimulateContract({ abi: iFameCheckoutRouterAbi })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__ and `functionName` set to `"executeRoute"`
  */
-export const useWriteISocietyNftMirrorSetApprovalForAll =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useWriteISocietyNftMirrorTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useSimulateISocietyNftMirror =
-  /*#__PURE__*/ createUseSimulateContract({ abi: iSocietyNftMirrorAbi })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"approve"`
- */
-export const useSimulateISocietyNftMirrorApprove =
+export const useSimulateIFameCheckoutRouterExecuteRoute =
   /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'approve',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useSimulateISocietyNftMirrorSafeTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
- */
-export const useSimulateISocietyNftMirrorSetApprovalForAll =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useSimulateISocietyNftMirrorTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useWatchISocietyNftMirrorEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({ abi: iSocietyNftMirrorAbi })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"Approval"`
- */
-export const useWatchISocietyNftMirrorApprovalEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'Approval',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"ApprovalForAll"`
- */
-export const useWatchISocietyNftMirrorApprovalForAllEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'ApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"Transfer"`
- */
-export const useWatchISocietyNftMirrorTransferEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'Transfer',
+    abi: iFameCheckoutRouterAbi,
+    functionName: 'executeRoute',
   })
 
 /**
@@ -21797,6 +23224,736 @@ export const useWatchSocietyNftAuctionProceedsWithdrawnEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: societyNftAuctionAbi,
     eventName: 'ProceedsWithdrawn',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useReadUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseReadContract({ abi: universalPoolArtMarketplaceAbi })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"MAX_INVENTORY_BATCH_SIZE"`
+ */
+export const useReadUniversalPoolArtMarketplaceMaxInventoryBatchSize =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'MAX_INVENTORY_BATCH_SIZE',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"WITHDRAWAL_PREMIUM_DECAY_PERIOD"`
+ */
+export const useReadUniversalPoolArtMarketplaceWithdrawalPremiumDecayPeriod =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'WITHDRAWAL_PREMIUM_DECAY_PERIOD',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderAt"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderCap"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderCap =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderCap',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderCount"`
+ */
+export const useReadUniversalPoolArtMarketplaceActiveProviderCount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'activeProviderCount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"artworkHash"`
+ */
+export const useReadUniversalPoolArtMarketplaceArtworkHash =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'artworkHash',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"authorizedCheckout"`
+ */
+export const useReadUniversalPoolArtMarketplaceAuthorizedCheckout =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'authorizedCheckout',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"communityFee"`
+ */
+export const useReadUniversalPoolArtMarketplaceCommunityFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'communityFee',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"creatorMagic"`
+ */
+export const useReadUniversalPoolArtMarketplaceCreatorMagic =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'creatorMagic',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"fame"`
+ */
+export const useReadUniversalPoolArtMarketplaceFame =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'fame',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"feeRecipient"`
+ */
+export const useReadUniversalPoolArtMarketplaceFeeRecipient =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'feeRecipient',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"inventory"`
+ */
+export const useReadUniversalPoolArtMarketplaceInventory =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'inventory',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"mirror"`
+ */
+export const useReadUniversalPoolArtMarketplaceMirror =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'mirror',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useReadUniversalPoolArtMarketplaceOnErc721Received =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'onERC721Received',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"owner"`
+ */
+export const useReadUniversalPoolArtMarketplaceOwner =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'owner',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"ownershipHandoverExpiresAt"`
+ */
+export const useReadUniversalPoolArtMarketplaceOwnershipHandoverExpiresAt =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'ownershipHandoverExpiresAt',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"paused"`
+ */
+export const useReadUniversalPoolArtMarketplacePaused =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'paused',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"premium"`
+ */
+export const useReadUniversalPoolArtMarketplacePremium =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'premium',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"providerFee"`
+ */
+export const useReadUniversalPoolArtMarketplaceProviderFee =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'providerFee',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"providerPosition"`
+ */
+export const useReadUniversalPoolArtMarketplaceProviderPosition =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'providerPosition',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseCharge"`
+ */
+export const useReadUniversalPoolArtMarketplacePurchaseCharge =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseCharge',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"totalProviderUnits"`
+ */
+export const useReadUniversalPoolArtMarketplaceTotalProviderUnits =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'totalProviderUnits',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalPremium"`
+ */
+export const useReadUniversalPoolArtMarketplaceWithdrawalPremium =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawalPremium',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useWriteUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseWriteContract({ abi: universalPoolArtMarketplaceAbi })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceCancelOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventory"`
+ */
+export const useWriteUniversalPoolArtMarketplaceDepositInventory =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventory',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventoryBatch"`
+ */
+export const useWriteUniversalPoolArtMarketplaceDepositInventoryBatch =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventoryBatch',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"pause"`
+ */
+export const useWriteUniversalPoolArtMarketplacePause =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'pause',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeld"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchaseHeld =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeld',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeldFor"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchaseHeldFor =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeldFor',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePool"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchasePool =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePool',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePoolFor"`
+ */
+export const useWriteUniversalPoolArtMarketplacePurchasePoolFor =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePoolFor',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRenounceOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRequestOwnershipHandover =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC20"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRescueErc20 =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC20',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC721"`
+ */
+export const useWriteUniversalPoolArtMarketplaceRescueErc721 =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC721',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setAuthorizedCheckout"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetAuthorizedCheckout =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setAuthorizedCheckout',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setCommunityFee"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetCommunityFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setCommunityFee',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetFeeRecipient =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setProviderFee"`
+ */
+export const useWriteUniversalPoolArtMarketplaceSetProviderFee =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setProviderFee',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useWriteUniversalPoolArtMarketplaceTransferOwnership =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"unpause"`
+ */
+export const useWriteUniversalPoolArtMarketplaceUnpause =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventory"`
+ */
+export const useWriteUniversalPoolArtMarketplaceWithdrawInventory =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventory',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useSimulateUniversalPoolArtMarketplace =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"cancelOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceCancelOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'cancelOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"completeOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceCompleteOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'completeOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventory"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceDepositInventory =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventory',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"depositInventoryBatch"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceDepositInventoryBatch =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'depositInventoryBatch',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"pause"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePause =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'pause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeld"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchaseHeld =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeld',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchaseHeldFor"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchaseHeldFor =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchaseHeldFor',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePool"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchasePool =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePool',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"purchasePoolFor"`
+ */
+export const useSimulateUniversalPoolArtMarketplacePurchasePoolFor =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'purchasePoolFor',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"renounceOwnership"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRenounceOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'renounceOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"requestOwnershipHandover"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRequestOwnershipHandover =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'requestOwnershipHandover',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC20"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRescueErc20 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC20',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"rescueERC721"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceRescueErc721 =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'rescueERC721',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setAuthorizedCheckout"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetAuthorizedCheckout =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setAuthorizedCheckout',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setCommunityFee"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetCommunityFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setCommunityFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setFeeRecipient"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetFeeRecipient =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setFeeRecipient',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"setProviderFee"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceSetProviderFee =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'setProviderFee',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"transferOwnership"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceTransferOwnership =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'transferOwnership',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"unpause"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceUnpause =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'unpause',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventory"`
+ */
+export const useSimulateUniversalPoolArtMarketplaceWithdrawInventory =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'withdrawInventory',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
+ */
+export const useWatchUniversalPoolArtMarketplaceEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"ArtworkPurchased"`
+ */
+export const useWatchUniversalPoolArtMarketplaceArtworkPurchasedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'ArtworkPurchased',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"AuthorizedCheckoutChanged"`
+ */
+export const useWatchUniversalPoolArtMarketplaceAuthorizedCheckoutChangedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'AuthorizedCheckoutChanged',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"CommunityFeeUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplaceCommunityFeeUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'CommunityFeeUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"FeeRecipientUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplaceFeeRecipientUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'FeeRecipientUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryBatchDeposited"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryBatchDepositedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryBatchDeposited',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryDeposited"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryDepositedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryDeposited',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"InventoryWithdrawn"`
+ */
+export const useWatchUniversalPoolArtMarketplaceInventoryWithdrawnEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'InventoryWithdrawn',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"MarketPaused"`
+ */
+export const useWatchUniversalPoolArtMarketplaceMarketPausedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'MarketPaused',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"MarketUnpaused"`
+ */
+export const useWatchUniversalPoolArtMarketplaceMarketUnpausedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'MarketUnpaused',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipHandoverCanceledEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipHandoverCanceled',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipHandoverRequested"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipHandoverRequestedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipHandoverRequested',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"OwnershipTransferred"`
+ */
+export const useWatchUniversalPoolArtMarketplaceOwnershipTransferredEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'OwnershipTransferred',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"ProviderFeeUpdated"`
+ */
+export const useWatchUniversalPoolArtMarketplaceProviderFeeUpdatedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'ProviderFeeUpdated',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"RescueERC20"`
+ */
+export const useWatchUniversalPoolArtMarketplaceRescueErc20Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'RescueERC20',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `eventName` set to `"RescueERC721"`
+ */
+export const useWatchUniversalPoolArtMarketplaceRescueErc721Event =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: universalPoolArtMarketplaceAbi,
+    eventName: 'RescueERC721',
   })
 
 /**

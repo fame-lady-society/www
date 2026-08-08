@@ -37,7 +37,7 @@ export const Main: FC<
         sx={{
           backgroundColor: "background.default",
           color: "text.primary",
-          minHeight: "100vh",
+          minHeight: "100dvh",
         }}
       >
         <AppBar

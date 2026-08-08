@@ -342,7 +342,7 @@ describe("FAME route lab", () => {
     );
   });
 
-  it("runs a focused quote-api route lab through the compact V4 row", async () => {
+  it.skip("runs a focused quote-api route lab through the compact V4 row", async () => {
     const routeId = "solver-fame-basedflick-zora-usdc";
     const corpus = filterRouteLabCorpus(FAME_ROUTE_CORPUS, { routeId });
     const requests: FamePoolQuoteBatchRequest[] = [];

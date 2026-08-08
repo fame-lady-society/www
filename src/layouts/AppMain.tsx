@@ -15,6 +15,7 @@ export function AppMain({
   isHome,
   isWrap,
   isFameSwap,
+  activeFamePage,
   title,
   mobileTitle,
   disableConnect,
@@ -41,6 +42,7 @@ export function AppMain({
         isWrap={isWrap}
         isFame={isFame}
         isFameSwap={isFameSwap}
+        activeFamePage={activeFamePage}
       />
       <li className="border-t border-gray-200 my-2 list-none" />
       <LinksMenuItems />

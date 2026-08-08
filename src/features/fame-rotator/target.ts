@@ -23,7 +23,7 @@ export type BurnPoolTargetResolution =
       status: "unavailable";
       tokenId: number;
       raw: string;
-      returnHref: "/fame";
+      returnHref: "/fame/rotate";
     }
   | {
       status: "retryable_read_failure";
@@ -131,7 +131,7 @@ export function resolveBurnPoolTarget(
       status: "unavailable",
       tokenId,
       raw,
-      returnHref: "/fame",
+      returnHref: "/fame/rotate",
     };
   }
 

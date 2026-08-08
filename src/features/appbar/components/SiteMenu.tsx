@@ -8,9 +8,11 @@ import ExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import DollarIcon from "@mui/icons-material/MonetizationOn";
 import PersonIcon from "@mui/icons-material/Person";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { WrappedLink } from "@/components/WrappedLink";
+import type { FameNavigationPage } from "../fameNavigation";
 
 export const SiteMenu: FC<{
   isFame?: boolean;
@@ -21,6 +23,7 @@ export const SiteMenu: FC<{
   isDao?: boolean;
   isLore?: boolean;
   isFameSwap?: boolean;
+  activeFamePage?: FameNavigationPage;
 }> = ({
   isFame = false,
   isHome = false,
@@ -30,6 +33,7 @@ export const SiteMenu: FC<{
   isDao = false,
   isLore = false,
   isFameSwap = false,
+  activeFamePage,
 }) => {
   return (
     <>
@@ -57,7 +61,11 @@ export const SiteMenu: FC<{
           }
         />
       </MenuItem>
-      <MenuItem component={WrappedLink} href="/fame" disabled={isFame}>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame"
+        disabled={isFame || activeFamePage === "landing"}
+      >
         <ListItemIcon>
           <DollarIcon />
         </ListItemIcon>
@@ -71,8 +79,56 @@ export const SiteMenu: FC<{
       </MenuItem>
       <MenuItem
         component={WrappedLink}
+        href="/fame/market"
+        disabled={activeFamePage === "marketplace"}
+      >
+        <ListItemIcon>
+          <StorefrontIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Marketplace
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame/gallery"
+        disabled={activeFamePage === "gallery"}
+      >
+        <ListItemIcon>
+          <AutoStoriesIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Gallery
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame/rotate"
+        disabled={activeFamePage === "rotator"}
+      >
+        <ListItemIcon>
+          <UpdateIcon />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Typography textAlign="right" color="text.primary">
+              FAME Rotator
+            </Typography>
+          }
+        />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
         href="/fame/swap"
-        disabled={isFameSwap}
+        disabled={isFameSwap || activeFamePage === "swap"}
       >
         <ListItemIcon>
           <ExchangeIcon />

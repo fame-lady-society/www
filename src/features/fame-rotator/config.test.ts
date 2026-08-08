@@ -12,7 +12,17 @@ import {
   getFameRotatorConfig,
   hasRequiredRotatorAbiSurface,
 } from "./config";
-import { fameBurnPoolRotatorAbi } from "@/wagmi";
+import {
+  fameBurnPoolRotatorAbi,
+  fameBurnPoolRotatorAddress,
+  useReadFameBurnPoolRotator,
+  useReadFameBurnPoolRotatorFame,
+  useReadFameBurnPoolRotatorMirror,
+  useSimulateFameBurnPoolRotator,
+  useSimulateFameBurnPoolRotatorRotateTo,
+  useWriteFameBurnPoolRotator,
+  useWriteFameBurnPoolRotatorRotateTo,
+} from "@/wagmi";
 
 const ROTATOR = "0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc" as const;
 const FAME = "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418" as const;
@@ -69,8 +79,9 @@ describe("Fame burn pool rotator config", () => {
     }
   });
 
-  it("generated ABI exposes rotateTo, TargetNotReached, fame, and mirror", () => {
+  it("generated bindings expose the configured address, ABI, and all rotator hooks", () => {
     assert.equal(hasRequiredRotatorAbiSurface(fameBurnPoolRotatorAbi), true);
+    assert.equal(fameBurnPoolRotatorAddress[base.id], ROTATOR);
     const names = new Set(
       fameBurnPoolRotatorAbi.map((e) => ("name" in e ? e.name : undefined)),
     );
@@ -78,6 +89,14 @@ describe("Fame burn pool rotator config", () => {
     assert.ok(names.has("TargetNotReached"));
     assert.ok(names.has("fame"));
     assert.ok(names.has("mirror"));
+
+    assert.equal(typeof useReadFameBurnPoolRotator, "function");
+    assert.equal(typeof useReadFameBurnPoolRotatorFame, "function");
+    assert.equal(typeof useReadFameBurnPoolRotatorMirror, "function");
+    assert.equal(typeof useWriteFameBurnPoolRotator, "function");
+    assert.equal(typeof useWriteFameBurnPoolRotatorRotateTo, "function");
+    assert.equal(typeof useSimulateFameBurnPoolRotator, "function");
+    assert.equal(typeof useSimulateFameBurnPoolRotatorRotateTo, "function");
   });
 
   it("runtime identity rejects empty code, lookalike runtime, and mismatched getters", () => {
@@ -94,44 +113,29 @@ describe("Fame burn pool rotator config", () => {
       compatible: true,
     });
 
-    assert.equal(
-      evaluateRotatorExecutionIdentity({ ...good, code: "0x" }).reason,
-      "missing_code",
-    );
-    assert.equal(
-      evaluateRotatorExecutionIdentity({ ...good, code: "0x00" }).reason,
-      "missing_code",
-    );
+    const reasonFor = (input: Parameters<typeof evaluateRotatorExecutionIdentity>[0]) => {
+      const result = evaluateRotatorExecutionIdentity(input);
+      assert.equal(result.compatible, false);
+      return result.reason;
+    };
+
+    assert.equal(reasonFor({ ...good, code: "0x" }), "missing_code");
+    assert.equal(reasonFor({ ...good, code: "0x00" }), "missing_code");
 
     // Lookalike: non-empty different bytecode but matching getters
     const lookalike = "0x6001600055" as Hex;
-    assert.equal(
-      evaluateRotatorExecutionIdentity({ ...good, code: lookalike }).reason,
-      "runtime_mismatch",
-    );
+    assert.equal(reasonFor({ ...good, code: lookalike }), "runtime_mismatch");
 
     assert.equal(
-      evaluateRotatorExecutionIdentity({
-        ...good,
-        fame: "0x0000000000000000000000000000000000000001",
-      }).reason,
+      reasonFor({ ...good, fame: "0x0000000000000000000000000000000000000001" }),
       "fame_mismatch",
     );
     assert.equal(
-      evaluateRotatorExecutionIdentity({
-        ...good,
-        mirror: "0x0000000000000000000000000000000000000001",
-      }).reason,
+      reasonFor({ ...good, mirror: "0x0000000000000000000000000000000000000001" }),
       "mirror_mismatch",
     );
-    assert.equal(
-      evaluateRotatorExecutionIdentity({ ...good, fame: null }).reason,
-      "invalid_fame",
-    );
-    assert.equal(
-      evaluateRotatorExecutionIdentity({ ...good, mirror: null }).reason,
-      "invalid_mirror",
-    );
+    assert.equal(reasonFor({ ...good, fame: null }), "invalid_fame");
+    assert.equal(reasonFor({ ...good, mirror: null }), "invalid_mirror");
   });
 
   it("pinned fingerprint matches keccak of the pinned runtime bytecode", () => {

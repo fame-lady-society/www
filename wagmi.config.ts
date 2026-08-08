@@ -123,7 +123,10 @@ export default defineConfig({
       ],
     }),
     foundry({
-      project: "../fame-contracts",
+      project: process.env.FAME_CONTRACTS_ROOT ?? "../fame-contracts",
+      forge: process.env.FAME_CONTRACTS_ROOT
+        ? { build: false, rebuild: false }
+        : undefined,
       deployments: {
         FameRouter: fameRouterAddress,
         FameBurnPoolRotator: fameBurnPoolRotatorAddress,
@@ -132,6 +135,7 @@ export default defineConfig({
         "ClaimToFame.sol/**",
         "Fame.sol/**",
         "FameRouter.sol/**",
+        "FameMarketplaceCheckout.sol/**",
         "FameMirror.sol/**",
         "FameBurnPoolRotator.sol/**",
         "IBalanceOf.sol/**",
@@ -140,6 +144,7 @@ export default defineConfig({
         "LingerieDreams.sol/**",
         "FUNKNLOVE.sol/**",
         "CreatorArtistMagic.sol/**",
+        "UniversalPoolArtMarketplace.sol/**",
         "SimpleOffchainReveal.sol/**",
         "SocietyNftAuction.sol/**",
       ],

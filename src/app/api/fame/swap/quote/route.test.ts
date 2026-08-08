@@ -552,6 +552,100 @@ describe("/api/fame/swap/quote", () => {
     }
   });
 
+  it("bypasses the indexed quote API in explicit local fork mode", async () => {
+    const snapshot = createSnapshotQuoteAdapter();
+    const previousForkMode = process.env.NEXT_PUBLIC_FAME_FORK_MODE;
+    const previousServerRpc = process.env.BASE_RPC_URL;
+    const previousBrowserRpc = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    const previousBrowserRpc2 = process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
+    const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
+    const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+    const previousFetch = globalThis.fetch;
+    let fetchCalls = 0;
+
+    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
+    process.env.BASE_RPC_URL = "http://127.0.0.1:8545";
+    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://127.0.0.1:8545";
+    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
+    process.env.FAME_POOL_API_URL = "https://society.example";
+    process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
+    globalThis.fetch = async () => {
+      fetchCalls += 1;
+      throw new Error("indexed quote API must not be called in fork mode");
+    };
+
+    try {
+      const response = await handleFameSwapQuotePost(
+        request({
+          tokenIn: WETH,
+          tokenOut: FAME,
+          amountIn: "100000000000000",
+          recipient: "0x0000000000000000000000000000000000000abc",
+          includeDebug: true,
+        }),
+        {
+          readinessForQuote: async (routerAddress) => ({
+            status: "ready",
+            routerAddress: routerAddress!,
+            feePpm: 2_222n,
+          }),
+          quoteAdapterForRequest: async () => ({
+            quoteContext: {
+              source: "fork",
+              chainId: 8453,
+              blockNumber: 125n,
+            },
+            async quoteEdge(edgeRequest) {
+              const quote = snapshot.quoteEdge(edgeRequest);
+              return quote.status === "quoted"
+                ? {
+                    ...quote,
+                    context: {
+                      source: "fork" as const,
+                      chainId: 8453,
+                      blockNumber: 125n,
+                    },
+                  }
+                : quote;
+            },
+          }),
+        },
+      );
+      const json: unknown = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.ok(isRecord(json));
+      assert.equal(json.status, "ready");
+      assert.equal(fetchCalls, 0);
+      const debug = json.debug;
+      assert.ok(isRecord(debug));
+      const quoteApi = debug.quoteApi;
+      assert.ok(isRecord(quoteApi));
+      assert.equal(quoteApi.configured, false);
+      assert.equal(quoteApi.attempted, false);
+      assert.equal(quoteApi.reason, "not_configured");
+    } finally {
+      globalThis.fetch = previousFetch;
+      if (previousForkMode === undefined)
+        delete process.env.NEXT_PUBLIC_FAME_FORK_MODE;
+      else process.env.NEXT_PUBLIC_FAME_FORK_MODE = previousForkMode;
+      if (previousServerRpc === undefined) delete process.env.BASE_RPC_URL;
+      else process.env.BASE_RPC_URL = previousServerRpc;
+      if (previousBrowserRpc === undefined)
+        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+      else process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousBrowserRpc;
+      if (previousBrowserRpc2 === undefined)
+        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
+      else process.env.NEXT_PUBLIC_BASE_RPC_URL_2 = previousBrowserRpc2;
+      if (previousPoolApiUrl === undefined)
+        delete process.env.FAME_POOL_API_URL;
+      else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
+      if (previousServiceToken === undefined)
+        delete process.env.FAME_POOL_STATE_SERVICE_TOKEN;
+      else process.env.FAME_POOL_STATE_SERVICE_TOKEN = previousServiceToken;
+    }
+  });
+
   it("reports when the quote API helper is not configured", async () => {
     const snapshot = createSnapshotQuoteAdapter();
     const response = await handleFameSwapQuotePost(

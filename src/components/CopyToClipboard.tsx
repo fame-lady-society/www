@@ -3,13 +3,14 @@ import { useNotifications } from "@/features/notifications/Context";
 
 export const CopyToClipboard: FC<{
   text: string;
+  clipboard?: boolean;
   mobileShareMessage?: string;
   children: (handleClick: () => void) => ReactNode;
-}> = ({ children, text, mobileShareMessage = "Share this" }) => {
+}> = ({ children, text, clipboard, mobileShareMessage = "Share this" }) => {
   const { addNotification } = useNotifications();
 
   const handleClick = useCallback(() => {
-    if (navigator.share) {
+    if (navigator.share && typeof clipboard === "undefined" || clipboard === false) {
       navigator.share({
         title: mobileShareMessage,
         text: text,

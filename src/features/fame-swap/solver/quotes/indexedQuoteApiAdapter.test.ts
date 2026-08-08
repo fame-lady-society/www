@@ -1042,6 +1042,36 @@ describe("FAME indexed quote API adapter", () => {
     assert.equal(reserveQuote.status, "quoted");
   });
 
+  it("uses live fallback without retrying after a quote API batch fails", async () => {
+    const edge = edgeFor("slipstream-basedflick-fame");
+    const fallback = { calls: 0 };
+    let batchFailures = 0;
+    let fetches = 0;
+    const adapter = createIndexedQuoteApiAdapter({
+      quoteClient: {
+        async fetchQuotes() {
+          fetches += 1;
+          throw new Error("FAME pool quote request failed with status 503.");
+        },
+      },
+      fallback: fallbackAdapter(fallback),
+      currentBlock: 125,
+      expectedSourceRegistryId: "unit-registry",
+      onBatchFailure() {
+        batchFailures += 1;
+      },
+    });
+
+    const first = await adapter.quoteEdge({ edge, amountIn: 1_000_000n });
+    const second = await adapter.quoteEdge({ edge, amountIn: 2_000_000n });
+
+    assert.equal(fetches, 1);
+    assert.equal(batchFailures, 1);
+    assert.equal(fallback.calls, 2);
+    assert.equal(first.status, "quoted");
+    assert.equal(second.status, "quoted");
+  });
+
   it("coalesces duplicate evaluated edges into one quote API request", async () => {
     const edge = edgeFor("slipstream-basedflick-fame");
     const fallback = { calls: 0 };

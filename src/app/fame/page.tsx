@@ -1,48 +1,26 @@
 import type { Metadata } from "next";
 import { Layout } from "@/features/fame/layout";
-import { fetchMetadata } from "frames.js/next";
-import { baseUrl } from "@/app/frames/frames";
-import { getFamePools } from "@/service/fame";
-import type { BurnPoolToken } from "@/features/fame/burnPoolImage";
+import { getCachedMarketStats } from "@/features/fame-landing/cachedMarketStats";
+import { presentLandingMarket } from "@/features/fame-landing/pricePresentation";
 
-export async function generateMetadata(): Promise<Metadata> {
-  let frameMetadata;
-  try {
-    frameMetadata = await fetchMetadata(new URL(`/fame/frame`, baseUrl));
-  } catch (error) {
-    console.warn("Failed to fetch frame metadata during build:", error);
-    frameMetadata = undefined;
-  }
+export const revalidate = 300;
 
-  return {
-    metadataBase: new URL("https://www.fameladysociety.com"),
-    title: "$FAME",
-    description: "The home of $FAME.",
-    openGraph: {
-      images: ["/images/fame/gold-leaf.png"],
-    },
-    ...(frameMetadata && { other: frameMetadata }),
-  };
+export const metadata: Metadata = {
+  metadataBase: new URL("https://www.fameladysociety.com"),
+  title: "$FAME",
+  description: "The home of $FAME.",
+  openGraph: { images: ["/images/fame/gold-leaf.png"] },
+  // Keep frame discovery local and static; the landing must not fetch itself.
+  other: {
+    "fc:frame": JSON.stringify({
+      version: "next",
+      imageUrl: "/images/fame/gold-leaf.png",
+      button: { title: "FAME" },
+    }),
+  },
+};
+
+export default async function Page() {
+  const stats = await getCachedMarketStats();
+  return <Layout market={presentLandingMarket(stats)} />;
 }
-
-export default async function Page({}: {}) {
-  let burnPool: BurnPoolToken[] = [];
-  let mintPool: Array<{ image: string }> = [];
-
-  try {
-    const pools = await getFamePools();
-    burnPool = pools.burnPool;
-    mintPool = pools.mintPool;
-  } catch (error) {
-    console.warn("Failed to fetch fame pools during build:", error);
-  }
-
-  return (
-    <Layout
-      burnPool={burnPool}
-      unrevealed={mintPool.map(({ image }) => image)}
-    />
-  );
-}
-
-export const dynamic = "force-dynamic";

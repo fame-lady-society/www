@@ -7,7 +7,6 @@ import { base } from "viem/chains";
 import { creatorArtistMagicAbi } from "@/wagmi";
 import {
   FAME_METADATA_FALLBACK_IMAGE,
-  fameMetadataFetchUrls,
   imageFromFameMetadata,
 } from "@/service/fameMetadata";
 
@@ -31,25 +30,14 @@ export const SelectableGrid = ({
   const client = useClient();
   const [images, setImages] = useState<Record<number, string>>({});
   const fetchMetadataImage = useCallback(async (uri: string) => {
-    let lastError: unknown = null;
-    for (const fetchUrl of fameMetadataFetchUrls(uri)) {
-      try {
-        const response = await fetch(fetchUrl);
-        if (!response.ok) {
-          throw new Error(
-            `Metadata request failed with ${response.status} ${response.statusText}`,
-          );
-        }
-
-        return imageFromFameMetadata(await response.json());
-      } catch (error) {
-        lastError = error;
-      }
+    const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error(
+        `Metadata request failed with ${response.status} ${response.statusText}`,
+      );
     }
 
-    throw lastError instanceof Error
-      ? lastError
-      : new Error("Failed to fetch metadata image");
+    return imageFromFameMetadata(await response.json());
   }, []);
   const fetchImage = useCallback(
     async (tokenId: bigint) => {

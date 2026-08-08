@@ -8,10 +8,12 @@ import ReloadIcon from "@mui/icons-material/Replay";
 import BankIcon from "@mui/icons-material/AccountBalance";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import PersonIcon from "@mui/icons-material/Person";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 
 import { MenuItem } from "./MenuItem";
 import { NetworkMenuItem } from "./NetworkMenuItem";
 import { mainnet } from "viem/chains";
+import type { FameNavigationPage } from "../fameNavigation";
 
 export const SiteMenu: FC<{
   isFame?: boolean;
@@ -23,6 +25,7 @@ export const SiteMenu: FC<{
   isLore?: boolean;
   isProfile?: boolean;
   isFameSwap?: boolean;
+  activeFamePage?: FameNavigationPage;
 }> = ({
   isFame = false,
   isHome = false,
@@ -33,6 +36,7 @@ export const SiteMenu: FC<{
   isLore = false,
   isProfile = false,
   isFameSwap = false,
+  activeFamePage,
 }) => {
   return (
     <>
@@ -52,9 +56,27 @@ export const SiteMenu: FC<{
       />
       <MenuItem
         href="/fame"
-        disabled={isFame}
+        disabled={isFame || activeFamePage === "landing"}
         icon={<ReloadIcon />}
         text="$FAME"
+      />
+      <MenuItem
+        href="/fame/market"
+        disabled={activeFamePage === "marketplace"}
+        icon={<StorefrontIcon />}
+        text="FAME Marketplace"
+      />
+      <MenuItem
+        href="/fame/gallery"
+        disabled={activeFamePage === "gallery"}
+        icon={<AutoStoriesIcon />}
+        text="FAME Gallery"
+      />
+      <MenuItem
+        href="/fame/rotate"
+        disabled={activeFamePage === "rotator"}
+        icon={<ReloadIcon />}
+        text="FAME Rotator"
       />
       <MenuItem
         href="/fame/swap"

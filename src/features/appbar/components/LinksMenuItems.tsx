@@ -77,33 +77,6 @@ export const LinksMenuItems: FC<{}> = ({}) => {
       </MenuItem>
       <MenuItem
         component={WrappedLink}
-        href="https://buy.fameladysociety.com"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <ListItemIcon>
-          <Image
-            src="/images/logos/reservoir.svg"
-            alt="reservoir"
-            width={25}
-            height={25}
-            style={{
-              maxWidth: "100%",
-              height: "auto",
-              marginRight: 8,
-            }}
-          />
-        </ListItemIcon>
-        <ListItemText
-          primary={
-            <Typography textAlign="right" color="text.primary">
-              Our Marketplace
-            </Typography>
-          }
-        />
-      </MenuItem>
-      <MenuItem
-        component={WrappedLink}
         href="https://opensea.io/collection/fameladysociety"
         target="_blank"
         rel="noopener noreferrer"

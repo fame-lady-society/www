@@ -7,8 +7,10 @@ import { routeArtifactById } from "../solver/artifacts";
 import { quoteWithReadyReadiness } from "../solver/quote";
 import { createDeterministicQuoteAdapter } from "../solver/quotes/deterministicAdapter";
 import { fameSwapQuoteView } from "../ui/quoteView";
+import { FAME_SWAP_OPPOSITE_ASSETS } from "../ui/tradeModel";
 import {
   FameSwapHeading,
+  fameSwapEmbeddedConfirmationCopy,
   fameSwapErrorDetails,
   fameSwapErrorSummary,
   fameSwapPresentation,
@@ -20,9 +22,7 @@ const recipient = "0x0000000000000000000000000000000000000abc";
 
 describe("FameSwapWidget focus target", () => {
   it("exposes the existing heading as a stable programmatic focus target", () => {
-    const html = renderToStaticMarkup(
-      createElement(FameSwapHeading, { compact: false }),
-    );
+    const html = renderToStaticMarkup(createElement(FameSwapHeading));
 
     assert.match(html, /id="fame-swap-heading"/);
     assert.match(html, /tabindex="-1"/);
@@ -51,6 +51,10 @@ describe("FameSwapWidget presentation contract", () => {
     assert.equal(compact.showAmountInput, true);
     assert.equal(compact.showQuotePanel, true);
     assert.equal(compact.showTransactionTimeline, true);
+    assert.equal(compact.showDescription, true);
+    assert.equal(compact.showQuoteDetails, true);
+    assert.equal(compact.showExternalFallbacks, true);
+    assert.equal(compact.showErrorDetails, true);
     assert.equal(compact.maxWidth, 480);
     assert.equal(compact.headingVariant, "h5");
   });
@@ -68,8 +72,54 @@ describe("FameSwapWidget presentation contract", () => {
     assert.equal(full.showAmountInput, true);
     assert.equal(full.showQuotePanel, true);
     assert.equal(full.showTransactionTimeline, true);
+    assert.equal(full.showDescription, true);
+    assert.equal(full.showQuoteDetails, true);
+    assert.equal(full.showExternalFallbacks, true);
+    assert.equal(full.showErrorDetails, true);
     assert.equal(full.maxWidth, 760);
     assert.equal(full.headingVariant, "h4");
+  });
+
+  it("embedded mode retains the swap engine while omitting full-page controls and copy", () => {
+    const embedded = fameSwapPresentation("embedded");
+
+    assert.equal(embedded.mode, "embedded");
+    assert.equal(embedded.forceBuyMode, false);
+    assert.equal(embedded.showModeTabs, true);
+    assert.equal(embedded.showSwapSideToggle, true);
+    assert.equal(embedded.showAmountInput, true);
+    assert.equal(embedded.showQuotePanel, true);
+    assert.equal(embedded.showTransactionTimeline, true);
+    assert.equal(embedded.showAdvancedControls, false);
+    assert.equal(embedded.showRouteMap, false);
+    assert.equal(embedded.showDiagnostics, false);
+    assert.equal(embedded.showDescription, false);
+    assert.equal(embedded.showQuoteDetails, false);
+    assert.equal(embedded.showExternalFallbacks, false);
+    assert.equal(embedded.showErrorDetails, false);
+    assert.equal(embedded.maxWidth, 480);
+    assert.equal(embedded.headingVariant, "h5");
+  });
+
+  it("uses plain embedded confirmation copy without evidentiary language", () => {
+    const confirmed = fameSwapEmbeddedConfirmationCopy("confirmed");
+    const submitting = fameSwapEmbeddedConfirmationCopy("submitting");
+
+    assert.equal(confirmed, "Swap confirmed on Base.");
+    assert.equal(
+      submitting,
+      "Confirm in your wallet and wait for confirmation on Base.",
+    );
+    assert.doesNotMatch(`${confirmed} ${submitting}`, /receipt|proof/i);
+  });
+});
+
+describe("FameSwapWidget buy choices", () => {
+  it("retains USDC, WETH, and native ETH funding", () => {
+    assert.deepEqual(
+      FAME_SWAP_OPPOSITE_ASSETS.map(({ symbol }) => symbol),
+      ["USDC", "WETH", "ETH"],
+    );
   });
 });
 

@@ -14,7 +14,9 @@ module.exports = {
   },
   serverExternalPackages: ["pino-pretty", "lokijs", "encoding"],
   images: {
-    minimumCacheTTL: 60,
+    // Gallery images are content-addressed or revalidated by the origin. Do
+    // not add a local minimum lifetime to the optimizer response.
+    minimumCacheTTL: 0,
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
@@ -23,17 +25,11 @@ module.exports = {
       },
       {
         hostname: "ipfs.io",
-        pathname:
-          "/ipfs/bafybeifrehxmpmvh4hiywtpmuuuvt4lotol7wl7dnxlsxikfevn2ivvm7m/*.png",
+        pathname: "/ipfs/**",
       },
       {
         hostname: "ipfs.fameladysociety.com",
-      },
-      {
-        hostname: "dev.fame.support",
-      },
-      {
-        hostname: "fame.support",
+        pathname: "/ipfs/**",
       },
       {
         hostname: "gateway.irys.xyz",
