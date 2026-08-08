@@ -15,7 +15,7 @@ const AssetSelectRoot = styled("div")({
   flexShrink: 0,
 });
 
-const AssetSelectButton = styled(ListboxButton)(({ theme }) => ({
+const AssetSelectButton = styled("button")(({ theme }) => ({
   boxSizing: "border-box",
   width: "100%",
   minHeight: 40,
@@ -61,7 +61,7 @@ const AssetSelectButton = styled(ListboxButton)(({ theme }) => ({
   },
 }));
 
-const AssetSelectOptions = styled(ListboxOptions)(({ theme }) => ({
+const AssetSelectOptions = styled("div")(({ theme }) => ({
   position: "absolute",
   zIndex: theme.zIndex.modal,
   top: "calc(100% + 6px)",
@@ -88,7 +88,7 @@ const AssetSelectOptions = styled(ListboxOptions)(({ theme }) => ({
   },
 }));
 
-const AssetSelectOption = styled(ListboxOption)(({ theme }) => ({
+const AssetSelectOption = styled("div")(({ theme }) => ({
   minHeight: 36,
   display: "flex",
   alignItems: "center",
@@ -138,17 +138,17 @@ export function GalleryAssetSelect<T extends string>({
       onChange={onChange}
       style={{ minWidth }}
     >
-      <AssetSelectButton aria-label={ariaLabel}>
+      <ListboxButton as={AssetSelectButton} aria-label={ariaLabel}>
         <span>{value}</span>
         <ArrowDropDownIcon
           aria-hidden="true"
           className="GalleryAssetSelect-arrow"
           fontSize="small"
         />
-      </AssetSelectButton>
-      <AssetSelectOptions modal={false} transition>
+      </ListboxButton>
+      <ListboxOptions as={AssetSelectOptions} modal={false} transition>
         {options.map((option) => (
-          <AssetSelectOption key={option} value={option}>
+          <ListboxOption as={AssetSelectOption} key={option} value={option}>
             {({ selected }) => (
               <>
                 <span>{option}</span>
@@ -160,9 +160,9 @@ export function GalleryAssetSelect<T extends string>({
                 ) : null}
               </>
             )}
-          </AssetSelectOption>
+          </ListboxOption>
         ))}
-      </AssetSelectOptions>
+      </ListboxOptions>
     </Listbox>
   );
 }
