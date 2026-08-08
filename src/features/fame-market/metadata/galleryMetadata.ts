@@ -1,6 +1,5 @@
 import {
   FAME_METADATA_FALLBACK_IMAGE,
-  irysGatewayToArweaveUrl,
   imageFromFameMetadata,
 } from "@/service/fameMetadata";
 import {
@@ -20,46 +19,40 @@ export const GALLERY_REMOTE_METADATA_MAX_BYTES =
 export const GALLERY_METADATA_TIMEOUT_MS = 10_000;
 
 const APPROVED_ARWEAVE_HOSTS = new Set(["arweave.net"]);
+const APPROVED_IRYS_HOSTS = new Set(["gateway.irys.xyz"]);
 const APPROVED_IPFS_HOSTS = new Set(["ipfs.io", "ipfs.fameladysociety.com"]);
 
 function approvedRemoteAssetUrl(rawUrl: string): string | null {
+  const assetUrl = rawUrl.trim();
   let url: URL;
   try {
-    url = new URL(rawUrl.trim());
+    url = new URL(assetUrl);
   } catch {
     return null;
   }
   if (url.protocol !== "https:" || url.pathname.length <= 1) return null;
 
-  const normalizedIrysUrl = irysGatewayToArweaveUrl(url.toString());
-  if (normalizedIrysUrl) return normalizedIrysUrl;
+  if (APPROVED_IRYS_HOSTS.has(url.hostname)) return assetUrl;
 
   const isArweave =
     APPROVED_ARWEAVE_HOSTS.has(url.hostname) ||
     url.hostname.endsWith(".arweave.net");
-  if (isArweave) return url.toString();
+  if (isArweave) return assetUrl;
 
   if (
     APPROVED_IPFS_HOSTS.has(url.hostname) &&
     url.pathname.startsWith("/ipfs/")
   ) {
-    return url.toString();
+    return assetUrl;
   }
 
   return null;
 }
 
-export function normalizeGalleryImageUrl(rawImage: string): string | null {
+export function validateGalleryImageUrl(rawImage: string): string | null {
   const image = rawImage.trim();
   if (image.startsWith("data:")) return validateInlineGalleryImage(image);
   return approvedRemoteAssetUrl(image);
-}
-
-function galleryMetadataFetchUrls(rawTokenUri: string) {
-  const normalized = approvedRemoteAssetUrl(rawTokenUri);
-  if (!normalized) return [];
-  const original = rawTokenUri.trim();
-  return normalized === original ? [normalized] : [normalized, original];
 }
 
 function failure(error: string): GalleryMetadataResult {
@@ -181,40 +174,40 @@ export async function loadGalleryMetadata(
     return decodeTestGalleryMetadata(tokenUri);
   }
 
-  for (const url of galleryMetadataFetchUrls(tokenUri)) {
-    try {
-      const body = await fetchBoundedMetadata(
-        fetchMetadata,
-        url,
-        timeoutMs,
-        GALLERY_REMOTE_METADATA_MAX_BYTES,
-        signal,
-      );
-      if (body === null) continue;
-      const parsed: unknown = JSON.parse(body);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        continue;
-      }
-      const metadata = parsed as Record<string, unknown>;
-      const image = normalizeGalleryImageUrl(imageFromFameMetadata(metadata));
-      if (!image)
-        throw new Error("Gallery metadata image origin is not approved");
-      return {
-        status: "ready",
-        image,
-        name: optionalString(metadata, "name", TEST_METADATA_LIMITS.name),
-        description: optionalString(
-          metadata,
-          "description",
-          TEST_METADATA_LIMITS.description,
-        ),
-        attributes: [],
-        error: null,
-      };
-    } catch (error) {
-      if (signal?.aborted) throw error;
-      // Try the normalized/original HTTPS URL before using fallback artwork.
+  const metadataUrl = approvedRemoteAssetUrl(tokenUri);
+  if (!metadataUrl) return failure("Token metadata URL is not approved");
+
+  try {
+    const body = await fetchBoundedMetadata(
+      fetchMetadata,
+      metadataUrl,
+      timeoutMs,
+      GALLERY_REMOTE_METADATA_MAX_BYTES,
+      signal,
+    );
+    if (body === null) return failure("Token metadata could not be loaded");
+    const parsed: unknown = JSON.parse(body);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return failure("Token metadata could not be loaded");
     }
+    const metadata = parsed as Record<string, unknown>;
+    const image = validateGalleryImageUrl(imageFromFameMetadata(metadata));
+    if (!image)
+      throw new Error("Gallery metadata image origin is not approved");
+    return {
+      status: "ready",
+      image,
+      name: optionalString(metadata, "name", TEST_METADATA_LIMITS.name),
+      description: optionalString(
+        metadata,
+        "description",
+        TEST_METADATA_LIMITS.description,
+      ),
+      attributes: [],
+      error: null,
+    };
+  } catch (error) {
+    if (signal?.aborted) throw error;
   }
 
   return failure("Token metadata could not be loaded");

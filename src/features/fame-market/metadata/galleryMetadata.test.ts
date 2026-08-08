@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   GALLERY_REMOTE_METADATA_MAX_BYTES,
-  normalizeGalleryImageUrl,
+  validateGalleryImageUrl,
   loadGalleryMetadata,
 } from "./galleryMetadata";
 
@@ -27,7 +27,7 @@ describe("gallery metadata loader", () => {
     assert.equal(result.image, image);
   });
 
-  it("normalizes approved Irys metadata and image URLs to Arweave", async () => {
+  it("fetches Irys metadata directly and preserves its canonical image URL", async () => {
     const image = "https://gateway.irys.xyz/example/image.png";
     const requested: string[] = [];
     const result = await loadGalleryMetadata(
@@ -46,9 +46,11 @@ describe("gallery metadata loader", () => {
     );
 
     assert.equal(result.status, "ready");
-    assert.equal(result.image, "https://arweave.net/example/image.png");
+    assert.equal(result.image, image);
     assert.equal(result.name, "Society #1");
-    assert.deepEqual(requested, ["https://arweave.net/example/metadata.json"]);
+    assert.deepEqual(requested, [
+      "https://gateway.irys.xyz/example/metadata.json",
+    ]);
   });
 
   it("uses fallback art when approved metadata names an unapproved image", async () => {
@@ -214,32 +216,34 @@ describe("gallery metadata loader", () => {
     controller.abort(new Error("card unmounted"));
 
     await assert.rejects(pending);
-    assert.deepEqual(requested, ["https://arweave.net/example/metadata.json"]);
+    assert.deepEqual(requested, [
+      "https://gateway.irys.xyz/example/metadata.json",
+    ]);
   });
 
-  it("accepts only inline, Arweave, normalized Irys, and approved IPFS images", () => {
+  it("validates approved image origins without rewriting their URLs", () => {
     const inline = `data:image/svg+xml;base64,${Buffer.from(
       "<svg></svg>",
     ).toString("base64")}`;
-    assert.equal(normalizeGalleryImageUrl(inline), inline);
+    assert.equal(validateGalleryImageUrl(inline), inline);
     assert.equal(
-      normalizeGalleryImageUrl("https://arweave.net/tx/image.png"),
+      validateGalleryImageUrl("https://arweave.net/tx/image.png"),
       "https://arweave.net/tx/image.png",
     );
     assert.equal(
-      normalizeGalleryImageUrl("https://gateway.irys.xyz/tx/image.png"),
-      "https://arweave.net/tx/image.png",
+      validateGalleryImageUrl("https://gateway.irys.xyz/tx/image.png"),
+      "https://gateway.irys.xyz/tx/image.png",
     );
     assert.equal(
-      normalizeGalleryImageUrl("https://ipfs.io/ipfs/bafy/image.png"),
+      validateGalleryImageUrl("https://ipfs.io/ipfs/bafy/image.png"),
       "https://ipfs.io/ipfs/bafy/image.png",
     );
     assert.equal(
-      normalizeGalleryImageUrl("https://fame.support/image.png"),
+      validateGalleryImageUrl("https://fame.support/image.png"),
       null,
     );
     assert.equal(
-      normalizeGalleryImageUrl("https://example.com/image.png"),
+      validateGalleryImageUrl("https://example.com/image.png"),
       null,
     );
   });

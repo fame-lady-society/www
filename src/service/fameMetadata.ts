@@ -1,27 +1,4 @@
-export const FAME_METADATA_FALLBACK_IMAGE =
-  "/images/fame/gold-leaf-square.png";
-
-export function irysGatewayToArweaveUrl(rawUrl: string): string | null {
-  let url: URL;
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-
-  if (url.protocol !== "https:" || url.hostname !== "gateway.irys.xyz") {
-    return null;
-  }
-
-  return `https://arweave.net${url.pathname}${url.search}`;
-}
-
-export function fameMetadataFetchUrls(uri: string): string[] {
-  const arweaveUrl = irysGatewayToArweaveUrl(uri);
-  if (!arweaveUrl) return [uri];
-
-  return [arweaveUrl, uri];
-}
+export const FAME_METADATA_FALLBACK_IMAGE = "/images/fame/gold-leaf-square.png";
 
 export function imageFromFameMetadata(metadata: unknown): string {
   if (

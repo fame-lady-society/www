@@ -10,7 +10,6 @@ import {
 } from "@/features/fame/contract";
 import {
   FAME_METADATA_FALLBACK_IMAGE,
-  fameMetadataFetchUrls,
   imageFromFameMetadata,
 } from "./fameMetadata";
 
@@ -140,25 +139,14 @@ async function fetchWithTimeout(
 }
 
 async function fetchMetadataImage(uri: string): Promise<string> {
-  let lastError: unknown = null;
-  for (const fetchUrl of fameMetadataFetchUrls(uri)) {
-    try {
-      const response = await fetchWithTimeout(fetchUrl);
-      if (!response.ok) {
-        throw new Error(
-          `Metadata request failed with ${response.status} ${response.statusText}`,
-        );
-      }
-
-      return imageFromFameMetadata(await response.json());
-    } catch (error) {
-      lastError = error;
-    }
+  const response = await fetchWithTimeout(uri);
+  if (!response.ok) {
+    throw new Error(
+      `Metadata request failed with ${response.status} ${response.statusText}`,
+    );
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Failed to fetch metadata image");
+  return imageFromFameMetadata(await response.json());
 }
 
 /**

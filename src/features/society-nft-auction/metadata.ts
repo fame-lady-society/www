@@ -1,6 +1,5 @@
 import {
   FAME_METADATA_FALLBACK_IMAGE,
-  fameMetadataFetchUrls,
   imageFromFameMetadata,
 } from "../../service/fameMetadata";
 import type { SocietyNftAuctionMetadata } from "./types";
@@ -46,47 +45,42 @@ export async function loadSocietyNftMetadata(
     return societyNftMetadataFallback("Society NFT token URI is unavailable");
   }
 
-  let foundMetadataWithoutImage = false;
-
-  for (const url of fameMetadataFetchUrls(tokenUri)) {
-    try {
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      const response = await Promise.race([
-        fetchMetadata(url),
-        new Promise<never>((_, reject) => {
-          timeout = setTimeout(
-            () => reject(new Error("Society NFT metadata request timed out")),
-            timeoutMs,
-          );
-        }),
-      ]).finally(() => clearTimeout(timeout));
-      if (!response.ok) continue;
-
-      const metadata: unknown = await response.json();
-      if (metadata === null || typeof metadata !== "object") {
-        foundMetadataWithoutImage = true;
-        continue;
-      }
-
-      try {
-        const record = metadata as Record<string, unknown>;
-        return {
-          image: validatedAuctionImage(metadata),
-          name: optionalMetadataString(record, "name"),
-          description: optionalMetadataString(record, "description"),
-          error: null,
-        };
-      } catch {
-        foundMetadataWithoutImage = true;
-      }
-    } catch {
-      // Try the next normalized/original token URI before using local artwork.
+  try {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const response = await Promise.race([
+      fetchMetadata(tokenUri.trim()),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("Society NFT metadata request timed out")),
+          timeoutMs,
+        );
+      }),
+    ]).finally(() => clearTimeout(timeout));
+    if (!response.ok) {
+      return societyNftMetadataFallback("Society NFT metadata is unavailable");
     }
-  }
 
-  return societyNftMetadataFallback(
-    foundMetadataWithoutImage
-      ? "Society NFT metadata does not contain a usable image"
-      : "Society NFT metadata is unavailable",
-  );
+    const metadata: unknown = await response.json();
+    if (metadata === null || typeof metadata !== "object") {
+      return societyNftMetadataFallback(
+        "Society NFT metadata does not contain a usable image",
+      );
+    }
+
+    try {
+      const record = metadata as Record<string, unknown>;
+      return {
+        image: validatedAuctionImage(metadata),
+        name: optionalMetadataString(record, "name"),
+        description: optionalMetadataString(record, "description"),
+        error: null,
+      };
+    } catch {
+      return societyNftMetadataFallback(
+        "Society NFT metadata does not contain a usable image",
+      );
+    }
+  } catch {
+    return societyNftMetadataFallback("Society NFT metadata is unavailable");
+  }
 }
