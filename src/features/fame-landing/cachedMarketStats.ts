@@ -22,18 +22,11 @@ import {
   tokenForAddress,
   type FameSwapToken,
 } from "@/features/fame-swap/tokens";
-import {
-  BUY_DEPTH_LADDER_USDC,
-  SELL_DEPTH_LADDER_FAME,
-  executableDepth,
-  mapBounded,
-} from "./liquidityDepth";
 import { marketFreshness, type Freshness } from "./marketStats";
 
 export const MARKET_STATS_REVALIDATE_SECONDS = 300;
 export const MARKET_STATS_COMPOSITION_TIMEOUT_MS = 7_000;
 export const LANDING_QUOTE_TIMEOUT_MS = 5_000;
-export const LIQUIDITY_LADDER_CONCURRENCY = 2;
 export const DEFI_FAME_AMOUNT = 1_000_000n * 10n ** 18n;
 
 export type MarketProjection<T> = Readonly<{
@@ -53,13 +46,7 @@ export type MarketplacePriceDto = Readonly<{
   premium: string;
   unit: string;
   totalSupply: string;
-  totalProviderUnits: string;
   decimals: number;
-}>;
-
-export type DepthDto = Readonly<{
-  amount: string;
-  atLeast: boolean;
 }>;
 
 export type LandingQuoteKind = "defiBuy" | "defiSell" | "nftBuy";
@@ -85,8 +72,6 @@ export type LandingMarketStats = Readonly<{
   defiSellEth: MarketProjectionState<LandingQuoteDto>;
   nftBuyUsdc: MarketProjectionState<LandingQuoteDto>;
   nftBuyEth: MarketProjectionState<LandingQuoteDto>;
-  buyDepth: MarketProjectionState<DepthDto>;
-  sellDepth: MarketProjectionState<DepthDto>;
 }>;
 
 type ProjectionData<T> = T extends () => Promise<MarketProjection<infer Data>>
@@ -179,7 +164,6 @@ async function marketplaceProducer(): Promise<
       premium: state.data.premium.toString(),
       unit: state.data.unit.toString(),
       totalSupply: state.data.totalSupply.toString(),
-      totalProviderUnits: state.data.totalProviderUnits.toString(),
       decimals: state.data.decimals,
     },
   };
@@ -311,81 +295,6 @@ const getNftBuyEth = cachedProjection("nft-buy-eth", () =>
   quoteProducer("nftBuy", "ETH"),
 );
 
-async function depthProducer(
-  side: "buy" | "sell",
-): Promise<MarketProjection<DepthDto>> {
-  const market = await marketplacePrice();
-  const ladder =
-    side === "buy" ? BUY_DEPTH_LADDER_USDC : SELL_DEPTH_LADDER_FAME;
-  const input = token(side === "buy" ? USDC : FAME_SWAP_TOKENS[0].address);
-  const output = token(side === "buy" ? FAME_SWAP_TOKENS[0].address : USDC);
-  const config = { ...getFameSwapConfig(), defaultSlippageBps: 0 };
-  const dependencies = createProductionFameQuoteDependencies({
-    requestTimeoutMs: LANDING_QUOTE_TIMEOUT_MS,
-    responseCushionMs: 0,
-  });
-  const readiness = await dependencies.readinessForQuote(config.routerAddress);
-  if (!dependencies.createAdapter) {
-    throw new Error("Depth quote adapter is unavailable.");
-  }
-  const adapter = await dependencies.createAdapter({
-    tokenIn: input,
-    tokenOut: output,
-    amountIn: 1n,
-    recipient: null,
-    config,
-    readiness,
-    optimizerBudgets: undefined,
-  });
-  const pinnedDependencies = {
-    readinessForQuote: async () => readiness,
-    createAdapter: async () => adapter,
-  };
-  const quote = async (amountIn: bigint) => {
-    const result = await quoteFameExactInput(
-      {
-        tokenIn: input,
-        tokenOut: output,
-        amountIn,
-        recipient: null,
-        config,
-        optimizerBudgets: landingOptimizerBudgets(),
-      },
-      pinnedDependencies,
-    );
-    if (result.status !== "ready") {
-      throw new Error("Depth quote is unavailable.");
-    }
-    return { input: amountIn, output: result.minAmountOutAfterFee };
-  };
-
-  const reference = await quote(side === "buy" ? 10n ** 6n : market.unit);
-  const candidates = await mapBounded(
-    ladder,
-    LIQUIDITY_LADDER_CONCURRENCY,
-    quote,
-  );
-  const depth = executableDepth(
-    reference,
-    candidates,
-    input.decimals,
-    output.decimals,
-  );
-  if (!depth) throw new Error("Depth is unavailable.");
-  return {
-    capturedAt: new Date().toISOString(),
-    data: {
-      amount: (side === "buy" ? depth.input : depth.output).toString(),
-      atLeast: depth.atLeast,
-    },
-  };
-}
-
-const getBuyDepth = cachedProjection("buy-depth", () => depthProducer("buy"));
-const getSellDepth = cachedProjection("sell-depth", () =>
-  depthProducer("sell"),
-);
-
 export async function getCachedMarketStats(
   now = Date.now(),
 ): Promise<LandingMarketStats> {
@@ -398,8 +307,6 @@ export async function getCachedMarketStats(
       defiSellEth: getDefiSellEth,
       nftBuyUsdc: getNftBuyUsdc,
       nftBuyEth: getNftBuyEth,
-      buyDepth: getBuyDepth,
-      sellDepth: getSellDepth,
     },
     now,
   );

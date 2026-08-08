@@ -262,10 +262,12 @@ export function GalleryViewContent({
             Loading {title}…
           </Typography>
           <Box
+            component="div"
             className="fame-skeleton"
             sx={{ height: 12, width: "64%", borderRadius: 0.5 }}
           />
           <Box
+            component="div"
             className="fame-skeleton"
             sx={{ height: 220, width: "100%", borderRadius: 0.5 }}
           />

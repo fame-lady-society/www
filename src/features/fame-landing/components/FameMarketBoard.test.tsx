@@ -26,16 +26,14 @@ const market: LandingMarketPresentation = {
       ETH: { value: "0.0052 ETH" },
     },
   },
-  metrics: {
-    marketCap: { value: "10.8K USDC" },
-    liquidity: { value: "8M FAME" },
-    buyDepth: { value: "5K USDC" },
-    sellDepth: { value: "4.5K USDC" },
+  marketCap: {
+    USDC: { value: "10.8K USDC" },
+    ETH: { value: "4.3512 ETH" },
   },
 };
 
 describe("FAME market board", () => {
-  it("shows prices and DeFi stats without repeating NFT sell", () => {
+  it("shows dual-currency market cap above DeFi prices", () => {
     const markup = renderToStaticMarkup(
       <FameMarketBoard initialMarket={market} />,
     );
@@ -45,15 +43,16 @@ describe("FAME market board", () => {
     assert.match(markup, /Marketplace/);
     assert.doesNotMatch(markup, /NFT sell/);
     assert.match(markup, /Market cap/);
-    assert.match(markup, /Liquidity/);
-    assert.match(markup, /Buy depth/);
-    assert.match(markup, /Sell depth/);
-    assert.match(markup, /1M FAME/);
     assert.match(markup, /10.8K USDC/);
+    assert.match(markup, /4.3512 ETH/);
+    assert.ok(markup.indexOf("Market cap") < markup.indexOf("DeFi buy"));
+    assert.ok(markup.indexOf("DeFi buy") < markup.indexOf("DeFi sell"));
+    assert.doesNotMatch(markup, /Liquidity|Buy depth|Sell depth/);
+    assert.match(markup, /1M FAME/);
     assert.doesNotMatch(markup, /cache|route|validation|slippage|unavailable/i);
   });
 
-  it("shows activity indicators for missing prices and stats", () => {
+  it("shows activity indicators for missing prices and market cap", () => {
     const empty: LandingMarketPresentation = {
       prices: {
         defiBuy: {
@@ -72,18 +71,16 @@ describe("FAME market board", () => {
           ETH: { value: null },
         },
       },
-      metrics: {
-        marketCap: { value: null },
-        liquidity: { value: null },
-        buyDepth: { value: null },
-        sellDepth: { value: null },
+      marketCap: {
+        USDC: { value: null },
+        ETH: { value: null },
       },
     };
     const markup = renderToStaticMarkup(
       <FameMarketBoard initialMarket={empty} />,
     );
 
-    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 11);
+    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 9);
     assert.doesNotMatch(markup, /Unavailable|error|failed/i);
   });
 
@@ -91,11 +88,11 @@ describe("FAME market board", () => {
     assert.equal(mergeLandingMarket(market, market), market);
     const current: LandingMarketPresentation = {
       ...market,
-      metrics: { ...market.metrics, buyDepth: { value: null } },
+      marketCap: { ...market.marketCap, ETH: { value: null } },
     };
     const merged = mergeLandingMarket(current, market);
     assert.notEqual(merged, current);
-    assert.equal(merged.metrics.buyDepth.value, "5K USDC");
+    assert.equal(merged.marketCap.ETH.value, "4.3512 ETH");
   });
 
   it("retries missing market data and stops cleanly", async () => {

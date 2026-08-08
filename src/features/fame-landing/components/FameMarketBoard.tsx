@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type {
+  LandingCurrencyValues,
   LandingMarketPresentation,
   LandingPriceRow,
-  PriceValue,
 } from "../pricePresentation";
 
 const RETRY_MS = 5_000;
@@ -72,16 +72,6 @@ function Loading() {
   );
 }
 
-function Value({ value }: { value: PriceValue }) {
-  return value.value ? (
-    <span className="font-medium tabular-nums text-[#f4eee2]">
-      {value.value}
-    </span>
-  ) : (
-    <Loading />
-  );
-}
-
 function PriceCard({
   title,
   row,
@@ -95,7 +85,7 @@ function PriceCard({
     <article
       className={
         featured
-          ? "flex min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8"
+          ? "flex h-full min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8"
           : "grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
       }
     >
@@ -147,18 +137,49 @@ function PriceCard({
   );
 }
 
-const METRIC_LABELS = {
-  marketCap: "Market cap",
-  liquidity: "Liquidity",
-  buyDepth: "Buy depth",
-  sellDepth: "Sell depth",
-} as const;
+function MarketCapCard({ values }: { values: LandingCurrencyValues }) {
+  return (
+    <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c9aa67]">
+        Market cap
+      </p>
+      <dl className="grid min-w-44 gap-2 text-sm">
+        <div className="flex min-h-6 items-center justify-between gap-4">
+          <dt className="text-[#9f9789]">USDC</dt>
+          <dd>
+            {values.USDC.value ? (
+              <span className="font-medium tabular-nums">
+                {values.USDC.value}
+              </span>
+            ) : (
+              <Loading />
+            )}
+          </dd>
+        </div>
+        <div className="flex min-h-6 items-center justify-between gap-4">
+          <dt className="text-[#9f9789]">ETH</dt>
+          <dd>
+            {values.ETH.value ? (
+              <span className="font-medium tabular-nums">
+                {values.ETH.value}
+              </span>
+            ) : (
+              <Loading />
+            )}
+          </dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
 
 function missing(market: LandingMarketPresentation): boolean {
   return (
     Object.values(market.prices).some(
       (row) => !row.fame || !row.USDC.value || !row.ETH.value,
-    ) || Object.values(market.metrics).some((item) => !item.value)
+    ) ||
+    !market.marketCap.USDC.value ||
+    !market.marketCap.ETH.value
   );
 }
 
@@ -182,15 +203,13 @@ export function mergeLandingMarket(
       },
     ),
   ) as LandingMarketPresentation["prices"];
-  const metrics = Object.fromEntries(
-    (Object.keys(current.metrics) as Array<keyof typeof current.metrics>).map(
-      (key) => [
-        key,
-        { value: next.metrics[key].value ?? current.metrics[key].value },
-      ],
-    ),
-  ) as LandingMarketPresentation["metrics"];
-  const merged = { prices, metrics };
+  const marketCap = {
+    USDC: {
+      value: next.marketCap.USDC.value ?? current.marketCap.USDC.value,
+    },
+    ETH: { value: next.marketCap.ETH.value ?? current.marketCap.ETH.value },
+  };
+  const merged = { prices, marketCap };
   return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
 }
 
@@ -231,29 +250,10 @@ export function FameMarketBoard({
           <PriceCard title="Marketplace" row={market.prices.nftBuy} featured />
         </div>
         <div className="lg:col-span-7">
+          <MarketCapCard values={market.marketCap} />
           <PriceCard title="DeFi buy" row={market.prices.defiBuy} />
           <PriceCard title="DeFi sell" row={market.prices.defiSell} />
         </div>
-      </div>
-      <div
-        aria-label="FAME stats"
-        className="mt-8 grid border-t border-[#c9aa67]/25 sm:grid-cols-2 lg:grid-cols-4"
-      >
-        {(Object.keys(METRIC_LABELS) as Array<keyof typeof METRIC_LABELS>).map(
-          (key) => (
-            <article
-              key={key}
-              className="border-b border-[#c9aa67]/20 py-5 sm:px-5 sm:first:pl-0 lg:border-r lg:last:border-r-0"
-            >
-              <h3 className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#8f8779]">
-                {METRIC_LABELS[key]}
-              </h3>
-              <p className="mt-3 min-h-6 font-medium tabular-nums text-[#f4eee2]">
-                <Value value={market.metrics[key]} />
-              </p>
-            </article>
-          ),
-        )}
       </div>
     </section>
   );

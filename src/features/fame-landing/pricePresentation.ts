@@ -4,28 +4,26 @@ import type {
   MarketProjectionState,
   MarketplacePriceDto,
 } from "./cachedMarketStats";
-import { DEFI_FAME_AMOUNT, type DepthDto } from "./cachedMarketStats";
+import { DEFI_FAME_AMOUNT } from "./cachedMarketStats";
 
 export type PriceValue = Readonly<{ value: string | null }>;
-export type LandingPriceRow = Readonly<{
-  fame: string | null;
+export type LandingCurrencyValues = Readonly<{
   USDC: PriceValue;
   ETH: PriceValue;
 }>;
+export type LandingPriceRow = Readonly<
+  LandingCurrencyValues & {
+    fame: string | null;
+  }
+>;
 export type LandingPrices = Readonly<{
   defiBuy: LandingPriceRow;
   defiSell: LandingPriceRow;
   nftBuy: LandingPriceRow;
 }>;
-export type LandingMetrics = Readonly<{
-  marketCap: PriceValue;
-  liquidity: PriceValue;
-  buyDepth: PriceValue;
-  sellDepth: PriceValue;
-}>;
 export type LandingMarketPresentation = Readonly<{
   prices: LandingPrices;
-  metrics: LandingMetrics;
+  marketCap: LandingCurrencyValues;
 }>;
 
 function grouped(value: bigint): string {
@@ -126,55 +124,50 @@ export function presentLandingPrices(stats: LandingMarketStats): LandingPrices {
   };
 }
 
-function metric(value: string | null): PriceValue {
-  return { value };
-}
-
-function depthValue(
-  state: MarketProjectionState<DepthDto>,
-  decimals: number,
-  symbol: "FAME" | "USDC",
+function marketCapValue(
+  totalSupply: bigint | null,
+  buy: MarketProjectionState<LandingQuoteDto>,
+  sell: MarketProjectionState<LandingQuoteDto>,
+  currency: "USDC" | "ETH",
 ): PriceValue {
-  if (state.status !== "available") return metric(null);
-  const value = formatPrice(BigInt(state.value.data.amount), decimals, symbol);
-  return metric(state.value.data.atLeast ? `${value}+` : value);
+  if (
+    totalSupply === null ||
+    buy.status !== "available" ||
+    sell.status !== "available"
+  ) {
+    return { value: null };
+  }
+
+  const amount =
+    ((BigInt(buy.value.data.amount) + BigInt(sell.value.data.amount)) *
+      totalSupply) /
+    (2n * DEFI_FAME_AMOUNT);
+  return {
+    value: formatPrice(amount, currency === "USDC" ? 6 : 18, currency),
+  };
 }
 
-export function presentLandingMetrics(
+export function presentLandingMarketCap(
   stats: LandingMarketStats,
-): LandingMetrics {
-  const market =
+): LandingCurrencyValues {
+  const totalSupply =
     stats.marketplace.status === "available"
-      ? stats.marketplace.value.data
+      ? BigInt(stats.marketplace.value.data.totalSupply)
       : null;
-  const buyUsdc =
-    stats.defiBuyUsdc.status === "available"
-      ? BigInt(stats.defiBuyUsdc.value.data.amount)
-      : null;
-  const sellUsdc =
-    stats.defiSellUsdc.status === "available"
-      ? BigInt(stats.defiSellUsdc.value.data.amount)
-      : null;
-  const marketCap =
-    market && buyUsdc !== null && sellUsdc !== null
-      ? ((buyUsdc + sellUsdc) * BigInt(market.totalSupply)) /
-        (2n * DEFI_FAME_AMOUNT)
-      : null;
-  const liquidity = market
-    ? BigInt(market.totalProviderUnits) * BigInt(market.unit)
-    : null;
 
   return {
-    marketCap: metric(
-      marketCap === null ? null : formatPrice(marketCap, 6, "USDC"),
+    USDC: marketCapValue(
+      totalSupply,
+      stats.defiBuyUsdc,
+      stats.defiSellUsdc,
+      "USDC",
     ),
-    liquidity: metric(
-      market && liquidity !== null
-        ? formatPrice(liquidity, market.decimals, "FAME")
-        : null,
+    ETH: marketCapValue(
+      totalSupply,
+      stats.defiBuyEth,
+      stats.defiSellEth,
+      "ETH",
     ),
-    buyDepth: depthValue(stats.buyDepth, 6, "USDC"),
-    sellDepth: depthValue(stats.sellDepth, 6, "USDC"),
   };
 }
 
@@ -183,7 +176,7 @@ export function presentLandingMarket(
 ): LandingMarketPresentation {
   return {
     prices: presentLandingPrices(stats),
-    metrics: presentLandingMetrics(stats),
+    marketCap: presentLandingMarketCap(stats),
   };
 }
 
@@ -200,11 +193,6 @@ export function emptyLandingMarket(): LandingMarketPresentation {
   const empty = { value: null };
   return {
     prices: emptyLandingPrices(),
-    metrics: {
-      marketCap: empty,
-      liquidity: empty,
-      buyDepth: empty,
-      sellDepth: empty,
-    },
+    marketCap: { USDC: empty, ETH: empty },
   };
 }

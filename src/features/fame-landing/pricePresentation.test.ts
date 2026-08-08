@@ -6,7 +6,7 @@ import type {
 } from "./cachedMarketStats";
 import {
   formatPrice,
-  presentLandingMetrics,
+  presentLandingMarketCap,
   presentLandingPrices,
 } from "./pricePresentation";
 
@@ -20,15 +20,9 @@ describe("FAME landing price formatting", () => {
   });
 
   it("abbreviates thousands and millions to at most one decimal", () => {
-    assert.equal(
-      formatPrice(218_655_239_996n, 6, "USDC"),
-      "218.7K USDC",
-    );
+    assert.equal(formatPrice(218_655_239_996n, 6, "USDC"), "218.7K USDC");
     assert.equal(formatPrice(1_000_000_000n, 6, "USDC"), "1K USDC");
-    assert.equal(
-      formatPrice(1_050_000n * 10n ** 18n, 18, "FAME"),
-      "1.1M FAME",
-    );
+    assert.equal(formatPrice(1_050_000n * 10n ** 18n, 18, "FAME"), "1.1M FAME");
   });
 
   it("never turns a small nonzero price into zero or scientific notation", () => {
@@ -37,7 +31,7 @@ describe("FAME landing price formatting", () => {
     assert.doesNotMatch(value, /e[+-]/i);
   });
 
-  it("formats market cap, liquidity, and both depth sides", () => {
+  it("formats market cap in USDC and ETH", () => {
     const capturedAt = "2026-08-03T12:00:00.000Z";
     const available = <T>(data: T): MarketProjectionState<T> => ({
       status: "available",
@@ -50,7 +44,6 @@ describe("FAME landing price formatting", () => {
         premium: (50_000n * 10n ** 18n).toString(),
         unit: (1_000_000n * 10n ** 18n).toString(),
         totalSupply: (888_000_000n * 10n ** 18n).toString(),
-        totalProviderUnits: "2",
         decimals: 18,
       }),
       defiBuyUsdc: quote("12340000"),
@@ -59,18 +52,11 @@ describe("FAME landing price formatting", () => {
       defiSellEth: quote("4800000000000000"),
       nftBuyUsdc: quote("12950000"),
       nftBuyEth: quote("5200000000000000"),
-      buyDepth: available({ amount: "1000000000", atLeast: true }),
-      sellDepth: available({
-        amount: "5000000000",
-        atLeast: false,
-      }),
     } satisfies LandingMarketStats;
 
-    assert.deepEqual(presentLandingMetrics(stats), {
-      marketCap: { value: "10.8K USDC" },
-      liquidity: { value: "2M FAME" },
-      buyDepth: { value: "1K USDC+" },
-      sellDepth: { value: "5K USDC" },
+    assert.deepEqual(presentLandingMarketCap(stats), {
+      USDC: { value: "10.8K USDC" },
+      ETH: { value: "4.3512 ETH" },
     });
     assert.equal(presentLandingPrices(stats).defiBuy.fame, "1M FAME");
     assert.equal(presentLandingPrices(stats).nftBuy.fame, "1.1M FAME");
