@@ -32,7 +32,7 @@ The page communicates current two-sided liquidity without promising perpetual av
 
 The waiting-to-be-minted artwork moves to `/fame/rotate`. That route shows the current targets visually and links each card to the existing `/fame/rotate/[targetId]` flow. A visitor never has to enter a token number.
 
-The current marketplace route family moves atomically from `/fame/gallery/*` to `/fame/market/*`. The vacated `/fame/gallery` becomes a separate, non-transactional collection view: the server derives the full Base token domain, removes every token inside CreatorArtistMagic's authoritative Art Pool bounds before constructing any public card or category, then renders the remaining stable identities in ascending order. Artwork loads progressively, and small decorations distinguish verified collector ownership, current marketplace availability, and unavailable status data. Marketplace purchase, receipt, liquidity, redemption, and TEST/admin behavior stays in the Market namespace.
+The canonical marketplace route family moves atomically from `/fame/gallery/*` to `/fame/market/*`. The vacated `/fame/gallery` becomes a separate, non-transactional collection view: the server derives the full Base token domain, removes every token inside CreatorArtistMagic's authoritative Art Pool bounds before constructing any public card or category, then renders the remaining stable identities in ascending order. Artwork loads progressively, and small decorations distinguish verified collector ownership, current marketplace availability, and unavailable status data. Marketplace purchase, receipt, liquidity, and redemption behavior stays in the Market namespace; the retired Base Sepolia TEST and admin routes are absent.
 
 ### Problem Frame
 
@@ -109,8 +109,8 @@ The marketplace release already has narrower authorities. The current `src/featu
 
 #### Marketplace route split and filtered Gallery
 
-- R56. Move the complete current marketplace route family atomically to `/fame/market/*`: root, purchase receipt, liquidity root/deposit/unstake, TEST marketplace, and TEST admin. Remove the superseded marketplace route files under `/fame/gallery/*`; do not add redirects, aliases, or compatibility pages.
-- R57. Update both shared site-menu implementations, the landing-scoped menu, receipt links, purchase-success navigation, liquidity links, runtime admin links, route metadata, and tests so **FAME Marketplace** always means `/fame/market` and **FAME Gallery** always means `/fame/gallery`. Market subflows return to Market, never to Gallery.
+- R56. Move the canonical marketplace route family atomically to `/fame/market/*`: root, purchase receipt, and liquidity root/deposit/unstake. Remove the superseded marketplace route files under `/fame/gallery/*` and the retired Base Sepolia TEST and admin routes; do not add redirects, aliases, or compatibility pages.
+- R57. Update both shared site-menu implementations, the landing-scoped menu, receipt links, purchase-success navigation, liquidity links, route metadata, and tests so **FAME Marketplace** always means `/fame/market` and **FAME Gallery** always means `/fame/gallery`. Market subflows return to Market, never to Gallery.
 - R58. Make `/fame/gallery` an informational public-collection route. Enumerate the configured Base FAME domain from 1 through 888 internally; at one Base block require both CreatorArtistMagic's `fame()` relationship to equal the configured FAME contract and FAME's active `renderer()` to equal the configured CreatorArtistMagic contract; read `artPoolStartIndex()` and `artPoolEndIndex()` from that validated renderer; validate the returned inclusive bounds against the domain; and remove every in-range token before deriving public IDs, cards, categories, status work, image requests, or page payloads. Never derive membership from metadata appearance, `artPoolNext()`, `GovSociety.isLocked()`, or a hardcoded current count.
 - R59. Classify each remaining public piece from one pinned Base status projection as exactly one of `available`, `owned`, `not_available`, or `unknown`. `available` requires valid marketplace identity, unpaused purchases, non-zero inventory, a valid artwork hash, and a currently resolvable held or mint/burn-pool fulfillment path. `owned` requires `ownerAt` to resolve to a non-zero non-marketplace address and no available path. `not_available` requires all classification reads to succeed with neither condition. Any failed, ambiguous, or contradictory authority yields `unknown`. Presentation is mutually exclusive and gives `available` precedence over marketplace custody; do not render a collector-owned badge from a connected wallet guess.
 - R60. Decorate `available` cards as **Available**, `owned` cards as **Owned**, and `unknown` cards with a neutral **Status unavailable** state. `not_available` cards may remain undecorated. Never infer availability from pool membership alone, label marketplace custody as collector ownership, or hide an unknown state as confirmed absence.
@@ -119,7 +119,7 @@ The marketplace release already has narrower authorities. The current `src/featu
 - R63. Cache only successful JSON-safe Gallery membership and status projections for 300 seconds, keyed by Base chain and the relevant configured contract addresses. Compose Gallery presentation at request time behind Next's `connection()` boundary so age transitions are not frozen into route output. Membership is valid for public rendering only below 300 seconds; Next may retain an older success internally during refresh failure, but the Gallery must immediately render no token cards until a new active-renderer membership snapshot succeeds. Preserve a matching last successful status projection through refresh failure, show a compact absolute observation time, mark it stale from 5 through 30 minutes, and replace badges with `unknown` after 30 minutes. A cold status failure may render the freshly filtered public collection with unknown decoration while membership remains fresh. Never combine a status snapshot with a different membership fingerprint.
 - R64. Gallery browsing must not require a connected wallet or start browser wallet, chain, or quote work. Keep the first release informational: no buy widget, redemption, liquidity controls, per-owner address display, filters, search, wallet-specific **Yours** state, or historical indexing. An available card does not authorize purchase; `/fame/market` revalidates its own current catalog before any wallet action.
 - R65. Use the same restrained black, warm-ivory, and muted-gold visual system as the landing, with minimal copy, stable responsive grid geometry, lazy images, visible focus, and no horizontal overflow at 390 by 844. Rendering, status refresh, or image completion must not reorder or remove cards from the current public membership snapshot. Art Pool IDs, their count, their bounds, and placeholder categories must not appear as direct representations in public copy, rendered markup, serialized page props, image requests, client logs, or sanitized server logs. The on-chain bounds and gaps between otherwise labeled public token IDs remain publicly inferable; this requirement prevents Gallery disclosure and placeholders, not blockchain confidentiality.
-- R66. Preserve current marketplace behavior after the route move: browsing, payment assets, purchase verification, receipt projection, Society redemption, liquidity staking, deposit/exit pages, TEST surface, and admin authority remain functionally unchanged apart from route, title, and navigation labels.
+- R66. Preserve canonical marketplace behavior after the route move: browsing, payment assets, purchase verification, receipt projection, Society redemption, liquidity staking, and deposit/exit pages remain functionally unchanged apart from route, title, and navigation labels.
 - R67. Keep the complete Gallery status and image dependency graph isolated from `/fame`. Landing source and browser-network verification must still prove that no collection IDs, metadata, ownership, pool membership, custody, artwork hashes, or Gallery code enter its initial render.
 - R68. Move the existing marketplace feature directory from `src/features/fame-gallery/` to `src/features/fame-market/` without a compatibility barrel. Rename route-facing labels, query-key roots, and browser-storage namespaces from gallery to market so the vacated feature namespace can own the real collection Gallery. Preserve established private `Gallery*` protocol-domain symbols when renaming them adds no semantic value.
 
@@ -149,7 +149,7 @@ The marketplace release already has narrower authorities. The current `src/featu
 - F8. **Logo navigation:** The visitor opens the site menu through the FAME logo and can reach `/fame/market`, `/fame/gallery`, and `/fame/rotate` without duplicated top-header links. Covers R46-R48 and R57.
 - F9. **Visual target selection:** `/fame/rotate` loads the ordered ID snapshot, renders one identity-preserving artwork link per ID, and navigates to the exact target. Covers R32-R39 and R42.
 - F10. **Stale target recovery:** The exact route rechecks the selected ID. An invalid, disappeared, or temporarily unreadable target returns the user to `/fame/rotate` or offers an exact retry. Covers R40-R41.
-- F11. **Marketplace route migration:** A shopper enters `/fame/market`, completes the existing browse or transaction flow, and remains under `/fame/market/*` through receipt, staking, deposit, exit, TEST, or admin navigation. Superseded nested `/fame/gallery/*` marketplace URLs are absent. Covers R56-R57 and R66.
+- F11. **Marketplace route migration:** A shopper enters `/fame/market`, completes the existing browse or transaction flow, and remains under `/fame/market/*` through receipt, staking, deposit, or exit navigation. Superseded nested `/fame/gallery/*` marketplace URLs and retired Base Sepolia TEST/admin URLs are absent. Covers R56-R57 and R66.
 - F12. **Filtered public collection:** `/fame/gallery` obtains a valid cached Art Pool membership projection, excludes that complete inclusive range before constructing its public identity list, renders the remaining IDs in stable order, progressively loads artwork, and applies independently cached `Available`, `Owned`, undecorated, or `Status unavailable` decoration without a wallet. Metadata or market failure never removes a public card; Art Pool authority failure fails closed before cards exist. Covers R58-R65 and R67.
 
 ### Acceptance Examples
@@ -175,7 +175,7 @@ The marketplace release already has narrower authorities. The current `src/featu
 - AE18. While a wallet request or transaction is active, **Swap now** remains open and its progress stays perceivable. After confirmation, rejection, or failure, the disclosure can close and reopen with its state retained.
 - AE19. An observation 29 minutes old remains numeric and clearly stale. At more than 30 minutes old, its number is unavailable while its last observation time remains visible; other younger projections are unaffected.
 - AE20. In a production-like local run, 20 warm cached requests meet the 750-millisecond p95 server TTFB target. A cold or expired-cache projection that exceeds the 2.5-second composition deadline is cancelled/degraded and the route completes within 3 seconds instead of waiting for quote work.
-- AE21. `/fame/market`, `/fame/market/purchase/[transactionHash]`, `/fame/market/stake`, `/fame/market/stake/deposit`, `/fame/market/stake/unstake`, `/fame/market/test`, and `/fame/market/test/admin` compose the existing marketplace behavior. The old nested marketplace URLs under `/fame/gallery/*` return not found rather than redirecting.
+- AE21. `/fame/market`, `/fame/market/purchase/[transactionHash]`, `/fame/market/stake`, `/fame/market/stake/deposit`, and `/fame/market/stake/unstake` compose the canonical marketplace behavior. The old nested marketplace URLs under `/fame/gallery/*`, `/fame/market/test`, and `/fame/market/test/admin` return not found rather than redirecting.
 - AE22. Given injected CreatorArtistMagic bounds, `/fame/gallery` subtracts the full inclusive Art Pool range from the canonical 1-through-888 domain before creating cards, status inputs, categories, or image URLs. It renders exactly the derived visible-ID count in ascending order; status or image arrival never changes that count or order.
 - AE23. A valid unpaused marketplace projection with inventory and a resolvable artwork target renders **Available**. A non-zero external `ownerAt` with no market path renders **Owned**. Marketplace custody never renders **Owned**, and a paused or empty-inventory target never renders **Available**.
 - AE24. One failed or contradictory ownership, mint/burn-pool membership, artwork-hash, or fulfillment-status read for a public ID renders **Status unavailable** for that card while verified public cards keep their own status. Missing marketplace configuration makes all public market decoration unknown without restoring or exposing an Art Pool ID.
@@ -200,7 +200,7 @@ The marketplace release already has narrower authorities. The current `src/featu
 
 This plan does not:
 
-- change marketplace purchase, redemption, liquidity, receipt, TEST, or admin behavior beyond moving the public route family and correcting route-facing labels;
+- change canonical marketplace purchase, redemption, liquidity, or receipt behavior beyond moving the public route family and correcting route-facing labels;
 - add circulating-supply exclusions, reserve-summed TVL, APY, or a price chart beyond the R27-R31 definitions;
 - add client polling, browser-derived landing statistics, or wallet balance reads outside the explicitly expanded swap widget;
 - cache or weaken exact-target transaction eligibility and preflight;
@@ -319,7 +319,7 @@ Delete `src/features/fame/layout.tsx` after `/fame` stops importing it. Move and
 
 **(session-settled: user-directed — chosen over keeping Marketplace and Gallery as two meanings of `/fame/gallery`.)**
 
-Move the entire current route tree to `src/app/fame/market/` in one unit, including purchase, staking, TEST, and admin descendants. Replace the old root file with the new collection page only after every hardcoded marketplace link, runtime admin href, menu item, receipt return, metadata title, and route-shape test points to `/fame/market`. The old nested marketplace URLs disappear and receive no redirect per the repository's no-backward-compatibility rule.
+Move the canonical route tree to `src/app/fame/market/` in one unit, including purchase and staking descendants. Replace the old root file with the new collection page only after every hardcoded marketplace link, menu item, receipt return, metadata title, and route-shape test points to `/fame/market`. The old nested marketplace URLs and retired Base Sepolia TEST/admin routes disappear and receive no redirect per the repository's no-backward-compatibility rule.
 
 Move the existing 103-file marketplace module to `src/features/fame-market/` without a compatibility barrel. Its external imports are concentrated in the moved route tree and route-shape tests, while its internal imports are relative, so the semantic directory move is bounded. Rename route-facing labels plus the `fame-gallery` React Query and browser-storage namespaces to market equivalents; old custody hints are disposable because canonical discovery already performs a full scan. Do not require a wholesale rename of every private `Gallery*` symbol when it still describes the gallery-market protocol domain.
 
@@ -481,7 +481,7 @@ The membership snapshot is a server-only cache DTO. Page composition passes only
 
 ### Sequencing
 
-1. Move the complete marketplace route tree and feature module to the Market namespace; update every route constructor, cache/storage namespace, label, and route test without compatibility paths.
+1. Move the canonical marketplace route tree and feature module to the Market namespace; update every route constructor, cache/storage namespace, label, and route test without compatibility paths.
 2. Add the shared Base collection domain plus the fail-closed Art Pool membership projection, filtered Gallery identity grid, matching status projection, and progressive image fallback.
 3. Extract and regression-test the shared exact-input service and production exact-target quote seam.
 4. Add the narrow marketplace read and seven-way independent cache/composition layer against the renamed market module.
@@ -554,7 +554,6 @@ The membership snapshot is a server-only cache DTO. Page composition passes only
 - Move `src/app/fame/gallery/page.tsx` to `src/app/fame/market/page.tsx`.
 - Move `src/app/fame/gallery/purchase/[transactionHash]/page.tsx` to `src/app/fame/market/purchase/[transactionHash]/page.tsx`.
 - Move `src/app/fame/gallery/stake/` to `src/app/fame/market/stake/`.
-- Move `src/app/fame/gallery/test/` to `src/app/fame/market/test/`.
 - Modify `src/features/appbar/components/SiteMenu.tsx`.
 - Modify `src/features/appbar/components.app/SiteMenu.tsx`.
 - Modify the moved `src/features/fame-market/components/GalleryView.tsx`.
@@ -569,9 +568,9 @@ The membership snapshot is a server-only cache DTO. Page composition passes only
 
 **Approach:**
 
-1. Move the route family and module together so moved pages never import a temporary compatibility path. Update route-facing metadata to **FAME Marketplace** and TEST surfaces to **TEST Marketplace**.
+1. Move the canonical route family and module together so moved pages never import a temporary compatibility path. Update route-facing metadata to **FAME Marketplace**.
 2. Change both shared menus to expose three distinct entries: Marketplace `/fame/market`, Gallery `/fame/gallery`, and Rotator `/fame/rotate`. Keep the shared app-bar triggers unchanged.
-3. Change purchase-success, receipt-return, liquidity, stake, deposit, unstake, and admin href constructors to the Market namespace. Keep every meaningful existing interaction as its current real page.
+3. Change purchase-success, receipt-return, liquidity, stake, deposit, and unstake href constructors to the Market namespace. Keep every meaningful canonical interaction as its current real page.
 4. Rename public query-key roots and browser-storage namespaces from `fame-gallery` to market equivalents. Treat old custody hints as disposable; canonical discovery still performs its full scan.
 5. Preserve internal `Gallery*` protocol-domain types and component names when they remain accurate. Do not mix a broad private-symbol rename into the route contract change.
 6. Update source-reading tests to assert the complete new route map. The vacated Gallery root is created by U7; every old nested marketplace path remains absent and receives no redirect.
@@ -581,12 +580,12 @@ The membership snapshot is a server-only cache DTO. Page composition passes only
 - `/fame/market` renders the existing marketplace against the configured production runtime.
 - Verified purchase navigation uses `/fame/market/purchase/[transactionHash]`, and receipt actions return to Market rather than Gallery.
 - `/fame/market/stake`, `/stake/deposit`, and `/stake/unstake` retain their current page components and return links.
-- `/fame/market/test` and `/fame/market/test/admin` retain TEST runtime and authority behavior with corrected titles and admin hrefs.
+- `/fame/market/test` and `/fame/market/test/admin` are absent and receive no redirect, alias, or retired page.
 - Both SiteMenu implementations render distinct Marketplace, Gallery, and Rotator entries at the settled paths.
 - No production source constructs `/fame/gallery/purchase`, `/fame/gallery/stake`, or `/fame/gallery/test`.
 - The old nested marketplace URLs return not found and do not redirect; `/fame/gallery` itself is reserved for U7.
 - Market React Query and custody-hint namespaces no longer collide with Gallery; missing old hints triggers canonical discovery rather than an empty catalog.
-- Existing marketplace purchase, redemption, liquidity, receipt, discovery, metadata, and admin tests pass after the move.
+- Existing marketplace purchase, redemption, liquidity, receipt, discovery, and metadata tests pass after the move.
 
 **Verification:**
 
@@ -990,7 +989,7 @@ Run the app with the normal local deployment context and inspect `/fame` at desk
 
 Inspect Market and Gallery separately:
 
-- Confirm `/fame/market`, its purchase receipt, stake, deposit, unstake, TEST, and TEST admin routes render the current marketplace components with **Marketplace** labels and no behavior regression.
+- Confirm `/fame/market`, its purchase receipt, stake, deposit, and unstake routes render the current marketplace components with **Marketplace** labels and no behavior regression; confirm `/fame/market/test` and `/fame/market/test/admin` are absent.
 - Confirm both shared menus and the landing menu distinguish Marketplace `/fame/market`, Gallery `/fame/gallery`, and Rotator `/fame/rotate`.
 - Confirm old `/fame/gallery/stake`, `/fame/gallery/test`, and `/fame/gallery/purchase/*` paths return not found without redirecting.
 - With a controlled Art Pool fixture, confirm `/fame/gallery` renders exactly the runtime-derived public token cards in ascending order at desktop and 390-by-844 sizes, keeps its geometry stable while images/status load, and has no horizontal overflow. Inspect server output, React payloads, image requests, and logs to confirm there is no direct representation of the excluded IDs, bounds, or count; do not misstate the publicly inferable gaps as confidential.
@@ -999,7 +998,7 @@ Inspect Market and Gallery separately:
 - Simulate missing marketplace configuration, one failed ownership read, warm status refresh failure, and cold status failure. Confirm only public decoration degrades, timestamps remain honest, and the filtered grid stays available.
 - Simulate cold Art Pool bound failure, refresh failure at 300 seconds, invalid bounds, and either CreatorArtistMagic relationship mismatch. Confirm each renders a concise Gallery-level unavailable state with no token cards, no guessed empty exclusion, and no hidden-ID detail. Then warm a new valid membership snapshot and confirm the filtered public set returns.
 - Inspect `/fame/gallery` network and client chunks. It may use its server status projection and lazy image route, but it must not initialize a browser wallet, browser RPC, quote request, or Market transaction/provider bundle.
-- Confirm Gallery contains one concise page-level Market action and no per-card buy control, owner address, redemption, liquidity, receipt, TEST, or admin surface.
+- Confirm Gallery contains one concise page-level Market action and no per-card buy control, owner address, redemption, liquidity, or receipt surface.
 
 Inspect `/fame/rotate` separately:
 

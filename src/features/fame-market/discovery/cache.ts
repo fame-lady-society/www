@@ -1,5 +1,4 @@
 import type { GalleryQueryIdentity } from "../queryKeys";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 
 export const CUSTODY_HINT_CACHE_SCHEMA_VERSION = 1;
 export const CUSTODY_HINT_CACHE_MAX_BYTES = 16_384;
@@ -21,24 +20,15 @@ export type GalleryCustodyHintCache = {
   updatedAt: number;
 };
 
-const defaultQueryIdentity: GalleryQueryIdentity = {
-  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
-  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
-};
-
 export function createGalleryCustodyCacheIdentity(
-  identity: GalleryQueryIdentity = defaultQueryIdentity,
-  bounds: { firstTokenId: bigint; lastTokenId: bigint } = {
-    firstTokenId: BigInt(
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.firstTokenId,
-    ),
-    lastTokenId: BigInt(
-      BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection.lastTokenId,
-    ),
-  },
+  identity: GalleryQueryIdentity,
+  bounds: { firstTokenId: bigint; lastTokenId: bigint },
 ): GalleryCustodyCacheIdentity {
+  if (!identity || !bounds) {
+    throw new Error(
+      "Gallery custody cache identity requires explicit runtime values.",
+    );
+  }
   return {
     chainId: identity.chainId,
     manifestVersion: identity.manifestVersion,
@@ -57,9 +47,14 @@ function sortedUniqueTokenIds(tokenIds: readonly bigint[]) {
 
 export function createGalleryCustodyHintCache(
   heldTokenIds: readonly bigint[],
+  identity: GalleryCustodyCacheIdentity,
   updatedAt = Date.now(),
-  identity = createGalleryCustodyCacheIdentity(),
 ): GalleryCustodyHintCache {
+  if (!identity) {
+    throw new Error(
+      "Gallery custody hints require an explicit runtime identity.",
+    );
+  }
   return {
     schemaVersion: CUSTODY_HINT_CACHE_SCHEMA_VERSION,
     identity,

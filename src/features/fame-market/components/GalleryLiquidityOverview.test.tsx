@@ -62,6 +62,7 @@ describe("gallery liquidity overview", () => {
             account: "0x7777777777777777777777777777777777777777",
             unitCount: 2n,
             indexPlusOne: 1n,
+            withdrawalPremium: 15n * 10n ** 18n,
           },
         }}
       />,
@@ -71,5 +72,14 @@ describe("gallery liquidity overview", () => {
     assert.match(html, /current share per marketplace sale/i);
     assert.match(html, /Add Society NFTs/);
     assert.match(html, /Exit liquidity/);
+  });
+
+  it("describes selected withdrawal and remaining-unit provider share without a random exit", () => {
+    const html = renderToStaticMarkup(
+      <GalleryLiquidityEducationCard global={global} showCta={false} />,
+    );
+    assert.match(html, /choose one current marketplace Society/i);
+    assert.match(html, /remaining credited units may still receive/i);
+    assert.doesNotMatch(html, /pseudorandom|free exit/i);
   });
 });

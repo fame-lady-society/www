@@ -356,6 +356,8 @@ export function GalleryStakeDepositView() {
             if (terminal) transaction.reset();
             transaction.setModalOpen(false);
           }}
+          onRetryRefresh={() => void transaction.retryRefresh()}
+          refreshRetrying={transaction.refreshRetrying}
         />
       </Stack>
     </Container>

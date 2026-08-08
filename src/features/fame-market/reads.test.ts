@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
 import {
   GALLERY_POOL_SCAN_BATCH_SIZE,
   GALLERY_POOL_SCAN_CONCURRENCY,
@@ -25,6 +24,12 @@ type CapturedMulticall = {
 const owner = "0x0000000000000000000000000000000000000001" as Address;
 const feeRecipient = "0x0000000000000000000000000000000000000002" as Address;
 const other = "0x0000000000000000000000000000000000000003" as Address;
+const addresses = {
+  marketplace: "0x1111111111111111111111111111111111111111",
+  fame: "0x2222222222222222222222222222222222222222",
+  mirror: "0x3333333333333333333333333333333333333333",
+  creatorMagic: "0x4444444444444444444444444444444444444444",
+} as const;
 const artwork = `0x${"ab".repeat(32)}` as Hash;
 
 function success(result: unknown) {
@@ -56,14 +61,13 @@ function createClient(
 }
 
 function standardResult(functionName: string, tokenId: bigint | null) {
-  const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
   switch (functionName) {
     case "fame":
-      return success(config.addresses.fame);
+      return success(addresses.fame);
     case "mirror":
-      return success(config.addresses.mirror);
+      return success(addresses.mirror);
     case "creatorMagic":
-      return success(config.addresses.creatorMagic);
+      return success(addresses.creatorMagic);
     case "owner":
       return success(owner);
     case "paused":
@@ -99,7 +103,7 @@ function standardResult(functionName: string, tokenId: bigint | null) {
     case "tokenURI":
       return success(`data:token/${tokenId}`);
     case "ownerAt":
-      return success(tokenId === 2n ? config.addresses.gallery : feeRecipient);
+      return success(tokenId === 2n ? addresses.marketplace : feeRecipient);
     case "balanceOf":
       return success(8_000_000n);
     case "allowance":
@@ -112,40 +116,56 @@ function standardResult(functionName: string, tokenId: bigint | null) {
 describe("successor gallery canonical reads", () => {
   it("pins the eleven landing authority fields and rejects a mismatched relationship", async () => {
     const mock = createClient(standardResult);
-    const result = await readMarketplaceLandingAuthority(mock.client, 44_399_999n, {
-      marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-      fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
-      mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
-      creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
-    });
-    assert.equal(result.status, "success");
-    assert.deepEqual(mock.multicalls[0]?.contracts.map(({ functionName }) => functionName), [
-      "fame", "mirror", "creatorMagic", "paused", "premium", "totalProviderUnits",
-      "activeProviderCount", "inventory", "unit", "totalSupply", "decimals",
-    ]);
-    const mismatch = createClient((functionName, tokenId) =>
-      functionName === "mirror" ? success(other) : standardResult(functionName, tokenId),
+    const result = await readMarketplaceLandingAuthority(
+      mock.client,
+      44_399_999n,
+      addresses,
     );
-    const rejected = await readMarketplaceLandingAuthority(mismatch.client, 44_399_999n, {
-      marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-      fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
-      mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
-      creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
-    });
+    assert.equal(result.status, "success");
+    assert.deepEqual(
+      mock.multicalls[0]?.contracts.map(({ functionName }) => functionName),
+      [
+        "fame",
+        "mirror",
+        "creatorMagic",
+        "paused",
+        "premium",
+        "totalProviderUnits",
+        "activeProviderCount",
+        "inventory",
+        "unit",
+        "totalSupply",
+        "decimals",
+      ],
+    );
+    const mismatch = createClient((functionName, tokenId) =>
+      functionName === "mirror"
+        ? success(other)
+        : standardResult(functionName, tokenId),
+    );
+    const rejected = await readMarketplaceLandingAuthority(
+      mismatch.client,
+      44_399_999n,
+      addresses,
+    );
     assert.equal(rejected.status, "failure");
   });
   it("pins all global successor fields to the supplied block", async () => {
     const mock = createClient(standardResult);
-    const result = await readGalleryGlobalState(mock.client, 44_399_999n);
+    const result = await readGalleryGlobalState(
+      mock.client,
+      44_399_999n,
+      addresses,
+    );
 
     assert.deepEqual(result, {
       status: "success",
       blockNumber: 44_399_999n,
       data: {
-        marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-        fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
-        mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
-        creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
+        marketplace: addresses.marketplace,
+        fame: addresses.fame,
+        mirror: addresses.mirror,
+        creatorMagic: addresses.creatorMagic,
         owner,
         paused: false,
         premium: 25n,
@@ -184,7 +204,12 @@ describe("successor gallery canonical reads", () => {
 
   it("loads combined Mint and Burn membership before hydrating eligible artwork", async () => {
     const mock = createClient(standardResult);
-    const result = await readGalleryPoolState(mock.client, 500n, [1n, 2n, 3n]);
+    const result = await readGalleryPoolState(
+      mock.client,
+      500n,
+      [1n, 2n, 3n],
+      addresses,
+    );
 
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
@@ -223,7 +248,12 @@ describe("successor gallery canonical reads", () => {
       }
       return standardResult(functionName, tokenId);
     });
-    const result = await readGalleryPoolState(mock.client, 501n, [1n, 2n]);
+    const result = await readGalleryPoolState(
+      mock.client,
+      501n,
+      [1n, 2n],
+      addresses,
+    );
 
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
@@ -243,7 +273,12 @@ describe("successor gallery canonical reads", () => {
       }
       return standardResult(functionName, tokenId);
     });
-    const result = await readGalleryPoolState(mock.client, 502n, [2n, 3n]);
+    const result = await readGalleryPoolState(
+      mock.client,
+      502n,
+      [2n, 3n],
+      addresses,
+    );
 
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
@@ -265,11 +300,12 @@ describe("successor gallery canonical reads", () => {
       }
       return standardResult(functionName, tokenId);
     });
-    const states = await readGalleryTokenStates(mock.client, 503n, [
-      1n,
-      2n,
-      3n,
-    ]);
+    const states = await readGalleryTokenStates(
+      mock.client,
+      503n,
+      [1n, 2n, 3n],
+      addresses,
+    );
 
     assert.equal(states.get(1n)?.status, "success");
     assert.deepEqual(states.get(2n), {
@@ -282,8 +318,18 @@ describe("successor gallery canonical reads", () => {
 
   it("distinguishes owner, non-owner, and owner-read failure", async () => {
     const mock = createClient(standardResult);
-    const owned = await readGalleryAuthority(mock.client, 600n, owner);
-    const denied = await readGalleryAuthority(mock.client, 600n, other);
+    const owned = await readGalleryAuthority(
+      mock.client,
+      600n,
+      owner,
+      addresses,
+    );
+    const denied = await readGalleryAuthority(
+      mock.client,
+      600n,
+      other,
+      addresses,
+    );
     assert.equal(owned.status, "success");
     assert.equal(owned.status === "success" && owned.data.authority, "owner");
     assert.equal(denied.status, "success");
@@ -297,16 +343,24 @@ describe("successor gallery canonical reads", () => {
         ? { status: "failure", error: new Error("rpc") }
         : standardResult(functionName, tokenId),
     );
-    assert.deepEqual(await readGalleryAuthority(failed.client, 601n, owner), {
-      status: "failure",
-      blockNumber: 601n,
-      message: "Gallery owner is unavailable",
-    });
+    assert.deepEqual(
+      await readGalleryAuthority(failed.client, 601n, owner, addresses),
+      {
+        status: "failure",
+        blockNumber: 601n,
+        message: "Gallery owner is unavailable",
+      },
+    );
   });
 
   it("pins buyer balance and marketplace allowance to one account block", async () => {
     const mock = createClient(standardResult);
-    const result = await readGalleryAccountState(mock.client, 650n, other);
+    const result = await readGalleryAccountState(
+      mock.client,
+      650n,
+      other,
+      addresses,
+    );
 
     assert.deepEqual(result, {
       status: "success",
@@ -325,7 +379,7 @@ describe("successor gallery canonical reads", () => {
     );
   });
 
-  it("uses the complete fixed 1-888 domain by default", async () => {
+  it("uses the explicitly supplied complete 1-888 domain", async () => {
     const mock = createClient((functionName, tokenId) => {
       if (
         functionName === "isTokenInMintPool" ||
@@ -335,7 +389,15 @@ describe("successor gallery canonical reads", () => {
       }
       return standardResult(functionName, tokenId);
     });
-    const result = await readGalleryPoolState(mock.client, 675n);
+    const tokenIds = Array.from({ length: 888 }, (_, index) =>
+      BigInt(index + 1),
+    );
+    const result = await readGalleryPoolState(
+      mock.client,
+      675n,
+      tokenIds,
+      addresses,
+    );
 
     assert.equal(result.status, "success");
     const membership = mock.multicalls.flatMap((call) => call.contracts);
@@ -361,7 +423,7 @@ describe("successor gallery canonical reads", () => {
       },
     };
     const ids = Array.from({ length: 130 }, (_, index) => BigInt(index + 1));
-    const result = await readGalleryPoolState(client, 700n, ids);
+    const result = await readGalleryPoolState(client, 700n, ids, addresses);
 
     assert.equal(result.status, "success");
     assert.ok(maximum <= GALLERY_POOL_SCAN_CONCURRENCY);

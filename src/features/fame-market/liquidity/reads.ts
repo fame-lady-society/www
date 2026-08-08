@@ -21,6 +21,7 @@ export type GalleryLiquidityProviderPosition = Readonly<{
   account: Address;
   unitCount: bigint;
   indexPlusOne: bigint;
+  withdrawalPremium: bigint | null;
 }>;
 
 export type GalleryLiquidityReadClient = GalleryMulticallClient & {
@@ -187,31 +188,57 @@ export async function readLiquidityProviderPosition(
   account: Address,
   addresses: GalleryReadAddresses,
 ): Promise<GalleryProjectionResult<GalleryLiquidityProviderPosition>> {
+  let position: unknown;
   try {
-    const position = await client.readContract({
+    position = await client.readContract({
       abi: universalPoolArtMarketplaceAbi,
       address: addresses.marketplace,
       functionName: "providerPosition",
       args: [account],
       blockNumber,
     });
-    if (
-      !Array.isArray(position) ||
-      typeof position[0] !== "bigint" ||
-      typeof position[1] !== "bigint"
-    ) {
-      return failure("Provider position is incomplete.", blockNumber);
-    }
+  } catch {
+    return failure("Provider position is unavailable.", blockNumber);
+  }
+  if (
+    !Array.isArray(position) ||
+    typeof position[0] !== "bigint" ||
+    typeof position[1] !== "bigint"
+  ) {
+    return failure("Provider position is incomplete.", blockNumber);
+  }
+  const [unitCount, indexPlusOne] = position;
+  if (unitCount === 0n) {
     return {
       status: "success",
       blockNumber,
       data: {
         account,
-        unitCount: position[0],
-        indexPlusOne: position[1],
+        unitCount,
+        indexPlusOne,
+        withdrawalPremium: null,
       },
     };
-  } catch {
-    return failure("Provider position is unavailable.", blockNumber);
   }
+
+  let withdrawalPremium: unknown;
+  try {
+    withdrawalPremium = await client.readContract({
+      abi: universalPoolArtMarketplaceAbi,
+      address: addresses.marketplace,
+      functionName: "withdrawalPremium",
+      args: [account],
+      blockNumber,
+    });
+  } catch {
+    return failure("Provider withdrawal premium is unavailable.", blockNumber);
+  }
+  if (typeof withdrawalPremium !== "bigint") {
+    return failure("Provider withdrawal premium is incomplete.", blockNumber);
+  }
+  return {
+    status: "success",
+    blockNumber,
+    data: { account, unitCount, indexPlusOne, withdrawalPremium },
+  };
 }

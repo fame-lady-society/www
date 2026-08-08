@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
 import type { GalleryArtworkTarget } from "../types";
-import { createGalleryCustodyHintCache } from "./cache";
+import {
+  createGalleryCustodyHintCache,
+  type GalleryCustodyCacheIdentity,
+} from "./cache";
 import {
   createInitialGalleryScanRegistry,
   discoverGalleryHoldings,
@@ -14,6 +17,18 @@ const marketplace = "0x1111111111111111111111111111111111111111" as Address;
 const outside = "0x2222222222222222222222222222222222222222" as Address;
 const hash =
   "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
+const cacheIdentity: GalleryCustodyCacheIdentity = {
+  chainId: 8_453,
+  manifestVersion: 1,
+  marketplaceAddress: marketplace,
+  deploymentBlock: "0",
+  firstTokenId: "1",
+  lastTokenId: "888",
+};
+
+function hintCache(tokenIds: readonly bigint[], updatedAt: number) {
+  return createGalleryCustodyHintCache(tokenIds, cacheIdentity, updatedAt);
+}
 
 function target(tokenId: bigint): GalleryArtworkTarget {
   return {
@@ -98,7 +113,8 @@ describe("gallery custody discovery", () => {
     const result = await discoverGalleryHoldings({
       source: source({ held: [1n, 3n] }),
       marketplace,
-      restoredHints: createGalleryCustodyHintCache([1n, 2n], 1),
+      cacheIdentity,
+      restoredHints: hintCache([1n, 2n], 1),
       persist: async () => undefined,
       onTargets: (kind, targets) => {
         stages.push({ kind, tokenIds: targets.map(({ tokenId }) => tokenId) });
@@ -119,6 +135,7 @@ describe("gallery custody discovery", () => {
     const result = await discoverGalleryHoldings({
       source: source({ held: [1n], failScan: true }),
       marketplace,
+      cacheIdentity,
       restoredHints: null,
       persist: async () => undefined,
     });
@@ -134,7 +151,8 @@ describe("gallery custody discovery", () => {
     const result = await discoverGalleryHoldings({
       source: source({ held: [1n], failCustody: [1n] }),
       marketplace,
-      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      cacheIdentity,
+      restoredHints: hintCache([1n], 1),
       persist: async (record) => {
         persistedIds = record.heldTokenIds;
       },
@@ -168,7 +186,8 @@ describe("gallery custody discovery", () => {
     const result = await discoverGalleryHoldings({
       source: reconciliationFailure,
       marketplace,
-      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      cacheIdentity,
+      restoredHints: hintCache([1n], 1),
       persist: async () => undefined,
     });
 
@@ -220,7 +239,8 @@ describe("gallery custody discovery", () => {
     const result = await discoverGalleryHoldings({
       source: finallyNotHeld,
       marketplace,
-      restoredHints: createGalleryCustodyHintCache([1n], 1),
+      cacheIdentity,
+      restoredHints: hintCache([1n], 1),
       persist: async (record) => {
         persistedIds = record.heldTokenIds;
       },

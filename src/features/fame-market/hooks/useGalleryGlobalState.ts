@@ -56,7 +56,7 @@ export function useGalleryGlobalState({
     queryKey: galleryQueryKeys.global(identity, blockNumber ?? 0n),
     queryFn: () => {
       if (!client || blockNumber === null) {
-        throw new Error("Base Sepolia public client is unavailable");
+        throw new Error("Gallery public client is unavailable");
       }
       return readGalleryGlobalState(
         client,

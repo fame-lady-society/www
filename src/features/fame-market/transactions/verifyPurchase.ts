@@ -202,7 +202,7 @@ export async function verifyGalleryPurchase({
   const sourceId = asBigint(purchase.args.sourceId);
   const artwork = asHash(purchase.args.artwork);
   const unit = asBigint(purchase.args.unitAmount);
-  const premium = asBigint(purchase.args.premiumAmount);
+  const grossPremiumAmount = asBigint(purchase.args.grossPremiumAmount);
   const inventoryBefore = asBigint(purchase.args.inventoryBefore);
   const inventoryAfter = asBigint(purchase.args.inventoryAfter);
   const expectedRoute = expectedRouteFacts(route);
@@ -215,7 +215,7 @@ export async function verifyGalleryPurchase({
     sourceId === null ||
     artwork === null ||
     unit === null ||
-    premium === null ||
+    grossPremiumAmount === null ||
     inventoryBefore === null ||
     inventoryAfter === null ||
     !isAddressEqual(buyer, terms.account) ||
@@ -225,7 +225,7 @@ export async function verifyGalleryPurchase({
     sourceId !== expectedRoute.sourceId ||
     !sameHex(artwork, terms.artworkHash) ||
     unit !== terms.unit ||
-    premium > terms.maxPremium ||
+    grossPremiumAmount > terms.maxPremium ||
     inventoryAfter < inventoryBefore
   ) {
     return unverified(
@@ -305,8 +305,8 @@ export async function verifyGalleryPurchase({
       deliveredShellId: route.shellId,
       artworkHash: artwork,
       unit,
-      premium,
-      total: unit + premium,
+      premium: grossPremiumAmount,
+      total: unit + grossPremiumAmount,
       recipient,
       affectedTokenIds: expectedRoute.affectedTokenIds,
     },

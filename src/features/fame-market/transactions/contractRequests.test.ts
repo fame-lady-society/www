@@ -2,28 +2,25 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
 import { fameAbi, universalPoolArtMarketplaceAbi } from "../../../wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import type {
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
 } from "../types";
 import {
-  galleryAdminContractRequest,
   galleryApprovalContractRequest,
   galleryPurchaseContractRequest,
 } from "./contractRequests";
 
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
 const account = "0x1111111111111111111111111111111111111111" as Address;
 const recipient = account;
-const feeRecipient = "0x2222222222222222222222222222222222222222" as Address;
+const fame = "0x2222222222222222222222222222222222222222" as Address;
 const runtimeMarketplace =
   "0x3333333333333333333333333333333333333333" as Address;
 const artworkHash =
   "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as Hash;
 
 const terms: GalleryFrozenBuyerTerms = {
-  chainId: config.chainId,
+  chainId: 31_337,
   account,
   recipient,
   selectedTarget: {
@@ -34,7 +31,7 @@ const terms: GalleryFrozenBuyerTerms = {
   unit: 1_000n,
   maxPremium: 25n,
   maximumSpend: 1_025n,
-  allowanceTarget: config.addresses.gallery,
+  allowanceTarget: runtimeMarketplace,
 };
 
 function requestFacts(request: {
@@ -57,14 +54,14 @@ function requestFacts(request: {
 
 describe("gallery contract requests", () => {
   it("approves exactly the frozen unit plus displayed premium", () => {
-    const request = galleryApprovalContractRequest(terms);
+    const request = galleryApprovalContractRequest(terms, fame);
     assert.strictEqual(request.abi, fameAbi);
     assert.deepEqual(requestFacts(request), {
-      address: config.addresses.fame,
+      address: fame,
       account,
-      chainId: config.chainId,
+      chainId: 31_337,
       functionName: "approve",
-      args: [config.addresses.gallery, 1_025n],
+      args: [runtimeMarketplace, 1_025n],
       value: 0n,
     });
   });
@@ -74,7 +71,7 @@ describe("gallery contract requests", () => {
       ...terms,
       allowanceTarget: runtimeMarketplace,
     };
-    const approval = galleryApprovalContractRequest(runtimeTerms);
+    const approval = galleryApprovalContractRequest(runtimeTerms, fame);
     const purchase = galleryPurchaseContractRequest(runtimeTerms, {
       kind: "held",
       shellId: 19n,
@@ -93,9 +90,9 @@ describe("gallery contract requests", () => {
     const request = galleryPurchaseContractRequest(terms, route);
     assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
     assert.deepEqual(requestFacts(request), {
-      address: config.addresses.gallery,
+      address: runtimeMarketplace,
       account,
-      chainId: config.chainId,
+      chainId: 31_337,
       functionName: "purchaseHeld",
       args: [19n, artworkHash, 25n, 0n, recipient],
       value: 0n,
@@ -114,56 +111,13 @@ describe("gallery contract requests", () => {
       const request = galleryPurchaseContractRequest(terms, route);
       assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
       assert.deepEqual(requestFacts(request), {
-        address: config.addresses.gallery,
+        address: runtimeMarketplace,
         account,
-        chainId: config.chainId,
+        chainId: 31_337,
         functionName: "purchasePool",
         args: [19n, 7n, artworkHash, 25n, 0n, recipient],
         value: 0n,
       });
     });
   }
-
-  it("maps only the successor owner operations", () => {
-    const cases = [
-      {
-        call: { kind: "set_community_fee", fee: 10n } as const,
-        functionName: "setCommunityFee",
-        args: [10n],
-      },
-      {
-        call: { kind: "set_provider_fee", fee: 20n } as const,
-        functionName: "setProviderFee",
-        args: [20n],
-      },
-      {
-        call: { kind: "set_fee_recipient", feeRecipient } as const,
-        functionName: "setFeeRecipient",
-        args: [feeRecipient],
-      },
-      {
-        call: { kind: "pause" } as const,
-        functionName: "pause",
-        args: [],
-      },
-      {
-        call: { kind: "unpause" } as const,
-        functionName: "unpause",
-        args: [],
-      },
-    ];
-
-    for (const testCase of cases) {
-      const request = galleryAdminContractRequest(testCase.call, account);
-      assert.strictEqual(request.abi, universalPoolArtMarketplaceAbi);
-      assert.deepEqual(requestFacts(request), {
-        address: config.addresses.gallery,
-        account,
-        chainId: config.chainId,
-        functionName: testCase.functionName,
-        args: testCase.args,
-        value: 0n,
-      });
-    }
-  });
 });

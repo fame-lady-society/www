@@ -155,9 +155,14 @@ export function GalleryLiquidityEducationCard({
             ID is not reserved.
           </Typography>
           <Typography>
-            A free exit returns one pseudorandom current pool Society. Selecting
-            a specific current pool Society costs the live premium directly in
-            FAME.
+            When you exit, choose one current marketplace Society and accept
+            the provider-specific withdrawal premium shown before the wallet
+            action.
+          </Typography>
+          <Typography>
+            The exiting unit is removed before provider-fee distribution. Any
+            remaining credited units may still receive their normal provider
+            share.
           </Typography>
           <Typography color="warning.main" fontWeight={700}>
             Direct Society NFT transfers to the marketplace are

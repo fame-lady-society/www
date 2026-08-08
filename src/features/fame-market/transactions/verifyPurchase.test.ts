@@ -100,7 +100,7 @@ function purchased({
   eventRecipient = recipient,
   eventArtwork = artworkHash,
   unit = 1_000n,
-  premium = 50n,
+  grossPremiumAmount = 50n,
   inventoryBefore = 10n,
   inventoryAfter = 10n,
   logIndex = 2,
@@ -111,7 +111,7 @@ function purchased({
   eventRecipient?: Address;
   eventArtwork?: Hash;
   unit?: bigint;
-  premium?: bigint;
+  grossPremiumAmount?: bigint;
   inventoryBefore?: bigint;
   inventoryAfter?: bigint;
   logIndex?: number;
@@ -138,7 +138,7 @@ function purchased({
         { type: "uint256", name: "sourceId" },
         { type: "bytes32", name: "artwork" },
         { type: "uint256", name: "unitAmount" },
-        { type: "uint256", name: "premiumAmount" },
+        { type: "uint256", name: "grossPremiumAmount" },
         { type: "uint256", name: "inventoryBefore" },
         { type: "uint256", name: "inventoryAfter" },
       ],
@@ -147,7 +147,7 @@ function purchased({
         sourceId,
         eventArtwork,
         unit,
-        premium,
+        grossPremiumAmount,
         inventoryBefore,
         inventoryAfter,
       ],
@@ -336,7 +336,7 @@ describe("successor gallery purchase verification", () => {
       purchased({ route: { kind: "held", shellId: 88n } }),
       purchased({ route: mintRoute, eventArtwork: otherArtworkHash }),
       purchased({ route: mintRoute, unit: 999n }),
-      purchased({ route: mintRoute, premium: 76n }),
+      purchased({ route: mintRoute, grossPremiumAmount: 76n }),
       purchased({
         route: mintRoute,
         inventoryBefore: 11n,

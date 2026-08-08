@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import {
   freezeGalleryBuyerTerms,
   resolveGalleryFulfillment,
@@ -9,8 +8,8 @@ import {
   type GalleryFulfillmentTokenState,
 } from "./resolveFulfillment";
 
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-const marketplace = config.addresses.gallery;
+const chainId = 31_337;
+const marketplace = "0x3333333333333333333333333333333333333333" as Address;
 const buyer = "0x1111111111111111111111111111111111111111" as Address;
 const elsewhere = "0x2222222222222222222222222222222222222222" as Address;
 const zero = "0x0000000000000000000000000000000000000000" as Address;
@@ -84,7 +83,7 @@ function frozenTerms(
       displayedPremium,
     },
     {
-      chainId: config.chainId,
+      chainId,
       marketplace: runtimeMarketplace,
     },
   );
@@ -95,7 +94,7 @@ describe("gallery fulfillment resolver", () => {
     const terms = frozenTerms();
 
     assert.deepEqual(terms, {
-      chainId: config.chainId,
+      chainId,
       account: buyer,
       recipient: buyer,
       selectedTarget: {

@@ -25,7 +25,82 @@ const buyer = "0x6666666666666666666666666666666666666666" as Address;
 const usdc = "0x7777777777777777777777777777777777777777" as Address;
 const transactionHash = `0x${"aa".repeat(32)}` as Hash;
 const artworkHash = `0x${"bb".repeat(32)}` as Hash;
+const otherArtworkHash = `0x${"dd".repeat(32)}` as Hash;
 const routeHash = `0x${"cc".repeat(32)}` as Hash;
+
+const inputTuple = (input: {
+  name: string;
+  type: string;
+  indexed?: boolean;
+}) => ({
+  name: input.name,
+  type: input.type,
+  indexed: input.indexed,
+});
+
+describe("generated marketplace receipt event ABIs", () => {
+  it("exposes the finalized ArtworkPurchased tuple", () => {
+    const event = universalPoolArtMarketplaceAbi.find(
+      (entry) => entry.type === "event" && entry.name === "ArtworkPurchased",
+    );
+    assert.ok(event);
+    assert.deepEqual(event.inputs.map(inputTuple), [
+      { name: "buyer", type: "address", indexed: true },
+      { name: "recipient", type: "address", indexed: true },
+      { name: "shellId", type: "uint256", indexed: true },
+      { name: "path", type: "uint8", indexed: false },
+      { name: "sourceId", type: "uint256", indexed: false },
+      { name: "artwork", type: "bytes32", indexed: false },
+      { name: "unitAmount", type: "uint256", indexed: false },
+      { name: "grossPremiumAmount", type: "uint256", indexed: false },
+      { name: "inventoryBefore", type: "uint256", indexed: false },
+      { name: "inventoryAfter", type: "uint256", indexed: false },
+    ]);
+  });
+
+  it("exposes source and artwork facts in the finalized CheckoutSettled tuple", () => {
+    const event = fameMarketplaceCheckoutAbi.find(
+      (entry) => entry.type === "event" && entry.name === "CheckoutSettled",
+    );
+    assert.ok(event);
+    assert.deepEqual(event.inputs.map(inputTuple), [
+      { name: "buyer", type: "address", indexed: true },
+      { name: "inputAsset", type: "address", indexed: true },
+      { name: "shellId", type: "uint256", indexed: true },
+      { name: "routeHash", type: "bytes32", indexed: false },
+      { name: "fulfillmentPath", type: "uint8", indexed: false },
+      { name: "sourceId", type: "uint256", indexed: false },
+      { name: "artwork", type: "bytes32", indexed: false },
+      { name: "inputAmount", type: "uint256", indexed: false },
+      { name: "inputRefund", type: "uint256", indexed: false },
+      { name: "routerFameOutput", type: "uint256", indexed: false },
+      {
+        name: "marketplaceFameCharge",
+        type: "uint256",
+        indexed: false,
+      },
+      { name: "fameRefund", type: "uint256", indexed: false },
+    ]);
+  });
+
+  it("keeps submitted and executed route hashes distinct in SocietyRedeemed", () => {
+    const event = fameMarketplaceCheckoutAbi.find(
+      (entry) => entry.type === "event" && entry.name === "SocietyRedeemed",
+    );
+    assert.ok(event);
+    assert.deepEqual(event.inputs.map(inputTuple), [
+      { name: "caller", type: "address", indexed: true },
+      { name: "outputAsset", type: "address", indexed: true },
+      { name: "tokenIdsHash", type: "bytes32", indexed: true },
+      { name: "tokenCount", type: "uint256", indexed: false },
+      { name: "quotedFameInput", type: "uint256", indexed: false },
+      { name: "actualFameInput", type: "uint256", indexed: false },
+      { name: "submittedRouteHash", type: "bytes32", indexed: false },
+      { name: "executedRouteHash", type: "bytes32", indexed: false },
+      { name: "netAmountOut", type: "uint256", indexed: false },
+    ]);
+  });
+});
 
 function topics(value: ReturnType<typeof encodeEventTopics>) {
   return value as unknown as readonly Hex[];
@@ -52,10 +127,14 @@ function purchased({
   shellId,
   path,
   sourceId,
+  artwork = artworkHash,
+  grossPremiumAmount = 30n,
 }: {
   shellId: bigint;
   path: 0 | 1 | 2;
   sourceId: bigint;
+  artwork?: Hash;
+  grossPremiumAmount?: bigint;
 }) {
   return log(
     marketplace,
@@ -76,7 +155,7 @@ function purchased({
         { type: "uint256" },
         { type: "uint256" },
       ],
-      [path, sourceId, artworkHash, 1_000n, 30n, 4n, 5n],
+      [path, sourceId, artwork, 1_000n, grossPremiumAmount, 4n, 5n],
     ),
   );
 }
@@ -94,7 +173,27 @@ function metadataUpdate(tokenId: bigint) {
   );
 }
 
-function checkoutSettled(shellId: bigint) {
+function checkoutSettled({
+  shellId,
+  path = 1,
+  sourceId = 31n,
+  artwork = artworkHash,
+  inputAmount = 12_000_000n,
+  inputRefund = 250_000n,
+  routerFameOutput = 1_050n,
+  marketplaceFameCharge = 1_030n,
+  fameRefund = 20n,
+}: {
+  shellId: bigint;
+  path?: 0 | 1 | 2;
+  sourceId?: bigint;
+  artwork?: Hash;
+  inputAmount?: bigint;
+  inputRefund?: bigint;
+  routerFameOutput?: bigint;
+  marketplaceFameCharge?: bigint;
+  fameRefund?: bigint;
+}) {
   return log(
     checkout,
     topics(
@@ -109,12 +208,24 @@ function checkoutSettled(shellId: bigint) {
         { type: "bytes32" },
         { type: "uint8" },
         { type: "uint256" },
+        { type: "bytes32" },
+        { type: "uint256" },
         { type: "uint256" },
         { type: "uint256" },
         { type: "uint256" },
         { type: "uint256" },
       ],
-      [routeHash, 1, 12_000_000n, 250_000n, 1_050n, 1_030n, 20n],
+      [
+        routeHash,
+        path,
+        sourceId,
+        artwork,
+        inputAmount,
+        inputRefund,
+        routerFameOutput,
+        marketplaceFameCharge,
+        fameRefund,
+      ],
     ),
   );
 }
@@ -168,6 +279,7 @@ describe("gallery purchase receipt projection", () => {
     assert.equal(projection.path, "held");
     assert.equal(projection.shellId, 7n);
     assert.equal(projection.sourceId, null);
+    assert.equal(projection.grossPremiumAmount, 30n);
     assert.equal(projection.total, 1_030n);
     assert.equal(projection.checkout, null);
     assert.equal(projection.route, null);
@@ -182,13 +294,18 @@ describe("gallery purchase receipt projection", () => {
         metadataUpdate(31n),
         transfer(8n),
         purchased({ shellId: 8n, path: 1, sourceId: 31n }),
-        checkoutSettled(8n),
+        checkoutSettled({ shellId: 8n }),
       ]),
       addresses,
     );
 
     assert.equal(projection.path, "mint");
     assert.equal(projection.sourceId, 31n);
+    assert.equal(projection.grossPremiumAmount, 30n);
+    assert.equal(
+      projection.checkout?.marketplaceFameCharge,
+      projection.total,
+    );
     assert.deepEqual(projection.metadataUpdatedTokenIds, [8n, 31n]);
     assert.deepEqual(projection.checkout, {
       inputAsset: usdc,
@@ -208,6 +325,94 @@ describe("gallery purchase receipt projection", () => {
       feeAmount: 10n,
       netAmountOut: 1_050n,
     });
+  });
+
+  it("accepts checkout boons that include ambient input and FAME balances", () => {
+    const projection = projectGalleryPurchaseReceipt(
+      receipt([
+        routeExecuted(),
+        transfer(8n),
+        purchased({ shellId: 8n, path: 1, sourceId: 31n }),
+        checkoutSettled({
+          shellId: 8n,
+          inputRefund: 17_250_000n,
+          fameRefund: 25n,
+        }),
+      ]),
+      addresses,
+    );
+
+    assert.equal(projection.checkout?.inputRefund, 17_250_000n);
+    assert.equal(projection.checkout?.fameRefund, 25n);
+    assert.equal(projection.checkout?.routerFameOutput, 1_050n);
+    assert.equal(projection.checkout?.marketplaceFameCharge, 1_030n);
+  });
+
+  it("rejects checkout source mismatches for held and pool purchases", () => {
+    const cases = [
+      receipt([
+        routeExecuted(),
+        transfer(7n),
+        purchased({ shellId: 7n, path: 0, sourceId: 0n }),
+        checkoutSettled({ shellId: 7n, path: 0, sourceId: 1n }),
+      ]),
+      receipt([
+        routeExecuted(),
+        transfer(8n),
+        purchased({ shellId: 8n, path: 1, sourceId: 31n }),
+        checkoutSettled({ shellId: 8n, sourceId: 32n }),
+      ]),
+    ];
+
+    for (const candidate of cases) {
+      assert.throws(
+        () => projectGalleryPurchaseReceipt(candidate, addresses),
+        /does not match the marketplace purchase/,
+      );
+    }
+  });
+
+  it("rejects a checkout artwork mismatch", () => {
+    assert.throws(
+      () =>
+        projectGalleryPurchaseReceipt(
+          receipt([
+            routeExecuted(),
+            transfer(8n),
+            purchased({ shellId: 8n, path: 1, sourceId: 31n }),
+            checkoutSettled({ shellId: 8n, artwork: otherArtworkHash }),
+          ]),
+          addresses,
+        ),
+      /does not match the marketplace purchase/,
+    );
+  });
+
+  it("rejects missing, duplicate, and malformed checkout settlements", () => {
+    const validCheckout = checkoutSettled({ shellId: 8n });
+    const purchaseLogs = [
+      routeExecuted(),
+      transfer(8n),
+      purchased({ shellId: 8n, path: 1, sourceId: 31n }),
+    ];
+    const cases = [
+      [purchaseLogs, /without a checkout settlement/],
+      [
+        [...purchaseLogs, validCheckout, validCheckout],
+        /multiple checkout settlements/,
+      ],
+      [
+        [...purchaseLogs, { ...validCheckout, data: "0x12" as Hex }],
+        /malformed event/,
+      ],
+    ] as const;
+
+    for (const [logs, expectedError] of cases) {
+      assert.throws(() =>
+        projectGalleryPurchaseReceipt(receipt([...logs]), addresses),
+        expectedError,
+      );
+    }
   });
 
   it("rejects reverted, duplicated, and non-marketplace receipts", () => {

@@ -3100,52 +3100,6 @@ export const fameAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FameBurnPoolRotationWorker
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const fameBurnPoolRotationWorkerAbi = [
-  {
-    type: 'constructor',
-    inputs: [
-      { name: 'fame_', internalType: 'contract Fame', type: 'address' },
-      { name: 'mirror_', internalType: 'contract FameMirror', type: 'address' },
-      { name: 'rotator_', internalType: 'address', type: 'address' },
-    ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'targetTokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
-      { name: 'recipient', internalType: 'address', type: 'address' },
-    ],
-    name: 'rotate',
-    outputs: [{ name: 'rotations', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'nonpayable',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyUsed' },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'fameBalance', internalType: 'uint256', type: 'uint256' },
-      { name: 'nftBalance', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'InvalidStartingState',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'maxRotations', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'TargetNotReached',
-  },
-  { type: 'error', inputs: [], name: 'TransferFailed' },
-  { type: 'error', inputs: [], name: 'Unauthorized' },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FameBurnPoolRotator
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4497,6 +4451,18 @@ export const fameMarketplaceCheckoutAbi = [
         indexed: false,
       },
       {
+        name: 'sourceId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'artwork',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
         name: 'inputAmount',
         internalType: 'uint256',
         type: 'uint256',
@@ -4570,6 +4536,12 @@ export const fameMarketplaceCheckoutAbi = [
         indexed: false,
       },
       {
+        name: 'submittedRouteHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: false,
+      },
+      {
         name: 'executedRouteHash',
         internalType: 'bytes32',
         type: 'bytes32',
@@ -4586,17 +4558,13 @@ export const fameMarketplaceCheckoutAbi = [
   },
   {
     type: 'error',
-    inputs: [
-      { name: 'asset', internalType: 'address', type: 'address' },
-      { name: 'baseline', internalType: 'uint256', type: 'uint256' },
-      { name: 'current', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'AmbientBalanceConsumed',
+    inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
+    name: 'AmbiguousPoolSource',
   },
   {
     type: 'error',
     inputs: [{ name: 'sourceId', internalType: 'uint256', type: 'uint256' }],
-    name: 'AmbiguousPoolSource',
+    name: 'ArtPoolSourceExcluded',
   },
   {
     type: 'error',
@@ -4613,6 +4581,11 @@ export const fameMarketplaceCheckoutAbi = [
     name: 'BadRouteVersion',
   },
   { type: 'error', inputs: [], name: 'CheckoutIsFeeRecipient' },
+  {
+    type: 'error',
+    inputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
+    name: 'CheckoutMirrorBalanceNotZero',
+  },
   {
     type: 'error',
     inputs: [
@@ -4684,7 +4657,6 @@ export const fameMarketplaceCheckoutAbi = [
     ],
     name: 'InvalidSocietyTokenRange',
   },
-  { type: 'error', inputs: [], name: 'MarketPaused' },
   {
     type: 'error',
     inputs: [
@@ -4692,14 +4664,6 @@ export const fameMarketplaceCheckoutAbi = [
       { name: 'actual', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'MarketplaceChargeMismatch',
-  },
-  {
-    type: 'error',
-    inputs: [
-      { name: 'baseline', internalType: 'uint256', type: 'uint256' },
-      { name: 'current', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'MirrorBalanceChanged',
   },
   {
     type: 'error',
@@ -4725,6 +4689,7 @@ export const fameMarketplaceCheckoutAbi = [
     ],
     name: 'ProtectedOutputTooLow',
   },
+  { type: 'error', inputs: [], name: 'PurchasesPaused' },
   {
     type: 'error',
     inputs: [
@@ -7626,24 +7591,6 @@ export const iBalanceOfAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IERC721MarketplaceRescue
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const ierc721MarketplaceRescueAbi = [
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IFameCheckoutRouter
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -7709,165 +7656,6 @@ export const iFameCheckoutRouterAbi = [
     name: 'feeRecipient',
     outputs: [{ name: '', internalType: 'address', type: 'address' }],
     stateMutability: 'view',
-  },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ISocietyNftMirror
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const iSocietyNftMirrorAbi = [
-  {
-    type: 'function',
-    inputs: [
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'approve',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getApproved',
-    outputs: [{ name: 'operator', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'owner', internalType: 'address', type: 'address' },
-      { name: 'operator', internalType: 'address', type: 'address' },
-    ],
-    name: 'isApprovedForAll',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ownerOf',
-    outputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-      { name: 'data', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'safeTransferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'operator', internalType: 'address', type: 'address' },
-      { name: 'approved', internalType: 'bool', type: 'bool' },
-    ],
-    name: 'setApprovalForAll',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
-    name: 'supportsInterface',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address' },
-      { name: 'to', internalType: 'address', type: 'address' },
-      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'transferFrom',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'approved',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Approval',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'owner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'operator',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'approved', internalType: 'bool', type: 'bool', indexed: false },
-    ],
-    name: 'ApprovalForAll',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'from', internalType: 'address', type: 'address', indexed: true },
-      { name: 'to', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'tokenId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'Transfer',
   },
 ] as const
 
@@ -9661,6 +9449,13 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
+    inputs: [],
+    name: 'WITHDRAWAL_PREMIUM_DECAY_PERIOD',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
     inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
     name: 'activeProviderAt',
     outputs: [{ name: '', internalType: 'address', type: 'address' }],
@@ -9844,7 +9639,7 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'buyer', internalType: 'address', type: 'address' }],
+    inputs: [{ name: '', internalType: 'address', type: 'address' }],
     name: 'purchaseCharge',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
@@ -10020,32 +9815,18 @@ export const universalPoolArtMarketplaceAbi = [
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'withdrawInventory',
-    outputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
     inputs: [
       { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
       { name: 'maxPremium', internalType: 'uint256', type: 'uint256' },
     ],
-    name: 'withdrawInventorySelected',
+    name: 'withdrawInventory',
     outputs: [],
     stateMutability: 'nonpayable',
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'withdrawalCursor',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'withdrawalNonce',
+    inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
+    name: 'withdrawalPremium',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
@@ -10096,7 +9877,7 @@ export const universalPoolArtMarketplaceAbi = [
         indexed: false,
       },
       {
-        name: 'premiumAmount',
+        name: 'grossPremiumAmount',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
@@ -10239,7 +10020,6 @@ export const universalPoolArtMarketplaceAbi = [
         type: 'uint256',
         indexed: true,
       },
-      { name: 'selected', internalType: 'bool', type: 'bool', indexed: false },
       {
         name: 'providerUnits',
         internalType: 'uint256',
@@ -10247,13 +10027,7 @@ export const universalPoolArtMarketplaceAbi = [
         indexed: false,
       },
       {
-        name: 'premiumAmount',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'scanSteps',
+        name: 'grossPremiumAmount',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
@@ -10424,16 +10198,16 @@ export const universalPoolArtMarketplaceAbi = [
     ],
     name: 'BuyerMirrorBalanceTooLow',
   },
+  {
+    type: 'error',
+    inputs: [{ name: 'checkout', internalType: 'address', type: 'address' }],
+    name: 'CheckoutIsFeeRecipient',
+  },
   { type: 'error', inputs: [], name: 'CoreAssetRescueBlocked' },
   {
     type: 'error',
     inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
     name: 'DuplicateInventoryToken',
-  },
-  {
-    type: 'error',
-    inputs: [{ name: 'recipient', internalType: 'address', type: 'address' }],
-    name: 'FeeRecipientNotSkippingNFT',
   },
   {
     type: 'error',
@@ -10484,7 +10258,6 @@ export const universalPoolArtMarketplaceAbi = [
   { type: 'error', inputs: [], name: 'MarketNotPaused' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  { type: 'error', inputs: [], name: 'NoPooledInventory' },
   {
     type: 'error',
     inputs: [{ name: 'provider', internalType: 'address', type: 'address' }],
@@ -16302,38 +16075,6 @@ export const useWatchFameTransferEvent =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
- */
-export const useWriteFameBurnPoolRotationWorker =
-  /*#__PURE__*/ createUseWriteContract({ abi: fameBurnPoolRotationWorkerAbi })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
- */
-export const useWriteFameBurnPoolRotationWorkerRotate =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-    functionName: 'rotate',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__
- */
-export const useSimulateFameBurnPoolRotationWorker =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link fameBurnPoolRotationWorkerAbi}__ and `functionName` set to `"rotate"`
- */
-export const useSimulateFameBurnPoolRotationWorkerRotate =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: fameBurnPoolRotationWorkerAbi,
-    functionName: 'rotate',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link fameBurnPoolRotatorAbi}__
  *
  * [__View Contract on Base Basescan__](https://basescan.org/address/0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc)
@@ -21146,36 +20887,6 @@ export const useReadIBalanceOfBalanceOf = /*#__PURE__*/ createUseReadContract({
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__
- */
-export const useWriteIerc721MarketplaceRescue =
-  /*#__PURE__*/ createUseWriteContract({ abi: ierc721MarketplaceRescueAbi })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useWriteIerc721MarketplaceRescueSafeTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: ierc721MarketplaceRescueAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__
- */
-export const useSimulateIerc721MarketplaceRescue =
-  /*#__PURE__*/ createUseSimulateContract({ abi: ierc721MarketplaceRescueAbi })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link ierc721MarketplaceRescueAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useSimulateIerc721MarketplaceRescueSafeTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: ierc721MarketplaceRescueAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link iFameCheckoutRouterAbi}__
  */
 export const useReadIFameCheckoutRouter = /*#__PURE__*/ createUseReadContract({
@@ -21220,176 +20931,6 @@ export const useSimulateIFameCheckoutRouterExecuteRoute =
   /*#__PURE__*/ createUseSimulateContract({
     abi: iFameCheckoutRouterAbi,
     functionName: 'executeRoute',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useReadISocietyNftMirror = /*#__PURE__*/ createUseReadContract({
-  abi: iSocietyNftMirrorAbi,
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"balanceOf"`
- */
-export const useReadISocietyNftMirrorBalanceOf =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'balanceOf',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"getApproved"`
- */
-export const useReadISocietyNftMirrorGetApproved =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'getApproved',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"isApprovedForAll"`
- */
-export const useReadISocietyNftMirrorIsApprovedForAll =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'isApprovedForAll',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"ownerOf"`
- */
-export const useReadISocietyNftMirrorOwnerOf =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'ownerOf',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"supportsInterface"`
- */
-export const useReadISocietyNftMirrorSupportsInterface =
-  /*#__PURE__*/ createUseReadContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'supportsInterface',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useWriteISocietyNftMirror = /*#__PURE__*/ createUseWriteContract({
-  abi: iSocietyNftMirrorAbi,
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"approve"`
- */
-export const useWriteISocietyNftMirrorApprove =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'approve',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useWriteISocietyNftMirrorSafeTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
- */
-export const useWriteISocietyNftMirrorSetApprovalForAll =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useWriteISocietyNftMirrorTransferFrom =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useSimulateISocietyNftMirror =
-  /*#__PURE__*/ createUseSimulateContract({ abi: iSocietyNftMirrorAbi })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"approve"`
- */
-export const useSimulateISocietyNftMirrorApprove =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'approve',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"safeTransferFrom"`
- */
-export const useSimulateISocietyNftMirrorSafeTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'safeTransferFrom',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"setApprovalForAll"`
- */
-export const useSimulateISocietyNftMirrorSetApprovalForAll =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'setApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `functionName` set to `"transferFrom"`
- */
-export const useSimulateISocietyNftMirrorTransferFrom =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: iSocietyNftMirrorAbi,
-    functionName: 'transferFrom',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__
- */
-export const useWatchISocietyNftMirrorEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({ abi: iSocietyNftMirrorAbi })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"Approval"`
- */
-export const useWatchISocietyNftMirrorApprovalEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'Approval',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"ApprovalForAll"`
- */
-export const useWatchISocietyNftMirrorApprovalForAllEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'ApprovalForAll',
-  })
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link iSocietyNftMirrorAbi}__ and `eventName` set to `"Transfer"`
- */
-export const useWatchISocietyNftMirrorTransferEvent =
-  /*#__PURE__*/ createUseWatchContractEvent({
-    abi: iSocietyNftMirrorAbi,
-    eventName: 'Transfer',
   })
 
 /**
@@ -23701,6 +23242,15 @@ export const useReadUniversalPoolArtMarketplaceMaxInventoryBatchSize =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"WITHDRAWAL_PREMIUM_DECAY_PERIOD"`
+ */
+export const useReadUniversalPoolArtMarketplaceWithdrawalPremiumDecayPeriod =
+  /*#__PURE__*/ createUseReadContract({
+    abi: universalPoolArtMarketplaceAbi,
+    functionName: 'WITHDRAWAL_PREMIUM_DECAY_PERIOD',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"activeProviderAt"`
  */
 export const useReadUniversalPoolArtMarketplaceActiveProviderAt =
@@ -23881,21 +23431,12 @@ export const useReadUniversalPoolArtMarketplaceTotalProviderUnits =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalCursor"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalPremium"`
  */
-export const useReadUniversalPoolArtMarketplaceWithdrawalCursor =
+export const useReadUniversalPoolArtMarketplaceWithdrawalPremium =
   /*#__PURE__*/ createUseReadContract({
     abi: universalPoolArtMarketplaceAbi,
-    functionName: 'withdrawalCursor',
-  })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawalNonce"`
- */
-export const useReadUniversalPoolArtMarketplaceWithdrawalNonce =
-  /*#__PURE__*/ createUseReadContract({
-    abi: universalPoolArtMarketplaceAbi,
-    functionName: 'withdrawalNonce',
+    functionName: 'withdrawalPremium',
   })
 
 /**
@@ -24085,15 +23626,6 @@ export const useWriteUniversalPoolArtMarketplaceWithdrawInventory =
   })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventorySelected"`
- */
-export const useWriteUniversalPoolArtMarketplaceWithdrawInventorySelected =
-  /*#__PURE__*/ createUseWriteContract({
-    abi: universalPoolArtMarketplaceAbi,
-    functionName: 'withdrawInventorySelected',
-  })
-
-/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__
  */
 export const useSimulateUniversalPoolArtMarketplace =
@@ -24279,15 +23811,6 @@ export const useSimulateUniversalPoolArtMarketplaceWithdrawInventory =
   /*#__PURE__*/ createUseSimulateContract({
     abi: universalPoolArtMarketplaceAbi,
     functionName: 'withdrawInventory',
-  })
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link universalPoolArtMarketplaceAbi}__ and `functionName` set to `"withdrawInventorySelected"`
- */
-export const useSimulateUniversalPoolArtMarketplaceWithdrawInventorySelected =
-  /*#__PURE__*/ createUseSimulateContract({
-    abi: universalPoolArtMarketplaceAbi,
-    functionName: 'withdrawInventorySelected',
   })
 
 /**

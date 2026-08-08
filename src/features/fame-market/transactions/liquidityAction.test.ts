@@ -19,6 +19,11 @@ const call: GalleryLiquidityCall = {
   kind: "deposit",
   tokenIds: [1n, 2n],
 };
+const withdrawal: GalleryLiquidityCall = {
+  kind: "withdrawal",
+  tokenId: 7n,
+  maxPremium: 25n,
+};
 
 describe("gallery liquidity action", () => {
   it("moves a simulated action through wallet, receipt, and refresh", async () => {
@@ -287,6 +292,111 @@ describe("gallery liquidity action", () => {
     assert.match(String(result.cause), /reverted onchain/i);
   });
 
+  it("classifies a failed withdrawal as contention only after refresh proves the token unavailable", async () => {
+    const result = await executeGalleryLiquidityAction(withdrawal, 8_453, {
+      dispatch: () => undefined,
+      getWalletContext: () => ({ account, chainId: 8_453 }),
+      switchChain: async () => undefined,
+      simulate: async () => {
+        throw new Error("execution reverted");
+      },
+      write: async () => hash,
+      waitForReceipt: async () => ({ status: "success" }),
+      refresh: async () => ({ selectedTokenAvailable: false }),
+    });
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.status === "failed" ? result.stage : null, "contention");
+    assert.match(
+      String(result.status === "failed" ? result.cause : ""),
+      /selected Society is no longer available/i,
+    );
+  });
+
+  it("retains an ordinary withdrawal failure when refresh still finds the selected token", async () => {
+    const failure = new Error("provider premium changed");
+    const result = await executeGalleryLiquidityAction(withdrawal, 8_453, {
+      dispatch: () => undefined,
+      getWalletContext: () => ({ account, chainId: 8_453 }),
+      switchChain: async () => undefined,
+      simulate: async () => {
+        throw failure;
+      },
+      write: async () => hash,
+      waitForReceipt: async () => ({ status: "success" }),
+      refresh: async () => ({ selectedTokenAvailable: true }),
+    });
+
+    assert.deepEqual(result, {
+      status: "failed",
+      stage: "simulation",
+      cause: failure,
+    });
+  });
+
+  it("keeps the visible withdrawal ceiling frozen when the live premium changes before simulation", async () => {
+    let livePremium = 25n;
+    let simulatedCall: GalleryLiquidityCall | null = null;
+    const pending = executeGalleryLiquidityAction(withdrawal, 8_453, {
+      dispatch: () => undefined,
+      getWalletContext: () => ({ account, chainId: 8_453 }),
+      switchChain: async () => undefined,
+      simulate: async (exactCall) => {
+        simulatedCall = exactCall;
+        return { request: true };
+      },
+      write: async () => hash,
+      waitForReceipt: async () => ({ status: "success" }),
+      refresh: async () => undefined,
+    });
+    livePremium = 30n;
+    await pending;
+
+    assert.equal(livePremium, 30n);
+    assert.deepEqual(simulatedCall, {
+      kind: "withdrawal",
+      tokenId: 7n,
+      maxPremium: 25n,
+    });
+  });
+
+  it("classifies a reverted withdrawal receipt as contention after token-absent refresh", async () => {
+    const result = await executeGalleryLiquidityAction(withdrawal, 8_453, {
+      dispatch: () => undefined,
+      getWalletContext: () => ({ account, chainId: 8_453 }),
+      switchChain: async () => undefined,
+      simulate: async () => ({ request: true }),
+      write: async () => hash,
+      waitForReceipt: async () => ({ status: "reverted" }),
+      refresh: async () => ({ selectedTokenAvailable: false }),
+    });
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.status === "failed" ? result.stage : null, "contention");
+  });
+
+  it("does not classify an unresolved withdrawal receipt as contention", async () => {
+    let refreshCalls = 0;
+    const result = await executeGalleryLiquidityAction(call, 8453, {
+      dispatch: () => undefined,
+      getWalletContext: () => ({ account, chainId: 8453 }),
+      switchChain: async () => undefined,
+      simulate: async () => ({ request: true }),
+      write: async () => hash,
+      waitForReceipt: async () => {
+        throw new Error("receipt polling timed out");
+      },
+      refresh: async () => {
+        refreshCalls += 1;
+        return { selectedTokenAvailable: false };
+      },
+    });
+
+    assert.equal(result.status, "failed");
+    assert.equal(result.status === "failed" ? result.stage : null, "receipt");
+    assert.equal(refreshCalls, 0);
+  });
+
   it("marks active wallet work busy and terminal states unlocked", () => {
     const active = galleryLiquidityActionReducer(
       initialGalleryLiquidityActionState,
@@ -299,6 +409,13 @@ describe("gallery liquidity action", () => {
     assert.equal(isGalleryLiquidityActionBusy(confirmed), false);
     assert.equal(isGalleryLiquidityActionTerminal(confirmed), true);
     assert.equal(isGalleryLiquidityActionTerminal(active), false);
+
+    const refreshing = galleryLiquidityActionReducer(active, {
+      type: "confirmed_refreshing",
+      cause: new Error("refresh failed"),
+    });
+    assert.equal(isGalleryLiquidityActionBusy(refreshing), true);
+    assert.equal(isGalleryLiquidityActionTerminal(refreshing), false);
   });
 
   it("does not expose an unstarted stake leg after approval failure", () => {

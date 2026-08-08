@@ -1,17 +1,13 @@
 import type { Address } from "viem";
 import { fameAbi, universalPoolArtMarketplaceAbi } from "../../../wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import type {
-  GalleryAdminCall,
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
 } from "../types";
 
-const config = BASE_SEPOLIA_TEST_GALLERY_CONFIG;
-
 export function galleryApprovalContractRequest(
   terms: GalleryFrozenBuyerTerms,
-  fameAddress: Address = config.addresses.fame,
+  fameAddress: Address,
 ) {
   return {
     abi: fameAbi,
@@ -60,49 +56,4 @@ export function galleryPurchaseContractRequest(
       terms.recipient,
     ],
   } as const;
-}
-
-export function galleryAdminContractRequest(
-  call: GalleryAdminCall,
-  account: Address,
-) {
-  const baseRequest = {
-    abi: universalPoolArtMarketplaceAbi,
-    address: config.addresses.gallery,
-    account,
-    chainId: config.chainId,
-  } as const;
-
-  switch (call.kind) {
-    case "set_community_fee":
-      return {
-        ...baseRequest,
-        functionName: "setCommunityFee",
-        args: [call.fee],
-      } as const;
-    case "set_provider_fee":
-      return {
-        ...baseRequest,
-        functionName: "setProviderFee",
-        args: [call.fee],
-      } as const;
-    case "set_fee_recipient":
-      return {
-        ...baseRequest,
-        functionName: "setFeeRecipient",
-        args: [call.feeRecipient],
-      } as const;
-    case "pause":
-      return {
-        ...baseRequest,
-        functionName: "pause",
-        args: [],
-      } as const;
-    case "unpause":
-      return {
-        ...baseRequest,
-        functionName: "unpause",
-        args: [],
-      } as const;
-  }
 }

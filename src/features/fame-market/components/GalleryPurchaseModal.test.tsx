@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Hash } from "viem";
@@ -10,6 +12,11 @@ import {
 
 const approvalHash = `0x${"a".repeat(64)}` as Hash;
 const purchaseHash = `0x${"b".repeat(64)}` as Hash;
+const runtimePresentation = {
+  tokenSymbol: "FAME",
+  networkName: "Base",
+  explorerBaseUrl: "https://basescan.org",
+} as const;
 
 function state(overrides: Partial<GalleryPurchaseState>): GalleryPurchaseState {
   return {
@@ -25,15 +32,30 @@ function state(overrides: Partial<GalleryPurchaseState>): GalleryPurchaseState {
 }
 
 describe("gallery purchase modal content", () => {
+  it("contains no testnet presentation defaults", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/features/fame-market/components/GalleryPurchaseModal.tsx",
+      ),
+      "utf8",
+    );
+
+    assert.doesNotMatch(source, /\bTEST\b/);
+    assert.doesNotMatch(source, /Base Sepolia/);
+    assert.doesNotMatch(source, /sepolia\.basescan\.org/);
+  });
+
   it("states the approval confirmation wait", () => {
     const html = renderToStaticMarkup(
       <GalleryPurchaseModalContent
         state={state({ status: "confirming_approval", approvalHash })}
-        transactions={[{ kind: "TEST approval", hash: approvalHash }]}
+        transactions={[{ kind: "FAME approval", hash: approvalHash }]}
+        {...runtimePresentation}
       />,
     );
 
-    assert.match(html, /Waiting for Base Sepolia approval confirmation/);
+    assert.match(html, /Waiting for Base approval confirmation/);
   });
 
   it("states the purchase confirmation wait", () => {
@@ -41,10 +63,11 @@ describe("gallery purchase modal content", () => {
       <GalleryPurchaseModalContent
         state={state({ status: "confirming_purchase", purchaseHash })}
         transactions={[{ kind: "gallery purchase", hash: purchaseHash }]}
+        {...runtimePresentation}
       />,
     );
 
-    assert.match(html, /Waiting for Base Sepolia confirmation/);
+    assert.match(html, /Waiting for Base confirmation/);
   });
 
   it("shows confirmed transaction links without offering another purchase", () => {
@@ -58,7 +81,7 @@ describe("gallery purchase modal content", () => {
       },
     });
     const transactions = [
-      { kind: "TEST approval", hash: approvalHash },
+      { kind: "FAME approval", hash: approvalHash },
       { kind: "gallery purchase", hash: purchaseHash },
     ];
     const html = renderToStaticMarkup(
@@ -66,6 +89,7 @@ describe("gallery purchase modal content", () => {
         <GalleryPurchaseModalContent
           state={currentState}
           transactions={transactions}
+          {...runtimePresentation}
         />
         <GalleryPurchaseModalActions
           state={currentState}
@@ -79,14 +103,8 @@ describe("gallery purchase modal content", () => {
       /Purchase transaction confirmed, but the delivered artwork could not be verified/,
     );
     assert.match(html, /archive read unavailable/);
-    assert.match(
-      html,
-      new RegExp(`https://sepolia\\.basescan\\.org/tx/${approvalHash}`),
-    );
-    assert.match(
-      html,
-      new RegExp(`https://sepolia\\.basescan\\.org/tx/${purchaseHash}`),
-    );
+    assert.match(html, new RegExp(`https://basescan\\.org/tx/${approvalHash}`));
+    assert.match(html, new RegExp(`https://basescan\\.org/tx/${purchaseHash}`));
     assert.match(html, new RegExp(approvalHash));
     assert.match(html, new RegExp(purchaseHash));
     assert.doesNotMatch(html, /Retry purchase/i);
@@ -129,13 +147,14 @@ describe("gallery purchase modal content", () => {
             cause: timeout,
           },
         })}
-        transactions={[{ kind: "TEST approval", hash: approvalHash }]}
+        transactions={[{ kind: "FAME approval", hash: approvalHash }]}
+        {...runtimePresentation}
       />,
     );
 
     assert.match(
       html,
-      /Timed out while waiting for the TEST approval transaction to be confirmed/,
+      /Timed out while waiting for the FAME approval transaction to be confirmed/,
     );
     assert.doesNotMatch(html, /\[redacted-hex\]/);
     assert.match(html, new RegExp(approvalHash));
@@ -145,7 +164,8 @@ describe("gallery purchase modal content", () => {
     const html = renderToStaticMarkup(
       <GalleryPurchaseModalContent
         state={state({ approvalHash })}
-        transactions={[{ kind: "TEST approval", hash: approvalHash }]}
+        transactions={[{ kind: "FAME approval", hash: approvalHash }]}
+        {...runtimePresentation}
       />,
     );
 

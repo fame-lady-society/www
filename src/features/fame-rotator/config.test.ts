@@ -12,7 +12,17 @@ import {
   getFameRotatorConfig,
   hasRequiredRotatorAbiSurface,
 } from "./config";
-import { fameBurnPoolRotatorAbi } from "@/wagmi";
+import {
+  fameBurnPoolRotatorAbi,
+  fameBurnPoolRotatorAddress,
+  useReadFameBurnPoolRotator,
+  useReadFameBurnPoolRotatorFame,
+  useReadFameBurnPoolRotatorMirror,
+  useSimulateFameBurnPoolRotator,
+  useSimulateFameBurnPoolRotatorRotateTo,
+  useWriteFameBurnPoolRotator,
+  useWriteFameBurnPoolRotatorRotateTo,
+} from "@/wagmi";
 
 const ROTATOR = "0xC0e0A441660361ab2B6Ff8032Ed1860E230274bc" as const;
 const FAME = "0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418" as const;
@@ -69,8 +79,9 @@ describe("Fame burn pool rotator config", () => {
     }
   });
 
-  it("generated ABI exposes rotateTo, TargetNotReached, fame, and mirror", () => {
+  it("generated bindings expose the configured address, ABI, and all rotator hooks", () => {
     assert.equal(hasRequiredRotatorAbiSurface(fameBurnPoolRotatorAbi), true);
+    assert.equal(fameBurnPoolRotatorAddress[base.id], ROTATOR);
     const names = new Set(
       fameBurnPoolRotatorAbi.map((e) => ("name" in e ? e.name : undefined)),
     );
@@ -78,6 +89,14 @@ describe("Fame burn pool rotator config", () => {
     assert.ok(names.has("TargetNotReached"));
     assert.ok(names.has("fame"));
     assert.ok(names.has("mirror"));
+
+    assert.equal(typeof useReadFameBurnPoolRotator, "function");
+    assert.equal(typeof useReadFameBurnPoolRotatorFame, "function");
+    assert.equal(typeof useReadFameBurnPoolRotatorMirror, "function");
+    assert.equal(typeof useWriteFameBurnPoolRotator, "function");
+    assert.equal(typeof useWriteFameBurnPoolRotatorRotateTo, "function");
+    assert.equal(typeof useSimulateFameBurnPoolRotator, "function");
+    assert.equal(typeof useSimulateFameBurnPoolRotatorRotateTo, "function");
   });
 
   it("runtime identity rejects empty code, lookalike runtime, and mismatched getters", () => {

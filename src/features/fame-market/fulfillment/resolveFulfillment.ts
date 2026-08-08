@@ -1,11 +1,8 @@
 import { isAddressEqual, type Address, type Hash } from "viem";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
 import type {
   GalleryFrozenBuyerTerms,
   GalleryFulfillmentRoute,
 } from "../types";
-
-const marketplace = BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery;
 
 export type GalleryFulfillmentTokenState = Readonly<{
   owner: Address;
@@ -47,9 +44,6 @@ export function freezeGalleryBuyerTerms(
   runtime: {
     chainId: number;
     marketplace: Address;
-  } = {
-    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-    marketplace,
   },
 ): GalleryFrozenBuyerTerms {
   return Object.freeze({

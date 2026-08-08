@@ -1,4 +1,4 @@
-import { createGalleryCustodyCacheIdentity } from "./cache";
+import type { GalleryCustodyCacheIdentity } from "./cache";
 import {
   createGalleryCustodyHintStorage,
   type GalleryCustodyHintStorage,
@@ -17,8 +17,13 @@ function browserLock(): GalleryDiscoveryLock | null {
 }
 
 export function getBrowserGalleryCustodyHintStorage(
-  identity = createGalleryCustodyCacheIdentity(),
+  identity: GalleryCustodyCacheIdentity,
 ) {
+  if (!identity) {
+    throw new Error(
+      "Gallery browser storage requires an explicit runtime identity.",
+    );
+  }
   const key = JSON.stringify(identity);
   const current = sharedStorage.get(key);
   if (current) return current;

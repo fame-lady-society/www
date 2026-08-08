@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   BASE_GALLERY_ADDRESSES,
   createBaseGalleryRuntime,
 } from "./baseGallery";
 import { parseBaseGalleryForkContracts } from "../contracts";
-import { BASE_SEPOLIA_GALLERY_RUNTIME } from "./galleryRuntime";
+import { useGalleryRuntime } from "./galleryRuntime";
 
 const marketplace = "0x1111111111111111111111111111111111111111";
 const checkout = "0x2222222222222222222222222222222222222222";
@@ -31,11 +33,6 @@ describe("Base FAME gallery configuration", () => {
     assert.equal(config.checkout?.address, checkout);
     assert.equal(config.token.symbol, "FAME");
     assert.equal(config.labels.network, "Base");
-    assert.equal(config.adminHref, undefined);
-    assert.equal(
-      BASE_SEPOLIA_GALLERY_RUNTIME.adminHref,
-      "/fame/market/test/admin",
-    );
     assert.deepEqual(config.collection, {
       firstTokenId: 1,
       lastTokenId: 888,
@@ -43,6 +40,18 @@ describe("Base FAME gallery configuration", () => {
     assert.equal("manifest" in config, false);
     assert.equal("hash" in config, false);
     assert.equal("proof" in config, false);
+  });
+
+  it("fails clearly when a marketplace consumer renders without a runtime provider", () => {
+    function RuntimeConsumer() {
+      useGalleryRuntime();
+      return null;
+    }
+
+    assert.throws(
+      () => renderToStaticMarkup(createElement(RuntimeConsumer)),
+      /Gallery runtime is not configured.*GalleryRuntimeProvider/,
+    );
   });
 
   it("rejects a missing or malformed marketplace address", () => {
@@ -188,20 +197,21 @@ describe("Base FAME gallery configuration", () => {
     }
   });
 
-  it("publishes the marketplace route family only under /fame/market", () => {
+  it("publishes only the canonical marketplace route family", () => {
     for (const file of [
       "src/app/fame/market/page.tsx",
       "src/app/fame/market/purchase/[transactionHash]/page.tsx",
       "src/app/fame/market/stake/page.tsx",
       "src/app/fame/market/stake/deposit/page.tsx",
       "src/app/fame/market/stake/unstake/page.tsx",
-      "src/app/fame/market/test/page.tsx",
-      "src/app/fame/market/test/admin/page.tsx",
     ]) {
       assert.equal(existsSync(resolve(process.cwd(), file)), true, file);
     }
 
     for (const file of [
+      "src/app/fame/market/test/page.tsx",
+      "src/app/fame/market/test/layout.tsx",
+      "src/app/fame/market/test/admin/page.tsx",
       "src/app/fame/gallery/purchase/[transactionHash]/page.tsx",
       "src/app/fame/gallery/stake/page.tsx",
       "src/app/fame/gallery/test/page.tsx",

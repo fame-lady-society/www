@@ -11,7 +11,6 @@ import {
   fameMirrorAbi,
   universalPoolArtMarketplaceAbi,
 } from "../../wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
 import type { GalleryRuntimeConfig } from "./config/galleryRuntime";
 import type {
   GalleryAccountState,
@@ -72,13 +71,6 @@ export type MarketplaceLandingAuthority = Readonly<{
 export const GALLERY_POOL_SCAN_BATCH_SIZE = 64;
 export const GALLERY_POOL_SCAN_CONCURRENCY = 2;
 
-const DEFAULT_ADDRESSES: GalleryReadAddresses = {
-  marketplace: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  fame: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.fame,
-  mirror: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.mirror,
-  creatorMagic: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.creatorMagic,
-};
-
 export function galleryReadAddresses(
   addresses: GalleryRuntimeConfig["addresses"],
 ): GalleryReadAddresses {
@@ -120,7 +112,7 @@ export async function captureGalleryBlock(client: GalleryMulticallClient) {
 export async function readGalleryGlobalState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ): Promise<GalleryProjectionResult<GalleryGlobalState>> {
   try {
     const results = await client.multicall({
@@ -353,10 +345,8 @@ export function galleryCollectionTokenIds({
 export async function readGalleryPoolState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
-  tokenIds: readonly bigint[] = galleryCollectionTokenIds(
-    BASE_SEPOLIA_TEST_GALLERY_CONFIG.collection,
-  ),
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  tokenIds: readonly bigint[],
+  addresses: GalleryReadAddresses,
 ): Promise<GalleryProjectionResult<GalleryPoolState>> {
   try {
     const membership = await runGalleryBatchedReads(
@@ -435,7 +425,7 @@ export async function readGalleryCustodyStates(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   tokenIds: readonly bigint[],
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ) {
   try {
     const ownership = await runGalleryBatchedReads(
@@ -493,7 +483,7 @@ export async function readGalleryTokenStates(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   tokenIds: readonly bigint[],
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ) {
   const custody = await readGalleryCustodyStates(
     client,
@@ -577,7 +567,7 @@ export async function readGalleryTokenState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   tokenId: bigint,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ) {
   const states = await readGalleryTokenStates(
     client,
@@ -595,7 +585,7 @@ export async function readGalleryAccountState(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   account: Address,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ): Promise<GalleryProjectionResult<GalleryAccountState>> {
   try {
     const results = await client.multicall({
@@ -635,7 +625,7 @@ export async function readGalleryAuthority(
   client: GalleryMulticallClient,
   blockNumber: bigint,
   account: Address,
-  addresses: GalleryReadAddresses = DEFAULT_ADDRESSES,
+  addresses: GalleryReadAddresses,
 ): Promise<GalleryProjectionResult<GalleryAuthorityState>> {
   try {
     const results = await client.multicall({

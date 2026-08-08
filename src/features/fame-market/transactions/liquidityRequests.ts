@@ -114,22 +114,7 @@ export function galleryLiquidityFameApprovalRequest(
   } as const;
 }
 
-export function galleryLiquidityRandomWithdrawalRequest(
-  account: Address,
-  chainId: number,
-  marketplace: Address,
-) {
-  return {
-    abi: universalPoolArtMarketplaceAbi,
-    address: marketplace,
-    account,
-    chainId,
-    functionName: "withdrawInventory",
-    args: [],
-  } as const;
-}
-
-export function galleryLiquiditySelectedWithdrawalRequest(
+export function galleryLiquidityWithdrawalRequest(
   account: Address,
   chainId: number,
   marketplace: Address,
@@ -142,7 +127,7 @@ export function galleryLiquiditySelectedWithdrawalRequest(
     address: marketplace,
     account,
     chainId,
-    functionName: "withdrawInventorySelected",
+    functionName: "withdrawInventory",
     args: [validatedSocietyTokenId(tokenId), maxPremium],
   } as const;
 }
@@ -161,7 +146,7 @@ export function galleryLiquidityContractRequest(
         addresses.marketplace,
         call.tokenIds,
       );
-    case "selected_withdrawal_approval":
+    case "withdrawal_approval":
       return galleryLiquidityFameApprovalRequest(
         account,
         chainId,
@@ -169,14 +154,8 @@ export function galleryLiquidityContractRequest(
         addresses.marketplace,
         call.amount,
       );
-    case "random_withdrawal":
-      return galleryLiquidityRandomWithdrawalRequest(
-        account,
-        chainId,
-        addresses.marketplace,
-      );
-    case "selected_withdrawal":
-      return galleryLiquiditySelectedWithdrawalRequest(
+    case "withdrawal":
+      return galleryLiquidityWithdrawalRequest(
         account,
         chainId,
         addresses.marketplace,

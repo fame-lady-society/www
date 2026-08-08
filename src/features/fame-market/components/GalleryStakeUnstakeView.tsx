@@ -7,26 +7,36 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { usePublicClient } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import { formatTestAmount } from "../format";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
-import { useGalleryLiquidityAction } from "../hooks/useGalleryLiquidityAction";
+import {
+  type GalleryLiquidityAllowanceState,
+  useGalleryLiquidityAction,
+} from "../hooks/useGalleryLiquidityAction";
 import {
   useGalleryLiquidityInventory,
   useGalleryLiquidityPosition,
 } from "../hooks/useGalleryLiquidityReads";
-import type { GalleryLiquidityToken } from "../liquidity/reads";
+import {
+  readLiquidityInventory,
+  readLiquidityProviderPosition,
+  type GalleryLiquidityProviderPosition,
+  type GalleryLiquidityReadClient,
+  type GalleryLiquidityToken,
+} from "../liquidity/reads";
 import type {
   GalleryLiquidityProviderViewState,
   GalleryLiquidityTokenListState,
 } from "../liquidity/viewState";
 import { GALLERY_VISIBLE_TOKEN_BATCH_LIMIT } from "../queryKeys";
+import { galleryCollectionTokenIds, galleryReadAddresses } from "../reads";
 import { isGalleryLiquidityActionTerminal } from "../transactions/liquidityAction";
 import { GalleryLiquidityTokenCard } from "./GalleryLiquidityTokenCard";
 import { GalleryLiquidityTransactionModal } from "./GalleryLiquidityTransactionModal";
-
-const EMPTY_LIQUIDITY_TOKENS: readonly GalleryLiquidityToken[] = [];
 
 export function GalleryStakeUnstakeContent({
   state,
@@ -34,33 +44,33 @@ export function GalleryStakeUnstakeContent({
   selectedTokenId,
   premium,
   fameAllowance,
-  fameAllowanceLoading = false,
+  chainMismatch = false,
   busy,
+  selectionInvalidatedMessage,
   walletControl,
   onSelect,
-  onRandomWithdrawal,
-  onApproveSelectedWithdrawal,
-  onSelectedWithdrawal,
+  onApproveWithdrawal,
+  onWithdrawal,
   onRetry,
   onRetryPosition,
-  onRetryGlobal,
+  onRetryAllowance,
   renderToken,
 }: {
   state: GalleryLiquidityTokenListState;
   provider: GalleryLiquidityProviderViewState;
   selectedTokenId: bigint | null;
   premium: bigint | null;
-  fameAllowance: bigint;
-  fameAllowanceLoading?: boolean;
+  fameAllowance: GalleryLiquidityAllowanceState;
+  chainMismatch?: boolean;
   busy: boolean;
+  selectionInvalidatedMessage?: string | null;
   walletControl?: ReactNode;
   onSelect: (tokenId: bigint) => void;
-  onRandomWithdrawal: () => void;
-  onApproveSelectedWithdrawal: () => void;
-  onSelectedWithdrawal: () => void;
+  onApproveWithdrawal: () => void;
+  onWithdrawal: () => void;
   onRetry?: () => void;
   onRetryPosition?: () => void;
-  onRetryGlobal?: () => void;
+  onRetryAllowance?: () => void;
   renderToken?: (
     token: GalleryLiquidityToken,
     selected: boolean,
@@ -71,21 +81,46 @@ export function GalleryStakeUnstakeContent({
   const [visibleCount, setVisibleCount] = useState(
     GALLERY_VISIBLE_TOKEN_BATCH_LIMIT,
   );
+  const invalidationRef = useRef<HTMLParagraphElement>(null);
   const isProvider = provider.status === "ready" && provider.unitCount > 0n;
-  const allowanceReady = premium !== null && fameAllowance >= premium;
-  const inventoryCount = state.status === "ready" ? state.tokens.length : 0;
+  const selectedTokenAvailable = Boolean(
+    selectedTokenId !== null &&
+      state.status === "ready" &&
+      state.tokens.some(({ tokenId }) => tokenId === selectedTokenId),
+  );
+  const selectionActionable =
+    isProvider && selectedTokenAvailable && !busy && !chainMismatch;
+  const allowanceReady =
+    premium !== null &&
+    fameAllowance.status === "ready" &&
+    fameAllowance.amount >= premium;
+
+  useEffect(() => {
+    if (selectionInvalidatedMessage) invalidationRef.current?.focus();
+  }, [selectionInvalidatedMessage]);
 
   return (
-    <Stack spacing={3}>
-      <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
+    <Stack spacing={3} sx={{ minWidth: 0 }}>
+      {selectionInvalidatedMessage ? (
+        <Typography
+          ref={invalidationRef}
+          tabIndex={-1}
+          role="status"
+          aria-live="polite"
+        >
+          {selectionInvalidatedMessage}
+        </Typography>
+      ) : null}
+
+      <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <div>
             <Typography component="h2" variant="h5">
-              Provider exits
+              Provider withdrawal
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-              Exits remain available while marketplace purchase checkout is
-              paused.
+              Choose one Society currently held by the marketplace. Withdrawals
+              remain available while purchase checkout is paused.
             </Typography>
           </div>
           {provider.status === "disconnected" ? (
@@ -98,7 +133,7 @@ export function GalleryStakeUnstakeContent({
             </Stack>
           ) : provider.status === "loading" ? (
             <Typography role="status">
-              Loading this wallet’s provider position…
+              Loading this wallet’s provider position and withdrawal premium…
             </Typography>
           ) : provider.status === "error" ? (
             <Alert
@@ -114,35 +149,18 @@ export function GalleryStakeUnstakeContent({
               {provider.message}
             </Alert>
           ) : isProvider ? (
-            <Stack spacing={1.5} alignItems="flex-start">
-              <Typography>
-                You have {provider.unitCount.toString()} credited provider{" "}
-                {provider.unitCount === 1n ? "unit" : "units"}.
-              </Typography>
-              <Button
-                variant="contained"
-                disabled={busy || inventoryCount === 0}
-                onClick={onRandomWithdrawal}
-                sx={{ minHeight: 48 }}
-              >
-                Receive one pseudorandom Society
-              </Button>
-              <Typography color="text.secondary" variant="body2">
-                This free exit removes one credited unit and returns a
-                pseudorandom Society currently owned by the pool, with no FAME
-                cost.
-              </Typography>
-            </Stack>
+            <Typography>
+              You have {provider.unitCount.toString()} credited provider{" "}
+              {provider.unitCount === 1n ? "unit" : "units"}. Select the exact
+              Society you want to withdraw below.
+            </Typography>
           ) : (
             <Stack spacing={1.5} alignItems="flex-start">
               <Typography color="text.secondary">
                 This wallet has no credited provider position. The live
                 inventory below remains public and read-only.
               </Typography>
-              <LinkButton
-                href="/fame/market/stake/deposit"
-                variant="contained"
-              >
+              <LinkButton href="/fame/market/stake/deposit" variant="contained">
                 Stake Society NFTs
               </LinkButton>
             </Stack>
@@ -156,7 +174,7 @@ export function GalleryStakeUnstakeContent({
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1 }}>
           Anyone can browse every Society currently owned by the marketplace.
-          Providers may select one card for a premium-paid exit.
+          Active providers can select exactly one.
         </Typography>
       </div>
 
@@ -184,7 +202,7 @@ export function GalleryStakeUnstakeContent({
           </Typography>
         </Paper>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {state.tokens.slice(0, visibleCount).map((token) => {
             const selected = selectedTokenId === token.tokenId;
             const disabled = busy || !isProvider;
@@ -217,63 +235,87 @@ export function GalleryStakeUnstakeContent({
               ),
             )
           }
-          sx={{ alignSelf: "flex-start" }}
+          sx={{ alignSelf: "flex-start", minHeight: 44 }}
         >
-          Show more pool Society NFTs
+          Show more marketplace Society NFTs
         </Button>
       ) : null}
 
       {isProvider && selectedTokenId !== null ? (
-        <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 } }}>
-          <Stack spacing={2} alignItems="flex-start">
-            {premium === null ? (
-              <Alert
-                severity="error"
-                action={
-                  onRetryGlobal ? (
-                    <Button color="inherit" onClick={onRetryGlobal}>
-                      Try again
-                    </Button>
-                  ) : undefined
-                }
-              >
-                The live FAME premium is unavailable. Refresh current state
-                before confirming a selected exit.
-              </Alert>
-            ) : null}
+        <Paper
+          variant="outlined"
+          sx={{ p: { xs: 2, sm: 3 }, width: "100%", minWidth: 0 }}
+        >
+          <Stack spacing={2} alignItems="flex-start" sx={{ minWidth: 0 }}>
             <div>
               <Typography component="h2" variant="h5">
                 Selected Society #{selectedTokenId.toString()}
               </Typography>
               <Typography sx={{ mt: 1 }}>
                 {premium === null
-                  ? "The selected exit price is loading."
-                  : `This selected exit pays ${formatTestAmount(premium)} FAME directly.`}{" "}
-                Your exiting unit is removed before provider-fee distribution,
-                so there is no self-rebate.
+                  ? "The provider withdrawal premium is unavailable."
+                  : `The current provider withdrawal premium is ${formatTestAmount(premium)} FAME.`}{" "}
+                Your exiting unit is removed before distribution.
+                {provider.unitCount > 1n
+                  ? " Any remaining credited units may still receive their normal provider share."
+                  : " With no remaining credited units, this wallet receives no provider share."}
               </Typography>
             </div>
             <Typography color="text.secondary" variant="body2">
-              The live premium is submitted as your maximum. If it rises before
-              execution, the transaction reverts instead of charging more.
+              This displayed premium is frozen as your maximum for the explicit
+              withdrawal action. If the required premium rises, the contract
+              reverts and a refreshed quote requires a new action.
             </Typography>
-            {premium === null ? null : !allowanceReady ? (
+
+            {chainMismatch ? (
+              <Alert severity="warning">
+                Your wallet is connected to a different network. Switch to the
+                marketplace network before approving or withdrawing.
+              </Alert>
+            ) : !selectedTokenAvailable ? (
+              <Alert severity="warning">
+                This selection is not actionable until inventory refreshes and
+                confirms that the Society is still available.
+              </Alert>
+            ) : premium === null ? (
+              <Alert severity="error">
+                The withdrawal premium is unavailable. Retry the provider
+                position read before continuing.
+              </Alert>
+            ) : fameAllowance.status === "loading" ? (
+              <Typography role="status">Checking FAME allowance…</Typography>
+            ) : fameAllowance.status === "error" ? (
+              <Alert
+                severity="error"
+                action={
+                  onRetryAllowance ? (
+                    <Button color="inherit" onClick={onRetryAllowance}>
+                      Retry allowance
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {fameAllowance.message}
+              </Alert>
+            ) : fameAllowance.status !== "ready" ? (
+              <Typography role="status">Checking FAME allowance…</Typography>
+            ) : !allowanceReady ? (
               <Button
                 variant="contained"
-                disabled={busy || fameAllowanceLoading}
-                onClick={onApproveSelectedWithdrawal}
-                sx={{ minHeight: 48 }}
+                disabled={!selectionActionable}
+                onClick={onApproveWithdrawal}
+                sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
               >
                 Approve {formatTestAmount(premium)} FAME
               </Button>
             ) : (
               <Button
                 variant="contained"
-                disabled={busy}
-                onClick={onSelectedWithdrawal}
-                sx={{ minHeight: 48 }}
+                disabled={!selectionActionable}
+                onClick={onWithdrawal}
+                sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
               >
-                Confirm selected exit
+                Withdraw Society #{selectedTokenId.toString()}
               </Button>
             )}
           </Stack>
@@ -284,82 +326,229 @@ export function GalleryStakeUnstakeContent({
 }
 
 export function GalleryStakeUnstakeView() {
+  const runtime = useGalleryRuntime();
+  const publicClient = usePublicClient({ chainId: runtime.chainId });
   const global = useGalleryGlobalState();
   const position = useGalleryLiquidityPosition(global.blockNumber);
   const inventory = useGalleryLiquidityInventory(global.blockNumber);
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | null>(null);
+  const [selectionInvalidatedMessage, setSelectionInvalidatedMessage] =
+    useState<string | null>(null);
+  const [refreshSnapshot, setRefreshSnapshot] = useState<{
+    account: `0x${string}`;
+    blockNumber: bigint;
+    position: GalleryLiquidityProviderPosition;
+    inventory: readonly GalleryLiquidityToken[] | null;
+  } | null>(null);
+  const accountKey = position.account?.toLowerCase() ?? null;
+  const previousAccountKey = useRef(accountKey);
+  const collectionTokenIds = useMemo(
+    () => galleryCollectionTokenIds(runtime.collection),
+    [runtime.collection],
+  );
   const transaction = useGalleryLiquidityAction({
     authorization: "fame",
-    refresh: async () => {
+    refresh: async (call) => {
+      const latestAccount = position.account;
+      const client = publicClient as unknown as
+        | GalleryLiquidityReadClient
+        | undefined;
+      if (!client || !latestAccount) {
+        throw new Error("Current provider and inventory state is unavailable.");
+      }
+      const blockNumber = await client.getBlockNumber();
+      const addresses = galleryReadAddresses(runtime.addresses);
+      const positionProjection = await readLiquidityProviderPosition(
+        client,
+        blockNumber,
+        latestAccount,
+        addresses,
+      );
+      if (positionProjection.status !== "success") {
+        throw new Error(
+          positionProjection.status === "failure"
+            ? positionProjection.message
+            : "Current provider state is unavailable.",
+        );
+      }
+
+      if (call.kind === "withdrawal_approval") {
+        setRefreshSnapshot({
+          account: latestAccount,
+          blockNumber,
+          position: positionProjection.data,
+          inventory: null,
+        });
+        return;
+      }
+
+      const inventoryProjection = await readLiquidityInventory(
+        client,
+        blockNumber,
+        collectionTokenIds,
+        addresses,
+      );
+      if (inventoryProjection.status !== "success") {
+        throw new Error(
+          inventoryProjection.status === "failure"
+            ? inventoryProjection.message
+            : "Current inventory state is unavailable.",
+        );
+      }
+      setRefreshSnapshot({
+        account: latestAccount,
+        blockNumber,
+        position: positionProjection.data,
+        inventory: inventoryProjection.data,
+      });
       await global.refresh();
+      return call.kind === "withdrawal"
+        ? {
+            selectedTokenAvailable: inventoryProjection.data.some(
+              ({ tokenId }) => tokenId === call.tokenId,
+            ),
+          }
+        : undefined;
     },
   });
-  const globalState =
-    global.projection.status === "success" ? global.projection.data : null;
+  const activeRefreshSnapshot =
+    refreshSnapshot &&
+    position.account &&
+    refreshSnapshot.account.toLowerCase() === position.account.toLowerCase()
+      ? refreshSnapshot
+      : null;
+  const effectivePositionProjection = useMemo(
+    () =>
+      activeRefreshSnapshot
+        ? {
+            status: "success" as const,
+            blockNumber: activeRefreshSnapshot.blockNumber,
+            data: activeRefreshSnapshot.position,
+          }
+        : position.projection,
+    [activeRefreshSnapshot, position.projection],
+  );
+  const effectiveInventoryProjection = useMemo(
+    () =>
+      activeRefreshSnapshot?.inventory
+        ? {
+            status: "success" as const,
+            blockNumber: activeRefreshSnapshot.blockNumber,
+            data: activeRefreshSnapshot.inventory,
+          }
+        : inventory.projection,
+    [activeRefreshSnapshot, inventory.projection],
+  );
   const providerState = useMemo<GalleryLiquidityProviderViewState>(() => {
     if (!position.account) return { status: "disconnected" };
     if (
-      position.projection.status === "idle" ||
-      position.projection.status === "loading"
+      effectivePositionProjection.status === "idle" ||
+      effectivePositionProjection.status === "loading"
     ) {
       return { status: "loading" };
     }
-    if (position.projection.status === "failure") {
-      return { status: "error", message: position.projection.message };
+    if (effectivePositionProjection.status === "failure") {
+      return { status: "error", message: effectivePositionProjection.message };
     }
     return {
       status: "ready",
-      unitCount: position.projection.data.unitCount,
+      unitCount: effectivePositionProjection.data.unitCount,
     };
-  }, [position.account, position.projection]);
-  const tokens =
-    inventory.projection.status === "success"
-      ? inventory.projection.data
-      : EMPTY_LIQUIDITY_TOKENS;
+  }, [effectivePositionProjection, position.account]);
+
+  useEffect(() => {
+    if (previousAccountKey.current !== accountKey) {
+      setRefreshSnapshot(null);
+      if (selectedTokenId !== null) {
+        setSelectedTokenId(null);
+        setSelectionInvalidatedMessage(
+          "The selected Society was cleared because the connected account changed.",
+        );
+      }
+    }
+    previousAccountKey.current = accountKey;
+  }, [accountKey, selectedTokenId]);
 
   useEffect(() => {
     if (
       selectedTokenId !== null &&
-      !tokens.some(({ tokenId }) => tokenId === selectedTokenId)
+      providerState.status === "ready" &&
+      providerState.unitCount === 0n
     ) {
       setSelectedTokenId(null);
+      setSelectionInvalidatedMessage(
+        "The selected Society was cleared because this wallet no longer has a provider position.",
+      );
     }
-  }, [selectedTokenId, tokens]);
+  }, [providerState, selectedTokenId]);
+
+  useEffect(() => {
+    if (
+      selectedTokenId !== null &&
+      effectiveInventoryProjection.status === "success" &&
+      !effectiveInventoryProjection.data.some(
+        ({ tokenId }) => tokenId === selectedTokenId,
+      )
+    ) {
+      setSelectedTokenId(null);
+      setSelectionInvalidatedMessage(
+        "The selected Society is no longer available. Choose another current marketplace Society.",
+      );
+    }
+  }, [effectiveInventoryProjection, selectedTokenId]);
+
+  useEffect(() => {
+    if (
+      refreshSnapshot &&
+      position.projection.status === "success" &&
+      position.projection.blockNumber >= refreshSnapshot.blockNumber &&
+      (refreshSnapshot.inventory === null ||
+        (inventory.projection.status === "success" &&
+          inventory.projection.blockNumber >= refreshSnapshot.blockNumber))
+    ) {
+      setRefreshSnapshot(null);
+    }
+  }, [inventory.projection, position.projection, refreshSnapshot]);
 
   const viewState = useMemo<GalleryLiquidityTokenListState>(() => {
-    if (inventory.projection.status === "loading") return { status: "loading" };
-    if (inventory.projection.status === "failure")
-      return { status: "error", message: inventory.projection.message };
-    return inventory.projection.data.length === 0
+    if (effectiveInventoryProjection.status === "loading") {
+      return { status: "loading" };
+    }
+    if (effectiveInventoryProjection.status === "failure") {
+      return { status: "error", message: effectiveInventoryProjection.message };
+    }
+    return effectiveInventoryProjection.data.length === 0
       ? { status: "empty" }
-      : { status: "ready", tokens: inventory.projection.data };
-  }, [inventory.projection]);
-  const premium = globalState?.premium ?? null;
+      : { status: "ready", tokens: effectiveInventoryProjection.data };
+  }, [effectiveInventoryProjection]);
+  const premium =
+    effectivePositionProjection.status === "success"
+      ? effectivePositionProjection.data.withdrawalPremium
+      : null;
   const terminal = isGalleryLiquidityActionTerminal(transaction.state);
 
   return (
     <Container
       maxWidth="lg"
-      sx={{ px: { xs: 2, sm: 3 }, py: { xs: 4, sm: 6 } }}
+      sx={{ px: { xs: 2, sm: 3 }, py: { xs: 3, sm: 6 }, minWidth: 0 }}
     >
-      <Stack spacing={{ xs: 3, sm: 4 }}>
+      <Stack spacing={{ xs: 3, sm: 4 }} sx={{ minWidth: 0 }}>
         <div>
           <LinkButton href="/fame/market/stake" variant="text">
             ← Liquidity overview
           </LinkButton>
           <Typography component="h1" variant="h3" sx={{ mt: 1 }}>
-            Exit marketplace liquidity
+            Withdraw marketplace liquidity
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-            Browse the live marketplace inventory, receive a free pseudorandom
-            Society, or select one current pool Society and pay the live premium
-            directly in FAME.
+            Choose one Society currently held by the marketplace and submit the
+            provider-specific withdrawal premium as your consent ceiling.
           </Typography>
           <Button
             variant="outlined"
-            disabled={global.isRefreshing}
+            disabled={global.isRefreshing || transaction.busy}
             onClick={() => void global.refresh()}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, minHeight: 44 }}
           >
             {global.isRefreshing ? "Refreshing…" : "Refresh inventory"}
           </Button>
@@ -370,43 +559,55 @@ export function GalleryStakeUnstakeView() {
           selectedTokenId={selectedTokenId}
           premium={premium}
           fameAllowance={transaction.fameAllowance}
-          fameAllowanceLoading={transaction.fameAllowanceLoading}
+          chainMismatch={transaction.chainMismatch}
           busy={transaction.busy}
+          selectionInvalidatedMessage={selectionInvalidatedMessage}
           walletControl={<ConnectKitButton />}
-          onSelect={(tokenId) =>
+          onSelect={(tokenId) => {
+            setSelectionInvalidatedMessage(null);
             setSelectedTokenId((current) =>
               current === tokenId ? null : tokenId,
-            )
-          }
-          onRandomWithdrawal={() =>
-            transaction.submit({ kind: "random_withdrawal" })
-          }
-          onApproveSelectedWithdrawal={() =>
-            premium !== null
-              ? transaction.submit({
-                  kind: "selected_withdrawal_approval",
-                  amount: premium,
-                })
-              : undefined
-          }
-          onSelectedWithdrawal={() => {
-            if (selectedTokenId !== null && premium !== null) {
-              transaction.submit({
-                kind: "selected_withdrawal",
-                tokenId: selectedTokenId,
-                maxPremium: premium,
+            );
+          }}
+          onApproveWithdrawal={() => {
+            if (premium !== null) {
+              void transaction.submit({
+                kind: "withdrawal_approval",
+                amount: premium,
               });
             }
           }}
+          onWithdrawal={() => {
+            if (selectedTokenId === null || premium === null) return;
+            const frozenTokenId = selectedTokenId;
+            const frozenPremium = premium;
+            void transaction
+              .submit({
+                kind: "withdrawal",
+                tokenId: frozenTokenId,
+                maxPremium: frozenPremium,
+              })
+              .then((result) => {
+                if (
+                  result?.status === "failed" &&
+                  result.stage === "contention"
+                ) {
+                  setSelectedTokenId(null);
+                  setSelectionInvalidatedMessage(
+                    "The selected Society is no longer available. Choose another current marketplace Society.",
+                  );
+                }
+              });
+          }}
           onRetry={() => void inventory.refresh()}
           onRetryPosition={() => void position.refresh()}
-          onRetryGlobal={() => void global.refresh()}
+          onRetryAllowance={() => void transaction.retryFameAllowance()}
         />
         {transaction.state.status !== "idle" && !transaction.modalOpen ? (
           <Button
             variant="outlined"
             onClick={() => transaction.setModalOpen(true)}
-            sx={{ alignSelf: "flex-start" }}
+            sx={{ alignSelf: "flex-start", minHeight: 44 }}
           >
             View liquidity transaction
           </Button>
@@ -420,6 +621,8 @@ export function GalleryStakeUnstakeView() {
             if (terminal) transaction.reset();
             transaction.setModalOpen(false);
           }}
+          onRetryRefresh={() => void transaction.retryRefresh()}
+          refreshRetrying={transaction.refreshRetrying}
         />
       </Stack>
     </Container>

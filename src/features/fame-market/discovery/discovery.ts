@@ -6,6 +6,7 @@ import type {
 } from "../types";
 import {
   createGalleryCustodyHintCache,
+  type GalleryCustodyCacheIdentity,
   type GalleryCustodyHintCache,
 } from "./cache";
 import {
@@ -91,6 +92,7 @@ export function runInitialGalleryScan<T>(
 export async function discoverGalleryHoldings({
   source,
   marketplace,
+  cacheIdentity,
   restoredHints,
   persist,
   onTargets,
@@ -98,6 +100,7 @@ export async function discoverGalleryHoldings({
 }: {
   source: GalleryCustodyDiscoverySource;
   marketplace: Address;
+  cacheIdentity: GalleryCustodyCacheIdentity;
   restoredHints: GalleryCustodyHintCache | null;
   persist: (record: GalleryCustodyHintCache) => Promise<unknown>;
   onTargets?: (
@@ -153,7 +156,7 @@ export async function discoverGalleryHoldings({
       ]),
     ];
     try {
-      await persist(createGalleryCustodyHintCache(heldTokenIds));
+      await persist(createGalleryCustodyHintCache(heldTokenIds, cacheIdentity));
     } catch {
       // Browser persistence is an optimization, never catalog availability.
     }

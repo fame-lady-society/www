@@ -2,10 +2,9 @@ import type { Address, Hash } from "viem";
 
 export type GalleryLiquidityCall =
   | Readonly<{ kind: "deposit"; tokenIds: readonly bigint[] }>
-  | Readonly<{ kind: "selected_withdrawal_approval"; amount: bigint }>
-  | Readonly<{ kind: "random_withdrawal" }>
+  | Readonly<{ kind: "withdrawal_approval"; amount: bigint }>
   | Readonly<{
-      kind: "selected_withdrawal";
+      kind: "withdrawal";
       tokenId: bigint;
       maxPremium: bigint;
     }>;
@@ -128,7 +127,9 @@ type GalleryLiquidityActionDependencies = Readonly<{
     hash: Hash,
     confirmations: 1,
   ) => Promise<{ status: "success" | "reverted" }>;
-  refresh: (call: GalleryLiquidityCall) => Promise<void>;
+  refresh: (
+    call: GalleryLiquidityCall,
+  ) => Promise<void | { selectedTokenAvailable?: boolean }>;
 }>;
 
 export type GalleryLiquidityActionResult =
@@ -151,6 +152,32 @@ export async function executeGalleryLiquidityAction(
   const fail = (cause: unknown): GalleryLiquidityActionResult => {
     dependencies.dispatch({ type: "failed", stage, cause });
     return { status: "failed", stage, cause };
+  };
+
+  const failAfterWithdrawalRefresh = async (
+    cause: unknown,
+    classifyReceiptContention = false,
+  ): Promise<GalleryLiquidityActionResult> => {
+    if (
+      call.kind === "withdrawal" &&
+      (stage === "simulation" || classifyReceiptContention)
+    ) {
+      try {
+        const refreshed = await dependencies.refresh(call);
+        if (refreshed?.selectedTokenAvailable === false) {
+          stage = "contention";
+          return fail(
+            new Error(
+              "The selected Society is no longer available. Choose another current marketplace Society.",
+              { cause },
+            ),
+          );
+        }
+      } catch {
+        // Preserve the original write failure when recovery reads also fail.
+      }
+    }
+    return fail(cause);
   };
 
   try {
@@ -218,7 +245,10 @@ export async function executeGalleryLiquidityAction(
     stage = "receipt";
     const receipt = await dependencies.waitForReceipt(hash, 1);
     if (receipt.status === "reverted") {
-      return fail(new Error("The liquidity transaction reverted onchain."));
+      return failAfterWithdrawalRefresh(
+        new Error("The liquidity transaction reverted onchain."),
+        true,
+      );
     }
 
     stage = "refresh";
@@ -231,7 +261,7 @@ export async function executeGalleryLiquidityAction(
     dependencies.dispatch({ type: "confirmed" });
     return { status: "confirmed", hash };
   } catch (cause) {
-    return fail(cause);
+    return failAfterWithdrawalRefresh(cause);
   }
 }
 
@@ -246,13 +276,14 @@ export function isGalleryLiquidityActionBusy(
     "simulating",
     "awaiting_wallet",
     "confirming",
+    "confirmed_refreshing",
   ].includes(state.status);
 }
 
 export function isGalleryLiquidityActionTerminal(
   state: GalleryLiquidityActionState,
 ) {
-  return ["confirmed", "confirmed_refreshing", "error"].includes(state.status);
+  return ["confirmed", "error"].includes(state.status);
 }
 
 export function hasGalleryLiquidityStakeLegStarted(

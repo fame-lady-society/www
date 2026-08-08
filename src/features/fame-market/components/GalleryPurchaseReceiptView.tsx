@@ -139,11 +139,11 @@ function SettlementDetails({
   if (!purchase.checkout || !purchase.route) {
     return (
       <Stack spacing={1.25}>
-        <Fact label="Paid directly" value={formatFame(purchase.total)} />
+        <Fact label="Direct FAME payment" value={formatFame(purchase.total)} />
         <Fact label="NFT liquidity" value={formatFame(purchase.unit)} />
         <Fact
-          label="Marketplace premium"
-          value={formatFame(purchase.premium)}
+          label="Gross marketplace premium"
+          value={formatFame(purchase.grossPremiumAmount)}
         />
       </Stack>
     );
@@ -173,6 +173,11 @@ function SettlementDetails({
       <Fact
         label="Marketplace payment"
         value={formatFame(checkout.marketplaceFameCharge)}
+      />
+      <Fact label="NFT liquidity" value={formatFame(purchase.unit)} />
+      <Fact
+        label="Gross marketplace premium"
+        value={formatFame(purchase.grossPremiumAmount)}
       />
       {checkout.fameRefund > 0n ? (
         <Fact

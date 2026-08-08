@@ -18,7 +18,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { isAddressEqual } from "viem";
 import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
@@ -448,7 +447,6 @@ export function GalleryView() {
   const openedPurchaseReceipt = useRef<string | null>(null);
   const [paymentAsset, setPaymentAsset] = useState<GalleryPaymentAsset>("FAME");
   useGalleryChainOnPageLoad(config.chainId);
-  const connection = useConnection();
   const global = useGalleryGlobalState();
   const pool = useGalleryPoolState();
   const poolTargets =
@@ -513,9 +511,6 @@ export function GalleryView() {
     state = { status: "ready" };
   }
 
-  const connectedOwner =
-    Boolean(connection.address && globalState) &&
-    isAddressEqual(connection.address!, globalState!.owner);
   const totalPrice = globalState ? globalState.unit + globalState.premium : 0n;
   const alternativePaymentReady =
     paymentAsset === "FAME" ||
@@ -576,11 +571,6 @@ export function GalleryView() {
               {config.labels.description}
             </Typography>
           </div>
-          {connectedOwner && config.adminHref ? (
-            <LinkButton href={config.adminHref} variant="text">
-              Open admin
-            </LinkButton>
-          ) : null}
         </Stack>
 
         <GalleryLiquidityCta />

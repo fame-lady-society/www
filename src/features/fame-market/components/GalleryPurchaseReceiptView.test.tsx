@@ -20,7 +20,7 @@ const marketplacePurchase: GalleryPurchaseReceiptProjection = {
   sourceId: 412n,
   artworkHash: `0x${"22".repeat(32)}` as Hash,
   unit: 1_000_000n * 10n ** 18n,
-  premium: 30_000n * 10n ** 18n,
+  grossPremiumAmount: 30_000n * 10n ** 18n,
   total: 1_030_000n * 10n ** 18n,
   inventoryBefore: 88n,
   inventoryAfter: 89n,
@@ -77,8 +77,12 @@ describe("gallery purchase receipt page", () => {
     assert.match(html, /Society #199/);
     assert.match(html, /122\.45 USDC/);
     assert.match(html, /Returned to wallet/);
+    assert.match(html, /Net input paid/);
+    assert.doesNotMatch(html, /Direct FAME payment/);
     assert.match(html, /1 USDC/);
     assert.match(html, /1,030,000 FAME/);
+    assert.match(html, /Gross marketplace premium/);
+    assert.doesNotMatch(html, /net (?:wallet )?(?:loss|cost)/i);
     assert.match(html, /10,000 FAME/);
     assert.match(html, /Mint-pool metadata swap/);
     assert.match(html, /Your token · Society #199/);
@@ -112,6 +116,9 @@ describe("gallery purchase receipt page", () => {
     );
 
     assert.match(html, /Held artwork delivery/);
+    assert.match(html, /Direct FAME payment/);
+    assert.doesNotMatch(html, /Net input paid/);
+    assert.match(html, /Gross marketplace premium/);
     assert.match(html, /no metadata swap was needed/);
     assert.doesNotMatch(html, /Pool token/);
     assert.doesNotMatch(html, /local Base fork/);

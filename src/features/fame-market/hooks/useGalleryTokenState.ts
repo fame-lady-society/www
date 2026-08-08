@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
@@ -11,26 +11,25 @@ import {
 } from "../queryKeys";
 import {
   captureGalleryBlock,
+  galleryReadAddresses,
   readGalleryTokenState,
   type GalleryMulticallClient,
 } from "../reads";
 import type { GalleryHookProjection, GalleryTokenState } from "../types";
 
-const identity: GalleryQueryIdentity = {
-  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
-  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
-};
-
 export function useGalleryTokenState(
   tokenId: bigint,
-  {
-    enabled = true,
-  }: { enabled?: boolean; refetchOnMount?: boolean } = {},
+  { enabled = true }: { enabled?: boolean; refetchOnMount?: boolean } = {},
 ) {
+  const config = useGalleryRuntime();
+  const identity: GalleryQueryIdentity = {
+    chainId: config.chainId,
+    manifestVersion: config.schemaVersion,
+    marketplaceAddress: config.addresses.gallery,
+    deploymentBlock: config.deployment.blockNumber,
+  };
   const publicClient = usePublicClient({
-    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+    chainId: config.chainId,
   });
   const client = publicClient as unknown as GalleryMulticallClient | undefined;
   const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
@@ -55,16 +54,17 @@ export function useGalleryTokenState(
   }, [client, enabled, tokenId]);
 
   const query = useQuery({
-    queryKey: galleryQueryKeys.token(
-      identity,
-      blockNumber ?? 0n,
-      tokenId,
-    ),
+    queryKey: galleryQueryKeys.token(identity, blockNumber ?? 0n, tokenId),
     queryFn: () => {
       if (!client || blockNumber === null) {
-        throw new Error("Base Sepolia public client is unavailable");
+        throw new Error("Gallery public client is unavailable");
       }
-      return readGalleryTokenState(client, blockNumber, tokenId);
+      return readGalleryTokenState(
+        client,
+        blockNumber,
+        tokenId,
+        galleryReadAddresses(config.addresses),
+      );
     },
     enabled: enabled && Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,

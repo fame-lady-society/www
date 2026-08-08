@@ -74,7 +74,7 @@ export function useGalleryPoolState({
     ),
     queryFn: () => {
       if (!client || blockNumber === null) {
-        throw new Error("Base Sepolia public client is unavailable");
+        throw new Error("Gallery public client is unavailable");
       }
       const collectionTokenIds =
         normalizedTokenIds ?? galleryCollectionTokenIds(config.collection);

@@ -23,8 +23,11 @@ function success(result: unknown) {
 function client(input: {
   owners: ReadonlyMap<bigint, Address>;
   balance?: bigint;
-  providerPosition?: readonly [bigint, bigint];
+  providerPosition?: unknown;
+  withdrawalPremium?: unknown;
   calls?: string[];
+  readCalls?: Array<{ functionName: string; blockNumber: bigint }>;
+  throwRead?: "providerPosition" | "withdrawalPremium";
   throwTokenUri?: boolean;
 }): GalleryLiquidityReadClient {
   return {
@@ -32,9 +35,19 @@ function client(input: {
       return 9_999n;
     },
     async readContract(read) {
+      input.readCalls?.push({
+        functionName: read.functionName,
+        blockNumber: read.blockNumber,
+      });
+      if (input.throwRead === read.functionName) {
+        throw new Error(`${read.functionName} rpc unavailable`);
+      }
       if (read.functionName === "balanceOf") return input.balance ?? 0n;
       if (read.functionName === "providerPosition") {
         return input.providerPosition ?? ([0n, 0n] as const);
+      }
+      if (read.functionName === "withdrawalPremium") {
+        return input.withdrawalPremium ?? 0n;
       }
       throw new Error(`Unexpected read ${read.functionName}`);
     },
@@ -155,9 +168,15 @@ describe("gallery liquidity reads", () => {
     assert.equal(calls.includes("artworkHash"), false);
   });
 
-  it("reads the connected wallet provider position at the pinned block", async () => {
+  it("reads the connected wallet provider position and premium at the pinned block", async () => {
+    const readCalls: Array<{ functionName: string; blockNumber: bigint }> = [];
     const result = await readLiquidityProviderPosition(
-      client({ owners: new Map(), providerPosition: [4n, 2n] }),
+      client({
+        owners: new Map(),
+        providerPosition: [4n, 2n],
+        withdrawalPremium: 15n,
+        readCalls,
+      }),
       9_998n,
       account,
       addresses,
@@ -165,7 +184,149 @@ describe("gallery liquidity reads", () => {
     assert.deepEqual(result, {
       status: "success",
       blockNumber: 9_998n,
-      data: { account, unitCount: 4n, indexPlusOne: 2n },
+      data: {
+        account,
+        unitCount: 4n,
+        indexPlusOne: 2n,
+        withdrawalPremium: 15n,
+      },
+    });
+    assert.deepEqual(readCalls, [
+      { functionName: "providerPosition", blockNumber: 9_998n },
+      { functionName: "withdrawalPremium", blockNumber: 9_998n },
+    ]);
+  });
+
+  it("does not read a premium for a zero-unit provider position", async () => {
+    const readCalls: Array<{ functionName: string; blockNumber: bigint }> = [];
+    const result = await readLiquidityProviderPosition(
+      client({
+        owners: new Map(),
+        providerPosition: [0n, 0n],
+        withdrawalPremium: 15n,
+        readCalls,
+      }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "success",
+      blockNumber: 9_998n,
+      data: {
+        account,
+        unitCount: 0n,
+        indexPlusOne: 0n,
+        withdrawalPremium: null,
+      },
+    });
+    assert.deepEqual(readCalls, [
+      { functionName: "providerPosition", blockNumber: 9_998n },
+    ]);
+  });
+
+  it("fails closed when the provider position is malformed", async () => {
+    const readCalls: Array<{ functionName: string; blockNumber: bigint }> = [];
+    const result = await readLiquidityProviderPosition(
+      client({ owners: new Map(), providerPosition: [1n], readCalls }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "failure",
+      blockNumber: 9_998n,
+      message: "Provider position is incomplete.",
+    });
+    assert.deepEqual(readCalls, [
+      { functionName: "providerPosition", blockNumber: 9_998n },
+    ]);
+  });
+
+  it("reports a failed provider position separately", async () => {
+    const readCalls: Array<{ functionName: string; blockNumber: bigint }> = [];
+    const result = await readLiquidityProviderPosition(
+      client({
+        owners: new Map(),
+        throwRead: "providerPosition",
+        readCalls,
+      }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "failure",
+      blockNumber: 9_998n,
+      message: "Provider position is unavailable.",
+    });
+    assert.deepEqual(readCalls, [
+      { functionName: "providerPosition", blockNumber: 9_998n },
+    ]);
+  });
+
+  it("fails closed when the provider withdrawal premium is malformed", async () => {
+    const result = await readLiquidityProviderPosition(
+      client({
+        owners: new Map(),
+        providerPosition: [1n, 1n],
+        withdrawalPremium: "15",
+      }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "failure",
+      blockNumber: 9_998n,
+      message: "Provider withdrawal premium is incomplete.",
+    });
+  });
+
+  it("reports a failed provider withdrawal premium separately", async () => {
+    const result = await readLiquidityProviderPosition(
+      client({
+        owners: new Map(),
+        providerPosition: [1n, 1n],
+        throwRead: "withdrawalPremium",
+      }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "failure",
+      blockNumber: 9_998n,
+      message: "Provider withdrawal premium is unavailable.",
+    });
+  });
+
+  it("preserves an exact zero withdrawal premium as a successful quote", async () => {
+    const result = await readLiquidityProviderPosition(
+      client({
+        owners: new Map(),
+        providerPosition: [1n, 1n],
+        withdrawalPremium: 0n,
+      }),
+      9_998n,
+      account,
+      addresses,
+    );
+
+    assert.deepEqual(result, {
+      status: "success",
+      blockNumber: 9_998n,
+      data: {
+        account,
+        unitCount: 1n,
+        indexPlusOne: 1n,
+        withdrawalPremium: 0n,
+      },
     });
   });
 });

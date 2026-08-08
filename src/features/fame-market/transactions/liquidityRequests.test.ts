@@ -1,18 +1,74 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { universalPoolArtMarketplaceAbi } from "../../../wagmi";
 import {
   galleryLiquidityContractRequest,
   galleryLiquidityDepositApprovalRequest,
   galleryLiquidityDepositRequest,
   galleryLiquidityFameApprovalRequest,
-  galleryLiquidityRandomWithdrawalRequest,
-  galleryLiquiditySelectedWithdrawalRequest,
+  galleryLiquidityWithdrawalRequest,
 } from "./liquidityRequests";
 
 const account = "0x1111111111111111111111111111111111111111" as const;
 const mirror = "0x2222222222222222222222222222222222222222" as const;
 const fame = "0x3333333333333333333333333333333333333333" as const;
 const marketplace = "0x4444444444444444444444444444444444444444" as const;
+
+describe("generated marketplace withdrawal ABI", () => {
+  it("exposes only the finalized selected withdrawal and provider premium functions", () => {
+    const functions = universalPoolArtMarketplaceAbi.filter(
+      (entry) => entry.type === "function",
+    );
+    const withdrawInventory = functions.filter(
+      (entry) => entry.name === "withdrawInventory",
+    );
+    const withdrawalPremium = functions.filter(
+      (entry) => entry.name === "withdrawalPremium",
+    );
+
+    assert.deepEqual(
+      withdrawInventory.map((entry) => ({
+        inputs: entry.inputs.map(({ name, type }) => ({ name, type })),
+        outputs: entry.outputs.map(({ name, type }) => ({ name, type })),
+        stateMutability: entry.stateMutability,
+      })),
+      [
+        {
+          inputs: [
+            { name: "tokenId", type: "uint256" },
+            { name: "maxPremium", type: "uint256" },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+      ],
+    );
+    assert.deepEqual(
+      withdrawalPremium.map((entry) => ({
+        inputs: entry.inputs.map(({ name, type }) => ({ name, type })),
+        outputs: entry.outputs.map(({ name, type }) => ({ name, type })),
+        stateMutability: entry.stateMutability,
+      })),
+      [
+        {
+          inputs: [{ name: "provider", type: "address" }],
+          outputs: [{ name: "", type: "uint256" }],
+          stateMutability: "view",
+        },
+      ],
+    );
+
+    const obsoleteNames = new Set([
+      "withdrawInventorySelected",
+      "withdrawalNonce",
+      "withdrawalCursor",
+    ]);
+    assert.equal(
+      functions.some((entry) => obsoleteNames.has(entry.name)),
+      false,
+    );
+  });
+});
 
 describe("gallery liquidity transaction requests", () => {
   it("constructs normal operator approval and one atomic batch deposit", () => {
@@ -65,15 +121,7 @@ describe("gallery liquidity transaction requests", () => {
     );
   });
 
-  it("constructs free and premium-paid provider exits without a router", () => {
-    const random = galleryLiquidityRandomWithdrawalRequest(
-      account,
-      8_453,
-      marketplace,
-    );
-    assert.equal(random.functionName, "withdrawInventory");
-    assert.deepEqual(random.args, []);
-
+  it("constructs only the canonical selected provider withdrawal", () => {
     const approval = galleryLiquidityFameApprovalRequest(
       account,
       8_453,
@@ -84,16 +132,26 @@ describe("gallery liquidity transaction requests", () => {
     assert.equal(approval.functionName, "approve");
     assert.deepEqual(approval.args, [marketplace, 25n]);
 
-    const selected = galleryLiquiditySelectedWithdrawalRequest(
+    const withdrawal = galleryLiquidityWithdrawalRequest(
       account,
       8_453,
       marketplace,
       42n,
       25n,
     );
-    assert.equal(selected.functionName, "withdrawInventorySelected");
-    assert.deepEqual(selected.args, [42n, 25n]);
-    assert.equal("value" in selected, false);
+    assert.equal(withdrawal.address, marketplace);
+    assert.equal(withdrawal.functionName, "withdrawInventory");
+    assert.deepEqual(withdrawal.args, [42n, 25n]);
+    assert.equal("value" in withdrawal, false);
+
+    assert.throws(
+      () => galleryLiquidityWithdrawalRequest(account, 8_453, marketplace, 0n, 0n),
+      /between 1 and 888/,
+    );
+    assert.throws(
+      () => galleryLiquidityWithdrawalRequest(account, 8_453, marketplace, 1n, -1n),
+      /cannot be negative/,
+    );
   });
 
   it("dispatches every liquidity call to its ABI-backed contract request", () => {
@@ -106,19 +164,13 @@ describe("gallery liquidity transaction requests", () => {
         addresses,
       ),
       galleryLiquidityContractRequest(
-        { kind: "selected_withdrawal_approval", amount: 25n },
+        { kind: "withdrawal_approval", amount: 25n },
         account,
         8_453,
         addresses,
       ),
       galleryLiquidityContractRequest(
-        { kind: "random_withdrawal" },
-        account,
-        8_453,
-        addresses,
-      ),
-      galleryLiquidityContractRequest(
-        { kind: "selected_withdrawal", tokenId: 2n, maxPremium: 25n },
+        { kind: "withdrawal", tokenId: 2n, maxPremium: 25n },
         account,
         8_453,
         addresses,
@@ -127,12 +179,7 @@ describe("gallery liquidity transaction requests", () => {
 
     assert.deepEqual(
       requests.map(({ functionName }) => functionName),
-      [
-        "depositInventoryBatch",
-        "approve",
-        "withdrawInventory",
-        "withdrawInventorySelected",
-      ],
+      ["depositInventoryBatch", "approve", "withdrawInventory"],
     );
   });
 });

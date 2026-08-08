@@ -57,7 +57,7 @@ export type GalleryPurchaseReceiptProjection = {
   sourceId: bigint | null;
   artworkHash: Hash;
   unit: bigint;
-  premium: bigint;
+  grossPremiumAmount: bigint;
   total: bigint;
   inventoryBefore: bigint;
   inventoryAfter: bigint;
@@ -227,8 +227,12 @@ export function projectGalleryPurchaseReceipt(
   const path = pathFromOrdinal(pathOrdinal);
   const rawSourceId = bigint(purchase.sourceId, "source token ID");
   const sourceId = path === "held" ? null : rawSourceId;
+  const artworkHash = hash(purchase.artwork, "artwork");
   const unit = bigint(purchase.unitAmount, "marketplace unit");
-  const premium = bigint(purchase.premiumAmount, "marketplace premium");
+  const grossPremiumAmount = bigint(
+    purchase.grossPremiumAmount,
+    "gross marketplace premium",
+  );
   const inventoryBefore = bigint(
     purchase.inventoryBefore,
     "inventory before purchase",
@@ -279,9 +283,19 @@ export function projectGalleryPurchaseReceipt(
       addresses.checkout,
       checkoutSettledTopic,
     );
+    const routeLogs = matchingLogs(
+      receipt.logs,
+      addresses.router,
+      routeExecutedTopic,
+    );
     if (checkoutLogs.length > 1) {
       throw new Error(
         "The transaction contains multiple checkout settlements.",
+      );
+    }
+    if (checkoutLogs.length === 0 && routeLogs.length > 0) {
+      throw new Error(
+        "The transaction contains a router execution without a checkout settlement.",
       );
     }
     if (checkoutLogs.length === 1) {
@@ -300,10 +314,20 @@ export function projectGalleryPurchaseReceipt(
         settlement.args.shellId,
         "checkout shell token ID",
       );
+      const settlementSourceId = bigint(
+        settlement.args.sourceId,
+        "checkout source token ID",
+      );
+      const settlementArtwork = hash(
+        settlement.args.artwork,
+        "checkout artwork",
+      );
       const settlementBuyer = address(settlement.args.buyer, "checkout buyer");
       if (
         settlementPath !== pathOrdinal ||
         settlementShellId !== shellId ||
+        settlementSourceId !== rawSourceId ||
+        !sameHex(settlementArtwork, artworkHash) ||
         !isAddressEqual(settlementBuyer, buyer)
       ) {
         throw new Error(
@@ -325,14 +349,6 @@ export function projectGalleryPurchaseReceipt(
         ),
         fameRefund: bigint(settlement.args.fameRefund, "FAME refund"),
       };
-      if (
-        checkout.inputRefund > checkout.inputAmount ||
-        checkout.marketplaceFameCharge + checkout.fameRefund !==
-          checkout.routerFameOutput
-      ) {
-        throw new Error("The checkout refund accounting is inconsistent.");
-      }
-
       const routeEvent = oneEvent(
         receipt.logs,
         addresses.router,
@@ -351,7 +367,7 @@ export function projectGalleryPurchaseReceipt(
         !isAddressEqual(tokenOut, addresses.fame) ||
         amountIn !== checkout.inputAmount ||
         netAmountOut !== checkout.routerFameOutput ||
-        checkout.marketplaceFameCharge !== unit + premium
+        checkout.marketplaceFameCharge !== unit + grossPremiumAmount
       ) {
         throw new Error(
           "The router execution does not match the checkout settlement.",
@@ -385,10 +401,10 @@ export function projectGalleryPurchaseReceipt(
     shellId,
     path,
     sourceId,
-    artworkHash: hash(purchase.artwork, "artwork"),
+    artworkHash,
     unit,
-    premium,
-    total: unit + premium,
+    grossPremiumAmount,
+    total: unit + grossPremiumAmount,
     inventoryBefore,
     inventoryAfter,
     metadataUpdatedTokenIds: decodeMetadataUpdates(receipt, addresses.mirror),

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, type PropsWithChildren } from "react";
 import type { Address } from "viem";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./baseSepoliaTestGallery";
 
 export type GalleryRuntimeConfig = {
   schemaVersion: number;
@@ -32,7 +31,6 @@ export type GalleryRuntimeConfig = {
     blockNumber: bigint;
   };
   explorerBaseUrl: string;
-  adminHref?: string;
   labels: {
     title: string;
     description: string;
@@ -40,25 +38,7 @@ export type GalleryRuntimeConfig = {
   };
 };
 
-export const BASE_SEPOLIA_GALLERY_RUNTIME: GalleryRuntimeConfig = {
-  ...BASE_SEPOLIA_TEST_GALLERY_CONFIG,
-  adminHref: "/fame/market/test/admin",
-  token: {
-    name: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.name,
-    symbol: BASE_SEPOLIA_TEST_GALLERY_CONFIG.testToken.symbol,
-  },
-  checkout: null,
-  labels: {
-    title: "TEST Marketplace",
-    description:
-      "Choose an artwork and buy it with TEST. Wallet connection is only needed when you buy.",
-    network: "Base Sepolia",
-  },
-};
-
-const GalleryRuntimeContext = createContext<GalleryRuntimeConfig>(
-  BASE_SEPOLIA_GALLERY_RUNTIME,
-);
+const GalleryRuntimeContext = createContext<GalleryRuntimeConfig | null>(null);
 
 export function GalleryRuntimeProvider({
   config,
@@ -72,5 +52,11 @@ export function GalleryRuntimeProvider({
 }
 
 export function useGalleryRuntime() {
-  return useContext(GalleryRuntimeContext);
+  const runtime = useContext(GalleryRuntimeContext);
+  if (!runtime) {
+    throw new Error(
+      "Gallery runtime is not configured. Wrap marketplace consumers in GalleryRuntimeProvider.",
+    );
+  }
+  return runtime;
 }

@@ -11,72 +11,138 @@ const inventory = {
   ],
 };
 
+const callbacks = {
+  onSelect: () => undefined,
+  onApproveWithdrawal: () => undefined,
+  onWithdrawal: () => undefined,
+};
+
 describe("gallery stake unstake view", () => {
-  it("keeps public inventory browseable without misleading exit controls", () => {
+  it("keeps public inventory browseable without provider withdrawal controls", () => {
     const html = renderToStaticMarkup(
       <GalleryStakeUnstakeContent
         state={inventory}
         provider={{ status: "ready", unitCount: 0n }}
         selectedTokenId={null}
-        premium={25n * 10n ** 18n}
-        fameAllowance={0n}
+        premium={null}
+        fameAllowance={{ status: "idle" }}
         busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
+        {...callbacks}
         renderToken={(token) => <div>{`Society #${token.tokenId}`}</div>}
       />,
     );
     assert.match(html, /Society #7/);
     assert.match(html, /Stake Society NFTs/);
-    assert.doesNotMatch(html, /Receive one pseudorandom Society/);
-    assert.doesNotMatch(html, /Confirm selected exit/);
+    assert.doesNotMatch(html, /Withdraw Society|Approve .* FAME/);
   });
 
-  it("gives providers a free pseudorandom exit and inline selected exit", () => {
+  it("offers exact approval for a selected withdrawal and explains remaining-unit share", () => {
     const html = renderToStaticMarkup(
       <GalleryStakeUnstakeContent
         state={inventory}
         provider={{ status: "ready", unitCount: 2n }}
         selectedTokenId={7n}
         premium={25n * 10n ** 18n}
-        fameAllowance={0n}
+        fameAllowance={{ status: "ready", amount: 0n }}
         busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
+        {...callbacks}
         renderToken={(token, selected) => (
-          <div>{`Society #${token.tokenId} ${selected ? "selected" : ""}`}</div>
+          <button aria-pressed={selected}>{`Society #${token.tokenId}`}</button>
         )}
       />,
     );
-    assert.match(html, /Receive one pseudorandom Society/);
-    assert.match(html, /no FAME cost/i);
-    assert.match(html, /25 FAME directly/i);
-    assert.match(html, /no self-rebate/i);
     assert.match(html, /Approve 25 FAME/);
-    assert.doesNotMatch(html, /Confirm selected exit/);
+    assert.match(html, /remaining credited units may still receive/i);
+    assert.match(html, /aria-pressed="true"/);
+    assert.doesNotMatch(html, /pseudorandom|no self-rebate/i);
   });
 
-  it("confirms selected withdrawal inline when direct FAME allowance is ready", () => {
+  it("withdraws with a zero ceiling without an approval action", () => {
     const html = renderToStaticMarkup(
       <GalleryStakeUnstakeContent
         state={inventory}
         provider={{ status: "ready", unitCount: 1n }}
         selectedTokenId={8n}
-        premium={25n}
-        fameAllowance={25n}
+        premium={0n}
+        fameAllowance={{ status: "ready", amount: 0n }}
         busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
+        {...callbacks}
         renderToken={() => <div>Society #8</div>}
       />,
     );
-    assert.match(html, /Confirm selected exit/);
+    assert.match(html, /Withdraw Society #8/);
+    assert.match(html, /0 FAME/);
+    assert.doesNotMatch(html, /Approve/);
+  });
+
+  it("fails closed while allowance is loading or unavailable", () => {
+    const loading = renderToStaticMarkup(
+      <GalleryStakeUnstakeContent
+        state={inventory}
+        provider={{ status: "ready", unitCount: 1n }}
+        selectedTokenId={7n}
+        premium={25n}
+        fameAllowance={{ status: "loading" }}
+        busy={false}
+        {...callbacks}
+        renderToken={() => <div>Society #7</div>}
+      />,
+    );
+    assert.match(loading, /Checking FAME allowance/i);
+    assert.doesNotMatch(loading, /Approve 25 FAME|Withdraw Society/);
+
+    const failed = renderToStaticMarkup(
+      <GalleryStakeUnstakeContent
+        state={inventory}
+        provider={{ status: "ready", unitCount: 1n }}
+        selectedTokenId={7n}
+        premium={25n}
+        fameAllowance={{ status: "error", message: "Allowance unavailable" }}
+        busy={false}
+        {...callbacks}
+        onRetryAllowance={() => undefined}
+        renderToken={() => <div>Society #7</div>}
+      />,
+    );
+    assert.match(failed, /Allowance unavailable/);
+    assert.match(failed, /Retry allowance/);
+    assert.doesNotMatch(failed, /Approve 25 FAME|Withdraw Society/);
+  });
+
+  it("retains stale visual selection as non-actionable during inventory failure", () => {
+    const html = renderToStaticMarkup(
+      <GalleryStakeUnstakeContent
+        state={{ status: "error", message: "Inventory unavailable" }}
+        provider={{ status: "ready", unitCount: 1n }}
+        selectedTokenId={7n}
+        premium={25n}
+        fameAllowance={{ status: "ready", amount: 25n }}
+        busy={false}
+        {...callbacks}
+        onRetry={() => undefined}
+      />,
+    );
+    assert.match(html, /Selected Society #7/);
+    assert.match(html, /selection is not actionable until inventory refreshes/i);
+    assert.doesNotMatch(html, /Withdraw Society #7/);
+  });
+
+  it("disables writes on a wallet-chain mismatch", () => {
+    const html = renderToStaticMarkup(
+      <GalleryStakeUnstakeContent
+        state={inventory}
+        provider={{ status: "ready", unitCount: 1n }}
+        selectedTokenId={7n}
+        premium={25n}
+        fameAllowance={{ status: "ready", amount: 25n }}
+        chainMismatch
+        busy={false}
+        {...callbacks}
+        renderToken={() => <div>Society #7</div>}
+      />,
+    );
+    assert.match(html, /wallet is connected to a different network/i);
+    assert.doesNotMatch(html, /Withdraw Society #7/);
   });
 
   it("bounds initial metadata hydration while keeping the full inventory browseable", () => {
@@ -91,19 +157,16 @@ describe("gallery stake unstake view", () => {
         }}
         provider={{ status: "disconnected" }}
         selectedTokenId={null}
-        premium={25n}
-        fameAllowance={0n}
+        premium={null}
+        fameAllowance={{ status: "idle" }}
         busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
+        {...callbacks}
         renderToken={(token) => <div>{`Society #${token.tokenId}`}</div>}
       />,
     );
     assert.match(html, /Society #24/);
     assert.doesNotMatch(html, /Society #25/);
-    assert.match(html, /Show more pool Society NFTs/);
+    assert.match(html, /Show more marketplace Society NFTs/);
   });
 
   it("does not call a failed provider-position read an empty position", () => {
@@ -112,41 +175,15 @@ describe("gallery stake unstake view", () => {
         state={inventory}
         provider={{ status: "error", message: "Position unavailable" }}
         selectedTokenId={null}
-        premium={25n}
-        fameAllowance={0n}
+        premium={null}
+        fameAllowance={{ status: "idle" }}
         busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
+        {...callbacks}
         onRetryPosition={() => undefined}
         renderToken={(token) => <div>{`Society #${token.tokenId}`}</div>}
       />,
     );
     assert.match(html, /Position unavailable/);
     assert.doesNotMatch(html, /no credited provider position/i);
-    assert.doesNotMatch(html, /Receive one pseudorandom Society/);
-  });
-
-  it("blocks selected exits until the live premium is available", () => {
-    const html = renderToStaticMarkup(
-      <GalleryStakeUnstakeContent
-        state={inventory}
-        provider={{ status: "ready", unitCount: 1n }}
-        selectedTokenId={7n}
-        premium={null}
-        fameAllowance={0n}
-        busy={false}
-        onSelect={() => undefined}
-        onRandomWithdrawal={() => undefined}
-        onApproveSelectedWithdrawal={() => undefined}
-        onSelectedWithdrawal={() => undefined}
-        onRetryGlobal={() => undefined}
-        renderToken={(token) => <div>{`Society #${token.tokenId}`}</div>}
-      />,
-    );
-    assert.match(html, /live FAME premium is unavailable/i);
-    assert.doesNotMatch(html, /Approve .* FAME/);
-    assert.doesNotMatch(html, /Confirm selected exit/);
   });
 });

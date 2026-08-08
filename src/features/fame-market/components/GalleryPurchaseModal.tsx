@@ -83,15 +83,15 @@ function purchaseStatusCopy(
 export function GalleryPurchaseModalContent({
   state,
   transactions,
-  tokenSymbol = "TEST",
-  networkName = "Base Sepolia",
-  explorerBaseUrl = "https://sepolia.basescan.org",
+  tokenSymbol,
+  networkName,
+  explorerBaseUrl,
 }: {
   state: GalleryPurchaseState;
   transactions: readonly { kind: string; hash?: `0x${string}` }[];
-  tokenSymbol?: string;
-  networkName?: string;
-  explorerBaseUrl?: string;
+  tokenSymbol: string;
+  networkName: string;
+  explorerBaseUrl: string;
 }) {
   const submittedTransactions = transactions.filter(
     (transaction): transaction is { kind: string; hash: `0x${string}` } =>
@@ -176,18 +176,18 @@ export function GalleryPurchaseModal({
   transactions,
   onClose,
   onDone,
-  tokenSymbol = "TEST",
-  networkName = "Base Sepolia",
-  explorerBaseUrl = "https://sepolia.basescan.org",
+  tokenSymbol,
+  networkName,
+  explorerBaseUrl,
 }: {
   state: GalleryPurchaseState;
   open: boolean;
   transactions: readonly { kind: string; hash?: `0x${string}` }[];
   onClose: () => void;
   onDone: () => void;
-  tokenSymbol?: string;
-  networkName?: string;
-  explorerBaseUrl?: string;
+  tokenSymbol: string;
+  networkName: string;
+  explorerBaseUrl: string;
 }) {
   const terminal =
     state.status === "verified" ||

@@ -94,15 +94,17 @@ export function useGalleryDiscovery({
     () => (publicClient ? discoverySource(publicClient, config) : null),
     [config, publicClient],
   );
-  const storage = useMemo(
+  const cacheIdentity = useMemo(
     () =>
-      getBrowserGalleryCustodyHintStorage(
-        createGalleryCustodyCacheIdentity(identity, {
-          firstTokenId: BigInt(config.collection.firstTokenId),
-          lastTokenId: BigInt(config.collection.lastTokenId),
-        }),
-      ),
-    [config, identity],
+      createGalleryCustodyCacheIdentity(identity, {
+        firstTokenId: BigInt(config.collection.firstTokenId),
+        lastTokenId: BigInt(config.collection.lastTokenId),
+      }),
+    [config.collection.firstTokenId, config.collection.lastTokenId, identity],
+  );
+  const storage = useMemo(
+    () => getBrowserGalleryCustodyHintStorage(cacheIdentity),
+    [cacheIdentity],
   );
   const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
   const [isScanning, setIsScanning] = useState(Boolean(source));
@@ -124,6 +126,7 @@ export function useGalleryDiscovery({
       discoverGalleryHoldings({
         source,
         marketplace,
+        cacheIdentity,
         restoredHints: storage.restore(),
         persist: (record) => storage.commit(record),
         onTargets: (_kind, targets) => {
@@ -154,7 +157,7 @@ export function useGalleryDiscovery({
     return () => {
       active = false;
     };
-  }, [deploymentKey, marketplace, source, storage]);
+  }, [cacheIdentity, deploymentKey, marketplace, source, storage]);
 
   const revalidateAffectedTokenIds = useCallback(
     async (tokenIds: readonly bigint[]) => {
@@ -195,6 +198,7 @@ export function useGalleryDiscovery({
       const result = await discoverGalleryHoldings({
         source,
         marketplace,
+        cacheIdentity,
         restoredHints: storage.restore(),
         persist: (record) => storage.commit(record),
       });
@@ -204,7 +208,13 @@ export function useGalleryDiscovery({
     } finally {
       setIsScanning(false);
     }
-  }, [getPendingInitialHeldTokenIds, marketplace, source, storage]);
+  }, [
+    cacheIdentity,
+    getPendingInitialHeldTokenIds,
+    marketplace,
+    source,
+    storage,
+  ]);
 
   const catalog = useMemo(
     () =>

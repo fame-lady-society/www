@@ -10,7 +10,15 @@ import {
   type GalleryDiscoveryLock,
 } from "./storage";
 
-const identity = createGalleryCustodyCacheIdentity();
+const identity = createGalleryCustodyCacheIdentity(
+  {
+    chainId: 8_453,
+    manifestVersion: 1,
+    marketplaceAddress: "0x1111111111111111111111111111111111111111",
+    deploymentBlock: 0n,
+  },
+  { firstTokenId: 1n, lastTokenId: 888n },
+);
 
 function memoryStorage(): GalleryCustodyStorageLike & {
   values: Map<string, string>;
@@ -38,11 +46,11 @@ describe("gallery custody hint storage", () => {
       identity,
     });
 
-    await storage.commit(createGalleryCustodyHintCache([1n, 2n], 1));
-    await storage.commit(createGalleryCustodyHintCache([2n, 3n], 2));
+    await storage.commit(createGalleryCustodyHintCache([1n, 2n], identity, 1));
+    await storage.commit(createGalleryCustodyHintCache([2n, 3n], identity, 2));
 
-    assert.match(storage.key, /84532/);
-    assert.match(storage.key, /44329992/);
+    assert.match(storage.key, /8453/);
+    assert.match(storage.key, /1111111111111111111111111111111111111111/);
     assert.deepEqual(storage.restore()?.heldTokenIds, ["2", "3"]);
   });
 
@@ -52,7 +60,7 @@ describe("gallery custody hint storage", () => {
       lock: null,
       identity,
     });
-    const cache = createGalleryCustodyHintCache([4n], 1);
+    const cache = createGalleryCustodyHintCache([4n], identity, 1);
 
     assert.equal((await storage.commit(cache)).status, "memory_only");
     assert.deepEqual(storage.restore(), cache);

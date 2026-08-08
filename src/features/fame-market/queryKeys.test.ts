@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "./config/baseSepoliaTestGallery";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
@@ -8,16 +7,15 @@ import {
 } from "./queryKeys";
 
 const identity: GalleryQueryIdentity = {
-  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
-  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
+  chainId: 8_453,
+  manifestVersion: 1,
+  marketplaceAddress: "0x1111111111111111111111111111111111111111",
+  deploymentBlock: 0n,
 };
 
 describe("successor gallery query keys", () => {
   it("separates projection kind, pinned block, token, and account", () => {
-    const account =
-      "0x0000000000000000000000000000000000000001" as const;
+    const account = "0x0000000000000000000000000000000000000001" as const;
     assert.notDeepEqual(
       galleryQueryKeys.global(identity, 100n),
       galleryQueryKeys.pool(identity, 100n),
@@ -54,8 +52,7 @@ describe("successor gallery query keys", () => {
       galleryQueryKeys.global(
         {
           ...identity,
-          marketplaceAddress:
-            "0x0000000000000000000000000000000000000004",
+          marketplaceAddress: "0x0000000000000000000000000000000000000004",
         },
         100n,
       ),

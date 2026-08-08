@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import type { Address } from "viem";
 import { usePublicClient } from "wagmi";
-import { BASE_SEPOLIA_TEST_GALLERY_CONFIG } from "../config/baseSepoliaTestGallery";
+import { useGalleryRuntime } from "../config/galleryRuntime";
 import {
   GALLERY_CANONICAL_QUERY_OPTIONS,
   galleryQueryKeys,
@@ -12,21 +12,22 @@ import {
 } from "../queryKeys";
 import {
   captureGalleryBlock,
+  galleryReadAddresses,
   readGalleryAccountState,
   type GalleryMulticallClient,
 } from "../reads";
 import type { GalleryAccountState, GalleryHookProjection } from "../types";
 
-const identity: GalleryQueryIdentity = {
-  chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
-  manifestVersion: BASE_SEPOLIA_TEST_GALLERY_CONFIG.schemaVersion,
-  marketplaceAddress: BASE_SEPOLIA_TEST_GALLERY_CONFIG.addresses.gallery,
-  deploymentBlock: BASE_SEPOLIA_TEST_GALLERY_CONFIG.deployment.blockNumber,
-};
-
 export function useGalleryAccountState(account: Address | null) {
+  const config = useGalleryRuntime();
+  const identity: GalleryQueryIdentity = {
+    chainId: config.chainId,
+    manifestVersion: config.schemaVersion,
+    marketplaceAddress: config.addresses.gallery,
+    deploymentBlock: config.deployment.blockNumber,
+  };
   const publicClient = usePublicClient({
-    chainId: BASE_SEPOLIA_TEST_GALLERY_CONFIG.chainId,
+    chainId: config.chainId,
   });
   const client = publicClient as unknown as GalleryMulticallClient | undefined;
   const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
@@ -58,7 +59,12 @@ export function useGalleryAccountState(account: Address | null) {
       if (!client || !account || blockNumber === null) {
         throw new Error("Wallet account is unavailable");
       }
-      return readGalleryAccountState(client, blockNumber, account);
+      return readGalleryAccountState(
+        client,
+        blockNumber,
+        account,
+        galleryReadAddresses(config.addresses),
+      );
     },
     enabled: Boolean(client && account && blockNumber !== null),
     ...GALLERY_CANONICAL_QUERY_OPTIONS,
