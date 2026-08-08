@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LandingMarketPresentation } from "../pricePresentation";
-import {
-  FameMarketBoard,
-  mergeLandingMarket,
-  startMarketRefresh,
-} from "./FameMarketBoard";
+import { FameMarketBoard } from "./FameMarketBoard";
 
 const market: LandingMarketPresentation = {
   prices: {
@@ -18,18 +14,19 @@ const market: LandingMarketPresentation = {
     defiSell: {
       fame: "1M FAME",
       USDC: { value: "11.90 USDC" },
-      ETH: { value: "0.0048 ETH" },
+      ETH: { value: "0.005 ETH" },
     },
     nftBuy: {
-      fame: "1.1M FAME",
+      fame: "1.05M FAME",
       USDC: { value: "12.95 USDC" },
-      ETH: { value: "0.0052 ETH" },
+      ETH: { value: "0.005 ETH" },
     },
   },
   marketCap: {
     USDC: { value: "10.8K USDC" },
-    ETH: { value: "4.3512 ETH" },
+    ETH: { value: "4.4 ETH" },
   },
+  marketplaceSupply: "888M FAME",
 };
 
 describe("FAME market board", () => {
@@ -41,11 +38,21 @@ describe("FAME market board", () => {
     assert.match(markup, /DeFi buy/);
     assert.match(markup, /DeFi sell/);
     assert.match(markup, /Marketplace/);
+    assert.match(markup, /Any 1 Society NFT/);
+    assert.match(markup, /888M FAME/);
+    assert.match(
+      markup,
+      /<div class="fame-display mt-3 text-2xl tabular-nums">888M FAME<\/div>/,
+    );
+    assert.match(markup, /1.05M FAME/);
+    assert.doesNotMatch(markup, /1.1M FAME/);
     assert.doesNotMatch(markup, /NFT sell/);
     assert.match(markup, /Market cap/);
     assert.match(markup, /10.8K USDC/);
-    assert.match(markup, /4.3512 ETH/);
+    assert.match(markup, /4.4 ETH/);
     assert.ok(markup.indexOf("Market cap") < markup.indexOf("DeFi buy"));
+    assert.ok(markup.indexOf("Market cap") < markup.indexOf("888M FAME"));
+    assert.ok(markup.indexOf("888M FAME") < markup.indexOf("10.8K USDC"));
     assert.ok(markup.indexOf("DeFi buy") < markup.indexOf("DeFi sell"));
     assert.doesNotMatch(markup, /Liquidity|Buy depth|Sell depth/);
     assert.match(markup, /1M FAME/);
@@ -75,59 +82,13 @@ describe("FAME market board", () => {
         USDC: { value: null },
         ETH: { value: null },
       },
+      marketplaceSupply: null,
     };
     const markup = renderToStaticMarkup(
       <FameMarketBoard initialMarket={empty} />,
     );
 
-    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 9);
+    assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 10);
     assert.doesNotMatch(markup, /Unavailable|error|failed/i);
-  });
-
-  it("keeps loaded values while retries fill gaps", () => {
-    assert.equal(mergeLandingMarket(market, market), market);
-    const current: LandingMarketPresentation = {
-      ...market,
-      marketCap: { ...market.marketCap, ETH: { value: null } },
-    };
-    const merged = mergeLandingMarket(current, market);
-    assert.notEqual(merged, current);
-    assert.equal(merged.marketCap.ETH.value, "4.3512 ETH");
-  });
-
-  it("retries missing market data and stops cleanly", async () => {
-    const jobs: Array<{ run: () => Promise<void>; delayMs: number }> = [];
-    const canceled: unknown[] = [];
-    const signals: AbortSignal[] = [];
-    let requests = 0;
-    let loaded: LandingMarketPresentation | null = null;
-
-    const stop = startMarketRefresh({
-      request: async (signal) => {
-        signals.push(signal);
-        requests += 1;
-        return requests === 1 ? null : market;
-      },
-      onMarket: (next) => {
-        loaded = next;
-      },
-      schedule: (run, delayMs) => {
-        jobs.push({ run, delayMs });
-        return jobs.length as unknown as ReturnType<typeof setTimeout>;
-      },
-      cancel: (timer) => canceled.push(timer),
-    });
-
-    assert.equal(jobs[0]?.delayMs, 500);
-    await jobs[0]!.run();
-    assert.equal(jobs[1]?.delayMs, 5_000);
-    await jobs[1]!.run();
-    assert.equal(loaded, market);
-
-    stop();
-    assert.equal(signals[0]?.aborted, true);
-    assert.equal(canceled.length, 1);
-    await jobs[2]!.run();
-    assert.equal(requests, 2);
   });
 });

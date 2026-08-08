@@ -261,7 +261,7 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
             />
           </div>
           <div className="flex flex-col justify-center border-t border-[#c9aa67]/20 px-6 py-16 sm:px-10 lg:col-span-5 lg:border-l lg:border-t-0 lg:px-14">
-            <p className="fame-kicker">Community-owned since 2022</p>
+            <p className="fame-kicker">Community-owned since 2023</p>
             <h2 className="fame-display mt-5 text-balance text-5xl sm:text-6xl">
               The collection outlived its creators.
             </h2>
@@ -320,18 +320,6 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
               OpenSea <Arrow />
             </TextLink>
           </nav>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[1100px] px-5 pb-28 sm:px-8 lg:pb-36">
-        <header className="mb-10 max-w-2xl">
-          <p className="fame-kicker">Collection tools</p>
-          <h2 className="fame-display mt-4 text-5xl sm:text-6xl">
-            Check a Society token.
-          </h2>
-        </header>
-        <div className="border border-[#c9aa67]/20 bg-[#11100d] p-5 sm:p-8">
-          <SingleTokenChecker />
         </div>
       </section>
 

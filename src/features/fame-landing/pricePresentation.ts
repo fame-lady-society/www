@@ -24,6 +24,7 @@ export type LandingPrices = Readonly<{
 export type LandingMarketPresentation = Readonly<{
   prices: LandingPrices;
   marketCap: LandingCurrencyValues;
+  marketplaceSupply: string | null;
 }>;
 
 function grouped(value: bigint): string {
@@ -58,21 +59,28 @@ export function formatPrice(
   amount: bigint,
   decimals: number,
   symbol: "FAME" | "USDC" | "ETH",
+  maximumFractionDigits = symbol === "USDC" ? 2 : symbol === "ETH" ? 3 : 2,
 ): string {
   const base = 10n ** BigInt(decimals);
   const compact = compactAmount(amount, base);
   if (compact) return `${compact} ${symbol}`;
 
-  const whole = amount / base;
-  const fullFraction = (amount % base).toString().padStart(decimals, "0");
-  const firstNonzero = fullFraction.search(/[1-9]/u);
-  const normalDigits = symbol === "ETH" ? 6 : symbol === "USDC" ? 6 : 2;
-  const visibleDigits =
-    firstNonzero >= normalDigits
-      ? Math.min(decimals, firstNonzero + 4)
-      : Math.min(decimals, normalDigits);
-  const fraction = fullFraction.slice(0, visibleDigits).replace(/0+$/u, "");
-  return `${grouped(whole)}${fraction ? `.${fraction}` : ""} ${symbol}`;
+  const negative = amount < 0n;
+  const absolute = negative ? -amount : amount;
+  const visibleDigits = Math.min(decimals, maximumFractionDigits);
+  const discardedBase = 10n ** BigInt(decimals - visibleDigits);
+  const rounded = (absolute + discardedBase / 2n) / discardedBase;
+  if (absolute > 0n && rounded === 0n) {
+    return `<0.${"0".repeat(Math.max(0, visibleDigits - 1))}1 ${symbol}`;
+  }
+
+  const visibleBase = 10n ** BigInt(visibleDigits);
+  const whole = rounded / visibleBase;
+  const fraction = (rounded % visibleBase)
+    .toString()
+    .padStart(visibleDigits, "0")
+    .replace(/0+$/u, "");
+  return `${negative ? "-" : ""}${grouped(whole)}${fraction ? `.${fraction}` : ""} ${symbol}`;
 }
 
 const DEFI_FAME_LABEL = formatPrice(DEFI_FAME_AMOUNT, 18, "FAME");
@@ -97,11 +105,23 @@ function marketplaceFame(
 ): string | null {
   if (state.status !== "available") return null;
   const market = state.value.data;
-  return formatPrice(
-    BigInt(market.unit) + BigInt(market.premium),
-    market.decimals,
-    "FAME",
-  );
+  const amount = BigInt(market.unit) + BigInt(market.premium);
+  const million = 10n ** BigInt(market.decimals + 6);
+  const whole = amount / million;
+  const fraction = (amount % million)
+    .toString()
+    .padStart(market.decimals + 6, "0")
+    .replace(/0+$/u, "");
+
+  return `${whole}${fraction ? `.${fraction}` : ""}M FAME`;
+}
+
+function marketplaceSupply(
+  state: MarketProjectionState<MarketplacePriceDto>,
+): string | null {
+  if (state.status !== "available") return null;
+  const market = state.value.data;
+  return formatPrice(BigInt(market.totalSupply), market.decimals, "FAME");
 }
 
 export function presentLandingPrices(stats: LandingMarketStats): LandingPrices {
@@ -143,7 +163,7 @@ function marketCapValue(
       totalSupply) /
     (2n * DEFI_FAME_AMOUNT);
   return {
-    value: formatPrice(amount, currency === "USDC" ? 6 : 18, currency),
+    value: formatPrice(amount, currency === "USDC" ? 6 : 18, currency, 1),
   };
 }
 
@@ -177,6 +197,7 @@ export function presentLandingMarket(
   return {
     prices: presentLandingPrices(stats),
     marketCap: presentLandingMarketCap(stats),
+    marketplaceSupply: marketplaceSupply(stats.marketplace),
   };
 }
 
@@ -194,5 +215,6 @@ export function emptyLandingMarket(): LandingMarketPresentation {
   return {
     prices: emptyLandingPrices(),
     marketCap: { USDC: empty, ETH: empty },
+    marketplaceSupply: null,
   };
 }

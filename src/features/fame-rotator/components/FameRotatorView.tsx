@@ -226,6 +226,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
 
             {/* Target vs offered comparison */}
             <Box
+              component="div"
               sx={{
                 display: "grid",
                 gridTemplateColumns: {

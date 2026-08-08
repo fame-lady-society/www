@@ -6,17 +6,17 @@ import type {
 } from "./cachedMarketStats";
 import {
   formatPrice,
+  presentLandingMarket,
   presentLandingMarketCap,
   presentLandingPrices,
 } from "./pricePresentation";
 
 describe("FAME landing price formatting", () => {
   it("keeps normal prices compact", () => {
-    assert.equal(
-      formatPrice(108_821_009_700_020_240n, 18, "ETH"),
-      "0.108821 ETH",
-    );
-    assert.equal(formatPrice(202_946_333n, 6, "USDC"), "202.946333 USDC");
+    assert.equal(formatPrice(108_821_009_700_020_240n, 18, "ETH"), "0.109 ETH");
+    assert.equal(formatPrice(202_946_333n, 6, "USDC"), "202.95 USDC");
+    assert.equal(formatPrice(233_430_200n, 6, "USDC"), "233.43 USDC");
+    assert.equal(formatPrice(120_934_000_000_000_000n, 18, "ETH"), "0.121 ETH");
   });
 
   it("abbreviates thousands and millions to at most one decimal", () => {
@@ -25,9 +25,9 @@ describe("FAME landing price formatting", () => {
     assert.equal(formatPrice(1_050_000n * 10n ** 18n, 18, "FAME"), "1.1M FAME");
   });
 
-  it("never turns a small nonzero price into zero or scientific notation", () => {
+  it("keeps a small nonzero price visible without excess precision", () => {
     const value = formatPrice(20_411n, 18, "ETH");
-    assert.equal(value, "0.00000000000002041 ETH");
+    assert.equal(value, "<0.001 ETH");
     assert.doesNotMatch(value, /e[+-]/i);
   });
 
@@ -56,9 +56,12 @@ describe("FAME landing price formatting", () => {
 
     assert.deepEqual(presentLandingMarketCap(stats), {
       USDC: { value: "10.8K USDC" },
-      ETH: { value: "4.3512 ETH" },
+      ETH: { value: "4.4 ETH" },
     });
     assert.equal(presentLandingPrices(stats).defiBuy.fame, "1M FAME");
-    assert.equal(presentLandingPrices(stats).nftBuy.fame, "1.1M FAME");
+    assert.equal(presentLandingPrices(stats).nftBuy.fame, "1.05M FAME");
+    assert.equal(presentLandingPrices(stats).nftBuy.USDC.value, "12.95 USDC");
+    assert.equal(presentLandingPrices(stats).nftBuy.ETH.value, "0.005 ETH");
+    assert.equal(presentLandingMarket(stats).marketplaceSupply, "888M FAME");
   });
 });
