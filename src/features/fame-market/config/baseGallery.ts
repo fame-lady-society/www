@@ -45,7 +45,7 @@ export function createBaseGalleryRuntime(
     labels: {
       title: "FAME Marketplace",
       description: contracts.checkout
-        ? "Choose an artwork and buy it with FAME, ETH, USDC, or WETH. Wallet connection is only needed when you buy."
+        ? "Choose an artwork and buy it with FAME, ETH, or USDC. Wallet connection is only needed when you buy."
         : "Choose an artwork and buy it with FAME. Wallet connection is only needed when you buy.",
       network: "Base",
     },

@@ -1,3 +1,4 @@
+import "./headlessUiTestSetup";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -144,7 +145,7 @@ describe("Society redemption accordion", () => {
     assert.match(html, /Society #40/u);
     assert.match(html, /Metadata unavailable/u);
     assert.match(html, /32 selected/u);
-    assert.match(html, /value="WETH"/u);
+    assert.match(html, /<span>WETH<\/span>/u);
     assert.match(html, /aria-label="Redemption output"/u);
     assert.match(html, /aria-haspopup="listbox"/u);
     assert.doesNotMatch(html, /<select/u);

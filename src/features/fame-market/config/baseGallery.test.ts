@@ -32,6 +32,8 @@ describe("Base FAME gallery configuration", () => {
     assert.equal(config.checkout?.address, checkout);
     assert.equal(config.token.symbol, "FAME");
     assert.equal(config.labels.network, "Base");
+    assert.match(config.labels.description, /FAME, ETH, or USDC/);
+    assert.doesNotMatch(config.labels.description, /WETH/);
     assert.deepEqual(config.collection, {
       firstTokenId: 1,
       lastTokenId: 888,
@@ -141,15 +143,17 @@ describe("Base FAME gallery configuration", () => {
     assert.doesNotMatch(source, /parseBaseGalleryForkContracts/);
     assert.doesNotMatch(source, /process\.env\.NEXT_PUBLIC_BASE_/);
     assert.match(source, /<GalleryView \/>/);
-    assert.match(
-      readFileSync(
-        resolve(
-          process.cwd(),
-          "src/features/fame-market/components/GalleryView.tsx",
-        ),
-        "utf8",
+    const galleryViewSource = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/features/fame-market/components/GalleryView.tsx",
       ),
-      /<GalleryLiquidityCta \/>/,
+      "utf8",
+    );
+    assert.match(galleryViewSource, /<GalleryLiquidityCta \/>/);
+    assert.match(
+      galleryViewSource,
+      /const CHECKOUT_PAYMENT_ASSETS = \[\s*"FAME",\s*"ETH",\s*"USDC",\s*\]/,
     );
     assert.doesNotMatch(source, /\/api\//);
   });

@@ -65,7 +65,6 @@ const CHECKOUT_PAYMENT_ASSETS = [
   "FAME",
   "ETH",
   "USDC",
-  "WETH",
 ] as const satisfies readonly GalleryPaymentAsset[];
 
 export function galleryPurchaseReceiptHref(state: GalleryPurchaseState) {
@@ -97,7 +96,7 @@ export function GalleryFundingLink({ chainId }: { chainId: number }) {
             Get FAME
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Buy FAME with ETH, WETH, or USDC on the swap page.
+            Buy FAME with ETH or USDC on the swap page.
           </Typography>
         </div>
         <LinkButton
@@ -218,7 +217,7 @@ export function GalleryPaymentPanel({
               Pay with
             </Typography>
             <Typography color="text.secondary">
-              FAME is direct. ETH, USDC, and WETH swap and purchase atomically.
+              FAME is direct. ETH and USDC swap and purchase atomically.
             </Typography>
           </div>
           <GalleryAssetSelect
