@@ -8,17 +8,22 @@ import { DefaultProvider } from "@/context/default";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { Main } from "@/layouts/Main";
+import type { FameNavigationPage } from "@/features/appbar/fameNavigation";
 
 export function FameMain({
   children,
   title = "FAME",
-}: PropsWithChildren<{ title?: ReactNode }>) {
+  activeFamePage = "landing",
+}: PropsWithChildren<{
+  title?: ReactNode;
+  activeFamePage?: FameNavigationPage;
+}>) {
   return (
     <Main
       menu={
         <MenuList dense disablePadding>
           <LinksMenuItems />
-          <SiteMenu isFame />
+          <SiteMenu activeFamePage={activeFamePage} />
         </MenuList>
       }
       title={
@@ -43,10 +48,16 @@ export function FameMain({
 export function FameShell({
   children,
   title,
-}: PropsWithChildren<{ title?: ReactNode }>) {
+  activeFamePage = "landing",
+}: PropsWithChildren<{
+  title?: ReactNode;
+  activeFamePage?: FameNavigationPage;
+}>) {
   return (
     <DefaultProvider base>
-      <FameMain title={title}>{children}</FameMain>
+      <FameMain title={title} activeFamePage={activeFamePage}>
+        {children}
+      </FameMain>
     </DefaultProvider>
   );
 }

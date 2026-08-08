@@ -27,7 +27,7 @@ export default async function Page() {
   }
 
   return (
-    <FameShell title="FAME Rotator">
+    <FameShell title="FAME Rotator" activeFamePage="rotator">
       <FameRotatorIndexPage status={status} targets={targets} />
     </FameShell>
   );

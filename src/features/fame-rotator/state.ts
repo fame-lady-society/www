@@ -267,7 +267,7 @@ export function projectFameRotatorPreflight({
       unit: unit.data,
       balance: fameBalance.data,
       message:
-        "You need at least one FAME unit to mint a Society NFT. Buy FAME to cover the shortfall shown — exact-input swaps do not guarantee that fill.",
+        "You need at least one FAME unit to mint a Society NFT. Buy FAME to cover the shortfall shown.",
     };
   }
 

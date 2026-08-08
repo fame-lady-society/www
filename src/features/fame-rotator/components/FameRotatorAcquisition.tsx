@@ -120,22 +120,7 @@ export const FameRotatorAcquisitionView: FC<FameRotatorAcquisitionViewProps> = (
             {shortfallLabel}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Exact shortfall (wei):{" "}
-            <Typography
-              component="span"
-              variant="body2"
-              fontFamily="monospace"
-              data-testid="fame-shortfall-raw"
-            >
-              {rawShortfall}
-            </Typography>
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
             {preflight.message}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Exact-input swaps do not guarantee this fill. Enter an amount you
-            choose — the widget is not auto-seeded to the shortfall.
           </Typography>
         </Stack>
 

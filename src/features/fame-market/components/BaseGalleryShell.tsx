@@ -13,7 +13,9 @@ export function BaseGalleryShell({
   return (
     <DefaultProvider base>
       <GalleryRuntimeProvider config={config}>
-        <FameMain title="FAME Marketplace">{children}</FameMain>
+        <FameMain title="FAME Marketplace" activeFamePage="marketplace">
+          {children}
+        </FameMain>
       </GalleryRuntimeProvider>
     </DefaultProvider>
   );

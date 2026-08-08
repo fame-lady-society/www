@@ -43,7 +43,7 @@ export default async function Page() {
   await connection();
   const presentation = await readGalleryPresentation();
   return (
-    <FameShell title="FAME Gallery">
+    <FameShell title="FAME Gallery" activeFamePage="gallery">
       {presentation ? (
         <FameGalleryPage {...presentation} />
       ) : (

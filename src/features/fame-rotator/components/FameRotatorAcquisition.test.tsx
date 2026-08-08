@@ -7,7 +7,6 @@ import { initialReadinessTransactionState } from "@/features/society-nft-readine
 import {
   FameRotatorAcquisitionView,
   formatFameShortfall,
-  fameShortfallRawLabel,
 } from "./FameRotatorAcquisition";
 import {
   fameRotatorAcquisitionBranch,
@@ -71,12 +70,11 @@ describe("FameRotatorAcquisitionView", () => {
     assert.match(html, /data-exact-output-guaranteed="false"/);
     assert.match(html, new RegExp(`data-shortfall="${shortfall.toString()}"`));
     assert.match(html, /data-testid="fame-shortfall"/);
-    assert.match(html, /data-testid="fame-shortfall-raw"/);
-    assert.match(html, new RegExp(fameShortfallRawLabel(shortfall)));
-    assert.match(html, /Exact-input swaps do not guarantee this fill/i);
-    assert.match(html, /not auto-seeded/i);
     assert.match(html, /data-exact-output-guaranteed="false"/);
-    assert.doesNotMatch(html, /guaranteed fill|will exactly fill|exact-output fill is guaranteed/i);
+    assert.doesNotMatch(
+      html,
+      /exact shortfall|not auto-seeded|guaranteed fill|will exactly fill|exact-output fill is guaranteed/i,
+    );
 
     // Shortfall lives outside the compact widget placeholder.
     assert.match(html, /data-compact-swap-placeholder="true"/);

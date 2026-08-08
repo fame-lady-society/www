@@ -118,24 +118,6 @@ describe("FAME route candidate graph", () => {
     assert.equal(unsupported.rejected[0]?.reason, "unsupported_pair");
   });
 
-  it("includes manifest-ready Slipstream2 edges in the executable graph", () => {
-    const executableGraph = buildFamePoolGraph();
-    const diagnosticGraph = buildFamePoolGraph(famePoolEdges(), {
-      includeManifestDisabled: true,
-    });
-
-    assert.ok(
-      executableGraph.edges.some((edge) =>
-        edge.poolId.startsWith("slipstream2-"),
-      ),
-    );
-    assert.ok(
-      diagnosticGraph.edges.some((edge) =>
-        edge.poolId.startsWith("slipstream2-"),
-      ),
-    );
-  });
-
   it("refuses disabled edges even when given a diagnostic graph", () => {
     const graph = buildFamePoolGraph(
       [

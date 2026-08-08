@@ -159,7 +159,7 @@ describe("Base FAME gallery configuration", () => {
       "utf8",
     );
     assert.match(fameShell, /<Main/);
-    assert.match(fameShell, /<SiteMenu isFame \/>/);
+    assert.match(fameShell, /<SiteMenu activeFamePage=\{activeFamePage\} \/>/);
     assert.match(fameShell, /<LinksMenuItems \/>/);
 
     const appBar = readFileSync(

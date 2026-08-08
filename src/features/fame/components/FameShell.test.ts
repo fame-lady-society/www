@@ -22,7 +22,19 @@ describe("FAME route shell", () => {
       "src/features/fame-market/components/BaseGalleryShell.tsx",
     );
     assert.match(shell, /<FameMain/);
+    assert.match(shell, /activeFamePage="marketplace"/);
     assert.doesNotMatch(shell, /<Main/);
+  });
+
+  it("marks the gallery and rotator routes as the active FAME destination", () => {
+    assert.match(
+      source("src/app/fame/gallery/page.tsx"),
+      /activeFamePage="gallery"/,
+    );
+    assert.match(
+      source("src/app/fame/rotate/page.tsx"),
+      /activeFamePage="rotator"/,
+    );
   });
 
   it("keeps the normal menu, links, addresses, and copy controls", () => {
