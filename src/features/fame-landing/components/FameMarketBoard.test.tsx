@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LandingMarketPresentation } from "../pricePresentation";
-import { FameMarketBoard } from "./FameMarketBoard";
+import {
+  FameMarketBoard,
+  mergeLandingMarket,
+  startMarketRetry,
+} from "./FameMarketBoard";
 
 const market: LandingMarketPresentation = {
   prices: {
@@ -90,5 +94,62 @@ describe("FAME market board", () => {
 
     assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 10);
     assert.doesNotMatch(markup, /Unavailable|error|failed/i);
+  });
+
+  it("keeps loaded values while retries fill every remaining gap", () => {
+    assert.equal(mergeLandingMarket(market, market), market);
+    const current: LandingMarketPresentation = {
+      ...market,
+      prices: {
+        ...market.prices,
+        defiBuy: {
+          ...market.prices.defiBuy,
+          USDC: { value: null },
+        },
+      },
+      marketCap: { ...market.marketCap, ETH: { value: null } },
+      marketplaceSupply: null,
+    };
+    const merged = mergeLandingMarket(current, market);
+    assert.notEqual(merged, current);
+    assert.equal(merged.prices.defiBuy.USDC.value, "12.34 USDC");
+    assert.equal(merged.marketCap.ETH.value, "4.4 ETH");
+    assert.equal(merged.marketplaceSupply, "888M FAME");
+  });
+
+  it("makes one recovery request, settles a failure, and stops cleanly", async () => {
+    const jobs: Array<{ run: () => Promise<void>; delayMs: number }> = [];
+    const canceled: unknown[] = [];
+    const signals: AbortSignal[] = [];
+    let completed = 0;
+    let loaded: LandingMarketPresentation | null = null;
+
+    const stop = startMarketRetry({
+      request: async (signal) => {
+        signals.push(signal);
+        throw new Error("timeout");
+      },
+      onMarket: (next) => {
+        loaded = next;
+      },
+      onComplete: () => {
+        completed += 1;
+      },
+      schedule: (run, delayMs) => {
+        jobs.push({ run, delayMs });
+        return jobs.length as unknown as ReturnType<typeof setTimeout>;
+      },
+      cancel: (timer) => canceled.push(timer),
+    });
+
+    assert.equal(jobs[0]?.delayMs, 500);
+    await jobs[0]!.run();
+    assert.equal(loaded, null);
+    assert.equal(completed, 1);
+    assert.equal(jobs.length, 1);
+
+    stop();
+    assert.equal(signals[0]?.aborted, true);
+    assert.equal(canceled.length, 1);
   });
 });

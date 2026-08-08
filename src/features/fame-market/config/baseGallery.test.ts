@@ -8,7 +8,7 @@ import {
   BASE_GALLERY_ADDRESSES,
   createBaseGalleryRuntime,
 } from "./baseGallery";
-import { parseBaseGalleryForkContracts } from "../contracts";
+import { parseBaseGalleryContracts } from "../contracts";
 import { useGalleryRuntime } from "./galleryRuntime";
 
 const marketplace = "0x1111111111111111111111111111111111111111";
@@ -16,20 +16,19 @@ const checkout = "0x2222222222222222222222222222222222222222";
 
 describe("Base FAME gallery configuration", () => {
   it("uses canonical Base contracts and only a plain runtime marketplace address", () => {
-    const contracts = parseBaseGalleryForkContracts({
+    const contracts = parseBaseGalleryContracts({
       marketplace,
       checkout,
-      forkMode: true,
     });
     assert.ok(contracts);
 
-    const config = createBaseGalleryRuntime(contracts);
+    const config = createBaseGalleryRuntime(contracts, { forkMode: false });
     assert.equal(config.chainId, 8_453);
     assert.deepEqual(config.addresses, {
       ...BASE_GALLERY_ADDRESSES,
       gallery: marketplace,
     });
-    assert.equal(config.checkout?.mode, "fork");
+    assert.equal(config.forkMode, false);
     assert.equal(config.checkout?.address, checkout);
     assert.equal(config.token.symbol, "FAME");
     assert.equal(config.labels.network, "Base");
@@ -56,56 +55,64 @@ describe("Base FAME gallery configuration", () => {
 
   it("rejects a missing or malformed marketplace address", () => {
     assert.equal(
-      parseBaseGalleryForkContracts({
+      parseBaseGalleryContracts({
         marketplace: undefined,
         checkout,
-        forkMode: true,
       }),
       null,
     );
     assert.equal(
-      parseBaseGalleryForkContracts({
+      parseBaseGalleryContracts({
         marketplace: "",
         checkout,
-        forkMode: true,
       }),
       null,
     );
     assert.equal(
-      parseBaseGalleryForkContracts({
+      parseBaseGalleryContracts({
         marketplace: "not-an-address",
         checkout,
-        forkMode: true,
       }),
       null,
     );
   });
 
-  it("fails the alternative checkout closed without a valid fork address", () => {
-    const missing = parseBaseGalleryForkContracts({
+  it("fails the alternative checkout closed without a valid checkout address", () => {
+    const missing = parseBaseGalleryContracts({
       marketplace,
       checkout: undefined,
-      forkMode: true,
     });
-    const malformed = parseBaseGalleryForkContracts({
+    const malformed = parseBaseGalleryContracts({
       marketplace,
       checkout: "not-an-address",
-      forkMode: true,
     });
     assert.ok(missing);
     assert.ok(malformed);
-    assert.equal(createBaseGalleryRuntime(missing).checkout, null);
-    assert.equal(createBaseGalleryRuntime(malformed).checkout, null);
+    assert.equal(
+      createBaseGalleryRuntime(missing, { forkMode: false }).checkout,
+      null,
+    );
+    assert.equal(
+      createBaseGalleryRuntime(malformed, { forkMode: false }).checkout,
+      null,
+    );
   });
 
-  it("keeps alternative checkout disabled outside explicit fork mode", () => {
-    const contracts = parseBaseGalleryForkContracts({
+  it("keeps the deployed checkout enabled independently of fork mode", () => {
+    const contracts = parseBaseGalleryContracts({
       marketplace,
       checkout,
-      forkMode: false,
     });
     assert.ok(contracts);
-    assert.equal(createBaseGalleryRuntime(contracts).checkout, null);
+    const production = createBaseGalleryRuntime(contracts, {
+      forkMode: false,
+    });
+    const fork = createBaseGalleryRuntime(contracts, { forkMode: true });
+
+    assert.equal(production.checkout?.address, checkout);
+    assert.equal(production.forkMode, false);
+    assert.equal(fork.checkout?.address, checkout);
+    assert.equal(fork.forkMode, true);
   });
 
   it("keeps the Marketplace, Gallery, and Rotator routes distinct in both site menus", () => {
@@ -123,13 +130,16 @@ describe("Base FAME gallery configuration", () => {
     }
   });
 
-  it("wires the direct route to the public env address and client gallery", () => {
+  it("wires the direct route to the canonical contract addresses and client gallery", () => {
     const source = readFileSync(
       resolve(process.cwd(), "src/app/fame/market/page.tsx"),
       "utf8",
     );
-    assert.match(source, /NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS/);
-    assert.match(source, /NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS/);
+    assert.match(source, /baseUniversalMarketplaceAddress/);
+    assert.match(source, /baseFameCheckoutAddress/);
+    assert.match(source, /parseBaseGalleryContracts/);
+    assert.doesNotMatch(source, /parseBaseGalleryForkContracts/);
+    assert.doesNotMatch(source, /process\.env\.NEXT_PUBLIC_BASE_/);
     assert.match(source, /<GalleryView \/>/);
     assert.match(
       readFileSync(

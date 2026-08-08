@@ -5,14 +5,13 @@ import {
   readMarketplaceLandingAuthority,
   type GalleryMulticallClient,
 } from "@/features/fame-market/reads";
-import {
-  BASE_GALLERY_ADDRESSES,
-  parseBaseGalleryForkContracts,
-} from "@/features/fame-market/contracts";
+import { BASE_GALLERY_ADDRESSES } from "@/features/fame-market/contracts";
+import { baseUniversalMarketplaceAddress } from "@/features/fame/contract";
 import {
   createProductionFameQuoteDependencies,
   quoteFameExactInput,
   quoteFameExactTarget,
+  type FameExactTargetQuote,
 } from "@/features/fame-swap/server/quoteService";
 import { getFameSwapConfig } from "@/features/fame-swap/config";
 import {
@@ -28,6 +27,7 @@ export const MARKET_STATS_REVALIDATE_SECONDS = 300;
 export const MARKET_STATS_COMPOSITION_TIMEOUT_MS = 7_000;
 export const LANDING_QUOTE_TIMEOUT_MS = 5_000;
 export const DEFI_FAME_AMOUNT = 1_000_000n * 10n ** 18n;
+export const FAME_LANDING_PRICE_CACHE_VERSION = "v6";
 
 export type MarketProjection<T> = Readonly<{
   capturedAt: string;
@@ -63,6 +63,15 @@ export type LandingQuoteDefinition = Readonly<{
   fameAmount: bigint;
   slippageBps: 0;
 }>;
+
+type LandingExactTargetResult =
+  | Pick<
+      Extract<FameExactTargetQuote, { status: "ready" }>,
+      "status" | "amountIn" | "stopReason"
+    >
+  | Readonly<{
+      status: Exclude<FameExactTargetQuote["status"], "ready">;
+    }>;
 
 export type LandingMarketStats = Readonly<{
   marketplace: MarketProjectionState<MarketplacePriceDto>;
@@ -115,26 +124,33 @@ export function landingExactTargetSearch(currency: LandingQuoteCurrency) {
   } as const;
 }
 
+export function landingExactTargetAmount(
+  result: LandingExactTargetResult,
+): bigint | null {
+  if (result.status !== "ready") return null;
+  return result.stopReason === "precision_reached" ||
+    result.stopReason === "minimum_sufficient"
+    ? result.amountIn
+    : null;
+}
+
 export function cachedProjection<T>(
   key: string,
   producer: () => Promise<MarketProjection<T>>,
 ) {
-  return unstable_cache(producer, ["fame-landing-prices-v5", key], {
-    revalidate: MARKET_STATS_REVALIDATE_SECONDS,
-  });
+  return unstable_cache(
+    producer,
+    [`fame-landing-prices-${FAME_LANDING_PRICE_CACHE_VERSION}`, key],
+    {
+      revalidate: MARKET_STATS_REVALIDATE_SECONDS,
+    },
+  );
 }
 
 function productionAddresses() {
-  const contracts = parseBaseGalleryForkContracts({
-    marketplace: process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS,
-    checkout: process.env.NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS,
-    forkMode: process.env.NEXT_PUBLIC_FAME_FORK_MODE === "1",
-  });
-  if (!contracts)
-    throw new Error("The Base marketplace address is not configured.");
   return galleryReadAddresses({
     ...BASE_GALLERY_ADDRESSES,
-    gallery: contracts.marketplace,
+    gallery: baseUniversalMarketplaceAddress,
   });
 }
 
@@ -250,8 +266,15 @@ async function quoteProducer(
         config,
       },
     );
-    if (result.status !== "ready") throw new Error(result.message);
-    amount = result.amountIn;
+    const convergedAmount = landingExactTargetAmount(result);
+    if (convergedAmount === null) {
+      throw new Error(
+        result.status === "ready"
+          ? `The exact-target quote did not converge (${result.stopReason}).`
+          : result.message,
+      );
+    }
+    amount = convergedAmount;
   } else {
     const result = await quoteFameExactInput(
       {

@@ -4,8 +4,13 @@ import type { Metadata } from "next";
 import { BaseGalleryShell } from "@/features/fame-market/components/BaseGalleryShell";
 import { GalleryView } from "@/features/fame-market/components/GalleryView";
 import { createBaseGalleryRuntime } from "@/features/fame-market/config/baseGallery";
-import { parseBaseGalleryForkContracts } from "@/features/fame-market/contracts";
+import { parseBaseGalleryContracts } from "@/features/fame-market/contracts";
 import { FameShell } from "@/features/fame/components/FameShell";
+import {
+  baseFameCheckoutAddress,
+  baseUniversalMarketplaceAddress,
+} from "@/features/fame/contract";
+import { fameForkModeEnabled } from "@/viem/baseRpcUrls";
 
 export const metadata: Metadata = {
   title: "FAME Marketplace",
@@ -14,10 +19,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  const contracts = parseBaseGalleryForkContracts({
-    marketplace: process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS,
-    checkout: process.env.NEXT_PUBLIC_BASE_FAME_CHECKOUT_ADDRESS,
-    forkMode: process.env.NEXT_PUBLIC_FAME_FORK_MODE === "1",
+  const contracts = parseBaseGalleryContracts({
+    marketplace: baseUniversalMarketplaceAddress,
+    checkout: baseFameCheckoutAddress,
   });
 
   if (!contracts) {
@@ -33,7 +37,11 @@ export default function Page() {
   }
 
   return (
-    <BaseGalleryShell config={createBaseGalleryRuntime(contracts)}>
+    <BaseGalleryShell
+      config={createBaseGalleryRuntime(contracts, {
+        forkMode: fameForkModeEnabled(),
+      })}
+    >
       <GalleryView />
     </BaseGalleryShell>
   );

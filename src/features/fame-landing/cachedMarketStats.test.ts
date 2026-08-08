@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   DEFI_FAME_AMOUNT,
+  FAME_LANDING_PRICE_CACHE_VERSION,
   composeMarketProjections,
+  landingExactTargetAmount,
   landingExactTargetSearch,
   landingQuoteDefinition,
 } from "./cachedMarketStats";
@@ -102,5 +104,47 @@ describe("FAME landing projection composition", () => {
       maxEvaluations: 48,
       maxRpcReads: 192,
     });
+  });
+
+  it("publishes only converged exact-target prices", () => {
+    assert.equal(
+      landingExactTargetAmount({
+        status: "ready",
+        amountIn: 12_345n,
+        stopReason: "precision_reached",
+      }),
+      12_345n,
+    );
+    assert.equal(
+      landingExactTargetAmount({
+        status: "ready",
+        amountIn: 1n,
+        stopReason: "minimum_sufficient",
+      }),
+      1n,
+    );
+    for (const stopReason of [
+      "evaluation_budget",
+      "rpc_budget",
+      "time_budget",
+      "unavailable_refinement",
+    ] as const) {
+      assert.equal(
+        landingExactTargetAmount({
+          status: "ready",
+          amountIn: 50_000n,
+          stopReason,
+        }),
+        null,
+      );
+    }
+    assert.equal(
+      landingExactTargetAmount({ status: "route_unavailable" }),
+      null,
+    );
+  });
+
+  it("invalidates cached prices from the pre-convergence implementation", () => {
+    assert.equal(FAME_LANDING_PRICE_CACHE_VERSION, "v6");
   });
 });

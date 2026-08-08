@@ -6,6 +6,7 @@ import type { Address } from "viem";
 export type GalleryRuntimeConfig = {
   schemaVersion: number;
   chainId: number;
+  forkMode: boolean;
   addresses: {
     fame: Address;
     mirror: Address;
@@ -13,7 +14,6 @@ export type GalleryRuntimeConfig = {
     gallery: Address;
   };
   checkout: null | {
-    mode: "fork";
     address: Address;
     router: Address;
     usdc: Address;

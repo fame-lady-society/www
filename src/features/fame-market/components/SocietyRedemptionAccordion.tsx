@@ -8,9 +8,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
-import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { TransactionsModal } from "@/components/TransactionsModal";
@@ -36,6 +34,13 @@ import type {
   GalleryRedemptionOutputAsset,
   GalleryRedemptionQuote,
 } from "../types";
+import { GalleryAssetSelect } from "./GalleryAssetSelect";
+
+const REDEMPTION_OUTPUT_ASSETS = [
+  "ETH",
+  "WETH",
+  "USDC",
+] as const satisfies readonly GalleryRedemptionOutputAsset[];
 
 export type SocietyRedemptionTokenPresentation = Readonly<{
   tokenId: bigint;
@@ -295,22 +300,13 @@ export function SocietyRedemptionAccordionView({
           <Typography fontWeight={700}>
             {selectedIds.length} selected
           </Typography>
-          <Select
-            size="small"
+          <GalleryAssetSelect
+            ariaLabel="Redemption output"
             value={outputAsset}
+            options={REDEMPTION_OUTPUT_ASSETS}
             disabled={locked}
-            onChange={(event) =>
-              onOutputAssetChange(
-                event.target.value as GalleryRedemptionOutputAsset,
-              )
-            }
-            aria-label="Redemption output"
-            sx={{ minWidth: 132 }}
-          >
-            <MenuItem value="ETH">ETH</MenuItem>
-            <MenuItem value="WETH">WETH</MenuItem>
-            <MenuItem value="USDC">USDC</MenuItem>
-          </Select>
+            onChange={onOutputAssetChange}
+          />
         </Stack>
 
         {quoteLoading ? (

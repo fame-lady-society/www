@@ -1,5 +1,4 @@
 import {
-  getAddress,
   isAddress,
   isAddressEqual,
   isHash,
@@ -11,6 +10,7 @@ import {
 import { base } from "viem/chains";
 import { client as baseClient } from "@/viem/base-client";
 import {
+  baseUniversalMarketplaceAddress,
   creatorArtistMagicAddress,
   societyFromNetwork,
 } from "@/features/fame/contract";
@@ -113,14 +113,6 @@ function isNonZeroHash(value: unknown): value is Hash {
     isHash(value) &&
     value !== `0x${"0".repeat(64)}`
   );
-}
-
-function configuredMarketplaceAddress(): Address {
-  const value = process.env.NEXT_PUBLIC_BASE_UNIVERSAL_MARKETPLACE_ADDRESS;
-  if (!value || !isAddress(value, { strict: false })) {
-    throw new Error("Base gallery marketplace address is unavailable.");
-  }
-  return getAddress(value);
 }
 
 function candidateTokenIds(
@@ -265,7 +257,7 @@ export async function readFameGalleryCatalog(
   const blockNumber = options.blockNumber ?? (await client.getBlockNumber());
   const creatorMagic = creatorArtistMagicAddress(base.id);
   const mirror = societyFromNetwork(base.id);
-  const marketplace = options.marketplace ?? configuredMarketplaceAddress();
+  const marketplace = options.marketplace ?? baseUniversalMarketplaceAddress;
 
   const boundaries = await client.multicall({
     allowFailure: true,

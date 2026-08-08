@@ -20,7 +20,7 @@ export const BASE_GALLERY_CHECKOUT_DEPENDENCIES = {
   weth: WETH,
 } as const;
 
-export type BaseGalleryForkContracts = Readonly<{
+export type BaseGalleryContracts = Readonly<{
   marketplace: Address;
   checkout: Address | null;
 }>;
@@ -32,15 +32,14 @@ function parseAddress(value: string | undefined): Address | null {
     : null;
 }
 
-export function parseBaseGalleryForkContracts(input: {
+export function parseBaseGalleryContracts(input: {
   marketplace: string | undefined;
   checkout: string | undefined;
-  forkMode?: boolean;
-}): BaseGalleryForkContracts | null {
+}): BaseGalleryContracts | null {
   const marketplace = parseAddress(input.marketplace);
   if (!marketplace) return null;
   return {
     marketplace,
-    checkout: input.forkMode ? parseAddress(input.checkout) : null,
+    checkout: parseAddress(input.checkout),
   };
 }

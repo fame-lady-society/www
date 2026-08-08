@@ -2,7 +2,7 @@ import { base } from "viem/chains";
 import {
   BASE_GALLERY_ADDRESSES,
   BASE_GALLERY_CHECKOUT_DEPENDENCIES,
-  type BaseGalleryForkContracts,
+  type BaseGalleryContracts,
 } from "../contracts";
 import type { GalleryRuntimeConfig } from "./galleryRuntime";
 import {
@@ -13,18 +13,19 @@ import {
 export { BASE_GALLERY_ADDRESSES } from "../contracts";
 
 export function createBaseGalleryRuntime(
-  contracts: BaseGalleryForkContracts,
+  contracts: BaseGalleryContracts,
+  options: { forkMode: boolean },
 ): GalleryRuntimeConfig {
   return {
     schemaVersion: 1,
     chainId: base.id,
+    forkMode: options.forkMode,
     addresses: {
       ...BASE_GALLERY_ADDRESSES,
       gallery: contracts.marketplace,
     },
     checkout: contracts.checkout
       ? {
-          mode: "fork",
           address: contracts.checkout,
           ...BASE_GALLERY_CHECKOUT_DEPENDENCIES,
         }
@@ -38,8 +39,6 @@ export function createBaseGalleryRuntime(
       lastTokenId: FAME_COLLECTION_LAST_TOKEN_ID,
     },
     deployment: {
-      // The fork deployment is intentionally temporary. Its address is the
-      // only deployment fact the app needs; no manifest or proof is persisted.
       blockNumber: 0n,
     },
     explorerBaseUrl: base.blockExplorers.default.url,

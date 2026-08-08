@@ -605,7 +605,7 @@ export function GalleryPurchaseReceiptView({
       metadata={metadata.metadata}
       mirror={runtime.addresses.mirror}
       explorerBaseUrl={runtime.explorerBaseUrl}
-      forkMode={runtime.checkout?.mode === "fork"}
+      forkMode={runtime.forkMode}
     />
   );
 }

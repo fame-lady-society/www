@@ -5,8 +5,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
@@ -43,6 +41,7 @@ import type {
 import type { Hash } from "viem";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
+import { GalleryAssetSelect } from "./GalleryAssetSelect";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
 import { GalleryLiquidityCta } from "./GalleryLiquidityOverview";
 import { SocietyRedemptionAccordion } from "./SocietyRedemptionAccordion";
@@ -60,6 +59,14 @@ export type PresentedGalleryArtwork = {
   metadata?: GalleryMetadataResult;
   tokenUri?: string;
 };
+
+const DIRECT_PAYMENT_ASSETS = ["FAME"] as const satisfies readonly GalleryPaymentAsset[];
+const CHECKOUT_PAYMENT_ASSETS = [
+  "FAME",
+  "ETH",
+  "USDC",
+  "WETH",
+] as const satisfies readonly GalleryPaymentAsset[];
 
 export function galleryPurchaseReceiptHref(state: GalleryPurchaseState) {
   return state.status === "verified" && state.purchaseHash
@@ -214,20 +221,15 @@ export function GalleryPaymentPanel({
               FAME is direct. ETH, USDC, and WETH swap and purchase atomically.
             </Typography>
           </div>
-          <Select
-            size="small"
+          <GalleryAssetSelect
+            ariaLabel="Payment asset"
             value={paymentAsset}
-            disabled={locked}
-            onChange={(event) =>
-              onPaymentAssetChange(event.target.value as GalleryPaymentAsset)
+            options={
+              checkoutEnabled ? CHECKOUT_PAYMENT_ASSETS : DIRECT_PAYMENT_ASSETS
             }
-            sx={{ minWidth: 132 }}
-          >
-            <MenuItem value="FAME">FAME</MenuItem>
-            {checkoutEnabled ? <MenuItem value="ETH">ETH</MenuItem> : null}
-            {checkoutEnabled ? <MenuItem value="USDC">USDC</MenuItem> : null}
-            {checkoutEnabled ? <MenuItem value="WETH">WETH</MenuItem> : null}
-          </Select>
+            disabled={locked}
+            onChange={onPaymentAssetChange}
+          />
         </Stack>
 
         {paymentDetails}

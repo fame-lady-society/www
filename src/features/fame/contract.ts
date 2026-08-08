@@ -30,6 +30,12 @@ export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
 export const baseCommunityMultiSigAddress =
   "0xC952C53D8B63919e372caa2E6FEe605ee24E4D3D" as const;
 
+export const baseUniversalMarketplaceAddress =
+  "0x54e7E4F2d439Be599706f51068f7EB2ce2D2a27e" as const;
+
+export const baseFameCheckoutAddress =
+  "0x1905B4a633074243f3D9FDB59596fB7419adce2c" as const;
+
 export function societyNftAuctionAddress(chainId: typeof base.id) {
   switch (chainId) {
     case base.id:

@@ -826,6 +826,7 @@ export function createIndexedQuoteApiAdapter(options: {
     }
   >();
   let flushScheduled = false;
+  let failedBatchCategory: FameQuoteApiBatchFailureCategory | undefined;
 
   function cacheKey(request: FameEdgeQuoteRequest): string {
     return [
@@ -872,8 +873,9 @@ export function createIndexedQuoteApiAdapter(options: {
           options.diagnostics?.recordBatchRequest({
             durationMs: Date.now() - batchStartedAtMs,
           });
+          failedBatchCategory = batchFailureCategory(error);
           options.onBatchFailure?.({
-            category: batchFailureCategory(error),
+            category: failedBatchCategory,
             currentBlock: options.currentBlock,
           });
           for (const entry of batch) entry.reject(error);
@@ -928,6 +930,14 @@ export function createIndexedQuoteApiAdapter(options: {
       }
 
       options.diagnostics?.recordAttempt(request, options.currentBlock);
+
+      if (failedBatchCategory) {
+        return fallbackQuote({
+          request,
+          reason: "quote_api_batch_failed",
+          batchFailureCategory: failedBatchCategory,
+        });
+      }
 
       let response: FamePoolQuoteBatchResponse;
       try {

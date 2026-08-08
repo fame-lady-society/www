@@ -1,10 +1,73 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import type {
   LandingCurrencyValues,
   LandingMarketPresentation,
   LandingPriceRow,
 } from "../pricePresentation";
 
-function Loading() {
+const INITIAL_RETRY_MS = 500;
+
+type RetryTimer = ReturnType<typeof setTimeout>;
+type MarketRequest = (
+  signal: AbortSignal,
+) => Promise<LandingMarketPresentation | null>;
+
+async function requestLandingMarket(
+  signal: AbortSignal,
+): Promise<LandingMarketPresentation | null> {
+  const response = await fetch("/api/fame/market-prices", {
+    cache: "no-store",
+    signal,
+  });
+  return response.ok
+    ? ((await response.json()) as LandingMarketPresentation)
+    : null;
+}
+
+export function startMarketRetry({
+  onMarket,
+  onComplete,
+  request = requestLandingMarket,
+  schedule = (run, delayMs) => setTimeout(run, delayMs),
+  cancel = (timer) => clearTimeout(timer),
+}: {
+  onMarket: (market: LandingMarketPresentation) => void;
+  onComplete: () => void;
+  request?: MarketRequest;
+  schedule?: (run: () => Promise<void>, delayMs: number) => RetryTimer;
+  cancel?: (timer: RetryTimer) => void;
+}): () => void {
+  let stopped = false;
+  let timer: RetryTimer | undefined;
+  const controller = new AbortController();
+
+  const refresh = async () => {
+    if (stopped) return;
+    try {
+      const next = await request(controller.signal);
+      if (next && !stopped) onMarket(next);
+    } catch {
+      // The board settles into its unavailable state after this single retry.
+    } finally {
+      if (!stopped) onComplete();
+    }
+  };
+
+  timer = schedule(refresh, INITIAL_RETRY_MS);
+  return () => {
+    stopped = true;
+    controller.abort();
+    if (timer) cancel(timer);
+  };
+}
+
+function Loading({ unavailable = false }: { unavailable?: boolean }) {
+  if (unavailable) {
+    return <span aria-label="Unavailable">—</span>;
+  }
+
   return (
     <span
       aria-label="Loading"
@@ -14,7 +77,15 @@ function Loading() {
   );
 }
 
-function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
+function PriceCard({
+  title,
+  row,
+  unavailable,
+}: {
+  title: string;
+  row: LandingPriceRow;
+  unavailable: boolean;
+}) {
   return (
     <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <div>
@@ -22,7 +93,7 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
           {title}
         </p>
         <div className="fame-display mt-3 text-2xl tabular-nums">
-          {row.fame ?? <Loading />}
+          {row.fame ?? <Loading unavailable={unavailable} />}
         </div>
       </div>
       <dl className="grid min-w-44 gap-2 text-sm">
@@ -32,7 +103,7 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
             {row.USDC.value ? (
               <span className="font-medium tabular-nums">{row.USDC.value}</span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -42,7 +113,7 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -51,7 +122,13 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
   );
 }
 
-function MarketplaceCard({ row }: { row: LandingPriceRow }) {
+function MarketplaceCard({
+  row,
+  unavailable,
+}: {
+  row: LandingPriceRow;
+  unavailable: boolean;
+}) {
   return (
     <article className="flex h-full min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8">
       <div>
@@ -69,7 +146,7 @@ function MarketplaceCard({ row }: { row: LandingPriceRow }) {
             {row.fame ? (
               <span className="font-medium tabular-nums">{row.fame}</span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -79,7 +156,7 @@ function MarketplaceCard({ row }: { row: LandingPriceRow }) {
             {row.USDC.value ? (
               <span className="font-medium tabular-nums">{row.USDC.value}</span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -89,7 +166,7 @@ function MarketplaceCard({ row }: { row: LandingPriceRow }) {
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -101,9 +178,11 @@ function MarketplaceCard({ row }: { row: LandingPriceRow }) {
 function MarketCapCard({
   values,
   supply,
+  unavailable,
 }: {
   values: LandingCurrencyValues;
   supply: string | null;
+  unavailable: boolean;
 }) {
   return (
     <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
@@ -112,7 +191,7 @@ function MarketCapCard({
           Market cap
         </p>
         <div className="fame-display mt-3 text-2xl tabular-nums">
-          {supply ?? <Loading />}
+          {supply ?? <Loading unavailable={unavailable} />}
         </div>
       </div>
       <dl className="grid min-w-44 gap-2 text-sm">
@@ -124,7 +203,7 @@ function MarketCapCard({
                 {values.USDC.value}
               </span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -136,7 +215,7 @@ function MarketCapCard({
                 {values.ETH.value}
               </span>
             ) : (
-              <Loading />
+              <Loading unavailable={unavailable} />
             )}
           </dd>
         </div>
@@ -145,11 +224,72 @@ function MarketCapCard({
   );
 }
 
+function missing(market: LandingMarketPresentation): boolean {
+  return (
+    Object.values(market.prices).some(
+      (row) => !row.fame || !row.USDC.value || !row.ETH.value,
+    ) ||
+    !market.marketCap.USDC.value ||
+    !market.marketCap.ETH.value ||
+    !market.marketplaceSupply
+  );
+}
+
+export function mergeLandingMarket(
+  current: LandingMarketPresentation,
+  next: LandingMarketPresentation,
+): LandingMarketPresentation {
+  const prices = Object.fromEntries(
+    (Object.keys(current.prices) as Array<keyof typeof current.prices>).map(
+      (key) => {
+        const oldRow = current.prices[key];
+        const newRow = next.prices[key];
+        return [
+          key,
+          {
+            fame: newRow.fame ?? oldRow.fame,
+            USDC: { value: newRow.USDC.value ?? oldRow.USDC.value },
+            ETH: { value: newRow.ETH.value ?? oldRow.ETH.value },
+          },
+        ];
+      },
+    ),
+  ) as LandingMarketPresentation["prices"];
+  const merged: LandingMarketPresentation = {
+    prices,
+    marketCap: {
+      USDC: {
+        value: next.marketCap.USDC.value ?? current.marketCap.USDC.value,
+      },
+      ETH: {
+        value: next.marketCap.ETH.value ?? current.marketCap.ETH.value,
+      },
+    },
+    marketplaceSupply: next.marketplaceSupply ?? current.marketplaceSupply,
+  };
+  return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
+}
+
 export function FameMarketBoard({
   initialMarket,
 }: {
   initialMarket: LandingMarketPresentation;
 }) {
+  const [market, setMarket] = useState(initialMarket);
+  const [retryFinished, setRetryFinished] = useState(false);
+  const needsMarket = missing(market);
+
+  useEffect(() => {
+    if (!needsMarket || retryFinished) return;
+    return startMarketRetry({
+      onMarket: (next) =>
+        setMarket((current) => mergeLandingMarket(current, next)),
+      onComplete: () => setRetryFinished(true),
+    });
+  }, [needsMarket, retryFinished]);
+
+  const unavailable = needsMarket && retryFinished;
+
   return (
     <section
       aria-label="FAME market"
@@ -168,15 +308,27 @@ export function FameMarketBoard({
       </header>
       <div className="grid gap-6 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-5">
-          <MarketplaceCard row={initialMarket.prices.nftBuy} />
+          <MarketplaceCard
+            row={market.prices.nftBuy}
+            unavailable={unavailable}
+          />
         </div>
         <div className="lg:col-span-7">
           <MarketCapCard
-            values={initialMarket.marketCap}
-            supply={initialMarket.marketplaceSupply}
+            values={market.marketCap}
+            supply={market.marketplaceSupply}
+            unavailable={unavailable}
           />
-          <PriceCard title="DeFi buy" row={initialMarket.prices.defiBuy} />
-          <PriceCard title="DeFi sell" row={initialMarket.prices.defiSell} />
+          <PriceCard
+            title="DeFi buy"
+            row={market.prices.defiBuy}
+            unavailable={unavailable}
+          />
+          <PriceCard
+            title="DeFi sell"
+            row={market.prices.defiSell}
+            unavailable={unavailable}
+          />
         </div>
       </div>
     </section>

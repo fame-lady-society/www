@@ -145,6 +145,9 @@ describe("Society redemption accordion", () => {
     assert.match(html, /Metadata unavailable/u);
     assert.match(html, /32 selected/u);
     assert.match(html, /value="WETH"/u);
+    assert.match(html, /aria-label="Redemption output"/u);
+    assert.match(html, /aria-haspopup="listbox"/u);
+    assert.doesNotMatch(html, /<select/u);
     assert.match(html, /Society #40[\s\S]*disabled/u);
   });
 

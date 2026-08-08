@@ -18,7 +18,6 @@ const OTHER =
 const ROUTE_HASH = `0x${"5".repeat(64)}` as Hash;
 
 const checkout = {
-  mode: "fork",
   address: CHECKOUT,
   ...BASE_GALLERY_CHECKOUT_DEPENDENCIES,
 } as const;

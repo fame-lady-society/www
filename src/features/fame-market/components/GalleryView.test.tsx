@@ -138,6 +138,9 @@ describe("TEST gallery public view", () => {
     assert.match(html, /returned to your wallet as FAME/);
     assert.match(html, /depends on liquidity when the transaction executes/);
     assert.doesNotMatch(html, /warning|high refund|unusual/i);
+    assert.match(html, /aria-label="Payment asset"/u);
+    assert.match(html, /aria-haspopup="listbox"/u);
+    assert.doesNotMatch(html, /<select/u);
 
     const directHtml = renderToStaticMarkup(
       <GalleryPaymentPanel
