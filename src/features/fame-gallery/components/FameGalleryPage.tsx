@@ -1,7 +1,37 @@
+"use client";
+
 import Link from "next/link";
-import type { FameGalleryStatusPresentation } from "../cachedStatus";
-import type { FameGalleryStatus } from "../status";
+import { useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+import type { FameGalleryCatalogPage, FameGalleryArtwork } from "../catalog";
 import { FameGalleryCard } from "./FameGalleryCard";
+
+type GalleryPageParam = {
+  cursor: number | null;
+  blockNumber: string;
+};
+
+async function fetchGalleryPage({
+  cursor,
+  blockNumber,
+}: GalleryPageParam): Promise<FameGalleryCatalogPage> {
+  const params = new URLSearchParams({ blockNumber });
+  if (cursor !== null) params.set("cursor", String(cursor));
+  const response = await fetch(`/api/fame/gallery?${params}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("FAME gallery page unavailable");
+  return (await response.json()) as FameGalleryCatalogPage;
+}
+
+function uniqueArtworks(pages: FameGalleryCatalogPage[]) {
+  const byTokenId = new Map<number, FameGalleryArtwork>();
+  for (const artwork of pages.flatMap(({ artworks }) => artworks)) {
+    byTokenId.set(artwork.tokenId, artwork);
+  }
+  return [...byTokenId.values()];
+}
 
 export function FameGalleryUnavailable() {
   return (
@@ -16,17 +46,62 @@ export function FameGalleryUnavailable() {
   );
 }
 
-export function FameGalleryPage({
-  tokenIds,
-  statuses,
-  freshness = "unavailable",
-  observedAt = null,
-}: {
-  tokenIds: number[];
-  statuses: Record<string, FameGalleryStatus>;
-  freshness?: FameGalleryStatusPresentation["freshness"];
-  observedAt?: number | null;
-}) {
+export function FameGalleryPage({ page }: { page: FameGalleryCatalogPage }) {
+  const query = useInfiniteQuery({
+    queryKey: ["fame-gallery-catalog", page.blockNumber],
+    queryFn: ({ pageParam }: { pageParam: GalleryPageParam }) =>
+      fetchGalleryPage(pageParam),
+    initialPageParam: {
+      cursor: null,
+      blockNumber: page.blockNumber,
+    } satisfies GalleryPageParam,
+    initialData: {
+      pages: [page],
+      pageParams: [
+        {
+          cursor: null,
+          blockNumber: page.blockNumber,
+        } satisfies GalleryPageParam,
+      ],
+    },
+    getNextPageParam: (lastPage) =>
+      lastPage.nextCursor === null
+        ? undefined
+        : {
+            cursor: lastPage.nextCursor,
+            blockNumber: lastPage.blockNumber,
+          },
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+  const { ref: loadMoreRef, inView } = useInView({
+    rootMargin: "800px 0px",
+  });
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchNextPageError,
+    isFetchingNextPage,
+  } = query;
+
+  useEffect(() => {
+    if (!inView || !hasNextPage || isFetchingNextPage || isFetchNextPageError) {
+      return;
+    }
+    void fetchNextPage();
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    inView,
+    isFetchNextPageError,
+    isFetchingNextPage,
+  ]);
+
+  const pages = query.data?.pages ?? [page];
+  const artworks = uniqueArtworks(pages);
+
   return (
     <div className="min-h-screen bg-black px-4 py-10 text-[#f5eddc] sm:px-8">
       <section className="mx-auto max-w-7xl">
@@ -37,20 +112,8 @@ export function FameGalleryPage({
             </p>
             <h1 className="mt-2 text-3xl">Collection</h1>
             <p className="mt-2 max-w-xl text-sm text-[#d7cfbf]">
-              Browse the FAME collection. Availability is confirmed in the
-              marketplace.
+              Browse market artwork and Society NFTs held by collectors.
             </p>
-            {freshness === "stale" && observedAt !== null ? (
-              <p className="mt-2 text-xs text-[#d7b979]">
-                Status data is stale (observed{" "}
-                {new Date(observedAt).toISOString()}).
-              </p>
-            ) : null}
-            {freshness === "unavailable" ? (
-              <p className="mt-2 text-xs text-[#d7cfbf]">
-                Status data is unavailable.
-              </p>
-            ) : null}
           </div>
           <Link
             href="/fame/market"
@@ -59,15 +122,38 @@ export function FameGalleryPage({
             Marketplace
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {tokenIds.map((tokenId) => (
+        <div
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+          data-artwork-count={artworks.length}
+        >
+          {artworks.map((artwork) => (
             <FameGalleryCard
-              key={tokenId}
-              tokenId={tokenId}
-              status={statuses[String(tokenId)] ?? "unknown"}
+              key={`${artwork.tokenId}:${artwork.artworkHash}`}
+              artwork={artwork}
             />
           ))}
         </div>
+        {hasNextPage || isFetchNextPageError ? (
+          <div
+            ref={loadMoreRef}
+            data-gallery-load-more
+            className="flex min-h-20 items-center justify-center py-8 text-sm text-[#d7cfbf]"
+          >
+            {isFetchNextPageError ? (
+              <button
+                type="button"
+                className="border border-[#d7b979] px-4 py-2 text-[#f5eddc]"
+                onClick={() => void fetchNextPage()}
+              >
+                Retry loading artwork
+              </button>
+            ) : isFetchingNextPage ? (
+              "Loading more artwork…"
+            ) : (
+              "Load more artwork"
+            )}
+          </div>
+        ) : null}
       </section>
     </div>
   );

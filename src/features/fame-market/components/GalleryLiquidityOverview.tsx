@@ -81,9 +81,8 @@ export function GalleryLiquidityEducationCard({
               Back marketplace liquidity.
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-              Contribute whole Society NFTs as market liquidity and earn an
-              equal-weight share of the provider portion of marketplace premiums
-              for every credited unit you provide.
+              Stake a whole Society NFT with its attached 1,000,000 FAME and
+              earn FAME on every marketplace sale.
             </Typography>
           </div>
           {showCta ? (
@@ -150,29 +149,23 @@ export function GalleryLiquidityEducationCard({
 
         <Stack spacing={1}>
           <Typography>
-            Each staked Society stays a whole DN404 unit with its attached
-            1,000,000 FAME while the marketplace holds it. Your original token
-            ID is not reserved.
+            You deposit a whole Society NFT with its attached 1,000,000 FAME.
           </Typography>
           <Typography>
-            When you exit, choose one current marketplace Society and accept
-            the provider-specific withdrawal premium shown before the wallet
-            action.
+            You may withdraw a different Society from the marketplace. Your
+            original NFT is not reserved.
           </Typography>
           <Typography>
-            The exiting unit is removed before provider-fee distribution. Any
-            remaining credited units may still receive their normal provider
-            share.
+            The withdrawal premium reaches 0 after 24 hours. You can exit sooner
+            by paying the current premium.
           </Typography>
           <Typography color="warning.main" fontWeight={700}>
-            Direct Society NFT transfers to the marketplace are
-            irreversible, uncredited donations. Use only the staking actions on
-            these pages.
+            Do not transfer Society NFTs directly to the marketplace. They
+            become irreversible, uncredited donations. Use the staking actions
+            on these pages.
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Shares shown here use current contract state.
-            They are per marketplace transaction, not a promise of future sales
-            or earnings.
+            Your per-sale share can change as the pool changes.
           </Typography>
         </Stack>
       </Stack>

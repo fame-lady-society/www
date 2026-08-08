@@ -1,11 +1,12 @@
 import {
   FAME_METADATA_FALLBACK_IMAGE,
-  fameMetadataFetchUrls,
+  irysGatewayToArweaveUrl,
   imageFromFameMetadata,
 } from "@/service/fameMetadata";
 import {
   TEST_METADATA_LIMITS,
   decodeTestGalleryMetadata,
+  validateInlineGalleryImage,
   type GalleryMetadataResult,
 } from "./testMetadata";
 
@@ -17,6 +18,49 @@ type MetadataFetch = (
 export const GALLERY_REMOTE_METADATA_MAX_BYTES =
   TEST_METADATA_LIMITS.decodedJson;
 export const GALLERY_METADATA_TIMEOUT_MS = 10_000;
+
+const APPROVED_ARWEAVE_HOSTS = new Set(["arweave.net"]);
+const APPROVED_IPFS_HOSTS = new Set(["ipfs.io", "ipfs.fameladysociety.com"]);
+
+function approvedRemoteAssetUrl(rawUrl: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(rawUrl.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" || url.pathname.length <= 1) return null;
+
+  const normalizedIrysUrl = irysGatewayToArweaveUrl(url.toString());
+  if (normalizedIrysUrl) return normalizedIrysUrl;
+
+  const isArweave =
+    APPROVED_ARWEAVE_HOSTS.has(url.hostname) ||
+    url.hostname.endsWith(".arweave.net");
+  if (isArweave) return url.toString();
+
+  if (
+    APPROVED_IPFS_HOSTS.has(url.hostname) &&
+    url.pathname.startsWith("/ipfs/")
+  ) {
+    return url.toString();
+  }
+
+  return null;
+}
+
+export function normalizeGalleryImageUrl(rawImage: string): string | null {
+  const image = rawImage.trim();
+  if (image.startsWith("data:")) return validateInlineGalleryImage(image);
+  return approvedRemoteAssetUrl(image);
+}
+
+function galleryMetadataFetchUrls(rawTokenUri: string) {
+  const normalized = approvedRemoteAssetUrl(rawTokenUri);
+  if (!normalized) return [];
+  const original = rawTokenUri.trim();
+  return normalized === original ? [normalized] : [normalized, original];
+}
 
 function failure(error: string): GalleryMetadataResult {
   return {
@@ -38,14 +82,6 @@ function optionalString(
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 && value.length <= limit ? trimmed : null;
-}
-
-function isHttpsUrl(value: string) {
-  try {
-    return new URL(value).protocol === "https:";
-  } catch {
-    return false;
-  }
 }
 
 function abortError(signal: AbortSignal) {
@@ -119,7 +155,10 @@ async function fetchBoundedMetadata(
   );
 
   try {
-    const response = await fetchMetadata(url, { signal: controller.signal });
+    const response = await fetchMetadata(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
     if (!response.ok) {
       await response.body?.cancel();
       return null;
@@ -141,12 +180,8 @@ export async function loadGalleryMetadata(
   if (tokenUri.startsWith("data:")) {
     return decodeTestGalleryMetadata(tokenUri);
   }
-  if (!isHttpsUrl(tokenUri)) {
-    return failure("Token metadata URL is unavailable");
-  }
 
-  for (const url of fameMetadataFetchUrls(tokenUri)) {
-    if (!isHttpsUrl(url)) continue;
+  for (const url of galleryMetadataFetchUrls(tokenUri)) {
     try {
       const body = await fetchBoundedMetadata(
         fetchMetadata,
@@ -161,9 +196,12 @@ export async function loadGalleryMetadata(
         continue;
       }
       const metadata = parsed as Record<string, unknown>;
+      const image = normalizeGalleryImageUrl(imageFromFameMetadata(metadata));
+      if (!image)
+        throw new Error("Gallery metadata image origin is not approved");
       return {
         status: "ready",
-        image: imageFromFameMetadata(metadata),
+        image,
         name: optionalString(metadata, "name", TEST_METADATA_LIMITS.name),
         description: optionalString(
           metadata,

@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useId } from "react";
@@ -40,14 +40,21 @@ export function ArtworkCard({
         flexDirection: "column",
       }}
     >
-      <CardMedia
-        component="img"
-        image={metadata.image}
-        alt={artworkReady ? `${displayName} artwork` : "Artwork unavailable"}
-        loading="lazy"
-        decoding="async"
-        sx={{ aspectRatio: "1 / 1", objectFit: "cover", bgcolor: "grey.900" }}
-      />
+      <div
+        style={{
+          position: "relative",
+          aspectRatio: "1 / 1",
+          backgroundColor: "#212121",
+        }}
+      >
+        <Image
+          src={metadata.image}
+          alt={artworkReady ? `${displayName} artwork` : "Artwork unavailable"}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw"
+          style={{ objectFit: "cover" }}
+        />
+      </div>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack spacing={1}>
           <Typography id={titleId} component="h2" variant="h5">

@@ -3,13 +3,13 @@ import { describe, it } from "node:test";
 import { galleryMetadataQueryOptions } from "./useGalleryMetadata";
 
 describe("gallery metadata query", () => {
-  it("caches each token URI indefinitely and bounds inactive retention", () => {
+  it("revalidates each token URI and does not retain inactive metadata", () => {
     const uri = "https://gateway.irys.xyz/example/metadata.json";
     const options = galleryMetadataQueryOptions(uri);
 
     assert.deepEqual(options.queryKey, ["fame-market", "metadata", uri]);
-    assert.equal(options.staleTime, Number.POSITIVE_INFINITY);
-    assert.equal(options.gcTime, 30 * 60 * 1_000);
+    assert.equal(options.staleTime, 0);
+    assert.equal(options.gcTime, 0);
     assert.equal(options.retry, 1);
     assert.equal(options.initialData, undefined);
   });

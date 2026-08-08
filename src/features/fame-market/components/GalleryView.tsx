@@ -39,6 +39,7 @@ import type {
   GalleryCheckoutQuote,
   GalleryPaymentAsset,
 } from "../types";
+import type { Hash } from "viem";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
@@ -54,6 +55,7 @@ export type GalleryViewContentState =
 
 export type PresentedGalleryArtwork = {
   stableKey: string;
+  artworkHash?: Hash;
   metadata?: GalleryMetadataResult;
   tokenUri?: string;
 };
@@ -352,7 +354,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
         {artworks.map((artwork) =>
           artwork.metadata ? (
             <ArtworkCard
-              key={artwork.stableKey}
+              key={`${artwork.stableKey}:${artwork.artworkHash ?? ""}`}
               metadata={artwork.metadata}
               purchaseLocked={purchaseLocked}
               purchaseInProgress={
@@ -364,7 +366,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
             />
           ) : (
             <GalleryMetadataArtworkCard
-              key={artwork.stableKey}
+              key={`${artwork.stableKey}:${artwork.artworkHash ?? ""}`}
               tokenUri={artwork.tokenUri ?? ""}
               purchaseLocked={purchaseLocked}
               purchaseInProgress={
@@ -485,6 +487,7 @@ export function GalleryView() {
     () =>
       discovery.catalog.map((target) => ({
         stableKey: target.targetId,
+        artworkHash: target.artworkHash ?? undefined,
         tokenUri: target.tokenUri ?? "",
       })),
     [discovery.catalog],

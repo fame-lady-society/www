@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   GALLERY_REMOTE_METADATA_MAX_BYTES,
+  normalizeGalleryImageUrl,
   loadGalleryMetadata,
 } from "./galleryMetadata";
 
@@ -26,7 +27,7 @@ describe("gallery metadata loader", () => {
     assert.equal(result.image, image);
   });
 
-  it("fetches HTTPS metadata directly and preserves its image value", async () => {
+  it("normalizes approved Irys metadata and image URLs to Arweave", async () => {
     const image = "https://gateway.irys.xyz/example/image.png";
     const requested: string[] = [];
     const result = await loadGalleryMetadata(
@@ -45,16 +46,52 @@ describe("gallery metadata loader", () => {
     );
 
     assert.equal(result.status, "ready");
-    assert.equal(result.image, image);
+    assert.equal(result.image, "https://arweave.net/example/image.png");
     assert.equal(result.name, "Society #1");
     assert.deepEqual(requested, ["https://arweave.net/example/metadata.json"]);
   });
 
-  it("rejects non-HTTPS and oversized remote metadata", async () => {
+  it("uses fallback art when approved metadata names an unapproved image", async () => {
+    const result = await loadGalleryMetadata(
+      "https://arweave.net/example/metadata.json",
+      async () =>
+        Response.json({ image: "https://fame.support/example/image.png" }),
+    );
+
+    assert.equal(result.status, "failure");
+    assert.match(result.image, /gold-leaf-square/);
+  });
+
+  it("rejects arbitrary HTTPS, fame.support, non-HTTPS, and oversized metadata", async () => {
     assert.equal(
       (
         await loadGalleryMetadata(
           "http://example.com/metadata.json",
+          async () => {
+            throw new Error("must not fetch");
+          },
+        )
+      ).status,
+      "failure",
+    );
+    let fetched = false;
+    assert.equal(
+      (
+        await loadGalleryMetadata(
+          "https://example.com/metadata.json",
+          async () => {
+            fetched = true;
+            return new Response("{}");
+          },
+        )
+      ).status,
+      "failure",
+    );
+    assert.equal(fetched, false);
+    assert.equal(
+      (
+        await loadGalleryMetadata(
+          "https://fame.support/metadata.json",
           async () => {
             throw new Error("must not fetch");
           },
@@ -67,7 +104,7 @@ describe("gallery metadata loader", () => {
     assert.equal(
       (
         await loadGalleryMetadata(
-          "https://example.com/metadata.json",
+          "https://arweave.net/metadata.json",
           async () => new Response(oversized, { status: 200 }),
         )
       ).status,
@@ -78,7 +115,7 @@ describe("gallery metadata loader", () => {
   it("aborts a timed-out browser metadata request", async () => {
     let aborted = false;
     const result = await loadGalleryMetadata(
-      "https://example.com/metadata.json",
+      "https://arweave.net/metadata.json",
       (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
           init?.signal?.addEventListener("abort", () => {
@@ -102,7 +139,7 @@ describe("gallery metadata loader", () => {
     });
 
     const result = await loadGalleryMetadata(
-      "https://example.com/metadata.json",
+      "https://arweave.net/metadata.json",
       async () => new Response(body, { status: 200 }),
       1,
     );
@@ -120,7 +157,7 @@ describe("gallery metadata loader", () => {
     });
 
     const result = await loadGalleryMetadata(
-      "https://example.com/metadata.json",
+      "https://arweave.net/metadata.json",
       async () =>
         new Response(body, {
           status: 200,
@@ -149,7 +186,7 @@ describe("gallery metadata loader", () => {
     });
 
     const result = await loadGalleryMetadata(
-      "https://example.com/metadata.json",
+      "https://arweave.net/metadata.json",
       async () => new Response(body, { status: 200 }),
     );
 
@@ -178,5 +215,32 @@ describe("gallery metadata loader", () => {
 
     await assert.rejects(pending);
     assert.deepEqual(requested, ["https://arweave.net/example/metadata.json"]);
+  });
+
+  it("accepts only inline, Arweave, normalized Irys, and approved IPFS images", () => {
+    const inline = `data:image/svg+xml;base64,${Buffer.from(
+      "<svg></svg>",
+    ).toString("base64")}`;
+    assert.equal(normalizeGalleryImageUrl(inline), inline);
+    assert.equal(
+      normalizeGalleryImageUrl("https://arweave.net/tx/image.png"),
+      "https://arweave.net/tx/image.png",
+    );
+    assert.equal(
+      normalizeGalleryImageUrl("https://gateway.irys.xyz/tx/image.png"),
+      "https://arweave.net/tx/image.png",
+    );
+    assert.equal(
+      normalizeGalleryImageUrl("https://ipfs.io/ipfs/bafy/image.png"),
+      "https://ipfs.io/ipfs/bafy/image.png",
+    );
+    assert.equal(
+      normalizeGalleryImageUrl("https://fame.support/image.png"),
+      null,
+    );
+    assert.equal(
+      normalizeGalleryImageUrl("https://example.com/image.png"),
+      null,
+    );
   });
 });

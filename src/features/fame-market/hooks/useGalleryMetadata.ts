@@ -19,15 +19,10 @@ export function galleryMetadataQueryOptions(tokenUri: string) {
   return {
     queryKey: ["fame-market", "metadata", tokenUri] as const,
     queryFn: async ({ signal }: { signal: AbortSignal }) =>
-      loadGalleryMetadata(
-        tokenUri,
-        fetch,
-        GALLERY_METADATA_TIMEOUT_MS,
-        signal,
-      ),
+      loadGalleryMetadata(tokenUri, fetch, GALLERY_METADATA_TIMEOUT_MS, signal),
     enabled: trimmedTokenUri.length > 0,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: 30 * 60 * 1_000,
+    staleTime: 0,
+    gcTime: 0,
     retry: 1,
     initialData,
   };

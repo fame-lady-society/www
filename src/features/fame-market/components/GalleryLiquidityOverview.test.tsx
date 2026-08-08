@@ -74,12 +74,19 @@ describe("gallery liquidity overview", () => {
     assert.match(html, /Exit liquidity/);
   });
 
-  it("describes selected withdrawal and remaining-unit provider share without a random exit", () => {
+  it("explains the deposit, sale earnings, and withdrawal terms", () => {
     const html = renderToStaticMarkup(
       <GalleryLiquidityEducationCard global={global} showCta={false} />,
     );
-    assert.match(html, /choose one current marketplace Society/i);
-    assert.match(html, /remaining credited units may still receive/i);
-    assert.doesNotMatch(html, /pseudorandom|free exit/i);
+    assert.match(html, /whole Society NFT with its attached 1,000,000 FAME/i);
+    assert.match(html, /earn FAME on every marketplace sale/i);
+    assert.match(html, /different Society from the marketplace/i);
+    assert.match(html, /premium reaches 0 after 24 hours/i);
+    assert.match(html, /exit sooner by paying the current premium/i);
+    assert.match(html, /irreversible, uncredited donations/i);
+    assert.doesNotMatch(
+      html,
+      /remaining credited units|pseudorandom|free exit/i,
+    );
   });
 });

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePublicClient } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
 import { useGalleryRuntime } from "../config/galleryRuntime";
-import { formatTestAmount } from "../format";
+import { formatTestAmountRoundedToUnit } from "../format";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import {
   type GalleryLiquidityAllowanceState,
@@ -119,8 +119,7 @@ export function GalleryStakeUnstakeContent({
               Provider withdrawal
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-              Choose one Society currently held by the marketplace. Withdrawals
-              remain available while purchase checkout is paused.
+              Choose one Society currently held by the marketplace.
             </Typography>
           </div>
           {provider.status === "disconnected" ? (
@@ -253,19 +252,12 @@ export function GalleryStakeUnstakeContent({
               </Typography>
               <Typography sx={{ mt: 1 }}>
                 {premium === null
-                  ? "The provider withdrawal premium is unavailable."
-                  : `The current provider withdrawal premium is ${formatTestAmount(premium)} FAME.`}{" "}
-                Your exiting unit is removed before distribution.
-                {provider.unitCount > 1n
-                  ? " Any remaining credited units may still receive their normal provider share."
-                  : " With no remaining credited units, this wallet receives no provider share."}
+                  ? "Premium unavailable."
+                  : `Premium: ${formatTestAmountRoundedToUnit(premium)} FAME.${
+                      premium > 0n ? " Reaches 0 after 24 hours." : ""
+                    }`}
               </Typography>
             </div>
-            <Typography color="text.secondary" variant="body2">
-              This displayed premium is frozen as your maximum for the explicit
-              withdrawal action. If the required premium rises, the contract
-              reverts and a refreshed quote requires a new action.
-            </Typography>
 
             {chainMismatch ? (
               <Alert severity="warning">
@@ -306,7 +298,7 @@ export function GalleryStakeUnstakeContent({
                 onClick={onApproveWithdrawal}
                 sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
               >
-                Approve {formatTestAmount(premium)} FAME
+                Approve {formatTestAmountRoundedToUnit(premium)} FAME
               </Button>
             ) : (
               <Button

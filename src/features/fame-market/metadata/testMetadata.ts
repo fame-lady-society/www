@@ -152,6 +152,26 @@ function assertPassiveSvg(svg: string) {
   }
 }
 
+export function validateInlineGalleryImage(rawImage: string): string | null {
+  const image = rawImage.trim();
+  const match = image.match(
+    /^data:(image\/(?:svg\+xml|png|jpeg|jpg|gif|webp|avif));base64,(.*)$/s,
+  );
+  if (!match) return null;
+
+  try {
+    const decoded = decodeBase64(
+      match[2] ?? "",
+      TEST_METADATA_LIMITS.encodedSvg,
+      TEST_METADATA_LIMITS.decodedSvg,
+    );
+    if (match[1] === "image/svg+xml") assertPassiveSvg(decoded);
+    return image;
+  } catch {
+    return null;
+  }
+}
+
 export function decodeTestGalleryMetadata(
   rawTokenUri: string,
 ): GalleryMetadataResult {

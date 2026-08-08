@@ -1,10 +1,8 @@
 import { connection } from "next/server";
-import { getCachedFameGalleryMembership } from "@/features/fame-gallery/cachedMembership";
 import {
-  getCachedFameGalleryStatuses,
-  presentFameGalleryStatuses,
-} from "@/features/fame-gallery/cachedStatus";
-import { isFreshFameGalleryMembership } from "@/features/fame-gallery/membership";
+  readFameGalleryCatalog,
+  serializeFameGalleryCatalog,
+} from "@/features/fame-gallery/catalog";
 import {
   FameGalleryPage,
   FameGalleryUnavailable,
@@ -13,27 +11,7 @@ import { FameShell } from "@/features/fame/components/FameShell";
 
 async function readGalleryPresentation() {
   try {
-    const membership = await getCachedFameGalleryMembership();
-    if (!isFreshFameGalleryMembership(membership)) return null;
-    try {
-      const status = await getCachedFameGalleryStatuses(
-        membership.visibleTokenIds,
-        membership.fingerprint,
-      );
-      const presentation = presentFameGalleryStatuses(
-        status,
-        membership.fingerprint,
-      );
-      return {
-        tokenIds: membership.visibleTokenIds,
-        ...presentation,
-      };
-    } catch {
-      return {
-        tokenIds: membership.visibleTokenIds,
-        ...presentFameGalleryStatuses(null, membership.fingerprint),
-      };
-    }
+    return serializeFameGalleryCatalog(await readFameGalleryCatalog());
   } catch {
     return null;
   }
@@ -45,7 +23,7 @@ export default async function Page() {
   return (
     <FameShell title="FAME Gallery" activeFamePage="gallery">
       {presentation ? (
-        <FameGalleryPage {...presentation} />
+        <FameGalleryPage page={presentation} />
       ) : (
         <FameGalleryUnavailable />
       )}

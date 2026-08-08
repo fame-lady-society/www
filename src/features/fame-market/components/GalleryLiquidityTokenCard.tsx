@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
 import Checkbox from "@mui/material/Checkbox";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -30,18 +30,25 @@ export function GalleryLiquidityTokenCard({
       : `Society #${token.tokenId.toString()}`;
   const content = (
     <>
-      <CardMedia
-        component="img"
-        image={metadata.image}
-        alt={
-          metadata.status === "ready"
-            ? `${name} artwork`
-            : "Artwork unavailable"
-        }
-        loading="lazy"
-        decoding="async"
-        sx={{ aspectRatio: "1 / 1", objectFit: "cover", bgcolor: "grey.900" }}
-      />
+      <div
+        style={{
+          position: "relative",
+          aspectRatio: "1 / 1",
+          backgroundColor: "#212121",
+        }}
+      >
+        <Image
+          src={metadata.image}
+          alt={
+            metadata.status === "ready"
+              ? `${name} artwork`
+              : "Artwork unavailable"
+          }
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw"
+          style={{ objectFit: "cover" }}
+        />
+      </div>
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="center">
           {selectable ? (

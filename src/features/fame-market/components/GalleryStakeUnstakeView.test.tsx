@@ -36,7 +36,7 @@ describe("gallery stake unstake view", () => {
     assert.doesNotMatch(html, /Withdraw Society|Approve .* FAME/);
   });
 
-  it("offers exact approval for a selected withdrawal and explains remaining-unit share", () => {
+  it("shows the selected withdrawal premium and its decay window", () => {
     const html = renderToStaticMarkup(
       <GalleryStakeUnstakeContent
         state={inventory}
@@ -52,9 +52,28 @@ describe("gallery stake unstake view", () => {
       />,
     );
     assert.match(html, /Approve 25 FAME/);
-    assert.match(html, /remaining credited units may still receive/i);
+    assert.match(html, /Premium: 25 FAME\. Reaches 0 after 24 hours\./);
+    assert.doesNotMatch(html, /remaining credited units|exiting unit|frozen/);
     assert.match(html, /aria-pressed="true"/);
     assert.doesNotMatch(html, /pseudorandom|no self-rebate/i);
+  });
+
+  it("rounds displayed premiums to the nearest whole FAME", () => {
+    const html = renderToStaticMarkup(
+      <GalleryStakeUnstakeContent
+        state={inventory}
+        provider={{ status: "ready", unitCount: 1n }}
+        selectedTokenId={7n}
+        premium={49_807n * 10n ** 18n + 291_666_666_666_666_667n}
+        fameAllowance={{ status: "ready", amount: 0n }}
+        busy={false}
+        {...callbacks}
+        renderToken={() => <div>Society #7</div>}
+      />,
+    );
+    assert.match(html, /Premium: 49,807 FAME/);
+    assert.match(html, /Approve 49,807 FAME/);
+    assert.doesNotMatch(html, /291\.291|666666/);
   });
 
   it("withdraws with a zero ceiling without an approval action", () => {
@@ -71,7 +90,8 @@ describe("gallery stake unstake view", () => {
       />,
     );
     assert.match(html, /Withdraw Society #8/);
-    assert.match(html, /0 FAME/);
+    assert.match(html, /Premium: 0 FAME/);
+    assert.doesNotMatch(html, /Reaches 0 after 24 hours/);
     assert.doesNotMatch(html, /Approve/);
   });
 
@@ -123,7 +143,10 @@ describe("gallery stake unstake view", () => {
       />,
     );
     assert.match(html, /Selected Society #7/);
-    assert.match(html, /selection is not actionable until inventory refreshes/i);
+    assert.match(
+      html,
+      /selection is not actionable until inventory refreshes/i,
+    );
     assert.doesNotMatch(html, /Withdraw Society #7/);
   });
 
