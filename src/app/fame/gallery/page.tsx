@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import type { Metadata } from "next";
 import {
   readFameGalleryCatalog,
   serializeFameGalleryCatalog,
@@ -8,6 +9,13 @@ import {
   FameGalleryUnavailable,
 } from "@/features/fame-gallery/components/FameGalleryPage";
 import { FameShell } from "@/features/fame/components/FameShell";
+
+export const metadata: Metadata = {
+  title: "FAME Gallery",
+  description:
+    "Browse Society NFTs held by collectors and artwork in the FAME marketplace.",
+  openGraph: { images: ["/images/fame/gold-leaf.png"] },
+};
 
 async function readGalleryPresentation() {
   try {

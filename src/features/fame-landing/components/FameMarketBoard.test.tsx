@@ -11,26 +11,26 @@ import {
 const market: LandingMarketPresentation = {
   prices: {
     defiBuy: {
-      fame: "1,000,000 FAME",
+      fame: "1M FAME",
       USDC: { value: "12.34 USDC" },
       ETH: { value: "0.005 ETH" },
     },
     defiSell: {
-      fame: "1,000,000 FAME",
+      fame: "1M FAME",
       USDC: { value: "11.90 USDC" },
       ETH: { value: "0.0048 ETH" },
     },
     nftBuy: {
-      fame: "1,050,000 FAME",
+      fame: "1.1M FAME",
       USDC: { value: "12.95 USDC" },
       ETH: { value: "0.0052 ETH" },
     },
   },
   metrics: {
-    marketCap: { value: "10,762.56 USDC" },
-    liquidity: { value: "8,000,000 FAME" },
-    buyDepth: { value: "5,000 USDC" },
-    sellDepth: { value: "4,500 USDC" },
+    marketCap: { value: "10.8K USDC" },
+    liquidity: { value: "8M FAME" },
+    buyDepth: { value: "5K USDC" },
+    sellDepth: { value: "4.5K USDC" },
   },
 };
 
@@ -48,6 +48,8 @@ describe("FAME market board", () => {
     assert.match(markup, /Liquidity/);
     assert.match(markup, /Buy depth/);
     assert.match(markup, /Sell depth/);
+    assert.match(markup, /1M FAME/);
+    assert.match(markup, /10.8K USDC/);
     assert.doesNotMatch(markup, /cache|route|validation|slippage|unavailable/i);
   });
 
@@ -55,12 +57,12 @@ describe("FAME market board", () => {
     const empty: LandingMarketPresentation = {
       prices: {
         defiBuy: {
-          fame: "1,000,000 FAME",
+          fame: "1M FAME",
           USDC: { value: null },
           ETH: { value: null },
         },
         defiSell: {
-          fame: "1,000,000 FAME",
+          fame: "1M FAME",
           USDC: { value: null },
           ETH: { value: null },
         },
@@ -93,7 +95,7 @@ describe("FAME market board", () => {
     };
     const merged = mergeLandingMarket(current, market);
     assert.notEqual(merged, current);
-    assert.equal(merged.metrics.buyDepth.value, "5,000 USDC");
+    assert.equal(merged.metrics.buyDepth.value, "5K USDC");
   });
 
   it("retries missing market data and stops cleanly", async () => {

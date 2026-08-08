@@ -32,32 +32,36 @@ export function ArtworkCard({
 
   return (
     <Card
-      variant="outlined"
       aria-labelledby={titleId}
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        backgroundColor: "transparent",
+        overflow: "visible",
       }}
     >
       <div
         style={{
           position: "relative",
           aspectRatio: "1 / 1",
-          backgroundColor: "#212121",
+          backgroundColor: "#16140f",
+          overflow: "hidden",
         }}
+        className="group ring-1 ring-inset ring-[#c9aa67]/20"
       >
         <Image
           src={metadata.image}
           alt={artworkReady ? `${displayName} artwork` : "Artwork unavailable"}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw"
+          className="fame-artwork"
           style={{ objectFit: "cover" }}
         />
       </div>
-      <CardContent sx={{ flexGrow: 1 }}>
+      <CardContent sx={{ flexGrow: 1, px: 0, pt: 2, pb: 1 }}>
         <Stack spacing={1}>
-          <Typography id={titleId} component="h2" variant="h5">
+          <Typography id={titleId} component="h2" variant="h6">
             {artworkReady ? displayName : "Artwork unavailable"}
           </Typography>
           {!artworkReady ? (
@@ -67,7 +71,7 @@ export function ArtworkCard({
           ) : null}
         </Stack>
       </CardContent>
-      <CardActions sx={{ p: 2, pt: 0 }}>
+      <CardActions sx={{ p: 0, pt: 1 }}>
         {artworkReady ? (
           <Button
             type="button"

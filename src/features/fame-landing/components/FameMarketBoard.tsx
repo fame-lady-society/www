@@ -67,14 +67,14 @@ function Loading() {
     <span
       aria-label="Loading"
       role="status"
-      className="inline-block size-4 animate-spin rounded-full border-2 border-[#8e762c] border-t-[#f5d46d]"
+      className="fame-skeleton inline-block h-4 w-20 rounded-sm"
     />
   );
 }
 
 function Value({ value }: { value: PriceValue }) {
   return value.value ? (
-    <span className="font-semibold tabular-nums text-[#fff5d8]">
+    <span className="font-medium tabular-nums text-[#f4eee2]">
       {value.value}
     </span>
   ) : (
@@ -82,24 +82,64 @@ function Value({ value }: { value: PriceValue }) {
   );
 }
 
-function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
+function PriceCard({
+  title,
+  row,
+  featured = false,
+}: {
+  title: string;
+  row: LandingPriceRow;
+  featured?: boolean;
+}) {
   return (
-    <article className="border border-[#8e762c] bg-black/30 p-5">
-      <h3 className="text-lg font-semibold text-[#f5d46d]">{title}</h3>
-      <div className="mt-4 text-2xl font-semibold tabular-nums">
-        {row.fame ?? <Loading />}
+    <article
+      className={
+        featured
+          ? "flex min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8"
+          : "grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+      }
+    >
+      <div>
+        <p
+          className={
+            featured
+              ? "text-xs font-bold uppercase tracking-[0.18em] text-[#0d0c0a]/70"
+              : "text-xs font-bold uppercase tracking-[0.18em] text-[#c9aa67]"
+          }
+        >
+          {title}
+        </p>
+        <div
+          className={`${featured ? "mt-5 text-3xl sm:text-4xl" : "mt-3 text-2xl"} fame-display tabular-nums`}
+        >
+          {row.fame ?? <Loading />}
+        </div>
       </div>
-      <dl className="mt-5 grid gap-3 text-sm">
+      <dl
+        className={`${featured ? "mt-10 border-t border-[#0d0c0a]/20 pt-5" : "min-w-44"} grid gap-2 text-sm`}
+      >
         <div className="flex min-h-6 items-center justify-between gap-4">
-          <dt className="text-[#c6b98b]">USDC</dt>
+          <dt className={featured ? "text-[#0d0c0a]/65" : "text-[#9f9789]"}>
+            USDC
+          </dt>
           <dd>
-            <Value value={row.USDC} />
+            {row.USDC.value ? (
+              <span className="font-medium tabular-nums">{row.USDC.value}</span>
+            ) : (
+              <Loading />
+            )}
           </dd>
         </div>
         <div className="flex min-h-6 items-center justify-between gap-4">
-          <dt className="text-[#c6b98b]">ETH</dt>
+          <dt className={featured ? "text-[#0d0c0a]/65" : "text-[#9f9789]"}>
+            ETH
+          </dt>
           <dd>
-            <Value value={row.ETH} />
+            {row.ETH.value ? (
+              <span className="font-medium tabular-nums">{row.ETH.value}</span>
+            ) : (
+              <Loading />
+            )}
           </dd>
         </div>
       </dl>
@@ -171,27 +211,44 @@ export function FameMarketBoard({
   }, [needsMarket]);
 
   return (
-    <section aria-label="FAME market">
-      <h2 className="mb-4 text-center text-3xl font-semibold">Prices</h2>
-      <div className="grid gap-3 lg:grid-cols-3">
-        <PriceCard title="DeFi buy" row={market.prices.defiBuy} />
-        <PriceCard title="DeFi sell" row={market.prices.defiSell} />
-        <PriceCard title="Marketplace" row={market.prices.nftBuy} />
+    <section
+      aria-label="FAME market"
+      className="bg-[#11100d] p-5 sm:p-8 lg:p-10"
+    >
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="fame-kicker">Market on Base</p>
+          <h2 className="fame-display mt-2 text-4xl sm:text-5xl">
+            At a glance
+          </h2>
+        </div>
+        <p className="max-w-xs text-sm leading-6 text-[#9f9789]">
+          Live reference prices across the token and Society marketplace.
+        </p>
+      </header>
+      <div className="grid gap-6 lg:grid-cols-12 lg:gap-10">
+        <div className="lg:col-span-5">
+          <PriceCard title="Marketplace" row={market.prices.nftBuy} featured />
+        </div>
+        <div className="lg:col-span-7">
+          <PriceCard title="DeFi buy" row={market.prices.defiBuy} />
+          <PriceCard title="DeFi sell" row={market.prices.defiSell} />
+        </div>
       </div>
       <div
         aria-label="FAME stats"
-        className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="mt-8 grid border-t border-[#c9aa67]/25 sm:grid-cols-2 lg:grid-cols-4"
       >
         {(Object.keys(METRIC_LABELS) as Array<keyof typeof METRIC_LABELS>).map(
           (key) => (
             <article
               key={key}
-              className="border border-[#685a2b] bg-black/30 p-4"
+              className="border-b border-[#c9aa67]/20 py-5 sm:px-5 sm:first:pl-0 lg:border-r lg:last:border-r-0"
             >
-              <h3 className="text-xs uppercase tracking-wide text-[#c6b98b]">
+              <h3 className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#8f8779]">
                 {METRIC_LABELS[key]}
               </h3>
-              <p className="mt-2 min-h-6 font-semibold">
+              <p className="mt-3 min-h-6 font-medium tabular-nums text-[#f4eee2]">
                 <Value value={market.metrics[key]} />
               </p>
             </article>

@@ -5,16 +5,21 @@ import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { ThemeProvider } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { createAppTheme } from "@/theme";
-import {
-  Web3Provider,
-} from "./Wagmi";
+import { createAppTheme, createFameTheme } from "@/theme";
+import { Web3Provider } from "./Wagmi";
 import { NotificationsProvider } from "@/features/notifications/Context";
 import { Notifications } from "@/features/notifications/Notifications";
 import { useAccount } from "@/hooks/useAccount";
 import { useEnsName } from "wagmi";
 import { Chain, Transport } from "viem";
-import { baseSepoliaChainOnly, baseSepoliaOnly, mainnetSepolia, polygonAmoyOnly, polygonOnly, sepoliaOnly } from "./wagmiConfig";
+import {
+  baseSepoliaChainOnly,
+  baseSepoliaOnly,
+  mainnetSepolia,
+  polygonAmoyOnly,
+  polygonOnly,
+  sepoliaOnly,
+} from "./wagmiConfig";
 
 const Config: FC<PropsWithChildren> = ({ children }) => {
   const { address, chain } = useAccount();
@@ -39,6 +44,7 @@ export const DefaultProvider: FC<
     polygonAmoy?: boolean;
     sepolia?: boolean;
     baseSepolia?: boolean;
+    fame?: boolean;
   }>
 > = ({
   siwe,
@@ -49,13 +55,17 @@ export const DefaultProvider: FC<
   polygonAmoy,
   sepolia,
   baseSepolia,
+  fame = false,
 }) => {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)", {
     defaultMatches: true,
   });
   const theme = useMemo(
-    () => createAppTheme(prefersDarkMode ? "dark" : "light"),
-    [prefersDarkMode],
+    () =>
+      fame
+        ? createFameTheme()
+        : createAppTheme(prefersDarkMode ? "dark" : "light"),
+    [fame, prefersDarkMode],
   );
 
   const chains = useMemo<readonly [Chain, ...Chain[]]>(() => {
@@ -85,7 +95,7 @@ export const DefaultProvider: FC<
         chainSet.add(chain);
       }
     }
-    if (baseSepolia) {  
+    if (baseSepolia) {
       for (const chain of baseSepoliaChainOnly.chains) {
         chainSet.add(chain);
       }
@@ -135,20 +145,22 @@ export const DefaultProvider: FC<
 
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <GlobalStyles
-        styles={(theme) => ({
-          html: {
-            backgroundColor: `${theme.palette.background.default} !important`,
-            color: `${theme.palette.text.primary} !important`,
-            colorScheme: theme.palette.mode,
-          },
-          body: {
-            backgroundColor: `${theme.palette.background.default} !important`,
-            color: `${theme.palette.text.primary} !important`,
-          },
-        })}
-      />
+      {!fame && <CssBaseline />}
+      {!fame && (
+        <GlobalStyles
+          styles={(theme) => ({
+            html: {
+              backgroundColor: `${theme.palette.background.default} !important`,
+              color: `${theme.palette.text.primary} !important`,
+              colorScheme: theme.palette.mode,
+            },
+            body: {
+              backgroundColor: `${theme.palette.background.default} !important`,
+              color: `${theme.palette.text.primary} !important`,
+            },
+          })}
+        />
+      )}
       <Web3Provider siwe={siwe} chains={chains} transports={transports}>
         <NotificationsProvider>
           <Config>{children}</Config>

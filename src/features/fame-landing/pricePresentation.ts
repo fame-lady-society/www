@@ -28,10 +28,32 @@ export type LandingMarketPresentation = Readonly<{
   metrics: LandingMetrics;
 }>;
 
-const DEFI_FAME_LABEL = "1,000,000 FAME";
-
 function grouped(value: bigint): string {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function compactAmount(amount: bigint, base: bigint): string | null {
+  const negative = amount < 0n;
+  const absolute = negative ? -amount : amount;
+  if (absolute < 1_000n * base) return null;
+
+  let divisor = 1_000n * base;
+  let suffix = "K";
+  if (absolute >= 1_000_000n * base) {
+    divisor = 1_000_000n * base;
+    suffix = "M";
+  }
+
+  let tenths = (absolute * 10n + divisor / 2n) / divisor;
+  if (suffix === "K" && tenths >= 10_000n) {
+    divisor = 1_000_000n * base;
+    suffix = "M";
+    tenths = (absolute * 10n + divisor / 2n) / divisor;
+  }
+
+  const whole = tenths / 10n;
+  const fraction = tenths % 10n;
+  return `${negative ? "-" : ""}${whole}${fraction ? `.${fraction}` : ""}${suffix}`;
 }
 
 export function formatPrice(
@@ -40,6 +62,9 @@ export function formatPrice(
   symbol: "FAME" | "USDC" | "ETH",
 ): string {
   const base = 10n ** BigInt(decimals);
+  const compact = compactAmount(amount, base);
+  if (compact) return `${compact} ${symbol}`;
+
   const whole = amount / base;
   const fullFraction = (amount % base).toString().padStart(decimals, "0");
   const firstNonzero = fullFraction.search(/[1-9]/u);
@@ -51,6 +76,8 @@ export function formatPrice(
   const fraction = fullFraction.slice(0, visibleDigits).replace(/0+$/u, "");
   return `${grouped(whole)}${fraction ? `.${fraction}` : ""} ${symbol}`;
 }
+
+const DEFI_FAME_LABEL = formatPrice(DEFI_FAME_AMOUNT, 18, "FAME");
 
 function quoteValue(
   state: MarketProjectionState<LandingQuoteDto>,

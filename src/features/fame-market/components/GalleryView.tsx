@@ -1,6 +1,7 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
@@ -70,7 +71,14 @@ export function GalleryFundingLink({ chainId }: { chainId: number }) {
   if (chainId !== base.id) return null;
 
   return (
-    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: { xs: 2.5, sm: 3.5 },
+        borderLeftWidth: 3,
+        borderLeftColor: "primary.main",
+      }}
+    >
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
@@ -243,10 +251,25 @@ export function GalleryViewContent({
 }) {
   if (state.status === "loading") {
     return (
-      <Paper variant="outlined" sx={{ p: 4 }} role="status" aria-live="polite">
-        <Typography component="h2" variant="h5">
-          Loading {title}…
-        </Typography>
+      <Paper
+        variant="outlined"
+        sx={{ p: { xs: 3, sm: 4 } }}
+        role="status"
+        aria-live="polite"
+      >
+        <Stack spacing={2}>
+          <Typography component="h2" variant="h5">
+            Loading {title}…
+          </Typography>
+          <Box
+            className="fame-skeleton"
+            sx={{ height: 12, width: "64%", borderRadius: 0.5 }}
+          />
+          <Box
+            className="fame-skeleton"
+            sx={{ height: 220, width: "100%", borderRadius: 0.5 }}
+          />
+        </Stack>
       </Paper>
     );
   }
@@ -335,22 +358,29 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
 }) {
   return (
     <Stack spacing={3}>
-      <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: { xs: 2.5, sm: 3.5 },
+          backgroundColor: "primary.main",
+          color: "primary.contrastText",
+        }}
+      >
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
           alignItems={{ xs: "flex-start", sm: "center" }}
           spacing={1}
         >
-          <Typography component="h2" variant="h5">
+          <Typography component="h2" variant="h4">
             Every artwork
           </Typography>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography variant="h5" fontFamily="monospace" fontWeight={600}>
             {formatTestAmount(totalPrice)} {tokenSymbol}
           </Typography>
         </Stack>
       </Paper>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {artworks.map((artwork) =>
           artwork.metadata ? (
             <ArtworkCard
@@ -556,10 +586,10 @@ export function GalleryView() {
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ px: { xs: 2, sm: 3 }, py: { xs: 4, sm: 6 } }}
+      maxWidth="xl"
+      sx={{ px: { xs: 2, sm: 4 }, py: { xs: 6, sm: 9 } }}
     >
-      <Stack spacing={{ xs: 3, sm: 4 }}>
+      <Stack spacing={{ xs: 3.5, sm: 5 }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
@@ -567,10 +597,20 @@ export function GalleryView() {
           spacing={2}
         >
           <div>
-            <Typography component="h1" variant="h3">
+            <Typography variant="overline" color="primary.main">
+              FAME / MARKET
+            </Typography>
+            <Typography
+              component="h1"
+              variant="h1"
+              sx={{ mt: 1.5, fontSize: { xs: "3.6rem", sm: "5.8rem" } }}
+            >
               {config.labels.title}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
+            <Typography
+              color="text.secondary"
+              sx={{ mt: 2.5, maxWidth: 680, lineHeight: 1.7 }}
+            >
               {config.labels.description}
             </Typography>
           </div>

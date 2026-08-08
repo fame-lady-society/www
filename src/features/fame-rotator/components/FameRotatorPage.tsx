@@ -66,9 +66,10 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
   const [approvalEpoch, setApprovalEpoch] = useState(0);
 
   const ownedIds = preflight.preflight.ownedIds;
-  const selectableOwnedIds = preflight.preflight.canSelectOffered
-    ? ownedIds
-    : [];
+  const selectableOwnedIds = useMemo(
+    () => (preflight.preflight.canSelectOffered ? ownedIds : []),
+    [ownedIds, preflight.preflight.canSelectOffered],
+  );
 
   // Presentation-only: load artwork for confirmed owned IDs. Failures fall back
   // so the token remains selectable by ID (plan R6 / shared metadata fallback).
@@ -399,6 +400,7 @@ export function FameRotatorPage({ resolution }: FameRotatorPageProps) {
           ? `Rotate #${resolution.tokenId}`
           : "Rotate"
       }
+      activeFamePage="rotator"
     >
       <FameRotatorExperience resolution={resolution} />
     </FameShell>

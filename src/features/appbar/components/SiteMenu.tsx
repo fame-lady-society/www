@@ -125,7 +125,11 @@ export const SiteMenu: FC<{
           }
         />
       </MenuItem>
-      <MenuItem component={WrappedLink} href="/fame/swap" disabled={isFameSwap}>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame/swap"
+        disabled={isFameSwap || activeFamePage === "swap"}
+      >
         <ListItemIcon>
           <ExchangeIcon />
         </ListItemIcon>

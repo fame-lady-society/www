@@ -11,7 +11,7 @@ export function BaseGalleryShell({
   children,
 }: PropsWithChildren<{ config: GalleryRuntimeConfig }>) {
   return (
-    <DefaultProvider base>
+    <DefaultProvider base fame>
       <GalleryRuntimeProvider config={config}>
         <FameMain title="FAME Marketplace" activeFamePage="marketplace">
           {children}

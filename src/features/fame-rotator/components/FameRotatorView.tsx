@@ -1,4 +1,5 @@
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -90,12 +91,12 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
 
   return (
     <Container
-      maxWidth="md"
-      sx={{ px: { xs: 2, sm: 3 }, py: { xs: 3, sm: 5 } }}
+      maxWidth="lg"
+      sx={{ px: { xs: 2, sm: 4 }, py: { xs: 6, sm: 9 } }}
       data-wallet-status={walletStatus}
     >
       <Stack spacing={{ xs: 3, md: 4 }}>
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ fontWeight: 650 }}>
           <Link
             component={NextLink}
             href="/fame/rotate"
@@ -203,10 +204,14 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
             data-max-rotations={resolution.maxRotations}
           >
             <Stack spacing={1}>
+              <Typography variant="overline" color="primary.main">
+                FAME / ROTATOR
+              </Typography>
               <Typography
                 id="rotate-available-heading"
-                variant="h4"
+                variant="h1"
                 component="h1"
+                sx={{ fontSize: { xs: "3.25rem", sm: "5rem" } }}
               >
                 Rotate for Society #{resolution.tokenId}
               </Typography>
@@ -220,10 +225,15 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
             </Stack>
 
             {/* Target vs offered comparison */}
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "flex-start" }}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+                gap: { xs: 2, sm: 3 },
+              }}
               data-testid="target-offered-comparison"
             >
               <TokenCard
@@ -248,7 +258,7 @@ export const FameRotatorView: FC<FameRotatorViewProps> = ({
                 }
                 emptyLabel="No offered NFT selected"
               />
-            </Stack>
+            </Box>
 
             {/* Wallet recovery */}
             <Stack
@@ -496,11 +506,13 @@ function TokenCard({
       spacing={1}
       sx={{
         flex: 1,
-        p: 2,
-        borderRadius: 2,
+        p: { xs: 2, sm: 3 },
+        borderRadius: 0.5,
         border: "1px solid",
         borderColor: highlight ? "primary.main" : "divider",
-        backgroundColor: "action.hover",
+        backgroundColor: highlight
+          ? "rgba(201, 170, 103, 0.08)"
+          : "rgba(22, 20, 15, 0.72)",
         minWidth: 0,
       }}
       data-token-card={label.toLowerCase().replace(/\s+/g, "-")}
@@ -517,9 +529,9 @@ function TokenCard({
           height={200}
           style={{
             width: "100%",
-            maxWidth: 200,
+            maxWidth: 360,
             height: "auto",
-            borderRadius: 8,
+            borderRadius: 2,
           }}
         />
       ) : (
@@ -528,9 +540,9 @@ function TokenCard({
           justifyContent="center"
           sx={{
             width: "100%",
-            maxWidth: 200,
+            maxWidth: 360,
             aspectRatio: "1",
-            borderRadius: 2,
+            borderRadius: 0.5,
             border: "1px dashed",
             borderColor: "divider",
             color: "text.secondary",

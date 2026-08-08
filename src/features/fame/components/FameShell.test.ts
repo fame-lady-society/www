@@ -42,9 +42,9 @@ describe("FAME route shell", () => {
     const landing = source("src/features/fame/layout.tsx");
     assert.match(shell, /<LinksMenuItems/);
     assert.match(shell, /<SiteMenu/);
-    assert.match(landing, /<LinksMenuItems/);
-    assert.match(landing, /<SiteMenu/);
-    assert.equal((landing.match(/<CopyToClipboard/g) ?? []).length, 2);
+    assert.match(landing, /<FameMain/);
+    assert.equal((landing.match(/<CopyToClipboard/g) ?? []).length, 1);
+    assert.equal((landing.match(/<ContractRow/g) ?? []).length, 2);
     assert.match(landing, /fameFromNetwork\(8453\)/);
     assert.match(landing, /0xbb5ed04dd7b207592429eb8d599d103ccad646c4/);
     assert.match(landing, /\/fame\/swap/);

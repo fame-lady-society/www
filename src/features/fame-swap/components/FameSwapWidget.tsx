@@ -566,6 +566,11 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
         mx: "auto",
         px: { xs: 2, sm: 3 },
         py: compact || embedded ? { xs: 2, sm: 2.5 } : { xs: 3, sm: 4 },
+        border: "1px solid",
+        borderColor: "divider",
+        backgroundColor: "rgba(22, 20, 15, 0.82)",
+        boxShadow: "inset 0 1px 0 rgba(244, 238, 226, 0.04)",
+        backdropFilter: "blur(16px)",
       }}
     >
       <Stack spacing={compact || embedded ? 1.75 : 2.25}>

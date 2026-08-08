@@ -39,9 +39,14 @@ export function GalleryLiquidityCta() {
         alignItems={{ xs: "stretch", md: "center" }}
         spacing={2}
       >
-        <Typography component="h2" variant="h5">
-          Back marketplace liquidity.
-        </Typography>
+        <div>
+          <Typography component="h2" variant="h5">
+            Put your Society to work.
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.75 }}>
+            Stake a whole Society NFT and earn FAME on marketplace sales.
+          </Typography>
+        </div>
         <LinkButton
           href="/fame/market/stake"
           variant="contained"

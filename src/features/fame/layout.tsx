@@ -1,1089 +1,374 @@
 "use client";
-import { DefaultProvider } from "@/context/default";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Typography from "@mui/material/Typography";
-import { Main } from "@/layouts/Main";
-import Box, { BoxProps } from "@mui/material/Box";
-import NextImage from "next/image";
-import { FC, PropsWithChildren, useRef } from "react";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useInView } from "react-intersection-observer";
-import { useSpring, animated } from "react-spring";
-import { Parallax, ParallaxProvider, useParallax } from "react-scroll-parallax";
-import { TwitterIcon } from "@/components/icons/twitter";
-import { CopyToClipboard } from "@/components/CopyToClipboard";
-import { WrappedLink } from "@/components/WrappedLink";
-import { OpenSeaIcon } from "@/components/icons/opensea";
-import MenuList from "@mui/material/MenuList";
-import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
+
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { SiteMenu } from "@/features/appbar/components/SiteMenu";
-import { styled } from "@mui/material/styles";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
+import NextImage from "next/image";
+import Link from "next/link";
+import type { FC, ReactNode } from "react";
+import { CopyToClipboard } from "@/components/CopyToClipboard";
+import { DefaultProvider } from "@/context/default";
+import { FameMarketBoard } from "@/features/fame-landing/components/FameMarketBoard";
+import type { LandingMarketPresentation } from "@/features/fame-landing/pricePresentation";
+import { FameMain } from "@/features/fame/components/FameShell";
 import { fameFromNetwork } from "@/features/fame/contract";
 import { FameFAQ } from "@/features/presale/components/FameFAQ";
 import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 import { SocietyNftReadinessRail } from "@/features/society-nft-readiness/components/SocietyNftReadinessRail";
-import { FameMarketBoard } from "@/features/fame-landing/components/FameMarketBoard";
-import type { LandingMarketPresentation } from "@/features/fame-landing/pricePresentation";
-
-const AnimatedBox = animated(Box);
-
-const AnimatedBoxFallIn: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.5, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    transform: inView ? "translateY(0)" : "translateY(-150px)",
-    config: { mass: 1, tension: 210, friction: 20 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedBoxFallUp: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.5, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    transform: inView ? "translateY(0)" : "translateY(150px)",
-    config: { mass: 1, tension: 210, friction: 20 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedBoxFadeIn: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 1, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    config: { mass: 10, tension: 120, friction: 50 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedBoxSlowFadeIn: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 1, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    config: { mass: 10, tension: 75, friction: 26 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedBoxPopAndFadeIn: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 0.5, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    transform: inView ? "scale(1)" : "scale(0.5)",
-    config: { mass: 1, tension: 210, friction: 20 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedSlideInLeft: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 0.1, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    transform: inView ? "translateX(0)" : "translateX(-150px)",
-    config: { mass: 2, tension: 50, friction: 20 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
-
-const AnimatedSlideInRight: FC<PropsWithChildren<BoxProps>> = ({
-  children,
-  ...rest
-}) => {
-  const { ref, inView } = useInView({
-    threshold: 0.1, // Adjusts when the animation triggers
-  });
-
-  const props = useSpring({
-    opacity: inView ? 1 : 0,
-    transform: inView ? "translateX(0)" : "translateX(150px)",
-    config: { mass: 2, tension: 50, friction: 20 },
-  });
-
-  return (
-    <AnimatedBox style={props} ref={ref} {...rest}>
-      {children}
-    </AnimatedBox>
-  );
-};
 
 const CopyButton = styled(Button)({
   border: 0,
-  justifyContent: "start",
-  textTransform: "none", // Keeps the text style similar to Typography
+  justifyContent: "flex-start",
+  minWidth: 0,
+  padding: 0,
+  textTransform: "none",
 });
 
+function Arrow() {
+  return <span aria-hidden>↗</span>;
+}
+
+function PrimaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="fame-action fame-focus inline-flex min-h-12 items-center justify-center bg-[#c9aa67] px-6 text-sm font-bold text-[#0d0c0a]"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function TextLink({
+  href,
+  children,
+  external = false,
+}: {
+  href: string;
+  children: ReactNode;
+  external?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer noopener" : undefined}
+      className="fame-action fame-focus inline-flex items-center gap-2 border-b border-[#c9aa67]/50 pb-1 text-sm font-semibold text-[#f4eee2] hover:border-[#c9aa67] hover:text-[#e4cd96]"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function ContractRow({ label, address }: { label: string; address: string }) {
+  return (
+    <div className="grid gap-2 border-t border-[#c9aa67]/20 py-5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center">
+      <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[#918878]">
+        {label}
+      </p>
+      <CopyToClipboard text={address} clipboard>
+        {(handleClick) => (
+          <CopyButton
+            onClick={handleClick}
+            endIcon={<ContentCopyIcon sx={{ fontSize: 17 }} />}
+            sx={{
+              color: "text.primary",
+              "&:hover": {
+                backgroundColor: "transparent",
+                color: "primary.light",
+              },
+            }}
+          >
+            <Typography
+              component="span"
+              fontFamily="monospace"
+              sx={{
+                overflowWrap: "anywhere",
+                textAlign: "left",
+                fontSize: { xs: "0.72rem", sm: "0.84rem" },
+              }}
+            >
+              {address}
+            </Typography>
+          </CopyButton>
+        )}
+      </CopyToClipboard>
+    </div>
+  );
+}
+
 const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
-  const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const imageWidth = isSmallScreen ? 200 : 400;
-  const imageHeight = Math.floor(imageWidth * 2);
   const fameTokenAddress = fameFromNetwork(8453);
   const fameNftAddress = "0xbb5ed04dd7b207592429eb8d599d103ccad646c4";
-  const eyesRef = useRef<HTMLImageElement>(null);
-  const eyesContainer = useParallax<HTMLDivElement>({
-    onProgressChange: (progress) => {
-      if (eyesRef.current) {
-        // when progress is at 0.5, opacity is 1, when progress is at 0 or 1, opacity is 0
-        eyesRef.current.style.opacity = (progress * (1 - progress)).toString();
-      }
-    },
-  });
 
   return (
-    <Grid2
-      container
-      spacing={2}
-      sx={{ mt: 4, mx: 4, pt: 2, color: "text.primary" }}
-    >
-      <Grid2 xs={12} display="flex" justifyContent="center" width="100%">
-        <div style={{ width: "100%", maxWidth: 720, marginBottom: 32 }}>
-          <AuctionLiveCta />
-        </div>
-      </Grid2>
-      <Grid2
-        xs={12}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        mt={8}
-        overflow="hidden"
-      >
-        <NextImage
-          src="/images/fame/gold-leaf-square-nobg.png"
-          alt="Fame Society"
-          width={imageWidth}
-          height={imageHeight}
-        />
-      </Grid2>
-      <Grid2
-        xs={12}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        overflow="hidden"
-      >
-        <AnimatedBoxSlowFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={6}
-        >
-          <Typography
-            variant="h2"
-            textTransform="uppercase"
-            fontSize={isSmallScreen ? "32px" : "96px"}
-          >
-            $FAME Society
-          </Typography>
-        </AnimatedBoxSlowFadeIn>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxPopAndFadeIn component="div">
-          <WrappedLink
-            href="https://t.me/famesocietybase"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <NextImage
-              src="/images/logos/telegram.png"
-              alt="reservoir"
-              width={25}
-              height={25}
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginRight: 8,
-              }}
-            />
-            <Typography variant="body1">Telegram</Typography>
-          </WrappedLink>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginTop={2}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxPopAndFadeIn component="div">
-          <WrappedLink
-            href="https://x.com/fameladysociety"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <TwitterIcon sx={{ marginRight: 1 }} />
-            <Typography variant="body1">Twitter</Typography>
-          </WrappedLink>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxPopAndFadeIn component="div">
-          <WrappedLink
-            href="https://discord.gg/jkAdAPXEpw"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <NextImage
-              src="/images/logos/discord-dark.png"
-              alt="discord"
-              width={25}
-              height={25}
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginRight: 8,
-              }}
-            />
-            <Typography variant="body1">Discord</Typography>
-          </WrappedLink>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
+    <div className="fame-landing overflow-hidden">
+      <section className="relative isolate border-b border-[#c9aa67]/15">
+        <div className="pointer-events-none absolute left-[-10rem] top-[-8rem] -z-10 h-[34rem] w-[34rem] rounded-full bg-[#c9aa67]/[0.07] blur-[120px]" />
+        <div className="mx-auto grid min-h-[calc(100dvh-68px)] max-w-[1440px] items-center gap-10 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-12 lg:px-12 lg:pb-24 lg:pt-20">
+          <div className="relative z-10 lg:col-span-7 lg:py-12">
+            <p className="fame-kicker">Base · token meets collection</p>
+            <h1 className="fame-display mt-6 max-w-4xl text-balance text-[clamp(4.2rem,9vw,8.8rem)] leading-[0.82]">
+              Hold the token.
+              <span className="mt-2 block text-[#c9aa67]">Meet Society.</span>
+            </h1>
+            <p className="mt-8 max-w-xl text-pretty text-base leading-7 text-[#bdb4a4] sm:text-lg sm:leading-8">
+              One million FAME resolves to one Society NFT. Trade the token,
+              collect the artwork, or rotate toward the Society you want—all on
+              Base.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-5">
+              <PrimaryLink href="/fame/swap">Trade FAME</PrimaryLink>
+              <TextLink href="/fame/market">
+                Browse the marketplace <Arrow />
+              </TextLink>
+              <TextLink href="/fame/rotate">Open the rotator</TextLink>
+            </div>
+            <div className="mt-10 max-w-xl">
+              <AuctionLiveCta />
+            </div>
+          </div>
 
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxPopAndFadeIn component="div">
-          <WrappedLink
-            href="https://warpcast.com/fameladysociety"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <NextImage
-              src="/images/logos/warpcast.png"
-              alt="discord"
-              width={25}
-              height={25}
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginRight: 8,
-              }}
-            />
-            <Typography variant="body1">Farcaster</Typography>
-          </WrappedLink>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2 xs={12} marginTop={6} marginBottom={5}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <FameMarketBoard initialMarket={market} />
-        </div>
-      </Grid2>
-      <Grid2 xs={12} marginBottom={4}>
-        <Box
-          component="section"
-          sx={{
-            position: "relative",
-            left: "50%",
-            width: "100vw",
-            transform: "translateX(-50%)",
-            zIndex: 1,
-            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-            py: { xs: 3, md: 4 },
-          }}
-        >
-          <Box
-            component="div"
-            sx={{
-              maxWidth: 1120,
-              mx: "auto",
-              px: { xs: 2, sm: 4 },
-              display: "grid",
-              gap: 3,
-            }}
-          >
-            <Box
-              component="div"
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "120px minmax(0, 1fr)" },
-                columnGap: 3,
-                rowGap: 1.5,
-                alignItems: "center",
-              }}
+          <div className="relative flex min-h-[30rem] items-center justify-center lg:col-span-5 lg:min-h-[42rem]">
+            <p
+              aria-hidden
+              className="fame-display absolute right-[-10%] top-[7%] -z-10 select-none text-[clamp(10rem,22vw,23rem)] leading-none text-[#c9aa67]/[0.035]"
             >
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-              >
-                chain
-              </Typography>
-              <Typography
-                variant="body1"
-                fontWeight={700}
-                textTransform="uppercase"
-              >
-                base
-              </Typography>
+              F
+            </p>
+            <NextImage
+              src="/images/fame/gold-leaf-square-nobg.png"
+              alt="Gold FAME Society mark"
+              width={760}
+              height={1520}
+              priority
+              loading="eager"
+              style={{ width: "auto" }}
+              className="h-[30rem] w-auto object-contain drop-shadow-[0_30px_55px_rgba(111,83,25,0.22)] sm:h-[36rem] lg:h-[42rem]"
+            />
+            <div className="absolute bottom-2 right-0 border-l border-[#c9aa67] bg-[#0d0c0a]/90 py-3 pl-4 pr-5 backdrop-blur sm:bottom-12">
+              <p className="text-[0.64rem] font-bold uppercase tracking-[0.18em] text-[#918878]">
+                The balance
+              </p>
+              <p className="mt-1 font-mono text-sm tabular-nums text-[#f4eee2]">
+                1 million $FAME = 1 Society NFT
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-              >
-                erc20
-              </Typography>
-              <CopyToClipboard text={fameTokenAddress}>
-                {(handleClick) => (
-                  <CopyButton
-                    sx={{
-                      p: 0,
-                      minWidth: 0,
-                      color: "text.primary",
-                      "&:hover": { backgroundColor: "transparent" },
-                    }}
-                    endIcon={
-                      <ContentCopyIcon
-                        sx={{
-                          color: "primary.main",
-                          fontSize: 18,
-                        }}
-                      />
-                    }
-                    onClick={handleClick}
-                  >
-                    <Typography
-                      component="span"
-                      fontFamily="monospace"
-                      fontSize={isSmallScreen ? "0.8rem" : "1rem"}
-                      sx={{ overflowWrap: "anywhere" }}
-                    >
-                      {fameTokenAddress}
-                    </Typography>
-                  </CopyButton>
-                )}
-              </CopyToClipboard>
+      <section className="relative z-10 mx-auto -mt-10 max-w-[1320px] px-4 sm:px-8">
+        <FameMarketBoard initialMarket={market} />
+      </section>
 
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-              >
-                erc721
-              </Typography>
-              <CopyToClipboard text={fameNftAddress}>
-                {(handleClick) => (
-                  <CopyButton
-                    sx={{
-                      p: 0,
-                      minWidth: 0,
-                      color: "text.primary",
-                      "&:hover": { backgroundColor: "transparent" },
-                    }}
-                    endIcon={
-                      <ContentCopyIcon
-                        sx={{
-                          color: "primary.main",
-                          fontSize: 18,
-                        }}
-                      />
-                    }
-                    onClick={handleClick}
-                  >
-                    <Typography
-                      component="span"
-                      fontFamily="monospace"
-                      fontSize={isSmallScreen ? "0.8rem" : "1rem"}
-                      sx={{ overflowWrap: "anywhere" }}
-                    >
-                      {fameNftAddress}
-                    </Typography>
-                  </CopyButton>
-                )}
-              </CopyToClipboard>
-            </Box>
+      <section className="mx-auto max-w-[1320px] px-5 py-28 sm:px-8 lg:py-40">
+        <header className="grid gap-6 border-b border-[#c9aa67]/25 pb-10 lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-8">
+            <p className="fame-kicker">Three ways in</p>
+            <h2 className="fame-display mt-4 max-w-4xl text-balance text-5xl leading-[0.94] sm:text-7xl">
+              A market designed around the art.
+            </h2>
+          </div>
+          <p className="max-w-md text-pretty text-sm leading-6 text-[#9f9789] lg:col-span-4">
+            Buy FAME through preferred liquidity, collect a Society work, or
+            follow the waiting pool toward a specific target.
+          </p>
+        </header>
 
-            <Box
-              component="nav"
-              aria-label="FAME resources"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "baseline",
-                justifyContent: "center",
-                gap: { xs: 2, sm: 4 },
-                pt: 2,
-                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-              }}
+        <div className="mt-8 grid gap-6 lg:grid-cols-12">
+          <article className="group relative min-h-[34rem] overflow-hidden bg-[#17130d] lg:col-span-7">
+            <NextImage
+              src="/images/fame/fame.png"
+              alt="FAME token artwork"
+              width={960}
+              height={960}
+              style={{ height: "auto" }}
+              className="fame-artwork absolute bottom-[-18%] right-[-10%] h-auto w-[82%] max-w-[42rem] opacity-90"
+            />
+            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#17130d] via-[#17130d]/80 to-transparent" />
+            <div className="relative z-10 flex h-full max-w-md flex-col justify-between p-7 sm:p-10">
+              <div>
+                <p className="fame-kicker">01 · Marketplace</p>
+                <h3 className="fame-display mt-4 text-5xl sm:text-6xl">
+                  Collect a Society.
+                </h3>
+                <p className="mt-5 max-w-sm text-sm leading-6 text-[#bdb4a4]">
+                  Choose artwork first, then pay directly with FAME or use an
+                  atomic route from ETH, USDC, or WETH.
+                </p>
+              </div>
+              <div className="mt-20">
+                <TextLink href="/fame/market">
+                  Enter the market <Arrow />
+                </TextLink>
+              </div>
+            </div>
+          </article>
+
+          <div className="grid gap-6 lg:col-span-5">
+            <article className="group flex min-h-[16rem] flex-col justify-between bg-[#c9aa67] p-7 text-[#0d0c0a] sm:p-9">
+              <div>
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.2em] text-[#0d0c0a]/60">
+                  02 · Swap
+                </p>
+                <h3 className="fame-display mt-3 text-4xl sm:text-5xl">
+                  Trade through preferred pools.
+                </h3>
+              </div>
+              <Link
+                href="/fame/swap"
+                className="fame-action fame-focus mt-8 inline-flex w-fit items-center gap-2 border-b border-[#0d0c0a]/50 pb-1 text-sm font-bold"
+              >
+                Open FAME swap <span aria-hidden>↗</span>
+              </Link>
+            </article>
+            <article className="group relative flex min-h-[16rem] flex-col justify-between overflow-hidden border border-[#c9aa67]/25 bg-[#11100d] p-7 sm:p-9">
+              <div className="absolute -right-10 -top-10 size-40 rounded-full border border-[#c9aa67]/20" />
+              <div>
+                <p className="fame-kicker">03 · Rotator</p>
+                <h3 className="fame-display mt-3 max-w-md text-4xl sm:text-5xl">
+                  Swap from the waiting Society.
+                </h3>
+              </div>
+              <div className="mt-8">
+                <TextLink href="/fame/rotate">
+                  See the queue <Arrow />
+                </TextLink>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#c9aa67]/20 bg-[#11100d]">
+        <div className="mx-auto grid max-w-[1320px] lg:grid-cols-12">
+          <div className="relative min-h-[22rem] overflow-hidden lg:col-span-7 lg:min-h-[34rem]">
+            <NextImage
+              src="/images/fame/eyes.png"
+              alt="Painted eyes from a Society portrait"
+              fill
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="object-contain object-center p-8 sm:p-14"
+            />
+          </div>
+          <div className="flex flex-col justify-center border-t border-[#c9aa67]/20 px-6 py-16 sm:px-10 lg:col-span-5 lg:border-l lg:border-t-0 lg:px-14">
+            <p className="fame-kicker">Community-owned since 2022</p>
+            <h2 className="fame-display mt-5 text-balance text-5xl sm:text-6xl">
+              The collection outlived its creators.
+            </h2>
+            <p className="mt-7 max-w-md text-pretty text-base leading-7 text-[#bdb4a4]">
+              Fame Lady Society grew from a community takeover of the original
+              all-female generative PFP project. FAME carries that same idea
+              forward: the market, the artwork, and the next chapter belong to
+              the people holding them.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+              <TextLink href="https://t.me/famesocietybase" external>
+                Telegram
+              </TextLink>
+              <TextLink href="https://x.com/fameladysociety" external>
+                X / Twitter
+              </TextLink>
+              <TextLink href="https://discord.gg/jkAdAPXEpw" external>
+                Discord
+              </TextLink>
+              <TextLink href="https://warpcast.com/fameladysociety" external>
+                Farcaster
+              </TextLink>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-[1320px] gap-12 px-5 py-28 sm:px-8 lg:grid-cols-12 lg:py-36">
+        <div className="lg:col-span-4">
+          <p className="fame-kicker">Verified coordinates</p>
+          <h2 className="fame-display mt-4 text-5xl sm:text-6xl">
+            Find FAME on Base.
+          </h2>
+          <p className="mt-5 max-w-sm text-sm leading-6 text-[#9f9789]">
+            Use the contract addresses below when adding the token or checking
+            the Society collection.
+          </p>
+        </div>
+        <div className="lg:col-span-8">
+          <ContractRow label="ERC-20 / FAME" address={fameTokenAddress} />
+          <ContractRow label="ERC-721 / Society" address={fameNftAddress} />
+          <nav
+            aria-label="FAME resources"
+            className="flex flex-wrap gap-x-7 gap-y-3 border-t border-[#c9aa67]/20 pt-6"
+          >
+            <TextLink
+              href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
+              external
             >
-              <Box
-                component="span"
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "baseline",
-                  gap: 1,
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                }}
-              >
-                <WrappedLink
-                  href="/fame/swap"
-                  underline="hover"
-                  sx={{
-                    fontWeight: 800,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Swap FAME
-                </WrappedLink>
-                <Typography variant="body2" color="text.secondary">
-                  using preferred pools
-                </Typography>
-              </Box>
-              <WrappedLink
-                href="/fame/market"
-                underline="hover"
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Marketplace
-              </WrappedLink>
-              <WrappedLink
-                href="/fame/rotate"
-                underline="hover"
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Rotator
-              </WrappedLink>
-              <WrappedLink
-                href="https://dexscreener.com/search?q=0xf307e242BfE1EC1fF01a4Cef2fdaa81b10A52418"
-                target="_blank"
-                rel="noreferrer noopener"
-                underline="hover"
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Dexscreener
-              </WrappedLink>
-              <WrappedLink
-                href="https://opensea.io/collection/fameladysociety"
-                target="_blank"
-                rel="noreferrer noopener"
-                underline="hover"
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                OpenSea
-              </WrappedLink>
-            </Box>
-          </Box>
-        </Box>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          flexDirection="column"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="h5" textAlign="center">
-            1 million $FAME = 1 Society NFT
-          </Typography>
-          <Typography textAlign="center" marginY={2}>
-            WE are the Fame Lady Society and this is $FAME, a revolutionary
-            DN-404 project featuring 888 stunning Fame inspired female NFT’s
-            liquidity backed by 888 million $FAME tokens.
-          </Typography>
-          <Typography textAlign="center" marginY={2}>
-            Buy 1 million $FAME and one of our rare and exclusive Society Ladies
-            mint into your wallet making you feel special and complete.
-          </Typography>
-          <Typography textAlign="center" marginY={2}>
-            Sell any portion of that million $FAME and she will disappear
-            leaving you heart broken and bewildered.
-          </Typography>
-          <Typography textAlign="center" marginY={2}>
-            So the choice is yours.
-          </Typography>
-          <Typography textAlign="center" marginY={2}>
-            One thing is for sure the $FAME/Society token/NFT will change the
-            way the World thinks about NFT assets and how they can be traded and
-            gamified.
-          </Typography>
-        </AnimatedBoxFadeIn>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxPopAndFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-          overflow="hidden"
-        >
-          <NextImage
-            src="/images/fame/fame.png"
-            alt="Fame Society"
-            width={isTinyScreen ? 250 : 500}
-            height={isTinyScreen ? 250 : 500}
-          />
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxPopAndFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-          overflow="hidden"
-        >
-          <Typography variant="h3" textTransform="uppercase" textAlign="center">
-            a community token
-          </Typography>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2
-        lg={3}
-        sm={12}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        overflow="hidden"
-      >
-        <AnimatedSlideInLeft
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <NextImage
-            src="/images/fame/bala.png"
-            alt="Fame Society"
-            width={isTinyScreen ? 150 : 300}
-            height={isTinyScreen ? 150 : 300}
-            style={{ marginTop: 32 }}
-          />
-        </AnimatedSlideInLeft>
-      </Grid2>
-      <Grid2
-        lg={6}
-        sm={12}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        overflow="hidden"
-      >
-        <AnimatedBoxFallIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <NextImage
-            src="/images/fame/zepeto.png"
-            alt="Fame Society"
-            width={isTinyScreen ? 225 : 550}
-            height={isTinyScreen ? 200 : 400}
-          />
-        </AnimatedBoxFallIn>
-      </Grid2>
-      <Grid2
-        lg={3}
-        sm={12}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        overflow="hidden"
-      >
-        <AnimatedSlideInRight
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <NextImage
-            src="/images/fame/gm-bri-bam2.png"
-            alt="Fame Society"
-            width={isTinyScreen ? 125 : 250}
-            height={isTinyScreen ? 200 : 400}
-          />
-        </AnimatedSlideInRight>
-      </Grid2>
-      <Grid2 xs={12} overflow="hidden">
-        <AnimatedBoxPopAndFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="h3" textTransform="uppercase" textAlign="center">
-            by and for the fame ladies
-          </Typography>
-        </AnimatedBoxPopAndFadeIn>
-      </Grid2>
-      <Grid2
-        ref={eyesContainer.ref}
-        xs={12}
-        marginBottom={20}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-        overflow="hidden"
-      >
-        <Parallax speed={-30}>
-          <NextImage
-            ref={eyesRef}
-            src="/images/fame/eyes.png"
-            alt="Fame Society"
-            width={1000}
-            height={500}
-            style={{
-              position: "relative",
-              top: 180,
-              marginBottom: 32,
-            }}
-          />
-        </Parallax>
-        <Parallax speed={10}>
-          <Typography
-            variant="h3"
-            textTransform="uppercase"
-            textAlign="center"
-            marginTop={2}
-            marginBottom={50}
-            position="relative"
-            top={-100}
-          >
-            a DN404 project
-          </Typography>
-        </Parallax>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="h5" textAlign="left">
-            The Fame Lady Society (FLSoc) is a vibrant community of NFT
-            collectors and creators dedicated to the original Fame Lady Squad
-            (FLS) NFTs, the pioneering all-female generative PFP project on the
-            Ethereum blockchain. With a strong focus on transparency, community
-            governance, inclusivity, and women&apos;s empowerment, FLSoc aims to
-            transform Web3 into &lsquo;webWE,&rsquo; fostering a collaborative
-            and supportive environment.
-          </Typography>
-        </AnimatedBoxFadeIn>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="h5" textAlign="left">
-            Fame Lady Society&apos;s mission is to ensure that every member has
-            a voice in shaping the project&apos;s future, promoting true
-            decentralization and sustainability for the benefit of the entire
-            community. FLSoc emerged from the challenges faced by the original
-            FLS, including a fraudulent foundation and a community-driven
-            takeover led by passionate members determined to reclaim and honor
-            the project&apos;s promise.
-          </Typography>
-        </AnimatedBoxFadeIn>
-      </Grid2>
-      <Grid2 xs={12}>
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={16}
-        >
-          <Typography variant="h5" textAlign="left">
-            Established on December 11, 2022, the Fame Lady Society continues to
-            fight for the return of the original smart contract while offering
-            an alternative through a newly created smart contract by 0xflick.
-            This effort ensures that the community can maintain ownership and
-            governance of their assets, reinforcing the society&apos;s
-            commitment to a decentralized and inclusive future.
-          </Typography>
-        </AnimatedBoxFadeIn>
-      </Grid2>
-      <Grid2 xs={12} marginY="4">
-        <AnimatedBoxFadeIn
-          component="div"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          marginTop={2}
-          marginBottom={8}
-        >
-          <Typography variant="h4" textAlign="center">
-            Join the Society
-          </Typography>
-        </AnimatedBoxFadeIn>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxFallUp component="div">
-          <WrappedLink
-            href="https://x.com/fameladysociety"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <TwitterIcon sx={{ marginRight: 1 }} />
-            <Typography variant="body1">Twitter</Typography>
-          </WrappedLink>
-        </AnimatedBoxFallUp>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxFallUp component="div">
-          <WrappedLink
-            href="https://discord.gg/jkAdAPXEpw"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <NextImage
-              src="/images/reveal/discord-dark.png"
-              alt="discord"
-              width={90}
-              height={25}
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginRight: 8,
-              }}
-            />
-            <Typography variant="body1" color="white">
-              invite
-            </Typography>
-          </WrappedLink>
-        </AnimatedBoxFallUp>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxFallUp component="div">
-          <WrappedLink
-            href="https://buy.fameladysociety.com"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <NextImage
-              src="/images/logos/reservoir.svg"
-              alt="reservoir"
-              width={25}
-              height={25}
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginRight: 8,
-              }}
-            />
-            <Typography variant="body1">Marketplace</Typography>
-          </WrappedLink>
-        </AnimatedBoxFallUp>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sm={6}
-        md={3}
-        marginBottom={2}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        width="100%"
-      >
-        <AnimatedBoxFallUp component="div">
-          <WrappedLink
-            href="https://opensea.io/collection/fameladysociety"
-            underline="none"
-            target="_blank"
-            rel="noreferrer"
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <OpenSeaIcon sx={{ marginRight: 1 }} />
-            <Typography variant="body1">OpenSea</Typography>
-          </WrappedLink>
-        </AnimatedBoxFallUp>
-      </Grid2>
-      <Grid2
-        xs={12}
-        sx={{
-          marginTop: 8,
-        }}
-      >
-        <SingleTokenChecker />
-      </Grid2>
+              Dexscreener <Arrow />
+            </TextLink>
+            <TextLink
+              href="https://opensea.io/collection/fameladysociety"
+              external
+            >
+              OpenSea <Arrow />
+            </TextLink>
+          </nav>
+        </div>
+      </section>
 
-      <Grid2 xs={12} marginY="4">
-        <Typography variant="body1" textAlign="center">
-          $FAME is a community token for the Fame Lady Society. No intrinsic
-          value, expectation of financial return, or utility is guaranteed
-          outside of the use of the token within the community.
-        </Typography>
-      </Grid2>
+      <section className="mx-auto max-w-[1100px] px-5 pb-28 sm:px-8 lg:pb-36">
+        <header className="mb-10 max-w-2xl">
+          <p className="fame-kicker">Collection tools</p>
+          <h2 className="fame-display mt-4 text-5xl sm:text-6xl">
+            Check a Society token.
+          </h2>
+        </header>
+        <div className="border border-[#c9aa67]/20 bg-[#11100d] p-5 sm:p-8">
+          <SingleTokenChecker />
+        </div>
+      </section>
 
-      <Grid2 xs={12} marginY="4">
-        <Card>
-          <CardContent>
+      <section className="mx-auto max-w-[1100px] px-5 pb-24 sm:px-8">
+        <div className="border-t border-[#c9aa67]/25 pt-10">
+          <h2 className="fame-display mb-8 text-4xl">Questions, answered.</h2>
+          <div>
             <FameFAQ />
-          </CardContent>
-        </Card>
-      </Grid2>
-    </Grid2>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[#c9aa67]/20 px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-[1320px] flex-col gap-5 text-xs leading-5 text-[#918878] sm:flex-row sm:items-end sm:justify-between">
+          <p className="max-w-2xl">
+            $FAME is a community token for the Fame Lady Society. No intrinsic
+            value, expectation of financial return, or utility is guaranteed
+            outside its use within the community.
+          </p>
+          <p className="font-mono tabular-nums">Base · Chain 8453</p>
+        </div>
+      </footer>
+    </div>
   );
 };
 
-const Header: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
-  const theme = useTheme();
-  const tinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
-  return (
-    <Main
-      menu={
-        <>
-          <MenuList dense disablePadding>
-            <LinksMenuItems />
-            <SiteMenu isFame />
-          </MenuList>
-        </>
-      }
-      title={
-        <>
-          {tinyScreen ? null : (
-            <Typography variant="h5" component="h1" marginLeft={2}>
-              $FAME
-            </Typography>
-          )}
-        </>
-      }
-    >
-      <SocietyNftReadinessRail surface="fame" />
-      <ParallaxProvider>
-        <Content market={market} />
-      </ParallaxProvider>
-    </Main>
-  );
-};
+const Header: FC<{ market: LandingMarketPresentation }> = ({ market }) => (
+  <FameMain title="$FAME" activeFamePage="landing">
+    <SocietyNftReadinessRail surface="fame" />
+    <Content market={market} />
+  </FameMain>
+);
 
 export const Layout: FC<{ market: LandingMarketPresentation }> = ({
   market,
-}) => {
-  return (
-    <DefaultProvider mainnet base polygon>
-      <Header market={market} />
-    </DefaultProvider>
-  );
-};
+}) => (
+  <DefaultProvider mainnet base polygon fame>
+    <Header market={market} />
+  </DefaultProvider>
+);

@@ -4,7 +4,11 @@ import type {
   LandingMarketStats,
   MarketProjectionState,
 } from "./cachedMarketStats";
-import { formatPrice, presentLandingMetrics } from "./pricePresentation";
+import {
+  formatPrice,
+  presentLandingMetrics,
+  presentLandingPrices,
+} from "./pricePresentation";
 
 describe("FAME landing price formatting", () => {
   it("keeps normal prices compact", () => {
@@ -13,6 +17,18 @@ describe("FAME landing price formatting", () => {
       "0.108821 ETH",
     );
     assert.equal(formatPrice(202_946_333n, 6, "USDC"), "202.946333 USDC");
+  });
+
+  it("abbreviates thousands and millions to at most one decimal", () => {
+    assert.equal(
+      formatPrice(218_655_239_996n, 6, "USDC"),
+      "218.7K USDC",
+    );
+    assert.equal(formatPrice(1_000_000_000n, 6, "USDC"), "1K USDC");
+    assert.equal(
+      formatPrice(1_050_000n * 10n ** 18n, 18, "FAME"),
+      "1.1M FAME",
+    );
   });
 
   it("never turns a small nonzero price into zero or scientific notation", () => {
@@ -51,10 +67,12 @@ describe("FAME landing price formatting", () => {
     } satisfies LandingMarketStats;
 
     assert.deepEqual(presentLandingMetrics(stats), {
-      marketCap: { value: "10,762.56 USDC" },
-      liquidity: { value: "2,000,000 FAME" },
-      buyDepth: { value: "1,000 USDC+" },
-      sellDepth: { value: "5,000 USDC" },
+      marketCap: { value: "10.8K USDC" },
+      liquidity: { value: "2M FAME" },
+      buyDepth: { value: "1K USDC+" },
+      sellDepth: { value: "5K USDC" },
     });
+    assert.equal(presentLandingPrices(stats).defiBuy.fame, "1M FAME");
+    assert.equal(presentLandingPrices(stats).nftBuy.fame, "1.1M FAME");
   });
 });

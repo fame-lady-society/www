@@ -29,7 +29,8 @@ const global: GalleryGlobalState = {
 describe("gallery liquidity overview", () => {
   it("keeps the gallery liquidity prompt compact", () => {
     const html = renderToStaticMarkup(<GalleryLiquidityCta />);
-    assert.match(html, /Back marketplace liquidity/);
+    assert.match(html, /Put your Society to work/);
+    assert.match(html, /earn FAME on marketplace sales/);
     assert.match(html, /Stake your Society NFTs/);
     assert.doesNotMatch(html, /Pool inventory/i);
     assert.doesNotMatch(html, /equal-weight share/i);

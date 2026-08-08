@@ -54,6 +54,28 @@ describe("FameGalleryPage", () => {
     assert.match(markup, /Available/);
   });
 
+  it("shows a refresh action instead of unrevealed art when metadata fails", () => {
+    const unavailableArtwork: FameGalleryArtwork = {
+      ...artwork,
+      tokenId: 149,
+      metadata: {
+        status: "failure",
+        image: "/images/fame/gold-leaf-square.png",
+        name: null,
+        description: null,
+        attributes: [],
+        error: "Token metadata could not be loaded",
+      },
+    };
+    const markup = renderPage([unavailableArtwork], null);
+
+    assert.match(markup, /Artwork unavailable/);
+    assert.match(markup, /The token metadata did not load/);
+    assert.match(markup, /Refresh artwork/);
+    assert.doesNotMatch(markup, /<img/);
+    assert.doesNotMatch(markup, /gold-leaf-square/);
+  });
+
   it("renders a library-backed load-more sentinel while another page exists", () => {
     const markup = renderPage([artwork], 49);
     assert.match(markup, /data-gallery-load-more/);
