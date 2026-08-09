@@ -20,7 +20,10 @@ import { useMemo, useState } from "react";
 import type { Address, Hash } from "viem";
 import { useReadContract, useTransactionReceipt } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
-import { creatorArtistMagicAbi } from "@/wagmi";
+import {
+  creatorArtistMagicAbi,
+  useReadCreatorArtistMagicGetMintPoolStart,
+} from "@/wagmi";
 import { formatTokenAmount } from "../../fame-swap/solver/format";
 import { tokenForAddress } from "../../fame-swap/tokens";
 import { useGalleryRuntime } from "../config/galleryRuntime";
@@ -89,12 +92,34 @@ function TokenLink({
   tokenId,
   title,
   body,
+  linked,
 }: {
   mirror: Address;
   tokenId: bigint;
   title: string;
   body: string;
+  linked: boolean;
 }) {
+  const content = (
+    <Stack direction="row" justifyContent="space-between" spacing={2}>
+      <div>
+        <Typography fontWeight={700}>{title}</Typography>
+        <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
+          {body}
+        </Typography>
+      </div>
+      {linked ? <LaunchIcon fontSize="small" aria-hidden /> : null}
+    </Stack>
+  );
+
+  if (!linked) {
+    return (
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        {content}
+      </Paper>
+    );
+  }
+
   return (
     <Paper
       component={Link}
@@ -118,15 +143,7 @@ function TokenLink({
         },
       }}
     >
-      <Stack direction="row" justifyContent="space-between" spacing={2}>
-        <div>
-          <Typography fontWeight={700}>{title}</Typography>
-          <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-            {body}
-          </Typography>
-        </div>
-        <LaunchIcon fontSize="small" aria-hidden />
-      </Stack>
+      {content}
     </Paper>
   );
 }
@@ -195,12 +212,16 @@ export function GalleryPurchaseReceiptContent({
   mirror,
   explorerBaseUrl,
   forkMode,
+  mintPoolStart,
+  mintPoolStartError = false,
 }: {
   purchase: GalleryPurchaseReceiptProjection;
   metadata: GalleryMetadataResult;
   mirror: Address;
   explorerBaseUrl: string;
   forkMode: boolean;
+  mintPoolStart: bigint | null;
+  mintPoolStartError?: boolean;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const name =
@@ -212,6 +233,12 @@ export function GalleryPurchaseReceiptContent({
   const metadataEventsComplete = expectedMetadataIds.every((tokenId) =>
     purchase.metadataUpdatedTokenIds.includes(tokenId),
   );
+  const shellHasOpenSeaPage =
+    mintPoolStart !== null && purchase.shellId < mintPoolStart;
+  const sourceHasOpenSeaPage =
+    mintPoolStart !== null &&
+    purchase.sourceId !== null &&
+    purchase.sourceId < mintPoolStart;
 
   return (
     <Container
@@ -315,17 +342,19 @@ export function GalleryPurchaseReceiptContent({
               >
                 View transaction
               </Button>
-              <Button
-                component={Link}
-                href={openSeaTokenUrl(mirror, purchase.shellId)}
-                target="_blank"
-                rel="noreferrer"
-                variant="outlined"
-                endIcon={<LaunchIcon />}
-                sx={{ minHeight: 48 }}
-              >
-                Open Society #{purchase.shellId} on OpenSea
-              </Button>
+              {shellHasOpenSeaPage ? (
+                <Button
+                  component={Link}
+                  href={openSeaTokenUrl(mirror, purchase.shellId)}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="outlined"
+                  endIcon={<LaunchIcon />}
+                  sx={{ minHeight: 48 }}
+                >
+                  Open Society #{purchase.shellId} on OpenSea
+                </Button>
+              ) : null}
             </Stack>
           </Stack>
         </Stack>
@@ -356,12 +385,14 @@ export function GalleryPurchaseReceiptContent({
                   tokenId={purchase.shellId}
                   title={`Your token · Society #${purchase.shellId}`}
                   body="Now displays the artwork you purchased."
+                  linked={shellHasOpenSeaPage}
                 />
                 <TokenLink
                   mirror={mirror}
                   tokenId={purchase.sourceId}
                   title={`Pool token · Society #${purchase.sourceId}`}
                   body="Received the metadata displaced by your purchase."
+                  linked={sourceHasOpenSeaPage}
                 />
               </Stack>
               {!metadataEventsComplete ? (
@@ -375,7 +406,8 @@ export function GalleryPurchaseReceiptContent({
           )}
         </Box>
 
-        {purchase.sourceId !== null ? (
+        {purchase.sourceId !== null &&
+        (shellHasOpenSeaPage || sourceHasOpenSeaPage) ? (
           <Paper
             component="section"
             variant="outlined"
@@ -385,19 +417,26 @@ export function GalleryPurchaseReceiptContent({
               OpenSea indexing
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 900 }}>
-              OpenSea may take a few minutes to show the new artwork on both
-              tokens. If either token still looks stale, open it on OpenSea and
-              choose “Refresh metadata.”
+              {shellHasOpenSeaPage && sourceHasOpenSeaPage
+                ? "OpenSea may take a few minutes to show the new artwork on both tokens. If either token still looks stale, open it on OpenSea and choose “Refresh metadata.”"
+                : "OpenSea may take a few minutes to show the new artwork on the linked token. If it still looks stale, open it on OpenSea and choose “Refresh metadata.”"}
             </Typography>
-            {forkMode ? (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                This purchase happened on a local Base fork. Basescan and
-                OpenSea cannot see fork-only state; their links point to the
-                canonical Base chain and will become live for production
-                purchases.
-              </Alert>
-            ) : null}
           </Paper>
+        ) : null}
+
+        {mintPoolStartError ? (
+          <Alert severity="warning">
+            OpenSea token links are unavailable because the mint-pool boundary
+            could not be loaded.
+          </Alert>
+        ) : null}
+
+        {forkMode ? (
+          <Alert severity="info">
+            This purchase happened on a local Base fork. Basescan and OpenSea
+            cannot see fork-only state; external links point to the canonical
+            Base chain and will become live for production purchases.
+          </Alert>
         ) : null}
 
         {metadata.status === "ready" &&
@@ -556,6 +595,12 @@ export function GalleryPurchaseReceiptView({
   const metadata = useGalleryMetadata(
     typeof tokenUri.data === "string" ? tokenUri.data : "",
   );
+  const mintPoolStart = useReadCreatorArtistMagicGetMintPoolStart({
+    address: runtime.addresses.creatorMagic,
+    chainId: runtime.chainId,
+    blockNumber: receipt.data?.blockNumber,
+    query: { enabled: projected.purchase !== null },
+  });
 
   if (!validHash) {
     return (
@@ -606,6 +651,10 @@ export function GalleryPurchaseReceiptView({
       mirror={runtime.addresses.mirror}
       explorerBaseUrl={runtime.explorerBaseUrl}
       forkMode={runtime.forkMode}
+      mintPoolStart={
+        typeof mintPoolStart.data === "bigint" ? mintPoolStart.data : null
+      }
+      mintPoolStartError={mintPoolStart.isError}
     />
   );
 }
