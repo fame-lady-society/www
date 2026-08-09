@@ -1,15 +1,80 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
+import { isAddressEqual, type Address } from "viem";
 import { useConnection, usePublicClient } from "wagmi";
 import { useGalleryRuntime } from "../config/galleryRuntime";
-import { readOwnedSocietyIds } from "../redemption/ownedSociety";
+import {
+  readOwnedSocietyIds,
+  type OwnedSocietyProjection,
+} from "../redemption/ownedSociety";
+
+export function galleryRedemptionOwnedQueryKey(
+  chainId: number,
+  account: Address | undefined,
+  checkout: Address | undefined,
+  mirror: Address,
+) {
+  return [
+    "gallery-redemption-owned",
+    chainId,
+    account?.toLowerCase() ?? null,
+    checkout?.toLowerCase() ?? null,
+    mirror.toLowerCase(),
+  ] as const;
+}
+
+export async function cacheConfirmedGalleryRedemption(
+  queryClient: Pick<QueryClient, "cancelQueries" | "setQueryData">,
+  input: Readonly<{
+    chainId: number;
+    account: Address;
+    checkout: Address;
+    mirror: Address;
+    tokenIds: readonly bigint[];
+    blockNumber: bigint;
+  }>,
+) {
+  const queryKey = galleryRedemptionOwnedQueryKey(
+    input.chainId,
+    input.account,
+    input.checkout,
+    input.mirror,
+  );
+  await queryClient.cancelQueries({ queryKey, exact: true });
+  const redeemedIds = new Set(input.tokenIds);
+  queryClient.setQueryData<OwnedSocietyProjection>(queryKey, (current) => {
+    if (
+      !current ||
+      current.status !== "ready" ||
+      !isAddressEqual(current.account, input.account)
+    ) {
+      return current;
+    }
+    const tokenIds = current.tokenIds.filter(
+      (tokenId) => !redeemedIds.has(tokenId),
+    );
+    if (tokenIds.length === current.tokenIds.length) return current;
+    return {
+      ...current,
+      blockNumber: input.blockNumber,
+      balance: BigInt(tokenIds.length),
+      tokenIds,
+    };
+  });
+}
 
 export function useGalleryRedemptionOwnership() {
   const runtime = useGalleryRuntime();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: runtime.chainId });
   const account = connection.address;
+  const queryKey = galleryRedemptionOwnedQueryKey(
+    runtime.chainId,
+    account,
+    runtime.checkout?.address,
+    runtime.addresses.mirror,
+  );
   const enabled = Boolean(
     runtime.checkout &&
       account &&
@@ -17,13 +82,7 @@ export function useGalleryRedemptionOwnership() {
       publicClient,
   );
   const query = useQuery({
-    queryKey: [
-      "gallery-redemption-owned",
-      runtime.chainId,
-      account?.toLowerCase() ?? null,
-      runtime.checkout?.address.toLowerCase() ?? null,
-      runtime.addresses.mirror.toLowerCase(),
-    ],
+    queryKey,
     enabled,
     retry: false,
     refetchOnWindowFocus: false,
