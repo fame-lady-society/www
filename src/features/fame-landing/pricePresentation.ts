@@ -1,10 +1,10 @@
-import type {
-  LandingMarketStats,
-  LandingQuoteDto,
-  MarketProjectionState,
-  MarketplacePriceDto,
-} from "./cachedMarketStats";
-import { DEFI_FAME_AMOUNT } from "./cachedMarketStats";
+import {
+  FAME_LANDING_COUNTER_ASSETS,
+  type FameLandingFieldState,
+  type FameLandingMarketplaceValue,
+  type FameLandingQuoteValue,
+  type FameLandingSnapshot,
+} from "./snapshot";
 
 export type PriceValue = Readonly<{ value: string | null }>;
 export type LandingCurrencyValues = Readonly<{
@@ -21,11 +21,22 @@ export type LandingPrices = Readonly<{
   defiSell: LandingPriceRow;
   nftBuy: LandingPriceRow;
 }>;
+export type LandingLiquidity = Readonly<{
+  fame: PriceValue;
+  counterAssets: ReadonlyArray<{
+    address: string;
+    label: string;
+    value: string | null;
+  }>;
+}>;
 export type LandingMarketPresentation = Readonly<{
   prices: LandingPrices;
   marketCap: LandingCurrencyValues;
   marketplaceSupply: string | null;
+  liquidity: LandingLiquidity;
 }>;
+
+const DEFI_FAME_AMOUNT = 1_000_000n * 10n ** 18n;
 
 function grouped(value: bigint): string {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -58,7 +69,7 @@ function compactAmount(amount: bigint, base: bigint): string | null {
 export function formatPrice(
   amount: bigint,
   decimals: number,
-  symbol: "FAME" | "USDC" | "ETH",
+  symbol: string,
   maximumFractionDigits = symbol === "USDC" ? 2 : symbol === "ETH" ? 3 : 2,
 ): string {
   const base = 10n ** BigInt(decimals);
@@ -86,14 +97,13 @@ export function formatPrice(
 const DEFI_FAME_LABEL = formatPrice(DEFI_FAME_AMOUNT, 18, "FAME");
 
 function quoteValue(
-  state: MarketProjectionState<LandingQuoteDto>,
+  state: FameLandingFieldState<FameLandingQuoteValue>,
   currency: "USDC" | "ETH",
 ): PriceValue {
   if (state.status !== "available") return { value: null };
-  const quote = state.value.data;
   return {
     value: formatPrice(
-      BigInt(quote.amount),
+      BigInt(state.value.amount),
       currency === "USDC" ? 6 : 18,
       currency,
     ),
@@ -101,10 +111,10 @@ function quoteValue(
 }
 
 function marketplaceFame(
-  state: MarketProjectionState<MarketplacePriceDto>,
+  state: FameLandingFieldState<FameLandingMarketplaceValue>,
 ): string | null {
   if (state.status !== "available") return null;
-  const market = state.value.data;
+  const market = state.value;
   const amount = BigInt(market.unit) + BigInt(market.premium);
   const million = 10n ** BigInt(market.decimals + 6);
   const whole = amount / million;
@@ -117,37 +127,20 @@ function marketplaceFame(
 }
 
 function marketplaceSupply(
-  state: MarketProjectionState<MarketplacePriceDto>,
+  state: FameLandingFieldState<FameLandingMarketplaceValue>,
 ): string | null {
   if (state.status !== "available") return null;
-  const market = state.value.data;
-  return formatPrice(BigInt(market.totalSupply), market.decimals, "FAME");
-}
-
-export function presentLandingPrices(stats: LandingMarketStats): LandingPrices {
-  return {
-    defiBuy: {
-      fame: DEFI_FAME_LABEL,
-      USDC: quoteValue(stats.defiBuyUsdc, "USDC"),
-      ETH: quoteValue(stats.defiBuyEth, "ETH"),
-    },
-    defiSell: {
-      fame: DEFI_FAME_LABEL,
-      USDC: quoteValue(stats.defiSellUsdc, "USDC"),
-      ETH: quoteValue(stats.defiSellEth, "ETH"),
-    },
-    nftBuy: {
-      fame: marketplaceFame(stats.marketplace),
-      USDC: quoteValue(stats.nftBuyUsdc, "USDC"),
-      ETH: quoteValue(stats.nftBuyEth, "ETH"),
-    },
-  };
+  return formatPrice(
+    BigInt(state.value.totalSupply),
+    state.value.decimals,
+    "FAME",
+  );
 }
 
 function marketCapValue(
   totalSupply: bigint | null,
-  buy: MarketProjectionState<LandingQuoteDto>,
-  sell: MarketProjectionState<LandingQuoteDto>,
+  buy: FameLandingFieldState<FameLandingQuoteValue>,
+  sell: FameLandingFieldState<FameLandingQuoteValue>,
   currency: "USDC" | "ETH",
 ): PriceValue {
   if (
@@ -159,62 +152,104 @@ function marketCapValue(
   }
 
   const amount =
-    ((BigInt(buy.value.data.amount) + BigInt(sell.value.data.amount)) *
-      totalSupply) /
+    ((BigInt(buy.value.amount) + BigInt(sell.value.amount)) * totalSupply) /
     (2n * DEFI_FAME_AMOUNT);
   return {
     value: formatPrice(amount, currency === "USDC" ? 6 : 18, currency, 1),
   };
 }
 
-export function presentLandingMarketCap(
-  stats: LandingMarketStats,
-): LandingCurrencyValues {
-  const totalSupply =
-    stats.marketplace.status === "available"
-      ? BigInt(stats.marketplace.value.data.totalSupply)
-      : null;
-
+function presentLiquidity(snapshot: FameLandingSnapshot): LandingLiquidity {
+  const state = snapshot.fields.liquidity;
+  if (state.status !== "available") return emptyLandingLiquidity();
+  const byAddress = new Map(
+    state.value.counterAssets.map((asset) => [
+      asset.address.toLowerCase(),
+      asset,
+    ]),
+  );
   return {
-    USDC: marketCapValue(
-      totalSupply,
-      stats.defiBuyUsdc,
-      stats.defiSellUsdc,
-      "USDC",
-    ),
-    ETH: marketCapValue(
-      totalSupply,
-      stats.defiBuyEth,
-      stats.defiSellEth,
-      "ETH",
-    ),
+    fame: { value: formatPrice(BigInt(state.value.fameAmount), 18, "FAME") },
+    counterAssets: FAME_LANDING_COUNTER_ASSETS.map((metadata) => {
+      const asset = byAddress.get(metadata.address.toLowerCase());
+      return {
+        address: metadata.address,
+        label: metadata.symbol,
+        value: asset
+          ? formatPrice(BigInt(asset.amount), asset.decimals, asset.symbol)
+          : null,
+      };
+    }),
+  };
+}
+
+function emptyLandingLiquidity(): LandingLiquidity {
+  return {
+    fame: { value: null },
+    counterAssets: FAME_LANDING_COUNTER_ASSETS.map((asset) => ({
+      address: asset.address,
+      label: asset.symbol,
+      value: null,
+    })),
   };
 }
 
 export function presentLandingMarket(
-  stats: LandingMarketStats,
+  snapshot: FameLandingSnapshot,
 ): LandingMarketPresentation {
-  return {
-    prices: presentLandingPrices(stats),
-    marketCap: presentLandingMarketCap(stats),
-    marketplaceSupply: marketplaceSupply(stats.marketplace),
-  };
-}
+  const { marketplace, quotes } = snapshot.fields;
+  const totalSupply =
+    marketplace.status === "available"
+      ? BigInt(marketplace.value.totalSupply)
+      : null;
 
-export function emptyLandingPrices(): LandingPrices {
-  const empty = { value: null };
   return {
-    defiBuy: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
-    defiSell: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
-    nftBuy: { fame: null, USDC: empty, ETH: empty },
+    prices: {
+      defiBuy: {
+        fame: DEFI_FAME_LABEL,
+        USDC: quoteValue(quotes.defiBuyUsdc, "USDC"),
+        ETH: quoteValue(quotes.defiBuyEth, "ETH"),
+      },
+      defiSell: {
+        fame: DEFI_FAME_LABEL,
+        USDC: quoteValue(quotes.defiSellUsdc, "USDC"),
+        ETH: quoteValue(quotes.defiSellEth, "ETH"),
+      },
+      nftBuy: {
+        fame: marketplaceFame(marketplace),
+        USDC: quoteValue(quotes.nftBuyUsdc, "USDC"),
+        ETH: quoteValue(quotes.nftBuyEth, "ETH"),
+      },
+    },
+    marketCap: {
+      USDC: marketCapValue(
+        totalSupply,
+        quotes.defiBuyUsdc,
+        quotes.defiSellUsdc,
+        "USDC",
+      ),
+      ETH: marketCapValue(
+        totalSupply,
+        quotes.defiBuyEth,
+        quotes.defiSellEth,
+        "ETH",
+      ),
+    },
+    marketplaceSupply: marketplaceSupply(marketplace),
+    liquidity: presentLiquidity(snapshot),
   };
 }
 
 export function emptyLandingMarket(): LandingMarketPresentation {
   const empty = { value: null };
   return {
-    prices: emptyLandingPrices(),
+    prices: {
+      defiBuy: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
+      defiSell: { fame: DEFI_FAME_LABEL, USDC: empty, ETH: empty },
+      nftBuy: { fame: null, USDC: empty, ETH: empty },
+    },
     marketCap: { USDC: empty, ETH: empty },
     marketplaceSupply: null,
+    liquidity: emptyLandingLiquidity(),
   };
 }
