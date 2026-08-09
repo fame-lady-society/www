@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   openGraph: { images: ["/images/fame/gold-leaf.png"] },
 };
 
+export const dynamic = "force-dynamic";
+
 async function readGalleryPresentation() {
   try {
     return serializeFameGalleryCatalog(await readFameGalleryCatalog());

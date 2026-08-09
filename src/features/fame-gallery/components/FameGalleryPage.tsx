@@ -142,9 +142,6 @@ export function FameGalleryPage({ page }: { page: FameGalleryCatalogPage }) {
             <FameGalleryCard
               key={`${artwork.tokenId}:${artwork.artworkHash}`}
               artwork={artwork}
-              onRefresh={async () => {
-                await query.refetch();
-              }}
             />
           ))}
         </div>

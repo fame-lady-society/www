@@ -26,6 +26,7 @@ function client(input: {
   providerPosition?: unknown;
   withdrawalPremium?: unknown;
   calls?: string[];
+  contractCalls?: Array<{ functionName: string; address: Address }>;
   readCalls?: Array<{ functionName: string; blockNumber: bigint }>;
   throwRead?: "providerPosition" | "withdrawalPremium";
   throwTokenUri?: boolean;
@@ -60,6 +61,10 @@ function client(input: {
       }
       return read.contracts.map((contract) => {
         input.calls?.push(contract.functionName);
+        input.contractCalls?.push({
+          functionName: contract.functionName,
+          address: contract.address,
+        });
         const tokenId = contract.args?.[0] as bigint;
         if (contract.functionName === "ownerAt") {
           return success(input.owners.get(tokenId) ?? other);
@@ -78,6 +83,7 @@ function client(input: {
 
 describe("gallery liquidity reads", () => {
   it("discovers wallet Society ownership without the checkout contract", async () => {
+    const contractCalls: Array<{ functionName: string; address: Address }> = [];
     const result = await readWalletOwnedSociety(
       client({
         owners: new Map([
@@ -86,6 +92,7 @@ describe("gallery liquidity reads", () => {
           [3n, account],
         ]),
         balance: 2n,
+        contractCalls,
       }),
       9_998n,
       account,
@@ -96,9 +103,28 @@ describe("gallery liquidity reads", () => {
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
     assert.deepEqual(result.data, [
-      { tokenId: 1n, tokenUri: "data:token/1" },
-      { tokenId: 3n, tokenUri: "data:token/3" },
+      {
+        tokenId: 1n,
+        tokenUri: "data:token/1",
+        artworkHash: `0x${"1".padStart(64, "0")}`,
+      },
+      {
+        tokenId: 3n,
+        tokenUri: "data:token/3",
+        artworkHash: `0x${"3".padStart(64, "0")}`,
+      },
     ]);
+    assert.deepEqual(
+      contractCalls.filter(({ functionName }) =>
+        ["tokenURI", "artworkHash"].includes(functionName),
+      ),
+      [
+        { functionName: "tokenURI", address: creatorMagic },
+        { functionName: "artworkHash", address: marketplace },
+        { functionName: "tokenURI", address: creatorMagic },
+        { functionName: "artworkHash", address: marketplace },
+      ],
+    );
   });
 
   it("fails closed when the owner scan does not reconcile with balanceOf", async () => {
@@ -136,8 +162,8 @@ describe("gallery liquidity reads", () => {
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
     assert.deepEqual(result.data, [
-      { tokenId: 1n, tokenUri: null },
-      { tokenId: 3n, tokenUri: null },
+      { tokenId: 1n, tokenUri: null, artworkHash: null },
+      { tokenId: 3n, tokenUri: null, artworkHash: null },
     ]);
   });
 
@@ -158,14 +184,19 @@ describe("gallery liquidity reads", () => {
     );
     assert.equal(result.status, "success");
     if (result.status !== "success") return;
-    assert.deepEqual(
-      result.data.map(({ tokenId, tokenUri }) => ({ tokenId, tokenUri })),
-      [
-        { tokenId: 1n, tokenUri: "data:token/1" },
-        { tokenId: 3n, tokenUri: "data:token/3" },
-      ],
-    );
-    assert.equal(calls.includes("artworkHash"), false);
+    assert.deepEqual(result.data, [
+      {
+        tokenId: 1n,
+        tokenUri: "data:token/1",
+        artworkHash: `0x${"1".padStart(64, "0")}`,
+      },
+      {
+        tokenId: 3n,
+        tokenUri: "data:token/3",
+        artworkHash: `0x${"3".padStart(64, "0")}`,
+      },
+    ]);
+    assert.equal(calls.includes("artworkHash"), true);
   });
 
   it("reads the connected wallet provider position and premium at the pinned block", async () => {

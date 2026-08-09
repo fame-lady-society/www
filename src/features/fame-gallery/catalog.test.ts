@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
+import { loadFameMetadata } from "@/features/fame/metadata";
 import { base } from "viem/chains";
 import {
   readFameGalleryCatalog,
@@ -11,6 +12,8 @@ import {
 const marketplace = "0x1111111111111111111111111111111111111111" as Address;
 const externalOwner = "0x2222222222222222222222222222222222222222" as Address;
 const artworkHash = `0x${"ab".repeat(32)}` as Hash;
+const resolveMetadata = (revision: { tokenUri: string }) =>
+  loadFameMetadata(revision.tokenUri);
 
 function success(result: unknown) {
   return { status: "success" as const, result };
@@ -81,7 +84,10 @@ describe("FAME gallery catalog", () => {
       }
     });
 
-    const result = await readFameGalleryCatalog(mock, { marketplace });
+    const result = await readFameGalleryCatalog(mock, {
+      marketplace,
+      resolveMetadata,
+    });
 
     assert.equal(result.blockNumber, 123n);
     assert.deepEqual(
@@ -183,6 +189,7 @@ describe("FAME gallery catalog", () => {
       cursor: 5,
       blockNumber: 456n,
       pageSize: 4,
+      resolveMetadata,
     });
 
     assert.equal(blockReads, 0);
@@ -223,7 +230,10 @@ describe("FAME gallery catalog", () => {
       }
     });
 
-    const result = await readFameGalleryCatalog(mock, { marketplace });
+    const result = await readFameGalleryCatalog(mock, {
+      marketplace,
+      resolveMetadata,
+    });
     assert.deepEqual(
       result.artworks.map(({ tokenId }) => tokenId),
       [1, 2],
@@ -256,7 +266,10 @@ describe("FAME gallery catalog", () => {
       }
     });
 
-    const result = await readFameGalleryCatalog(mock, { marketplace });
+    const result = await readFameGalleryCatalog(mock, {
+      marketplace,
+      resolveMetadata,
+    });
     assert.deepEqual(result.artworks, []);
   });
 });

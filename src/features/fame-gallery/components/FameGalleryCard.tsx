@@ -1,58 +1,101 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getFameArtworkRevisions } from "@/service/fame";
+import { galleryMetadataQueryOptions } from "@/features/fame-market/hooks/useGalleryMetadata";
+import type {
+  FameArtworkRevision,
+  FameMetadataResult,
+} from "@/features/fame/metadata";
 import type { FameGalleryArtwork } from "../catalog";
 
-function refreshedImageUrl(image: string, refreshAttempt: number) {
-  if (refreshAttempt === 0 || image.startsWith("data:")) return image;
-
-  const url = new URL(image);
-  url.searchParams.set("fame_refresh", String(refreshAttempt));
-  return url.toString();
+export async function refreshFameGalleryArtwork(
+  tokenId: number,
+  dependencies: {
+    readRevisions: (tokenIds: readonly number[]) => Promise<{
+      revisions: readonly FameArtworkRevision[];
+    }>;
+    resolveMetadata: (
+      revision: FameArtworkRevision,
+    ) => Promise<FameMetadataResult>;
+  },
+) {
+  const snapshot = await dependencies.readRevisions([tokenId]);
+  const revision = snapshot.revisions.find(
+    ({ tokenId: revisionTokenId }) => revisionTokenId === String(tokenId),
+  );
+  if (!revision) throw new Error("Token artwork revision is unavailable");
+  return {
+    revision,
+    metadata: await dependencies.resolveMetadata(revision),
+  };
 }
 
-export function FameGalleryCard({
-  artwork,
-  onRefresh,
-}: {
-  artwork: FameGalleryArtwork;
-  onRefresh: () => Promise<void>;
-}) {
+export function FameGalleryCard({ artwork }: { artwork: FameGalleryArtwork }) {
   const { metadata, tokenId, kind, artworkHash } = artwork;
+  const queryClient = useQueryClient();
+  const [currentMetadata, setCurrentMetadata] = useState(metadata);
+  const [currentArtworkHash, setCurrentArtworkHash] = useState(artworkHash);
   const [imageFailed, setImageFailed] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
   const [refreshAttempt, setRefreshAttempt] = useState(0);
+  const refreshInFlight = useRef<Promise<void> | null>(null);
   const label = kind === "owned" ? "Owned" : "Available";
   const name =
-    metadata.status === "ready" && metadata.name
-      ? metadata.name
+    currentMetadata.status === "ready" && currentMetadata.name
+      ? currentMetadata.name
       : `FAME #${tokenId}`;
-  const artworkUnavailable = metadata.status !== "ready" || imageFailed;
+  const artworkUnavailable = currentMetadata.status !== "ready" || imageFailed;
 
   useEffect(() => {
+    setCurrentMetadata(metadata);
+    setCurrentArtworkHash(artworkHash);
     setImageFailed(false);
+    setRefreshError(false);
     setRefreshAttempt(0);
-  }, [artworkHash, metadata.image, metadata.status]);
+  }, [artworkHash, metadata]);
 
-  async function refreshArtwork() {
+  function refreshArtwork() {
+    if (refreshInFlight.current) return refreshInFlight.current;
     setIsRefreshing(true);
-    try {
-      await onRefresh();
-      setRefreshAttempt((attempt) => attempt + 1);
-      setImageFailed(false);
-    } finally {
-      setIsRefreshing(false);
-    }
+    setRefreshError(false);
+    const refresh = refreshFameGalleryArtwork(tokenId, {
+      readRevisions: getFameArtworkRevisions,
+      resolveMetadata: (revision) =>
+        queryClient.fetchQuery(galleryMetadataQueryOptions(revision)),
+    })
+      .then((refreshed) => {
+        setCurrentMetadata(refreshed.metadata);
+        setCurrentArtworkHash(refreshed.revision.artworkHash ?? artworkHash);
+        setRefreshAttempt((attempt) => attempt + 1);
+        setImageFailed(false);
+      })
+      .catch(() => {
+        setRefreshError(true);
+      })
+      .finally(() => {
+        if (refreshInFlight.current === refresh) {
+          refreshInFlight.current = null;
+          setIsRefreshing(false);
+        }
+      });
+    refreshInFlight.current = refresh;
+    return refresh;
   }
 
   return (
-    <article className="group text-[#f4eee2]" data-artwork-hash={artworkHash}>
+    <article
+      className="group text-[#f4eee2]"
+      data-artwork-hash={currentArtworkHash}
+    >
       <div className="relative aspect-square w-full overflow-hidden bg-[#16140f] ring-1 ring-inset ring-[#c9aa67]/20">
         {!artworkUnavailable ? (
           <Image
             key={refreshAttempt}
-            src={refreshedImageUrl(metadata.image, refreshAttempt)}
+            src={currentMetadata.image}
             alt={`${name} artwork`}
             fill
             sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
@@ -77,10 +120,15 @@ export function FameGalleryCard({
               Artwork unavailable
             </p>
             <p className="mt-2 max-w-52 text-xs leading-5 text-[#9f9789]">
-              {metadata.status === "ready"
+              {currentMetadata.status === "ready"
                 ? "The token image did not load."
                 : "The token metadata did not load."}
             </p>
+            {refreshError ? (
+              <p className="mt-2 text-xs text-[#d9b977]" role="status">
+                Refresh failed. Try again.
+              </p>
+            ) : null}
             <button
               type="button"
               className="fame-action fame-focus mt-4 inline-flex min-h-10 w-fit items-center border border-[#c9aa67]/70 px-4 text-xs font-bold uppercase tracking-[0.12em] text-[#f4eee2] hover:border-[#c9aa67] hover:bg-[#c9aa67]/10 disabled:cursor-wait disabled:opacity-60"

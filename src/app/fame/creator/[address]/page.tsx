@@ -5,11 +5,9 @@ import { getArtPoolRange, getDN404Storage, getFamePools } from "@/service/fame";
 import { CreatorPortal } from "./CreatorPortal";
 import { ChainSelector } from "../ChainSelector";
 
-export default async function CreatorAddressPage(
-  props: {
-    params: Promise<{ address: string }>;
-  }
-) {
+export default async function CreatorAddressPage(props: {
+  params: Promise<{ address: string }>;
+}) {
   const params = await props.params;
   if (!isAddress(params.address)) {
     throw new Error("Invalid address");
@@ -27,16 +25,13 @@ export default async function CreatorAddressPage(
   const mintPoolStart =
     dn404Storage.totalNFTSupply + BigInt(dn404Storage.burnPool.length);
 
-  const artPool: Record<number, string> = {};
-  for (let i = artPoolRange.startIndex; i <= artPoolRange.endIndex; i++) {
-    if (i < artPoolRange.nextIndex) {
-      artPool[i] = `/fame/token/image/${i}`;
-    } else {
-      artPool[i] = "/images/fame/gold-leaf-square.png";
-    }
-  }
   return (
-    <AppMain title="FAME Creator Portal" mobileTitle="Create" isDao headerRight={<ChainSelector />}>
+    <AppMain
+      title="FAME Creator Portal"
+      mobileTitle="Create"
+      isDao
+      headerRight={<ChainSelector />}
+    >
       <CreatorPortal
         address={params.address}
         tokenIds={tokenIds}
@@ -51,7 +46,6 @@ export default async function CreatorAddressPage(
           tokenId,
           uri: image,
         }))}
-        artPool={artPool}
       />
     </AppMain>
   );

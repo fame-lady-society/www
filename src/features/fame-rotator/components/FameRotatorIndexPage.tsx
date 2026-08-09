@@ -1,13 +1,16 @@
 import Link from "next/link";
-import { FameRotatorTargetCard } from "./FameRotatorTargetCard";
+import { FameRotatorTargetGrid } from "./FameRotatorTargetGrid";
 
 export type FameRotatorSelectorTarget = {
   tokenId: number;
-  image: string;
 };
 
 export type FameRotatorIndexPageProps =
-  | { status: "ready"; targets: readonly FameRotatorSelectorTarget[] }
+  | {
+      status: "ready";
+      targets: readonly FameRotatorSelectorTarget[];
+      blockNumber: string;
+    }
   | { status: "empty" }
   | { status: "error" };
 
@@ -30,7 +33,8 @@ export function FameRotatorIndexPage(props: FameRotatorIndexPageProps) {
             </h1>
           </div>
           <p className="max-w-md text-sm leading-6 text-[#bdb4a4] lg:col-span-4">
-            Select the artwork you want to swap for. Requires a Society currently held in your wallet.
+            Select the artwork you want to swap for. Requires a Society
+            currently held in your wallet.
           </p>
         </header>
 
@@ -46,20 +50,10 @@ export function FameRotatorIndexPage(props: FameRotatorIndexPageProps) {
         ) : null}
 
         {props.status === "ready" ? (
-          <section
-            className="mt-5 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-12 md:grid-cols-3 xl:grid-cols-4"
-            aria-label="Waiting Society targets"
-            data-testid="rotator-target-grid"
-          >
-            {props.targets.map((target, index) => (
-              <FameRotatorTargetCard
-                key={target.tokenId}
-                tokenId={target.tokenId}
-                image={target.image}
-                position={index + 1}
-              />
-            ))}
-          </section>
+          <FameRotatorTargetGrid
+            tokenIds={props.targets.map(({ tokenId }) => tokenId)}
+            blockNumber={props.blockNumber}
+          />
         ) : null}
 
         {props.status === "empty" ? (

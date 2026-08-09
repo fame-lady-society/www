@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FameGalleryArtwork } from "../catalog";
+import { refreshFameGalleryArtwork } from "./FameGalleryCard";
 import { FameGalleryPage } from "./FameGalleryPage";
 
 const artwork: FameGalleryArtwork = {
@@ -33,6 +34,34 @@ function renderPage(artworks: FameGalleryArtwork[], nextCursor: number | null) {
 }
 
 describe("FameGalleryPage", () => {
+  it("refreshes only the selected token and preserves its exact image URL", async () => {
+    const requested: number[][] = [];
+    const tokenUri = "https://gateway.irys.xyz/exact/7?path=A%2FB";
+    const image = "https://arweave.net/exact-image?size=original";
+    const refreshed = await refreshFameGalleryArtwork(7, {
+      readRevisions: async (tokenIds) => {
+        requested.push([...tokenIds]);
+        return {
+          revisions: [{ tokenId: "7", tokenUri }],
+        };
+      },
+      resolveMetadata: async (revision) => {
+        assert.equal(revision.tokenUri, tokenUri);
+        return {
+          status: "ready",
+          image,
+          name: "FAME #7",
+          description: null,
+          attributes: [],
+          error: null,
+        };
+      },
+    });
+
+    assert.deepEqual(requested, [[7]]);
+    assert.equal(refreshed.metadata.image, image);
+  });
+
   it("renders artwork identity, ownership, and next/image output", () => {
     const markup = renderToStaticMarkup(
       <QueryClientProvider client={new QueryClient()}>

@@ -15,7 +15,6 @@ interface MetadataSwapProps {
   nextArtPoolIndex: number;
   nextMintPoolIndex: number;
   mintPool: Array<{ tokenId: number; uri: string }>;
-  artPool: Record<number, string>; // tokenId -> uri
   roles?: {
     isCreator?: boolean;
     isBanisher?: boolean;
@@ -32,7 +31,6 @@ export function MetadataSwap({
   nextArtPoolIndex,
   nextMintPoolIndex,
   mintPool,
-  artPool,
   roles,
   onBack,
 }: MetadataSwapProps) {

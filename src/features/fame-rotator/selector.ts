@@ -33,8 +33,3 @@ export async function withRotatorSelectorReadDeadline<T>(
     if (timeout !== undefined) clearTimeout(timeout);
   }
 }
-
-/** Artwork loads independently so metadata/RPC slowness cannot delay SSR. */
-export function getRotatorSelectorImagePath(tokenId: number): string {
-  return `/fame/token/image/${tokenId}`;
-}

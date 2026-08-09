@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  GALLERY_REMOTE_METADATA_MAX_BYTES,
-  validateGalleryImageUrl,
-  loadGalleryMetadata,
-} from "./galleryMetadata";
+  FAME_REMOTE_METADATA_MAX_BYTES,
+  validateFameImageUrl,
+  loadFameMetadata,
+} from "@/features/fame/metadata";
 
 function dataUri(mime: string, value: string) {
   return `data:${mime};base64,${Buffer.from(value).toString("base64")}`;
@@ -16,7 +16,7 @@ describe("gallery metadata loader", () => {
       "image/svg+xml",
       '<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>',
     );
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       dataUri("application/json", JSON.stringify({ name: "TEST #1", image })),
       async () => {
         throw new Error("inline metadata must not fetch");
@@ -30,7 +30,7 @@ describe("gallery metadata loader", () => {
   it("fetches Irys metadata directly and preserves its canonical image URL", async () => {
     const image = "https://gateway.irys.xyz/example/image.png";
     const requested: string[] = [];
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://gateway.irys.xyz/example/metadata.json",
       async (input) => {
         requested.push(String(input));
@@ -54,7 +54,7 @@ describe("gallery metadata loader", () => {
   });
 
   it("uses fallback art when approved metadata names an unapproved image", async () => {
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://arweave.net/example/metadata.json",
       async () =>
         Response.json({ image: "https://fame.support/example/image.png" }),
@@ -67,19 +67,16 @@ describe("gallery metadata loader", () => {
   it("rejects arbitrary HTTPS, fame.support, non-HTTPS, and oversized metadata", async () => {
     assert.equal(
       (
-        await loadGalleryMetadata(
-          "http://example.com/metadata.json",
-          async () => {
-            throw new Error("must not fetch");
-          },
-        )
+        await loadFameMetadata("http://example.com/metadata.json", async () => {
+          throw new Error("must not fetch");
+        })
       ).status,
       "failure",
     );
     let fetched = false;
     assert.equal(
       (
-        await loadGalleryMetadata(
+        await loadFameMetadata(
           "https://example.com/metadata.json",
           async () => {
             fetched = true;
@@ -92,7 +89,7 @@ describe("gallery metadata loader", () => {
     assert.equal(fetched, false);
     assert.equal(
       (
-        await loadGalleryMetadata(
+        await loadFameMetadata(
           "https://fame.support/metadata.json",
           async () => {
             throw new Error("must not fetch");
@@ -102,10 +99,10 @@ describe("gallery metadata loader", () => {
       "failure",
     );
 
-    const oversized = "x".repeat(GALLERY_REMOTE_METADATA_MAX_BYTES + 1);
+    const oversized = "x".repeat(FAME_REMOTE_METADATA_MAX_BYTES + 1);
     assert.equal(
       (
-        await loadGalleryMetadata(
+        await loadFameMetadata(
           "https://arweave.net/metadata.json",
           async () => new Response(oversized, { status: 200 }),
         )
@@ -116,7 +113,7 @@ describe("gallery metadata loader", () => {
 
   it("aborts a timed-out browser metadata request", async () => {
     let aborted = false;
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://arweave.net/metadata.json",
       (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
@@ -140,7 +137,7 @@ describe("gallery metadata loader", () => {
       },
     });
 
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://arweave.net/metadata.json",
       async () => new Response(body, { status: 200 }),
       1,
@@ -158,13 +155,13 @@ describe("gallery metadata loader", () => {
       },
     });
 
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://arweave.net/metadata.json",
       async () =>
         new Response(body, {
           status: 200,
           headers: {
-            "content-length": String(GALLERY_REMOTE_METADATA_MAX_BYTES + 1),
+            "content-length": String(FAME_REMOTE_METADATA_MAX_BYTES + 1),
           },
         }),
     );
@@ -175,9 +172,7 @@ describe("gallery metadata loader", () => {
 
   it("cancels a streamed body when accumulated bytes cross the limit", async () => {
     let cancelled = false;
-    const oversizedChunk = new Uint8Array(
-      GALLERY_REMOTE_METADATA_MAX_BYTES + 1,
-    );
+    const oversizedChunk = new Uint8Array(FAME_REMOTE_METADATA_MAX_BYTES + 1);
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(oversizedChunk);
@@ -187,7 +182,7 @@ describe("gallery metadata loader", () => {
       },
     });
 
-    const result = await loadGalleryMetadata(
+    const result = await loadFameMetadata(
       "https://arweave.net/metadata.json",
       async () => new Response(body, { status: 200 }),
     );
@@ -200,7 +195,7 @@ describe("gallery metadata loader", () => {
     const controller = new AbortController();
     const requested: string[] = [];
 
-    const pending = loadGalleryMetadata(
+    const pending = loadFameMetadata(
       "https://gateway.irys.xyz/example/metadata.json",
       async (input, init) => {
         requested.push(String(input));
@@ -225,26 +220,20 @@ describe("gallery metadata loader", () => {
     const inline = `data:image/svg+xml;base64,${Buffer.from(
       "<svg></svg>",
     ).toString("base64")}`;
-    assert.equal(validateGalleryImageUrl(inline), inline);
+    assert.equal(validateFameImageUrl(inline), inline);
     assert.equal(
-      validateGalleryImageUrl("https://arweave.net/tx/image.png"),
+      validateFameImageUrl("https://arweave.net/tx/image.png"),
       "https://arweave.net/tx/image.png",
     );
     assert.equal(
-      validateGalleryImageUrl("https://gateway.irys.xyz/tx/image.png"),
+      validateFameImageUrl("https://gateway.irys.xyz/tx/image.png"),
       "https://gateway.irys.xyz/tx/image.png",
     );
     assert.equal(
-      validateGalleryImageUrl("https://ipfs.io/ipfs/bafy/image.png"),
+      validateFameImageUrl("https://ipfs.io/ipfs/bafy/image.png"),
       "https://ipfs.io/ipfs/bafy/image.png",
     );
-    assert.equal(
-      validateGalleryImageUrl("https://fame.support/image.png"),
-      null,
-    );
-    assert.equal(
-      validateGalleryImageUrl("https://example.com/image.png"),
-      null,
-    );
+    assert.equal(validateFameImageUrl("https://fame.support/image.png"), null);
+    assert.equal(validateFameImageUrl("https://example.com/image.png"), null);
   });
 });

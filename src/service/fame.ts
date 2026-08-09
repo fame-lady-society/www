@@ -2,9 +2,10 @@
 
 import { type Address } from "viem";
 import { client as baseClient } from "@/viem/base-client";
-import { creatorArtistMagicAbi } from "@/wagmi";
+import { creatorArtistMagicAbi, universalPoolArtMarketplaceAbi } from "@/wagmi";
 import { base } from "viem/chains";
 import {
+  baseUniversalMarketplaceAddress,
   creatorArtistMagicAddress,
   fameFromNetwork,
 } from "@/features/fame/contract";
@@ -12,6 +13,10 @@ import {
   FAME_METADATA_FALLBACK_IMAGE,
   imageFromFameMetadata,
 } from "./fameMetadata";
+import {
+  readFameArtworkRevisions,
+  type FameArtworkRevisionClient,
+} from "@/features/fame/artworkRevisions";
 
 /** Coherent block-pinned FIFO burn-pool ID snapshot (no metadata). */
 export type OrderedBurnPoolSnapshot = {
@@ -125,6 +130,25 @@ export async function getArtPoolRange() {
   };
 }
 
+export async function getFameArtworkRevisions(
+  tokenIds: readonly number[],
+  blockNumber?: string,
+) {
+  const snapshot = await readFameArtworkRevisions(
+    baseClient as unknown as FameArtworkRevisionClient,
+    creatorArtistMagicAddress(base.id),
+    creatorArtistMagicAbi,
+    baseUniversalMarketplaceAddress,
+    universalPoolArtMarketplaceAbi,
+    tokenIds,
+    blockNumber === undefined ? undefined : BigInt(blockNumber),
+  );
+  return {
+    blockNumber: snapshot.blockNumber.toString(),
+    revisions: snapshot.revisions,
+  };
+}
+
 async function fetchWithTimeout(
   url: string,
   timeoutMs = 10000,
@@ -147,25 +171,6 @@ async function fetchMetadataImage(uri: string): Promise<string> {
   }
 
   return imageFromFameMetadata(await response.json());
-}
-
-/**
- * Presentation helper: resolve a token image via tokenURI + metadata fetch,
- * falling back to the shared placeholder without throwing.
- */
-export async function getFameTokenImage(tokenId: number): Promise<string> {
-  try {
-    const uri = await baseClient.readContract({
-      abi: creatorArtistMagicAbi,
-      address: creatorArtistMagicAddress(base.id),
-      functionName: "tokenURI",
-      args: [BigInt(tokenId)],
-    });
-    return await fetchMetadataImage(uri);
-  } catch (error) {
-    console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
-    return FAME_METADATA_FALLBACK_IMAGE;
-  }
 }
 
 /**

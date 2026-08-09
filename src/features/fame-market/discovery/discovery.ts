@@ -75,6 +75,14 @@ export function createInitialGalleryScanRegistry() {
       if (current) return current as Promise<T>;
       const started = attempt();
       attempts.set(key, started);
+      void started.then(
+        () => {
+          if (attempts.get(key) === started) attempts.delete(key);
+        },
+        () => {
+          if (attempts.get(key) === started) attempts.delete(key);
+        },
+      );
       return started;
     },
   };

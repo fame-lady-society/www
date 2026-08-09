@@ -14,7 +14,6 @@ interface CreatorPortalProps {
   nextArtPoolIndex: number;
   nextMintPoolIndex: number;
   mintPool: Array<{ tokenId: number; uri: string }>;
-  artPool: Record<number, string>;
 }
 
 export function CreatorPortal({
@@ -24,7 +23,6 @@ export function CreatorPortal({
   nextArtPoolIndex,
   nextMintPoolIndex,
   mintPool,
-  artPool,
 }: CreatorPortalProps) {
   const { address: connectedAddress, isConnecting } = useAccount();
   const router = useRouter();
@@ -141,7 +139,6 @@ export function CreatorPortal({
             nextArtPoolIndex={nextArtPoolIndex}
             nextMintPoolIndex={nextMintPoolIndex}
             mintPool={mintPool}
-            artPool={artPool}
             roles={roles}
             onBack={() => setSelectedTokenId(null)}
           />

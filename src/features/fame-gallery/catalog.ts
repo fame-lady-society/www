@@ -19,8 +19,12 @@ import {
   fameMirrorAbi,
   universalPoolArtMarketplaceAbi,
 } from "@/wagmi";
-import { loadGalleryMetadata } from "@/features/fame-market/metadata/galleryMetadata";
-import type { GalleryMetadataResult } from "@/features/fame-market/metadata/testMetadata";
+import {
+  resolveFameMetadataBatch,
+  type FameArtworkRevision,
+  type FameMetadataResolver,
+  type FameMetadataResult,
+} from "@/features/fame/metadata";
 import {
   FAME_COLLECTION_FIRST_TOKEN_ID,
   FAME_COLLECTION_LAST_TOKEN_ID,
@@ -28,7 +32,6 @@ import {
 
 const CATALOG_BATCH_SIZE = 64;
 const CATALOG_READ_CONCURRENCY = 2;
-const METADATA_RESOLVE_CONCURRENCY = 8;
 export const FAME_GALLERY_PAGE_SCAN_SIZE = 24;
 
 export type FameGalleryArtwork = {
@@ -37,7 +40,7 @@ export type FameGalleryArtwork = {
   owner: Address | null;
   artworkHash: Hash;
   tokenUri: string;
-  metadata: GalleryMetadataResult;
+  metadata: FameMetadataResult;
 };
 
 export type FameGalleryCatalogResult = {
@@ -87,6 +90,7 @@ export type FameGalleryCatalogOptions = {
   cursor?: number;
   blockNumber?: bigint;
   pageSize?: number;
+  resolveMetadata?: FameMetadataResolver;
 };
 
 const productionClient = baseClient as unknown as FameGalleryCatalogClient;
@@ -207,43 +211,40 @@ async function batchedReads(
   });
 }
 
-async function resolveMetadata(artwork: {
+type ChainReadyArtwork = {
   tokenId: bigint;
   kind: FameGalleryArtwork["kind"];
   owner: Address | null;
   artworkHash: Hash;
   tokenUri: string;
-}) {
-  return {
-    tokenId: Number(artwork.tokenId),
-    kind: artwork.kind,
-    owner: artwork.owner,
-    artworkHash: artwork.artworkHash,
-    tokenUri: artwork.tokenUri,
-    metadata: await loadGalleryMetadata(artwork.tokenUri),
-  } satisfies FameGalleryArtwork;
-}
+};
 
 async function resolveMetadataBatch(
-  artworks: readonly Parameters<typeof resolveMetadata>[0][],
+  artworks: readonly ChainReadyArtwork[],
+  resolveMetadata?: FameMetadataResolver,
 ) {
-  const resolved = new Array<FameGalleryArtwork>(artworks.length);
-  let nextArtwork = 0;
-  const worker = async () => {
-    while (nextArtwork < artworks.length) {
-      const index = nextArtwork;
-      nextArtwork += 1;
-      resolved[index] = await resolveMetadata(artworks[index]!);
-    }
-  };
-
-  await Promise.all(
-    Array.from(
-      { length: Math.min(METADATA_RESOLVE_CONCURRENCY, artworks.length) },
-      worker,
-    ),
+  const revisions = artworks.map(
+    ({ tokenId, tokenUri, artworkHash }) =>
+      ({
+        tokenId: tokenId.toString(),
+        tokenUri,
+        artworkHash,
+      }) satisfies FameArtworkRevision,
   );
-  return resolved;
+  const metadata = await resolveFameMetadataBatch(revisions, {
+    resolveMetadata,
+  });
+  return artworks.map(
+    (artwork, index) =>
+      ({
+        tokenId: Number(artwork.tokenId),
+        kind: artwork.kind,
+        owner: artwork.owner,
+        artworkHash: artwork.artworkHash,
+        tokenUri: artwork.tokenUri,
+        metadata: metadata[index]!.metadata,
+      }) satisfies FameGalleryArtwork,
+  );
 }
 
 export async function readFameGalleryCatalog(
@@ -394,7 +395,10 @@ export async function readFameGalleryCatalog(
     ];
   });
 
-  const resolved = await resolveMetadataBatch(chainReady);
+  const resolved = await resolveMetadataBatch(
+    chainReady,
+    options.resolveMetadata,
+  );
   return {
     blockNumber,
     artworks: resolved.sort((left, right) => left.tokenId - right.tokenId),
