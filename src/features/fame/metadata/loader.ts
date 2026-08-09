@@ -3,26 +3,25 @@ import {
   imageFromFameMetadata,
 } from "@/service/fameMetadata";
 import {
-  TEST_METADATA_LIMITS,
-  decodeTestGalleryMetadata,
-  validateInlineGalleryImage,
-  type GalleryMetadataResult,
-} from "./testMetadata";
+  FAME_METADATA_LIMITS,
+  decodeInlineFameMetadata,
+  validateInlineFameImage,
+} from "./inline";
+import type { FameMetadataResult } from "./types";
 
-type MetadataFetch = (
+export type FameMetadataFetch = (
   input: RequestInfo | URL,
   init?: RequestInit,
 ) => Promise<Response>;
 
-export const GALLERY_REMOTE_METADATA_MAX_BYTES =
-  TEST_METADATA_LIMITS.decodedJson;
-export const GALLERY_METADATA_TIMEOUT_MS = 10_000;
+export const FAME_REMOTE_METADATA_MAX_BYTES = FAME_METADATA_LIMITS.decodedJson;
+export const FAME_METADATA_TIMEOUT_MS = 10_000;
 
 const APPROVED_ARWEAVE_HOSTS = new Set(["arweave.net"]);
 const APPROVED_IRYS_HOSTS = new Set(["gateway.irys.xyz"]);
 const APPROVED_IPFS_HOSTS = new Set(["ipfs.io", "ipfs.fameladysociety.com"]);
 
-function approvedRemoteAssetUrl(rawUrl: string): string | null {
+export function validateFameRemoteAssetUrl(rawUrl: string): string | null {
   const assetUrl = rawUrl.trim();
   let url: URL;
   try {
@@ -49,13 +48,13 @@ function approvedRemoteAssetUrl(rawUrl: string): string | null {
   return null;
 }
 
-export function validateGalleryImageUrl(rawImage: string): string | null {
+export function validateFameImageUrl(rawImage: string): string | null {
   const image = rawImage.trim();
-  if (image.startsWith("data:")) return validateInlineGalleryImage(image);
-  return approvedRemoteAssetUrl(image);
+  if (image.startsWith("data:")) return validateInlineFameImage(image);
+  return validateFameRemoteAssetUrl(image);
 }
 
-function failure(error: string): GalleryMetadataResult {
+export function fameMetadataFailure(error: string): FameMetadataResult {
   return {
     status: "failure",
     image: FAME_METADATA_FALLBACK_IMAGE,
@@ -80,7 +79,7 @@ function optionalString(
 function abortError(signal: AbortSignal) {
   return signal.reason instanceof Error
     ? signal.reason
-    : new Error("Gallery metadata request aborted");
+    : new Error("FAME metadata request aborted");
 }
 
 async function readBoundedResponseText(
@@ -91,12 +90,12 @@ async function readBoundedResponseText(
   const contentLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > maxBytes) {
     await response.body?.cancel();
-    throw new Error("Gallery metadata response is too large");
+    throw new Error("FAME metadata response is too large");
   }
   if (!response.body) {
     const body = await response.text();
     if (new TextEncoder().encode(body).byteLength > maxBytes) {
-      throw new Error("Gallery metadata response is too large");
+      throw new Error("FAME metadata response is too large");
     }
     return body;
   }
@@ -117,7 +116,7 @@ async function readBoundedResponseText(
       bytesRead += value.byteLength;
       if (bytesRead > maxBytes) {
         await reader.cancel();
-        throw new Error("Gallery metadata response is too large");
+        throw new Error("FAME metadata response is too large");
       }
       body += decoder.decode(value, { stream: true });
     }
@@ -129,7 +128,7 @@ async function readBoundedResponseText(
 }
 
 async function fetchBoundedMetadata(
-  fetchMetadata: MetadataFetch,
+  fetchMetadata: FameMetadataFetch,
   url: string,
   timeoutMs: number,
   maxBytes: number,
@@ -143,7 +142,7 @@ async function fetchBoundedMetadata(
     externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
   }
   const timeout = setTimeout(
-    () => controller.abort(new Error("Gallery metadata request timed out")),
+    () => controller.abort(new Error("FAME metadata request timed out")),
     timeoutMs,
   );
 
@@ -163,45 +162,47 @@ async function fetchBoundedMetadata(
   }
 }
 
-export async function loadGalleryMetadata(
+export async function loadFameMetadata(
   rawTokenUri: string,
-  fetchMetadata: MetadataFetch = fetch,
-  timeoutMs = GALLERY_METADATA_TIMEOUT_MS,
+  fetchMetadata: FameMetadataFetch = fetch,
+  timeoutMs = FAME_METADATA_TIMEOUT_MS,
   signal?: AbortSignal,
-): Promise<GalleryMetadataResult> {
+): Promise<FameMetadataResult> {
   const tokenUri = rawTokenUri.trim();
   if (tokenUri.startsWith("data:")) {
-    return decodeTestGalleryMetadata(tokenUri);
+    return decodeInlineFameMetadata(tokenUri);
   }
 
-  const metadataUrl = approvedRemoteAssetUrl(tokenUri);
-  if (!metadataUrl) return failure("Token metadata URL is not approved");
+  const metadataUrl = validateFameRemoteAssetUrl(tokenUri);
+  if (!metadataUrl)
+    return fameMetadataFailure("Token metadata URL is not approved");
 
   try {
     const body = await fetchBoundedMetadata(
       fetchMetadata,
       metadataUrl,
       timeoutMs,
-      GALLERY_REMOTE_METADATA_MAX_BYTES,
+      FAME_REMOTE_METADATA_MAX_BYTES,
       signal,
     );
-    if (body === null) return failure("Token metadata could not be loaded");
+    if (body === null) {
+      return fameMetadataFailure("Token metadata could not be loaded");
+    }
     const parsed: unknown = JSON.parse(body);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return failure("Token metadata could not be loaded");
+      return fameMetadataFailure("Token metadata could not be loaded");
     }
     const metadata = parsed as Record<string, unknown>;
-    const image = validateGalleryImageUrl(imageFromFameMetadata(metadata));
-    if (!image)
-      throw new Error("Gallery metadata image origin is not approved");
+    const image = validateFameImageUrl(imageFromFameMetadata(metadata));
+    if (!image) throw new Error("FAME metadata image origin is not approved");
     return {
       status: "ready",
       image,
-      name: optionalString(metadata, "name", TEST_METADATA_LIMITS.name),
+      name: optionalString(metadata, "name", FAME_METADATA_LIMITS.name),
       description: optionalString(
         metadata,
         "description",
-        TEST_METADATA_LIMITS.description,
+        FAME_METADATA_LIMITS.description,
       ),
       attributes: [],
       error: null,
@@ -210,5 +211,5 @@ export async function loadGalleryMetadata(
     if (signal?.aborted) throw error;
   }
 
-  return failure("Token metadata could not be loaded");
+  return fameMetadataFailure("Token metadata could not be loaded");
 }

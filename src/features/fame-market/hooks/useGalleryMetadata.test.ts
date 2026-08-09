@@ -1,15 +1,26 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { FAME_METADATA_CLIENT_CACHE_SCHEMA_VERSION } from "@/features/fame/metadata/client";
 import { galleryMetadataQueryOptions } from "./useGalleryMetadata";
 
 describe("gallery metadata query", () => {
-  it("revalidates each token URI and does not retain inactive metadata", () => {
+  it("keeps successful metadata fresh by exact URI/hash revision", () => {
     const uri = "https://gateway.irys.xyz/example/metadata.json";
-    const options = galleryMetadataQueryOptions(uri);
+    const artworkHash = `0x${"ab".repeat(32)}` as `0x${string}`;
+    const options = galleryMetadataQueryOptions({
+      tokenId: "12",
+      tokenUri: uri,
+      artworkHash,
+    });
 
-    assert.deepEqual(options.queryKey, ["fame-market", "metadata", uri]);
-    assert.equal(options.staleTime, 0);
-    assert.equal(options.gcTime, 0);
+    assert.deepEqual(options.queryKey, [
+      "fame-metadata",
+      FAME_METADATA_CLIENT_CACHE_SCHEMA_VERSION,
+      uri,
+      artworkHash,
+    ]);
+    assert.equal(options.staleTime, Infinity);
+    assert.equal(options.gcTime, 30 * 60 * 1000);
     assert.equal(options.retry, 1);
     assert.equal(options.initialData, undefined);
   });
@@ -23,7 +34,10 @@ describe("gallery metadata query", () => {
       }),
     ).toString("base64")}`;
 
-    const initialData = galleryMetadataQueryOptions(uri).initialData;
+    const initialData = galleryMetadataQueryOptions({
+      tokenId: "12",
+      tokenUri: uri,
+    }).initialData;
     assert.equal(typeof initialData, "function");
     assert.equal(initialData?.().status, "ready");
   });

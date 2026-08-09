@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   RotatorSelectorReadTimeoutError,
-  getRotatorSelectorImagePath,
   withRotatorSelectorReadDeadline,
 } from "./selector";
 
@@ -20,11 +19,5 @@ describe("withRotatorSelectorReadDeadline", () => {
       withRotatorSelectorReadDeadline(never, 1),
       RotatorSelectorReadTimeoutError,
     );
-  });
-});
-
-describe("getRotatorSelectorImagePath", () => {
-  it("defers artwork to the token-image route", () => {
-    assert.equal(getRotatorSelectorImagePath(42), "/fame/token/image/42");
   });
 });

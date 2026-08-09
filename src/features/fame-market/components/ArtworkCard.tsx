@@ -8,7 +8,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useId } from "react";
-import type { GalleryMetadataResult } from "../metadata/testMetadata";
+import type { FameMetadataResult } from "@/features/fame/metadata";
 
 export function ArtworkCard({
   metadata,
@@ -18,7 +18,7 @@ export function ArtworkCard({
   onBuy,
   onRetry,
 }: {
-  metadata: GalleryMetadataResult;
+  metadata: FameMetadataResult;
   purchaseLocked: boolean;
   purchaseInProgress?: boolean;
   tokenSymbol?: string;

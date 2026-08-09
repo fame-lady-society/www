@@ -9,13 +9,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { base } from "viem/chains";
 import { usePublicClient, useSwitchChain } from "wagmi";
 import { FameShell } from "@/features/fame/components/FameShell";
 import { fameMirrorAbi } from "@/wagmi";
-import { getFameTokenImage } from "@/service/fame";
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
+import { galleryMetadataQueryOptions } from "@/features/fame-market/hooks/useGalleryMetadata";
 import {
   FAME_BURN_POOL_ROTATOR_BASE_ADDRESS,
   getFameRotatorConfig,
@@ -23,6 +23,7 @@ import {
 import { useFameRotatorExecutionEnvironment } from "../hooks/useFameRotatorExecutionEnvironment";
 import { useFameRotatorPreflight } from "../hooks/useFameRotatorPreflight";
 import { useFameRotatorTransaction } from "../hooks/useFameRotatorTransaction";
+import { useFameArtworkRevisions } from "../hooks/useFameArtworkRevisions";
 import { isRotatorAuthorizedForOffered } from "../transactions/contractRequests";
 import type { BurnPoolTargetResolution } from "../target";
 import { FameRotatorAcquisition } from "./FameRotatorAcquisition";
@@ -71,41 +72,27 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
     [ownedIds, preflight.preflight.canSelectOffered],
   );
 
-  // Presentation-only: load artwork for confirmed owned IDs. Failures fall back
-  // so the token remains selectable by ID (plan R6 / shared metadata fallback).
-  const ownedImagesQuery = useQuery({
-    queryKey: [
-      "fame-rotator",
-      "owned-token-images",
-      execution.account,
-      selectableOwnedIds.join(","),
-    ],
-    enabled: selectableOwnedIds.length > 0,
-    staleTime: 60_000,
-    queryFn: async (): Promise<Record<number, string>> => {
-      const entries = await Promise.all(
-        selectableOwnedIds.map(async (tokenId) => {
-          try {
-            const image = await getFameTokenImage(tokenId);
-            return [tokenId, image] as const;
-          } catch {
-            return [tokenId, FAME_METADATA_FALLBACK_IMAGE] as const;
-          }
-        }),
-      );
-      return Object.fromEntries(entries);
-    },
+  const ownedRevisions = useFameArtworkRevisions(selectableOwnedIds);
+  const ownedMetadataQueries = useQueries({
+    queries: selectableOwnedIds.map((tokenId) =>
+      galleryMetadataQueryOptions(
+        ownedRevisions.byTokenId.get(tokenId) ?? {
+          tokenId: tokenId.toString(),
+          tokenUri: "",
+        },
+      ),
+    ),
   });
 
   const ownedTokenImages = useMemo(() => {
-    const loaded = ownedImagesQuery.data ?? {};
-    // Ensure every selectable id has a renderable src while images load.
     const images: Record<number, string> = {};
-    for (const tokenId of selectableOwnedIds) {
-      images[tokenId] = loaded[tokenId] ?? FAME_METADATA_FALLBACK_IMAGE;
-    }
+    selectableOwnedIds.forEach((tokenId, index) => {
+      images[tokenId] =
+        ownedMetadataQueries[index]?.data?.image ??
+        FAME_METADATA_FALLBACK_IMAGE;
+    });
     return images;
-  }, [ownedImagesQuery.data, selectableOwnedIds]);
+  }, [ownedMetadataQueries, selectableOwnedIds]);
 
   // Invalidate selection when account/ownership changes remove the offered id.
   useEffect(() => {
@@ -123,8 +110,8 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
   }, [preflight.preflight.status]);
 
   const refreshAll = useCallback(async () => {
-    await preflight.refetch();
-  }, [preflight]);
+    await Promise.all([preflight.refetch(), ownedRevisions.refetch()]);
+  }, [ownedRevisions, preflight]);
 
   const transaction = useFameRotatorTransaction({
     account: execution.account,

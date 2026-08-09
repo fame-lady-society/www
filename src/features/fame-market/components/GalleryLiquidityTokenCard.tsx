@@ -23,7 +23,11 @@ export function GalleryLiquidityTokenCard({
   disabled: boolean;
   onSelect: () => void;
 }) {
-  const metadata = useGalleryMetadata(token.tokenUri ?? "").metadata;
+  const metadata = useGalleryMetadata({
+    tokenId: token.tokenId.toString(),
+    tokenUri: token.tokenUri ?? "",
+    artworkHash: token.artworkHash ?? undefined,
+  }).metadata;
   const name =
     metadata.status === "ready" && metadata.name
       ? metadata.name

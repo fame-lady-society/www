@@ -20,6 +20,7 @@ import {
 import { base } from "viem/chains";
 import { useConnection, useSwitchChain } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
+import type { FameMetadataResult } from "@/features/fame/metadata";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
 import { formatTestAmount } from "../format";
 import { displaySafeErrorMessage } from "../../fame-swap/solver/diagnostics";
@@ -32,7 +33,6 @@ import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryMetadata } from "../hooks/useGalleryMetadata";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
-import type { GalleryMetadataResult } from "../metadata/testMetadata";
 import type {
   GalleryArtworkTarget,
   GalleryCheckoutQuote,
@@ -55,12 +55,15 @@ export type GalleryViewContentState =
 
 export type PresentedGalleryArtwork = {
   stableKey: string;
+  tokenId: bigint;
   artworkHash?: Hash;
-  metadata?: GalleryMetadataResult;
+  metadata?: FameMetadataResult;
   tokenUri?: string;
 };
 
-const DIRECT_PAYMENT_ASSETS = ["FAME"] as const satisfies readonly GalleryPaymentAsset[];
+const DIRECT_PAYMENT_ASSETS = [
+  "FAME",
+] as const satisfies readonly GalleryPaymentAsset[];
 const CHECKOUT_PAYMENT_ASSETS = [
   "FAME",
   "ETH",
@@ -400,7 +403,9 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
           ) : (
             <GalleryMetadataArtworkCard
               key={`${artwork.stableKey}:${artwork.artworkHash ?? ""}`}
+              tokenId={artwork.tokenId}
               tokenUri={artwork.tokenUri ?? ""}
+              artworkHash={artwork.artworkHash}
               purchaseLocked={purchaseLocked}
               purchaseInProgress={
                 purchaseLocked && activeArtworkKey === artwork.stableKey
@@ -422,21 +427,29 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
 });
 
 function GalleryMetadataArtworkCard({
+  tokenId,
   tokenUri,
+  artworkHash,
   purchaseLocked,
   purchaseInProgress,
   tokenSymbol,
   onBuy,
   onRetry,
 }: {
+  tokenId: bigint;
   tokenUri: string;
+  artworkHash?: Hash;
   purchaseLocked: boolean;
   purchaseInProgress: boolean;
   tokenSymbol: string;
   onBuy: () => void;
   onRetry: () => void;
 }) {
-  const query = useGalleryMetadata(tokenUri);
+  const query = useGalleryMetadata({
+    tokenId: tokenId.toString(),
+    tokenUri,
+    artworkHash,
+  });
   if (query.isLoading) {
     return (
       <Paper variant="outlined" sx={{ p: 3 }} role="status">
@@ -489,8 +502,8 @@ export function GalleryView() {
   const discovery = useGalleryDiscovery({ poolTargets });
 
   const refresh = useCallback(async () => {
-    await Promise.all([global.refresh(), pool.refresh()]);
-  }, [global, pool]);
+    await Promise.all([global.refresh(), pool.refresh(), discovery.refresh()]);
+  }, [discovery, global, pool]);
   const globalState =
     global.projection.status === "success" ? global.projection.data : null;
   const checkoutQuote = useGalleryCheckoutQuote({
@@ -520,6 +533,7 @@ export function GalleryView() {
     () =>
       discovery.catalog.map((target) => ({
         stableKey: target.targetId,
+        tokenId: target.tokenId,
         artworkHash: target.artworkHash ?? undefined,
         tokenUri: target.tokenUri ?? "",
       })),

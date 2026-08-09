@@ -16,10 +16,12 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import NextLink from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { Address, Hash } from "viem";
 import { useReadContract, useTransactionReceipt } from "wagmi";
 import { LinkButton } from "@/components/LinkButton";
+import type { FameMetadataResult } from "@/features/fame/metadata";
 import {
   creatorArtistMagicAbi,
   useReadCreatorArtistMagicGetMintPoolStart,
@@ -29,7 +31,6 @@ import { tokenForAddress } from "../../fame-swap/tokens";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { formatTestAmount } from "../format";
 import { useGalleryMetadata } from "../hooks/useGalleryMetadata";
-import type { GalleryMetadataResult } from "../metadata/testMetadata";
 import {
   projectGalleryPurchaseReceipt,
   type GalleryPurchaseReceiptProjection,
@@ -216,7 +217,7 @@ export function GalleryPurchaseReceiptContent({
   mintPoolStartError = false,
 }: {
   purchase: GalleryPurchaseReceiptProjection;
-  metadata: GalleryMetadataResult;
+  metadata: FameMetadataResult;
   mirror: Address;
   explorerBaseUrl: string;
   forkMode: boolean;
@@ -285,12 +286,11 @@ export function GalleryPurchaseReceiptContent({
               sx={{ p: 1, bgcolor: "common.black", overflow: "hidden" }}
             >
               {!imageFailed ? (
-                // The renderer supplies an inline data URI. Next Image cannot
-                // improve or proxy it, so preserve the exact on-chain artwork.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={metadata.image}
                   alt={`${name} artwork`}
+                  width={1200}
+                  height={1200}
                   onError={() => setImageFailed(true)}
                   style={{
                     display: "block",
@@ -592,9 +592,11 @@ export function GalleryPurchaseReceiptView({
     blockNumber: receipt.data?.blockNumber,
     query: { enabled: projected.purchase !== null },
   });
-  const metadata = useGalleryMetadata(
-    typeof tokenUri.data === "string" ? tokenUri.data : "",
-  );
+  const metadata = useGalleryMetadata({
+    tokenId: projected.purchase?.shellId.toString() ?? "0",
+    tokenUri: typeof tokenUri.data === "string" ? tokenUri.data : "",
+    artworkHash: projected.purchase?.artworkHash,
+  });
   const mintPoolStart = useReadCreatorArtistMagicGetMintPoolStart({
     address: runtime.addresses.creatorMagic,
     chainId: runtime.chainId,

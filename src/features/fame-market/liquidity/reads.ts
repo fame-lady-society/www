@@ -1,4 +1,4 @@
-import { isAddressEqual, type Address } from "viem";
+import { isAddressEqual, type Address, type Hash } from "viem";
 import {
   creatorArtistMagicAbi,
   fameMirrorAbi,
@@ -15,6 +15,7 @@ import type { GalleryProjectionResult } from "../types";
 export type GalleryLiquidityToken = Readonly<{
   tokenId: bigint;
   tokenUri: string | null;
+  artworkHash?: Hash | null;
 }>;
 
 export type GalleryLiquidityProviderPosition = Readonly<{
@@ -95,25 +96,37 @@ export async function readWalletOwnedSociety(
             functionName: "tokenURI",
             args: [tokenId],
           },
+          {
+            address: addresses.marketplace,
+            abi: universalPoolArtMarketplaceAbi,
+            functionName: "artworkHash",
+            args: [tokenId],
+          },
         ],
       );
     } catch {
       // A metadata outage must not hide verified wallet ownership.
     }
     const metadataByTokenId = new Map(
-      metadata.map(({ tokenId, results }) => [tokenId, results[0]]),
+      metadata.map(({ tokenId, results }) => [tokenId, results]),
     );
     return {
       status: "success",
       blockNumber,
       data: ownedTokenIds.map((tokenId) => {
-        const tokenUri = metadataByTokenId.get(tokenId);
+        const [tokenUri, artworkHash] = metadataByTokenId.get(tokenId) ?? [];
         return {
           tokenId,
           tokenUri:
             tokenUri?.status === "success" &&
             typeof tokenUri.result === "string"
               ? tokenUri.result
+              : null,
+          artworkHash:
+            artworkHash?.status === "success" &&
+            typeof artworkHash.result === "string" &&
+            /^0x[0-9a-fA-F]{64}$/.test(artworkHash.result)
+              ? (artworkHash.result as Hash)
               : null,
         };
       }),
@@ -158,24 +171,36 @@ export async function readLiquidityInventory(
           functionName: "tokenURI",
           args: [tokenId],
         },
+        {
+          address: addresses.marketplace,
+          abi: universalPoolArtMarketplaceAbi,
+          functionName: "artworkHash",
+          args: [tokenId],
+        },
       ],
     );
   } catch {
     // Inventory remains browseable by token ID when metadata is unavailable.
   }
   const metadataByTokenId = new Map(
-    metadata.map(({ tokenId, results }) => [tokenId, results[0]]),
+    metadata.map(({ tokenId, results }) => [tokenId, results]),
   );
   return {
     status: "success",
     blockNumber,
     data: heldTokenIds.map((tokenId) => {
-      const tokenUri = metadataByTokenId.get(tokenId);
+      const [tokenUri, artworkHash] = metadataByTokenId.get(tokenId) ?? [];
       return {
         tokenId,
         tokenUri:
           tokenUri?.status === "success" && typeof tokenUri.result === "string"
             ? tokenUri.result
+            : null,
+        artworkHash:
+          artworkHash?.status === "success" &&
+          typeof artworkHash.result === "string" &&
+          /^0x[0-9a-fA-F]{64}$/.test(artworkHash.result)
+            ? (artworkHash.result as Hash)
             : null,
       };
     }),

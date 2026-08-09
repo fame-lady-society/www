@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import {
-  getFameTokenImage,
+  getFameArtworkRevisions,
   getOrderedBurnPoolTokenIds,
 } from "@/service/fame";
+import { resolveFameMetadata } from "@/features/fame/metadata";
 import { FameRotatorPage } from "@/features/fame-rotator/components/FameRotatorPage";
 import {
   resolveBurnPoolTarget,
@@ -32,23 +33,43 @@ export default async function Page(props: Props) {
     return <FameRotatorPage resolution={early} />;
   }
 
-  let resolution: BurnPoolTargetResolution;
+  let snapshot;
   try {
-    const snapshot = await getOrderedBurnPoolTokenIds({ cache: "display" });
-    // Metadata is presentation-only; failure must not remove identity.
-    const image = await getFameTokenImage(early.tokenId);
-    resolution = resolveBurnPoolTarget({
-      rawTargetId,
-      snapshot,
-      image,
-    });
+    snapshot = await getOrderedBurnPoolTokenIds({ cache: "execution" });
   } catch (error) {
-    resolution = resolveBurnPoolTarget({
-      rawTargetId,
-      poolReadError: error,
-    });
+    return (
+      <FameRotatorPage
+        resolution={resolveBurnPoolTarget({
+          rawTargetId,
+          poolReadError: error,
+        })}
+      />
+    );
   }
 
+  let image: string | undefined;
+  const identity = resolveBurnPoolTarget({ rawTargetId, snapshot });
+  if (identity.status === "available") {
+    try {
+      const revisions = await getFameArtworkRevisions(
+        [early.tokenId],
+        snapshot.blockNumber.toString(),
+      );
+      const revision = revisions.revisions[0];
+      if (revision) {
+        const metadata = await resolveFameMetadata(revision);
+        if (metadata.status === "ready") image = metadata.image;
+      }
+    } catch {
+      // Artwork is presentation-only and never changes target eligibility.
+    }
+  }
+
+  const resolution: BurnPoolTargetResolution = resolveBurnPoolTarget({
+    rawTargetId,
+    snapshot,
+    image,
+  });
   return <FameRotatorPage resolution={resolution} />;
 }
 

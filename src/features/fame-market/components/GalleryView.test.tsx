@@ -2,7 +2,7 @@ import "./headlessUiTestSetup";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
+import { decodeInlineFameMetadata } from "@/features/fame/metadata";
 import { FAME, USDC, WETH } from "../../fame-swap/tokens";
 import type { GalleryCheckoutQuote } from "../types";
 import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
@@ -21,7 +21,7 @@ function dataUri(mime: string, value: string) {
 }
 
 function readyMetadata(name: string) {
-  return decodeTestGalleryMetadata(
+  return decodeInlineFameMetadata(
     dataUri(
       "application/json",
       JSON.stringify({
@@ -234,8 +234,8 @@ describe("TEST gallery public view", () => {
 
   it("presents artwork and one global TEST price without route mechanics", () => {
     const artworks: PresentedGalleryArtwork[] = [
-      { stableKey: "one", metadata: readyMetadata("Sunrise") },
-      { stableKey: "two", metadata: readyMetadata("Sunrise") },
+      { stableKey: "one", tokenId: 1n, metadata: readyMetadata("Sunrise") },
+      { stableKey: "two", tokenId: 2n, metadata: readyMetadata("Sunrise") },
     ];
     const html = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "ready" }}>
@@ -261,7 +261,9 @@ describe("TEST gallery public view", () => {
   it("keeps the FAME price while labeling the selected checkout asset", () => {
     const html = renderToStaticMarkup(
       <GalleryArtworkGrid
-        artworks={[{ stableKey: "one", metadata: readyMetadata("Sunrise") }]}
+        artworks={[
+          { stableKey: "one", tokenId: 1n, metadata: readyMetadata("Sunrise") },
+        ]}
         totalPrice={price}
         onBuy={() => undefined}
         onRetry={() => undefined}
@@ -278,7 +280,7 @@ describe("TEST gallery public view", () => {
   it("shows retryable unavailable artwork without a Buy action", () => {
     const html = renderToStaticMarkup(
       <ArtworkCard
-        metadata={decodeTestGalleryMetadata("bad uri")}
+        metadata={decodeInlineFameMetadata("bad uri")}
         purchaseLocked={false}
         onBuy={() => undefined}
         onRetry={() => undefined}
@@ -295,8 +297,12 @@ describe("TEST gallery public view", () => {
     const html = renderToStaticMarkup(
       <GalleryArtworkGrid
         artworks={[
-          { stableKey: "one", metadata: readyMetadata("Sunrise") },
-          { stableKey: "two", metadata: readyMetadata("Moonlight") },
+          { stableKey: "one", tokenId: 1n, metadata: readyMetadata("Sunrise") },
+          {
+            stableKey: "two",
+            tokenId: 2n,
+            metadata: readyMetadata("Moonlight"),
+          },
         ]}
         totalPrice={price}
         purchaseLocked
@@ -314,7 +320,13 @@ describe("TEST gallery public view", () => {
     const html = renderToStaticMarkup(
       <GalleryViewContent state={{ status: "ready" }} paused>
         <GalleryArtworkGrid
-          artworks={[{ stableKey: "one", metadata: readyMetadata("Sunrise") }]}
+          artworks={[
+            {
+              stableKey: "one",
+              tokenId: 1n,
+              metadata: readyMetadata("Sunrise"),
+            },
+          ]}
           totalPrice={price}
           purchaseLocked
           onBuy={() => undefined}

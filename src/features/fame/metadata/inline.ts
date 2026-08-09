@@ -1,45 +1,20 @@
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
+import type { FameMetadataAttribute, FameMetadataResult } from "./types";
 
-export const TEST_METADATA_LIMITS = {
+export const FAME_METADATA_LIMITS = {
   encodedJson: 350 * 1024,
   decodedJson: 256 * 1024,
-  encodedSvg: Math.floor(1.4 * 1024 * 1024),
-  decodedSvg: 1024 * 1024,
+  encodedImage: Math.floor(1.4 * 1024 * 1024),
+  decodedImage: 1024 * 1024,
   name: 256,
   description: 4_096,
   attributes: 32,
   attributeField: 256,
 } as const;
 
-export type GalleryMetadataAttribute = {
-  traitType: string;
-  value: string;
-};
-
-export type GalleryMetadataResult =
-  | {
-      status: "ready";
-      image: string;
-      name: string | null;
-      description: string | null;
-      attributes: GalleryMetadataAttribute[];
-      error: null;
-    }
-  | {
-      status: "fallback" | "failure";
-      image: string;
-      name: null;
-      description: null;
-      attributes: [];
-      error: string;
-    };
-
-function fallback(
-  status: "fallback" | "failure",
-  error: string,
-): GalleryMetadataResult {
+function failure(error: string): FameMetadataResult {
   return {
-    status,
+    status: "failure",
     image: FAME_METADATA_FALLBACK_IMAGE,
     name: null,
     description: null,
@@ -48,7 +23,7 @@ function fallback(
   };
 }
 
-function decodeBase64(
+function decodeBase64Bytes(
   encoded: string,
   encodedLimit: number,
   decodedLimit: number,
@@ -68,8 +43,17 @@ function decodeBase64(
   if (binary.length > decodedLimit) {
     throw new Error("Decoded payload is too large");
   }
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+function decodeBase64Text(
+  encoded: string,
+  encodedLimit: number,
+  decodedLimit: number,
+) {
+  return new TextDecoder("utf-8", { fatal: true }).decode(
+    decodeBase64Bytes(encoded, encodedLimit, decodedLimit),
+  );
 }
 
 function decodeDataUri(
@@ -82,7 +66,7 @@ function decodeDataUri(
   if (!uri.startsWith(prefix)) {
     throw new Error(`Expected ${mime} Base64 data URI`);
   }
-  return decodeBase64(uri.slice(prefix.length), encodedLimit, decodedLimit);
+  return decodeBase64Text(uri.slice(prefix.length), encodedLimit, decodedLimit);
 }
 
 function optionalBoundedString(value: unknown, field: string, limit: number) {
@@ -94,9 +78,9 @@ function optionalBoundedString(value: unknown, field: string, limit: number) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function attributes(value: unknown): GalleryMetadataAttribute[] {
+function attributes(value: unknown): FameMetadataAttribute[] {
   if (value === undefined) return [];
-  if (!Array.isArray(value) || value.length > TEST_METADATA_LIMITS.attributes) {
+  if (!Array.isArray(value) || value.length > FAME_METADATA_LIMITS.attributes) {
     throw new Error("Metadata attributes exceed their bound");
   }
 
@@ -111,15 +95,12 @@ function attributes(value: unknown): GalleryMetadataAttribute[] {
       typeof traitType !== "string" ||
       typeof attributeValue !== "string" ||
       traitType.length === 0 ||
-      traitType.length > TEST_METADATA_LIMITS.attributeField ||
-      attributeValue.length > TEST_METADATA_LIMITS.attributeField
+      traitType.length > FAME_METADATA_LIMITS.attributeField ||
+      attributeValue.length > FAME_METADATA_LIMITS.attributeField
     ) {
       throw new Error(`Metadata attribute ${index} is invalid`);
     }
-    return {
-      traitType,
-      value: attributeValue,
-    };
+    return { traitType, value: attributeValue };
   });
 }
 
@@ -152,7 +133,7 @@ function assertPassiveSvg(svg: string) {
   }
 }
 
-export function validateInlineGalleryImage(rawImage: string): string | null {
+export function validateInlineFameImage(rawImage: string): string | null {
   const image = rawImage.trim();
   const match = image.match(
     /^data:(image\/(?:svg\+xml|png|jpeg|jpg|gif|webp|avif));base64,(.*)$/s,
@@ -160,32 +141,34 @@ export function validateInlineGalleryImage(rawImage: string): string | null {
   if (!match) return null;
 
   try {
-    const decoded = decodeBase64(
+    const bytes = decodeBase64Bytes(
       match[2] ?? "",
-      TEST_METADATA_LIMITS.encodedSvg,
-      TEST_METADATA_LIMITS.decodedSvg,
+      FAME_METADATA_LIMITS.encodedImage,
+      FAME_METADATA_LIMITS.decodedImage,
     );
-    if (match[1] === "image/svg+xml") assertPassiveSvg(decoded);
+    if (match[1] === "image/svg+xml") {
+      assertPassiveSvg(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    }
     return image;
   } catch {
     return null;
   }
 }
 
-export function decodeTestGalleryMetadata(
+export function decodeInlineFameMetadata(
   rawTokenUri: string,
-): GalleryMetadataResult {
+): FameMetadataResult {
   const tokenUri = rawTokenUri.trim();
   if (tokenUri.length === 0) {
-    return fallback("fallback", "Token metadata is unavailable");
+    return failure("Token metadata is unavailable");
   }
 
   try {
     const json = decodeDataUri(
       tokenUri,
       "application/json",
-      TEST_METADATA_LIMITS.encodedJson,
-      TEST_METADATA_LIMITS.decodedJson,
+      FAME_METADATA_LIMITS.encodedJson,
+      FAME_METADATA_LIMITS.decodedJson,
     );
     const parsed: unknown = JSON.parse(json);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -195,31 +178,26 @@ export function decodeTestGalleryMetadata(
     if (typeof metadata.image !== "string" || metadata.image.length === 0) {
       throw new Error("Metadata image is missing");
     }
-    const svg = decodeDataUri(
-      metadata.image,
-      "image/svg+xml",
-      TEST_METADATA_LIMITS.encodedSvg,
-      TEST_METADATA_LIMITS.decodedSvg,
-    );
-    assertPassiveSvg(svg);
+    const image = validateInlineFameImage(metadata.image);
+    if (!image) throw new Error("Metadata image could not be decoded safely");
 
     return {
       status: "ready",
-      image: metadata.image,
+      image,
       name: optionalBoundedString(
         metadata.name,
         "Metadata name",
-        TEST_METADATA_LIMITS.name,
+        FAME_METADATA_LIMITS.name,
       ),
       description: optionalBoundedString(
         metadata.description,
         "Metadata description",
-        TEST_METADATA_LIMITS.description,
+        FAME_METADATA_LIMITS.description,
       ),
       attributes: attributes(metadata.attributes),
       error: null,
     };
   } catch {
-    return fallback("failure", "Token metadata could not be decoded safely");
+    return failure("Token metadata could not be decoded safely");
   }
 }

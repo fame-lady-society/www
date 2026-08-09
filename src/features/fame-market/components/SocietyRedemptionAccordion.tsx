@@ -11,6 +11,7 @@ import Checkbox from "@mui/material/Checkbox";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Image from "next/image";
 import { TransactionsModal } from "@/components/TransactionsModal";
 import {
   Fragment,
@@ -122,10 +123,11 @@ function SocietyTokenPresentationCard({
       <Stack direction="row" spacing={1.5} alignItems="center">
         <Checkbox checked={selected} disabled={disabled} tabIndex={-1} />
         {token.metadata.status === "ready" && token.metadata.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={token.metadata.image}
             alt=""
+            width={56}
+            height={56}
             style={{
               width: 56,
               height: 56,
@@ -454,9 +456,10 @@ function OwnedSocietyTokenCard({
     functionName: "tokenURI",
     args: [tokenId],
   });
-  const metadata = useGalleryMetadata(
-    typeof tokenUri.data === "string" ? tokenUri.data : "",
-  );
+  const metadata = useGalleryMetadata({
+    tokenId: tokenId.toString(),
+    tokenUri: typeof tokenUri.data === "string" ? tokenUri.data : "",
+  });
   const presentation: SocietyRedemptionTokenPresentation = {
     tokenId,
     metadata:

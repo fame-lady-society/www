@@ -109,7 +109,7 @@ export function useGalleryDiscovery({
   const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
   const [isScanning, setIsScanning] = useState(Boolean(source));
   const [scanCompleted, setScanCompleted] = useState(false);
-  const initialScan = useRef<ReturnType<typeof discoverGalleryHoldings> | null>(
+  const pendingScan = useRef<ReturnType<typeof discoverGalleryHoldings> | null>(
     null,
   );
   const scanGeneration = useRef(0);
@@ -142,18 +142,39 @@ export function useGalleryDiscovery({
         },
       }),
     );
-    initialScan.current = scan;
-    void scan.then((result) => {
-      if (!active) return;
-      if (isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)) {
-        setHeldTargets((current) =>
-          reconcileGalleryCatalogTargets(current, result.targets),
-        );
-      }
-      setScanCompleted(result.scanCompleted);
-      setIsScanning(false);
-      if (initialScan.current === scan) initialScan.current = null;
-    });
+    pendingScan.current = scan;
+    void scan
+      .then(
+        (result) => {
+          if (
+            !active ||
+            !isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)
+          ) {
+            return;
+          }
+          setHeldTargets((current) =>
+            reconcileGalleryCatalogTargets(current, result.targets),
+          );
+          setScanCompleted(result.scanCompleted);
+        },
+        () => {
+          if (
+            active &&
+            isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)
+          ) {
+            setScanCompleted(false);
+          }
+        },
+      )
+      .finally(() => {
+        if (pendingScan.current === scan) pendingScan.current = null;
+        if (
+          active &&
+          isCurrentGalleryScan(scanGenerationAtStart, scanGeneration.current)
+        ) {
+          setIsScanning(false);
+        }
+      });
     return () => {
       active = false;
     };
@@ -162,28 +183,38 @@ export function useGalleryDiscovery({
   const revalidateAffectedTokenIds = useCallback(
     async (tokenIds: readonly bigint[]) => {
       if (!source) return [];
-      const targets = await revalidateGalleryHeldTokenIds(source, tokenIds, {
-        marketplace,
-      });
-      scanGeneration.current += 1;
-      setHeldTargets((current) => {
-        const affected = new Set(
-          tokenIds.map((tokenId) => `held:${tokenId.toString()}`),
-        );
-        const retained = current.filter(
-          ({ targetId }) => !affected.has(targetId),
-        );
-        return appendGalleryCatalogTargets(retained, targets);
-      });
-      return targets;
+      const generation = scanGeneration.current + 1;
+      scanGeneration.current = generation;
+      pendingScan.current = null;
+      try {
+        const targets = await revalidateGalleryHeldTokenIds(source, tokenIds, {
+          marketplace,
+        });
+        if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+          setHeldTargets((current) => {
+            const affected = new Set(
+              tokenIds.map((tokenId) => `held:${tokenId.toString()}`),
+            );
+            const retained = current.filter(
+              ({ targetId }) => !affected.has(targetId),
+            );
+            return appendGalleryCatalogTargets(retained, targets);
+          });
+        }
+        return targets;
+      } finally {
+        if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+          setIsScanning(false);
+        }
+      }
     },
     [marketplace, source],
   );
 
   const getPendingInitialHeldTokenIds = useCallback(() => {
-    const pendingInitialScan = initialScan.current;
-    return pendingInitialScan
-      ? pendingInitialScan.then((result) =>
+    const activeScan = pendingScan.current;
+    return activeScan
+      ? activeScan.then((result) =>
           result.targets.map(({ tokenId }) => tokenId),
         )
       : null;
@@ -193,20 +224,29 @@ export function useGalleryDiscovery({
     if (!source) return [];
     const pendingInitialScan = getPendingInitialHeldTokenIds();
     if (pendingInitialScan) return pendingInitialScan;
+    const generation = scanGeneration.current + 1;
+    scanGeneration.current = generation;
     setIsScanning(true);
+    const scan = discoverGalleryHoldings({
+      source,
+      marketplace,
+      cacheIdentity,
+      restoredHints: storage.restore(),
+      persist: (record) => storage.commit(record),
+    });
+    pendingScan.current = scan;
     try {
-      const result = await discoverGalleryHoldings({
-        source,
-        marketplace,
-        cacheIdentity,
-        restoredHints: storage.restore(),
-        persist: (record) => storage.commit(record),
-      });
-      setHeldTargets(result.targets);
-      setScanCompleted(result.scanCompleted);
+      const result = await scan;
+      if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+        setHeldTargets(result.targets);
+        setScanCompleted(result.scanCompleted);
+      }
       return result.targets.map(({ tokenId }) => tokenId);
     } finally {
-      setIsScanning(false);
+      if (pendingScan.current === scan) pendingScan.current = null;
+      if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+        setIsScanning(false);
+      }
     }
   }, [
     cacheIdentity,
@@ -215,6 +255,41 @@ export function useGalleryDiscovery({
     source,
     storage,
   ]);
+
+  const refresh = useCallback(async () => {
+    if (!source) return [];
+    const generation = scanGeneration.current + 1;
+    scanGeneration.current = generation;
+    setIsScanning(true);
+    setScanCompleted(false);
+    const scan = discoverGalleryHoldings({
+      source,
+      marketplace,
+      cacheIdentity,
+      restoredHints: storage.restore(),
+      persist: (record) => storage.commit(record),
+      onTargets: (_kind, targets) => {
+        if (!isCurrentGalleryScan(generation, scanGeneration.current)) return;
+        setHeldTargets((current) =>
+          appendGalleryCatalogTargets(current, targets),
+        );
+      },
+    });
+    pendingScan.current = scan;
+    try {
+      const result = await scan;
+      if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+        setHeldTargets(result.targets);
+        setScanCompleted(result.scanCompleted);
+      }
+      return result.targets.map(({ tokenId }) => tokenId);
+    } finally {
+      if (pendingScan.current === scan) pendingScan.current = null;
+      if (isCurrentGalleryScan(generation, scanGeneration.current)) {
+        setIsScanning(false);
+      }
+    }
+  }, [cacheIdentity, marketplace, source, storage]);
 
   const catalog = useMemo(
     () =>
@@ -233,5 +308,6 @@ export function useGalleryDiscovery({
     revalidateAffectedTokenIds,
     getPendingInitialHeldTokenIds,
     recoverHeldTokenIds,
+    refresh,
   };
 }

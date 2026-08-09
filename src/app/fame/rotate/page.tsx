@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { FameRotatorIndexPage } from "@/features/fame-rotator/components/FameRotatorIndexPage";
-import {
-  getRotatorSelectorImagePath,
-  withRotatorSelectorReadDeadline,
-} from "@/features/fame-rotator/selector";
+import { withRotatorSelectorReadDeadline } from "@/features/fame-rotator/selector";
 import { getOrderedBurnPoolTokenIds } from "@/service/fame";
 import { FameShell } from "@/features/fame/components/FameShell";
 
@@ -14,20 +11,23 @@ export const metadata: Metadata = {
   openGraph: { images: ["/images/fame/gold-leaf.png"] },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   let status: "empty" | "error" | "ready" = "error";
-  let targets: { tokenId: number; image: string }[] = [];
+  let targets: { tokenId: number }[] = [];
+  let blockNumber = "0";
 
   try {
     const snapshot = await withRotatorSelectorReadDeadline(
-      getOrderedBurnPoolTokenIds({ cache: "display" }),
+      getOrderedBurnPoolTokenIds({ cache: "execution" }),
     );
     if (snapshot.tokenIds.length === 0) status = "empty";
     else {
       targets = snapshot.tokenIds.map((tokenId) => ({
         tokenId,
-        image: getRotatorSelectorImagePath(tokenId),
       }));
+      blockNumber = snapshot.blockNumber.toString();
       status = "ready";
     }
   } catch {
@@ -36,7 +36,15 @@ export default async function Page() {
 
   return (
     <FameShell title="FAME Rotator" activeFamePage="rotator">
-      <FameRotatorIndexPage status={status} targets={targets} />
+      {status === "ready" ? (
+        <FameRotatorIndexPage
+          status="ready"
+          targets={targets}
+          blockNumber={blockNumber}
+        />
+      ) : (
+        <FameRotatorIndexPage status={status} />
+      )}
     </FameShell>
   );
 }

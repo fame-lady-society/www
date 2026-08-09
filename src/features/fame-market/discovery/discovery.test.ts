@@ -268,18 +268,29 @@ describe("gallery custody discovery", () => {
     assert.deepEqual(targets, [target(2n)]);
   });
 
-  it("reuses one initial automatic attempt across consumers and later triggers", async () => {
+  it("deduplicates only an in-flight initial automatic attempt", async () => {
     const registry = createInitialGalleryScanRegistry();
     let scans = 0;
+    let finishFirst: ((value: number) => void) | undefined;
     const run = () =>
-      registry.run("deployment", async () => {
+      registry.run("deployment", () => {
         scans += 1;
-        return scans;
+        if (scans === 1) {
+          return new Promise<number>((resolve) => {
+            finishFirst = resolve;
+          });
+        }
+        return Promise.resolve(scans);
       });
 
-    assert.equal(await run(), 1);
-    assert.equal(await run(), 1);
-    assert.equal(await run(), 1);
+    const first = run();
+    const duplicate = run();
     assert.equal(scans, 1);
+    finishFirst?.(1);
+    assert.equal(await first, 1);
+    assert.equal(await duplicate, 1);
+
+    assert.equal(await run(), 2);
+    assert.equal(scans, 2);
   });
 });

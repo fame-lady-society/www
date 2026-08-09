@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { describe, it, mock } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Address, Hash } from "viem";
+import { decodeInlineFameMetadata } from "@/features/fame/metadata";
 import {
   GalleryRuntimeProvider,
   type GalleryRuntimeConfig,
 } from "../config/galleryRuntime";
-import { decodeTestGalleryMetadata } from "../metadata/testMetadata";
 import type { GalleryPurchaseReceiptProjection } from "../transactions/projectPurchaseReceipt";
 
 function dataUri(mime: string, value: string) {
@@ -62,7 +62,7 @@ const metadataUri = dataUri(
     attributes: [{ trait_type: "Edition", value: "Society" }],
   }),
 );
-const metadata = decodeTestGalleryMetadata(metadataUri);
+const metadata = decodeInlineFameMetadata(metadataUri);
 const receipt = {
   status: "success" as const,
   transactionHash: marketplacePurchase.transactionHash,

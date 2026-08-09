@@ -1,0 +1,1 @@
+export const FAME_METADATA_CACHE_SCHEMA_VERSION = "v1";

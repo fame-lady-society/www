@@ -1,19 +1,24 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FameRotatorIndexPage } from "./FameRotatorIndexPage";
+
+function render(page: React.ReactNode) {
+  return renderToStaticMarkup(
+    <QueryClientProvider client={new QueryClient()}>
+      {page}
+    </QueryClientProvider>,
+  );
+}
 
 describe("FameRotatorIndexPage", () => {
   it("preserves FIFO order and routes each visual target to its exact flow", () => {
-    const markup = renderToStaticMarkup(
+    const markup = render(
       <FameRotatorIndexPage
         status="ready"
-        targets={[
-          { tokenId: 30, image: "https://images.example/30.png" },
-          { tokenId: 10, image: FAME_METADATA_FALLBACK_IMAGE },
-          { tokenId: 20, image: "https://images.example/20.png" },
-        ]}
+        blockNumber="123"
+        targets={[{ tokenId: 30 }, { tokenId: 10 }, { tokenId: 20 }]}
       />,
     );
     assert.ok(
@@ -28,8 +33,8 @@ describe("FameRotatorIndexPage", () => {
   });
 
   it("distinguishes an empty waiting pool from a failed pool read", () => {
-    const empty = renderToStaticMarkup(<FameRotatorIndexPage status="empty" />);
-    const error = renderToStaticMarkup(<FameRotatorIndexPage status="error" />);
+    const empty = render(<FameRotatorIndexPage status="empty" />);
+    const error = render(<FameRotatorIndexPage status="error" />);
     assert.match(empty, /No waiting targets right now/);
     assert.doesNotMatch(empty, /Could not load waiting targets/);
     assert.match(error, /Could not load waiting targets/);
