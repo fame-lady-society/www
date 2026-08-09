@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "fame-landing-defi-snapshot-v1",
+  "provenance": {
+    "chainId": 8453,
+    "safeBlockNumber": 45884844,
+    "safeBlockHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "capturedAt": "2026-08-09T12:00:00.000Z",
+    "sourceRegistryId": "pool-state-registry-v4:0x582b48fdaeb3c88bfc40415ba5a86d1cfd1bd4fe208fa6533f3681c02700f1c7:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0x4212d61e225b7504c307c9ea60783147d485ea16e59bd8e0254257b5e6d59842",
+    "routeAuthorityRevision": "fame-landing-route-authority-v1:0x44cd1807a871080e02630714058ccd2545746712c9b382ffe4411223feeaf218:0xe12b694540180d42f640c9b660379eab7e38caef92f24e22c629f6b6da4c427e",
+    "snapshotId": "fame-landing-defi-snapshot-v1:45884844:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:2026-08-09T12:00:00.000Z"
+  },
+  "fields": {
+    "marketplace": {
+      "status": "available",
+      "value": {
+        "unit": "1000000000000000000000000",
+        "premium": "50000000000000000000000",
+        "totalSupply": "987654321000000000000000000",
+        "decimals": 18
+      }
+    },
+    "quotes": {
+      "defiBuyUsdc": {
+        "status": "available",
+        "value": {
+          "amount": "250000000",
+          "quoteDefinitionId": "defi-buy-usdc-v1",
+          "routeId": "solver-single_path-aerodrome-v2-usdc-weth--scale-equalizer-weth-fame"
+        }
+      },
+      "defiBuyEth": {
+        "status": "available",
+        "value": {
+          "amount": "420000000000000000",
+          "quoteDefinitionId": "defi-buy-eth-v1",
+          "routeId": "defi-buy-eth-split-50-50"
+        }
+      },
+      "defiSellUsdc": {
+        "status": "available",
+        "value": {
+          "amount": "240000000",
+          "quoteDefinitionId": "defi-sell-usdc-v1",
+          "routeId": "solver-single_path-scale-equalizer-weth-fame--aerodrome-v2-usdc-weth"
+        }
+      },
+      "defiSellEth": {
+        "status": "available",
+        "value": {
+          "amount": "410000000000000000",
+          "quoteDefinitionId": "defi-sell-eth-v1",
+          "routeId": "defi-sell-eth-split-50-50"
+        }
+      },
+      "nftBuyUsdc": {
+        "status": "available",
+        "value": {
+          "amount": "262500000",
+          "quoteDefinitionId": "nft-buy-usdc-v1",
+          "routeId": "solver-single_path-aerodrome-v2-usdc-weth--scale-equalizer-weth-fame"
+        }
+      },
+      "nftBuyEth": {
+        "status": "available",
+        "value": {
+          "amount": "440000000000000000",
+          "quoteDefinitionId": "nft-buy-eth-v1",
+          "routeId": "nft-buy-eth-split-50-50"
+        }
+      }
+    },
+    "liquidity": {
+      "status": "available",
+      "value": {
+        "fameAmount": "25000000000000000000000000",
+        "counterAssets": [
+          {
+            "address": "0x15e012abf9d32cd67fc6cf480ea0e318e9ed5926",
+            "amount": "100000000000000000000",
+            "decimals": 18,
+            "symbol": "basedflick"
+          },
+          {
+            "address": "0x4200000000000000000000000000000000000006",
+            "amount": "3000000000000000000",
+            "decimals": 18,
+            "symbol": "WETH"
+          },
+          {
+            "address": "0x54016a4848a38f257b6e96331f7404073fd9c32c",
+            "amount": "400000000000000000000",
+            "decimals": 18,
+            "symbol": "SCALE"
+          },
+          {
+            "address": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
+            "amount": "500000000000000000000",
+            "decimals": 18,
+            "symbol": "frxUSD"
+          }
+        ]
+      }
+    }
+  }
+}

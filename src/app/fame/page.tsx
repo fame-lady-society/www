@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Layout } from "@/features/fame/layout";
-import { getCachedMarketStats } from "@/features/fame-landing/cachedMarketStats";
-import { presentLandingMarket } from "@/features/fame-landing/pricePresentation";
+import {
+  emptyLandingMarket,
+  presentLandingMarket,
+} from "@/features/fame-landing/pricePresentation";
+import { readFameLandingSnapshot } from "@/features/fame-landing/snapshot";
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.fameladysociety.com"),
@@ -21,6 +24,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const stats = await getCachedMarketStats();
-  return <Layout market={presentLandingMarket(stats)} />;
+  const result = await readFameLandingSnapshot();
+  const market =
+    result.status === "available"
+      ? presentLandingMarket(result.snapshot)
+      : emptyLandingMarket();
+  return <Layout market={market} />;
 }

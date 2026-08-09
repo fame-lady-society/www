@@ -11,7 +11,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { isAddressEqual, type Hash, type Hex } from "viem";
+import { isAddressEqual, type Address, type Hash, type Hex } from "viem";
 import {
   useConfig,
   useConnection,
@@ -32,6 +32,7 @@ import type {
   GalleryRedemptionOutputAsset,
   GalleryRedemptionQuote,
 } from "../types";
+import { cacheConfirmedGalleryRedemption } from "./useGalleryRedemptionOwnership";
 
 export type GalleryRedemptionTransactionStatus =
   | "idle"
@@ -66,6 +67,7 @@ type SubmitDependencies<TRequest> = Readonly<{
   write: (request: unknown) => Promise<Hash>;
   waitForReceipt: (hash: Hash, confirmations: number) => Promise<Receipt>;
   onHash?: (hash: Hash) => void;
+  onConfirmed?: (receipt: Receipt) => void | Promise<void>;
   onStage?: (
     stage: "simulating" | "awaiting_wallet" | "confirming" | "refreshing",
   ) => void;
@@ -77,6 +79,20 @@ export function galleryRedemptionPrimaryAction(input: {
 }) {
   if (!input.quoteCurrent) return "blocked" as const;
   return input.approved ? ("review" as const) : ("approve" as const);
+}
+
+function galleryRedemptionSelectionKey(
+  tokenIds: readonly bigint[],
+  outputAsset: GalleryRedemptionOutputAsset,
+) {
+  return `${outputAsset}:${tokenIds.join(",")}`;
+}
+
+export function shouldPrepareGalleryRedemptionSimulation(input: {
+  submittedSelectionKey: string | null;
+  selectionKey: string;
+}) {
+  return input.submittedSelectionKey !== input.selectionKey;
 }
 
 export function galleryRedemptionStateForStage(
@@ -148,10 +164,44 @@ export async function invalidateGalleryRedemptionQueries(
   queryClient: Pick<QueryClient, "invalidateQueries">,
 ) {
   await Promise.allSettled([
-    queryClient.invalidateQueries({ queryKey: ["gallery-redemption-owned"] }),
+    queryClient.invalidateQueries({
+      queryKey: ["gallery-redemption-owned"],
+      refetchType: "none",
+    }),
     queryClient.invalidateQueries({ queryKey: ["gallery-redemption-quote"] }),
     queryClient.invalidateQueries({ queryKey: ["balance"] }),
   ]);
+}
+
+function galleryRedemptionApprovalQueryKey(
+  chainId: number,
+  account: Address | undefined,
+  checkout: Address | undefined,
+) {
+  return [
+    "gallery-redemption-approval",
+    chainId,
+    account?.toLowerCase() ?? null,
+    checkout?.toLowerCase() ?? null,
+  ] as const;
+}
+
+export function cacheGalleryRedemptionApproval(
+  queryClient: Pick<QueryClient, "setQueryData">,
+  input: Readonly<{
+    chainId: number;
+    account: Address;
+    checkout: Address;
+  }>,
+) {
+  queryClient.setQueryData(
+    galleryRedemptionApprovalQueryKey(
+      input.chainId,
+      input.account,
+      input.checkout,
+    ),
+    true,
+  );
 }
 
 export async function submitGalleryRedemptionApproval<TRequest>(
@@ -164,6 +214,7 @@ export async function submitGalleryRedemptionApproval<TRequest>(
   input.onHash?.(submittedHash);
   input.onStage?.("confirming");
   const receipt = await input.waitForReceipt(submittedHash, 1);
+  await input.onConfirmed?.(receipt);
   return receipt;
 }
 
@@ -190,6 +241,7 @@ export async function submitGalleryRedemptionTransaction<TRequest>(
   input.onHash?.(submittedHash);
   input.onStage?.("confirming");
   const receipt = await input.waitForReceipt(submittedHash, 1);
+  await input.onConfirmed?.(receipt);
   if (input.refreshAfterSuccess) {
     input.onStage?.("refreshing");
     await input.refreshAfterSuccess();
@@ -217,12 +269,11 @@ export function useGalleryRedemption(input: {
       publicClient,
   );
   const approvalQuery = useQuery({
-    queryKey: [
-      "gallery-redemption-approval",
+    queryKey: galleryRedemptionApprovalQueryKey(
       runtime.chainId,
-      connection.address?.toLowerCase() ?? null,
-      checkout?.address.toLowerCase() ?? null,
-    ],
+      connection.address,
+      checkout?.address,
+    ),
     enabled: approvalEnabled,
     retry: false,
     refetchOnWindowFocus: false,
@@ -250,6 +301,11 @@ export function useGalleryRedemption(input: {
     | { status: "error"; consentKey: string; error: Error }
   >({ status: "idle" });
   const simulationRef = useRef<GalleryRedemptionSimulation | null>(null);
+  const submittedSelectionKeyRef = useRef<string | null>(null);
+  const selectionKey = galleryRedemptionSelectionKey(
+    input.tokenIds,
+    input.outputAsset,
+  );
   const approved = approvalQuery.data === true;
   const quoteCurrent = Boolean(
     input.quote &&
@@ -262,9 +318,20 @@ export function useGalleryRedemption(input: {
   );
 
   useEffect(() => {
-    if (!approved || !quoteCurrent || !input.quote || !publicClient) {
+    if (
+      !shouldPrepareGalleryRedemptionSimulation({
+        submittedSelectionKey: submittedSelectionKeyRef.current,
+        selectionKey,
+      }) ||
+      !approved ||
+      !quoteCurrent ||
+      !input.quote ||
+      !publicClient
+    ) {
       simulationRef.current = null;
-      setSimulationState({ status: "idle" });
+      setSimulationState((current) =>
+        current.status === "idle" ? current : { status: "idle" },
+      );
       return;
     }
     const consentKey = galleryRedemptionConsentKey(input.quote);
@@ -292,7 +359,7 @@ export function useGalleryRedemption(input: {
     return () => {
       cancelled = true;
     };
-  }, [approved, input.quote, publicClient, quoteCurrent]);
+  }, [approved, input.quote, publicClient, quoteCurrent, selectionKey]);
 
   const waitForReceipt = useCallback(
     async (hash: Hash, confirmations: number): Promise<Receipt> => {
@@ -375,6 +442,12 @@ export function useGalleryRedemption(input: {
           submittedHash = hash;
           setState((current) => ({ ...current, operation: "approval", hash }));
         },
+        onConfirmed: () =>
+          cacheGalleryRedemptionApproval(queryClient, {
+            chainId: runtime.chainId,
+            account,
+            checkout: checkout.address,
+          }),
         onStage: (stage) =>
           setState((current) =>
             galleryRedemptionStateForStage("approval", stage, current),
@@ -385,7 +458,6 @@ export function useGalleryRedemption(input: {
         operation: "approval",
         hash: current.operation === "approval" ? current.hash : submittedHash,
       }));
-      await approvalQuery.refetch();
     } catch (cause) {
       setState((current) => ({
         status: "error",
@@ -401,11 +473,11 @@ export function useGalleryRedemption(input: {
       setModalOpen(true);
     }
   }, [
-    approvalQuery,
     assertForkWallet,
     checkout,
     latestConnection,
     publicClient,
+    queryClient,
     runtime.addresses.mirror,
     runtime.chainId,
     waitForReceipt,
@@ -414,6 +486,7 @@ export function useGalleryRedemption(input: {
 
   const redeem = useCallback(async () => {
     let submittedHash: Hash | undefined;
+    let receiptConfirmed = false;
     let lastStage:
       | "simulating"
       | "awaiting_wallet"
@@ -454,6 +527,7 @@ export function useGalleryRedemption(input: {
       setModalOpen(true);
       const request = galleryRedemptionRequest(input.quote);
       const consentKey = galleryRedemptionConsentKey(input.quote);
+      submittedSelectionKeyRef.current = selectionKey;
       const result = await submitGalleryRedemptionTransaction({
         request,
         consentKey,
@@ -468,6 +542,19 @@ export function useGalleryRedemption(input: {
             operation: "redemption",
             hash,
           }));
+        },
+        onConfirmed: async (receipt) => {
+          receiptConfirmed = true;
+          simulationRef.current = null;
+          setSimulationState({ status: "idle" });
+          await cacheConfirmedGalleryRedemption(queryClient, {
+            chainId: runtime.chainId,
+            account,
+            checkout: input.quote!.checkout,
+            mirror: runtime.addresses.mirror,
+            tokenIds: input.tokenIds,
+            blockNumber: receipt.blockNumber,
+          });
         },
         onStage: (stage) => {
           lastStage = stage;
@@ -485,6 +572,7 @@ export function useGalleryRedemption(input: {
         hash: result.transactionHash,
       });
     } catch (cause) {
+      if (!receiptConfirmed) submittedSelectionKeyRef.current = null;
       const error =
         cause instanceof Error
           ? cause
@@ -518,6 +606,8 @@ export function useGalleryRedemption(input: {
     publicClient,
     queryClient,
     quoteCurrent,
+    selectionKey,
+    runtime.addresses.mirror,
     runtime.chainId,
     simulationState,
     waitForReceipt,

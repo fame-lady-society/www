@@ -1,17 +1,27 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { QueryClient } from "@tanstack/react-query";
 import type { Hash, Hex } from "viem";
 import {
   assertGalleryForkWalletIdentity,
+  cacheGalleryRedemptionApproval,
   galleryRedemptionStateForStage,
   galleryRedemptionTransactions,
   invalidateGalleryRedemptionQueries,
   galleryRedemptionPrimaryAction,
+  shouldPrepareGalleryRedemptionSimulation,
   submitGalleryRedemptionApproval,
   submitGalleryRedemptionTransaction,
 } from "./useGalleryRedemption";
+import {
+  cacheConfirmedGalleryRedemption,
+  galleryRedemptionOwnedQueryKey,
+} from "./useGalleryRedemptionOwnership";
 
 const ORIGINAL_HASH = `0x${"1".repeat(64)}` as Hash;
+const ACCOUNT = "0x1111111111111111111111111111111111111111";
+const CHECKOUT = "0x2222222222222222222222222222222222222222";
+const MIRROR = "0x3333333333333333333333333333333333333333";
 
 describe("gallery redemption transaction hook helpers", () => {
   it("requires explicit approval and stops after one confirmation", async () => {
@@ -44,6 +54,53 @@ describe("gallery redemption transaction hook helpers", () => {
     assert.equal(
       galleryRedemptionPrimaryAction({ approved: true, quoteCurrent: true }),
       "review",
+    );
+  });
+
+  it("publishes approval only after its receipt confirms", async () => {
+    const calls: string[] = [];
+    const queryClient = new QueryClient();
+    await submitGalleryRedemptionApproval({
+      request: { functionName: "setApprovalForAll" },
+      simulate: async (request) => {
+        calls.push("simulate");
+        return { request };
+      },
+      write: async () => {
+        calls.push("write");
+        return ORIGINAL_HASH;
+      },
+      waitForReceipt: async () => {
+        calls.push("receipt");
+        return {
+          transactionHash: ORIGINAL_HASH,
+          blockNumber: 51n,
+        };
+      },
+      onConfirmed: () => {
+        calls.push("publish approval");
+        cacheGalleryRedemptionApproval(queryClient, {
+          chainId: 8453,
+          account: ACCOUNT,
+          checkout: CHECKOUT,
+        });
+      },
+    });
+
+    assert.deepEqual(calls, [
+      "simulate",
+      "write",
+      "receipt",
+      "publish approval",
+    ]);
+    assert.equal(
+      queryClient.getQueryData([
+        "gallery-redemption-approval",
+        8453,
+        ACCOUNT,
+        CHECKOUT,
+      ]),
+      true,
     );
   });
 
@@ -133,7 +190,7 @@ describe("gallery redemption transaction hook helpers", () => {
   });
 
   it("refreshes owned IDs, checkout balance, output balance, and quote after success", async () => {
-    const refreshed: string[] = [];
+    const lifecycle: string[] = [];
     const result = await submitGalleryRedemptionTransaction({
       request: {},
       consentKey: "fresh",
@@ -144,13 +201,127 @@ describe("gallery redemption transaction hook helpers", () => {
         transactionHash: ORIGINAL_HASH,
         blockNumber: 52n,
       }),
+      onConfirmed: () => {
+        lifecycle.push("publish confirmed burn");
+      },
+      onStage: (stage) => {
+        if (stage === "refreshing") lifecycle.push("refreshing");
+      },
       refreshAfterSuccess: async () => {
-        refreshed.push("owned", "checkout", "output", "quote");
+        lifecycle.push("owned", "checkout", "output", "quote");
       },
     });
 
     assert.equal(result.transactionHash, ORIGINAL_HASH);
-    assert.deepEqual(refreshed, ["owned", "checkout", "output", "quote"]);
+    assert.deepEqual(lifecycle, [
+      "publish confirmed burn",
+      "refreshing",
+      "owned",
+      "checkout",
+      "output",
+      "quote",
+    ]);
+  });
+
+  it("removes a confirmed burn from the exact owned-NFT cache immediately", async () => {
+    const queryClient = new QueryClient();
+    const queryKey = galleryRedemptionOwnedQueryKey(
+      8453,
+      ACCOUNT,
+      CHECKOUT,
+      MIRROR,
+    );
+    queryClient.setQueryData(queryKey, {
+      status: "ready",
+      account: ACCOUNT,
+      blockNumber: 50n,
+      balance: 3n,
+      tokenIds: [16n, 483n, 541n],
+    });
+
+    await cacheConfirmedGalleryRedemption(queryClient, {
+      chainId: 8453,
+      account: ACCOUNT,
+      checkout: CHECKOUT,
+      mirror: MIRROR,
+      tokenIds: [483n],
+      blockNumber: 51n,
+    });
+
+    assert.deepEqual(queryClient.getQueryData(queryKey), {
+      status: "ready",
+      account: ACCOUNT,
+      blockNumber: 51n,
+      balance: 2n,
+      tokenIds: [16n, 541n],
+    });
+  });
+
+  it("cancels a pre-receipt ownership read before publishing the burn", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const queryKey = galleryRedemptionOwnedQueryKey(
+      8453,
+      ACCOUNT,
+      CHECKOUT,
+      MIRROR,
+    );
+    const beforeBurn = {
+      status: "ready" as const,
+      account: ACCOUNT,
+      blockNumber: 50n,
+      balance: 1n,
+      tokenIds: [483n],
+    };
+    queryClient.setQueryData(queryKey, beforeBurn);
+    let resolveStaleRead!: (value: typeof beforeBurn) => void;
+    const staleRead = queryClient
+      .fetchQuery({
+        queryKey,
+        queryFn: () =>
+          new Promise<typeof beforeBurn>((resolve) => {
+            resolveStaleRead = resolve;
+          }),
+      })
+      .catch(() => undefined);
+    await Promise.resolve();
+
+    await cacheConfirmedGalleryRedemption(queryClient, {
+      chainId: 8453,
+      account: ACCOUNT,
+      checkout: CHECKOUT,
+      mirror: MIRROR,
+      tokenIds: [483n],
+      blockNumber: 51n,
+    });
+    resolveStaleRead(beforeBurn);
+    await staleRead;
+
+    assert.deepEqual(queryClient.getQueryData(queryKey), {
+      status: "ready",
+      account: ACCOUNT,
+      blockNumber: 51n,
+      balance: 0n,
+      tokenIds: [],
+    });
+  });
+
+  it("does not simulate the submitted selection again after its quote changes", () => {
+    assert.equal(
+      shouldPrepareGalleryRedemptionSimulation({
+        submittedSelectionKey: "USDC:483",
+        selectionKey: "USDC:483",
+      }),
+      false,
+    );
+    assert.equal(
+      shouldPrepareGalleryRedemptionSimulation({
+        submittedSelectionKey: "USDC:483",
+        selectionKey: "USDC:541",
+      }),
+      true,
+    );
   });
 
   it("keeps transaction identity only after wagmi returns a hash", () => {
@@ -227,7 +398,7 @@ describe("gallery redemption transaction hook helpers", () => {
     } as never);
 
     assert.deepEqual(invalidated, [
-      { queryKey: ["gallery-redemption-owned"] },
+      { queryKey: ["gallery-redemption-owned"], refetchType: "none" },
       { queryKey: ["gallery-redemption-quote"] },
       { queryKey: ["balance"] },
     ]);

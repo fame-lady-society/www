@@ -1,73 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type {
   LandingCurrencyValues,
+  LandingLiquidity,
   LandingMarketPresentation,
   LandingPriceRow,
 } from "../pricePresentation";
-
-const RETRY_DELAYS_MS = [5_000, 10_000, 20_000, 30_000] as const;
-
-type RetryTimer = ReturnType<typeof setTimeout>;
-type MarketRequest = (
-  signal: AbortSignal,
-) => Promise<LandingMarketPresentation | null>;
-
-async function requestLandingMarket(
-  signal: AbortSignal,
-): Promise<LandingMarketPresentation | null> {
-  const response = await fetch("/api/fame/market-prices", {
-    cache: "no-store",
-    signal,
-  });
-  return response.ok
-    ? ((await response.json()) as LandingMarketPresentation)
-    : null;
-}
-
-export function startMarketRefresh({
-  onMarket,
-  request = requestLandingMarket,
-  schedule = (run, delayMs) => setTimeout(run, delayMs),
-  cancel = (timer) => clearTimeout(timer),
-}: {
-  onMarket: (market: LandingMarketPresentation) => boolean;
-  request?: MarketRequest;
-  schedule?: (run: () => Promise<void>, delayMs: number) => RetryTimer;
-  cancel?: (timer: RetryTimer) => void;
-}): () => void {
-  let stopped = false;
-  let timer: RetryTimer | undefined;
-  let attempt = 0;
-  const controller = new AbortController();
-
-  const refresh = async () => {
-    if (stopped) return;
-    let complete = false;
-    try {
-      const next = await request(controller.signal);
-      if (next && !stopped) complete = onMarket(next);
-    } catch {
-      // A later attempt can recover from a transient quote-service failure.
-    } finally {
-      if (!stopped && !complete) {
-        attempt += 1;
-        timer = schedule(
-          refresh,
-          RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]!,
-        );
-      }
-    }
-  };
-
-  timer = schedule(refresh, RETRY_DELAYS_MS[attempt]);
-  return () => {
-    stopped = true;
-    controller.abort();
-    if (timer) cancel(timer);
-  };
-}
 
 function Loading() {
   return (
@@ -79,13 +17,7 @@ function Loading() {
   );
 }
 
-function PriceCard({
-  title,
-  row,
-}: {
-  title: string;
-  row: LandingPriceRow;
-}) {
+function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
   return (
     <article className="grid gap-5 border-t border-[#c9aa67]/25 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <div>
@@ -122,11 +54,7 @@ function PriceCard({
   );
 }
 
-function MarketplaceCard({
-  row,
-}: {
-  row: LandingPriceRow;
-}) {
+function MarketplaceCard({ row }: { row: LandingPriceRow }) {
   return (
     <article className="flex h-full min-h-64 flex-col justify-between bg-[#c9aa67] p-6 text-[#0d0c0a] sm:p-8">
       <div>
@@ -220,72 +148,50 @@ function MarketCapCard({
   );
 }
 
-function missing(market: LandingMarketPresentation): boolean {
+function LiquidityCard({ liquidity }: { liquidity: LandingLiquidity }) {
   return (
-    Object.values(market.prices).some(
-      (row) => !row.fame || !row.USDC.value || !row.ETH.value,
-    ) ||
-    !market.marketCap.USDC.value ||
-    !market.marketCap.ETH.value ||
-    !market.marketplaceSupply
+    <article className="mt-8 border-t border-[#c9aa67]/25 pt-6">
+      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c9aa67]">
+            Liquidity
+          </p>
+          <div className="fame-display mt-3 text-2xl tabular-nums">
+            {liquidity.fame.value ?? <Loading />}
+          </div>
+          <p className="mt-2 max-w-sm text-xs leading-5 text-[#777064]">
+            Assets held across reviewed direct FAME pools.
+          </p>
+        </div>
+        <dl className="grid min-w-56 gap-2 text-sm sm:grid-cols-2 sm:gap-x-8">
+          {liquidity.counterAssets.map((asset) => (
+            <div
+              key={asset.address}
+              className="flex min-h-6 items-center justify-between gap-4"
+            >
+              <dt className="text-[#9f9789]">{asset.label}</dt>
+              <dd>
+                {asset.value ? (
+                  <span className="font-medium tabular-nums">
+                    {asset.value}
+                  </span>
+                ) : (
+                  <Loading />
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </article>
   );
 }
 
-export function mergeLandingMarket(
-  current: LandingMarketPresentation,
-  next: LandingMarketPresentation,
-): LandingMarketPresentation {
-  const prices = Object.fromEntries(
-    (Object.keys(current.prices) as Array<keyof typeof current.prices>).map(
-      (key) => {
-        const oldRow = current.prices[key];
-        const newRow = next.prices[key];
-        return [
-          key,
-          {
-            fame: newRow.fame ?? oldRow.fame,
-            USDC: { value: newRow.USDC.value ?? oldRow.USDC.value },
-            ETH: { value: newRow.ETH.value ?? oldRow.ETH.value },
-          },
-        ];
-      },
-    ),
-  ) as LandingMarketPresentation["prices"];
-  const merged: LandingMarketPresentation = {
-    prices,
-    marketCap: {
-      USDC: {
-        value: next.marketCap.USDC.value ?? current.marketCap.USDC.value,
-      },
-      ETH: {
-        value: next.marketCap.ETH.value ?? current.marketCap.ETH.value,
-      },
-    },
-    marketplaceSupply: next.marketplaceSupply ?? current.marketplaceSupply,
-  };
-  return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
-}
-
 export function FameMarketBoard({
-  initialMarket,
+  market,
 }: {
-  initialMarket: LandingMarketPresentation;
+  market: LandingMarketPresentation;
 }) {
-  const [market, setMarket] = useState(initialMarket);
-  const needsMarket = missing(market);
-
-  useEffect(() => {
-    if (!needsMarket) return;
-    let latestMarket = initialMarket;
-    return startMarketRefresh({
-      onMarket: (next) => {
-        latestMarket = mergeLandingMarket(latestMarket, next);
-        setMarket(latestMarket);
-        return !missing(latestMarket);
-      },
-    });
-  }, [initialMarket, needsMarket]);
-
   return (
     <section
       aria-label="FAME market"
@@ -315,6 +221,7 @@ export function FameMarketBoard({
           <PriceCard title="DeFi sell" row={market.prices.defiSell} />
         </div>
       </div>
+      <LiquidityCard liquidity={market.liquidity} />
     </section>
   );
 }

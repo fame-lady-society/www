@@ -167,7 +167,7 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
       </section>
 
       <section className="relative z-10 mx-auto -mt-10 max-w-[1320px] px-4 sm:px-8">
-        <FameMarketBoard initialMarket={market} />
+        <FameMarketBoard market={market} />
       </section>
 
       <section className="mx-auto max-w-[1320px] px-5 py-28 sm:px-8 lg:py-40">
