@@ -373,7 +373,8 @@ export function GalleryPurchaseReceiptContent({
               <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 800 }}>
                 The selected pool artwork moved onto your Society NFT. The
                 metadata previously on your NFT moved back to the pool token.
-                Both token records emitted metadata updates in this transaction.
+                Metadata updates were emitted in this transaction but can take up to 5
+                minutes to propagate to platforms such as Opensea.
               </Typography>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
