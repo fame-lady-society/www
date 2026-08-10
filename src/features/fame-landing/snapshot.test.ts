@@ -3,13 +3,23 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import fixture from "./fixtures/fame-landing-defi-snapshot-v1.json";
 import {
+  createFameLandingSnapshotReader,
   FAME_LANDING_CONSUMER_REVALIDATE_SECONDS,
+  FAME_LANDING_SNAPSHOT_BASE_URL,
   parseFameLandingSnapshot,
-  readFameLandingSnapshot,
 } from "./snapshot";
 
 function copyFixture(): Record<string, unknown> {
   return structuredClone(fixture) as Record<string, unknown>;
+}
+
+function fixtureAt(capturedAt: string, safeBlockNumber: number) {
+  const value = copyFixture();
+  const provenance = value.provenance as Record<string, unknown>;
+  provenance.safeBlockNumber = safeBlockNumber;
+  provenance.capturedAt = capturedAt;
+  provenance.snapshotId = `${provenance.schemaVersion ?? value.schemaVersion}:${safeBlockNumber.toString()}:${String(provenance.safeBlockHash)}:${capturedAt}`;
+  return value;
 }
 
 describe("Society Bots FAME landing snapshot consumer", () => {
@@ -139,35 +149,70 @@ describe("Society Bots FAME landing snapshot consumer", () => {
   });
 
   it("uses only the anonymous fixed endpoint with 30-second revalidation", async () => {
+    let currentTime = Date.parse("2026-08-09T12:01:00.000Z");
     const requests: Array<{
       url: string;
       init: RequestInit & { next?: unknown };
     }> = [];
-    const result = await readFameLandingSnapshot({
-      baseUrl: "https://society.example/prod/",
-      now: Date.parse("2026-08-09T12:01:00.000Z"),
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => currentTime,
       fetcher: async (url, init) => {
         requests.push({ url, init });
         return new Response(JSON.stringify(fixture), { status: 200 });
       },
     });
+    const first = await readSnapshot();
+    const cached = await readSnapshot();
+    currentTime += FAME_LANDING_CONSUMER_REVALIDATE_SECONDS * 1_000;
+    const revalidated = await readSnapshot();
 
-    assert.equal(result.status, "available");
+    assert.equal(first.status, "available");
+    assert.equal(cached.status, "available");
+    assert.equal(revalidated.status, "available");
     assert.equal(FAME_LANDING_CONSUMER_REVALIDATE_SECONDS, 30);
-    assert.equal(requests.length, 1);
+    assert.equal(FAME_LANDING_SNAPSHOT_BASE_URL, "https://fame.support");
+    assert.equal(requests.length, 2);
     assert.equal(
       requests[0].url,
-      "https://society.example/prod/fame/landing-defi-snapshot",
+      "https://fame.support/fame/landing-defi-snapshot",
     );
     assert.equal(requests[0].init.method, "GET");
-    assert.deepEqual(requests[0].init.next, { revalidate: 30 });
+    assert.deepEqual(requests[0].init.next, { revalidate: 0 });
     assert.equal(requests[0].init.headers, undefined);
     assert.ok(requests[0].init.signal instanceof AbortSignal);
   });
 
+  it("foreground-refreshes an expired snapshot instead of returning it once", async () => {
+    let currentTime = Date.parse("2026-08-09T12:01:00.000Z");
+    let requests = 0;
+    const refreshedFixture = fixtureAt("2026-08-09T12:06:00.000Z", 45_885_000);
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => currentTime,
+      fetcher: async () => {
+        requests += 1;
+        return Response.json(requests === 1 ? fixture : refreshedFixture);
+      },
+    });
+
+    const initial = await readSnapshot();
+    currentTime = Date.parse("2026-08-09T12:06:00.000Z");
+    const afterExpiry = await readSnapshot();
+
+    assert.equal(initial.status, "available");
+    assert.equal(afterExpiry.status, "available");
+    assert.equal(requests, 2);
+    if (afterExpiry.status === "available") {
+      assert.equal(afterExpiry.snapshot.provenance.safeBlockNumber, 45_885_000);
+      assert.equal(
+        afterExpiry.snapshot.provenance.capturedAt,
+        "2026-08-09T12:06:00.000Z",
+      );
+    }
+  });
+
   it("fails the whole read closed on transport and parsing failures", async () => {
     let requests = 0;
-    const unavailable = await readFameLandingSnapshot({
+    const readUnavailable = createFameLandingSnapshotReader({
       baseUrl: "https://society.example",
       fetcher: async () => {
         requests += 1;
@@ -177,14 +222,33 @@ describe("Society Bots FAME landing snapshot consumer", () => {
         });
       },
     });
+    const unavailable = await readUnavailable();
     assert.deepEqual(unavailable, { status: "unavailable" });
     assert.equal(requests, 1);
 
-    const malformed = await readFameLandingSnapshot({
+    const readMalformed = createFameLandingSnapshotReader({
       baseUrl: "https://society.example",
       fetcher: async () => new Response("{}", { status: 200 }),
     });
+    const malformed = await readMalformed();
     assert.deepEqual(malformed, { status: "unavailable" });
+  });
+
+  it("does not cache an unavailable response", async () => {
+    let requests = 0;
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => Date.parse("2026-08-09T12:01:00.000Z"),
+      fetcher: async () => {
+        requests += 1;
+        return requests === 1
+          ? new Response('{"error":"snapshot-unavailable"}', { status: 503 })
+          : Response.json(fixture);
+      },
+    });
+
+    assert.deepEqual(await readSnapshot(), { status: "unavailable" });
+    assert.equal((await readSnapshot()).status, "available");
+    assert.equal(requests, 2);
   });
 
   it("fails the whole read closed when the bounded request aborts", async () => {
@@ -205,7 +269,7 @@ describe("Society Bots FAME landing snapshot consumer", () => {
     });
 
     try {
-      const result = await readFameLandingSnapshot({
+      const readSnapshot = createFameLandingSnapshotReader({
         baseUrl: "https://society.example",
         fetcher: async (_url, init) => {
           if (init.signal !== controller.signal) {
@@ -225,6 +289,7 @@ describe("Society Bots FAME landing snapshot consumer", () => {
           throw new Error("unreachable");
         },
       });
+      const result = await readSnapshot();
 
       assert.deepEqual(result, { status: "unavailable" });
       assert.equal(signalWasPassed, true);
@@ -248,25 +313,27 @@ describe("Society Bots FAME landing snapshot consumer", () => {
 
     for (const baseUrl of baseUrls) {
       let requests = 0;
-      const result = await readFameLandingSnapshot({
+      const readSnapshot = createFameLandingSnapshotReader({
         baseUrl,
         fetcher: async () => {
           requests += 1;
           return new Response();
         },
       });
+      const result = await readSnapshot();
       assert.deepEqual(result, { status: "unavailable" }, baseUrl);
       assert.equal(requests, 0, baseUrl);
     }
 
     let requests = 0;
-    const result = await readFameLandingSnapshot({
+    const readSnapshot = createFameLandingSnapshotReader({
       baseUrl: "http://society.example",
       fetcher: async () => {
         requests += 1;
         return new Response();
       },
     });
+    const result = await readSnapshot();
     assert.deepEqual(result, { status: "unavailable" });
     assert.equal(requests, 0);
   });

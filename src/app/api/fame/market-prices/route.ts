@@ -5,6 +5,7 @@ import {
 } from "@/features/fame-landing/pricePresentation";
 import {
   FAME_LANDING_SNAPSHOT_MAX_AGE_SECONDS,
+  type FameLandingSnapshotResult,
   readFameLandingSnapshot,
 } from "@/features/fame-landing/snapshot";
 
@@ -28,8 +29,10 @@ function snapshotCacheControl(capturedAt: string): string | null {
   return `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
 }
 
-export async function GET() {
-  const result = await readFameLandingSnapshot();
+export async function fameMarketPricesResponse(
+  readSnapshot: () => Promise<FameLandingSnapshotResult> = readFameLandingSnapshot,
+) {
+  const result = await readSnapshot();
   if (result.status === "unavailable") {
     return NextResponse.json(emptyLandingMarket(), {
       status: 503,
@@ -54,4 +57,8 @@ export async function GET() {
       "X-Fame-Snapshot-Schema": result.snapshot.schemaVersion,
     },
   });
+}
+
+export async function GET() {
+  return fameMarketPricesResponse();
 }

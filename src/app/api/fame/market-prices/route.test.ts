@@ -1,17 +1,13 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import fixture from "@/features/fame-landing/fixtures/fame-landing-defi-snapshot-v1.json";
-import { GET, revalidate } from "./route";
+import { createFameLandingSnapshotReader } from "@/features/fame-landing/snapshot";
+import { fameMarketPricesResponse, revalidate } from "./route";
 
-const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
-const originalBaseUrl = process.env.FAME_POOL_API_URL;
 
 afterEach(() => {
-  globalThis.fetch = originalFetch;
   Date.now = originalNow;
-  if (originalBaseUrl === undefined) delete process.env.FAME_POOL_API_URL;
-  else process.env.FAME_POOL_API_URL = originalBaseUrl;
 });
 
 describe("FAME market presentation API", () => {
@@ -20,15 +16,18 @@ describe("FAME market presentation API", () => {
   });
 
   it("serves one snapshot presentation with the established cache policy", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    Date.now = () => Date.parse("2026-08-09T12:01:00.000Z");
+    const now = Date.parse("2026-08-09T12:01:00.000Z");
+    Date.now = () => now;
     let requests = 0;
-    globalThis.fetch = async () => {
-      requests += 1;
-      return new Response(JSON.stringify(fixture), { status: 200 });
-    };
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => now,
+      fetcher: async () => {
+        requests += 1;
+        return new Response(JSON.stringify(fixture), { status: 200 });
+      },
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
     const body = (await response.json()) as Record<string, unknown>;
 
     assert.equal(requests, 1);
@@ -47,8 +46,8 @@ describe("FAME market presentation API", () => {
   });
 
   it("keeps a valid unavailable leaf cacheable without merging another response", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    Date.now = () => Date.parse("2026-08-09T12:01:00.000Z");
+    const now = Date.parse("2026-08-09T12:01:00.000Z");
+    Date.now = () => now;
     const snapshot = structuredClone(fixture) as unknown as {
       fields: { quotes: Record<string, unknown> };
     };
@@ -56,10 +55,13 @@ describe("FAME market presentation API", () => {
       status: "unavailable",
       reason: "no-safe-route",
     };
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(snapshot), { status: 200 });
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => now,
+      fetcher: async () =>
+        new Response(JSON.stringify(snapshot), { status: 200 }),
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
     const body = (await response.json()) as {
       prices: {
         defiBuy: { USDC: { value: string | null }; ETH: { value: string } };
@@ -74,12 +76,15 @@ describe("FAME market presentation API", () => {
   });
 
   it("limits fresh and stale cache time to the snapshot's remaining lifetime", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    Date.now = () => Date.parse("2026-08-09T12:03:20.000Z");
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(fixture), { status: 200 });
+    const now = Date.parse("2026-08-09T12:03:20.000Z");
+    Date.now = () => now;
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => now,
+      fetcher: async () =>
+        new Response(JSON.stringify(fixture), { status: 200 }),
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
 
     assert.equal(response.status, 200);
     assert.equal(
@@ -89,12 +94,15 @@ describe("FAME market presentation API", () => {
   });
 
   it("does not cache a snapshot when less than one second remains", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    Date.now = () => Date.parse("2026-08-09T12:04:59.500Z");
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(fixture), { status: 200 });
+    const now = Date.parse("2026-08-09T12:04:59.500Z");
+    Date.now = () => now;
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => now,
+      fetcher: async () =>
+        new Response(JSON.stringify(fixture), { status: 200 }),
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
 
     assert.equal(response.status, 200);
     assert.equal(
@@ -104,27 +112,27 @@ describe("FAME market presentation API", () => {
   });
 
   it("fails closed if the snapshot expires before response construction", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    const times = [
-      Date.parse("2026-08-09T12:04:59.999Z"),
-      Date.parse("2026-08-09T12:05:00.000Z"),
-    ];
-    Date.now = () => times.shift() ?? Date.parse("2026-08-09T12:05:00.000Z");
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify(fixture), { status: 200 });
+    const validatedAt = Date.parse("2026-08-09T12:04:59.999Z");
+    Date.now = () => Date.parse("2026-08-09T12:05:00.000Z");
+    const readSnapshot = createFameLandingSnapshotReader({
+      clock: () => validatedAt,
+      fetcher: async () =>
+        new Response(JSON.stringify(fixture), { status: 200 }),
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
 
     assert.equal(response.status, 503);
     assert.equal(response.headers.get("cache-control"), "no-store");
   });
 
   it("returns the whole unavailable presentation with no-store on failure", async () => {
-    process.env.FAME_POOL_API_URL = "https://society.example";
-    globalThis.fetch = async () =>
-      new Response('{"error":"snapshot-unavailable"}', { status: 503 });
+    const readSnapshot = createFameLandingSnapshotReader({
+      fetcher: async () =>
+        new Response('{"error":"snapshot-unavailable"}', { status: 503 }),
+    });
 
-    const response = await GET();
+    const response = await fameMarketPricesResponse(readSnapshot);
     const body = (await response.json()) as {
       prices: { nftBuy: { fame: string | null } };
       marketCap: { USDC: { value: string | null } };

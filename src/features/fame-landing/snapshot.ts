@@ -3,6 +3,7 @@ export const FAME_LANDING_SNAPSHOT_SCHEMA_VERSION =
 export const FAME_LANDING_SNAPSHOT_MAX_AGE_SECONDS = 300;
 export const FAME_LANDING_SNAPSHOT_FUTURE_TOLERANCE_SECONDS = 30;
 export const FAME_LANDING_CONSUMER_REVALIDATE_SECONDS = 30;
+export const FAME_LANDING_SNAPSHOT_BASE_URL = "https://fame.support";
 // Bound the one-shot server fetch so a non-settling Society Bots request fails closed.
 export const FAME_LANDING_SNAPSHOT_REQUEST_TIMEOUT_MS = 10_000;
 
@@ -513,7 +514,7 @@ function fameLandingSnapshotEndpointUrl(rawBaseUrl: string): string {
     basePath.endsWith("/fame/pool-quotes") ||
     basePath.endsWith("/fame/landing-defi-snapshot")
   ) {
-    throw new Error("FAME_POOL_API_URL must be a base URL.");
+    throw new Error("FAME landing snapshot URL must be a base URL.");
   }
   if (url.protocol !== "https:" && !localEndpoint(url)) {
     throw new Error("FAME pool API base URL must use HTTPS outside loopback.");
@@ -522,29 +523,77 @@ function fameLandingSnapshotEndpointUrl(rawBaseUrl: string): string {
   return url.toString();
 }
 
-export async function readFameLandingSnapshot({
-  baseUrl = process.env.FAME_POOL_API_URL,
+export function createFameLandingSnapshotReader({
+  baseUrl = FAME_LANDING_SNAPSHOT_BASE_URL,
   fetcher = fetch,
-  now,
+  clock = Date.now,
 }: {
   baseUrl?: string;
   fetcher?: FameLandingSnapshotFetcher;
-  now?: number;
-} = {}): Promise<FameLandingSnapshotResult> {
-  if (!baseUrl) return { status: "unavailable" };
-  try {
-    const response = await fetcher(fameLandingSnapshotEndpointUrl(baseUrl), {
-      method: "GET",
-      next: { revalidate: FAME_LANDING_CONSUMER_REVALIDATE_SECONDS },
-      signal: AbortSignal.timeout(FAME_LANDING_SNAPSHOT_REQUEST_TIMEOUT_MS),
-    });
-    if (!response.ok) return { status: "unavailable" };
-    const snapshot = parseFameLandingSnapshot(
-      (await response.json()) as unknown,
-      now ?? Date.now(),
-    );
-    return { status: "available", snapshot };
-  } catch {
-    return { status: "unavailable" };
-  }
+  clock?: () => number;
+} = {}): () => Promise<FameLandingSnapshotResult> {
+  let cached: { snapshot: FameLandingSnapshot; expiresAt: number } | undefined;
+  let pending: Promise<FameLandingSnapshotResult> | undefined;
+
+  return async () => {
+    const readAt = clock();
+    if (cached && readAt < cached.expiresAt) {
+      return { status: "available", snapshot: cached.snapshot };
+    }
+    cached = undefined;
+
+    if (pending) return pending;
+
+    const request = (async (): Promise<FameLandingSnapshotResult> => {
+      try {
+        const response = await fetcher(
+          fameLandingSnapshotEndpointUrl(baseUrl),
+          {
+            method: "GET",
+            // The reader owns foreground revalidation. Disabling Next's fetch
+            // cache prevents it from returning an expired snapshot while it
+            // refreshes that entry in the background.
+            next: { revalidate: 0 },
+            signal: AbortSignal.timeout(
+              FAME_LANDING_SNAPSHOT_REQUEST_TIMEOUT_MS,
+            ),
+          },
+        );
+        if (!response.ok) return { status: "unavailable" };
+
+        const validatedAt = clock();
+        const snapshot = parseFameLandingSnapshot(
+          (await response.json()) as unknown,
+          validatedAt,
+        );
+        cached = {
+          snapshot,
+          expiresAt: Math.min(
+            validatedAt + FAME_LANDING_CONSUMER_REVALIDATE_SECONDS * 1_000,
+            Date.parse(snapshot.provenance.capturedAt) +
+              FAME_LANDING_SNAPSHOT_MAX_AGE_SECONDS * 1_000,
+          ),
+        };
+        return { status: "available", snapshot };
+      } catch {
+        return { status: "unavailable" };
+      }
+    })();
+    pending = request;
+
+    try {
+      return await request;
+    } finally {
+      if (pending === request) pending = undefined;
+    }
+  };
+}
+
+const readDefaultFameLandingSnapshot = createFameLandingSnapshotReader({
+  fetcher: (url, init) => fetch(url, init),
+  clock: () => Date.now(),
+});
+
+export function readFameLandingSnapshot(): Promise<FameLandingSnapshotResult> {
+  return readDefaultFameLandingSnapshot();
 }
