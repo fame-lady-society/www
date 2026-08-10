@@ -489,9 +489,7 @@ function transactionCopy(status: string, error?: Error) {
   if (status === "awaiting_approval_wallet")
     return "Approve NFT redemption in your wallet.";
   if (status === "confirming_approval")
-    return "Waiting for one Base approval confirmation…";
-  if (status === "approval_confirmed")
-    return "NFT redemption approved. Review and burn when ready.";
+    return "Approval confirmed. Waiting for two additional Base blocks…";
   if (status === "simulating_redemption")
     return "Checking this redemption with the contract…";
   if (status === "awaiting_redemption_wallet")
@@ -572,8 +570,7 @@ export function SocietyRedemptionAccordion() {
   }, [ownership.state]);
   const terminal =
     transaction.state.status === "success" ||
-    transaction.state.status === "error" ||
-    transaction.state.status === "approval_confirmed";
+    transaction.state.status === "error";
 
   if (!runtime.checkout) return null;
   return (
@@ -630,8 +627,7 @@ export function SocietyRedemptionAccordion() {
             severity={
               transaction.state.status === "error"
                 ? "error"
-                : transaction.state.status === "success" ||
-                    transaction.state.status === "approval_confirmed"
+                : transaction.state.status === "success"
                   ? "success"
                   : "info"
             }

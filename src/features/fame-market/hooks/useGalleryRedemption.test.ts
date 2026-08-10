@@ -4,13 +4,14 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Hash, Hex } from "viem";
 import {
   assertGalleryForkWalletIdentity,
-  cacheGalleryRedemptionApproval,
+  cacheConfirmedGalleryRedemptionApproval,
   galleryRedemptionStateForStage,
   galleryRedemptionTransactions,
   invalidateGalleryRedemptionQueries,
   galleryRedemptionPrimaryAction,
   shouldPrepareGalleryRedemptionSimulation,
   submitGalleryRedemptionApproval,
+  submitGalleryRedemptionApprovalFlow,
   submitGalleryRedemptionTransaction,
 } from "./useGalleryRedemption";
 import {
@@ -19,12 +20,13 @@ import {
 } from "./useGalleryRedemptionOwnership";
 
 const ORIGINAL_HASH = `0x${"1".repeat(64)}` as Hash;
+const REDEMPTION_HASH = `0x${"2".repeat(64)}` as Hash;
 const ACCOUNT = "0x1111111111111111111111111111111111111111";
 const CHECKOUT = "0x2222222222222222222222222222222222222222";
 const MIRROR = "0x3333333333333333333333333333333333333333";
 
 describe("gallery redemption transaction hook helpers", () => {
-  it("requires explicit approval and stops after one confirmation", async () => {
+  it("waits two extra blocks after approval before continuing", async () => {
     const calls: string[] = [];
     const result = await submitGalleryRedemptionApproval({
       request: { functionName: "setApprovalForAll" },
@@ -45,7 +47,7 @@ describe("gallery redemption transaction hook helpers", () => {
       },
     });
 
-    assert.deepEqual(calls, ["simulate approval", "write approval", "wait 1"]);
+    assert.deepEqual(calls, ["simulate approval", "write approval", "wait 3"]);
     assert.equal(result.transactionHash, ORIGINAL_HASH);
     assert.equal(
       galleryRedemptionPrimaryAction({ approved: false, quoteCurrent: true }),
@@ -57,7 +59,7 @@ describe("gallery redemption transaction hook helpers", () => {
     );
   });
 
-  it("publishes approval only after its receipt confirms", async () => {
+  it("publishes approval only after the receipt block exposes it on-chain", async () => {
     const calls: string[] = [];
     const queryClient = new QueryClient();
     await submitGalleryRedemptionApproval({
@@ -77,20 +79,29 @@ describe("gallery redemption transaction hook helpers", () => {
           blockNumber: 51n,
         };
       },
-      onConfirmed: () => {
-        calls.push("publish approval");
-        cacheGalleryRedemptionApproval(queryClient, {
-          chainId: 8453,
-          account: ACCOUNT,
-          checkout: CHECKOUT,
-        });
-      },
+      onConfirmed: (receipt) =>
+        cacheConfirmedGalleryRedemptionApproval(
+          queryClient,
+          {
+            chainId: 8453,
+            account: ACCOUNT,
+            checkout: CHECKOUT,
+            blockNumber: receipt.blockNumber,
+          },
+          async (blockNumber) => {
+            calls.push(`read approval at ${blockNumber}`);
+            return true;
+          },
+        ).then(() => {
+          calls.push("publish approval");
+        }),
     });
 
     assert.deepEqual(calls, [
       "simulate",
       "write",
       "receipt",
+      "read approval at 51",
       "publish approval",
     ]);
     assert.equal(
@@ -101,6 +112,84 @@ describe("gallery redemption transaction hook helpers", () => {
         CHECKOUT,
       ]),
       true,
+    );
+  });
+
+  it("continues from confirmed approval into one redemption submission", async () => {
+    const calls: string[] = [];
+    await submitGalleryRedemptionApprovalFlow({
+      request: { functionName: "setApprovalForAll" },
+      simulate: async (request) => {
+        calls.push("simulate approval");
+        return { request };
+      },
+      write: async () => {
+        calls.push("write approval");
+        return ORIGINAL_HASH;
+      },
+      waitForReceipt: async (_hash, confirmations) => {
+        calls.push(`confirm approval after ${confirmations} blocks`);
+        return { transactionHash: ORIGINAL_HASH, blockNumber: 51n };
+      },
+      onConfirmed: async () => {
+        calls.push("verify approval on-chain");
+      },
+      continueToRedemption: async () => {
+        await submitGalleryRedemptionTransaction({
+          request: { functionName: "redeemSociety" },
+          consentKey: "approved-burn",
+          cachedSimulation: null,
+          simulate: async (request) => {
+            calls.push("simulate redemption");
+            return { request };
+          },
+          write: async () => {
+            calls.push("write redemption");
+            return REDEMPTION_HASH;
+          },
+          waitForReceipt: async () => {
+            calls.push("confirm redemption");
+            return { transactionHash: REDEMPTION_HASH, blockNumber: 52n };
+          },
+        });
+      },
+    });
+
+    assert.deepEqual(calls, [
+      "simulate approval",
+      "write approval",
+      "confirm approval after 3 blocks",
+      "verify approval on-chain",
+      "simulate redemption",
+      "write redemption",
+      "confirm redemption",
+    ]);
+  });
+
+  it("does not publish a receipt whose block lacks the approval", async () => {
+    const queryClient = new QueryClient();
+    await assert.rejects(
+      cacheConfirmedGalleryRedemptionApproval(
+        queryClient,
+        {
+          chainId: 8453,
+          account: ACCOUNT,
+          checkout: CHECKOUT,
+          blockNumber: 51n,
+        },
+        async () => false,
+      ),
+      /not confirmed on-chain/u,
+    );
+
+    assert.equal(
+      queryClient.getQueryData([
+        "gallery-redemption-approval",
+        8453,
+        ACCOUNT,
+        CHECKOUT,
+      ]),
+      undefined,
     );
   });
 
@@ -324,13 +413,15 @@ describe("gallery redemption transaction hook helpers", () => {
     );
   });
 
-  it("keeps transaction identity only after wagmi returns a hash", () => {
+  it("retains approval and redemption rows like the purchase modal", () => {
     const approvalAwaiting = galleryRedemptionStateForStage(
       "approval",
       "awaiting_wallet",
       { status: "idle" },
     );
-    assert.deepEqual(galleryRedemptionTransactions(approvalAwaiting), []);
+    assert.deepEqual(galleryRedemptionTransactions(approvalAwaiting), [
+      { kind: "NFT redemption approval" },
+    ]);
 
     const approvalConfirming = galleryRedemptionStateForStage(
       "approval",
@@ -338,7 +429,7 @@ describe("gallery redemption transaction hook helpers", () => {
       {
         status: "awaiting_approval_wallet",
         operation: "approval",
-        hash: ORIGINAL_HASH,
+        approvalHash: ORIGINAL_HASH,
       },
     );
     assert.deepEqual(galleryRedemptionTransactions(approvalConfirming), [
@@ -350,18 +441,23 @@ describe("gallery redemption transaction hook helpers", () => {
       "simulating",
       approvalConfirming,
     );
-    assert.equal(redemptionSimulating.hash, undefined);
+    assert.deepEqual(galleryRedemptionTransactions(redemptionSimulating), [
+      { kind: "NFT redemption approval", hash: ORIGINAL_HASH },
+      { kind: "Society NFT redemption" },
+    ]);
     const redemptionRefreshing = galleryRedemptionStateForStage(
       "redemption",
       "refreshing",
       {
         status: "confirming_redemption",
         operation: "redemption",
-        hash: ORIGINAL_HASH,
+        approvalHash: ORIGINAL_HASH,
+        redemptionHash: REDEMPTION_HASH,
       },
     );
     assert.deepEqual(galleryRedemptionTransactions(redemptionRefreshing), [
-      { kind: "Society NFT redemption", hash: ORIGINAL_HASH },
+      { kind: "NFT redemption approval", hash: ORIGINAL_HASH },
+      { kind: "Society NFT redemption", hash: REDEMPTION_HASH },
     ]);
   });
 

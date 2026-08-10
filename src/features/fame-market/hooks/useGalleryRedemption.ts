@@ -39,7 +39,6 @@ export type GalleryRedemptionTransactionStatus =
   | "simulating_approval"
   | "awaiting_approval_wallet"
   | "confirming_approval"
-  | "approval_confirmed"
   | "simulating_redemption"
   | "awaiting_redemption_wallet"
   | "confirming_redemption"
@@ -52,7 +51,8 @@ export type GalleryRedemptionOperation = "approval" | "redemption";
 export type GalleryRedemptionTransactionState = Readonly<{
   status: GalleryRedemptionTransactionStatus;
   operation?: GalleryRedemptionOperation;
-  hash?: Hash;
+  approvalHash?: Hash;
+  redemptionHash?: Hash;
   error?: Error;
 }>;
 
@@ -60,6 +60,8 @@ type Receipt = Readonly<{
   transactionHash: Hash;
   blockNumber: bigint;
 }>;
+
+const GALLERY_REDEMPTION_APPROVAL_CONFIRMATIONS = 3;
 
 type SubmitDependencies<TRequest> = Readonly<{
   request: TRequest;
@@ -114,29 +116,47 @@ export function galleryRedemptionStateForStage(
             ? "confirming_approval"
             : "confirming_redemption"
           : "refreshing";
-  const preserveHash =
-    current.operation === operation &&
+  const startsApproval = operation === "approval" && stage === "simulating";
+  const preservesRedemptionHash =
+    operation === "redemption" &&
     (stage === "confirming" || stage === "refreshing");
   return {
     status,
     operation,
-    hash: preserveHash ? current.hash : undefined,
+    approvalHash: startsApproval ? undefined : current.approvalHash,
+    redemptionHash: preservesRedemptionHash
+      ? current.redemptionHash
+      : undefined,
   };
 }
 
 export function galleryRedemptionTransactions(
   state: GalleryRedemptionTransactionState,
 ) {
-  if (!state.operation || !state.hash) return [];
-  return [
-    {
-      kind:
-        state.operation === "approval"
-          ? "NFT redemption approval"
-          : "Society NFT redemption",
-      hash: state.hash,
-    },
-  ];
+  const transactions: { kind: string; hash?: Hash }[] = [];
+  if (state.approvalHash) {
+    transactions.push({
+      kind: "NFT redemption approval",
+      hash: state.approvalHash,
+    });
+  } else if (
+    state.status === "simulating_approval" ||
+    state.status === "awaiting_approval_wallet"
+  ) {
+    transactions.push({ kind: "NFT redemption approval" });
+  }
+  if (state.redemptionHash) {
+    transactions.push({
+      kind: "Society NFT redemption",
+      hash: state.redemptionHash,
+    });
+  } else if (
+    state.status === "simulating_redemption" ||
+    state.status === "awaiting_redemption_wallet"
+  ) {
+    transactions.push({ kind: "Society NFT redemption" });
+  }
+  return transactions;
 }
 
 export async function assertGalleryForkWalletIdentity(input: {
@@ -186,14 +206,20 @@ function galleryRedemptionApprovalQueryKey(
   ] as const;
 }
 
-export function cacheGalleryRedemptionApproval(
+export async function cacheConfirmedGalleryRedemptionApproval(
   queryClient: Pick<QueryClient, "setQueryData">,
   input: Readonly<{
     chainId: number;
     account: Address;
     checkout: Address;
+    blockNumber: bigint;
   }>,
+  readApprovalAtBlock: (blockNumber: bigint) => Promise<boolean>,
 ) {
+  const approved = await readApprovalAtBlock(input.blockNumber);
+  if (!approved) {
+    throw new Error("NFT redemption approval was not confirmed on-chain.");
+  }
   queryClient.setQueryData(
     galleryRedemptionApprovalQueryKey(
       input.chainId,
@@ -213,9 +239,27 @@ export async function submitGalleryRedemptionApproval<TRequest>(
   const submittedHash = await input.write(simulated.request);
   input.onHash?.(submittedHash);
   input.onStage?.("confirming");
-  const receipt = await input.waitForReceipt(submittedHash, 1);
+  const receipt = await input.waitForReceipt(
+    submittedHash,
+    GALLERY_REDEMPTION_APPROVAL_CONFIRMATIONS,
+  );
   await input.onConfirmed?.(receipt);
   return receipt;
+}
+
+export async function submitGalleryRedemptionApprovalFlow<TRequest>(
+  input: SubmitDependencies<TRequest> & {
+    continueToRedemption: (receipt: Receipt) => Promise<void>;
+  },
+) {
+  const { continueToRedemption, onConfirmed, ...approval } = input;
+  return submitGalleryRedemptionApproval({
+    ...approval,
+    onConfirmed: async (receipt) => {
+      await onConfirmed?.(receipt);
+      await continueToRedemption(receipt);
+    },
+  });
 }
 
 export type GalleryRedemptionSimulation = Readonly<{
@@ -419,6 +463,145 @@ export function useGalleryRedemption(input: {
     [checkout, publicClient, runtime.chainId, wagmiConfig],
   );
 
+  const executeRedemption = useCallback(
+    async (approvalConfirmed: boolean) => {
+      let submittedHash: Hash | undefined;
+      let receiptConfirmed = false;
+      let lastStage:
+        | "simulating"
+        | "awaiting_wallet"
+        | "confirming"
+        | "refreshing"
+        | undefined;
+      try {
+        const account = latestConnection();
+        if (!approvalConfirmed && !approved)
+          throw new Error("Approve NFT redemption before burning NFTs.");
+        if (!input.quote || !quoteCurrent) {
+          throw new Error(
+            "The redemption quote changed or expired. Refresh it before burning.",
+          );
+        }
+        if (
+          !isGalleryRedemptionQuoteCurrent(input.quote, {
+            account,
+            chainId: runtime.chainId,
+            tokenIds: input.tokenIds,
+            outputAsset: input.outputAsset,
+            now: Date.now(),
+          })
+        ) {
+          throw new Error(
+            "The redemption quote changed or expired. Refresh it before burning.",
+          );
+        }
+        if (!isAddressEqual(account, input.quote.account)) {
+          throw new Error("The connected redemption account changed.");
+        }
+        if (!approvalConfirmed && simulationState.status === "pending") {
+          throw new Error("The redemption simulation is still running.");
+        }
+        if (!approvalConfirmed && simulationState.status === "error") {
+          throw simulationState.error;
+        }
+        if (!publicClient) throw new Error("Base RPC client is unavailable.");
+        await assertForkWallet(account);
+        setModalOpen(true);
+        const request = galleryRedemptionRequest(input.quote);
+        const consentKey = galleryRedemptionConsentKey(input.quote);
+        submittedSelectionKeyRef.current = selectionKey;
+        const result = await submitGalleryRedemptionTransaction({
+          request,
+          consentKey,
+          cachedSimulation: approvalConfirmed ? null : simulationRef.current,
+          simulate: (candidate) => publicClient.simulateContract(candidate),
+          write: (candidate) => writeContract(candidate as ExactWriteRequest),
+          waitForReceipt,
+          onHash: (hash) => {
+            submittedHash = hash;
+            setState((current) => ({
+              ...current,
+              operation: "redemption",
+              redemptionHash: hash,
+            }));
+          },
+          onConfirmed: async (receipt) => {
+            receiptConfirmed = true;
+            simulationRef.current = null;
+            setSimulationState({ status: "idle" });
+            await cacheConfirmedGalleryRedemption(queryClient, {
+              chainId: runtime.chainId,
+              account,
+              checkout: input.quote!.checkout,
+              mirror: runtime.addresses.mirror,
+              tokenIds: input.tokenIds,
+              blockNumber: receipt.blockNumber,
+            });
+          },
+          onStage: (stage) => {
+            lastStage = stage;
+            setState((current) =>
+              galleryRedemptionStateForStage("redemption", stage, current),
+            );
+          },
+          refreshAfterSuccess: () =>
+            invalidateGalleryRedemptionQueries(queryClient),
+        });
+        simulationRef.current = result.simulation;
+        setState((current) => ({
+          status: "success",
+          operation: "redemption",
+          approvalHash: current.approvalHash,
+          redemptionHash: result.transactionHash,
+        }));
+      } catch (cause) {
+        if (!receiptConfirmed) submittedSelectionKeyRef.current = null;
+        const error =
+          cause instanceof Error
+            ? cause
+            : new Error("Society redemption failed.");
+        if (submittedHash) {
+          simulationRef.current = null;
+          setSimulationState({ status: "idle" });
+          void queryClient.invalidateQueries({
+            queryKey: ["gallery-redemption-quote"],
+          });
+        } else if (lastStage === "simulating" && input.quote) {
+          const consentKey = galleryRedemptionConsentKey(input.quote);
+          simulationRef.current = null;
+          setSimulationState({ status: "error", consentKey, error });
+        }
+        setState((current) => ({
+          status: "error",
+          operation: "redemption",
+          approvalHash: current.approvalHash,
+          redemptionHash:
+            submittedHash ??
+            (current.operation === "redemption"
+              ? current.redemptionHash
+              : undefined),
+          error,
+        }));
+        setModalOpen(true);
+      }
+    },
+    [
+      approved,
+      assertForkWallet,
+      input,
+      latestConnection,
+      publicClient,
+      queryClient,
+      quoteCurrent,
+      selectionKey,
+      runtime.addresses.mirror,
+      runtime.chainId,
+      simulationState,
+      waitForReceipt,
+      writeContract,
+    ],
+  );
+
   const approve = useCallback(async () => {
     let submittedHash: Hash | undefined;
     try {
@@ -433,38 +616,54 @@ export function useGalleryRedemption(input: {
         runtime.addresses.mirror,
         checkout.address,
       );
-      await submitGalleryRedemptionApproval({
+      await submitGalleryRedemptionApprovalFlow({
         request,
         simulate: (candidate) => publicClient.simulateContract(candidate),
         write: (candidate) => writeContract(candidate as ExactWriteRequest),
         waitForReceipt,
         onHash: (hash) => {
           submittedHash = hash;
-          setState((current) => ({ ...current, operation: "approval", hash }));
+          setState((current) => ({
+            ...current,
+            operation: "approval",
+            approvalHash: hash,
+            redemptionHash: undefined,
+          }));
         },
-        onConfirmed: () =>
-          cacheGalleryRedemptionApproval(queryClient, {
-            chainId: runtime.chainId,
-            account,
-            checkout: checkout.address,
-          }),
+        onConfirmed: async (receipt) => {
+          submittedSelectionKeyRef.current = selectionKey;
+          await cacheConfirmedGalleryRedemptionApproval(
+            queryClient,
+            {
+              chainId: runtime.chainId,
+              account,
+              checkout: checkout.address,
+              blockNumber: receipt.blockNumber,
+            },
+            (blockNumber) =>
+              publicClient.readContract({
+                ...galleryRedemptionApprovalReadRequest(
+                  account,
+                  runtime.addresses.mirror,
+                  checkout.address,
+                ),
+                blockNumber,
+              }),
+          );
+        },
+        continueToRedemption: () => executeRedemption(true),
         onStage: (stage) =>
           setState((current) =>
             galleryRedemptionStateForStage("approval", stage, current),
           ),
       });
-      setState((current) => ({
-        status: "approval_confirmed",
-        operation: "approval",
-        hash: current.operation === "approval" ? current.hash : submittedHash,
-      }));
     } catch (cause) {
+      submittedSelectionKeyRef.current = null;
       setState((current) => ({
         status: "error",
         operation: "approval",
-        hash:
-          submittedHash ??
-          (current.operation === "approval" ? current.hash : undefined),
+        approvalHash: submittedHash ?? current.approvalHash,
+        redemptionHash: undefined,
         error:
           cause instanceof Error
             ? cause
@@ -475,144 +674,21 @@ export function useGalleryRedemption(input: {
   }, [
     assertForkWallet,
     checkout,
+    executeRedemption,
     latestConnection,
     publicClient,
     queryClient,
     runtime.addresses.mirror,
     runtime.chainId,
+    selectionKey,
     waitForReceipt,
     writeContract,
   ]);
 
-  const redeem = useCallback(async () => {
-    let submittedHash: Hash | undefined;
-    let receiptConfirmed = false;
-    let lastStage:
-      | "simulating"
-      | "awaiting_wallet"
-      | "confirming"
-      | "refreshing"
-      | undefined;
-    try {
-      const account = latestConnection();
-      if (!approved)
-        throw new Error("Approve NFT redemption before burning NFTs.");
-      if (!input.quote || !quoteCurrent) {
-        throw new Error(
-          "The redemption quote changed or expired. Refresh it before burning.",
-        );
-      }
-      if (
-        !isGalleryRedemptionQuoteCurrent(input.quote, {
-          account,
-          chainId: runtime.chainId,
-          tokenIds: input.tokenIds,
-          outputAsset: input.outputAsset,
-          now: Date.now(),
-        })
-      ) {
-        throw new Error(
-          "The redemption quote changed or expired. Refresh it before burning.",
-        );
-      }
-      if (!isAddressEqual(account, input.quote.account)) {
-        throw new Error("The connected redemption account changed.");
-      }
-      if (simulationState.status === "pending") {
-        throw new Error("The redemption simulation is still running.");
-      }
-      if (simulationState.status === "error") throw simulationState.error;
-      if (!publicClient) throw new Error("Base RPC client is unavailable.");
-      await assertForkWallet(account);
-      setModalOpen(true);
-      const request = galleryRedemptionRequest(input.quote);
-      const consentKey = galleryRedemptionConsentKey(input.quote);
-      submittedSelectionKeyRef.current = selectionKey;
-      const result = await submitGalleryRedemptionTransaction({
-        request,
-        consentKey,
-        cachedSimulation: simulationRef.current,
-        simulate: (candidate) => publicClient.simulateContract(candidate),
-        write: (candidate) => writeContract(candidate as ExactWriteRequest),
-        waitForReceipt,
-        onHash: (hash) => {
-          submittedHash = hash;
-          setState((current) => ({
-            ...current,
-            operation: "redemption",
-            hash,
-          }));
-        },
-        onConfirmed: async (receipt) => {
-          receiptConfirmed = true;
-          simulationRef.current = null;
-          setSimulationState({ status: "idle" });
-          await cacheConfirmedGalleryRedemption(queryClient, {
-            chainId: runtime.chainId,
-            account,
-            checkout: input.quote!.checkout,
-            mirror: runtime.addresses.mirror,
-            tokenIds: input.tokenIds,
-            blockNumber: receipt.blockNumber,
-          });
-        },
-        onStage: (stage) => {
-          lastStage = stage;
-          setState((current) =>
-            galleryRedemptionStateForStage("redemption", stage, current),
-          );
-        },
-        refreshAfterSuccess: () =>
-          invalidateGalleryRedemptionQueries(queryClient),
-      });
-      simulationRef.current = result.simulation;
-      setState({
-        status: "success",
-        operation: "redemption",
-        hash: result.transactionHash,
-      });
-    } catch (cause) {
-      if (!receiptConfirmed) submittedSelectionKeyRef.current = null;
-      const error =
-        cause instanceof Error
-          ? cause
-          : new Error("Society redemption failed.");
-      if (submittedHash) {
-        simulationRef.current = null;
-        setSimulationState({ status: "idle" });
-        void queryClient.invalidateQueries({
-          queryKey: ["gallery-redemption-quote"],
-        });
-      } else if (lastStage === "simulating" && input.quote) {
-        const consentKey = galleryRedemptionConsentKey(input.quote);
-        simulationRef.current = null;
-        setSimulationState({ status: "error", consentKey, error });
-      }
-      setState((current) => ({
-        status: "error",
-        operation: "redemption",
-        hash:
-          submittedHash ??
-          (current.operation === "redemption" ? current.hash : undefined),
-        error,
-      }));
-      setModalOpen(true);
-    }
-  }, [
-    approved,
-    assertForkWallet,
-    input,
-    latestConnection,
-    publicClient,
-    queryClient,
-    quoteCurrent,
-    selectionKey,
-    runtime.addresses.mirror,
-    runtime.chainId,
-    simulationState,
-    waitForReceipt,
-    writeContract,
-  ]);
+  const redeem = useCallback(
+    () => executeRedemption(false),
+    [executeRedemption],
+  );
 
   const transactions = useMemo(
     () => galleryRedemptionTransactions(state),
@@ -636,7 +712,6 @@ export function useGalleryRedemption(input: {
     redeem,
     locked:
       state.status !== "idle" &&
-      state.status !== "approval_confirmed" &&
       state.status !== "success" &&
       state.status !== "error",
   };
