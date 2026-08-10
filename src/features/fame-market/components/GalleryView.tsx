@@ -43,6 +43,7 @@ import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
 import { GalleryAssetSelect } from "./GalleryAssetSelect";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
+import { GalleryPurchaseDisclosureModal } from "./GalleryPurchaseDisclosureModal";
 import { GalleryLiquidityCta } from "./GalleryLiquidityOverview";
 import { SocietyRedemptionAccordion } from "./SocietyRedemptionAccordion";
 
@@ -688,6 +689,11 @@ export function GalleryView() {
           tokenSymbol={paymentAsset}
           networkName={config.labels.network}
           explorerBaseUrl={config.explorerBaseUrl}
+        />
+        <GalleryPurchaseDisclosureModal
+          open={purchase.disclosureModalOpen}
+          onCancel={purchase.cancelDisclosure}
+          onUnderstand={purchase.acceptDisclosure}
         />
       </Stack>
     </Container>

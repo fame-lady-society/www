@@ -44,6 +44,11 @@ import {
   galleryPurchaseContractRequest,
 } from "../transactions/contractRequests";
 import {
+  cancelGalleryPurchaseDisclosure,
+  requestGalleryPurchaseDisclosure,
+  understandGalleryPurchaseDisclosure,
+} from "../purchaseDisclosure";
+import {
   freezeGalleryCheckoutBuyerTerms,
   galleryCheckoutAllowanceRequest,
   galleryCheckoutApprovalContractRequest,
@@ -254,9 +259,11 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     initialGalleryPurchaseState,
   );
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [disclosureModalOpen, setDisclosureModalOpen] = useState(false);
   const [activeArtworkKey, setActiveArtworkKey] = useState<string | null>(null);
   const activeAttempt = useRef<ActiveAttempt | null>(null);
   const selectedTarget = useRef<GalleryArtworkTarget | null>(null);
+  const waitingForDisclosure = useRef(false);
   const waitingForConnection = useRef(false);
   const sawConnectModalOpen = useRef(false);
   const inputsRef = useRef(inputs);
@@ -726,6 +733,18 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     ],
   );
 
+  const beginAttempt = useCallback(() => {
+    const latest = getConnection(wagmiConfig);
+    if (!latest.address) {
+      dispatch({ type: "connecting" });
+      waitingForConnection.current = true;
+      sawConnectModalOpen.current = false;
+      connectModal.setOpen(true);
+      return;
+    }
+    void executeAttempt();
+  }, [connectModal, executeAttempt, wagmiConfig]);
+
   const buy = useCallback(
     (target: GalleryArtworkTarget) => {
       if (activeAttempt.current) return;
@@ -749,23 +768,50 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       selectedTarget.current = target;
       setActiveArtworkKey(target.targetId);
 
-      const latest = getConnection(wagmiConfig);
-      if (!latest.address) {
-        dispatch({ type: "connecting" });
-        waitingForConnection.current = true;
-        sawConnectModalOpen.current = false;
-        connectModal.setOpen(true);
-        return;
-      }
-      void executeAttempt();
+      requestGalleryPurchaseDisclosure({
+        getStorage: () => window.localStorage,
+        pending: waitingForDisclosure,
+        setOpen: setDisclosureModalOpen,
+        beginAttempt,
+        onStorageError: (operation, cause) =>
+          console.warn(
+            `[gallery purchase:disclosure_storage_${operation}]`,
+            cause,
+          ),
+      });
     },
-    [
-      config.token.symbol,
-      connectModal,
-      executeAttempt,
-      failOutsideQueue,
-      wagmiConfig,
-    ],
+    [beginAttempt, config.token.symbol, failOutsideQueue],
+  );
+
+  const cancelDisclosure = useCallback(() => {
+    cancelGalleryPurchaseDisclosure({
+      pending: waitingForDisclosure,
+      setOpen: setDisclosureModalOpen,
+      abortAttempt: () => {
+        activeAttempt.current = null;
+        selectedTarget.current = null;
+        setActiveArtworkKey(null);
+        dispatch({ type: "reset" });
+      },
+    });
+  }, []);
+
+  const acceptDisclosure = useCallback(
+    (doNotShowAgain: boolean) => {
+      understandGalleryPurchaseDisclosure({
+        getStorage: () => window.localStorage,
+        pending: waitingForDisclosure,
+        setOpen: setDisclosureModalOpen,
+        beginAttempt,
+        onStorageError: (operation, cause) =>
+          console.warn(
+            `[gallery purchase:disclosure_storage_${operation}]`,
+            cause,
+          ),
+        doNotShowAgain,
+      });
+    },
+    [beginAttempt],
   );
 
   useEffect(() => {
@@ -827,6 +873,9 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
     buy,
     modalOpen: transactionModalOpen,
     setModalOpen: setTransactionModalOpen,
+    disclosureModalOpen,
+    cancelDisclosure,
+    acceptDisclosure,
     locked: activeArtworkKey !== null,
     activeArtworkKey,
     selectedTarget: selectedTarget.current,
