@@ -16,15 +16,16 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { WrappedLink } from "@/components/WrappedLink";
 import { TwitterIcon } from "@/components/icons/twitter";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 
 const AnimatedBox = animated(Box);
 
-const AnimatedFadeIn: FC<
-  PropsWithChildren<BoxProps & { delay?: number }>
-> = ({ children, delay = 0, ...rest }) => {
+const AnimatedFadeIn: FC<PropsWithChildren<BoxProps & { delay?: number }>> = ({
+  children,
+  delay = 0,
+  ...rest
+}) => {
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.15,
@@ -44,9 +45,11 @@ const AnimatedFadeIn: FC<
   );
 };
 
-const AnimatedScaleIn: FC<
-  PropsWithChildren<BoxProps & { delay?: number }>
-> = ({ children, delay = 0, ...rest }) => {
+const AnimatedScaleIn: FC<PropsWithChildren<BoxProps & { delay?: number }>> = ({
+  children,
+  delay = 0,
+  ...rest
+}) => {
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.2,
@@ -66,10 +69,9 @@ const AnimatedScaleIn: FC<
   );
 };
 
-const GradientText: FC<PropsWithChildren<{ variant?: "primary" | "secondary" }>> = ({
-  children,
-  variant = "primary",
-}) => (
+const GradientText: FC<
+  PropsWithChildren<{ variant?: "primary" | "secondary" }>
+> = ({ children, variant = "primary" }) => (
   <Box
     component="span"
     sx={{
@@ -236,7 +238,8 @@ export const Layout: FC = () => {
       component="div"
       sx={{
         minHeight: "100vh",
-        background: "radial-gradient(ellipse at 50% 0%, rgba(196, 77, 255, 0.08) 0%, transparent 50%)",
+        background:
+          "radial-gradient(ellipse at 50% 0%, rgba(196, 77, 255, 0.08) 0%, transparent 50%)",
       }}
     >
       {/* Hero Section */}
@@ -262,7 +265,11 @@ export const Layout: FC = () => {
               <Typography
                 variant="h1"
                 sx={{
-                  fontSize: isTinyScreen ? "2.5rem" : isSmallScreen ? "3.5rem" : "4.5rem",
+                  fontSize: isTinyScreen
+                    ? "2.5rem"
+                    : isSmallScreen
+                      ? "3.5rem"
+                      : "4.5rem",
                   fontWeight: 800,
                   lineHeight: 1.1,
                   letterSpacing: "-0.03em",
@@ -280,8 +287,9 @@ export const Layout: FC = () => {
                 color="text.secondary"
                 sx={{ mb: 4, lineHeight: 1.7, maxWidth: 480 }}
               >
-                Fame Lady Society is a community-owned Web3 project celebrating women&apos;s empowerment, radical transparency,
-                and true decentralization.
+                Fame Lady Society is a community-owned Web3 project celebrating
+                women&apos;s empowerment, radical transparency, and true
+                decentralization.
               </Typography>
               <Box component="div" display="flex" flexWrap="wrap" gap={2}>
                 <Button
@@ -292,7 +300,8 @@ export const Layout: FC = () => {
                   endIcon={<ArrowForwardIcon />}
                   sx={{
                     backgroundColor: "transparent !important",
-                    background: "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%) !important",
+                    background:
+                      "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%) !important",
                     color: "#fff !important",
                     px: 4,
                     py: 1.5,
@@ -300,7 +309,8 @@ export const Layout: FC = () => {
                     fontSize: "1rem",
                     "&:hover": {
                       backgroundColor: "transparent !important",
-                      background: "linear-gradient(135deg, #ff8cb5 0%, #d06aff 100%) !important",
+                      background:
+                        "linear-gradient(135deg, #ff8cb5 0%, #d06aff 100%) !important",
                     },
                   }}
                 >
@@ -360,8 +370,7 @@ export const Layout: FC = () => {
                     theme.palette.mode === "light"
                       ? "radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.6) 70%)"
                       : "none",
-                  p: (theme) =>
-                    theme.palette.mode === "light" ? 2 : 0,
+                  p: (theme) => (theme.palette.mode === "light" ? 2 : 0),
                   "&::before": {
                     content: '""',
                     position: "absolute",
@@ -369,7 +378,8 @@ export const Layout: FC = () => {
                     left: "10%",
                     right: "10%",
                     bottom: "10%",
-                    background: "radial-gradient(circle, rgba(196, 77, 255, 0.3) 0%, transparent 70%)",
+                    background:
+                      "radial-gradient(circle, rgba(196, 77, 255, 0.3) 0%, transparent 70%)",
                     filter: "blur(60px)",
                     zIndex: 0,
                   },
@@ -474,7 +484,7 @@ export const Layout: FC = () => {
             <FeatureCard
               icon="👑"
               title="Community First"
-              description="No VCs, no corporate interests. Every decision is made by and for the community through the FAMEus DAO. Your voice matters here."
+              description="No VCs or corporate interests. The project was reclaimed by its holders and continues through volunteer stewardship, public contracts, and community participation."
               delay={100}
             />
           </Grid2>
@@ -494,7 +504,8 @@ export const Layout: FC = () => {
         component="section"
         sx={{
           py: 12,
-          background: "linear-gradient(180deg, rgba(196, 77, 255, 0.05) 0%, transparent 50%, rgba(107, 91, 255, 0.05) 100%)",
+          background:
+            "linear-gradient(180deg, rgba(196, 77, 255, 0.05) 0%, transparent 50%, rgba(107, 91, 255, 0.05) 100%)",
         }}
       >
         <Container maxWidth="lg">
@@ -545,16 +556,17 @@ export const Layout: FC = () => {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  Introducing <GradientText variant="secondary">$FAME</GradientText>
+                  Introducing{" "}
+                  <GradientText variant="secondary">$FAME</GradientText>
                 </Typography>
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   sx={{ mb: 3, lineHeight: 1.8, fontSize: "1.1rem" }}
                 >
-                  A revolutionary DN404 token on Base that bridges ERC20 liquidity
-                  with NFT art. 888 unique Society NFTs are backed by 888 million
-                  $FAME tokens.
+                  A revolutionary DN404 token on Base that bridges ERC20
+                  liquidity with NFT art. 888 unique Society NFTs are backed by
+                  888 million $FAME tokens.
                 </Typography>
                 <Box
                   component="div"
@@ -572,16 +584,13 @@ export const Layout: FC = () => {
                         : "1px solid rgba(255,255,255,0.1)",
                   }}
                 >
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    mb={1}
-                  >
+                  <Typography variant="h5" fontWeight={700} mb={1}>
                     1,000,000 $FAME = 1 Society Lady
                   </Typography>
                   <Typography color="text.secondary">
-                    Collect 1 million $FAME, and a Society Lady NFT automatically
-                    mints to your wallet. True liquidity-backed art.
+                    Collect 1 million $FAME, and a Society Lady NFT
+                    automatically mints to your wallet. True liquidity-backed
+                    art.
                   </Typography>
                 </Box>
                 <Button
@@ -592,14 +601,16 @@ export const Layout: FC = () => {
                   endIcon={<ArrowForwardIcon />}
                   sx={{
                     backgroundColor: "transparent !important",
-                    background: "linear-gradient(135deg, #ffd700 0%, #ff8c00 100%) !important",
+                    background:
+                      "linear-gradient(135deg, #ffd700 0%, #ff8c00 100%) !important",
                     color: "#000 !important",
                     px: 4,
                     py: 1.5,
                     fontWeight: 700,
                     "&:hover": {
                       backgroundColor: "transparent !important",
-                      background: "linear-gradient(135deg, #ffe033 0%, #ffa033 100%) !important",
+                      background:
+                        "linear-gradient(135deg, #ffe033 0%, #ffa033 100%) !important",
                     },
                   }}
                 >
@@ -644,9 +655,9 @@ export const Layout: FC = () => {
                 color="text.secondary"
                 sx={{ mb: 3, lineHeight: 1.8, fontSize: "1.1rem" }}
               >
-                Own an original Fame Lady Squad NFT? Wrap it to receive a Fame Lady
-                Society NFT with the same artwork. Your original is held safely in
-                the contract—unwrap anytime.
+                Own an original Fame Lady Squad NFT? Wrap it to receive a Fame
+                Lady Society NFT with the same artwork. Your original is held
+                safely in the contract—unwrap anytime.
               </Typography>
               <Box component="div" sx={{ mb: 4 }}>
                 {[
@@ -668,7 +679,8 @@ export const Layout: FC = () => {
                         width: 24,
                         height: 24,
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%)",
+                        background:
+                          "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -728,11 +740,14 @@ export const Layout: FC = () => {
         </Grid2>
       </Container>
 
-      <Divider sx={{ borderColor: (theme) =>
-        theme.palette.mode === "light"
-          ? "rgba(15, 23, 42, 0.08)"
-          : "rgba(255,255,255,0.05)"
-      }} />
+      <Divider
+        sx={{
+          borderColor: (theme) =>
+            theme.palette.mode === "light"
+              ? "rgba(15, 23, 42, 0.08)"
+              : "rgba(255,255,255,0.05)",
+        }}
+      />
 
       {/* Community Section */}
       <Container maxWidth="lg" sx={{ py: 12 }}>
@@ -758,8 +773,8 @@ export const Layout: FC = () => {
             mb={6}
             lineHeight={1.7}
           >
-            Whether you&apos;re a longtime holder or just discovering us, there&apos;s
-            a place for you in the Fame Lady Society.
+            Whether you&apos;re a longtime holder or just discovering us,
+            there&apos;s a place for you in the Fame Lady Society.
           </Typography>
         </AnimatedFadeIn>
 
@@ -819,18 +834,10 @@ export const Layout: FC = () => {
           </Grid2>
           <Grid2 xs={6} sm={4} md={2}>
             <SocialCard
-              href="https://www.tally.xyz/gov/fameus-dao"
-              icon={<AccountBalanceIcon sx={{ fontSize: 40 }} />}
-              label="FAMEus DAO"
-              delay={200}
-            />
-          </Grid2>
-          <Grid2 xs={6} sm={4} md={2}>
-            <SocialCard
               href="https://github.com/fame-lady-society"
               icon={<GitHubIcon sx={{ fontSize: 40 }} />}
               label="GitHub"
-              delay={250}
+              delay={200}
             />
           </Grid2>
         </Grid2>
@@ -841,7 +848,8 @@ export const Layout: FC = () => {
         component="section"
         sx={{
           py: 10,
-          background: "linear-gradient(180deg, transparent 0%, rgba(196, 77, 255, 0.08) 100%)",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(196, 77, 255, 0.08) 100%)",
         }}
       >
         <Container maxWidth="md">
@@ -882,8 +890,9 @@ export const Layout: FC = () => {
                 mx="auto"
                 lineHeight={1.7}
               >
-                Browse the collection on OpenSea and find your perfect Fame Lady.
-                Join 234+ unique holders in owning a piece of Web3 HERstory.
+                Browse the collection on OpenSea and find your perfect Fame
+                Lady. Join 234+ unique holders in owning a piece of Web3
+                HERstory.
               </Typography>
               <Button
                 component={WrappedLink}
@@ -894,7 +903,8 @@ export const Layout: FC = () => {
                 size="large"
                 sx={{
                   backgroundColor: "transparent !important",
-                  background: "linear-gradient(135deg, #2081e2 0%, #1868b7 100%) !important",
+                  background:
+                    "linear-gradient(135deg, #2081e2 0%, #1868b7 100%) !important",
                   color: "#fff !important",
                   px: 5,
                   py: 1.5,
@@ -902,7 +912,8 @@ export const Layout: FC = () => {
                   fontSize: "1rem",
                   "&:hover": {
                     backgroundColor: "transparent !important",
-                    background: "linear-gradient(135deg, #3d9aff 0%, #2081e2 100%) !important",
+                    background:
+                      "linear-gradient(135deg, #3d9aff 0%, #2081e2 100%) !important",
                   },
                 }}
               >
@@ -923,7 +934,8 @@ export const Layout: FC = () => {
             sx={{ opacity: 0.7 }}
           >
             Fame Lady Society is run entirely by volunteers. No paid team, no
-            corporate backing—just a passionate community keeping the dream alive.
+            corporate backing—just a passionate community keeping the dream
+            alive.
           </Typography>
         </AnimatedFadeIn>
       </Container>

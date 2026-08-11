@@ -5,7 +5,9 @@ import { PleaseConnectYourWallet } from "./PleaseConnectYourWallet";
 
 const videoWipeUrl = "/videos/wipe-2.mp4";
 
-export default async function Home(props: { params: Promise<{ network: string }> }) {
+export default async function Home(props: {
+  params: Promise<{ network: string }>;
+}) {
   const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
@@ -28,7 +30,7 @@ export default async function Home(props: { params: Promise<{ network: string }>
 
   return (
     <>
-      <AppMain title="FAMEus" isDao headerRight={<ChainSelector />}>
+      <AppMain title="FAMEus Recovery" isDao headerRight={<ChainSelector />}>
         <VideoWipeInteraction
           videoUrl={videoWipeUrl}
           redirectPath={`/${network}/fameus/wrap`}
@@ -37,12 +39,13 @@ export default async function Home(props: { params: Promise<{ network: string }>
           <div className="w-full pl-4 py-8">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-4xl font-bold mb-6 text-center">
-                FAMEus DAO Onboarding
+                FAMEus Recovery
               </h1>
               <p className="text-lg text-left mb-6">
-                The FAMEus DAO requires you to wrap your $FAME Society NFTs into
-                Governance Society NFTs. These Governance Society NFTs will be
-                used to vote on the future of the FAMEus DAO.
+                FAMEus governance is paused. Connect only if you need to manage
+                an existing legacy position. The following pages preserve the
+                legacy wrap, lock, and unwrap controls; unwrapping is available
+                from the Recovery tab.
               </p>
               <PleaseConnectYourWallet />
             </div>

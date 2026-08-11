@@ -25,7 +25,7 @@ export const PresaleFAQ: FC = () => {
             <Typography component="p">
               Presale participants are not purchasing $FAME tokens for the
               purpose of profit, but rather to support the Fame Lady Society and
-              the FAMEus DAO.
+              the initial $FAME liquidity.
             </Typography>
           </>
         }

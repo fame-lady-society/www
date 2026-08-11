@@ -3,8 +3,6 @@ import cn from "classnames";
 import NextImage from "next/image";
 import { FlowerSelect } from "@/components/FlowerSelect";
 
-const BASE_URL = "https://fame.support/thumb/";
-
 const ImageForToken: FC<{
   imageUrl: string;
   onClick: () => void;

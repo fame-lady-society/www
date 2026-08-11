@@ -6,7 +6,6 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import { TwitterIcon } from "@/components/icons/twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import Image from "next/image";
 import { OpenSeaIcon } from "@/components/icons/opensea";
 import Divider from "@mui/material/Divider";
@@ -144,24 +143,6 @@ export const LinksMenuItems: FC<{}> = ({}) => {
           }
         />
       </MenuItem>
-      <MenuItem
-        component={WrappedLink}
-        href="https://www.tally.xyz/gov/fameus-dao"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <ListItemIcon>
-          <AccountBalanceIcon />
-        </ListItemIcon>
-        <ListItemText
-          primary={
-            <Typography textAlign="right" color="text.primary">
-              FAMEus DAO
-            </Typography>
-          }
-        />
-      </MenuItem>
-
       <MenuItem
         component={WrappedLink}
         href="https://github.com/fame-lady-society"

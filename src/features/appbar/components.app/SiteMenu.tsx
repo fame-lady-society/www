@@ -88,7 +88,7 @@ export const SiteMenu: FC<{
         href="/fameus"
         disabled={isDao}
         icon={<BankIcon />}
-        text="FAMEus DAO"
+        text="FAMEus Recovery"
       />
       <MenuItem
         href="/customize"

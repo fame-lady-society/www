@@ -2,17 +2,13 @@ import { AppMain } from "@/layouts/AppMain";
 import { isAddress } from "viem";
 import { InfoTooltip } from "@/components/InfoToolTip";
 
-export default async function Home(
-  props: {
-    params: Promise<{ address: string }>;
-    children: React.ReactNode;
-  }
-) {
+export default async function Home(props: {
+  params: Promise<{ address: string }>;
+  children: React.ReactNode;
+}) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   if (!isAddress(params.address)) {
     return (
@@ -33,8 +29,8 @@ export default async function Home(
               Schwing DAO Wrap
             </h1>
             <p className="text-lg text-left mb-6">
-              The Schwing DAO is the test DAO of the FAMEus DAO. No value or
-              utility is intended or implied.
+              Schwing is a separate experimental project. No value or utility is
+              intended or implied.
             </p>
             <h3 className="text-2xl font-bold mb-6 flex items-center">
               Liquid $SCHWING Austin Powers NFTs

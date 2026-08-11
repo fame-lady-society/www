@@ -1,18 +1,13 @@
 import { AppMain } from "@/layouts/AppMain";
 import { isAddress } from "viem";
-import { InfoTooltip } from "@/components/InfoToolTip";
 
-export default async function Home(
-  props: {
-    params: Promise<{ address: string; network: string }>;
-    children: React.ReactNode;
-  }
-) {
+export default async function Home(props: {
+  params: Promise<{ address: string; network: string }>;
+  children: React.ReactNode;
+}) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   if (!isAddress(params.address)) {
     return (
@@ -46,7 +41,7 @@ export default async function Home(
 
   return (
     <>
-      <AppMain title="FAMEus DAO">
+      <AppMain title="FAMEus Recovery">
         <div className="w-full px-4 py-8">
           <div className="max-w-4xl mx-auto">{children}</div>
         </div>

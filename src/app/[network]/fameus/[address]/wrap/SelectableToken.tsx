@@ -1,35 +1,7 @@
-import { FC, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
-import cn from "classnames";
-import NextImage from "next/image";
 import { FlowerSelect } from "@/components/FlowerSelect";
-
-const BASE_URL = "https://fame.support/thumb/";
-
-const ImageForToken: FC<{
-  tokenId: bigint;
-  onClick: () => void;
-  onHoverIn: () => void;
-  onHoverOut: () => void;
-  isSelected: boolean;
-}> = ({ tokenId, onClick, onHoverIn, onHoverOut, isSelected }) => {
-  return (
-    <NextImage
-      src={`${BASE_URL}${tokenId.toString()}`}
-      alt="FAMEus"
-      width={400}
-      height={400}
-      onClick={onClick}
-      onMouseEnter={onHoverIn}
-      onMouseLeave={onHoverOut}
-      className={cn(
-        "border-4 transition-all duration-300",
-        isSelected && "border-red-400",
-        !isSelected && "border-transparent",
-      )}
-    />
-  );
-};
+import { SelectableTokenTile } from "@/components/SelectableTokenTile";
 
 export const SelectableToken = ({
   tokenId,
@@ -63,12 +35,13 @@ export const SelectableToken = ({
 
   return (
     <div className="relative">
-      <ImageForToken
+      <SelectableTokenTile
         tokenId={tokenId}
+        label="Society"
         onClick={handleClick}
-        onHoverIn={handleHoverIn}
-        onHoverOut={handleHoverOut}
-        isSelected={isSelected || hasHovered}
+        onMouseEnter={handleHoverIn}
+        onMouseLeave={handleHoverOut}
+        isHighlighted={isSelected || hasHovered}
       />
       <FlowerSelect isSelected={isSelected} />
       {isPending && (

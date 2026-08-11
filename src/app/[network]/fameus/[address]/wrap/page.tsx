@@ -9,11 +9,9 @@ import { FameusProvider } from "./context";
 import { InfoTooltip } from "@/components/InfoToolTip";
 import { TabBar } from "../TabBar";
 
-export default async function Home(
-  props: {
-    params: Promise<{ address: string; network: string }>;
-  }
-) {
+export default async function Home(props: {
+  params: Promise<{ address: string; network: string }>;
+}) {
   const params = await props.params;
   if (!isAddress(params.address)) {
     throw new Error("Invalid address");
@@ -40,13 +38,13 @@ export default async function Home(
       address={params.address}
       network={params.network as "sepolia" | "base"}
     >
-      <h1 className="text-4xl font-bold mb-6 text-center">FAMEus DAO</h1>
+      <h1 className="text-4xl font-bold mb-6 text-center">FAMEus Recovery</h1>
       <TabBar activeTab="wrap" />
-      <h2 className="text-4xl font-bold mb-6">Wrap</h2>
+      <h2 className="text-4xl font-bold mb-6">Legacy wrap</h2>
       <p className="text-lg text-left mb-6">
-        The FAMEus DAO requires you to wrap your $FAME Society NFTs into
-        Governance Society NFTs. These Governance Society NFTs will be used to
-        vote on the future of the FAMEus DAO.
+        FAMEus governance is paused. This legacy control remains available for
+        existing holders who need to manage a prior FAMEus position. Wrapping is
+        not required to use FAME or Society today.
       </p>
       <p className="text-lg text-left mb-6">
         When you wrap your $FAME Society NFTs, you will receive a Governance

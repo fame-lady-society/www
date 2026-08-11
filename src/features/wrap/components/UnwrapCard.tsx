@@ -60,16 +60,20 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
 
   const fetchWrappedTokens = useCallback(async () => {
     if (!address) return;
-    
+
     setIsLoading(true);
     setFetchError(null);
-    
+
     try {
-      const endpoint = network === "sepolia" ? "/api/sepolia/owned" : "/api/ethereum/owned";
+      const endpoint =
+        network === "sepolia" ? "/api/sepolia/owned" : "/api/ethereum/owned";
       const response = await fetch(endpoint, {
-        headers: withAuthHeaders(undefined, authSession?.token ? authSession : null),
+        headers: withAuthHeaders(
+          undefined,
+          authSession?.token ? authSession : null,
+        ),
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           setFetchError("Please sign in to view your wrapped tokens");
@@ -78,7 +82,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
         }
         return;
       }
-      
+
       const ownedTokens: number[] = await response.json();
       setTokenIds(ownedTokens.map((id) => BigInt(id)));
       setHasFetched(true);
@@ -100,7 +104,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
   const handleExpand = useCallback(() => {
     const newExpanded = !expanded;
     setExpanded(newExpanded);
-    
+
     if (newExpanded && !hasFetched && !isLoading) {
       fetchWrappedTokens();
     }
@@ -117,11 +121,19 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
 
   const handleConfirmUnwrap = useCallback(() => {
     setShowFarewellModal(false);
-    const recipient = transferTo && isAddress(sendTo || sendToInput)
-      ? (sendTo || sendToInput) as `0x${string}`
-      : address!;
+    const recipient =
+      transferTo && isAddress(sendTo || sendToInput)
+        ? ((sendTo || sendToInput) as `0x${string}`)
+        : address!;
     onUnwrapMany([recipient, selectedTokenIds]);
-  }, [address, onUnwrapMany, selectedTokenIds, sendTo, sendToInput, transferTo]);
+  }, [
+    address,
+    onUnwrapMany,
+    selectedTokenIds,
+    sendTo,
+    sendToInput,
+    transferTo,
+  ]);
 
   const handleCancelUnwrap = useCallback(() => {
     setShowFarewellModal(false);
@@ -183,12 +195,11 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
             {expanded ? "Select tokens to unwrap" : "Load your wrapped tokens"}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {expanded 
-              ? hasFetched 
+            {expanded
+              ? hasFetched
                 ? `${tokenIds.length} wrapped token${tokenIds.length !== 1 ? "s" : ""} found`
                 : "Loading..."
-              : "Click to view and unwrap your Fame Lady Society NFTs"
-            }
+              : "Click to view and unwrap your Fame Lady Society NFTs"}
           </Typography>
         </Box>
         <Box
@@ -347,7 +358,9 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                                 justifyContent: "center",
                               }}
                             >
-                              <CheckCircle sx={{ fontSize: 20, color: "#fff" }} />
+                              <CheckCircle
+                                sx={{ fontSize: 20, color: "#fff" }}
+                              />
                             </Box>
                           )}
                         </Box>
@@ -375,9 +388,10 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                         "& .MuiSwitch-switchBase.Mui-checked": {
                           color: "#ff9800",
                         },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          backgroundColor: "#ff9800",
-                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                          {
+                            backgroundColor: "#ff9800",
+                          },
                       }}
                     />
                   }
@@ -415,7 +429,14 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                 {!transactionInProgress && (
                   <>
                     {/* Chip row - always reserve space */}
-                    <Box component="div" sx={{ minHeight: 32, display: "flex", alignItems: "center" }}>
+                    <Box
+                      component="div"
+                      sx={{
+                        minHeight: 32,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       {selectedTokenIds.length > 0 && (
                         <Chip
                           label={`${selectedTokenIds.length} token${selectedTokenIds.length !== 1 ? "s" : ""} selected`}
@@ -447,8 +468,13 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                         return (
                           <Typography variant="body2" color="text.secondary">
                             Original NFTs will be sent to{" "}
-                            <Typography component="span" fontWeight={600} sx={{ color: "#ff9800" }}>
-                              {resolvedAddress.slice(0, 6)}...{resolvedAddress.slice(-4)}
+                            <Typography
+                              component="span"
+                              fontWeight={600}
+                              sx={{ color: "#ff9800" }}
+                            >
+                              {resolvedAddress.slice(0, 6)}...
+                              {resolvedAddress.slice(-4)}
                             </Typography>
                           </Typography>
                         );
@@ -482,12 +508,16 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                   disabled={
                     transactionInProgress ||
                     selectedTokenIds.length === 0 ||
-                    (transferTo && !(resolvedAddress && isAddress(resolvedAddress)))
+                    (transferTo &&
+                      !(resolvedAddress && isAddress(resolvedAddress)))
                   }
                 >
                   {transactionInProgress ? (
                     <>
-                      <CircularProgress size={20} sx={{ mr: 1, color: "inherit" }} />
+                      <CircularProgress
+                        size={20}
+                        sx={{ mr: 1, color: "inherit" }}
+                      />
                       Processing...
                     </>
                   ) : (
@@ -574,7 +604,8 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               sx={{
                 p: 2,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, rgba(255, 107, 157, 0.2) 0%, rgba(196, 77, 255, 0.2) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(255, 107, 157, 0.2) 0%, rgba(196, 77, 255, 0.2) 100%)",
                 animation: "pulse 2s ease-in-out infinite",
                 "@keyframes pulse": {
                   "0%, 100%": { transform: "scale(1)", opacity: 1 },
@@ -612,23 +643,23 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               variant="body1"
               sx={{ mb: 3, lineHeight: 1.8, fontStyle: "italic" }}
             >
-              &ldquo;Remember where we came from. In 2021, we were deceived—three men
-              posed as women to create what they claimed was the first major all-female
-              NFT project. When the truth came out, our community didn&apos;t crumble.
+              &ldquo;Remember where we came from. In 2021, we were
+              deceived—three men posed as women to create what they claimed was
+              the first major all-female NFT project. When the truth came out,
+              our community didn&apos;t crumble.
               <strong> We rose.</strong>&rdquo;
             </Typography>
 
             <Divider sx={{ my: 3, borderColor: "rgba(255, 107, 157, 0.2)" }} />
 
-            <Typography
-              variant="body1"
-              sx={{ mb: 3, lineHeight: 1.8 }}
-            >
-              The Fame Lady Society you hold isn&apos;t just an NFT—it&apos;s a symbol
-              of <strong>resilience</strong>, <strong>sisterhood</strong>, and
-              <strong> community triumph</strong>. We took back our narrative. We built
-              a DAO. We launched <strong>$FAME</strong>. We proved that when women
-              lead, we don&apos;t just survive—<em>we thrive</em>.
+            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8 }}>
+              The Fame Lady Society you hold isn&apos;t just an NFT—it&apos;s a
+              symbol of <strong>resilience</strong>, <strong>sisterhood</strong>
+              , and
+              <strong> community triumph</strong>. We took back our narrative.
+              We built community-owned infrastructure. We launched{" "}
+              <strong>$FAME</strong>. We proved that when women lead, we
+              don&apos;t just survive—<em>we thrive</em>.
             </Typography>
 
             <Box
@@ -642,10 +673,9 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               }}
             >
               <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
-                By unwrapping, you&apos;re leaving the Society and returning to the
-                original Fame Lady Squad contract—a relic of the betrayal we overcame.
-                Your voice in governance, your place in our sisterhood, your connection
-                to everything we&apos;ve built together... it stays here.
+                By unwrapping, you relinquish the Society NFT and return to the
+                original Fame Lady Squad contract. The original NFT is released
+                to your wallet, while the wrapped Society token is surrendered.
               </Typography>
             </Box>
 
@@ -657,7 +687,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
                 mb: 2,
               }}
             >
-              Are you sure you want to leave the Society?
+              Are you sure you want to unwrap?
             </Typography>
 
             <Box
@@ -673,7 +703,8 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
             >
               <WarningAmberIcon sx={{ fontSize: 16, color: "#ff9800" }} />
               <Typography variant="caption">
-                {selectedTokenIds.length} token{selectedTokenIds.length !== 1 ? "s" : ""} will be unwrapped
+                {selectedTokenIds.length} token
+                {selectedTokenIds.length !== 1 ? "s" : ""} will be unwrapped
               </Typography>
             </Box>
           </Box>
@@ -695,11 +726,13 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               px: 4,
               fontWeight: 600,
               backgroundColor: "transparent !important",
-              background: "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%) !important",
+              background:
+                "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%) !important",
               color: "#fff !important",
               "&:hover": {
                 backgroundColor: "transparent !important",
-                background: "linear-gradient(135deg, #ff85ad 0%, #d070ff 100%) !important",
+                background:
+                  "linear-gradient(135deg, #ff85ad 0%, #d070ff 100%) !important",
               },
             }}
           >

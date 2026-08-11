@@ -56,9 +56,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
     useMemo(() => {
       const filteredIndexes = tokenIds
         .map((_, index) => index)
-        .filter(
-          (index) => !completedTokenIds.includes(tokenIds[index]),
-        );
+        .filter((index) => !completedTokenIds.includes(tokenIds[index]));
 
       return {
         tokenIdsToDisplay: filteredIndexes.map((i) => tokenIds[i]),
@@ -67,12 +65,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
           (i) => guardianAddresses[i],
         ),
       };
-    }, [
-      tokenIds,
-      completedTokenIds,
-      lockStatus,
-      guardianAddresses,
-    ]);
+    }, [tokenIds, completedTokenIds, lockStatus, guardianAddresses]);
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -82,7 +75,7 @@ export const ManageTokens: FC<ManageTokensProps> = ({ tokenIds, chainId }) => {
             disabled={toUnwrapSelectedTokenIds.length === 0}
             onClick={() => setLockWithGuardianModalOpen(true)}
           >
-            Lock
+            Legacy lock
           </button>
           <button
             className={cn("bg-blue-500 text-white px-4 py-2 rounded-md")}

@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
-import { FameFAQ } from "./FameFAQ";
+import { FameFAQ } from "@/features/fame/components/FameFAQ";
 import { PresaleFAQ } from "./PresaleFAQ";
 
 export const InfoCard: FC<{}> = () => {
