@@ -7,7 +7,7 @@ import {
   sepolia,
   baseSepolia,
 } from "wagmi/chains";
-import { Chain, Transport } from "viem";
+import type { Chain, Transport } from "viem";
 import { parseRpcUrls } from "@/viem/rpcUrls";
 import { baseRpcUrls } from "@/viem/baseRpcUrls";
 
@@ -24,94 +24,37 @@ const polygonAmoyRpcUrls = parseRpcUrls(
   "NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON",
 );
 
-export const mainnetSepolia = {
-  chains: [mainnet, sepolia],
-  transports: {
-    [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
-      batch: {
-        batchSize: 10,
-        wait: 500,
-      },
-      retryCount: 5,
-      retryDelay: 100,
-    }),
-    [sepolia.id]: fallback(
-      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
-    ),
-  },
-} as const;
-
-export const sepoliaOnly = {
-  chains: [sepolia],
-  transports: {
-    [sepolia.id]: fallback(
-      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
-    ),
-  },
-} as const;
-
-export const baseSepoliaOnly = {
-  chains: [base, sepolia],
-  transports: {
-    [base.id]: fallback(
-      baseRpcUrls().map((rpc) =>
-        http(rpc, {
-          batch: true,
-        }),
-      ),
-    ),
-    [sepolia.id]: fallback(
-      sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
-    ),
-  },
-} as const;
-
-export const baseSepoliaChainOnly = {
-  chains: [baseSepolia],
-  transports: {
-    [baseSepolia.id]: fallback(
-      baseSepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
-    ),
-  },
-} as const;
-
-export const polygonOnly = {
-  chains: [polygonChain],
-  transports: {
-    [polygonChain.id]: fallback([
-      http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_1!, {
-        batch: true,
-      }),
-      http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL_2!, {
-        batch: true,
-      }),
-    ]),
-  },
-} as const;
-
-export const polygonAmoyOnly = {
-  chains: [polygonAmoy],
-  transports: {
-    [polygonAmoy.id]: fallback(
-      polygonAmoyRpcUrls.map((rpc) => http(rpc, { batch: true })),
-    ),
-  },
-} as const;
-
 export const transports: Record<number, Transport> = {
-  ...mainnetSepolia.transports,
-  ...sepoliaOnly.transports,
-  ...baseSepoliaOnly.transports,
-  ...baseSepoliaChainOnly.transports,
-  ...polygonOnly.transports,
-  ...polygonAmoyOnly.transports,
+  [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
+    batch: { batchSize: 10, wait: 500 },
+    retryCount: 5,
+    retryDelay: 100,
+  }),
+  [base.id]: fallback(baseRpcUrls().map((rpc) => http(rpc, { batch: true }))),
+  [polygonChain.id]: fallback(
+    [
+      process.env.NEXT_PUBLIC_POLYGON_RPC_URL_1,
+      process.env.NEXT_PUBLIC_POLYGON_RPC_URL_2,
+    ]
+      .filter((rpc): rpc is string => Boolean(rpc))
+      .map((rpc) => http(rpc, { batch: true })),
+  ),
+  [sepolia.id]: fallback(
+    sepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
+  ),
+  [baseSepolia.id]: fallback(
+    baseSepoliaRpcUrls.map((rpc) => http(rpc, { batch: true })),
+  ),
+  [polygonAmoy.id]: fallback(
+    polygonAmoyRpcUrls.map((rpc) => http(rpc, { batch: true })),
+  ),
 } as const;
 
 export const chains: readonly [Chain, ...Chain[]] = [
+  mainnet,
   base,
   polygonChain,
-  polygonAmoy,
   sepolia,
-  mainnet,
   baseSepolia,
+  polygonAmoy,
 ] as const;

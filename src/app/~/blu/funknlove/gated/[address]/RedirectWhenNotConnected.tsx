@@ -3,14 +3,12 @@
 import { FC, useEffect } from "react";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
-import { useSIWE } from "connectkit";
 
 export const RedirectWhenNotConnected: FC<{
   toGo: string;
   toChain: number;
 }> = ({ toGo }) => {
-  const { isConnected } = useAccount();
-  const { isSignedIn } = useSIWE();
+  const { isConnected, isSignedIn } = useAccount();
   const router = useRouter();
 
   useEffect(() => {

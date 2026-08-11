@@ -1,12 +1,35 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { NextResponse } from "next/server";
 
-const NONCE_SECRET = process.env.SIWE_NONCE_SECRET || "change-me-in-production";
-const NONCE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+import { SESSION_SECRET } from "./session-utils";
+
+export const NONCE_COOKIE_NAME = "siwe_nonce";
+export const NONCE_MAX_AGE = 5 * 60;
+const NONCE_EXPIRY_MS = NONCE_MAX_AGE * 1000;
+
+function nonceHmac(value: string): string {
+  return createHmac("sha256", SESSION_SECRET)
+    .update(`siwe-nonce:${value}`)
+    .digest("hex");
+}
+
+export function createNonceCookieBinding(signedNonce: string): string {
+  return nonceHmac(`binding:${signedNonce}`);
+}
+
+export function verifyNonceCookieBinding(
+  signedNonce: string,
+  binding: string | undefined,
+): boolean {
+  if (!binding || !/^[0-9a-f]{64}$/i.test(binding)) return false;
+  return timingSafeEqual(
+    Buffer.from(createNonceCookieBinding(signedNonce), "hex"),
+    Buffer.from(binding, "hex"),
+  );
+}
 
 export function signNonce(nonce: string, timestamp: number): string {
-  const hmac = createHmac("sha256", NONCE_SECRET);
-  hmac.update(`${nonce}:${timestamp}`);
-  const signature = hmac.digest("hex");
+  const signature = nonceHmac(`${nonce}:${timestamp}`);
   const signedData = `${nonce}:${timestamp}:${signature}`;
   return Buffer.from(signedData).toString("base64url");
 }
@@ -28,20 +51,25 @@ export function verifyNonce(signedNonce: string): {
   }
 
   const [nonce, timestampStr, signature] = parts;
-  const timestamp = parseInt(timestampStr, 10);
+  if (
+    !nonce ||
+    !/^\d+$/.test(timestampStr) ||
+    !/^[0-9a-f]{64}$/i.test(signature)
+  ) {
+    return { valid: false, nonce: "" };
+  }
+  const timestamp = Number(timestampStr);
 
-  if (isNaN(timestamp)) {
+  if (!Number.isSafeInteger(timestamp)) {
     return { valid: false, nonce: "" };
   }
 
   const now = Date.now();
-  if (now - timestamp > NONCE_EXPIRY_MS) {
+  if (timestamp > now || now - timestamp > NONCE_EXPIRY_MS) {
     return { valid: false, nonce: "" };
   }
 
-  const expectedSignature = createHmac("sha256", NONCE_SECRET)
-    .update(`${nonce}:${timestamp}`)
-    .digest("hex");
+  const expectedSignature = nonceHmac(`${nonce}:${timestamp}`);
 
   const expectedBuffer = Buffer.from(expectedSignature, "hex");
   const receivedBuffer = Buffer.from(signature, "hex");
@@ -52,4 +80,31 @@ export function verifyNonce(signedNonce: string): {
 
   const isValid = timingSafeEqual(expectedBuffer, receivedBuffer);
   return { valid: isValid, nonce };
+}
+
+export function setNonceCookie(
+  response: NextResponse,
+  signedNonce: string,
+): void {
+  response.cookies.set(
+    NONCE_COOKIE_NAME,
+    createNonceCookieBinding(signedNonce),
+    {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: NONCE_MAX_AGE,
+      path: "/siwe",
+    },
+  );
+}
+
+export function clearNonceCookie(response: NextResponse): void {
+  response.cookies.set(NONCE_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/siwe",
+    expires: new Date(0),
+  });
 }

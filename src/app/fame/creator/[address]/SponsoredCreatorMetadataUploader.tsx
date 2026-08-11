@@ -1,9 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { withAuthHeaders } from "@/utils/authToken";
 import type { CreatorMetadataUploadMode } from "@/features/fame/creatorMetadata";
-import { useSIWE } from "connectkit";
+import { useSiweSession } from "@/context/SiweSession";
 
 type SponsoredCreatorMetadataUploaderProps = {
   address: `0x${string}`;
@@ -45,7 +44,6 @@ export async function uploadSponsoredCreatorMetadata(
 
   const response = await fetch("/api/fame/creator/metadata", {
     method: "POST",
-    headers: withAuthHeaders(),
     body: formData,
   });
   if (!response.ok) {
@@ -62,7 +60,7 @@ export function SponsoredCreatorMetadataUploader({
   onComplete,
 }: SponsoredCreatorMetadataUploaderProps) {
   const inputId = useId();
-  const { isSignedIn, signIn } = useSIWE();
+  const { isSignedIn, signIn } = useSiweSession();
   const [file, setFile] = useState<File | null>(null);
   const [state, setState] = useState<UploadState>("idle");
   const [error, setError] = useState<string | null>(null);

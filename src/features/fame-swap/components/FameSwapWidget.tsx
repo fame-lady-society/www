@@ -12,7 +12,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Address, Hash } from "viem";
@@ -732,7 +732,7 @@ export const FameSwapWidget: FC<FameSwapWidgetProps> = ({
             {primaryLabel}
           </Button>
         ) : (
-          <ConnectKitButton />
+          <WalletConnectButton />
         )}
 
         <Alert

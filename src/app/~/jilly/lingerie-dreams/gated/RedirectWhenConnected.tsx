@@ -4,7 +4,6 @@ import { FC, useEffect, useState } from "react";
 import { useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { useRouter, usePathname } from "next/navigation";
-import { useSIWE } from "connectkit";
 
 export const RedirectWhenConnected: FC<{
   pathPrefix: string;
@@ -14,8 +13,12 @@ export const RedirectWhenConnected: FC<{
   const [targetChainId, setTargetChainId] = useState<number | undefined>(
     toChain,
   );
-  const { isConnected, address, chainId: connectedChainId } = useAccount();
-  const { isSignedIn } = useSIWE();
+  const {
+    isConnected,
+    isSignedIn,
+    address,
+    chainId: connectedChainId,
+  } = useAccount();
 
   const { chains, switchChainAsync, isSuccess, isPending } = useSwitchChain({
     mutation: {

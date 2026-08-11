@@ -20,7 +20,7 @@ export const WrapSuccessPage: FC<{}> = () => {
     setTxHash(txHash);
   }, []);
   return (
-    <DefaultProvider mainnet>
+    <DefaultProvider>
       <Main
         menu={
           <>

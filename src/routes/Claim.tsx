@@ -60,7 +60,7 @@ const NextPage: FC<{
   chainId: typeof sepolia.id | typeof base.id;
 }> = ({ chainId }) => {
   return (
-    <DefaultProvider base siwe mainnet>
+    <DefaultProvider siwe>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

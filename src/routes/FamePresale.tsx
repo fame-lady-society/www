@@ -39,7 +39,7 @@ export const FamePresale: FC<{
   network: "base" | "sepolia";
 }> = ({ network }) => {
   return (
-    <DefaultProvider base>
+    <DefaultProvider>
       <Main
         menu={
           <>

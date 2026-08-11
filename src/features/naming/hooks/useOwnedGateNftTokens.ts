@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
-import { withAuthHeaders } from "@/utils/authToken";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useSiweSession } from "@/context/SiweSession";
 import { readOwnedTokenIds } from "@/utils/ownedTokens";
 
 export type NetworkType = "sepolia" | "mainnet" | "base-sepolia";
@@ -19,22 +18,17 @@ function getOwnedApiRoute(network: NetworkType): string {
 
 export function useOwnedGateNftTokens(network: NetworkType) {
   const { address } = useAccount();
-  const authSession = useAuthSession();
+  const { isSignedIn, session } = useSiweSession();
 
   const query = useQuery({
-    queryKey: ["gateNftTokens", network, address, authSession?.token],
+    queryKey: ["gateNftTokens", network, address, session?.expiresAt],
     queryFn: async () => {
       if (!address) return [];
-      const response = await fetch(getOwnedApiRoute(network), {
-        headers: withAuthHeaders(
-          undefined,
-          authSession.token ? authSession : null,
-        ),
-      });
+      const response = await fetch(getOwnedApiRoute(network));
 
       return readOwnedTokenIds(response);
     },
-    enabled: !!address && !!authSession?.token,
+    enabled: !!address && isSignedIn,
   });
 
   return query;

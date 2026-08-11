@@ -6,7 +6,7 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePublicClient } from "wagmi";
 import { isAddressEqual } from "viem";
@@ -574,7 +574,7 @@ export function GalleryStakeUnstakeView({
           chainMismatch={transaction.chainMismatch}
           busy={transaction.busy}
           selectionInvalidatedMessage={selectionInvalidatedMessage}
-          walletControl={<ConnectKitButton />}
+          walletControl={<WalletConnectButton />}
           onSelect={(tokenId) => {
             setSelectionInvalidatedMessage(null);
             setSelectedTokenId((current) =>

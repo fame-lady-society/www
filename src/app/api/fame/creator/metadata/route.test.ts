@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
-import { handleCreatorMetadataUpload } from "./route";
 import type { IrysSponsoredUploader } from "@/service/irys_sponsored_upload";
+
+process.env.SESSION_SECRET ||= "test-session-secret";
+
+const { handleCreatorMetadataUpload } = await import("./route");
 
 const CREATOR = "0x0000000000000000000000000000000000000001" as const;
 const OTHER = "0x0000000000000000000000000000000000000002" as const;

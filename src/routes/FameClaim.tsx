@@ -97,7 +97,7 @@ const NextPage: FC<{
 }> = ({ address, chainId }) => {
   const isValid = isAddress(address);
   return (
-    <DefaultProvider base siwe mainnet>
+    <DefaultProvider siwe>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

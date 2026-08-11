@@ -2,7 +2,8 @@
 
 import { getConnection } from "@wagmi/core";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { useModal } from "connectkit";
+import { useWalletModal } from "@/hooks/useWalletModal";
+import { GalleryConnectionAttempt } from "./galleryConnectionAttempt";
 import {
   useCallback,
   useEffect,
@@ -253,7 +254,12 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const { switchChainAsync } = useSwitchChain();
   const { mutateAsync: writeContract } = useWriteContract();
   type ExactWagmiWriteRequest = Parameters<typeof writeContract>[0];
-  const connectModal = useModal();
+  const {
+    openConnect,
+    close: closeConnectModal,
+    isOpen: connectModalOpen,
+    isLoading: connectModalLoading,
+  } = useWalletModal();
   const [state, dispatch] = useReducer(
     galleryPurchaseReducer,
     initialGalleryPurchaseState,
@@ -264,8 +270,8 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   const activeAttempt = useRef<ActiveAttempt | null>(null);
   const selectedTarget = useRef<GalleryArtworkTarget | null>(null);
   const waitingForDisclosure = useRef(false);
-  const waitingForConnection = useRef(false);
-  const sawConnectModalOpen = useRef(false);
+  const connectionAttempt = useRef(new GalleryConnectionAttempt());
+  const connectCancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputsRef = useRef(inputs);
   const checkoutSimulation = useRef<{
     key: string;
@@ -293,309 +299,281 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
       queueDispatch({ type: "failed", stage, cause });
       setTransactionModalOpen(true);
       activeAttempt.current = null;
-      waitingForConnection.current = false;
-      sawConnectModalOpen.current = false;
+      selectedTarget.current = null;
+      connectionAttempt.current.reset();
       setActiveArtworkKey(null);
     },
     [queueDispatch],
   );
 
-  const executeAttempt = useCallback(
-    async () => {
-      const attempt = activeAttempt.current;
-      if (!attempt) return;
-      if (!publicClient) {
+  const executeAttempt = useCallback(async () => {
+    const attempt = activeAttempt.current;
+    if (!attempt) return;
+    if (!publicClient) {
+      failOutsideQueue(
+        "connection",
+        unavailableClientError(config.labels.network),
+      );
+      return;
+    }
+
+    setTransactionModalOpen(true);
+    let outerStage: GalleryPurchaseErrorStage = "connection";
+    try {
+      let latestConnection = getConnection(wagmiConfig);
+      if (!latestConnection.address) {
+        failOutsideQueue("connection", connectionError(config.token.symbol));
+        return;
+      }
+      if (latestConnection.chainId !== config.chainId) {
+        outerStage = "switch_chain";
+        dispatch({ type: "switching_chain" });
+        await switchChainAsync({ chainId: config.chainId });
+        latestConnection = getConnection(wagmiConfig);
+      }
+      if (
+        !latestConnection.address ||
+        latestConnection.chainId !== config.chainId
+      ) {
         failOutsideQueue(
-          "connection",
-          unavailableClientError(config.labels.network),
+          "switch_chain",
+          new Error(`Switch to ${config.labels.network} to continue.`),
         );
         return;
       }
 
-      setTransactionModalOpen(true);
-      let outerStage: GalleryPurchaseErrorStage = "connection";
-      try {
-        let latestConnection = getConnection(wagmiConfig);
-        if (!latestConnection.address) {
-          failOutsideQueue("connection", connectionError(config.token.symbol));
-          return;
-        }
-        if (latestConnection.chainId !== config.chainId) {
-          outerStage = "switch_chain";
-          dispatch({ type: "switching_chain" });
-          await switchChainAsync({ chainId: config.chainId });
-          latestConnection = getConnection(wagmiConfig);
-        }
-        if (
-          !latestConnection.address ||
-          latestConnection.chainId !== config.chainId
-        ) {
-          failOutsideQueue(
-            "switch_chain",
-            new Error(`Switch to ${config.labels.network} to continue.`),
-          );
-          return;
-        }
+      if (!attempt.target.artworkHash) {
+        failOutsideQueue(
+          "fulfillment",
+          new Error("This artwork is not ready to purchase."),
+        );
+        return;
+      }
 
-        if (!attempt.target.artworkHash) {
-          failOutsideQueue(
-            "fulfillment",
-            new Error("This artwork is not ready to purchase."),
-          );
-          return;
-        }
-
-        const checkoutQuote = attempt.checkoutQuote;
-        if (
-          attempt.paymentAsset !== "FAME" &&
-          (!checkoutQuote || !isFreshGalleryCheckoutQuote(checkoutQuote))
-        ) {
-          failOutsideQueue(
-            "purchase_simulation",
-            new Error(
-              "The checkout quote expired. Refresh the quote before buying.",
-            ),
-          );
-          return;
-        }
-        const terms =
-          attempt.terms ??
-          (attempt.paymentAsset === "FAME"
-            ? freezeGalleryBuyerTerms(
-                {
-                  account: latestConnection.address,
-                  selectedTarget: {
-                    targetId: attempt.target.targetId,
-                    tokenId: attempt.target.tokenId,
-                  },
-                  artworkHash: attempt.target.artworkHash,
-                  unit: attempt.displayedUnit,
-                  displayedPremium: attempt.displayedPremium,
-                },
-                {
-                  chainId: config.chainId,
-                  marketplace,
-                },
-              )
-            : freezeGalleryCheckoutBuyerTerms({
-                chainId: config.chainId,
+      const checkoutQuote = attempt.checkoutQuote;
+      if (
+        attempt.paymentAsset !== "FAME" &&
+        (!checkoutQuote || !isFreshGalleryCheckoutQuote(checkoutQuote))
+      ) {
+        failOutsideQueue(
+          "purchase_simulation",
+          new Error(
+            "The checkout quote expired. Refresh the quote before buying.",
+          ),
+        );
+        return;
+      }
+      const terms =
+        attempt.terms ??
+        (attempt.paymentAsset === "FAME"
+          ? freezeGalleryBuyerTerms(
+              {
                 account: latestConnection.address,
-                target: attempt.target,
-                quote: checkoutQuote!,
-              }));
-        attempt.terms = terms;
+                selectedTarget: {
+                  targetId: attempt.target.targetId,
+                  tokenId: attempt.target.tokenId,
+                },
+                artworkHash: attempt.target.artworkHash,
+                unit: attempt.displayedUnit,
+                displayedPremium: attempt.displayedPremium,
+              },
+              {
+                chainId: config.chainId,
+                marketplace,
+              },
+            )
+          : freezeGalleryCheckoutBuyerTerms({
+              chainId: config.chainId,
+              account: latestConnection.address,
+              target: attempt.target,
+              quote: checkoutQuote!,
+            }));
+      attempt.terms = terms;
 
-        const artPoolBoundsByBlock = new Map<
-          bigint,
-          Promise<readonly [bigint, bigint]>
-        >();
-        const readArtPoolBounds = (blockNumber: bigint) => {
-          const current = artPoolBoundsByBlock.get(blockNumber);
-          if (current) return current;
-          const started = Promise.all([
-            publicClient.readContract({
-              abi: creatorArtistMagicAbi,
-              address: creatorMagic,
-              functionName: "artPoolStartIndex",
-              blockNumber,
-            }),
-            publicClient.readContract({
-              abi: creatorArtistMagicAbi,
-              address: creatorMagic,
-              functionName: "artPoolEndIndex",
-              blockNumber,
-            }),
-          ]).then(([startIndex, endIndex]) =>
-            Object.freeze([startIndex, endIndex] as const),
-          );
-          artPoolBoundsByBlock.set(blockNumber, started);
-          return started;
-        };
+      const artPoolBoundsByBlock = new Map<
+        bigint,
+        Promise<readonly [bigint, bigint]>
+      >();
+      const readArtPoolBounds = (blockNumber: bigint) => {
+        const current = artPoolBoundsByBlock.get(blockNumber);
+        if (current) return current;
+        const started = Promise.all([
+          publicClient.readContract({
+            abi: creatorArtistMagicAbi,
+            address: creatorMagic,
+            functionName: "artPoolStartIndex",
+            blockNumber,
+          }),
+          publicClient.readContract({
+            abi: creatorArtistMagicAbi,
+            address: creatorMagic,
+            functionName: "artPoolEndIndex",
+            blockNumber,
+          }),
+        ]).then(([startIndex, endIndex]) =>
+          Object.freeze([startIndex, endIndex] as const),
+        );
+        artPoolBoundsByBlock.set(blockNumber, started);
+        return started;
+      };
 
-        const fulfillmentSource: GalleryFulfillmentReadSource = {
-          captureBlockNumber: () => publicClient.getBlockNumber(),
-          readPremium: (blockNumber) =>
-            publicClient.readContract({
-              abi: universalPoolArtMarketplaceAbi,
-              address: marketplace,
-              functionName: "premium",
-              blockNumber,
-            }),
-          async readTokenState(tokenId, blockNumber) {
-            const [owner, artworkHash, inMintPool, inBurnPool, artPoolBounds] =
-              await Promise.all([
-                publicClient.readContract({
-                  abi: fameMirrorAbi,
-                  address: mirror,
-                  functionName: "ownerAt",
-                  args: [tokenId],
-                  blockNumber,
-                }),
-                publicClient.readContract({
-                  abi: universalPoolArtMarketplaceAbi,
-                  address: marketplace,
-                  functionName: "artworkHash",
-                  args: [tokenId],
-                  blockNumber,
-                }),
-                publicClient.readContract({
-                  abi: creatorArtistMagicAbi,
-                  address: creatorMagic,
-                  functionName: "isTokenInMintPool",
-                  args: [tokenId],
-                  blockNumber,
-                }),
-                publicClient.readContract({
-                  abi: creatorArtistMagicAbi,
-                  address: creatorMagic,
-                  functionName: "isTokenInBurnedPool",
-                  args: [tokenId],
-                  blockNumber,
-                }),
-                readArtPoolBounds(blockNumber),
-              ]);
-            return {
-              owner,
-              artworkHash,
-              inArtPool: isTokenInGalleryArtPool(
-                tokenId,
-                artPoolBounds[0],
-                artPoolBounds[1],
-              ),
-              inMintPool,
-              inBurnPool,
-            };
+      const fulfillmentSource: GalleryFulfillmentReadSource = {
+        captureBlockNumber: () => publicClient.getBlockNumber(),
+        readPremium: (blockNumber) =>
+          publicClient.readContract({
+            abi: universalPoolArtMarketplaceAbi,
+            address: marketplace,
+            functionName: "premium",
+            blockNumber,
+          }),
+        async readTokenState(tokenId, blockNumber) {
+          const [owner, artworkHash, inMintPool, inBurnPool, artPoolBounds] =
+            await Promise.all([
+              publicClient.readContract({
+                abi: fameMirrorAbi,
+                address: mirror,
+                functionName: "ownerAt",
+                args: [tokenId],
+                blockNumber,
+              }),
+              publicClient.readContract({
+                abi: universalPoolArtMarketplaceAbi,
+                address: marketplace,
+                functionName: "artworkHash",
+                args: [tokenId],
+                blockNumber,
+              }),
+              publicClient.readContract({
+                abi: creatorArtistMagicAbi,
+                address: creatorMagic,
+                functionName: "isTokenInMintPool",
+                args: [tokenId],
+                blockNumber,
+              }),
+              publicClient.readContract({
+                abi: creatorArtistMagicAbi,
+                address: creatorMagic,
+                functionName: "isTokenInBurnedPool",
+                args: [tokenId],
+                blockNumber,
+              }),
+              readArtPoolBounds(blockNumber),
+            ]);
+          return {
+            owner,
+            artworkHash,
+            inArtPool: isTokenInGalleryArtPool(
+              tokenId,
+              artPoolBounds[0],
+              artPoolBounds[1],
+            ),
+            inMintPool,
+            inBurnPool,
+          };
+        },
+        readShellOwner: (tokenId, blockNumber) =>
+          publicClient.readContract({
+            abi: fameMirrorAbi,
+            address: mirror,
+            functionName: "ownerAt",
+            args: [tokenId],
+            blockNumber,
+          }),
+      };
+
+      let checkoutFulfillmentRoute: GalleryFulfillmentRoute | null = null;
+      await executeGalleryPurchase({
+        terms,
+        // A Buy action authorizes one bounded, read-only custody refresh when
+        // the page's shell snapshot is stale. Transaction writes are never
+        // retried by this recovery path.
+        allowShellRecovery: true,
+        dependencies: {
+          dispatch: queueDispatch,
+          readBalance: (frozen) => {
+            if (frozen.checkout?.paymentAsset === "ETH") {
+              return publicClient.getBalance({ address: frozen.account });
+            }
+            return publicClient.readContract({
+              abi: fameAbi,
+              address: frozen.checkout?.inputToken ?? fame,
+              functionName: "balanceOf",
+              args: [frozen.account],
+            });
           },
-          readShellOwner: (tokenId, blockNumber) =>
-            publicClient.readContract({
-              abi: fameMirrorAbi,
-              address: mirror,
-              functionName: "ownerAt",
-              args: [tokenId],
-              blockNumber,
-            }),
-        };
-
-        let checkoutFulfillmentRoute: GalleryFulfillmentRoute | null = null;
-        await executeGalleryPurchase({
-          terms,
-          // A Buy action authorizes one bounded, read-only custody refresh when
-          // the page's shell snapshot is stale. Transaction writes are never
-          // retried by this recovery path.
-          allowShellRecovery: true,
-          dependencies: {
-            dispatch: queueDispatch,
-            readBalance: (frozen) => {
-              if (frozen.checkout?.paymentAsset === "ETH") {
-                return publicClient.getBalance({ address: frozen.account });
-              }
+          readAllowance: (frozen) => {
+            if (!frozen.checkout) {
               return publicClient.readContract({
                 abi: fameAbi,
-                address: frozen.checkout?.inputToken ?? fame,
-                functionName: "balanceOf",
-                args: [frozen.account],
+                address: fame,
+                functionName: "allowance",
+                args: [frozen.account, marketplace],
               });
-            },
-            readAllowance: (frozen) => {
-              if (!frozen.checkout) {
-                return publicClient.readContract({
-                  abi: fameAbi,
-                  address: fame,
-                  functionName: "allowance",
-                  args: [frozen.account, marketplace],
-                });
-              }
-              const request = galleryCheckoutAllowanceRequest({
-                owner: frozen.account,
-                quote: checkoutQuote!,
-              });
-              return request
-                ? publicClient.readContract(request)
-                : Promise.resolve(frozen.maximumSpend);
-            },
-            async simulateApproval(frozen) {
-              const request = frozen.checkout
-                ? galleryCheckoutApprovalContractRequest(frozen, checkoutQuote!)
-                : galleryApprovalContractRequest(frozen, fame);
-              if (!request) {
-                throw new Error(
-                  "Native ETH checkout does not require approval.",
-                );
-              }
-              const simulation = await publicClient.simulateContract(request);
-              return { request: simulation.request };
-            },
-            writeApproval: (request) =>
-              writeContract(request as ExactWagmiWriteRequest),
-            async resolveFulfillment({
+            }
+            const request = galleryCheckoutAllowanceRequest({
+              owner: frozen.account,
+              quote: checkoutQuote!,
+            });
+            return request
+              ? publicClient.readContract(request)
+              : Promise.resolve(frozen.maximumSpend);
+          },
+          async simulateApproval(frozen) {
+            const request = frozen.checkout
+              ? galleryCheckoutApprovalContractRequest(frozen, checkoutQuote!)
+              : galleryApprovalContractRequest(frozen, fame);
+            if (!request) {
+              throw new Error("Native ETH checkout does not require approval.");
+            }
+            const simulation = await publicClient.simulateContract(request);
+            return { request: simulation.request };
+          },
+          writeApproval: (request) =>
+            writeContract(request as ExactWagmiWriteRequest),
+          async resolveFulfillment({
+            terms: frozen,
+            allowShellRecovery: recover,
+          }) {
+            const latest = inputsRef.current;
+            const pendingInitialScan = recover
+              ? null
+              : latest.getPendingInitialHeldTokenIds();
+            const resolved = await resolveGalleryFulfillment({
               terms: frozen,
-              allowShellRecovery: recover,
-            }) {
-              const latest = inputsRef.current;
-              const pendingInitialScan = recover
-                ? null
-                : latest.getPendingInitialHeldTokenIds();
-              const resolved = await resolveGalleryFulfillment({
-                terms: frozen,
-                candidateTokenIds: galleryCandidateTokenIdsForArtwork(
-                  latest.catalog,
-                  frozen.artworkHash,
-                ),
-                knownShellTokenIds: latest.heldTargets.map(
-                  ({ tokenId }) => tokenId,
-                ),
-                source: fulfillmentSource,
-                refreshShellTokenIds: recover
-                  ? latest.recoverHeldTokenIds
-                  : pendingInitialScan
-                    ? () => pendingInitialScan
-                    : undefined,
-              });
-              checkoutFulfillmentRoute = resolved;
-              return { route: resolved };
-            },
-            async simulatePurchase(frozen, route) {
-              const currentConnection = getConnection(wagmiConfig);
-              const submissionError = galleryCheckoutSubmissionError({
-                terms: frozen,
-                quote: checkoutQuote,
-                connectedAccount: currentConnection.address,
-                connectedChainId: currentConnection.chainId,
-                networkName: config.labels.network,
-              });
-              if (submissionError) throw submissionError;
-              if (frozen.checkout) {
-                if (route.kind === "held") {
-                  const request = galleryCheckoutContractRequest(
-                    frozen,
-                    route,
-                    checkoutQuote!,
-                  ) as GalleryHeldCheckoutRequest;
-                  const key = galleryCheckoutSimulationKey({
-                    terms: frozen,
-                    route,
-                  })!;
-                  if (checkoutSimulation.current?.key === key) {
-                    return { request: checkoutSimulation.current.request };
-                  }
-                  const executableRequest =
-                    await simulateGalleryCheckoutRequest({
-                      request,
-                      simulate: (candidate) =>
-                        publicClient.simulateContract(candidate),
-                      onDiagnostic: logGalleryCheckoutSimulationDiagnostic,
-                    });
-                  checkoutSimulation.current = {
-                    key,
-                    request: executableRequest,
-                  };
-                  return { request: executableRequest };
-                }
+              candidateTokenIds: galleryCandidateTokenIdsForArtwork(
+                latest.catalog,
+                frozen.artworkHash,
+              ),
+              knownShellTokenIds: latest.heldTargets.map(
+                ({ tokenId }) => tokenId,
+              ),
+              source: fulfillmentSource,
+              refreshShellTokenIds: recover
+                ? latest.recoverHeldTokenIds
+                : pendingInitialScan
+                  ? () => pendingInitialScan
+                  : undefined,
+            });
+            checkoutFulfillmentRoute = resolved;
+            return { route: resolved };
+          },
+          async simulatePurchase(frozen, route) {
+            const currentConnection = getConnection(wagmiConfig);
+            const submissionError = galleryCheckoutSubmissionError({
+              terms: frozen,
+              quote: checkoutQuote,
+              connectedAccount: currentConnection.address,
+              connectedChainId: currentConnection.chainId,
+              networkName: config.labels.network,
+            });
+            if (submissionError) throw submissionError;
+            if (frozen.checkout) {
+              if (route.kind === "held") {
                 const request = galleryCheckoutContractRequest(
                   frozen,
                   route,
                   checkoutQuote!,
-                ) as GalleryPoolCheckoutRequest;
+                ) as GalleryHeldCheckoutRequest;
                 const key = galleryCheckoutSimulationKey({
                   terms: frozen,
                   route,
@@ -615,135 +593,156 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
                 };
                 return { request: executableRequest };
               }
-              if (route.kind === "held") {
-                const request = galleryPurchaseContractRequest(
-                  frozen,
-                  route,
-                ) as GalleryHeldPurchaseRequest;
-                const simulation = await publicClient.simulateContract(request);
-                return { request: simulation.request };
+              const request = galleryCheckoutContractRequest(
+                frozen,
+                route,
+                checkoutQuote!,
+              ) as GalleryPoolCheckoutRequest;
+              const key = galleryCheckoutSimulationKey({
+                terms: frozen,
+                route,
+              })!;
+              if (checkoutSimulation.current?.key === key) {
+                return { request: checkoutSimulation.current.request };
               }
+              const executableRequest = await simulateGalleryCheckoutRequest({
+                request,
+                simulate: (candidate) =>
+                  publicClient.simulateContract(candidate),
+                onDiagnostic: logGalleryCheckoutSimulationDiagnostic,
+              });
+              checkoutSimulation.current = {
+                key,
+                request: executableRequest,
+              };
+              return { request: executableRequest };
+            }
+            if (route.kind === "held") {
               const request = galleryPurchaseContractRequest(
                 frozen,
                 route,
-              ) as GalleryPoolPurchaseRequest;
+              ) as GalleryHeldPurchaseRequest;
               const simulation = await publicClient.simulateContract(request);
               return { request: simulation.request };
-            },
-            writePurchase: (request) =>
-              writeContract(request as ExactWagmiWriteRequest),
-            async waitForReceipt(hash, confirmations) {
-              const receipt = await publicClient.waitForTransactionReceipt({
-                hash,
-                confirmations,
-              });
-              return {
-                status: receipt.status,
-                blockNumber: receipt.blockNumber,
-                transactionHash: receipt.transactionHash,
-                logs: receipt.logs.map((log) => ({
-                  address: log.address,
-                  data: log.data,
-                  topics: log.topics,
-                  logIndex: log.logIndex,
-                })),
-              };
-            },
-            verifyPurchase: terms.checkout
-              ? undefined
-              : ({ receipt, hash, terms: frozen, route }) =>
-                  verifyGalleryPurchase({
-                    receipt,
-                    expectedHash: hash,
-                    terms: frozen,
-                    route,
-                    addresses: { marketplace, mirror },
-                    dependencies: {
-                      readOwnerAt: (shellId) =>
-                        publicClient.readContract({
-                          abi: fameMirrorAbi,
-                          address: mirror,
-                          functionName: "ownerAt",
-                          args: [shellId],
-                        }),
-                      readArtworkHash: (shellId) =>
-                        publicClient.readContract({
-                          abi: universalPoolArtMarketplaceAbi,
-                          address: marketplace,
-                          functionName: "artworkHash",
-                          args: [shellId],
-                        }),
-                    },
-                  }),
-            async refreshAfterPurchase(acquisition) {
-              const latest = inputsRef.current;
-              await Promise.all([
-                refreshGalleryAfterPurchase(acquisition, latest),
-                refreshOwnedSociety(),
-              ]);
-            },
-            async refreshAfterReceipt() {
-              if (!checkoutFulfillmentRoute) {
-                throw new Error(
-                  "The checkout fulfillment route is unavailable.",
-                );
-              }
-              const affectedTokenIds =
-                checkoutFulfillmentRoute.kind === "held"
-                  ? [checkoutFulfillmentRoute.shellId]
-                  : [
-                      checkoutFulfillmentRoute.shellId,
-                      checkoutFulfillmentRoute.sourceId,
-                    ];
-              const latest = inputsRef.current;
-              const results = await Promise.allSettled([
-                latest.refreshGlobal(),
-                latest.refreshPool(),
-                latest.revalidateAffectedTokenIds(affectedTokenIds),
-                refreshOwnedSociety(),
-              ]);
-              const failure = results.find(
-                (result): result is PromiseRejectedResult =>
-                  result.status === "rejected",
-              );
-              if (failure) throw failure.reason;
-            },
+            }
+            const request = galleryPurchaseContractRequest(
+              frozen,
+              route,
+            ) as GalleryPoolPurchaseRequest;
+            const simulation = await publicClient.simulateContract(request);
+            return { request: simulation.request };
           },
-        });
-      } catch (cause) {
-        failOutsideQueue(outerStage, cause);
-      } finally {
-        activeAttempt.current = null;
-        setActiveArtworkKey(null);
-      }
-    },
-    [
-      failOutsideQueue,
-      config,
-      creatorMagic,
-      fame,
-      marketplace,
-      mirror,
-      publicClient,
-      queueDispatch,
-      refreshOwnedSociety,
-      switchChainAsync,
-      wagmiConfig,
-      writeContract,
-    ],
-  );
+          writePurchase: (request) =>
+            writeContract(request as ExactWagmiWriteRequest),
+          async waitForReceipt(hash, confirmations) {
+            const receipt = await publicClient.waitForTransactionReceipt({
+              hash,
+              confirmations,
+            });
+            return {
+              status: receipt.status,
+              blockNumber: receipt.blockNumber,
+              transactionHash: receipt.transactionHash,
+              logs: receipt.logs.map((log) => ({
+                address: log.address,
+                data: log.data,
+                topics: log.topics,
+                logIndex: log.logIndex,
+              })),
+            };
+          },
+          verifyPurchase: terms.checkout
+            ? undefined
+            : ({ receipt, hash, terms: frozen, route }) =>
+                verifyGalleryPurchase({
+                  receipt,
+                  expectedHash: hash,
+                  terms: frozen,
+                  route,
+                  addresses: { marketplace, mirror },
+                  dependencies: {
+                    readOwnerAt: (shellId) =>
+                      publicClient.readContract({
+                        abi: fameMirrorAbi,
+                        address: mirror,
+                        functionName: "ownerAt",
+                        args: [shellId],
+                      }),
+                    readArtworkHash: (shellId) =>
+                      publicClient.readContract({
+                        abi: universalPoolArtMarketplaceAbi,
+                        address: marketplace,
+                        functionName: "artworkHash",
+                        args: [shellId],
+                      }),
+                  },
+                }),
+          async refreshAfterPurchase(acquisition) {
+            const latest = inputsRef.current;
+            await Promise.all([
+              refreshGalleryAfterPurchase(acquisition, latest),
+              refreshOwnedSociety(),
+            ]);
+          },
+          async refreshAfterReceipt() {
+            if (!checkoutFulfillmentRoute) {
+              throw new Error("The checkout fulfillment route is unavailable.");
+            }
+            const affectedTokenIds =
+              checkoutFulfillmentRoute.kind === "held"
+                ? [checkoutFulfillmentRoute.shellId]
+                : [
+                    checkoutFulfillmentRoute.shellId,
+                    checkoutFulfillmentRoute.sourceId,
+                  ];
+            const latest = inputsRef.current;
+            const results = await Promise.allSettled([
+              latest.refreshGlobal(),
+              latest.refreshPool(),
+              latest.revalidateAffectedTokenIds(affectedTokenIds),
+              refreshOwnedSociety(),
+            ]);
+            const failure = results.find(
+              (result): result is PromiseRejectedResult =>
+                result.status === "rejected",
+            );
+            if (failure) throw failure.reason;
+          },
+        },
+      });
+    } catch (cause) {
+      failOutsideQueue(outerStage, cause);
+    } finally {
+      activeAttempt.current = null;
+      setActiveArtworkKey(null);
+    }
+  }, [
+    failOutsideQueue,
+    config,
+    creatorMagic,
+    fame,
+    marketplace,
+    mirror,
+    publicClient,
+    queueDispatch,
+    refreshOwnedSociety,
+    switchChainAsync,
+    wagmiConfig,
+    writeContract,
+  ]);
 
   const beginAttempt = useCallback(() => {
     const latest = getConnection(wagmiConfig);
     if (!latest.address) {
       dispatch({ type: "connecting" });
-      waitingForConnection.current = true;
-      sawConnectModalOpen.current = false;
-      connectModal.setOpen(true);
+      connectionAttempt.current.begin();
+      void openConnect().catch((cause) =>
+        failOutsideQueue("connection", cause),
+      );
       return;
     }
     void executeAttempt();
-  }, [connectModal, executeAttempt, wagmiConfig]);
+  }, [executeAttempt, failOutsideQueue, openConnect, wagmiConfig]);
 
   const buy = useCallback(
     (target: GalleryArtworkTarget) => {
@@ -815,25 +814,63 @@ export function useGalleryPurchase(inputs: GalleryPurchaseInputs) {
   );
 
   useEffect(() => {
-    if (!waitingForConnection.current) return;
-    if (connectModal.open) sawConnectModalOpen.current = true;
-    if (connection.address) {
-      waitingForConnection.current = false;
-      sawConnectModalOpen.current = false;
-      connectModal.setOpen(false);
+    if (!connectionAttempt.current.isWaiting()) return;
+    if (connectModalOpen) {
+      if (connectCancelTimer.current) {
+        clearTimeout(connectCancelTimer.current);
+        connectCancelTimer.current = null;
+      }
+    }
+    const decision = connectionAttempt.current.observe({
+      connected: Boolean(connection.address),
+      modalOpen: connectModalOpen,
+      modalLoading: connectModalLoading,
+    });
+    if (decision === "execute") {
+      if (connectCancelTimer.current) {
+        clearTimeout(connectCancelTimer.current);
+        connectCancelTimer.current = null;
+      }
+      void closeConnectModal();
       void executeAttempt();
       return;
     }
-    if (sawConnectModalOpen.current && !connectModal.open) {
-      failOutsideQueue("connection", connectionError(config.token.symbol));
+    if (decision === "schedule_cancel" && !connectCancelTimer.current) {
+      connectCancelTimer.current = setTimeout(() => {
+        connectCancelTimer.current = null;
+        const latest = getConnection(wagmiConfig);
+        const settled = connectionAttempt.current.settleAfterClose(
+          Boolean(latest.address),
+        );
+        if (settled === "execute") {
+          void executeAttempt();
+          return;
+        }
+        if (settled === "cancel") {
+          failOutsideQueue("connection", connectionError(config.token.symbol));
+        }
+      }, 500);
     }
   }, [
+    closeConnectModal,
+    connectModalLoading,
+    connectModalOpen,
     config.token.symbol,
-    connectModal,
     connection.address,
     executeAttempt,
     failOutsideQueue,
+    wagmiConfig,
   ]);
+
+  useEffect(
+    () => () => {
+      if (connectCancelTimer.current) clearTimeout(connectCancelTimer.current);
+      connectionAttempt.current.reset();
+      activeAttempt.current = null;
+      selectedTarget.current = null;
+    },
+    [],
+  );
 
   const transactions = useMemo(() => {
     const result: { kind: string; hash?: Hash }[] = [];

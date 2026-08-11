@@ -355,7 +355,7 @@ const Header: FC<{ market: LandingMarketPresentation }> = ({ market }) => (
 export const Layout: FC<{ market: LandingMarketPresentation }> = ({
   market,
 }) => (
-  <DefaultProvider mainnet base polygon fame>
+  <DefaultProvider fame>
     <Header market={market} />
   </DefaultProvider>
 );

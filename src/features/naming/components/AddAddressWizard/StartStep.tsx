@@ -10,7 +10,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { isAddress } from "viem";
 import { useReadContract, useDisconnect } from "wagmi";
-import { ConnectKitButton } from "connectkit";
 import { useAccount } from "@/hooks/useAccount";
 import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import { useAddressVerificationSession } from "../../hooks/useAddressVerificationSession";
