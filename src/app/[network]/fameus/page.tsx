@@ -45,11 +45,6 @@ export default async function Home(props: {
                 NFTs.
               </p>
               <p className="text-lg text-left mb-6">
-                This site does not provide an undelegate action. Clearing an
-                existing delegation requires a compatible external wallet or
-                contract interface.
-              </p>
-              <p className="text-lg text-left mb-6">
                 Touch anywhere to continue.
               </p>
             </div>

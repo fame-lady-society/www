@@ -544,10 +544,6 @@ export const FAQ: FC = () => {
             }
           />
           <QA
-            question="How do I clear an existing FAMEus delegation?"
-            answer="The site does not currently provide an undelegate action. Clearing an existing delegation requires a compatible external wallet or direct contract interface, and unwrapping a Governance Society NFT does not automatically clear a separate delegation."
-          />
-          <QA
             question="Is there a paid team behind Fame Lady Society?"
             answer="No! Fame Lady Society is run entirely by volunteers. There are no paid team members, no VC funding, and no corporate backing. Every person contributing to the project does so because they believe in the mission of community ownership and women's empowerment in Web3."
           />

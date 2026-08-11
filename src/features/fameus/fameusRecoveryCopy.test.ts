@@ -46,7 +46,7 @@ describe("FAMEus recovery copy", () => {
     assert.match(tabs, />\s*Recovery\s*</);
   });
 
-  it("states the recovery boundary without inventing an undelegate control", () => {
+  it("states that governance is paused and recovery supports unwrapping", () => {
     const entry = source("src/app/[network]/fameus/page.tsx");
     const recovery = source(
       "src/app/[network]/fameus/[address]/governance/page.tsx",
@@ -54,8 +54,5 @@ describe("FAMEus recovery copy", () => {
 
     assert.match(entry, /governance is paused/i);
     assert.match(recovery, /unwrap/i);
-    assert.match(recovery, /compatible external wallet or contract interface/i);
-    assert.match(recovery, /does\s+not clear an existing delegation/i);
-    assert.doesNotMatch(recovery, /onClick.*undelegate/is);
   });
 });

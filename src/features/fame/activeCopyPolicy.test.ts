@@ -65,11 +65,5 @@ describe("active FAME and FAMEus copy policy", () => {
 
     assert.match(faq, /href="\/fameus"/);
     assert.match(faq, /controls for unwrapping existing Governance/);
-    assert.match(faq, /does not currently provide an undelegate action/);
-    assert.match(
-      faq,
-      /compatible external wallet or direct contract interface/,
-    );
-    assert.match(faq, /does not automatically clear a separate delegation/);
   });
 });

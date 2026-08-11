@@ -46,10 +46,7 @@ export default async function Home(props: {
         to use the existing legacy lock or unwrap controls.
       </p>
       <p className="text-lg text-left mb-6">
-        This site supports unwrapping Governance Society NFTs. Unwrapping does
-        not clear an existing delegation. Clearing an existing delegation
-        requires a compatible external wallet or contract interface; there is no
-        undelegate action on this site.
+        This site supports unwrapping Governance Society NFTs.
       </p>
       <h3 className="text-2xl font-bold mb-6 flex items-center ">
         Your Governance $FAME Ladies
