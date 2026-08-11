@@ -61,7 +61,13 @@ describe("FAME route shell", () => {
     assert.doesNotMatch(landing, /BurnPoolImage|burnPool|unrevealed/);
     assert.doesNotMatch(landing, /href="\/fame\/gallery"/);
     assert.match(landing, /1 million \$FAME = 1 Society NFT/);
-    assert.match(landing, /<SingleTokenChecker/);
+    assert.match(landing, /<SocietyNftReadinessRail/);
     assert.match(landing, /<FameFAQ/);
+    assert.match(
+      landing,
+      /import \{ FameFAQ \} from "@\/features\/fame\/components\/FameFAQ"/,
+    );
+    assert.match(landing, /atomic route from ETH or USDC/);
+    assert.doesNotMatch(landing, /atomic route from ETH, USDC, or WETH/);
   });
 });

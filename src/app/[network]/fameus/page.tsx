@@ -1,11 +1,12 @@
 import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "./ChainSelector";
 import { VideoWipeInteraction } from "./VideoWipeInteraction";
-import { WrappedLink } from "@/components/WrappedLink";
 
 const videoWipeUrl = "/videos/wipe-1.mp4";
 
-export default async function Home(props: { params: Promise<{ network: string }> }) {
+export default async function Home(props: {
+  params: Promise<{ network: string }>;
+}) {
   const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
@@ -27,7 +28,7 @@ export default async function Home(props: { params: Promise<{ network: string }>
   }
   return (
     <>
-      <AppMain title="FAMEus" isDao headerRight={<ChainSelector />}>
+      <AppMain title="FAMEus Recovery" isDao headerRight={<ChainSelector />}>
         <VideoWipeInteraction
           videoUrl={videoWipeUrl}
           redirectPath={`/${network}/fameus/onboarding`}
@@ -36,21 +37,17 @@ export default async function Home(props: { params: Promise<{ network: string }>
           <div className="w-full pl-4 py-8">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-4xl font-bold mb-6 text-center">
-                Enter the FAMEus DAO
+                FAMEus Recovery
               </h1>
               <p className="text-lg text-left mb-6">
-                The FAMEus DAO is a community-driven organization that empowers
-                $FAME Society NFT holders to shape the future of the FAMEus DAO.
+                FAMEus governance is paused. These legacy pages remain available
+                for existing holders to manage and unwrap Governance Society
+                NFTs.
               </p>
               <p className="text-lg text-left mb-6">
-                <WrappedLink
-                  href="https://www.tally.xyz/gov/fameus-dao"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:no-underline"
-                >
-                  View governance on Tally →
-                </WrappedLink>
+                This site does not provide an undelegate action. Clearing an
+                existing delegation requires a compatible external wallet or
+                contract interface.
               </p>
               <p className="text-lg text-left mb-6">
                 Touch anywhere to continue.

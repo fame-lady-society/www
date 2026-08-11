@@ -1,38 +1,12 @@
-import { FC, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import cn from "classnames";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import UnlockIcon from "@mui/icons-material/LockOpenOutlined";
 import CircularProgress from "@mui/material/CircularProgress";
-import NextImage from "next/image";
 
 import { FlowerSelect } from "@/components/FlowerSelect";
+import { SelectableTokenTile } from "@/components/SelectableTokenTile";
 import { zeroAddress } from "viem";
-
-const BASE_URL = "https://fame.support/thumb/";
-
-const ImageForToken: FC<{
-  tokenId: bigint;
-  onClick: () => void;
-  onHoverIn: () => void;
-  onHoverOut: () => void;
-  isSelected: boolean;
-}> = ({ tokenId, onClick, onHoverIn, onHoverOut, isSelected }) => {
-  return (
-    <NextImage
-      src={`${BASE_URL}${tokenId.toString()}`}
-      alt="FAMEus"
-      width={400}
-      height={400}
-      onClick={onClick}
-      onMouseEnter={onHoverIn}
-      onMouseLeave={onHoverOut}
-      className={cn(
-        "border-4 border-transparent transition-all duration-300",
-        isSelected && "border-red-400",
-      )}
-    />
-  );
-};
 
 export const SelectableToken = ({
   tokenId,
@@ -75,12 +49,13 @@ export const SelectableToken = ({
 
   return (
     <div className="relative">
-      <ImageForToken
+      <SelectableTokenTile
         tokenId={tokenId}
+        label="Governance Society"
         onClick={handleClick}
-        onHoverIn={handleHoverIn}
-        onHoverOut={handleHoverOut}
-        isSelected={isSelected || hasHovered}
+        onMouseEnter={handleHoverIn}
+        onMouseLeave={handleHoverOut}
+        isHighlighted={isSelected || hasHovered}
       />
       <FlowerSelect isSelected={isSelected} />
       {isLocked ? (
@@ -112,7 +87,7 @@ export const SelectableToken = ({
             : (guardianAddress === zeroAddress || guardianAddress === null) &&
                 isLocked
               ? "This token is locked by you"
-            : `This token is locked by ${guardianAddress}`}
+              : `This token is locked by ${guardianAddress}`}
         </div>
       )}
       {isPending && (

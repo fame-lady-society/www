@@ -30,7 +30,7 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { fameSaleAddress } from "@/features/fame/contract";
-import { FameFAQ } from "@/features/presale/components/FameFAQ";
+import { FameFAQ } from "@/features/fame/components/FameFAQ";
 import {
   OG_AGE_BOOST,
   OG_RANK_BOOST,

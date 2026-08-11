@@ -2,7 +2,9 @@ import { AppMain } from "@/layouts/AppMain";
 import { ChainSelector } from "../ChainSelector";
 import { RedirectWhenConnected } from "@/features/fameus/client-components/RedirectWhenConnected";
 
-export default async function Home(props: { params: Promise<{ network: string }> }) {
+export default async function Home(props: {
+  params: Promise<{ network: string }>;
+}) {
   const params = await props.params;
   const { network } = params;
   let resolvedNetwork: "sepolia" | "base" | undefined;
@@ -25,16 +27,17 @@ export default async function Home(props: { params: Promise<{ network: string }>
 
   return (
     <>
-      <AppMain title="FAMEus" isDao headerRight={<ChainSelector />}>
+      <AppMain title="FAMEus Recovery" isDao headerRight={<ChainSelector />}>
         <div className="w-full pl-4 py-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-6 text-center">
-              FAMEus DAO Wrap
+              FAMEus Recovery
             </h1>
             <p className="text-lg text-left mb-6">
-              The FAMEus DAO requires you to wrap your $FAME Society NFTs into
-              Governance Society NFTs. These Governance Society NFTs will be
-              used to vote on the future of the FAMEus DAO.
+              FAMEus governance is paused. This legacy wrap control remains
+              available for existing holders who need to manage a prior FAMEus
+              position. Use the Recovery tab after connecting to unwrap a
+              Governance Society NFT.
             </p>
             <p className="text-lg text-left mb-6">
               Connect your wallet to see your $FAME ladies.

@@ -15,6 +15,14 @@ function menuItem(html: string, href: string) {
 }
 
 describe("FAME site menu", () => {
+  it("links to FAMEus recovery without presenting active DAO governance", () => {
+    const html = renderToStaticMarkup(createElement(SiteMenu));
+
+    assert.match(menuItem(html, "/fameus"), /FAMEus Recovery/);
+    assert.doesNotMatch(html, /FAMEus DAO/);
+    assert.doesNotMatch(html, /tally\.xyz/i);
+  });
+
   it("disables only the active FAME destination", () => {
     const html = renderToStaticMarkup(
       createElement(SiteMenu, { activeFamePage: "marketplace" }),

@@ -15,7 +15,6 @@ import { useSpring, animated } from "react-spring";
 import { WrappedLink } from "@/components/WrappedLink";
 import { TwitterIcon } from "@/components/icons/twitter";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 const AnimatedBox = animated(Box);
 
@@ -202,16 +201,13 @@ export const LoreContent: FC = () => {
 
       {/* Our Story Timeline */}
       <Section title="Our Story" id="story">
-        <TimelineItem
-          date="July 12, 2021"
-          title="The Beginning"
-          highlight
-        >
+        <TimelineItem date="July 12, 2021" title="The Beginning" highlight>
           <Typography mb={2}>
-            Fame Lady Squad launched as the <strong>first all-female generative
-            PFP project</strong> on the Ethereum blockchain. A collection of
-            8,888 unique, bold, and beautiful women entered the NFT space,
-            promising to empower and celebrate women in Web3.
+            Fame Lady Squad launched as the{" "}
+            <strong>first all-female generative PFP project</strong> on the
+            Ethereum blockchain. A collection of 8,888 unique, bold, and
+            beautiful women entered the NFT space, promising to empower and
+            celebrate women in Web3.
           </Typography>
           <Typography>
             The project garnered immediate attention and excitement. Women and
@@ -223,9 +219,9 @@ export const LoreContent: FC = () => {
         <TimelineItem date="August 2021" title="The Revelation">
           <Typography mb={2}>
             The community discovered a devastating truth: the &quot;three women
-            founders&quot; were actually <strong>Russian men pretending to be
-            women</strong>. The promise of female empowerment had been built on
-            deception.
+            founders&quot; were actually{" "}
+            <strong>Russian men pretending to be women</strong>. The promise of
+            female empowerment had been built on deception.
           </Typography>
           <Typography>
             Rather than abandon the project, the community chose to fight. What
@@ -234,11 +230,7 @@ export const LoreContent: FC = () => {
           </Typography>
         </TimelineItem>
 
-        <TimelineItem
-          date="August 11, 2021"
-          title="The Takeover"
-          highlight
-        >
+        <TimelineItem date="August 11, 2021" title="The Takeover" highlight>
           <Typography mb={2}>
             In an unprecedented move, the smart contract was transferred to an
             elected community steward. For the first time in NFT history, a
@@ -284,11 +276,7 @@ export const LoreContent: FC = () => {
           </Typography>
         </TimelineItem>
 
-        <TimelineItem
-          date="July 12, 2024"
-          title="$FAME Launches"
-          highlight
-        >
+        <TimelineItem date="July 12, 2024" title="$FAME Launches" highlight>
           <Typography mb={2}>
             On the 3rd anniversary of the original launch, the community
             introduced <strong>$FAME</strong>—a revolutionary DN404 token that
@@ -297,16 +285,16 @@ export const LoreContent: FC = () => {
           <Typography>
             888 unique Society NFTs are backed by 888 million $FAME tokens.
             Collect 1 million $FAME, and a Society Lady automatically mints to
-            your wallet. True liquidity-backed NFTs, created by and for the
-            Fame Lady Society.
+            your wallet. True liquidity-backed NFTs, created by and for the Fame
+            Lady Society.
           </Typography>
         </TimelineItem>
 
         <TimelineItem date="Present Day" title="The Society Continues">
           <Typography>
             Today, Fame Lady Society stands as a testament to what community can
-            achieve. Run entirely by volunteers, governed by its holders, and
-            committed to the original vision of women&apos;s empowerment in
+            achieve. Sustained by volunteers, grounded in community ownership,
+            and committed to the original vision of women&apos;s empowerment in
             Web3—done right this time, by the community itself.
           </Typography>
         </TimelineItem>
@@ -325,10 +313,9 @@ export const LoreContent: FC = () => {
                     🌟 Community First
                   </Typography>
                   <Typography>
-                    Every decision is made by and for the community. No
-                    VCs, no corporate interests—just passionate volunteers
-                    working together. Our governance ensures every voice
-                    matters.
+                    No VCs, no corporate interests—just passionate volunteers
+                    working together to maintain a project the community
+                    reclaimed and made its own.
                   </Typography>
                 </CardContent>
               </Card>
@@ -343,8 +330,8 @@ export const LoreContent: FC = () => {
                   </Typography>
                   <Typography>
                     We&apos;re fulfilling the original promise—for real this
-                    time. FLS is a space where women lead, create, and thrive
-                    in Web3. We&apos;re turning &quot;web3&quot; into
+                    time. FLS is a space where women lead, create, and thrive in
+                    Web3. We&apos;re turning &quot;web3&quot; into
                     &quot;webWE.&quot;
                   </Typography>
                 </CardContent>
@@ -356,13 +343,13 @@ export const LoreContent: FC = () => {
               <Card sx={{ height: "100%", p: 2 }}>
                 <CardContent>
                   <Typography variant="h5" mb={2} color="primary">
-                    🔓 True Decentralization
+                    🔓 Community Ownership
                   </Typography>
                   <Typography>
                     We learned the hard way what centralized control means.
-                    That&apos;s why Fame Lady Society is built on transparent,
-                    decentralized governance. The FAMEus DAO gives every
-                    Society holder a vote.
+                    That&apos;s why Fame Lady Society rebuilt around public
+                    contracts, shared stewardship, and transparent community
+                    infrastructure.
                   </Typography>
                 </CardContent>
               </Card>
@@ -449,7 +436,12 @@ export const LoreContent: FC = () => {
       <Section title="Join the Society" id="join">
         <AnimatedFadeIn component="div">
           <Box component="div" textAlign="center" mb={4}>
-            <Typography variant="h6" color="text.secondary" maxWidth="600px" mx="auto">
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              maxWidth="600px"
+              mx="auto"
+            >
               Whether you&apos;re a longtime holder or just discovering us,
               there&apos;s a place for you in the Fame Lady Society.
             </Typography>
@@ -472,10 +464,12 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.04)"
+                        : "rgba(255,255,255,0.05)",
+                  },
                 }}
               >
                 <Box
@@ -533,10 +527,12 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.04)"
+                        : "rgba(255,255,255,0.05)",
+                  },
                 }}
               >
                 <Box
@@ -550,7 +546,9 @@ export const LoreContent: FC = () => {
                     justifyContent: "center",
                   }}
                 >
-                  <TwitterIcon sx={{ fontSize: 40, width: "100%", height: "100%" }} />
+                  <TwitterIcon
+                    sx={{ fontSize: 40, width: "100%", height: "100%" }}
+                  />
                 </Box>
                 <Typography>Twitter/X</Typography>
               </Card>
@@ -571,10 +569,12 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.04)"
+                        : "rgba(255,255,255,0.05)",
+                  },
                 }}
               >
                 <Box
@@ -632,10 +632,12 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.04)"
+                        : "rgba(255,255,255,0.05)",
+                  },
                 }}
               >
                 <Box
@@ -682,44 +684,6 @@ export const LoreContent: FC = () => {
             <AnimatedFadeIn component="div">
               <Card
                 component={WrappedLink}
-                href="https://www.tally.xyz/gov/fameus-dao"
-                target="_blank"
-                rel="noreferrer"
-                sx={{
-                  textDecoration: "none",
-                  textAlign: "center",
-                  p: 3,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
-                }}
-              >
-                <Box
-                  component="div"
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    mb: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <AccountBalanceIcon sx={{ fontSize: 40, width: "100%", height: "100%" }} />
-                </Box>
-                <Typography>FAMEus DAO</Typography>
-              </Card>
-            </AnimatedFadeIn>
-          </Grid2>
-          <Grid2 xs={6} sm={4} md={3}>
-            <AnimatedFadeIn component="div">
-              <Card
-                component={WrappedLink}
                 href="https://github.com/fame-lady-society"
                 target="_blank"
                 rel="noreferrer"
@@ -731,10 +695,12 @@ export const LoreContent: FC = () => {
                   flexDirection: "column",
                   alignItems: "center",
                   overflow: "hidden",
-                  "&:hover": { backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? "rgba(15, 23, 42, 0.04)"
-                      : "rgba(255,255,255,0.05)" },
+                  "&:hover": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(15, 23, 42, 0.04)"
+                        : "rgba(255,255,255,0.05)",
+                  },
                 }}
               >
                 <Box
@@ -748,7 +714,9 @@ export const LoreContent: FC = () => {
                     justifyContent: "center",
                   }}
                 >
-                  <GitHubIcon sx={{ fontSize: 40, width: "100%", height: "100%" }} />
+                  <GitHubIcon
+                    sx={{ fontSize: 40, width: "100%", height: "100%" }}
+                  />
                 </Box>
                 <Typography>GitHub</Typography>
               </Card>

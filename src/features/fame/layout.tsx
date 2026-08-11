@@ -11,10 +11,9 @@ import { CopyToClipboard } from "@/components/CopyToClipboard";
 import { DefaultProvider } from "@/context/default";
 import { FameMarketBoard } from "@/features/fame-landing/components/FameMarketBoard";
 import type { LandingMarketPresentation } from "@/features/fame-landing/pricePresentation";
+import { FameFAQ } from "@/features/fame/components/FameFAQ";
 import { FameMain } from "@/features/fame/components/FameShell";
 import { fameFromNetwork } from "@/features/fame/contract";
-import { FameFAQ } from "@/features/presale/components/FameFAQ";
-import { SingleTokenChecker } from "@/features/claim-to-fame/components/SingleTokenChecker";
 import { AuctionLiveCta } from "@/features/society-nft-auction/components/AuctionLiveCta";
 import { SocietyNftReadinessRail } from "@/features/society-nft-readiness/components/SocietyNftReadinessRail";
 
@@ -203,7 +202,7 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
                 </h3>
                 <p className="mt-5 max-w-sm text-sm leading-6 text-[#bdb4a4]">
                   Choose artwork first, then pay directly with FAME or use an
-                  atomic route from ETH, USDC, or WETH.
+                  atomic route from ETH or USDC.
                 </p>
               </div>
               <div className="mt-20">

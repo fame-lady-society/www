@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
 import "@/styles/tailwind.css";
 import { DefaultProvider } from "@/context/default";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.OG_BASE_URL!),
   title: {
-    template: "FAMEus - %s",
-    default: "Home",
+    template: "FAMEus Recovery - %s",
+    default: "FAMEus Recovery",
   },
-  description: "The FAMEus DAO is redefining web3",
+  description:
+    "FAMEus governance is paused. These legacy pages remain available for existing holders to manage and unwrap Governance Society NFTs.",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -37,8 +34,9 @@ export const metadata: Metadata = {
         alt: "$FAME",
       },
     ],
-    description: "The FAMEus DAO is redefining web3",
-    title: "The future of web3",
+    description:
+      "FAMEus governance is paused. Legacy recovery remains available for existing holders.",
+    title: "FAMEus Recovery",
   },
 };
 

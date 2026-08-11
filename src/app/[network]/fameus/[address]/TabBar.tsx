@@ -35,7 +35,7 @@ export const TabBar: FC<{
           )}
           onClick={onClickWrap}
         >
-          Wrap
+          Legacy wrap
         </button>
         <button
           className={cn(
@@ -46,7 +46,7 @@ export const TabBar: FC<{
           )}
           onClick={onClickGovernance}
         >
-          Governance
+          Recovery
         </button>
       </div>
       <hr className="border-gray-200 w-full mb-6" />

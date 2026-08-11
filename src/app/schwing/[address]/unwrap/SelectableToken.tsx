@@ -1,32 +1,6 @@
-import { FC, useCallback, useState } from "react";
-import cn from "classnames";
-import NextImage from "next/image";
+import { useCallback } from "react";
 
-const BASE_URL = "https://fame.support/thumb/";
-
-const ImageForToken: FC<{
-  tokenId: bigint;
-  onClick: () => void;
-  onHoverIn: () => void;
-  onHoverOut: () => void;
-  isSelected: boolean;
-}> = ({ tokenId, onClick, onHoverIn, onHoverOut, isSelected }) => {
-  return (
-    <NextImage
-      src={`${BASE_URL}${tokenId.toString()}`}
-      alt="FAMEus"
-      width={400}
-      height={400}
-      onClick={onClick}
-      onMouseEnter={onHoverIn}
-      onMouseLeave={onHoverOut}
-      className={cn(
-        "border-4 border-transparent transition-all duration-300",
-        isSelected && "border-red-400",
-      )}
-    />
-  );
-};
+import { SelectableTokenTile } from "@/components/SelectableTokenTile";
 
 export const SelectableToken = ({
   tokenId,
@@ -56,12 +30,13 @@ export const SelectableToken = ({
   }, []);
 
   return (
-    <ImageForToken
+    <SelectableTokenTile
       tokenId={tokenId}
+      label="Schwing token"
       onClick={handleClick}
-      onHoverIn={handleHoverIn}
-      onHoverOut={handleHoverOut}
-      isSelected={isSelected}
+      onMouseEnter={handleHoverIn}
+      onMouseLeave={handleHoverOut}
+      isHighlighted={isSelected}
     />
   );
 };

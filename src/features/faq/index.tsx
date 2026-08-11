@@ -1,5 +1,5 @@
 "use client";
-import { FC, ReactNode, PropsWithChildren, useState } from "react";
+import { FC, ReactNode, PropsWithChildren } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -164,7 +164,7 @@ export const FAQ: FC = () => {
             lineHeight={1.7}
           >
             Everything you need to know about Fame Lady Society, wrapping, $FAME
-            tokens, and our community governance.
+            tokens, community history, and legacy FAMEus recovery.
           </Typography>
         </Box>
       </AnimatedFadeIn>
@@ -185,7 +185,7 @@ export const FAQ: FC = () => {
             { label: "About FLS", href: "#about" },
             { label: "Wrapping", href: "#wrapping" },
             { label: "$FAME Token", href: "#fame" },
-            { label: "Governance", href: "#governance" },
+            { label: "FAMEus Recovery", href: "#fameus-recovery" },
           ].map((item) => (
             <Chip
               key={item.href}
@@ -268,8 +268,9 @@ export const FAQ: FC = () => {
                   </li>
                   <li>
                     <Typography lineHeight={1.8}>
-                      <strong>Radical transparency:</strong> All decisions are
-                      documented and governance is on-chain
+                      <strong>Radical transparency:</strong> Contracts,
+                      community infrastructure, and project history are public
+                      and verifiable
                     </Typography>
                   </li>
                   <li>
@@ -295,14 +296,16 @@ export const FAQ: FC = () => {
                 <Typography color="text.secondary" lineHeight={1.8} mb={2}>
                   Instead, the community rallied together. The smart contract
                   was transferred to an elected community steward on August 11,
-                  2021. Unfortunately, the steward was at first unable, and later unwilling, 
-                  to establish a multi-signature wallet on behalf of the entire community.
+                  2021. Unfortunately, the steward was at first unable, and
+                  later unwilling, to establish a multi-signature wallet on
+                  behalf of the entire community.
                 </Typography>
                 <Typography color="text.secondary" lineHeight={1.8}>
-                  The Fame Lady Society was officially established on April 20th,
-                  2023 with a new, community-controlled smart contract, and a multi-signature wallet on behalf of the entire community.
-                  fulfilling the original promise of decentralize ownership done
-                  right this time by the community itself.
+                  The Fame Lady Society was officially established on April
+                  20th, 2023 with a new, community-controlled smart contract,
+                  and a multi-signature wallet on behalf of the entire
+                  community. fulfilling the original promise of decentralize
+                  ownership done right this time by the community itself.
                 </Typography>
               </>
             }
@@ -376,8 +379,8 @@ export const FAQ: FC = () => {
                   </li>
                   <li>
                     <Typography lineHeight={1.8}>
-                      <strong>Future benefits:</strong> Access to community
-                      airdrops, events, and governance participation
+                      <strong>Community access:</strong> Stay connected to
+                      collector tools, events, and volunteer-led projects
                     </Typography>
                   </li>
                 </Box>
@@ -496,48 +499,53 @@ export const FAQ: FC = () => {
         </Section>
       </Box>
 
-      {/* Governance */}
-      <Box component="div" id="governance">
-        <Section title="Governance & Community" icon="🏛️" delay={300}>
+      {/* FAMEus recovery */}
+      <Box component="div" id="fameus-recovery">
+        <Section title="FAMEus Recovery & Community" icon="🏛️" delay={300}>
           <QA
-            question="How is Fame Lady Society governed?"
+            question="Is FAMEus governance active?"
             answer={
               <>
                 <Typography color="text.secondary" lineHeight={1.8} mb={2}>
-                  Fame Lady Society is governed by its NFT holders through the{" "}
-                  <strong>FAMEus DAO</strong>. Every Fame Lady Society NFT
-                  holder has the power to vote on proposals concerning the
-                  operational affairs of the community.
+                  No. FAMEus governance and proposal activity are paused. The
+                  legacy pages remain available so existing holders can recover
+                  positions created while the system was active.
                 </Typography>
                 <Typography color="text.secondary" lineHeight={1.8}>
-                  The Society is guided by an elected Community Council voted in
-                  by verified holders. The Council is responsible for planning
-                  the overall direction, vision, and long-term strategy of the
-                  project.
+                  Visit{" "}
+                  <WrappedLink href="/fameus" sx={{ color: "primary.main" }}>
+                    FAMEus Recovery
+                  </WrappedLink>{" "}
+                  to access those legacy tools. It is not an active voting or
+                  proposal portal.
                 </Typography>
               </>
             }
           />
           <QA
-            question="How can I participate in governance?"
+            question="What can I do in FAMEus Recovery?"
             answer={
               <>
+                <Typography color="text.secondary" lineHeight={1.8} mb={2}>
+                  The site provides controls for unwrapping existing Governance
+                  Society NFTs. Legacy wrapping and locking controls remain
+                  visible, but they do not exit a position. Use the Recovery tab
+                  and Unwrap control to recover the underlying Society NFT and
+                  FAME.
+                </Typography>
                 <Typography color="text.secondary" lineHeight={1.8}>
-                  Hold a Fame Lady Society NFT (either wrapped or through
-                  $FAME), then visit{" "}
-                  <WrappedLink
-                    href="https://www.tally.xyz/gov/fameus-dao"
-                    target="_blank"
-                    rel="noreferrer"
-                    sx={{ color: "primary.main" }}
-                  >
-                    FAMEus DAO on Tally
+                  Start at{" "}
+                  <WrappedLink href="/fameus" sx={{ color: "primary.main" }}>
+                    FAMEus Recovery
                   </WrappedLink>{" "}
-                  to view and vote on active proposals. You can also create
-                  proposals if you meet the threshold requirements.
+                  and connect the wallet that holds the affected tokens.
                 </Typography>
               </>
             }
+          />
+          <QA
+            question="How do I clear an existing FAMEus delegation?"
+            answer="The site does not currently provide an undelegate action. Clearing an existing delegation requires a compatible external wallet or direct contract interface, and unwrapping a Governance Society NFT does not automatically clear a separate delegation."
           />
           <QA
             question="Is there a paid team behind Fame Lady Society?"
@@ -654,8 +662,7 @@ export const FAQ: FC = () => {
               px: 4,
               py: 1.5,
               borderRadius: 2,
-              background:
-                "linear-gradient(135deg, #5865F2 0%, #4752C4 100%)",
+              background: "linear-gradient(135deg, #5865F2 0%, #4752C4 100%)",
               color: "#fff",
               fontWeight: 700,
               textDecoration: "none",

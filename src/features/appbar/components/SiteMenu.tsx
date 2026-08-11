@@ -148,7 +148,7 @@ export const SiteMenu: FC<{
         <ListItemText
           primary={
             <Typography textAlign="right" color="text.primary">
-              FAMEus DAO
+              FAMEus Recovery
             </Typography>
           }
         />
