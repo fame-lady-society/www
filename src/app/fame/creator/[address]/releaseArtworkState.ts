@@ -7,6 +7,21 @@ export type FrozenArtworkRelease = Readonly<{
 export type SubmittedReleaseStatus = "success" | "reverted" | "unknown";
 export type ReleaseFailureResolution = "complete" | "recover" | "block";
 
+export function createArtworkReleaseSingleFlight() {
+  let active = false;
+
+  return async (task: () => Promise<void>): Promise<boolean> => {
+    if (active) return false;
+    active = true;
+    try {
+      await task();
+      return true;
+    } finally {
+      active = false;
+    }
+  };
+}
+
 export async function reconcileSubmittedArtworkRelease(
   readReceiptStatus: () => Promise<"success" | "reverted">,
 ): Promise<SubmittedReleaseStatus> {

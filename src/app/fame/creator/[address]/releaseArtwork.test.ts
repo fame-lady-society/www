@@ -3,12 +3,43 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "node:test";
 import {
+  createArtworkReleaseSingleFlight,
   reconcileSubmittedArtworkRelease,
   recoverContendedArtworkRelease,
   resolveArtworkReleaseFailure,
 } from "./releaseArtworkState";
 
 describe("creator artwork release", () => {
+  it("allows only one release submission while the first is pending", async () => {
+    let finishFirst!: () => void;
+    const firstPending = new Promise<void>((resolve) => {
+      finishFirst = resolve;
+    });
+    const runSingleFlight = createArtworkReleaseSingleFlight();
+    let submissions = 0;
+
+    const first = runSingleFlight(async () => {
+      submissions += 1;
+      await firstPending;
+    });
+    const overlapping = await runSingleFlight(async () => {
+      submissions += 1;
+    });
+
+    assert.equal(overlapping, false);
+    assert.equal(submissions, 1);
+
+    finishFirst();
+    assert.equal(await first, true);
+    assert.equal(
+      await runSingleFlight(async () => {
+        submissions += 1;
+      }),
+      true,
+    );
+    assert.equal(submissions, 2);
+  });
+
   it("keeps the uploaded metadata frozen when the boundary has not moved", async () => {
     let regenerated = false;
     const recovered = await recoverContendedArtworkRelease(

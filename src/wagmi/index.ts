@@ -1181,11 +1181,6 @@ export const creatorArtistMagicAbi = [
     name: 'NextTokenIdMismatch',
   },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  {
-    type: 'error',
-    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
-    name: 'ReleaseTokenAlreadyOwned',
-  },
   { type: 'error', inputs: [], name: 'TokenNotInBurnPool' },
   { type: 'error', inputs: [], name: 'TokenNotInMintPool' },
   { type: 'error', inputs: [], name: 'TokenNotOwned' },
