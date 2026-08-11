@@ -99,7 +99,7 @@ The product bet comes from the current beta screenshot and review notes: the pri
 
 - This pass does not need to build a new router solver or route ranking system; it consumes the existing quote/readiness/transaction boundaries.
 - This pass does not need to support arbitrary non-FAME token pairs.
-- This pass does not need to replace ConnectKit or the app's existing wagmi configuration.
+- This pass does not need to replace the wallet modal or the app's existing wagmi configuration.
 - This pass does not need a marketing landing page or explanatory hero before the widget.
 - Raw calldata, artifact hashes, and manifest details should remain available for diagnostics but are not the primary product surface.
 - Route visualization in this pass must not invent route ranking, price impact, or split strength data that is not already exposed by the current quote/artifact boundary.
@@ -111,7 +111,7 @@ The product bet comes from the current beta screenshot and review notes: the pri
 - Make route understanding visible by default but progressive: the compact route summary is always visible, while a richer route map belongs in a product-facing route section rather than raw diagnostics.
 - Gate automatic approval-to-swap continuation conservatively: user intent, quote freshness, readiness, and protected simulation must all still be valid.
 - Keep advanced controls compact and deterministic: a gear opens an inline advanced panel for slippage and deadline, with visible reset/default state.
-- Preserve the existing app stack: MUI, Tailwind, ConnectKit, wagmi, viem, and the current `src/features/fame-swap` boundaries remain the implementation context.
+- Preserve the existing app stack: MUI, Tailwind, Reown AppKit, wagmi, viem, and the current `src/features/fame-swap` boundaries remain the implementation context.
 
 ## Default Widget Anatomy
 
@@ -128,19 +128,19 @@ Compact mode may reduce visual density but must keep mode, amount, quote output,
 
 ## State Matrix
 
-| State | Required User-Facing Behavior |
-|---|---|
-| Disconnected | Show connect wallet CTA; allow non-wallet educational quote placeholders only if they cannot be mistaken for executable quotes. |
-| Wrong chain | Show switch-to-Base CTA, allow read-only route/quote context when available, and block approval/swap. |
-| Switch pending/rejected/failed | Preserve entered trade details, show retry or manual switch guidance, and keep approval/swap blocked. |
-| Waiting for amount | Keep CTA disabled and guide the user to enter an amount for the active input asset. |
-| Checking/simulating | Preserve controls where safe, show live status, and prevent duplicate transaction actions. |
-| Ready | Show receive estimate, protected minimum, route summary, active risk settings, and the next wallet action. |
-| Expired | Preserve the trade, show refresh guidance, and require a fresh quote before approval or swap. |
-| Unsupported/blocked | Explain the route or readiness reason, show allowed FAME directions, and keep transaction actions blocked. |
+| State                             | Required User-Facing Behavior                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Disconnected                      | Show connect wallet CTA; allow non-wallet educational quote placeholders only if they cannot be mistaken for executable quotes.      |
+| Wrong chain                       | Show switch-to-Base CTA, allow read-only route/quote context when available, and block approval/swap.                                |
+| Switch pending/rejected/failed    | Preserve entered trade details, show retry or manual switch guidance, and keep approval/swap blocked.                                |
+| Waiting for amount                | Keep CTA disabled and guide the user to enter an amount for the active input asset.                                                  |
+| Checking/simulating               | Preserve controls where safe, show live status, and prevent duplicate transaction actions.                                           |
+| Ready                             | Show receive estimate, protected minimum, route summary, active risk settings, and the next wallet action.                           |
+| Expired                           | Preserve the trade, show refresh guidance, and require a fresh quote before approval or swap.                                        |
+| Unsupported/blocked               | Explain the route or readiness reason, show allowed FAME directions, and keep transaction actions blocked.                           |
 | Approval needed/pending/confirmed | Show exact approval amount and spender context; after confirmation, move to protected swap simulation or the next explicit swap CTA. |
-| Swap pending/confirmed | Show BaseScan link when a hash exists; on confirmation, offer start another swap. |
-| Failed/reverted | Preserve trade context, show safe retry guidance, and keep raw errors secondary to actionable copy. |
+| Swap pending/confirmed            | Show BaseScan link when a hash exists; on confirmation, offer start another swap.                                                    |
+| Failed/reverted                   | Preserve trade context, show safe retry guidance, and keep raw errors secondary to actionable copy.                                  |
 
 ## Dependencies / Assumptions
 

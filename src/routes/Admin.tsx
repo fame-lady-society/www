@@ -10,7 +10,7 @@ import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 
 export const Admin: NextPage<{}> = () => {
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider>
       <Main
         menu={
           <>

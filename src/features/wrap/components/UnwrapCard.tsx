@@ -20,8 +20,6 @@ import DialogActions from "@mui/material/DialogActions";
 import Divider from "@mui/material/Divider";
 import { useEnsAddress } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { withAuthHeaders } from "@/utils/authToken";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -43,7 +41,6 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
   nonce,
 }) => {
   const { address } = useAccount();
-  const authSession = useAuthSession();
   const [expanded, setExpanded] = useState(false);
   const [tokenIds, setTokenIds] = useState<bigint[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,12 +64,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
     try {
       const endpoint =
         network === "sepolia" ? "/api/sepolia/owned" : "/api/ethereum/owned";
-      const response = await fetch(endpoint, {
-        headers: withAuthHeaders(
-          undefined,
-          authSession?.token ? authSession : null,
-        ),
-      });
+      const response = await fetch(endpoint);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -91,7 +83,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [address, authSession, network]);
+  }, [address, network]);
 
   // Reset selection and refetch when nonce changes (after successful transaction)
   useEffect(() => {

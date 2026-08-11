@@ -54,7 +54,7 @@ The marketplace release already has narrower authorities. The current `src/featu
 #### Landing boundary
 
 - R1. Replace the current `/fame` pool and artwork grids with a FAME information and market-stat page.
-- R2. Render all landing market statistics on the Next.js server. The initial collapsed `/fame` render must not initialize wagmi, ConnectKit, React Query chain hooks, browser RPC, or browser quote work. A deliberate first expansion of **Swap now** is the only landing interaction allowed to lazy-load those transactional dependencies. The Society helper URL and credential come only from validated server environment configuration, and credentials, authorization headers, private helper URLs, raw upstream errors, and raw response bodies must never enter cached DTOs, rendered output, or logs.
+- R2. Render all landing market statistics on the Next.js server. The initial collapsed `/fame` render must not initialize wagmi, Reown AppKit, React Query chain hooks, browser RPC, or browser quote work. A deliberate first expansion of **Swap now** is the only landing interaction allowed to lazy-load those transactional dependencies. The Society helper URL and credential come only from validated server environment configuration, and credentials, authorization headers, private helper URLs, raw upstream errors, and raw response bodies must never enter cached DTOs, rendered output, or logs.
 - R3. Remove `getFamePools()` and `dynamic = "force-dynamic"` from `src/app/fame/page.tsx`.
 - R4. Do not enumerate burn or mint pools, token metadata, token ownership, marketplace custody, gallery targets, or all gallery artwork from `/fame`.
 - R5. Keep the informational content, three-option currency selector, logo menu, destination actions, and swap accordion usable when every market projection is unavailable and at a 390-by-844 viewport; controls and links must remain keyboard reachable with visible focus and adequate touch targets, and state must never depend on color alone.
@@ -862,7 +862,7 @@ bun test src/features/fame-swap/components/FameSwapWidget.test.ts
 - Marketplace, Gallery, and Rotator point to `/fame/market`, `/fame/gallery`, and `/fame/rotate` respectively.
 - The component renders no token grid, token number, pool membership, custody, or gallery-art list.
 - The component does not mount the retired community story, social grid, copy-address controls, token checkers, FAQ, auction CTA, or readiness rail; their modules remain available to other consumers.
-- The initial page and board dependency trace has no provider, wallet, wagmi, ConnectKit, React Query, or quote-hook import; only the lazy embedded chunk contains them.
+- The initial page and board dependency trace has no provider, wallet, wagmi, Reown AppKit, React Query, or quote-hook import; only the lazy embedded chunk contains them.
 - The closed swap disclosure mounts no provider or widget. First expansion mounts the embedded widget, sets the correct accessibility state, and later collapse/reopen retains entered state.
 - Lazy loading is announced; module/provider failure shows Retry and `/fame/swap`; an active wallet request or transaction prevents collapse until a terminal state.
 - Twenty warm production-build requests meet the 750-millisecond p95 server TTFB target; a forced cold producer overrun degrades within the 2.5-second composition ceiling and the route completes within 3 seconds.
@@ -872,7 +872,7 @@ bun test src/features/fame-swap/components/FameSwapWidget.test.ts
 
 ```bash
 bun test src/features/fame-landing
-rg -n --glob '!EmbeddedFameSwap.tsx' --glob '!*.test.ts' --glob '!*.test.tsx' "getFamePools|force-dynamic|DefaultProvider|Main|wagmi|ConnectKit|useAccount|useReadContract" src/app/fame/page.tsx src/features/fame-landing
+rg -n --glob '!EmbeddedFameSwap.tsx' --glob '!*.test.ts' --glob '!*.test.tsx' "getFamePools|force-dynamic|DefaultProvider|Main|wagmi|AppKit|useAccount|useReadContract" src/app/fame/page.tsx src/features/fame-landing
 ```
 
 The source scan must exclude `EmbeddedFameSwap.tsx` and the tests that intentionally assert the lazy boundary. It must return no forbidden eager landing dependency. A separate positive assertion must verify that the lazy module, and only that module, owns the Base provider and embedded widget.
@@ -985,7 +985,7 @@ Run the app with the normal local deployment context and inspect `/fame` at desk
 - Start a wallet request or transaction. Confirm the accordion cannot hide its active progress until confirmation, rejection, or failure.
 - Collapse and reopen the swap. Confirm entered state remains and focus behavior is predictable.
 - Inspect the build output. `/fame` must show five-minute ISR behavior.
-- Inspect the landing client chunks or dependency trace. The initial board/menu/disclosure chunks must not include wagmi, ConnectKit, or the legacy FAME layout; the lazy embedded chunk may include the transactional dependencies.
+- Inspect the landing client chunks or dependency trace. The initial board/menu/disclosure chunks must not include wagmi, Reown AppKit, or the legacy FAME layout; the lazy embedded chunk may include the transactional dependencies.
 
 Inspect Market and Gallery separately:
 

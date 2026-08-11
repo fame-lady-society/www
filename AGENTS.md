@@ -2,7 +2,7 @@
 
 ## Overview
 
-- `fls` is a Next.js 15 / React 19 web app that powers multiple Fame Lady Society web experiences such as NFT wrapping, customization portals, and presale flows.
+- `fls` is a Next.js 16 / React 19 web app that powers multiple Fame Lady Society web experiences such as NFT wrapping, customization portals, and presale flows.
 - The UI is written in TypeScript with TailwindCSS, Emotion, MUI, React Query, Redux Toolkit, wagmi, and viem for blockchain interactions.
 - Deprecated: legacy GraphQL data integrations via `@graphprotocol/client` remain in the tree but the upstream subgraphs are offline and will be removed.
 - The app integrates with Ethereum mainnet, Base, and Sepolia contracts plus Farcaster frames, Irys uploads, and IPFS-backed metadata services.
@@ -40,7 +40,8 @@
 - Deprecated: `.graphclientrc.yml` still lists Sepolia/Mainnet/Base subgraphs, but those endpoints are down; no new GraphQL operations should be added.
 - Blockchain reads/writes go through wagmi/viem and ethers v5 providers, using addresses from `wagmi.config.ts` and environment-specific signer keys.
 - File and metadata uploads leverage Irys (`@irys/web-upload`), IPFS (`kubo-rpc-client`), and on-chain metadata routes in `src/pages/api`.
-- Authentication flows rely on `next-auth`, SIWE via `connectkit-next-siwe`, and session secrets in `.env.local`.
+- Wallet connection uses one Reown AppKit/Wagmi adapter with Ethereum, Base, Polygon, Sepolia, Base Sepolia, and Polygon Amoy available everywhere.
+- Route-scoped SIWE is app-owned through `/siwe`. It uses a seven-day HTTP-only cookie and a five-minute stateless nonce bound to a separate HTTP-only cookie; `SESSION_SECRET` is required.
 - Sentry (`@sentry/nextjs`) is configured but optional; enable by uncommenting the wrapper in `next.config.js` and ensuring DSN/keys are set.
 
 ## Build & Deployment

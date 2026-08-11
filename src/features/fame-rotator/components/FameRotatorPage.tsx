@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@mui/material/Button";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import {
   useCallback,
   useEffect,
@@ -203,7 +203,7 @@ function FameRotatorExperience({ resolution }: FameRotatorPageProps) {
   let walletControl: ReactNode = undefined;
   switch (execution.environment.status) {
     case "disconnected":
-      walletControl = <ConnectKitButton />;
+      walletControl = <WalletConnectButton />;
       break;
     case "wrong_chain":
       walletControl = (

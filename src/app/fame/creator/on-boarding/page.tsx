@@ -5,7 +5,7 @@ import { useAccount } from "@/hooks/useAccount";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { base } from "viem/chains";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 
 export default function OnBoardingPage() {
   const { isConnected, chainId: connectedChainId } = useAccount();
@@ -32,7 +32,7 @@ export default function OnBoardingPage() {
               <p className="text-lg mb-6">
                 Please connect your wallet to access the FAME Creator Portal.
               </p>
-              <ConnectKitButton />
+              <WalletConnectButton />
             </div>
           ) : (
             <div className="text-center mb-8">

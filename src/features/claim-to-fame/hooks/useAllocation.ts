@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 import { erc721Abi } from "viem";
 import { useReadContracts } from "wagmi";
-import { createConfig } from "wagmi";
 import { mainnet, polygon } from "viem/chains";
-import { getDefaultConfig } from "connectkit";
 import {
   HUNNYS_CONTRACT,
   MERMAIDS_CONTRACT,

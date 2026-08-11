@@ -7,7 +7,6 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useSIWE } from "connectkit";
 import { useReadContract } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
 import { erc721Abi } from "viem";
@@ -22,8 +21,7 @@ const M4A_DOWNLOAD_URL =
   "https://gateway.irys.xyz/vGa10Rq5QKEDrAOEnsfwbOinjcdq0GtBkjGrXmfdO2U/Lingerie Dreams.m4a";
 
 const DownloadCard: FC = () => {
-  const { isSignedIn } = useSIWE();
-  const { address } = useAccount();
+  const { address, isSignedIn } = useAccount();
   const { data, isLoading } = useReadContract({
     address: lingerieDreamsAddressForChain(polygon.id),
     abi: erc721Abi,

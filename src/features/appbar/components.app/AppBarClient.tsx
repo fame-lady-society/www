@@ -3,7 +3,7 @@
 import { FC, ReactNode, useState } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import { HomeMenu } from "./HomeMenu";
-import { ConnectKitButton } from "connectkit";
+import { AppKitButton } from "@reown/appkit/react";
 
 interface AppBarLeftProps {
   menu?: ReactNode;
@@ -40,5 +40,5 @@ interface AppBarRightProps {
 export const AppBarClientRight: FC<AppBarRightProps> = ({ disableConnect }) => {
   if (disableConnect) return null;
 
-  return <ConnectKitButton />;
+  return <AppKitButton balance="hide" />;
 };

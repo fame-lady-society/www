@@ -15,13 +15,15 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectControl } from "@/components/WalletConnectControl";
 import { sepolia, mainnet, baseSepolia } from "viem/chains";
-import { normalize } from  "viem/ens";
+import { normalize } from "viem/ens";
 import { useClaimName } from "../hooks/useClaimName";
-import { useOwnedGateNftTokens, type NetworkType } from "../hooks/useOwnedGateNftTokens";
+import {
+  useOwnedGateNftTokens,
+  type NetworkType,
+} from "../hooks/useOwnedGateNftTokens";
 import { useAccount } from "@/hooks/useAccount";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { useSwitchChain, useWaitForTransactionReceipt } from "wagmi";
 import { useWriteBulkMinterMint } from "@/wagmi";
 import { encodeIdentifier, parseIdentifier } from "../utils/networkUtils";
@@ -67,8 +69,12 @@ export interface ClaimNameFormProps {
 export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   const expectedChainId = getExpectedChainId(network);
   const { mutateAsync: switchChainAsync } = useSwitchChain();
-  const { isConnected, signIn, chainId: connectedChainId } = useAccount();
-  const { token } = useAuthSession();
+  const {
+    isConnected,
+    isSignedIn,
+    signIn,
+    chainId: connectedChainId,
+  } = useAccount();
   const [desiredName, setDesiredName] = useState("");
   const [selectedTokenId, setSelectedTokenId] = useState<bigint | "">("");
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -84,11 +90,15 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     connectedChainId,
     targetChainId: expectedChainId,
   });
-  const needsSetup = !isConnected || !token || isWrongChain;
-  const isBulkMinterNetwork = network === "base-sepolia" || network === "sepolia";
+  const needsSetup = !isConnected || !isSignedIn || isWrongChain;
+  const isBulkMinterNetwork =
+    network === "base-sepolia" || network === "sepolia";
 
-  const { data: availableTokens, isLoading: isLoadingTokens, refetch: refetchTokens } =
-    useOwnedGateNftTokens(network);
+  const {
+    data: availableTokens,
+    isLoading: isLoadingTokens,
+    refetch: refetchTokens,
+  } = useOwnedGateNftTokens(network);
 
   const {
     writeContract: writeBulkMinterMint,
@@ -117,14 +127,15 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     reset,
   } = useClaimName(network);
 
-  const isBulkMinterMinting = isBulkMinterMintPending || isBulkMinterMintConfirming;
+  const isBulkMinterMinting =
+    isBulkMinterMintPending || isBulkMinterMintConfirming;
 
   useEffect(() => {
     if (bulkMinterMintError) {
       setMintError(
         bulkMinterMintError instanceof Error
           ? bulkMinterMintError.message
-          : "Mint failed. Please try again."
+          : "Mint failed. Please try again.",
       );
       resetBulkMinterMint();
     }
@@ -144,7 +155,11 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
   }, [isConnected, isWrongChain]);
 
   useEffect(() => {
-    if (!isConnected || !isWrongChain || autoSwitchChainId === expectedChainId) {
+    if (
+      !isConnected ||
+      !isWrongChain ||
+      autoSwitchChainId === expectedChainId
+    ) {
       return;
     }
 
@@ -262,15 +277,16 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
     if (!isConnected) {
       title = "Connect Your Wallet";
       description = "Connect your wallet to claim a name.";
-    } else if (isWrongChain && !token) {
+    } else if (isWrongChain && !isSignedIn) {
       title = "Switch Network & Sign In";
       description = `Switch to ${getNetworkDisplayName(network)} and sign in to continue.`;
     } else if (isWrongChain) {
       title = "Switch Network";
       description = `Please switch to ${getNetworkDisplayName(network)} to continue.`;
-    } else if (!token) {
+    } else if (!isSignedIn) {
       title = "Sign In Required";
-      description = "Sign in to verify your wallet ownership and load your NFTs.";
+      description =
+        "Sign in to verify your wallet ownership and load your NFTs.";
     }
 
     return (
@@ -288,19 +304,23 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
             </Alert>
           )}
           {!isConnected ? (
-            <ConnectKitButton.Custom>
-              {({ show }) => (
-                <Button variant="outlined" onClick={show}>
+            <WalletConnectControl>
+              {({ open }) => (
+                <Button variant="outlined" onClick={open}>
                   Connect Your Wallet
                 </Button>
               )}
-            </ConnectKitButton.Custom>
+            </WalletConnectControl>
           ) : (
             <Button
               variant="outlined"
               onClick={handleSetup}
               disabled={isSettingUp}
-              startIcon={isSettingUp ? <CircularProgress size={20} color="inherit" /> : null}
+              startIcon={
+                isSettingUp ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : null
+              }
             >
               {isSettingUp ? "Please wait..." : title}
             </Button>
@@ -321,9 +341,13 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
             You claimed the name &ldquo;{name}&rdquo;
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Your identity has been created and your soulbound NFT has been minted.
+            Your identity has been created and your soulbound NFT has been
+            minted.
           </Typography>
-          <Box component="div" sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+          <Box
+            component="div"
+            sx={{ display: "flex", gap: 2, justifyContent: "center" }}
+          >
             <Button
               component={Link}
               href={`/${network}/~/${encodeIdentifier(normalize(name))}`}
@@ -331,11 +355,7 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
             >
               View Your Profile
             </Button>
-            <Button
-              component={Link}
-              href={`/${network}/~/`}
-              variant="outlined"
-            >
+            <Button component={Link} href={`/${network}/~/`} variant="outlined">
               Back to All Profiles
             </Button>
           </Box>
@@ -365,7 +385,10 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
 
           {/* Step 1: Enter name and select token */}
           {step === "idle" && (
-            <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <Box
+              component="div"
+              sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+            >
               <TextField
                 label="Desired Name"
                 value={desiredName}
@@ -376,7 +399,10 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
               />
 
               {isLoadingTokens ? (
-                <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  component="div"
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
                   <CircularProgress size={20} />
                   <Typography variant="body2">
                     Loading your gate NFTs...
@@ -389,7 +415,11 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                 </Alert>
               ) : (
                 <Box component="div">
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     Select a Gate NFT to bind to your identity:
                   </Typography>
                   <Grid2 container spacing={2}>
@@ -400,12 +430,14 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                             borderRadius: 2,
                             overflow: "hidden",
                             transition: "all 0.2s ease",
-                            border: selectedTokenId === BigInt(tokenId)
-                              ? "3px solid"
-                              : "3px solid transparent",
-                            borderColor: selectedTokenId === BigInt(tokenId)
-                              ? "primary.main"
-                              : "transparent",
+                            border:
+                              selectedTokenId === BigInt(tokenId)
+                                ? "3px solid"
+                                : "3px solid transparent",
+                            borderColor:
+                              selectedTokenId === BigInt(tokenId)
+                                ? "primary.main"
+                                : "transparent",
                             "&:hover": {
                               transform: "translateY(-4px)",
                               boxShadow: "0 8px 20px rgba(196, 77, 255, 0.2)",
@@ -434,13 +466,16 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
                                     right: 8,
                                     p: 0.5,
                                     borderRadius: "50%",
-                                    background: "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%)",
+                                    background:
+                                      "linear-gradient(135deg, #ff6b9d 0%, #c44dff 100%)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
                                 >
-                                  <CheckCircle sx={{ fontSize: 20, color: "#fff" }} />
+                                  <CheckCircle
+                                    sx={{ fontSize: 20, color: "#fff" }}
+                                  />
                                 </Box>
                               )}
                             </Box>
@@ -459,8 +494,13 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
 
               {isBulkMinterNetwork && (
                 <Box component="div">
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Need more gate NFTs? Mint a test BulkMinter NFT on {getNetworkDisplayName(network)}.
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    Need more gate NFTs? Mint a test BulkMinter NFT on{" "}
+                    {getNetworkDisplayName(network)}.
                   </Typography>
                   {mintError && (
                     <Alert severity="error" sx={{ mb: 2 }}>
@@ -521,13 +561,19 @@ export const ClaimNameForm: FC<ClaimNameFormProps> = ({ network }) => {
 
               {secondsRemaining > 0 ? (
                 <>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     Please wait {secondsRemaining} seconds before revealing your
                     claim...
                   </Typography>
                   <LinearProgress
                     variant="determinate"
-                    value={((minCommitAge - secondsRemaining) / minCommitAge) * 100}
+                    value={
+                      ((minCommitAge - secondsRemaining) / minCommitAge) * 100
+                    }
                     sx={{ mb: 2, height: 8, borderRadius: 4 }}
                   />
                   <Typography

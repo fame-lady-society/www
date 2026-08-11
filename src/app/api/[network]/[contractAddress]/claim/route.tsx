@@ -30,6 +30,7 @@ import {
   OG_RANK_BOOST,
 } from "@/features/claim-to-fame/hooks/constants";
 import { getSession } from "@/app/siwe/session-utils";
+import { claimAuthorizationStatus } from "./claimAuthorization";
 
 interface Params {
   network: string;
@@ -255,7 +256,10 @@ async function verifyClaimForContract({
   }
 }
 
-export async function POST(req: NextRequest, props: { params: Promise<Params> }) {
+export async function POST(
+  req: NextRequest,
+  props: { params: Promise<Params> },
+) {
   const params = await props.params;
   const network = asNetwork(params.network);
 
@@ -267,6 +271,9 @@ export async function POST(req: NextRequest, props: { params: Promise<Params> })
   // TODO verify contract address
 
   const session = getSession(req);
+  if (!session) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
 
   try {
     let data: Input;
@@ -276,11 +283,7 @@ export async function POST(req: NextRequest, props: { params: Promise<Params> })
       return NextResponse.json({ error: "invalid input" }, { status: 400 });
     }
 
-    if (
-      session?.address &&
-      isAddress(session?.address) &&
-      data.address !== session?.address
-    ) {
+    if (claimAuthorizationStatus(session, data.address) === 403) {
       return NextResponse.json({ error: "unauthorized" }, { status: 403 });
     }
 

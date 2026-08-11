@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { isAddress } from "viem";
 
-export const SESSION_SECRET = process.env.SESSION_SECRET!;
+export function requireSessionSecret(value: string | undefined): string {
+  if (!value?.trim()) {
+    throw new Error("SESSION_SECRET is required for SIWE sessions.");
+  }
+  return value;
+}
+
+export const SESSION_SECRET = requireSessionSecret(process.env.SESSION_SECRET);
 export const COOKIE_NAME = "siwe";
 export const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
-const BEARER_PREFIX = "bearer ";
 
 export type SessionData = {
   address: `0x${string}`;
   chainId: number;
   expiresAt: number;
-};
-
-export type SignedSession = {
-  session: SessionData;
-  token: string;
 };
 
 function signSession(data: SessionData): string {
@@ -43,16 +45,29 @@ function verifySession(signedSession: string): SessionData | null {
     .update(payload)
     .digest("hex");
 
-  if (signature !== expectedSignature) {
+  if (!/^[0-9a-f]{64}$/i.test(signature)) {
+    return null;
+  }
+  if (
+    !timingSafeEqual(
+      Buffer.from(expectedSignature, "hex"),
+      Buffer.from(signature, "hex"),
+    )
+  ) {
     return null;
   }
 
   try {
-    const data: SessionData = JSON.parse(payload);
-    if (data.expiresAt < Date.now()) {
+    const data = JSON.parse(payload) as Partial<SessionData>;
+    if (
+      !isAddress(data.address ?? "") ||
+      !Number.isSafeInteger(data.chainId) ||
+      !Number.isSafeInteger(data.expiresAt) ||
+      data.expiresAt! <= Date.now()
+    ) {
       return null;
     }
-    return data;
+    return data as SessionData;
   } catch {
     return null;
   }
@@ -67,43 +82,9 @@ export function createSignedSession(
   return { token: signSession(session), session };
 }
 
-function readSignedSession(token: string): SignedSession | null {
-  const session = verifySession(token);
-  return session ? { session, token } : null;
-}
-
-function extractBearerToken(request: NextRequest): string | null {
-  const header = request.headers.get("authorization");
-  if (!header) {
-    return null;
-  }
-  const lower = header.toLowerCase();
-  if (!lower.startsWith(BEARER_PREFIX)) {
-    return null;
-  }
-  const token = header.slice(BEARER_PREFIX.length);
-  return token ? token.trim() : null;
-}
-
 export function getSession(request: NextRequest): SessionData | null {
-  return getSignedSession(request)?.session ?? null;
-}
-
-export function getSignedSession(request: NextRequest): SignedSession | null {
-  const bearerToken = extractBearerToken(request);
-  if (bearerToken) {
-    const bearerSession = readSignedSession(bearerToken);
-    if (bearerSession) {
-      return bearerSession;
-    }
-  }
-
   const cookie = request.cookies.get(COOKIE_NAME);
-  if (cookie?.value) {
-    return readSignedSession(cookie.value);
-  }
-
-  return null;
+  return cookie?.value ? verifySession(cookie.value) : null;
 }
 
 export function setSession(

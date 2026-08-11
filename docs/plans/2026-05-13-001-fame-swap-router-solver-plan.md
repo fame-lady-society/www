@@ -44,7 +44,7 @@ Open durable todos after the 2026-05-14 review:
 
 ## Research Summary
 
-`www` is a Next.js 14 App Router app using React 18, MUI, Tailwind, ConnectKit, wagmi, viem, and generated contract hooks. The app has no committed vitest or Playwright dependency, but Bun is available locally and existing TypeScript tests use `node:test` assertions under `src/features/naming/attestations/__tests__/attestations.test.ts`. The plan should therefore keep core verification in pure TypeScript files runnable with `bun test`, and leave heavier browser/fork coverage behind scripts that do not add new package dependencies.
+`www` uses the Next.js App Router with MUI, Tailwind, Reown AppKit, wagmi, viem, and generated contract hooks. The app has no committed vitest or Playwright dependency, but Bun is available locally and existing TypeScript tests use `node:test` assertions under `src/features/naming/attestations/__tests__/attestations.test.ts`. The plan should therefore keep core verification in pure TypeScript files runnable with `bun test`, and leave heavier browser/fork coverage behind scripts that do not add new package dependencies.
 
 No `docs/solutions/` directory exists in this repo, so there were no local institutional learnings to carry forward. The `fleet` reference confirms a useful fork harness shape: random Anvil port, readiness polling through JSON-RPC, child process cleanup, env injection, and no secret logging.
 
@@ -169,7 +169,7 @@ No `docs/solutions/` directory exists in this repo, so there were no local insti
   - Submitting: CTA `Submitting`; recovery is wait for wallet/receipt.
   - Confirmed: CTA `Swap confirmed`; recovery is view transaction or start another swap.
   - Reverted: CTA `Try again`; recovery is retry after reviewing diagnostics.
-- Use MUI controls and existing ConnectKit/wagmi patterns; keep styling local to the feature and avoid nested cards.
+- Use MUI controls and existing Reown AppKit/wagmi patterns; keep styling local to the feature and avoid nested cards.
 - Show external fallback links only for stale-artifact and not-live-ready states. Fallback links must be hardcoded from an allowlisted destination set, use `rel="noopener noreferrer"` for new tabs, and never include user-controlled redirect URLs.
 - Accessibility requirements: token selects and amount inputs must be keyboard reachable with visible focus, primary CTA focus must return after wallet/transaction state changes, diagnostics disclosure must be button-controlled with `aria-expanded`, and tap targets must be at least 44px high on mobile.
 

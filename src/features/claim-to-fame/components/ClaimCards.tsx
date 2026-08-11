@@ -16,12 +16,12 @@ import {
 } from "viem";
 import { useReadContracts, useWriteContract, useSimulateContract } from "wagmi";
 import { base, sepolia } from "viem/chains";
-import { useClaim } from "../hooks/useClaim";
+import { ClaimRequestError, useClaim } from "../hooks/useClaim";
 import { formatFame } from "@/utils/fame";
 import { useNotifications } from "@/features/notifications/Context";
 import { TransactionProgress } from "@/components/TransactionProgress";
 import { Claim } from "@/app/api/[network]/[contractAddress]/claim/route";
-import { useSIWE } from "connectkit";
+import { useSiweSession } from "@/context/SiweSession";
 
 export const ClaimCard: FC<{
   chainId: typeof sepolia.id | typeof base.id;
@@ -30,8 +30,8 @@ export const ClaimCard: FC<{
   title?: string;
 }> = ({ chainId, contractAddress, tokenIds, title }) => {
   const { addNotification } = useNotifications();
-  const { address } = useAccount();
-  const { isSignedIn } = useSIWE();
+  const { address, isSignedIn, signIn } = useAccount();
+  const { signOut } = useSiweSession();
 
   const {
     data: [signatureNonces, isClaimedBatch] = [],
@@ -98,6 +98,8 @@ export const ClaimCard: FC<{
     isLoading: isClaimLoading,
     refetch: refetchClaim,
     isFetched,
+    isError: isClaimError,
+    error: claimError,
   } = useClaim({
     enabled: isSignedIn,
     chainId,
@@ -105,6 +107,15 @@ export const ClaimCard: FC<{
     address,
     tokenIds: notYetClaimedTokenIds ?? [],
   });
+
+  useEffect(() => {
+    if (
+      claimError instanceof ClaimRequestError &&
+      (claimError.status === 401 || claimError.status === 403)
+    ) {
+      void signOut();
+    }
+  }, [claimError, signOut]);
 
   // for all claim data, find the claims that are equal to or greater than the current nonce and sort ascending so that the first claim is the next claim
   const unconfirmedClaim = useMemo(() => {
@@ -142,7 +153,9 @@ export const ClaimCard: FC<{
     functionName: "claimWithTokens",
     query: {
       // wait until after the reveal wait period has passed
-      enabled: !!unconfirmedClaim && unconfirmedClaim.deadlineSeconds < Date.now() / 1000,
+      enabled:
+        !!unconfirmedClaim &&
+        unconfirmedClaim.deadlineSeconds < Date.now() / 1000,
     },
     args: unconfirmedClaim
       ? ([
@@ -242,6 +255,13 @@ export const ClaimCard: FC<{
               Fetching claim data...
             </Typography>
           ) : null}
+          {isClaimError ? (
+            <Typography variant="body1" color="error" marginY={2}>
+              {claimError instanceof Error
+                ? claimError.message
+                : "Unable to load claim data."}
+            </Typography>
+          ) : null}
           {!isSimulationError && unconfirmedClaim ? (
             <Typography variant="body1" marginY={2}>
               Claiming {formatFame(parseUnits(unconfirmedClaim.amount, 18))}
@@ -268,19 +288,22 @@ export const ClaimCard: FC<{
         </CardContent>
         <CardActions>
           <Button
-            onClick={onClaim}
+            onClick={isSignedIn ? onClaim : () => void signIn()}
             disabled={
-              !!hash ||
-              !notYetClaimedTokenIds ||
-              notYetClaimedTokenIds?.length === 0 ||
               !address ||
-              isClaimLoading ||
-              isWritePending
+              (isSignedIn &&
+                (!!hash ||
+                  !notYetClaimedTokenIds ||
+                  notYetClaimedTokenIds.length === 0 ||
+                  isClaimLoading ||
+                  isWritePending))
             }
           >
-            {notYetClaimedTokenIds && notYetClaimedTokenIds.length
-              ? `Claim ${notYetClaimedTokenIds.length} token${notYetClaimedTokenIds.length > 1 ? "s" : ""}`
-              : "no claim available"}
+            {!isSignedIn
+              ? "Sign in to claim"
+              : notYetClaimedTokenIds && notYetClaimedTokenIds.length
+                ? `Claim ${notYetClaimedTokenIds.length} token${notYetClaimedTokenIds.length > 1 ? "s" : ""}`
+                : "no claim available"}
           </Button>
         </CardActions>
       </Card>

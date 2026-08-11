@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectControl } from "@/components/WalletConnectControl";
 import { useAccount } from "@/hooks/useAccount";
 
 export function PleaseConnectYourWallet() {
@@ -11,17 +11,17 @@ export function PleaseConnectYourWallet() {
   }
 
   return (
-    <ConnectKitButton.Custom>
-      {({ show }) => {
+    <WalletConnectControl>
+      {({ open }) => {
         return (
           <button
             className="rounded-lg border border-gray-200 p-4 text-center mx-auto block"
-            onClick={show}
+            onClick={open}
           >
             Please connect your wallet
           </button>
         );
       }}
-    </ConnectKitButton.Custom>
+    </WalletConnectControl>
   );
 }

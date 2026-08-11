@@ -25,7 +25,7 @@ export const TokenPage: FC<{
   network?: "mainnet" | "sepolia";
 }> = ({ metadata, tokenId, network }) => {
   return (
-    <DefaultProvider mainnet>
+    <DefaultProvider>
       <Main
         menu={
           <>

@@ -6,7 +6,7 @@ import { TransactionsModal } from "@/components/TransactionsModal";
 import { useMint } from "./hooks/useMint";
 import { useReadContract, useSwitchChain } from "wagmi";
 import { useAccount } from "@/hooks/useAccount";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import { funknloveAddressForChain } from "./contracts";
 import { erc721Abi, formatEther } from "viem";
 import { useNotifications } from "@/features/notifications/Context";
@@ -244,7 +244,7 @@ export const Mint: FC<{
                   : "Mint more!"}
         </button>
       ) : (
-        <ConnectKitButton />
+        <WalletConnectButton />
       )}
       <TransactionsModal
         open={transactionModalOpen}

@@ -39,7 +39,7 @@ The goal here is to identify the strongest frontend work needed to turn the beta
 - This should stay a swap tool, not a landing page.
 - FAME should be first-class: everything is either buying FAME or selling FAME.
 - Solver/backend follow-ups are tracked separately in `docs/ideation/2026-05-12-fame-swap-router-solver-ideation.md`.
-- UI work should reuse the existing MUI, Tailwind, ConnectKit, wagmi, and viem patterns rather than introducing a new design system.
+- UI work should reuse the existing MUI, Tailwind, Reown AppKit, wagmi, and viem patterns rather than introducing a new design system.
 
 ## Raw Candidate Pool
 
@@ -174,18 +174,18 @@ The candidate pool was generated from four frames: user/operator pain, removing 
 
 ## Rejection Summary
 
-| # | Idea | Reason Rejected |
-|---|------|-----------------|
-| 1 | Keep route visualization only inside debug diagnostics | Conflicts with the goal of making route learning first-class. |
-| 2 | Preserve arbitrary pair selection as the main UI | The product model is FAME buy/sell, not a generic DEX. |
-| 3 | Add a marketing hero before the widget | The user needs the swap tool as the first screen. |
-| 4 | Use chips as the primary quote display | Too easy to miss and already failing the screenshot review. |
-| 5 | Auto-submit swap after approval unconditionally | Unsafe if quote, deadline, readiness, or simulation changes. |
-| 6 | Expose every route hash and calldata detail by default | Useful for diagnostics, but too technical for the main widget. |
-| 7 | Hide advanced slippage entirely | Users need control over real swap risk. |
-| 8 | Add presets only for all tokens | Percentage presets are most useful and least ambiguous for sell flows. |
-| 9 | Wait for full solver route ranking before improving UI | The current route can already be made much clearer. |
-| 10 | Treat dark-mode CTA contrast as cosmetic | It blocks the primary action from being readable. |
+| #   | Idea                                                   | Reason Rejected                                                        |
+| --- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| 1   | Keep route visualization only inside debug diagnostics | Conflicts with the goal of making route learning first-class.          |
+| 2   | Preserve arbitrary pair selection as the main UI       | The product model is FAME buy/sell, not a generic DEX.                 |
+| 3   | Add a marketing hero before the widget                 | The user needs the swap tool as the first screen.                      |
+| 4   | Use chips as the primary quote display                 | Too easy to miss and already failing the screenshot review.            |
+| 5   | Auto-submit swap after approval unconditionally        | Unsafe if quote, deadline, readiness, or simulation changes.           |
+| 6   | Expose every route hash and calldata detail by default | Useful for diagnostics, but too technical for the main widget.         |
+| 7   | Hide advanced slippage entirely                        | Users need control over real swap risk.                                |
+| 8   | Add presets only for all tokens                        | Percentage presets are most useful and least ambiguous for sell flows. |
+| 9   | Wait for full solver route ranking before improving UI | The current route can already be made much clearer.                    |
+| 10  | Treat dark-mode CTA contrast as cosmetic               | It blocks the primary action from being readable.                      |
 
 ## Suggested Brainstorm Seeds
 

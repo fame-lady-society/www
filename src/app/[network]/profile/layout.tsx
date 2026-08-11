@@ -34,7 +34,7 @@ export default function NamingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <DefaultProvider mainnet baseSepolia siwe>
+    <DefaultProvider siwe>
       {children}
     </DefaultProvider>
   );
