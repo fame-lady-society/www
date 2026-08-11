@@ -744,6 +744,7 @@ export const creatorArtistMagicAbi = [
       { name: '_childRenderer', internalType: 'address', type: 'address' },
       { name: '_fame', internalType: 'address payable', type: 'address' },
       { name: '_nextTokenId', internalType: 'uint16', type: 'uint16' },
+      { name: '_artPoolNextIndex', internalType: 'uint16', type: 'uint16' },
     ],
     stateMutability: 'nonpayable',
   },
@@ -993,6 +994,18 @@ export const creatorArtistMagicAbi = [
   },
   {
     type: 'function',
+    inputs: [
+      { name: 'expectedTokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'metadataUri', internalType: 'string', type: 'string' },
+    ],
+    name: 'releaseArtwork',
+    outputs: [
+      { name: 'releasedTokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [],
     name: 'renounceOwnership',
     outputs: [],
@@ -1067,6 +1080,37 @@ export const creatorArtistMagicAbi = [
     anonymous: false,
     inputs: [
       {
+        name: 'creator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'artworkHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'metadataUri',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+    ],
+    name: 'ArtworkReleased',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
         name: 'pendingOwner',
         internalType: 'address',
         type: 'address',
@@ -1124,10 +1168,24 @@ export const creatorArtistMagicAbi = [
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'ArtPoolFull' },
   { type: 'error', inputs: [], name: 'InvalidMetadata' },
+  { type: 'error', inputs: [], name: 'InvalidPoolConfiguration' },
   { type: 'error', inputs: [], name: 'InvalidTokenId' },
   { type: 'error', inputs: [], name: 'MintPoolFull' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'expected', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'NextTokenIdMismatch',
+  },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ReleaseTokenAlreadyOwned',
+  },
   { type: 'error', inputs: [], name: 'TokenNotInBurnPool' },
   { type: 'error', inputs: [], name: 'TokenNotInMintPool' },
   { type: 'error', inputs: [], name: 'TokenNotOwned' },
@@ -13099,6 +13157,15 @@ export const useWriteCreatorArtistMagicGrantRoles =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"releaseArtwork"`
+ */
+export const useWriteCreatorArtistMagicReleaseArtwork =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'releaseArtwork',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceOwnership"`
  */
 export const useWriteCreatorArtistMagicRenounceOwnership =
@@ -13249,6 +13316,15 @@ export const useSimulateCreatorArtistMagicGrantRoles =
   })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"releaseArtwork"`
+ */
+export const useSimulateCreatorArtistMagicReleaseArtwork =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: creatorArtistMagicAbi,
+    functionName: 'releaseArtwork',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `functionName` set to `"renounceOwnership"`
  */
 export const useSimulateCreatorArtistMagicRenounceOwnership =
@@ -13316,6 +13392,15 @@ export const useSimulateCreatorArtistMagicUpdateMetadata =
  */
 export const useWatchCreatorArtistMagicEvent =
   /*#__PURE__*/ createUseWatchContractEvent({ abi: creatorArtistMagicAbi })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"ArtworkReleased"`
+ */
+export const useWatchCreatorArtistMagicArtworkReleasedEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: creatorArtistMagicAbi,
+    eventName: 'ArtworkReleased',
+  })
 
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link creatorArtistMagicAbi}__ and `eventName` set to `"OwnershipHandoverCanceled"`

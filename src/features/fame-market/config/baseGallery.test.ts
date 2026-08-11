@@ -8,24 +8,25 @@ import {
   BASE_GALLERY_ADDRESSES,
   createBaseGalleryRuntime,
 } from "./baseGallery";
-import { parseBaseGalleryContracts } from "../contracts";
 import { useGalleryRuntime } from "./galleryRuntime";
 
 const marketplace = "0x1111111111111111111111111111111111111111";
 const checkout = "0x2222222222222222222222222222222222222222";
+const creatorMagic = "0x3333333333333333333333333333333333333333";
 
 describe("Base FAME gallery configuration", () => {
   it("uses canonical Base contracts and only a plain runtime marketplace address", () => {
-    const contracts = parseBaseGalleryContracts({
+    const contracts = {
+      creatorMagic,
       marketplace,
       checkout,
-    });
-    assert.ok(contracts);
+    } as const;
 
     const config = createBaseGalleryRuntime(contracts, { forkMode: false });
     assert.equal(config.chainId, 8_453);
     assert.deepEqual(config.addresses, {
       ...BASE_GALLERY_ADDRESSES,
+      creatorMagic,
       gallery: marketplace,
     });
     assert.equal(config.forkMode, false);
@@ -55,57 +56,12 @@ describe("Base FAME gallery configuration", () => {
     );
   });
 
-  it("rejects a missing or malformed marketplace address", () => {
-    assert.equal(
-      parseBaseGalleryContracts({
-        marketplace: undefined,
-        checkout,
-      }),
-      null,
-    );
-    assert.equal(
-      parseBaseGalleryContracts({
-        marketplace: "",
-        checkout,
-      }),
-      null,
-    );
-    assert.equal(
-      parseBaseGalleryContracts({
-        marketplace: "not-an-address",
-        checkout,
-      }),
-      null,
-    );
-  });
-
-  it("fails the alternative checkout closed without a valid checkout address", () => {
-    const missing = parseBaseGalleryContracts({
-      marketplace,
-      checkout: undefined,
-    });
-    const malformed = parseBaseGalleryContracts({
-      marketplace,
-      checkout: "not-an-address",
-    });
-    assert.ok(missing);
-    assert.ok(malformed);
-    assert.equal(
-      createBaseGalleryRuntime(missing, { forkMode: false }).checkout,
-      null,
-    );
-    assert.equal(
-      createBaseGalleryRuntime(malformed, { forkMode: false }).checkout,
-      null,
-    );
-  });
-
   it("keeps the deployed checkout enabled independently of fork mode", () => {
-    const contracts = parseBaseGalleryContracts({
+    const contracts = {
+      creatorMagic,
       marketplace,
       checkout,
-    });
-    assert.ok(contracts);
+    } as const;
     const production = createBaseGalleryRuntime(contracts, {
       forkMode: false,
     });
@@ -137,9 +93,8 @@ describe("Base FAME gallery configuration", () => {
       resolve(process.cwd(), "src/app/fame/market/page.tsx"),
       "utf8",
     );
-    assert.match(source, /baseUniversalMarketplaceAddress/);
-    assert.match(source, /baseFameCheckoutAddress/);
-    assert.match(source, /parseBaseGalleryContracts/);
+    assert.match(source, /baseFameV3Stack/);
+    assert.match(source, /createBaseGalleryRuntime\(baseFameV3Stack\(\)/);
     assert.doesNotMatch(source, /parseBaseGalleryForkContracts/);
     assert.doesNotMatch(source, /process\.env\.NEXT_PUBLIC_BASE_/);
     assert.match(source, /<GalleryView \/>/);
@@ -203,6 +158,10 @@ describe("Base FAME gallery configuration", () => {
       ["src/app/fame/market/stake/page.tsx", "GalleryStakeView"],
       ["src/app/fame/market/stake/deposit/page.tsx", "GalleryStakeDepositView"],
       ["src/app/fame/market/stake/unstake/page.tsx", "GalleryStakeUnstakeView"],
+      [
+        "src/app/fame/market/stake/legacy/page.tsx",
+        "LegacyPositionRecoveryGate",
+      ],
     ] as const;
     for (const [file, component] of routes) {
       const source = readFileSync(resolve(process.cwd(), file), "utf8");
@@ -218,6 +177,7 @@ describe("Base FAME gallery configuration", () => {
       "src/app/fame/market/stake/page.tsx",
       "src/app/fame/market/stake/deposit/page.tsx",
       "src/app/fame/market/stake/unstake/page.tsx",
+      "src/app/fame/market/stake/legacy/page.tsx",
     ]) {
       assert.equal(existsSync(resolve(process.cwd(), file)), true, file);
     }

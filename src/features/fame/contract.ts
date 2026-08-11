@@ -3,6 +3,7 @@ import {
   fameSaleTokenAddress as sepoliaFameSaleTokenAddress,
 } from "@/wagmi";
 import { base, sepolia } from "viem/chains";
+import type { Address } from "viem";
 
 export function fameSaleAddress(chainId: typeof sepolia.id | typeof base.id) {
   return chainId === 11155111
@@ -30,11 +31,31 @@ export function fameFromNetwork(chainId: typeof sepolia.id | typeof base.id) {
 export const baseCommunityMultiSigAddress =
   "0xC952C53D8B63919e372caa2E6FEe605ee24E4D3D" as const;
 
-export const baseUniversalMarketplaceAddress =
+export const baseLegacyUniversalMarketplaceAddress =
   "0x54e7E4F2d439Be599706f51068f7EB2ce2D2a27e" as const;
 
-export const baseFameCheckoutAddress =
-  "0x1905B4a633074243f3D9FDB59596fB7419adce2c" as const;
+export const baseCreatorArtistMagicV3Address =
+  "0x6754e4871775A781702f2Ab6e494754a562586ee" as const;
+
+export const baseUniversalMarketplaceV3Address =
+  "0x93222897902a5Fc2f20079d242c660117277930A" as const;
+
+export const baseFameMarketplaceCheckoutV3Address =
+  "0x50B9649Aa28D7d0B966B2A51092C5BcF37905a63" as const;
+
+export type BaseFameV3Stack = Readonly<{
+  creatorMagic: Address;
+  marketplace: Address;
+  checkout: Address;
+}>;
+
+export function baseFameV3Stack(): BaseFameV3Stack {
+  return {
+    creatorMagic: baseCreatorArtistMagicV3Address,
+    marketplace: baseUniversalMarketplaceV3Address,
+    checkout: baseFameMarketplaceCheckoutV3Address,
+  };
+}
 
 export function societyNftAuctionAddress(chainId: typeof base.id) {
   switch (chainId) {
@@ -70,7 +91,7 @@ export function govSocietyFromNetwork(
 export function creatorArtistMagicAddress(chainId: typeof base.id) {
   switch (chainId) {
     case base.id:
-      return "0xC8268c2aa571F3C88044C2959F73DdB8eB9e139F" as const;
+      return baseFameV3Stack().creatorMagic;
     default:
       throw new Error("Invalid chainId");
   }

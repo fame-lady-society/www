@@ -1,4 +1,12 @@
-export type CreatorMetadataUploadMode = "art" | "end" | "update";
+export const CREATOR_METADATA_UPLOAD_MODES = [
+  "art",
+  "end",
+  "release",
+  "update",
+] as const;
+
+export type CreatorMetadataUploadMode =
+  (typeof CREATOR_METADATA_UPLOAD_MODES)[number];
 
 export type CreatorPortalRoles = {
   isCreator: boolean;
@@ -12,12 +20,10 @@ const ROLE_CREATOR = 1n << 1n;
 const ROLE_BANISHER = 1n << 2n;
 const ROLE_ART_POOL_MANAGER = 1n << 3n;
 
-export const CREATOR_METADATA_UPLOAD_MODES = ["art", "end", "update"] as const;
-
 export function isCreatorMetadataUploadMode(
   mode: unknown,
 ): mode is CreatorMetadataUploadMode {
-  return mode === "art" || mode === "end" || mode === "update";
+  return CREATOR_METADATA_UPLOAD_MODES.some((candidate) => candidate === mode);
 }
 
 export function decodeCreatorPortalRoles(roles?: bigint): CreatorPortalRoles {
@@ -44,6 +50,8 @@ export function canUploadCreatorMetadata(
       return roles.isCreator || roles.isArtPoolManager;
     case "end":
       return roles.isCreator || roles.isBanisher;
+    case "release":
+      return roles.isCreator;
     case "update":
       return roles.isCreator;
   }

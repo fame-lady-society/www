@@ -5,7 +5,7 @@ import { client as baseClient } from "@/viem/base-client";
 import { creatorArtistMagicAbi, universalPoolArtMarketplaceAbi } from "@/wagmi";
 import { base } from "viem/chains";
 import {
-  baseUniversalMarketplaceAddress,
+  baseFameV3Stack,
   creatorArtistMagicAddress,
   fameFromNetwork,
 } from "@/features/fame/contract";
@@ -17,6 +17,7 @@ import {
   readFameArtworkRevisions,
   type FameArtworkRevisionClient,
 } from "@/features/fame/artworkRevisions";
+import { readFamePoolMembership } from "@/features/fame-gallery/catalog";
 
 /** Coherent block-pinned FIFO burn-pool ID snapshot (no metadata). */
 export type OrderedBurnPoolSnapshot = {
@@ -106,20 +107,21 @@ export async function clearOrderedBurnPoolDisplayCache(): Promise<void> {
 }
 
 export async function getArtPoolRange() {
+  const creatorMagic = baseFameV3Stack().creatorMagic;
   const [startIndex, endIndex, nextIndex] = await Promise.all([
     baseClient.readContract({
       abi: creatorArtistMagicAbi,
-      address: creatorArtistMagicAddress(base.id),
+      address: creatorMagic,
       functionName: "artPoolStartIndex",
     }),
     baseClient.readContract({
       abi: creatorArtistMagicAbi,
-      address: creatorArtistMagicAddress(base.id),
+      address: creatorMagic,
       functionName: "artPoolEndIndex",
     }),
     baseClient.readContract({
       abi: creatorArtistMagicAbi,
-      address: creatorArtistMagicAddress(base.id),
+      address: creatorMagic,
       functionName: "artPoolNext",
     }),
   ]);
@@ -134,11 +136,12 @@ export async function getFameArtworkRevisions(
   tokenIds: readonly number[],
   blockNumber?: string,
 ) {
+  const stack = baseFameV3Stack();
   const snapshot = await readFameArtworkRevisions(
     baseClient as unknown as FameArtworkRevisionClient,
-    creatorArtistMagicAddress(base.id),
+    stack.creatorMagic,
     creatorArtistMagicAbi,
-    baseUniversalMarketplaceAddress,
+    stack.marketplace,
     universalPoolArtMarketplaceAbi,
     tokenIds,
     blockNumber === undefined ? undefined : BigInt(blockNumber),
@@ -247,89 +250,50 @@ export async function getOrderedBurnPoolTokenIds(
 }
 
 export async function getFamePools() {
-  // Burn-pool side: share the focused ordered ID snapshot (display cache OK).
-  const { tokenIds: burnTokenIds } = await getOrderedBurnPoolTokenIds({
-    cache: "display",
-  });
-
-  // Mint-pool side still needs DN404 nextTokenId from full storage.
-  const { nextTokenId } = await getDN404Storage();
-
-  const uris = await Promise.all(
-    burnTokenIds.map((tokenId) =>
-      baseClient
-        .readContract({
-          abi: creatorArtistMagicAbi,
-          address: creatorArtistMagicAddress(base.id),
-          functionName: "tokenURI",
-          args: [BigInt(tokenId)],
-        })
-        .then((uri) => ({
-          uri,
-          tokenId,
-        })),
-    ),
-  );
-
-  const mintPoolEnd = await baseClient.readContract({
+  const creatorMagic = baseFameV3Stack().creatorMagic;
+  const snapshot = await readFamePoolMembership();
+  const { blockNumber } = snapshot;
+  const mintPoolStartPromise = baseClient.readContract({
     abi: creatorArtistMagicAbi,
-    address: creatorArtistMagicAddress(base.id),
-    functionName: "nextTokenId",
+    address: creatorMagic,
+    functionName: "getMintPoolStart",
+    blockNumber,
   });
 
-  const mintPoolUris = await Promise.all(
-    Array.from(
-      { length: Number(mintPoolEnd) - Number(nextTokenId) },
-      (_, i) => {
-        const tokenId = nextTokenId + BigInt(i);
-        return baseClient
-          .readContract({
-            abi: creatorArtistMagicAbi,
-            address: creatorArtistMagicAddress(base.id),
-            functionName: "tokenURI",
-            args: [tokenId],
-          })
-          .then((uri) => ({
-            uri,
-            tokenId: Number(tokenId),
-          }));
-      },
-    ),
+  const poolUris = await Promise.all(
+    snapshot.pools.map(async ({ tokenId, kind }) => ({
+      tokenId,
+      kind,
+      uri: await baseClient.readContract({
+        abi: creatorArtistMagicAbi,
+        address: creatorMagic,
+        functionName: "tokenURI",
+        args: [BigInt(tokenId)],
+        blockNumber,
+      }),
+    })),
   );
+  const artworks = await Promise.all(
+    poolUris.map(async ({ tokenId, kind, uri }) => {
+      try {
+        return { tokenId, kind, image: await fetchMetadataImage(uri) };
+      } catch (error) {
+        console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
+        return { tokenId, kind, image: FAME_METADATA_FALLBACK_IMAGE };
+      }
+    }),
+  );
+
+  const mintPoolStart = await mintPoolStartPromise;
 
   return {
-    burnPool: await Promise.all(
-      uris.map(async ({ uri, tokenId }) => {
-        try {
-          return {
-            tokenId,
-            image: await fetchMetadataImage(uri),
-          };
-        } catch (error) {
-          console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
-          return {
-            tokenId,
-            image: FAME_METADATA_FALLBACK_IMAGE,
-          };
-        }
-      }),
-    ),
-    mintPool: await Promise.all(
-      mintPoolUris.map(async ({ uri, tokenId }) => {
-        try {
-          return {
-            tokenId,
-            image: await fetchMetadataImage(uri),
-          };
-        } catch (error) {
-          console.warn(`Failed to fetch metadata for token ${tokenId}:`, error);
-          return {
-            tokenId,
-            image: FAME_METADATA_FALLBACK_IMAGE,
-          };
-        }
-      }),
-    ),
+    mintPoolStart: Number(mintPoolStart),
+    burnPool: artworks
+      .filter(({ kind }) => kind === "burn")
+      .map(({ tokenId, image }) => ({ tokenId, image })),
+    mintPool: artworks
+      .filter(({ kind }) => kind === "mint")
+      .map(({ tokenId, image }) => ({ tokenId, image })),
   };
 }
 

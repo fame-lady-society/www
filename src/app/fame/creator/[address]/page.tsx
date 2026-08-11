@@ -1,9 +1,35 @@
 import { AppMain } from "@/layouts/AppMain";
+import { Suspense } from "react";
 import { isAddress } from "viem";
 import { fetchBaseNftLadiesData } from "@/features/fameus/service/graphql";
-import { getArtPoolRange, getDN404Storage, getFamePools } from "@/service/fame";
+import { getArtPoolRange, getFamePools } from "@/service/fame";
 import { CreatorPortal } from "./CreatorPortal";
+import { ReleaseArtwork } from "./ReleaseArtwork";
 import { ChainSelector } from "../ChainSelector";
+
+async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
+  const [tokenIds, pools, artPoolRange] = await Promise.all([
+    fetchBaseNftLadiesData({ owner: address }),
+    getFamePools(),
+    getArtPoolRange(),
+  ]);
+  return (
+    <CreatorPortal
+      address={address}
+      tokenIds={tokenIds}
+      burnPool={pools.burnPool.map(({ tokenId, image }) => ({
+        tokenId: Number(tokenId),
+        uri: image,
+      }))}
+      nextArtPoolIndex={artPoolRange.nextIndex}
+      nextMintPoolIndex={pools.mintPoolStart}
+      mintPool={pools.mintPool.map(({ tokenId, image }) => ({
+        tokenId,
+        uri: image,
+      }))}
+    />
+  );
+}
 
 export default async function CreatorAddressPage(props: {
   params: Promise<{ address: string }>;
@@ -13,17 +39,7 @@ export default async function CreatorAddressPage(props: {
     throw new Error("Invalid address");
   }
 
-  // Fetch user's NFTs and pools data
-  const [tokenIds, dn404Storage, pools, artPoolRange] = await Promise.all([
-    fetchBaseNftLadiesData({ owner: params.address }),
-    getDN404Storage(),
-    getFamePools(),
-    getArtPoolRange(),
-  ]);
-
-  // Calculate mint pool start
-  const mintPoolStart =
-    dn404Storage.totalNFTSupply + BigInt(dn404Storage.burnPool.length);
+  const address = params.address as `0x${string}`;
 
   return (
     <AppMain
@@ -32,21 +48,18 @@ export default async function CreatorAddressPage(props: {
       isDao
       headerRight={<ChainSelector />}
     >
-      <CreatorPortal
-        address={params.address}
-        tokenIds={tokenIds}
-        burnPool={pools.burnPool.map(({ tokenId, image }) => ({
-          tokenId: Number(tokenId),
-          uri: image,
-        }))}
-        nextArtPoolIndex={artPoolRange.nextIndex}
-        nextMintPoolIndex={Number(mintPoolStart)}
-        // We can never agree on these names
-        mintPool={pools.mintPool.map(({ tokenId, image }) => ({
-          tokenId,
-          uri: image,
-        }))}
-      />
+      <div className="mx-auto w-full max-w-4xl px-4 pt-8">
+        <ReleaseArtwork address={address} />
+      </div>
+      <Suspense
+        fallback={
+          <p className="py-8 text-center" role="status">
+            Loading owned artwork tools…
+          </p>
+        }
+      >
+        <ExistingArtworkPortal address={address} />
+      </Suspense>
     </AppMain>
   );
 }

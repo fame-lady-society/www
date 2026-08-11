@@ -9,11 +9,7 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 import { client as baseClient } from "@/viem/base-client";
-import {
-  baseUniversalMarketplaceAddress,
-  creatorArtistMagicAddress,
-  societyFromNetwork,
-} from "@/features/fame/contract";
+import { baseFameV3Stack, societyFromNetwork } from "@/features/fame/contract";
 import {
   creatorArtistMagicAbi,
   fameMirrorAbi,
@@ -53,6 +49,16 @@ export type FameGalleryCatalogPage = {
   blockNumber: string;
   artworks: FameGalleryArtwork[];
   nextCursor: number | null;
+};
+
+export type FamePoolMembership = {
+  tokenId: number;
+  kind: "mint" | "burn";
+};
+
+export type FamePoolMembershipSnapshot = {
+  blockNumber: bigint;
+  pools: FamePoolMembership[];
 };
 
 export function serializeFameGalleryCatalog(
@@ -211,6 +217,86 @@ async function batchedReads(
   });
 }
 
+export async function readFamePoolMembership(
+  client: FameGalleryCatalogClient = productionClient,
+  requestedBlockNumber?: bigint,
+): Promise<FamePoolMembershipSnapshot> {
+  const blockNumber = requestedBlockNumber ?? (await client.getBlockNumber());
+  const creatorMagic = baseFameV3Stack().creatorMagic;
+  const boundaries = await client.multicall({
+    allowFailure: true,
+    blockNumber,
+    contracts: [
+      {
+        address: creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "nextTokenId",
+      },
+      {
+        address: creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "artPoolStartIndex",
+      },
+      {
+        address: creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "artPoolEndIndex",
+      },
+    ],
+  });
+  const nextTokenId = asSafeBigint(successfulResult(boundaries[0]));
+  const artPoolStart = asSafeBigint(successfulResult(boundaries[1]));
+  const artPoolEnd = asSafeBigint(successfulResult(boundaries[2]));
+  if (nextTokenId === null || artPoolStart === null || artPoolEnd === null) {
+    throw new Error("CreatorArtistMagic pool boundaries are unavailable.");
+  }
+
+  const tokenIds = candidateTokenIds(
+    nextTokenId,
+    artPoolStart,
+    artPoolEnd,
+    undefined,
+    FAME_COLLECTION_LAST_TOKEN_ID + 1,
+  ).ids;
+  const membership = await batchedReads(
+    client,
+    blockNumber,
+    tokenIds,
+    (tokenId) => [
+      {
+        address: creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "isTokenInMintPool",
+        args: [tokenId],
+      },
+      {
+        address: creatorMagic,
+        abi: creatorArtistMagicAbi,
+        functionName: "isTokenInBurnedPool",
+        args: [tokenId],
+      },
+    ],
+  );
+
+  const pools: FamePoolMembership[] = [];
+  for (const candidate of membership) {
+    const mint = successfulResult(candidate.results[0]);
+    const burn = successfulResult(candidate.results[1]);
+    if (
+      typeof mint !== "boolean" ||
+      typeof burn !== "boolean" ||
+      mint === burn
+    ) {
+      continue;
+    }
+    pools.push({
+      tokenId: Number(candidate.tokenId),
+      kind: mint ? "mint" : "burn",
+    });
+  }
+  return { blockNumber, pools };
+}
+
 type ChainReadyArtwork = {
   tokenId: bigint;
   kind: FameGalleryArtwork["kind"];
@@ -256,9 +342,10 @@ export async function readFameGalleryCatalog(
     throw new Error("Gallery page size is invalid.");
   }
   const blockNumber = options.blockNumber ?? (await client.getBlockNumber());
-  const creatorMagic = creatorArtistMagicAddress(base.id);
+  const stack = baseFameV3Stack();
+  const creatorMagic = stack.creatorMagic;
   const mirror = societyFromNetwork(base.id);
-  const marketplace = options.marketplace ?? baseUniversalMarketplaceAddress;
+  const marketplace = options.marketplace ?? stack.marketplace;
 
   const boundaries = await client.multicall({
     allowFailure: true,

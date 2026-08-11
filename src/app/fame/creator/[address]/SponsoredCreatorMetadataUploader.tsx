@@ -9,7 +9,7 @@ type SponsoredCreatorMetadataUploaderProps = {
   address: `0x${string}`;
   tokenId: number;
   mode: CreatorMetadataUploadMode;
-  onComplete: (metadataUri: string) => void;
+  onComplete: (result: SponsoredCreatorMetadataResult) => void;
 };
 
 type UploadState = "idle" | "uploading" | "done" | "error";
@@ -21,6 +21,39 @@ const SUPPORTED_IMAGE_TYPES = new Set([
   "image/png",
   "image/webp",
 ]);
+
+export type SponsoredCreatorMetadataResult = {
+  imageUri: string;
+  metadataUri: string;
+};
+
+type SponsoredCreatorMetadataInput = {
+  address: `0x${string}`;
+  tokenId: number;
+  mode: CreatorMetadataUploadMode;
+} & ({ image: File; imageUri?: never } | { image?: never; imageUri: string });
+
+export async function uploadSponsoredCreatorMetadata(
+  input: SponsoredCreatorMetadataInput,
+): Promise<SponsoredCreatorMetadataResult> {
+  const formData = new FormData();
+  formData.set("address", input.address);
+  formData.set("tokenId", String(input.tokenId));
+  formData.set("mode", input.mode);
+  if (input.image) formData.set("image", input.image);
+  if (input.imageUri) formData.set("imageUri", input.imageUri);
+
+  const response = await fetch("/api/fame/creator/metadata", {
+    method: "POST",
+    headers: withAuthHeaders(),
+    body: formData,
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Sponsored upload failed: ${response.status} ${text}`);
+  }
+  return (await response.json()) as SponsoredCreatorMetadataResult;
+}
 
 export function SponsoredCreatorMetadataUploader({
   address,
@@ -63,34 +96,17 @@ export function SponsoredCreatorMetadataUploader({
     setMetadataUri(null);
 
     try {
-      const formData = new FormData();
-      formData.set("address", address);
-      formData.set("tokenId", String(tokenId));
-      formData.set("mode", mode);
-      formData.set("image", file);
-
-      const response = await fetch("/api/fame/creator/metadata", {
-        method: "POST",
-        headers: withAuthHeaders(),
-        body: formData,
+      const data = await uploadSponsoredCreatorMetadata({
+        address,
+        tokenId,
+        mode,
+        image: file,
       });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(
-          `Sponsored upload failed: ${response.status} ${text}`,
-        );
-      }
-
-      const data = (await response.json()) as {
-        imageUri: string;
-        metadataUri: string;
-      };
 
       setImageUri(data.imageUri);
       setMetadataUri(data.metadataUri);
       setState("done");
-      onComplete(data.metadataUri);
+      onComplete(data);
     } catch (err) {
       setState("error");
       setError(err instanceof Error ? err.message : "Sponsored upload failed");

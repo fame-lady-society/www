@@ -212,7 +212,7 @@ export function MetadataSwap({
                         address={address}
                         tokenId={selectedTokenId}
                         mode="art"
-                        onComplete={(metadataUri) => {
+                        onComplete={({ metadataUri }) => {
                           setArtPoolUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}
@@ -250,7 +250,7 @@ export function MetadataSwap({
                         address={address}
                         tokenId={selectedTokenId}
                         mode="end"
-                        onComplete={(metadataUri) => {
+                        onComplete={({ metadataUri }) => {
                           setEndOfMintUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}
@@ -288,7 +288,7 @@ export function MetadataSwap({
                         address={address}
                         tokenId={selectedTokenId}
                         mode="update"
-                        onComplete={(metadataUri) => {
+                        onComplete={({ metadataUri }) => {
                           setUpdateMetadataUrl(metadataUri);
                           setShowUploaderFor(null);
                         }}

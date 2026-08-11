@@ -12,12 +12,14 @@ function makeRequest(opts: {
   tokenId?: string;
   mode?: string;
   image?: File | string;
+  imageUri?: string;
 }) {
   const formData = new FormData();
   if (opts.address !== undefined) formData.set("address", opts.address);
   if (opts.tokenId !== undefined) formData.set("tokenId", opts.tokenId);
   if (opts.mode !== undefined) formData.set("mode", opts.mode);
   if (opts.image !== undefined) formData.set("image", opts.image);
+  if (opts.imageUri !== undefined) formData.set("imageUri", opts.imageUri);
 
   return new NextRequest("http://localhost/api/fame/creator/metadata", {
     method: "POST",
@@ -124,6 +126,73 @@ describe("/api/fame/creator/metadata", () => {
     );
 
     assert.equal(response.status, 200);
+  });
+
+  it("allows only creators to sponsor newly released artwork", async () => {
+    const allowed = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId: "651",
+        mode: "release",
+        image: imageFile(),
+      }),
+      deps({ roles: 2n }),
+    );
+    const denied = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId: "651",
+        mode: "release",
+        image: imageFile(),
+      }),
+      deps({ roles: 4n }),
+    );
+    assert.equal(allowed.status, 200);
+    assert.equal(denied.status, 403);
+  });
+
+  it("regenerates release metadata from an exact existing Irys image URI", async () => {
+    const imageUri = `https://gateway.irys.xyz/${"a".repeat(43)}`;
+    const uploads: Array<{ content: Buffer; tags: unknown }> = [];
+    const response = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId: "652",
+        mode: "release",
+        imageUri,
+      }),
+      deps({ roles: 2n, uploads }),
+    );
+    assert.equal(response.status, 200);
+    assert.equal(uploads.length, 1);
+    assert.equal(
+      JSON.parse(uploads[0].content.toString("utf-8")).image,
+      imageUri,
+    );
+  });
+
+  it("rejects non-Irys image reuse and reuse outside release mode", async () => {
+    const imageUri = `https://example.com/${"a".repeat(43)}`;
+    const invalidHost = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId: "652",
+        mode: "release",
+        imageUri,
+      }),
+      deps({ roles: 2n }),
+    );
+    const invalidMode = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId: "652",
+        mode: "update",
+        imageUri: `https://gateway.irys.xyz/${"a".repeat(43)}`,
+      }),
+      deps({ roles: 2n }),
+    );
+    assert.equal(invalidHost.status, 400);
+    assert.equal(invalidMode.status, 400);
   });
 
   it("rejects wallets without the required mode role", async () => {

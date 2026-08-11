@@ -17,12 +17,7 @@ import {
   uploadToIrys,
 } from "@/service/irys_sponsored_upload";
 import { getBalance, readContract } from "viem/actions";
-import {
-  isAddress,
-  isAddressEqual,
-  keccak256,
-  type Address,
-} from "viem";
+import { isAddress, isAddressEqual, keccak256, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
 
@@ -60,6 +55,24 @@ function contentHash(bytes: Uint8Array | string) {
   return keccak256(
     typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes,
   ).slice(2);
+}
+
+export function isExactIrysGatewayUri(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "gateway.irys.xyz" &&
+      url.username === "" &&
+      url.password === "" &&
+      url.search === "" &&
+      url.hash === "" &&
+      /^\/[A-Za-z0-9_-]{43}$/.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function defaultGetMaxFundAmount() {
@@ -112,6 +125,7 @@ export async function handleCreatorMetadataUpload(
   const tokenIdRaw = formData.get("tokenId");
   const mode = formData.get("mode");
   const image = formData.get("image");
+  const existingImageUri = formData.get("imageUri");
 
   if (typeof address !== "string" || !isAddress(address)) {
     return jsonError("Invalid address", 400);
@@ -129,43 +143,64 @@ export async function handleCreatorMetadataUpload(
   if (!isCreatorMetadataUploadMode(mode)) {
     return jsonError("Invalid mode", 400);
   }
-  if (!(image instanceof File)) {
-    return jsonError("Missing image", 400);
-  }
-  if (!SUPPORTED_IMAGE_TYPES.has(image.type)) {
-    return jsonError("Unsupported image type", 400);
-  }
-  if (image.size <= 0 || image.size > MAX_IMAGE_BYTES) {
-    return jsonError("Invalid image size", 400);
-  }
-
   const roles = decodeCreatorPortalRoles(await deps.readRoles(address));
   if (!canUploadCreatorMetadata(roles, mode)) {
     return jsonError("Forbidden", 403);
   }
 
-  const imageBytes = new Uint8Array(await image.arrayBuffer());
-  const uploader = await deps.createUploader();
+  let imageUri: string | null = null;
+  let imageToUpload: File | null = null;
+  if (existingImageUri !== null) {
+    if (mode !== "release" || image instanceof File) {
+      return jsonError(
+        "Existing image URI is only valid for release recovery",
+        400,
+      );
+    }
+    if (!isExactIrysGatewayUri(existingImageUri)) {
+      return jsonError("Invalid image URI", 400);
+    }
+    imageUri = existingImageUri;
+  } else {
+    if (!(image instanceof File)) {
+      return jsonError("Missing image", 400);
+    }
+    if (!SUPPORTED_IMAGE_TYPES.has(image.type)) {
+      return jsonError("Unsupported image type", 400);
+    }
+    if (image.size <= 0 || image.size > MAX_IMAGE_BYTES) {
+      return jsonError("Invalid image size", 400);
+    }
+    imageToUpload = image;
+  }
 
-  await ensureIrysBalance({
-    uploader,
-    bytes: imageBytes.byteLength,
-    maxFundAmount: await deps.getMaxFundAmount(),
-    logContext: { address, tokenId, kind: "creator-image" },
-  });
-  const imageUri = await uploadToIrys({
-    uploader,
-    content: imageBytes,
-    tags: [
-      { name: "Content-Type", value: image.type },
-      { name: "Content-Length", value: String(imageBytes.byteLength) },
-      {
-        name: "Content-Disposition",
-        value: `attachment; filename="${sanitizeFilename(image.name)}"`,
-      },
-      { name: "Content-Hash", value: contentHash(imageBytes) },
-    ],
-  });
+  const uploader = await deps.createUploader();
+  if (imageToUpload) {
+    const imageBytes = new Uint8Array(await imageToUpload.arrayBuffer());
+    await ensureIrysBalance({
+      uploader,
+      bytes: imageBytes.byteLength,
+      maxFundAmount: await deps.getMaxFundAmount(),
+      logContext: { address, tokenId, kind: "creator-image" },
+    });
+    imageUri = await uploadToIrys({
+      uploader,
+      content: imageBytes,
+      tags: [
+        { name: "Content-Type", value: imageToUpload.type },
+        { name: "Content-Length", value: String(imageBytes.byteLength) },
+        {
+          name: "Content-Disposition",
+          value: `attachment; filename="${sanitizeFilename(imageToUpload.name)}"`,
+        },
+        { name: "Content-Hash", value: contentHash(imageBytes) },
+      ],
+    });
+  }
+
+  if (!imageUri) {
+    throw new Error("Creator image upload did not return a URI.");
+  }
 
   const metadataContent = createCreatorMetadataJson(tokenId, imageUri);
   const metadataBytes = contentLength(metadataContent);

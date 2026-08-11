@@ -9,7 +9,9 @@ import Typography from "@mui/material/Typography";
 import { ConnectKitButton } from "connectkit";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePublicClient } from "wagmi";
+import { isAddressEqual } from "viem";
 import { LinkButton } from "@/components/LinkButton";
+import { baseLegacyUniversalMarketplaceAddress } from "@/features/fame/contract";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import { formatTestAmountRoundedToUnit } from "../format";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
@@ -317,8 +319,13 @@ export function GalleryStakeUnstakeContent({
   );
 }
 
-export function GalleryStakeUnstakeView() {
+export function GalleryStakeUnstakeView({
+  marketplaceKind = "active",
+}: {
+  marketplaceKind?: "active" | "legacy";
+}) {
   const runtime = useGalleryRuntime();
+  const legacy = marketplaceKind === "legacy";
   const publicClient = usePublicClient({ chainId: runtime.chainId });
   const global = useGalleryGlobalState();
   const position = useGalleryLiquidityPosition(global.blockNumber);
@@ -519,6 +526,16 @@ export function GalleryStakeUnstakeView() {
       : null;
   const terminal = isGalleryLiquidityActionTerminal(transaction.state);
 
+  if (
+    legacy &&
+    !isAddressEqual(
+      runtime.addresses.gallery,
+      baseLegacyUniversalMarketplaceAddress,
+    )
+  ) {
+    throw new Error("Legacy withdrawal must target the retired marketplace.");
+  }
+
   return (
     <Container
       maxWidth="lg"
@@ -527,13 +544,16 @@ export function GalleryStakeUnstakeView() {
       <Stack spacing={{ xs: 3, sm: 4 }} sx={{ minWidth: 0 }}>
         <div>
           <LinkButton href="/fame/market/stake" variant="text">
-            ← Liquidity overview
+            ← {legacy ? "Active marketplace liquidity" : "Liquidity overview"}
           </LinkButton>
           <Typography component="h1" variant="h3" sx={{ mt: 1 }}>
-            Withdraw marketplace liquidity
+            {legacy
+              ? "Withdraw legacy marketplace liquidity"
+              : "Withdraw marketplace liquidity"}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-            Choose one Society currently held by the marketplace and submit the
+            Choose one Society currently held by the{" "}
+            {legacy ? "retired" : "active"} marketplace and submit the
             provider-specific withdrawal premium as your consent ceiling.
           </Typography>
           <Button

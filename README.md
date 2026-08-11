@@ -51,3 +51,13 @@ yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## FAME Mint/Burn pool authority
+
+The gallery and creator tools treat `CreatorArtistMagic` as the authority for Mint Pool and Burn Pool membership. Use `isTokenInMintPool`, `isTokenInBurnedPool`, and `getMintPoolStart`; do not hard-code or reconstruct a historical frontier such as `592` in the web app.
+
+The contract intentionally preserves V2's best-effort live-supply classifier. Its boundary advances when fresh sequential Society IDs mint, but it may move backward after burns because deployed FAME exposes live `totalNFTSupply()`, not DN404's private historical next-ID frontier. Reads used for one view or transaction should be pinned to a consistent block, and the UI must not describe the inferred split as exact mint history.
+
+## FAME contract address authority
+
+Production FAME contract addresses are pinned in `src/features/fame/contract.ts`. The V3 stack must be changed there as one unit; do not inject creator, marketplace, or checkout addresses through environment variables. The currently pinned V3 stack is the next-address prediction from the reviewed no-broadcast Base deployment dry run and must be reconciled against the live deployment receipts before release.

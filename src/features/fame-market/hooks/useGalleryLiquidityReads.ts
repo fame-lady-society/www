@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useConnection, usePublicClient } from "wagmi";
+import type { Address } from "viem";
 import { useGalleryRuntime } from "../config/galleryRuntime";
 import {
   readLiquidityInventory,
@@ -23,7 +24,10 @@ function liquidityQueryOptions() {
   } as const;
 }
 
-export function useGalleryLiquidityPosition(blockNumber: bigint | null) {
+export function useGalleryLiquidityPosition(
+  blockNumber: bigint | null,
+  marketplace?: Address,
+) {
   const runtime = useGalleryRuntime();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: runtime.chainId });
@@ -32,12 +36,13 @@ export function useGalleryLiquidityPosition(blockNumber: bigint | null) {
     | GalleryLiquidityReadClient
     | undefined;
   const enabled = Boolean(client && account && blockNumber !== null);
+  const targetMarketplace = marketplace ?? runtime.addresses.gallery;
   const query = useQuery({
     queryKey: [
       "gallery-liquidity",
       "position",
       runtime.chainId,
-      runtime.addresses.gallery.toLowerCase(),
+      targetMarketplace.toLowerCase(),
       account?.toLowerCase() ?? null,
       blockNumber?.toString() ?? null,
     ],
@@ -50,7 +55,10 @@ export function useGalleryLiquidityPosition(blockNumber: bigint | null) {
         client,
         blockNumber,
         account,
-        galleryReadAddresses(runtime.addresses),
+        galleryReadAddresses({
+          ...runtime.addresses,
+          gallery: targetMarketplace,
+        }),
       );
     },
     ...liquidityQueryOptions(),
@@ -65,7 +73,12 @@ export function useGalleryLiquidityPosition(blockNumber: bigint | null) {
             blockNumber,
             message: "Provider position is unavailable.",
           };
-  return { projection, refresh: query.refetch, account };
+  return {
+    projection,
+    refresh: query.refetch,
+    account,
+    marketplace: targetMarketplace,
+  };
 }
 
 export function useGalleryOwnedSociety(blockNumber: bigint | null) {

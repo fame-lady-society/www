@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Address, Hash } from "viem";
-import { creatorArtistMagicAddress } from "@/features/fame/contract";
+import {
+  baseCreatorArtistMagicV3Address,
+  creatorArtistMagicAddress,
+} from "@/features/fame/contract";
 import { loadFameMetadata } from "@/features/fame/metadata";
 import { base } from "viem/chains";
 import {
   readFameGalleryCatalog,
+  readFamePoolMembership,
   type FameGalleryCatalogClient,
 } from "./catalog";
 
@@ -60,6 +64,46 @@ function client(
 }
 
 describe("FAME gallery catalog", () => {
+  it("provides a block-pinned contract-authoritative pool snapshot without hydration", async () => {
+    const { mock, calls } = client((functionName, tokenId) => {
+      switch (functionName) {
+        case "nextTokenId":
+          return 6n;
+        case "artPoolStartIndex":
+          return 3n;
+        case "artPoolEndIndex":
+          return 4n;
+        case "isTokenInMintPool":
+          return tokenId === 1n;
+        case "isTokenInBurnedPool":
+          return tokenId === 2n;
+        default:
+          throw new Error(`Unexpected ${functionName}`);
+      }
+    });
+
+    const result = await readFamePoolMembership(mock, 456n);
+
+    assert.deepEqual(result, {
+      blockNumber: 456n,
+      pools: [
+        { tokenId: 1, kind: "mint" },
+        { tokenId: 2, kind: "burn" },
+      ],
+    });
+    assert.ok(calls.every(({ blockNumber }) => blockNumber === 456n));
+    assert.ok(
+      calls
+        .flatMap(({ tokenIds }) => tokenIds)
+        .every((tokenId) => tokenId !== 3n && tokenId !== 4n && tokenId < 6n),
+    );
+    assert.ok(
+      calls
+        .flatMap(({ functionNames }) => functionNames)
+        .every((name) => name !== "tokenURI" && name !== "ownerAt"),
+    );
+  });
+
   it("uses the canonical CreatorArtistMagic, stops at nextTokenId, and excludes Art Pool before all token reads", async () => {
     const { mock, calls } = client((functionName, tokenId) => {
       switch (functionName) {
@@ -142,7 +186,7 @@ describe("FAME gallery catalog", () => {
     );
     assert.equal(
       creatorArtistMagicAddress(base.id),
-      "0xC8268c2aa571F3C88044C2959F73DdB8eB9e139F",
+      baseCreatorArtistMagicV3Address,
     );
     assert.equal(
       calls.filter(({ functionNames }) => functionNames.includes("nextTokenId"))
@@ -237,6 +281,42 @@ describe("FAME gallery catalog", () => {
     assert.deepEqual(
       result.artworks.map(({ tokenId }) => tokenId),
       [1, 2],
+    );
+  });
+
+  it("discovers artwork released at the former end of the mint pool", async () => {
+    const { mock } = client((functionName, tokenId) => {
+      switch (functionName) {
+        case "nextTokenId":
+          return 652;
+        case "artPoolStartIndex":
+          return 266;
+        case "artPoolEndIndex":
+          return 419;
+        case "isTokenInMintPool":
+          return tokenId === 651n;
+        case "isTokenInBurnedPool":
+          return false;
+        case "ownerAt":
+          return "0x0000000000000000000000000000000000000000";
+        case "artworkHash":
+          return artworkHash;
+        case "tokenURI":
+          return metadataUri(tokenId!);
+        default:
+          throw new Error(`Unexpected ${functionName}`);
+      }
+    });
+
+    const result = await readFameGalleryCatalog(mock, {
+      marketplace,
+      cursor: 651,
+      pageSize: 1,
+      resolveMetadata,
+    });
+    assert.deepEqual(
+      result.artworks.map(({ tokenId, kind }) => ({ tokenId, kind })),
+      [{ tokenId: 651, kind: "mint" }],
     );
   });
 

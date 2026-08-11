@@ -13,6 +13,7 @@ import {
   GalleryLiquidityEducationCard,
   GalleryProviderPositionCard,
 } from "./GalleryLiquidityOverview";
+import { LegacyPositionRecoveryLink } from "./LegacyPositionRecovery";
 
 export function GalleryStakeView() {
   const global = useGalleryGlobalState();
@@ -58,6 +59,7 @@ export function GalleryStakeView() {
           position={position.projection}
           walletControl={<ConnectKitButton />}
         />
+        <LegacyPositionRecoveryLink blockNumber={global.blockNumber} />
       </Stack>
     </Container>
   );
