@@ -8,7 +8,7 @@ export default function UploadPage() {
   const [lastTx, setLastTx] = useState<string | null>(null);
 
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider>
       <div className="max-w-3xl mx-auto p-6">
         <h1 className="text-2xl font-semibold mb-4">
           Upload to Arweave (via Irys)

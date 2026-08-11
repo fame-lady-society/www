@@ -45,12 +45,13 @@ This is `fls`, a Next.js 14 / React 18 web app for Fame Lady Society — NFT wra
 - Use viem v2 for low-level blockchain operations, encoding, and decoding.
 - ethers v5 (`@ethersproject/providers`) exists for legacy code only — prefer wagmi/viem for new code.
 - Contract addresses and ABIs are configured in `wagmi.config.ts`; generated hooks live in `src/wagmi/index.ts`.
-- Supported chains: Ethereum mainnet, Base, Sepolia.
+- Supported chains: Ethereum mainnet, Base, Polygon, Sepolia, Base Sepolia, and Polygon Amoy.
 
 ## Authentication
 
-- next-auth with SIWE (Sign-In with Ethereum) via `connectkit-next-siwe`.
-- Session management uses `SESSION_SECRET` from environment.
+- Wallet connection uses Reown AppKit with the Wagmi adapter. Initialize it once outside React renders.
+- Route-scoped SIWE is app-owned through `/siwe` and uses an HTTP-only seven-day cookie; browser bearer tokens are not used.
+- `SESSION_SECRET` is required for both session and nonce signing. Stateless nonce cookies prevent normal replay, but strict atomic replay prevention would require shared storage.
 
 ## Deprecated — Do Not Use
 

@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
-import { withAuthHeaders } from "@/utils/authToken";
 
 export function useUpdateMetadata(network: "mainnet" | "sepolia" = "mainnet") {
   return useMutation({
@@ -23,7 +22,6 @@ export function useUpdateMetadata(network: "mainnet" | "sepolia" = "mainnet") {
         `/api/${network}/metadata?${q.toString()}`,
         {
           method: "GET",
-          headers: withAuthHeaders(),
         },
       );
       if (!getResponse.ok) {
@@ -40,7 +38,7 @@ export function useUpdateMetadata(network: "mainnet" | "sepolia" = "mainnet") {
       // Step 2: POST to upload metadata to Irys and get final signature
       const postResponse = await fetch(`/api/${network}/metadata`, {
         method: "POST",
-        headers: withAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tokenId,
           name,

@@ -136,7 +136,7 @@ export function FameShell({
   activeFamePage?: FameNavigationPage;
 }>) {
   return (
-    <DefaultProvider base fame>
+    <DefaultProvider fame>
       <FameMain title={title} activeFamePage={activeFamePage}>
         {children}
       </FameMain>

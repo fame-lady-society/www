@@ -46,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <DefaultProvider base sepolia>
+    <DefaultProvider>
       {children}
     </DefaultProvider>
   );

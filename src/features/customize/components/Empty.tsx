@@ -6,22 +6,22 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { useAccount } from "@/hooks/useAccount";
-import { ConnectKitButton, useSIWE } from "connectkit";
+import { WalletConnectControl } from "@/components/WalletConnectControl";
 
 const NotConnected: FC<{}> = () => {
   return (
-    <ConnectKitButton.Custom>
-      {({ show }) => {
+    <WalletConnectControl>
+      {({ open }) => {
         return (
           <button
             className="rounded-lg border border-gray-200 p-4 text-center mx-auto block"
-            onClick={show}
+            onClick={open}
           >
             Connect your wallet to see your Fame Ladies
           </button>
         );
       }}
-    </ConnectKitButton.Custom>
+    </WalletConnectControl>
   );
 };
 

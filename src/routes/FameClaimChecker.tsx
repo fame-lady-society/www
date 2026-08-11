@@ -10,7 +10,7 @@ import { AdjustableChecker } from "@/features/claim-to-fame/components/Adjustabl
 
 const NextPage: FC<{}> = () => {
   return (
-    <DefaultProvider mainnet polygon>
+    <DefaultProvider>
       <Main
         title={
           <Typography variant="h5" component="h1" marginLeft={2}>

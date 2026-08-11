@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import { useState, type ReactNode } from "react";
 import { base } from "viem/chains";
 import { useBalance, useSwitchChain } from "wagmi";
@@ -115,7 +115,7 @@ function SocietyNftAuctionExperience() {
   let walletControl: ReactNode = undefined;
   switch (execution.environment.status) {
     case "disconnected":
-      walletControl = <ConnectKitButton />;
+      walletControl = <WalletConnectButton />;
       break;
     case "wrong_chain":
       walletControl = (
@@ -273,7 +273,7 @@ function SocietyNftAuctionExperience() {
 
 export function SocietyNftAuctionPage() {
   return (
-    <DefaultProvider base>
+    <DefaultProvider>
       <Main
         menu={
           <MenuList dense disablePadding>

@@ -1,15 +1,18 @@
 "use client";
 
-import { ConnectKitButton, useSIWE } from "connectkit";
+import { WalletConnectControl } from "@/components/WalletConnectControl";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useEffect, useState } from "react";
 import { useAccount } from "@/hooks/useAccount";
 
 export function ConnectCard() {
-  const { isSignedIn, signIn } = useSIWE();
-
   const [hasRendered, setHasRendered] = useState(false);
-  const { isConnected, isConnecting: accountConnecting } = useAccount();
+  const {
+    isConnected,
+    isConnecting: accountConnecting,
+    isSignedIn,
+    signIn,
+  } = useAccount();
 
   useEffect(() => {
     setHasRendered(true);
@@ -27,8 +30,8 @@ export function ConnectCard() {
 
   if (!isConnected) {
     return (
-      <ConnectKitButton.Custom>
-        {({ show, isConnecting }) => {
+      <WalletConnectControl>
+        {({ open, isConnecting }) => {
           return (
             <>
               {!isConnecting && (
@@ -42,7 +45,7 @@ export function ConnectCard() {
                         Connect your wallet to access the token gated content
                       </p>
                       <button
-                        onClick={show}
+                        onClick={open}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                       >
                         CONNECT
@@ -55,7 +58,7 @@ export function ConnectCard() {
             </>
           );
         }}
-      </ConnectKitButton.Custom>
+      </WalletConnectControl>
     );
   }
 
@@ -68,7 +71,7 @@ export function ConnectCard() {
             Please sign in with your Ethereum wallet to access the content
           </p>
           <button
-            onClick={() => signIn?.()}
+            onClick={() => void signIn()}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             SIGN IN WITH ETHEREUM

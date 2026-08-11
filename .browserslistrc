@@ -1,6 +1,6 @@
-> 0.5%
-last 2 versions
-Firefox ESR
-not dead
-safari >= 10
-ios_saf >= 10 
+chrome >= 111
+and_chr >= 111
+edge >= 111
+firefox >= 111
+safari >= 16.4
+ios_saf >= 16.4

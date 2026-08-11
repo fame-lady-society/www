@@ -44,7 +44,7 @@ const Content: FC<{}> = () => {
 
 const HomePage: NextPage<{}> = () => {
   return (
-    <DefaultProvider mainnet base>
+    <DefaultProvider>
       <Content />
       <RedirectDuringMint />
     </DefaultProvider>

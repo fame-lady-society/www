@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "@/hooks/useAccount";
-import { withAuthHeaders } from "@/utils/authToken";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useSiweSession } from "@/context/SiweSession";
 import { readOwnedTokenIds } from "@/utils/ownedTokens";
 import { baseSepolia, mainnet, sepolia } from "viem/chains";
 
@@ -26,21 +25,16 @@ export function useLadies({
   chainId: typeof mainnet.id | typeof sepolia.id | typeof baseSepolia.id;
 }) {
   const { address } = useAccount();
-  const authSession = useAuthSession();
+  const { isSignedIn, session } = useSiweSession();
   const query = useQuery({
-    queryKey: ["ladies", chainId, address, authSession?.token],
+    queryKey: ["ladies", chainId, address, session?.expiresAt],
     queryFn: async () => {
       if (!address) return [];
-      const response = await fetch(`/api/${chainIdToChainName(chainId)}/owned`, {
-        headers: withAuthHeaders(
-          undefined,
-          authSession?.token ? authSession : null,
-        ),
-      });
+      const response = await fetch(`/api/${chainIdToChainName(chainId)}/owned`);
 
       return readOwnedTokenIds(response);
     },
-    enabled: !!address && !!authSession?.token,
+    enabled: !!address && isSignedIn,
   });
 
   return query;

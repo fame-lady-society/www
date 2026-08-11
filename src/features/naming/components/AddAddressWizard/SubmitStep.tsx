@@ -14,7 +14,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useWaitForTransactionReceipt, useSwitchChain, useDisconnect, useWriteContract } from "wagmi";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectControl } from "@/components/WalletConnectControl";
 import { useAccount } from "@/hooks/useAccount";
 import { flsNamingAbi, flsNamingAddress } from "@/wagmi";
 import { useAddressVerificationSession } from "../../hooks/useAddressVerificationSession";
@@ -51,9 +51,9 @@ const ConnectActionButton: FC<ConnectActionProps> = ({
   }, [autoOpen, onAutoOpenHandled]);
 
   return (
-    <ConnectKitButton.Custom>
-      {({ show }) => {
-        showRef.current = show;
+    <WalletConnectControl>
+      {({ open }) => {
+        showRef.current = open;
 
         if (!isConnected) {
           return (
@@ -71,7 +71,7 @@ const ConnectActionButton: FC<ConnectActionProps> = ({
           </Button>
         );
       }}
-    </ConnectKitButton.Custom>
+    </WalletConnectControl>
   );
 };
 

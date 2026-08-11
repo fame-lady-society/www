@@ -11,7 +11,7 @@ import { Menu as MenuIcon } from "@mui/icons-material";
 import { HomeMenu } from "./HomeMenu";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import theme from "@/theme";
-import { ConnectKitButton } from "connectkit";
+import { AppKitButton } from "@reown/appkit/react";
 
 export const AppBar: FC<{
   menu?: ReactNode;
@@ -49,7 +49,7 @@ export const AppBar: FC<{
           {right}
           <Box ml={2} component="span" />
           {disableConnect ? null : (
-            <ConnectKitButton showAvatar={!tinyScreen} />
+            <AppKitButton balance="hide" size={tinyScreen ? "sm" : "md"} />
           )}
         </Toolbar>
       </MuiAppBar>

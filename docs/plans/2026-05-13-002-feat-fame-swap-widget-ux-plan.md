@@ -38,7 +38,7 @@ The target user is a Fame Lady Society holder or buyer who is comfortable connec
 ## Scope Boundaries
 
 - Do not build a new router solver, live route ranking, price impact engine, or arbitrary non-FAME pair support.
-- Do not replace ConnectKit, wagmi, viem, MUI, or the existing `src/features/fame-swap` feature boundary.
+- Do not replace Reown AppKit, wagmi, viem, MUI, or the existing `src/features/fame-swap` feature boundary.
 - Do not expose reusable raw calldata in production diagnostics.
 - Do not infer route strength or split share when current route data does not support it.
 - Do not require automatic post-approval swap submission in this pass; a guided explicit second step is acceptable and safer.

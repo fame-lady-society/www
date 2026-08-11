@@ -7,7 +7,6 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useSIWE } from "connectkit";
 import { useAccount } from "@/hooks/useAccount";
 
 import { funknloveAddressForChain } from "../../contracts";
@@ -23,8 +22,7 @@ const M4A_DOWNLOAD_URL =
   "https://gateway.irys.xyz/XDg0FN6HM4H76wvCqBi_wUK0r8ZLm1GHorZHK0ouiL0";
 
 const DownloadCard: FC = () => {
-  const { isSignedIn } = useSIWE();
-  const { address } = useAccount();
+  const { address, isSignedIn } = useAccount();
   const { data, isLoading } = useReadContracts({
     contracts: [
       {

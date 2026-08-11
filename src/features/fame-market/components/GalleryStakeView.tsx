@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import { LinkButton } from "@/components/LinkButton";
 import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryLiquidityPosition } from "../hooks/useGalleryLiquidityReads";
@@ -56,7 +56,7 @@ export function GalleryStakeView() {
         <GalleryProviderPositionCard
           global={globalState}
           position={position.projection}
-          walletControl={<ConnectKitButton />}
+          walletControl={<WalletConnectButton />}
         />
       </Stack>
     </Container>

@@ -6,7 +6,7 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ConnectKitButton } from "connectkit";
+import { WalletConnectButton } from "@/components/WalletConnectControl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { LinkButton } from "@/components/LinkButton";
 import { formatTestAmount } from "../format";
@@ -325,7 +325,7 @@ export function GalleryStakeDepositView() {
           providerUnitCount={providerUnitCount}
           operatorApproved={transaction.operatorApproved}
           busy={transaction.busy}
-          walletControl={<ConnectKitButton />}
+          walletControl={<WalletConnectButton />}
           onToggle={toggle}
           onDeposit={() =>
             transaction.submit({ kind: "deposit", tokenIds: selectedIds })

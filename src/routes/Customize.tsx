@@ -8,29 +8,30 @@ import { Main } from "@/layouts/Main";
 import { SiteMenu } from "@/features/appbar/components/SiteMenu";
 import { LinksMenuItems } from "@/features/appbar/components/LinksMenuItems";
 import { SelectPage } from "@/features/customize/SelectPage";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useMemo } from "react";
 import { useAccount } from "@/hooks/useAccount";
-import { UnsupportedNetwork } from "@/features/wrap/UnsupportedNetwork";
-import { useRouter } from "next/navigation";
 import { useLadies } from "@/features/customize/hooks/useLadies";
-import { mainnet, sepolia } from "viem/chains";
+import { SwitchToChainBanner } from "@/components/SwitchToChainBanner";
+import {
+  resolveCustomizeNetworkPolicy,
+  type CustomizeNetwork,
+} from "@/features/customize/networkPolicy";
 
-const Content: FC<{ network: "mainnet" | "sepolia"; prefix?: string }> = ({
+export const CustomizeContent: FC<{
+  network: CustomizeNetwork;
+  prefix?: string;
+}> = ({
   prefix = "",
   network,
 }) => {
-  const { replace } = useRouter();
-  const { chain } = useAccount();
-
-  useEffect(() => {
-    if (chain && chain?.name.toLowerCase() !== network) {
-      const name = chain.id === 1 ? "mainnet" : chain.name.toLowerCase();
-      replace(`/${name}/customize`);
-    }
-  }, [chain, replace, network]);
+  const { chainId: connectedChainId } = useAccount();
+  const { targetChainId, shouldOfferSwitch } = resolveCustomizeNetworkPolicy(
+    network,
+    connectedChainId,
+  );
 
   const { isLoading, data } = useLadies({
-    chainId: (chain?.id ?? 1) as typeof mainnet.id | typeof sepolia.id,
+    chainId: targetChainId,
   });
   const tokens = useMemo(
     () =>
@@ -38,18 +39,19 @@ const Content: FC<{ network: "mainnet" | "sepolia"; prefix?: string }> = ({
     [data, prefix],
   );
 
-  if (chain && ![1, 11155111].includes(chain?.id)) {
-    return <UnsupportedNetwork />;
-  }
   return (
     <Container maxWidth="lg" sx={{ py: 2, mt: 8 }}>
-      <SelectPage isLoading={isLoading} tokens={tokens ?? []} />
+      {shouldOfferSwitch ? (
+        <SwitchToChainBanner chainId={targetChainId} />
+      ) : (
+        <SelectPage isLoading={isLoading} tokens={tokens} />
+      )}
     </Container>
   );
 };
 
 const Customize: NextPage<{
-  network: "mainnet" | "sepolia";
+  network: CustomizeNetwork;
   prefix?: string;
 }> = ({ network, prefix }) => {
   return (
@@ -69,7 +71,7 @@ const Customize: NextPage<{
           </Typography>
         }
       >
-        <Content prefix={prefix} network={network} />
+        <CustomizeContent prefix={prefix} network={network} />
       </Main>
     </DefaultProvider>
   );

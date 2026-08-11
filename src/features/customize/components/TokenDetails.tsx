@@ -1,6 +1,6 @@
-import React, { FC, useCallback, useMemo, useRef, useState } from "react";
+import React, { FC, useCallback, useMemo, useState } from "react";
 import * as sentry from "@sentry/nextjs";
-import { useSIWE } from "connectkit";
+import { useSiweSession } from "@/context/SiweSession";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Image from "next/image";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -32,35 +32,16 @@ const EditableNameAndDescription: FC<{
   onSubmit: (name: string, description: string) => void;
   isPending: boolean;
 }> = ({ initialName, initialDescription, onSubmit, isPending }) => {
-  const wantToUpdate = useRef(false);
-  const { addNotification } = useNotifications();
   const [name, setName] = useState(initialName);
-  const { isLoading, isSignedIn, signIn } = useSIWE({
-    onSignIn: () => {
-      if (wantToUpdate.current) {
-        onSubmit(name, initialDescription);
-        wantToUpdate.current = false;
-      }
-    },
-    onSignOut: () => {
-      if (wantToUpdate) {
-        wantToUpdate.current = false;
-        addNotification({
-          id: "sign-out",
-          message: "You need to sign in with ethereum to update the token",
-          type: "info",
-        });
-      }
-    },
-  });
+  const { status, isSignedIn, signIn } = useSiweSession();
+  const isLoading = status === "checking" || status === "signing";
   const [description, setDescription] = useState(initialDescription);
-  const doSubmit = useCallback(() => {
+  const doSubmit = useCallback(async () => {
     if (!isSignedIn) {
-      wantToUpdate.current = true;
-      setTimeout(() => signIn());
-    } else {
-      onSubmit(name, description);
+      const signedIn = await signIn();
+      if (!signedIn) return;
     }
+    onSubmit(name, description);
   }, [isSignedIn, signIn, onSubmit, name, description]);
   return (
     <Paper elevation={3} sx={{ p: 2 }}>
