@@ -1,3 +1,5 @@
+import { getAddress, isAddress, keccak256 } from "viem";
+
 export const CREATOR_METADATA_UPLOAD_MODES = [
   "art",
   "end",
@@ -7,6 +9,131 @@ export const CREATOR_METADATA_UPLOAD_MODES = [
 
 export type CreatorMetadataUploadMode =
   (typeof CREATOR_METADATA_UPLOAD_MODES)[number];
+
+export const MAX_CREATOR_IMAGE_BYTES = 12 * 1024 * 1024;
+export const CREATOR_IMAGE_TYPES = [
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export type CreatorImageType = (typeof CREATOR_IMAGE_TYPES)[number];
+export const CREATOR_UPLOAD_APPLICATION_ID = "fame-creator-metadata-v2";
+
+export const CREATOR_UPLOAD_TAGS = {
+  application: "App-Name",
+  operation: "Fame-Creator-Operation",
+  creator: "Fame-Creator-Address",
+  token: "Fame-Creator-Token",
+  mode: "Fame-Creator-Mode",
+  purpose: "Fame-Creator-Purpose",
+  contentHash: "Content-Hash",
+  contentLength: "Content-Length",
+  contentType: "Content-Type",
+} as const;
+
+export type CreatorUploadTag = {
+  name: string;
+  value: string;
+};
+
+export type CreatorImageDescriptor = {
+  type: string;
+  size: number;
+};
+
+export function isSupportedCreatorImageType(
+  type: unknown,
+): type is CreatorImageType {
+  return (
+    typeof type === "string" &&
+    (CREATOR_IMAGE_TYPES as readonly string[]).includes(type)
+  );
+}
+
+export function validateCreatorImageDescriptor(
+  descriptor: CreatorImageDescriptor,
+): string | null {
+  if (!isSupportedCreatorImageType(descriptor.type)) {
+    return "Unsupported image type";
+  }
+  if (!Number.isSafeInteger(descriptor.size) || descriptor.size <= 0) {
+    return "Invalid image size";
+  }
+  if (descriptor.size > MAX_CREATOR_IMAGE_BYTES) {
+    return "Image exceeds the 12 MB limit";
+  }
+  return null;
+}
+
+export function normalizeCreatorAddress(value: string): `0x${string}` {
+  if (!isAddress(value)) throw new Error("Invalid creator address");
+  return getAddress(value) as `0x${string}`;
+}
+
+export function creatorContentHash(bytes: Uint8Array): string {
+  return keccak256(bytes).slice(2).toLowerCase();
+}
+
+export function creatorImageTags(input: {
+  operationId: string;
+  creatorAddress: string;
+  tokenId: number;
+  mode: CreatorMetadataUploadMode;
+  type: CreatorImageType;
+  size: number;
+  contentHash: string;
+}): CreatorUploadTag[] {
+  return [
+    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
+    {
+      name: CREATOR_UPLOAD_TAGS.creator,
+      value: normalizeCreatorAddress(input.creatorAddress).toLowerCase(),
+    },
+    { name: CREATOR_UPLOAD_TAGS.token, value: String(input.tokenId) },
+    { name: CREATOR_UPLOAD_TAGS.mode, value: input.mode },
+    { name: CREATOR_UPLOAD_TAGS.purpose, value: "image" },
+    { name: CREATOR_UPLOAD_TAGS.contentType, value: input.type },
+    { name: CREATOR_UPLOAD_TAGS.contentLength, value: String(input.size) },
+    { name: CREATOR_UPLOAD_TAGS.contentHash, value: input.contentHash },
+  ];
+}
+
+export function creatorMetadataTags(input: {
+  operationId: string;
+  creatorAddress: string;
+  tokenId: number;
+  mode: CreatorMetadataUploadMode;
+  content: string;
+  imageUri: string;
+}): CreatorUploadTag[] {
+  const bytes = new TextEncoder().encode(input.content);
+  return [
+    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
+    {
+      name: CREATOR_UPLOAD_TAGS.creator,
+      value: normalizeCreatorAddress(input.creatorAddress).toLowerCase(),
+    },
+    { name: CREATOR_UPLOAD_TAGS.token, value: String(input.tokenId) },
+    { name: CREATOR_UPLOAD_TAGS.mode, value: input.mode },
+    { name: CREATOR_UPLOAD_TAGS.purpose, value: "metadata" },
+    { name: CREATOR_UPLOAD_TAGS.contentType, value: "application/json" },
+    { name: CREATOR_UPLOAD_TAGS.contentLength, value: String(bytes.byteLength) },
+    { name: CREATOR_UPLOAD_TAGS.contentHash, value: creatorContentHash(bytes) },
+    { name: "Fame-Creator-Image-Uri", value: input.imageUri },
+  ];
+}
+
+export function findCreatorTag(
+  tags: readonly CreatorUploadTag[],
+  name: string,
+): string | null {
+  const matches = tags.filter((tag) => tag.name === name);
+  if (matches.length !== 1) return null;
+  return matches[0]?.value ?? null;
+}
 
 export type CreatorPortalRoles = {
   isCreator: boolean;

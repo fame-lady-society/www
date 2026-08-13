@@ -13,6 +13,19 @@ export type IrysSponsoredUploader = {
     content: Buffer,
     opts: { tags: IrysUploadTag[] },
   ) => Promise<{ id?: string } | undefined>;
+  address?: string;
+  approval?: {
+    createApproval: (opts: {
+      approvedAddress: string;
+      amount: string | number | bigint;
+      expiresInSeconds: number;
+    }) => Promise<unknown>;
+    getApproval: (opts: {
+      approvedAddress: string;
+      payingAddress?: string;
+    }) => Promise<{ amount: string; expiresBy?: string }>;
+    revokeApproval: (opts: { approvedAddress: string }) => Promise<unknown>;
+  };
 };
 
 export function toBigIntAmount(value: unknown): bigint {
