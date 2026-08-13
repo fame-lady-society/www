@@ -125,7 +125,7 @@ type GalleryLiquidityActionDependencies = Readonly<{
   }>;
   waitForReceipt: (
     hash: Hash,
-    confirmations: 1,
+    confirmations: 1 | 2,
   ) => Promise<{ status: "success" | "reverted" }>;
   refresh: (
     call: GalleryLiquidityCall,
@@ -224,7 +224,7 @@ export async function executeGalleryLiquidityAction(
         stage = "approval_receipt";
         const approvalReceipt = await dependencies.waitForReceipt(
           approvalHash,
-          1,
+          2,
         );
         if (approvalReceipt.status === "reverted") {
           return fail(new Error("The liquidity approval reverted onchain."));
