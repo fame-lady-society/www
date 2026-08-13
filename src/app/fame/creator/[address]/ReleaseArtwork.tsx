@@ -22,8 +22,11 @@ import {
 } from "@/wagmi";
 import {
   SponsoredCreatorMetadataUploader,
-  uploadSponsoredCreatorMetadata,
 } from "./SponsoredCreatorMetadataUploader";
+import {
+  finalizeCreatorMetadata,
+  reauthorizeCreatorMetadata,
+} from "@/service/creator_irys_upload";
 import { useHasCreatorRole } from "./useHasCreatorRole";
 import {
   createArtworkReleaseSingleFlight,
@@ -108,11 +111,22 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
         return BigInt(result.data);
       },
       async ({ expectedTokenId, imageUri }) => {
-        const result = await uploadSponsoredCreatorMetadata({
+        if (!frozen.operationId) {
+          throw new Error("The existing image upload cannot be reauthorized.");
+        }
+        const authorization = await reauthorizeCreatorMetadata({
+          address,
+          tokenId: Number(expectedTokenId),
+          mode: "release",
+          operationId: frozen.operationId,
+          imageUri,
+        });
+        const result = await finalizeCreatorMetadata({
           address,
           tokenId: Number(expectedTokenId),
           mode: "release",
           imageUri,
+          capability: authorization.capability,
         });
         return result.metadataUri;
       },
@@ -251,11 +265,13 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
               address={address}
               tokenId={Number(boundary)}
               mode="release"
-              onComplete={({ metadataUri, imageUri }) => {
+              onComplete={({ metadataUri, imageUri, imageCapability, operationId }) => {
                 setRelease({
                   expectedTokenId: BigInt(boundary),
                   imageUri,
                   metadataUri,
+                  imageCapability,
+                  operationId,
                 });
                 setPhase("idle");
                 setMessage(null);

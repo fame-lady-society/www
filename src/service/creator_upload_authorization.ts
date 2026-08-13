@@ -45,7 +45,15 @@ export type CreatorUploadCapability = {
 
 type CapabilityInput = Omit<
   CreatorUploadCapability,
-  "v" | "iss" | "aud" | "env" | "jti" | "iat" | "nbf" | "exp"
+  | "v"
+  | "iss"
+  | "aud"
+  | "env"
+  | "jti"
+  | "iat"
+  | "nbf"
+  | "exp"
+  | "chainId"
 > & {
   ttlSeconds?: number;
 };

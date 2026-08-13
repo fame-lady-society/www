@@ -26,6 +26,25 @@ export type IrysSponsoredUploader = {
     }) => Promise<{ amount: string; expiresBy?: string }>;
     revokeApproval: (opts: { approvedAddress: string }) => Promise<unknown>;
   };
+  transactions?: {
+    getById: (id: string) => Promise<{
+      id: string;
+      address: string;
+      currency: string;
+      tags: IrysUploadTag[];
+    }>;
+    query: (parameters: {
+      limit?: number;
+      tags?: { name: string; values: string[] }[];
+    }) => Promise<
+      {
+        id: string;
+        address: string;
+        currency: string;
+        tags: IrysUploadTag[];
+      }[]
+    >;
+  };
 };
 
 export function toBigIntAmount(value: unknown): bigint {

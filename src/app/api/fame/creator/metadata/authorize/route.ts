@@ -20,6 +20,7 @@ import { buildNodeIrysUploader } from "@/service/irys_backend_client_node";
 import {
   computeBufferedIrysPrice,
   ensureIrysBalance,
+  toBigIntAmount,
   type IrysSponsoredUploader,
 } from "@/service/irys_sponsored_upload";
 import {
@@ -186,12 +187,15 @@ export async function handleCreatorMetadataAuthorize(
   );
   if (!reserved) return jsonError("An upload is already in progress", 409);
 
+  let uploaderForCleanup: IrysSponsoredUploader | null = null;
+  let approvalCreated = false;
   try {
     const uploader = await deps.createUploader();
+    uploaderForCleanup = uploader;
     const sponsorAddress = normalizeCreatorAddress(deps.getSponsorAddress());
     const priceBytes = body.imageBytes + CREATOR_UPLOAD_TAG_OVERHEAD_BYTES;
     const price = computeBufferedIrysPrice(
-      BigInt(await uploader.getPrice(priceBytes) as string | number | bigint),
+      toBigIntAmount(await uploader.getPrice(priceBytes)),
     );
     await ensureIrysBalance({
       uploader,
@@ -207,6 +211,7 @@ export async function handleCreatorMetadataAuthorize(
       amount: price,
       expiresInSeconds: CREATOR_UPLOAD_EXPIRY_SECONDS,
     });
+    approvalCreated = true;
     const confirmedApproval = await uploader.approval.getApproval({
       approvedAddress: creatorAddress,
       payingAddress: sponsorAddress,
@@ -251,7 +256,9 @@ export async function handleCreatorMetadataAuthorize(
       operation,
       CREATOR_UPLOAD_EXPIRY_SECONDS,
     );
-    if (!created) throw new Error("Unable to create upload operation");
+    if (!created) {
+      throw new Error("Unable to create upload operation");
+    }
     return NextResponse.json({
       capability: capabilityResult.token,
       operationId,
@@ -259,6 +266,19 @@ export async function handleCreatorMetadataAuthorize(
       expiresAt: capabilityResult.capability.exp * 1000,
     });
   } catch (error) {
+    if (approvalCreated && uploaderForCleanup?.approval) {
+      try {
+        await uploaderForCleanup.approval.revokeApproval({
+          approvedAddress: creatorAddress,
+        });
+      } catch (revokeError) {
+        console.error("[creator-upload] approval cleanup failed", {
+          operationId,
+          error: revokeError,
+        });
+        sentry.captureException(revokeError, { extra: { operationId } });
+      }
+    }
     await deps.journal.releaseCreator(creatorAddress, operationId);
     console.error("[creator-upload] authorization failed", { operationId });
     sentry.captureException(error, { extra: { operationId } });

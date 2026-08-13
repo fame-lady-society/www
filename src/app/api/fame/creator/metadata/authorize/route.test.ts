@@ -62,6 +62,7 @@ function journal(): CreatorUploadJournal {
 
 function deps(overrides: Partial<Parameters<typeof handleCreatorMetadataAuthorize>[1]> = {}) {
   let approvalCreated = false;
+  let approvalRevoked = false;
   const uploader = {
     getPrice: async () => 1000n,
     getBalance: async () => 2000n,
@@ -72,7 +73,9 @@ function deps(overrides: Partial<Parameters<typeof handleCreatorMetadataAuthoriz
         approvalCreated = true;
       },
       getApproval: async () => ({ amount: "1100", expiresBy: "9999999999999" }),
-      revokeApproval: async () => undefined,
+      revokeApproval: async () => {
+        approvalRevoked = true;
+      },
     },
   };
   return {
@@ -89,6 +92,7 @@ function deps(overrides: Partial<Parameters<typeof handleCreatorMetadataAuthoriz
     now: () => 1_700_000_000_000,
     ...overrides,
     _approvalCreated: () => approvalCreated,
+    _approvalRevoked: () => approvalRevoked,
   } as any;
 }
 
@@ -163,5 +167,20 @@ describe("/api/fame/creator/metadata/authorize", () => {
       [first.status, second.status].sort((a, b) => a - b),
       [200, 409],
     );
+  });
+
+  it("revokes the payer approval when operation persistence fails", async () => {
+    const injected = deps({
+      journal: {
+        ...journal(),
+        createOperation: async () => false,
+      },
+    });
+    const response = await handleCreatorMetadataAuthorize(
+      makeRequest(validBody()),
+      injected,
+    );
+    assert.equal(response.status, 503);
+    assert.equal(injected._approvalRevoked(), true);
   });
 });

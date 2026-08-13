@@ -1,13 +1,21 @@
 import * as sentry from "@sentry/nextjs";
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { isAddress, isAddressEqual, type Address } from "viem";
+import { base } from "viem/chains";
+import { getBalance, readContract } from "viem/actions";
+import { privateKeyToAccount } from "viem/accounts";
 import { getSession, type SessionData } from "@/app/siwe/session-utils";
-import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import {
   canUploadCreatorMetadata,
   createCreatorMetadataJson,
+  creatorMetadataTags,
   decodeCreatorPortalRoles,
   isCreatorMetadataUploadMode,
+  normalizeCreatorAddress,
+  type CreatorMetadataUploadMode,
 } from "@/features/fame/creatorMetadata";
+import { creatorArtistMagicAddress } from "@/features/fame/contract";
 import { client as basePublicClient } from "@/viem/base-client";
 import { creatorArtistMagicAbi } from "@/wagmi";
 import { buildNodeIrysUploader } from "@/service/irys_backend_client_node";
@@ -16,70 +24,91 @@ import {
   type IrysSponsoredUploader,
   uploadToIrys,
 } from "@/service/irys_sponsored_upload";
-import { getBalance, readContract } from "viem/actions";
-import { isAddress, isAddressEqual, keccak256, type Address } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+import {
+  createCreatorUploadJournal,
+  type CreatorUploadJournal,
+} from "@/service/creator_upload_journal";
+import {
+  createCreatorIrysVerifier,
+  parseCreatorIrysGatewayUri,
+  verifyCreatorImage,
+  type CreatorIrysVerifier,
+} from "@/service/creator_irys_verifier";
+import {
+  CREATOR_UPLOAD_CHAIN_ID,
+  CREATOR_UPLOAD_LEASE_SECONDS,
+  CREATOR_UPLOAD_MAX_BODY_BYTES,
+  digestSessionCookie,
+  verifyCreatorUploadCapability,
+} from "@/service/creator_upload_authorization";
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const SUPPORTED_IMAGE_TYPES = new Set([
-  "image/gif",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+type CreatorMetadataFinalizeRequest = {
+  address: string;
+  tokenId: number;
+  mode: string;
+  imageUri: string;
+  capability: string;
+};
 
-type CreatorMetadataUploadDeps = {
+export type CreatorMetadataUploadDeps = {
   getSession: (request: NextRequest) => SessionData | null;
   readRoles: (address: Address) => Promise<bigint>;
   createUploader: () => Promise<IrysSponsoredUploader>;
+  createVerifier: (uploader: IrysSponsoredUploader) => CreatorIrysVerifier;
   getMaxFundAmount: () => Promise<bigint>;
+  journal: CreatorUploadJournal;
 };
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-function sanitizeFilename(filename: string) {
-  const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
-  return sanitized || "creator-image";
+function hasTrustedOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  if (origin && origin !== request.nextUrl.origin) return false;
+  const fetchSite = request.headers.get("sec-fetch-site");
+  return !fetchSite || fetchSite === "same-origin" || fetchSite === "same-site";
 }
 
-function contentLength(bytes: Uint8Array | string) {
-  return typeof bytes === "string"
-    ? new TextEncoder().encode(bytes).length
-    : bytes.byteLength;
+function safeJsonBody(value: unknown): value is CreatorMetadataFinalizeRequest {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const body = value as Partial<CreatorMetadataFinalizeRequest>;
+  const keys = Object.keys(body).sort().join(",");
+  return (
+    keys === "address,capability,imageUri,mode,tokenId" &&
+    typeof body.address === "string" &&
+    typeof body.capability === "string" &&
+    typeof body.imageUri === "string" &&
+    typeof body.mode === "string" &&
+    Number.isSafeInteger(body.tokenId) &&
+    body.tokenId! >= 0
+  );
 }
 
-function contentHash(bytes: Uint8Array | string) {
-  return keccak256(
-    typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes,
-  ).slice(2);
-}
-
-export function isExactIrysGatewayUri(value: unknown): value is string {
-  if (typeof value !== "string") return false;
+async function parseBody(
+  request: NextRequest,
+): Promise<CreatorMetadataFinalizeRequest | null> {
+  const contentType = request.headers.get("content-type")?.split(";", 1)[0];
+  if (contentType !== "application/json") return null;
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > CREATOR_UPLOAD_MAX_BODY_BYTES) {
+    return null;
+  }
+  const text = await request.text();
+  if (new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES) {
+    return null;
+  }
   try {
-    const url = new URL(value);
-    return (
-      url.protocol === "https:" &&
-      url.hostname === "gateway.irys.xyz" &&
-      url.username === "" &&
-      url.password === "" &&
-      url.search === "" &&
-      url.hash === "" &&
-      /^\/[A-Za-z0-9_-]{43}$/.test(url.pathname)
-    );
+    const body: unknown = JSON.parse(text);
+    return safeJsonBody(body) ? body : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
 async function defaultGetMaxFundAmount() {
   const privateKey = process.env.METADATA_PRIVATE_KEY;
-  if (!privateKey) {
-    throw new Error("METADATA_PRIVATE_KEY not configured");
-  }
+  if (!privateKey) throw new Error("METADATA_PRIVATE_KEY not configured");
   const account = privateKeyToAccount(privateKey as `0x${string}`);
   const accountBalance = await getBalance(basePublicClient, {
     address: account.address,
@@ -90,12 +119,10 @@ async function defaultGetMaxFundAmount() {
 
 async function defaultCreateUploader() {
   const privateKey = process.env.METADATA_PRIVATE_KEY;
-  if (!privateKey) {
-    throw new Error("METADATA_PRIVATE_KEY not configured");
-  }
-  return buildNodeIrysUploader({
+  if (!privateKey) throw new Error("METADATA_PRIVATE_KEY not configured");
+  return (await buildNodeIrysUploader({
     privateKey: privateKey as `0x${string}`,
-  }) as Promise<IrysSponsoredUploader>;
+  })) as unknown as IrysSponsoredUploader;
 }
 
 const defaultDeps: CreatorMetadataUploadDeps = {
@@ -108,130 +135,244 @@ const defaultDeps: CreatorMetadataUploadDeps = {
       args: [address],
     }),
   createUploader: defaultCreateUploader,
+  createVerifier: (uploader) => createCreatorIrysVerifier(uploader),
   getMaxFundAmount: defaultGetMaxFundAmount,
+  journal: createCreatorUploadJournal(),
 };
+
+async function revokeImageApproval(uploader: IrysSponsoredUploader, address: string) {
+  if (!uploader.approval) {
+    throw new Error("Irys approval support is unavailable");
+  }
+  await uploader.approval.revokeApproval({
+    approvedAddress: normalizeCreatorAddress(address),
+  });
+}
+
+const METADATA_INDEX_RETRY_DELAYS_MS = [0, 250, 750] as const;
+
+async function findMetadataWithRetry(
+  verifier: CreatorIrysVerifier,
+  input: Parameters<CreatorIrysVerifier["findMetadataTransaction"]>[0],
+) {
+  for (const [index, delay] of METADATA_INDEX_RETRY_DELAYS_MS.entries()) {
+    if (delay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    const transaction = await verifier.findMetadataTransaction(input);
+    if (transaction || index === METADATA_INDEX_RETRY_DELAYS_MS.length - 1) {
+      return transaction;
+    }
+  }
+  return null;
+}
+
+export function isExactIrysGatewayUri(value: unknown): value is string {
+  return parseCreatorIrysGatewayUri(value) !== null;
+}
 
 export async function handleCreatorMetadataUpload(
   request: NextRequest,
   deps: CreatorMetadataUploadDeps = defaultDeps,
 ) {
+  if (!hasTrustedOrigin(request)) return jsonError("Invalid origin", 403);
   const session = deps.getSession(request);
-  if (!session) {
-    return jsonError("Unauthorized", 401);
+  if (!session) return jsonError("Unauthorized", 401);
+  if (session.chainId !== CREATOR_UPLOAD_CHAIN_ID) {
+    return jsonError("Sign in with Ethereum on Base before uploading", 403);
   }
-
-  const formData = await request.formData();
-  const address = formData.get("address");
-  const tokenIdRaw = formData.get("tokenId");
-  const mode = formData.get("mode");
-  const image = formData.get("image");
-  const existingImageUri = formData.get("imageUri");
-
-  if (typeof address !== "string" || !isAddress(address)) {
-    return jsonError("Invalid address", 400);
-  }
-  if (!isAddressEqual(address, session.address)) {
+  const cookie = request.cookies.get("siwe")?.value;
+  if (!cookie) return jsonError("Unauthorized", 401);
+  const body = await parseBody(request);
+  if (!body) return jsonError("Invalid request body", 422);
+  if (!isAddress(body.address) || !isAddressEqual(body.address, session.address)) {
     return jsonError("Unauthorized", 403);
   }
-  if (typeof tokenIdRaw !== "string" || !/^\d+$/.test(tokenIdRaw)) {
-    return jsonError("Invalid tokenId", 400);
-  }
-  const tokenId = Number(tokenIdRaw);
-  if (!Number.isSafeInteger(tokenId)) {
-    return jsonError("Invalid tokenId", 400);
-  }
-  if (!isCreatorMetadataUploadMode(mode)) {
+  if (!isCreatorMetadataUploadMode(body.mode)) {
     return jsonError("Invalid mode", 400);
   }
-  const roles = decodeCreatorPortalRoles(await deps.readRoles(address));
-  if (!canUploadCreatorMetadata(roles, mode)) {
+  const capability = verifyCreatorUploadCapability(body.capability);
+  if (
+    !capability ||
+    (capability.purpose !== "image-upload" &&
+      capability.purpose !== "metadata-finalization")
+  ) {
+    return jsonError("Invalid or expired upload authorization", 403);
+  }
+  const creatorAddress = normalizeCreatorAddress(body.address);
+  if (
+    capability.address.toLowerCase() !== creatorAddress.toLowerCase() ||
+    capability.sessionDigest !== digestSessionCookie(cookie) ||
+    capability.mode !== body.mode
+  ) {
+    return jsonError("Upload authorization scope mismatch", 403);
+  }
+  if (
+    capability.purpose === "image-upload" &&
+    capability.tokenId !== body.tokenId
+  ) {
+    return jsonError("Upload authorization scope mismatch", 403);
+  }
+  if (
+    capability.purpose === "metadata-finalization" &&
+    (capability.tokenId !== body.tokenId || capability.imageUri !== body.imageUri)
+  ) {
+    return jsonError("Metadata authorization scope mismatch", 403);
+  }
+
+  const roles = decodeCreatorPortalRoles(await deps.readRoles(body.address));
+  if (!canUploadCreatorMetadata(roles, body.mode)) {
     return jsonError("Forbidden", 403);
   }
 
-  let imageUri: string | null = null;
-  let imageToUpload: File | null = null;
-  if (existingImageUri !== null) {
-    if (mode !== "release" || image instanceof File) {
-      return jsonError(
-        "Existing image URI is only valid for release recovery",
-        400,
-      );
+  const operation = await deps.journal.getOperation(capability.operationId);
+  if (
+    !operation ||
+    operation.creatorAddress.toLowerCase() !== creatorAddress.toLowerCase() ||
+    operation.sessionDigest !== capability.sessionDigest ||
+    operation.mode !== capability.mode ||
+    operation.imageHash !== capability.imageHash ||
+    operation.imageBytes !== capability.imageBytes
+  ) {
+    return jsonError("Upload operation not found", 404);
+  }
+  if (
+    operation.status === "finalized" &&
+    operation.metadataUri &&
+    capability.purpose === "image-upload"
+  ) {
+    if (operation.imageUri !== body.imageUri) {
+      return jsonError("Upload operation image mismatch", 409);
     }
-    if (!isExactIrysGatewayUri(existingImageUri)) {
-      return jsonError("Invalid image URI", 400);
-    }
-    imageUri = existingImageUri;
-  } else {
-    if (!(image instanceof File)) {
-      return jsonError("Missing image", 400);
-    }
-    if (!SUPPORTED_IMAGE_TYPES.has(image.type)) {
-      return jsonError("Unsupported image type", 400);
-    }
-    if (image.size <= 0 || image.size > MAX_IMAGE_BYTES) {
-      return jsonError("Invalid image size", 400);
-    }
-    imageToUpload = image;
+    return NextResponse.json({
+      imageUri: operation.imageUri,
+      metadataUri: operation.metadataUri,
+    });
+  }
+  if (operation.status === "revoked" || operation.status === "failed") {
+    return jsonError("Upload operation is no longer active", 409);
   }
 
-  const uploader = await deps.createUploader();
-  if (imageToUpload) {
-    const imageBytes = new Uint8Array(await imageToUpload.arrayBuffer());
+  const lease = randomUUID();
+  const locked = await deps.journal.acquireFinalization(
+    capability.operationId,
+    lease,
+    CREATOR_UPLOAD_LEASE_SECONDS,
+  );
+  if (!locked) return jsonError("Upload finalization is already in progress", 409);
+
+  let imageVerified = false;
+  try {
+    const uploader = await deps.createUploader();
+    const verifier = deps.createVerifier(uploader);
+    const verifiedImage = await verifyCreatorImage({
+      verifier,
+      imageUri: body.imageUri,
+      operationId: capability.operationId,
+      creatorAddress,
+      tokenId: operation.tokenId,
+      mode: capability.mode,
+      imageType: capability.imageType,
+      imageBytes: capability.imageBytes,
+      imageHash: capability.imageHash,
+    });
+    imageVerified = true;
+    await deps.journal.updateOperation(capability.operationId, {
+      status: "image_verified",
+      imageUri: verifiedImage.imageUri,
+      imageTxId: verifiedImage.imageTxId,
+    });
+
+    const existingMetadata = await findMetadataWithRetry(verifier, {
+      operationId: capability.operationId,
+      tokenId: body.tokenId,
+      creatorAddress,
+      mode: capability.mode,
+      imageUri: verifiedImage.imageUri,
+      sponsorAddress: capability.sponsorAddress,
+    });
+    if (existingMetadata) {
+      const metadataUri = `${"https://gateway.irys.xyz"}/${existingMetadata.id}`;
+      await deps.journal.updateOperation(capability.operationId, {
+        status: "finalized",
+        metadataUri,
+        metadataTxId: existingMetadata.id,
+      });
+      if (capability.purpose === "image-upload") {
+        await revokeImageApproval(uploader, creatorAddress);
+      }
+      await deps.journal.releaseCreator(creatorAddress, capability.operationId);
+      return NextResponse.json({ imageUri: verifiedImage.imageUri, metadataUri });
+    }
+
+    if (capability.purpose === "image-upload") {
+      await revokeImageApproval(uploader, creatorAddress);
+    }
+    const metadataContent = createCreatorMetadataJson(
+      body.tokenId,
+      verifiedImage.imageUri,
+    );
+    const metadataBytes = new TextEncoder().encode(metadataContent).byteLength;
     await ensureIrysBalance({
       uploader,
-      bytes: imageBytes.byteLength,
+      bytes: metadataBytes + 4096,
       maxFundAmount: await deps.getMaxFundAmount(),
-      logContext: { address, tokenId, kind: "creator-image" },
+      logContext: { operationId: capability.operationId, kind: "creator-metadata" },
     });
-    imageUri = await uploadToIrys({
+    const metadataUri = await uploadToIrys({
       uploader,
-      content: imageBytes,
-      tags: [
-        { name: "Content-Type", value: imageToUpload.type },
-        { name: "Content-Length", value: String(imageBytes.byteLength) },
-        {
-          name: "Content-Disposition",
-          value: `attachment; filename="${sanitizeFilename(imageToUpload.name)}"`,
-        },
-        { name: "Content-Hash", value: contentHash(imageBytes) },
-      ],
+      content: metadataContent,
+      tags: creatorMetadataTags({
+        operationId: capability.operationId,
+        creatorAddress,
+        tokenId: body.tokenId,
+        mode: capability.mode,
+        content: metadataContent,
+        imageUri: verifiedImage.imageUri,
+      }),
     });
+    const metadataTxId = parseCreatorIrysGatewayUri(metadataUri)?.transactionId;
+    if (!metadataTxId) throw new Error("Metadata upload returned an invalid URI");
+    await deps.journal.updateOperation(capability.operationId, {
+      status: "finalized",
+      metadataUri,
+      metadataTxId,
+    });
+    await deps.journal.releaseCreator(creatorAddress, capability.operationId);
+    return NextResponse.json({ imageUri: verifiedImage.imageUri, metadataUri });
+  } catch (error) {
+    if (imageVerified) {
+      await deps.journal.updateOperation(capability.operationId, {
+        status: "image_verified",
+      });
+    } else {
+      await deps.journal.updateOperation(capability.operationId, {
+        status: "failed",
+      });
+      await deps.journal.releaseCreator(creatorAddress, capability.operationId);
+    }
+    console.error("[creator-upload] metadata finalization failed", {
+      operationId: capability.operationId,
+    });
+    sentry.captureException(error, {
+      extra: { operationId: capability.operationId },
+    });
+    return jsonError(
+      imageVerified
+        ? "Image uploaded, but metadata finalization failed. Retry metadata."
+        : "Unable to verify the uploaded image",
+      imageVerified ? 503 : 422,
+    );
+  } finally {
+    await deps.journal.releaseFinalization(capability.operationId, lease);
   }
-
-  if (!imageUri) {
-    throw new Error("Creator image upload did not return a URI.");
-  }
-
-  const metadataContent = createCreatorMetadataJson(tokenId, imageUri);
-  const metadataBytes = contentLength(metadataContent);
-  await ensureIrysBalance({
-    uploader,
-    bytes: metadataBytes,
-    maxFundAmount: await deps.getMaxFundAmount(),
-    logContext: { address, tokenId, kind: "creator-metadata" },
-  });
-  const metadataUri = await uploadToIrys({
-    uploader,
-    content: metadataContent,
-    tags: [
-      { name: "Content-Type", value: "application/json" },
-      { name: "Content-Length", value: String(metadataBytes) },
-      {
-        name: "Content-Disposition",
-        value: `attachment; filename="fame-creator-${tokenId}.json"`,
-      },
-      { name: "Content-Hash", value: contentHash(metadataContent) },
-    ],
-  });
-
-  return NextResponse.json({ imageUri, metadataUri });
 }
 
 export async function POST(request: NextRequest) {
   try {
     return await handleCreatorMetadataUpload(request);
   } catch (error) {
-    console.error(error);
+    console.error("[creator-upload] metadata route failed");
     sentry.captureException(error);
     return jsonError("Internal server error", 500);
   }

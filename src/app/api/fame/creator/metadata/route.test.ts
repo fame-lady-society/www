@@ -1,240 +1,281 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
+import {
+  createCreatorMetadataJson,
+  creatorContentHash,
+  creatorImageTags,
+} from "@/features/fame/creatorMetadata";
+import type {
+  CreatorIrysVerifier,
+  CreatorIrysTransaction,
+} from "@/service/creator_irys_verifier";
+import type {
+  CreatorUploadJournal,
+  CreatorUploadOperation,
+} from "@/service/creator_upload_journal";
+import {
+  createCreatorUploadCapability,
+  digestSessionCookie,
+} from "@/service/creator_upload_authorization";
 import type { IrysSponsoredUploader } from "@/service/irys_sponsored_upload";
 
 process.env.SESSION_SECRET ||= "test-session-secret";
+process.env.CREATOR_UPLOAD_CAPABILITY_SECRET ||= "test-creator-upload-secret";
 
 const { handleCreatorMetadataUpload } = await import("./route");
 
 const CREATOR = "0x0000000000000000000000000000000000000001" as const;
 const OTHER = "0x0000000000000000000000000000000000000002" as const;
+const IMAGE_TX_ID = "i".repeat(43);
+const METADATA_TX_ID = "m".repeat(43);
+const SESSION_COOKIE = "session-cookie";
 
-function makeRequest(opts: {
-  address?: string;
-  tokenId?: string;
-  mode?: string;
-  image?: File | string;
-  imageUri?: string;
-}) {
-  const formData = new FormData();
-  if (opts.address !== undefined) formData.set("address", opts.address);
-  if (opts.tokenId !== undefined) formData.set("tokenId", opts.tokenId);
-  if (opts.mode !== undefined) formData.set("mode", opts.mode);
-  if (opts.image !== undefined) formData.set("image", opts.image);
-  if (opts.imageUri !== undefined) formData.set("imageUri", opts.imageUri);
-
-  return new NextRequest("http://localhost/api/fame/creator/metadata", {
-    method: "POST",
-    body: formData,
-  });
+function makeRequest(body: Record<string, unknown>, cookie = SESSION_COOKIE) {
+  return new NextRequest(
+    "https://fameladysociety.com/api/fame/creator/metadata",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: `siwe=${cookie}`,
+      },
+      body: JSON.stringify(body),
+    },
+  );
 }
 
-function imageFile(type = "image/png", name = "creator.png") {
-  return new File(["image-bytes"], name, { type });
+function makePng(): Uint8Array {
+  return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4]);
 }
 
-function deps(opts: {
-  sessionAddress?: `0x${string}` | null;
-  roles?: bigint;
-  uploads?: Array<{ content: string | Uint8Array; tags: unknown }>;
-}) {
-  const uploads = opts.uploads ?? [];
+function makeJournal(initial?: CreatorUploadOperation): CreatorUploadJournal {
+  const records = new Map<string, CreatorUploadOperation>();
+  if (initial) records.set(initial.operationId, initial);
+  const leases = new Set<string>();
+  return {
+    reserveCreator: async () => true,
+    releaseCreator: async () => undefined,
+    createOperation: async (operation) => {
+      if (records.has(operation.operationId)) return false;
+      records.set(operation.operationId, operation);
+      return true;
+    },
+    getOperation: async (operationId) => records.get(operationId) ?? null,
+    updateOperation: async (operationId, patch) => {
+      const current = records.get(operationId);
+      if (!current) return null;
+      const next = { ...current, ...patch };
+      records.set(operationId, next);
+      return next;
+    },
+    acquireFinalization: async (operationId, lease) => {
+      if (leases.has(operationId)) return null;
+      const current = records.get(operationId);
+      if (!current) return null;
+      leases.add(operationId);
+      const next = { ...current, status: "finalizing" as const, finalizationLease: lease };
+      records.set(operationId, next);
+      return next;
+    },
+    releaseFinalization: async (operationId) => {
+      leases.delete(operationId);
+      const current = records.get(operationId);
+      if (!current) return null;
+      const next = {
+        ...current,
+        status:
+          current.status === "finalizing"
+            ? ("image_verified" as const)
+            : current.status,
+        finalizationLease: undefined,
+      };
+      records.set(operationId, next);
+      return next;
+    },
+  };
+}
+
+function makeOperation(image: Uint8Array): CreatorUploadOperation {
+  const now = Date.now();
+  return {
+    operationId: "cu_test-operation-123456",
+    creatorAddress: CREATOR,
+    sessionDigest: digestSessionCookie(SESSION_COOKIE),
+    tokenId: 123,
+    mode: "update",
+    imageType: "image/png",
+    imageBytes: image.byteLength,
+    imageHash: creatorContentHash(image),
+    sponsorAddress: OTHER,
+    approvalAmount: "1000",
+    createdAt: now,
+    expiresAt: now + 300_000,
+    status: "authorized",
+  };
+}
+
+function makeDeps(image: Uint8Array, operation = makeOperation(image)) {
+  const transaction: CreatorIrysTransaction = {
+    id: IMAGE_TX_ID,
+    address: CREATOR,
+    currency: "base-eth",
+    tags: creatorImageTags({
+      operationId: operation.operationId,
+      creatorAddress: CREATOR,
+      tokenId: operation.tokenId,
+      mode: operation.mode,
+      type: operation.imageType,
+      size: image.byteLength,
+      contentHash: operation.imageHash,
+    }),
+  };
+  const verifier: CreatorIrysVerifier = {
+    getTransaction: async () => transaction,
+    findMetadataTransaction: async () => null,
+    readData: async () => image,
+  };
+  const uploads: Array<{ content: Buffer; tags: unknown }> = [];
+  let revoked = false;
   const uploader: IrysSponsoredUploader = {
     getPrice: async () => 1n,
     getBalance: async () => 10n,
     fund: async () => undefined,
-    upload: async (content, uploadOpts) => {
-      uploads.push({ content, tags: uploadOpts.tags });
-      return { id: uploads.length === 1 ? "image-tx" : "metadata-tx" };
+    upload: async (content, opts) => {
+      uploads.push({ content, tags: opts.tags });
+      return { id: METADATA_TX_ID };
+    },
+    approval: {
+      createApproval: async () => undefined,
+      getApproval: async () => ({ amount: "1000" }),
+      revokeApproval: async () => {
+        revoked = true;
+      },
     },
   };
-
+  const journal = makeJournal(operation);
   return {
-    getSession: () =>
-      opts.sessionAddress === null
-        ? null
-        : {
-            address: opts.sessionAddress ?? CREATOR,
-            chainId: 8453,
-            expiresAt: Date.now() + 60_000,
-          },
-    readRoles: async () => opts.roles ?? 0n,
+    getSession: () => ({
+      address: CREATOR,
+      chainId: 8453,
+      expiresAt: Date.now() + 60_000,
+    }),
+    readRoles: async () => 2n,
     createUploader: async () => uploader,
+    createVerifier: () => verifier,
     getMaxFundAmount: async () => 100n,
+    journal,
+    uploads,
+    wasRevoked: () => revoked,
+  };
+}
+
+function requestBody(operation: CreatorUploadOperation, imageUri: string) {
+  const capability = createCreatorUploadCapability({
+    purpose: "image-upload",
+    operationId: operation.operationId,
+    address: CREATOR,
+    sessionDigest: digestSessionCookie(SESSION_COOKIE),
+    tokenId: operation.tokenId,
+    mode: operation.mode,
+    imageType: operation.imageType,
+    imageBytes: operation.imageBytes,
+    imageHash: operation.imageHash,
+    sponsorAddress: operation.sponsorAddress,
+    approvalAmount: operation.approvalAmount,
+  }).token;
+  return {
+    address: CREATOR,
+    tokenId: operation.tokenId,
+    mode: operation.mode,
+    imageUri,
+    capability,
   };
 }
 
 describe("/api/fame/creator/metadata", () => {
   it("returns 401 when unauthenticated", async () => {
+    const image = makePng();
+    const injected = makeDeps(image);
     const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "update",
-        image: imageFile(),
-      }),
-      deps({ sessionAddress: null }),
+      makeRequest(requestBody(makeOperation(image), `https://gateway.irys.xyz/${IMAGE_TX_ID}`)),
+      { ...injected, getSession: () => null },
     );
-
     assert.equal(response.status, 401);
   });
 
-  it("returns 403 when the session address does not match the request address", async () => {
-    const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: OTHER,
-        tokenId: "123",
-        mode: "update",
-        image: imageFile(),
-      }),
-      deps({ sessionAddress: CREATOR, roles: 2n }),
+  it("rejects multipart image bytes and address substitution", async () => {
+    const image = makePng();
+    const operation = makeOperation(image);
+    const injected = makeDeps(image, operation);
+    const formData = new FormData();
+    formData.set("address", CREATOR);
+    formData.set("tokenId", "123");
+    formData.set("mode", "update");
+    formData.set("image", new File(["image"], "creator.png", { type: "image/png" }));
+    const multipart = new NextRequest(
+      "https://fameladysociety.com/api/fame/creator/metadata",
+      { method: "POST", body: formData, headers: { cookie: `siwe=${SESSION_COOKIE}` } },
     );
+    assert.equal(await handleCreatorMetadataUpload(multipart, injected).then((r) => r.status), 422);
 
-    assert.equal(response.status, 403);
-  });
-
-  it("returns 400 when the image is missing or unsupported", async () => {
-    const missing = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "update",
-      }),
-      deps({ roles: 2n }),
-    );
-    assert.equal(missing.status, 400);
-
-    const unsupported = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "update",
-        image: imageFile("text/plain", "creator.txt"),
-      }),
-      deps({ roles: 2n }),
-    );
-    assert.equal(unsupported.status, 400);
-  });
-
-  it("allows art pool managers to sponsor art-pool metadata", async () => {
-    const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "art",
-        image: imageFile(),
-      }),
-      deps({ roles: 8n }),
-    );
-
-    assert.equal(response.status, 200);
-  });
-
-  it("allows only creators to sponsor newly released artwork", async () => {
-    const allowed = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "651",
-        mode: "release",
-        image: imageFile(),
-      }),
-      deps({ roles: 2n }),
-    );
-    const denied = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "651",
-        mode: "release",
-        image: imageFile(),
-      }),
-      deps({ roles: 4n }),
-    );
-    assert.equal(allowed.status, 200);
-    assert.equal(denied.status, 403);
-  });
-
-  it("regenerates release metadata from an exact existing Irys image URI", async () => {
-    const imageUri = `https://gateway.irys.xyz/${"a".repeat(43)}`;
-    const uploads: Array<{ content: Buffer; tags: unknown }> = [];
-    const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "652",
-        mode: "release",
-        imageUri,
-      }),
-      deps({ roles: 2n, uploads }),
-    );
-    assert.equal(response.status, 200);
-    assert.equal(uploads.length, 1);
+    const substituted = {
+      ...requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`),
+      address: OTHER,
+    };
     assert.equal(
-      JSON.parse(uploads[0].content.toString("utf-8")).image,
-      imageUri,
+      await handleCreatorMetadataUpload(makeRequest(substituted), injected).then(
+        (r) => r.status,
+      ),
+      403,
     );
   });
 
-  it("rejects non-Irys image reuse and reuse outside release mode", async () => {
-    const imageUri = `https://example.com/${"a".repeat(43)}`;
-    const invalidHost = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "652",
-        mode: "release",
-        imageUri,
-      }),
-      deps({ roles: 2n }),
-    );
-    const invalidMode = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "652",
-        mode: "update",
-        imageUri: `https://gateway.irys.xyz/${"a".repeat(43)}`,
-      }),
-      deps({ roles: 2n }),
-    );
-    assert.equal(invalidHost.status, 400);
-    assert.equal(invalidMode.status, 400);
-  });
-
-  it("rejects wallets without the required mode role", async () => {
+  it("verifies the Irys image and publishes metadata with the exact URI", async () => {
+    const image = makePng();
+    const operation = makeOperation(image);
+    const injected = makeDeps(image, operation);
+    const imageUri = `https://gateway.irys.xyz/${IMAGE_TX_ID}`;
     const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "update",
-        image: imageFile(),
-      }),
-      deps({ roles: 0n }),
+      makeRequest(requestBody(operation, imageUri)),
+      injected,
     );
-
-    assert.equal(response.status, 403);
-  });
-
-  it("uploads the image, then generated metadata, and returns both gateway URIs", async () => {
-    const uploads: Array<{ content: Buffer; tags: unknown }> = [];
-    const response = await handleCreatorMetadataUpload(
-      makeRequest({
-        address: CREATOR,
-        tokenId: "123",
-        mode: "update",
-        image: imageFile(),
-      }),
-      deps({ roles: 2n, uploads }),
-    );
-
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), {
-      imageUri: "https://gateway.irys.xyz/image-tx",
-      metadataUri: "https://gateway.irys.xyz/metadata-tx",
-    });
-    assert.equal(uploads.length, 2);
-    assert.ok(Buffer.isBuffer(uploads[0].content));
-    assert.ok(Buffer.isBuffer(uploads[1].content));
-    assert.equal(
-      JSON.parse(uploads[1].content.toString("utf-8")).image,
-      "https://gateway.irys.xyz/image-tx",
+    const body = await response.json();
+    assert.equal(body.imageUri, imageUri);
+    assert.equal(body.metadataUri, `https://gateway.irys.xyz/${METADATA_TX_ID}`);
+    assert.equal(injected.uploads.length, 1);
+    assert.equal(JSON.parse(injected.uploads[0].content.toString()).image, imageUri);
+    assert.equal(injected.wasRevoked(), true);
+  });
+
+  it("fails closed when the declared MIME does not match image bytes", async () => {
+    const image = makePng();
+    const operation = { ...makeOperation(image), imageType: "image/jpeg" as const };
+    const injected = makeDeps(image, operation);
+    const response = await handleCreatorMetadataUpload(
+      makeRequest(requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`)),
+      injected,
     );
+    assert.equal(response.status, 422);
+    assert.equal(injected.uploads.length, 0);
+  });
+
+  it("returns the existing result instead of publishing metadata twice", async () => {
+    const image = makePng();
+    const operation = {
+      ...makeOperation(image),
+      status: "finalized" as const,
+      imageUri: `https://gateway.irys.xyz/${IMAGE_TX_ID}`,
+      metadataUri: `https://gateway.irys.xyz/${METADATA_TX_ID}`,
+    };
+    const injected = makeDeps(image, operation);
+    const response = await handleCreatorMetadataUpload(
+      makeRequest(requestBody(operation, operation.imageUri!)),
+      injected,
+    );
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).metadataUri, operation.metadataUri);
+    assert.equal(injected.uploads.length, 0);
   });
 });
