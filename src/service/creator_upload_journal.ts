@@ -67,8 +67,8 @@ const ACTIVE_PREFIX = "fame:creator-upload:active:";
 const LEASE_PREFIX = "fame:creator-upload:lease:";
 
 function requireKvClient() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const url = process.env.FLS_KV_REST_API_URL;
+  const token = process.env.FLS_KV_REST_API_TOKEN;
   if (!url || !token) {
     throw new Error("Creator upload journal requires Vercel KV configuration");
   }
