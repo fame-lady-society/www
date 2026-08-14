@@ -27,6 +27,37 @@ import { GalleryLiquidityTransactionModal } from "./GalleryLiquidityTransactionM
 
 const EMPTY_LIQUIDITY_TOKENS: readonly GalleryLiquidityToken[] = [];
 
+type GalleryStakeRefreshResult =
+  | Readonly<{ status: "success" }>
+  | Readonly<{ status: "failure"; message: string }>;
+
+export async function refreshGalleryStakeDepositReads({
+  captureBlock,
+  refreshPositionAtBlock,
+  refreshOwnershipAtBlock,
+}: {
+  captureBlock: () => Promise<bigint | null>;
+  refreshPositionAtBlock: (
+    blockNumber: bigint,
+  ) => Promise<GalleryStakeRefreshResult>;
+  refreshOwnershipAtBlock: (
+    blockNumber: bigint,
+  ) => Promise<GalleryStakeRefreshResult>;
+}) {
+  const blockNumber = await captureBlock();
+  if (blockNumber === null) {
+    throw new Error("Gallery refresh block is unavailable.");
+  }
+  const results = await Promise.all([
+    refreshPositionAtBlock(blockNumber),
+    refreshOwnershipAtBlock(blockNumber),
+  ]);
+  const failure = results.find((result) => result.status === "failure");
+  if (failure?.status === "failure") {
+    throw new Error(failure.message);
+  }
+}
+
 export function GalleryStakeDepositContent({
   state,
   selectedIds,
@@ -239,7 +270,11 @@ export function GalleryStakeDepositView() {
   const transaction = useGalleryLiquidityAction({
     authorization: "operator",
     refresh: async () => {
-      await global.refresh();
+      await refreshGalleryStakeDepositReads({
+        captureBlock: global.captureBlock,
+        refreshPositionAtBlock: position.refreshAtBlock,
+        refreshOwnershipAtBlock: ownership.refreshAtBlock,
+      });
     },
   });
   const globalState =

@@ -34,8 +34,10 @@ export function useGalleryGlobalState({
   const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
 
   const capture = useCallback(async () => {
-    if (!client || !enabled) return;
-    setBlockNumber(await captureGalleryBlock(client));
+    if (!client || !enabled) return null;
+    const capturedBlock = await captureGalleryBlock(client);
+    setBlockNumber(capturedBlock);
+    return capturedBlock;
   }, [client, enabled]);
 
   useEffect(() => {
@@ -82,6 +84,9 @@ export function useGalleryGlobalState({
     projection,
     blockNumber,
     isRefreshing: query.isFetching && !query.isPending,
-    refresh: capture,
+    refresh: async () => {
+      await capture();
+    },
+    captureBlock: capture,
   };
 }
