@@ -45,7 +45,7 @@ describe("gallery liquidity action", () => {
     );
   });
 
-  it("continues from one approval confirmation directly into staking", async () => {
+  it("continues from two approval confirmations directly into staking", async () => {
     const calls: string[] = [];
     const events: GalleryLiquidityEvent[] = [];
     const result = await executeGalleryLiquidityAction(call, 8_453, {
@@ -90,7 +90,7 @@ describe("gallery liquidity action", () => {
       "read approval",
       "simulate approval",
       "write approval",
-      "wait approval 1",
+      "wait approval 2",
       "sync approval",
       "simulate stake",
       "write stake",
@@ -133,7 +133,10 @@ describe("gallery liquidity action", () => {
     });
 
     assert.equal(result.status, "failed");
-    assert.equal(result.status === "failed" ? result.stage : null, "approval_receipt");
+    assert.equal(
+      result.status === "failed" ? result.stage : null,
+      "approval_receipt",
+    );
     assert.equal(stakeSimulated, false);
   });
 
@@ -306,7 +309,10 @@ describe("gallery liquidity action", () => {
     });
 
     assert.equal(result.status, "failed");
-    assert.equal(result.status === "failed" ? result.stage : null, "contention");
+    assert.equal(
+      result.status === "failed" ? result.stage : null,
+      "contention",
+    );
     assert.match(
       String(result.status === "failed" ? result.cause : ""),
       /selected Society is no longer available/i,
@@ -372,7 +378,10 @@ describe("gallery liquidity action", () => {
     });
 
     assert.equal(result.status, "failed");
-    assert.equal(result.status === "failed" ? result.stage : null, "contention");
+    assert.equal(
+      result.status === "failed" ? result.stage : null,
+      "contention",
+    );
   });
 
   it("does not classify an unresolved withdrawal receipt as contention", async () => {

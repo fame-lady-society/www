@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useConnection, usePublicClient } from "wagmi";
 import type { Address } from "viem";
@@ -24,11 +24,42 @@ function liquidityQueryOptions() {
   } as const;
 }
 
+function liquidityPositionQueryKey(
+  chainId: number,
+  marketplace: Address,
+  account: Address | undefined,
+  blockNumber: bigint | null,
+) {
+  return [
+    "gallery-liquidity",
+    "position",
+    chainId,
+    marketplace.toLowerCase(),
+    account?.toLowerCase() ?? null,
+    blockNumber?.toString() ?? null,
+  ] as const;
+}
+
+function ownedSocietyQueryKey(
+  chainId: number,
+  account: Address | undefined,
+  blockNumber: bigint | null,
+) {
+  return [
+    "gallery-liquidity",
+    "owned-society",
+    chainId,
+    account?.toLowerCase() ?? null,
+    blockNumber?.toString() ?? null,
+  ] as const;
+}
+
 export function useGalleryLiquidityPosition(
   blockNumber: bigint | null,
   marketplace?: Address,
 ) {
   const runtime = useGalleryRuntime();
+  const queryClient = useQueryClient();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: runtime.chainId });
   const account = connection.address;
@@ -38,14 +69,12 @@ export function useGalleryLiquidityPosition(
   const enabled = Boolean(client && account && blockNumber !== null);
   const targetMarketplace = marketplace ?? runtime.addresses.gallery;
   const query = useQuery({
-    queryKey: [
-      "gallery-liquidity",
-      "position",
+    queryKey: liquidityPositionQueryKey(
       runtime.chainId,
-      targetMarketplace.toLowerCase(),
-      account?.toLowerCase() ?? null,
-      blockNumber?.toString() ?? null,
-    ],
+      targetMarketplace,
+      account,
+      blockNumber,
+    ),
     enabled,
     queryFn: () => {
       if (!client || !account || blockNumber === null) {
@@ -76,6 +105,30 @@ export function useGalleryLiquidityPosition(
   return {
     projection,
     refresh: query.refetch,
+    refreshAtBlock: (targetBlockNumber: bigint) => {
+      if (!client || !account) {
+        throw new Error("Provider position is unavailable.");
+      }
+      return queryClient.fetchQuery({
+        queryKey: liquidityPositionQueryKey(
+          runtime.chainId,
+          targetMarketplace,
+          account,
+          targetBlockNumber,
+        ),
+        queryFn: () =>
+          readLiquidityProviderPosition(
+            client,
+            targetBlockNumber,
+            account,
+            galleryReadAddresses({
+              ...runtime.addresses,
+              gallery: targetMarketplace,
+            }),
+          ),
+        ...liquidityQueryOptions(),
+      });
+    },
     account,
     marketplace: targetMarketplace,
   };
@@ -83,6 +136,7 @@ export function useGalleryLiquidityPosition(
 
 export function useGalleryOwnedSociety(blockNumber: bigint | null) {
   const runtime = useGalleryRuntime();
+  const queryClient = useQueryClient();
   const connection = useConnection();
   const publicClient = usePublicClient({ chainId: runtime.chainId });
   const account = connection.address;
@@ -95,13 +149,7 @@ export function useGalleryOwnedSociety(blockNumber: bigint | null) {
   );
   const enabled = Boolean(client && account && blockNumber !== null);
   const query = useQuery({
-    queryKey: [
-      "gallery-liquidity",
-      "owned-society",
-      runtime.chainId,
-      account?.toLowerCase() ?? null,
-      blockNumber?.toString() ?? null,
-    ],
+    queryKey: ownedSocietyQueryKey(runtime.chainId, account, blockNumber),
     enabled,
     queryFn: () => {
       if (!client || !account || blockNumber === null) {
@@ -127,7 +175,32 @@ export function useGalleryOwnedSociety(blockNumber: bigint | null) {
             blockNumber,
             message: "Society ownership is unavailable.",
           };
-  return { projection, refresh: query.refetch, account };
+  return {
+    projection,
+    refresh: query.refetch,
+    refreshAtBlock: (targetBlockNumber: bigint) => {
+      if (!client || !account) {
+        throw new Error("Society ownership is unavailable.");
+      }
+      return queryClient.fetchQuery({
+        queryKey: ownedSocietyQueryKey(
+          runtime.chainId,
+          account,
+          targetBlockNumber,
+        ),
+        queryFn: () =>
+          readWalletOwnedSociety(
+            client,
+            targetBlockNumber,
+            account,
+            tokenIds,
+            galleryReadAddresses(runtime.addresses),
+          ),
+        ...liquidityQueryOptions(),
+      });
+    },
+    account,
+  };
 }
 
 export function useGalleryLiquidityInventory(blockNumber: bigint | null) {
