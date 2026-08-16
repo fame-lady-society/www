@@ -6,6 +6,7 @@ import { getArtPoolRange, getFamePools } from "@/service/fame";
 import { CreatorPortal } from "./CreatorPortal";
 import { ReleaseArtwork } from "./ReleaseArtwork";
 import { ChainSelector } from "../ChainSelector";
+import { CreatorBaseNetworkGate } from "./CreatorBaseNetworkGate";
 
 async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
   const [tokenIds, pools, artPoolRange] = await Promise.all([
@@ -48,18 +49,20 @@ export default async function CreatorAddressPage(props: {
       isDao
       headerRight={<ChainSelector />}
     >
-      <div className="mx-auto w-full max-w-4xl px-4 pt-8">
-        <ReleaseArtwork address={address} />
-      </div>
-      <Suspense
-        fallback={
-          <p className="py-8 text-center" role="status">
-            Loading owned artwork tools…
-          </p>
-        }
-      >
-        <ExistingArtworkPortal address={address} />
-      </Suspense>
+      <CreatorBaseNetworkGate>
+        <div className="mx-auto w-full max-w-4xl px-4 pt-8">
+          <ReleaseArtwork address={address} />
+        </div>
+        <Suspense
+          fallback={
+            <p className="py-8 text-center" role="status">
+              Loading owned artwork tools…
+            </p>
+          }
+        >
+          <ExistingArtworkPortal address={address} />
+        </Suspense>
+      </CreatorBaseNetworkGate>
     </AppMain>
   );
 }

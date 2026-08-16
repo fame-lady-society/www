@@ -80,7 +80,7 @@ function stateCopy(state: SponsoredCreatorUploadState, signedIn: boolean) {
     default:
       return signedIn
         ? "Your wallet will sign the image; FLS sponsors the Irys upload."
-        : "Sign in with Ethereum before uploading. The image will upload directly to Irys.";
+        : "Sign in with Ethereum on Base before uploading. The image will upload directly to Irys.";
   }
 }
 
@@ -169,7 +169,7 @@ export function SponsoredCreatorMetadataUploader({
       return;
     }
     if (!isSignedIn) {
-      setError("Sign in with Ethereum before uploading metadata.");
+      setError("Sign in with Ethereum on Base before uploading metadata.");
       setState("error");
       return;
     }
