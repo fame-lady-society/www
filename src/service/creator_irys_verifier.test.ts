@@ -8,6 +8,7 @@ import {
 } from "@/features/fame/creatorMetadata";
 import {
   createCreatorIrysVerifier,
+  IRYS_GATEWAY_ORIGIN,
   parseCreatorIrysGatewayUri,
   verifyCreatorImage,
   type CreatorIrysVerifier,
@@ -148,6 +149,53 @@ describe("creator Irys image verification", () => {
     assert.equal(
       JSON.stringify(query).includes("Fame-Creator-Image-Uri"),
       true,
+    );
+  });
+
+  it("follows Irys gateway redirects only to the trusted Irys CDN", async () => {
+    const bytes = image();
+    const requests: URL[] = [];
+    const verifier = createCreatorIrysVerifier(
+      {
+        getPrice: async () => 1n,
+        getBalance: async () => 1n,
+        fund: async () => undefined,
+        upload: async () => ({ id: TX_ID }),
+        transactions: {
+          getById: async () => ({
+            id: TX_ID,
+            address: CREATOR,
+            currency: "base-eth",
+            tags: [],
+          }),
+          query: async () => [],
+        },
+      },
+      async (input) => {
+        const url = new URL(input.toString());
+        requests.push(url);
+        if (requests.length === 1) {
+          return new Response(null, {
+            status: 302,
+            headers: {
+              location: `https://cdn.mainnet-1.datasprite-cdn.com/${TX_ID}/`,
+            },
+          });
+        }
+        return new Response(bytes, {
+          status: 200,
+          headers: { "content-length": String(bytes.byteLength) },
+        });
+      },
+    );
+
+    assert.deepEqual(
+      await verifier.readData(TX_ID, bytes.byteLength),
+      bytes,
+    );
+    assert.deepEqual(
+      requests.map((request) => request.origin),
+      [IRYS_GATEWAY_ORIGIN, "https://cdn.mainnet-1.datasprite-cdn.com"],
     );
   });
 });

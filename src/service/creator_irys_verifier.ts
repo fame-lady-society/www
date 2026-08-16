@@ -13,6 +13,8 @@ import type { IrysSponsoredUploader } from "@/service/irys_sponsored_upload";
 export const IRYS_GATEWAY_ORIGIN = "https://gateway.irys.xyz";
 export const IRYS_BASE_CURRENCY = "base-eth";
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+const IRYS_CDN_HOST_SUFFIX = ".datasprite-cdn.com";
+const MAX_IRYS_DATA_REDIRECTS = 3;
 
 export type CreatorIrysTransaction = {
   id: string;
@@ -190,6 +192,16 @@ function assertMetadataTags(input: {
   }
 }
 
+function isAllowedIrysDataUrl(value: URL): boolean {
+  return (
+    value.protocol === "https:" &&
+    !value.username &&
+    !value.password &&
+    (value.origin === IRYS_GATEWAY_ORIGIN ||
+      value.hostname.endsWith(IRYS_CDN_HOST_SUFFIX))
+  );
+}
+
 export async function verifyCreatorImage(input: {
   verifier: CreatorIrysVerifier;
   imageUri: string;
@@ -295,10 +307,25 @@ export function createCreatorIrysVerifier(
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15_000);
       try {
-        const response = await fetchImpl(
-          `${IRYS_GATEWAY_ORIGIN}/${transactionId}`,
-          { redirect: "error", signal: controller.signal },
-        );
+        let dataUrl = new URL(`${IRYS_GATEWAY_ORIGIN}/${transactionId}`);
+        let response: Response;
+        for (let redirectCount = 0; ; redirectCount += 1) {
+          response = await fetchImpl(dataUrl, {
+            redirect: "manual",
+            signal: controller.signal,
+          });
+          if (response.status < 300 || response.status >= 400) break;
+          if (redirectCount >= MAX_IRYS_DATA_REDIRECTS) {
+            throw new Error("Too many Irys image redirects");
+          }
+          const location = response.headers.get("location");
+          if (!location) throw new Error("Irys image redirect is missing location");
+          const nextUrl = new URL(location, dataUrl);
+          if (!isAllowedIrysDataUrl(nextUrl)) {
+            throw new Error("Irys image redirected to an untrusted origin");
+          }
+          dataUrl = nextUrl;
+        }
         if (!response.ok || !response.body) {
           throw new Error("Irys image data is unavailable");
         }

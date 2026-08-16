@@ -353,6 +353,7 @@ export async function handleCreatorMetadataUpload(
     }
     console.error("[creator-upload] metadata finalization failed", {
       operationId: capability.operationId,
+      error: error instanceof Error ? error.message : String(error),
     });
     sentry.captureException(error, {
       extra: { operationId: capability.operationId },
