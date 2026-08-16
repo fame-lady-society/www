@@ -157,5 +157,7 @@ describe("creator artwork release", () => {
       source,
       /check the transaction before attempting another release/,
     );
+    assert.match(source, /resetKey=\{uploaderResetKey\}/);
+    assert.match(source, /Ownership did not change/);
   });
 });

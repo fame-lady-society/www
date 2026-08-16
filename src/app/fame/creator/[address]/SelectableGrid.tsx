@@ -27,7 +27,7 @@ export const SelectableGrid = ({
   onTokenSelected: (tokenId: bigint) => void;
   onTokenUnselected: (tokenId: bigint) => void;
 }) => {
-  const client = useClient();
+  const client = useClient({ chainId: base.id });
   const [images, setImages] = useState<Record<number, string>>({});
   const fetchMetadataImage = useCallback(async (uri: string) => {
     const response = await fetch(uri);

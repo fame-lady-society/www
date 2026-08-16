@@ -149,7 +149,7 @@ export function SiweSessionProvider({
   const restoreSession = useCallback(async () => {
     if (coordinatorRef.current.hasInFlightAttempt()) return false;
     const epoch = coordinatorRef.current.currentEpoch();
-    if (!enabled || !isConnected || !address) {
+    if (!enabled || !isConnected || !address || !chainId) {
       if (mountedRef.current) clearClientSession();
       return false;
     }
@@ -181,6 +181,17 @@ export function SiweSessionProvider({
         return false;
       }
 
+      if (restored.chainId !== chainId) {
+        await queueServerCleanup({
+          address: restored.address,
+          expiresAt: restored.expiresAt,
+        });
+        if (coordinatorRef.current.isCurrent(epoch) && mountedRef.current) {
+          clearClientSession();
+        }
+        return false;
+      }
+
       if (!coordinatorRef.current.isCurrent(epoch) || !mountedRef.current) {
         return false;
       }
@@ -201,7 +212,14 @@ export function SiweSessionProvider({
       setStatus("error");
       return false;
     }
-  }, [address, clearClientSession, enabled, isConnected, queueServerCleanup]);
+  }, [
+    address,
+    chainId,
+    clearClientSession,
+    enabled,
+    isConnected,
+    queueServerCleanup,
+  ]);
 
   const signIn = useCallback((): Promise<boolean> => {
     if (!enabled || !isConnected || !address || !chainId) {
@@ -214,7 +232,11 @@ export function SiweSessionProvider({
       setStatus("error");
       return Promise.resolve(false);
     }
-    if (session && sameAddress(session.address, address)) {
+    if (
+      session &&
+      sameAddress(session.address, address) &&
+      session.chainId === chainId
+    ) {
       return Promise.resolve(true);
     }
 
@@ -343,9 +365,9 @@ export function SiweSessionProvider({
       clearClientSession();
       return;
     }
-    if (isConnected && address) void restoreSession();
+    if (isConnected && address && chainId) void restoreSession();
     else clearClientSession();
-  }, [address, clearClientSession, enabled, isConnected, restoreSession]);
+  }, [address, chainId, clearClientSession, enabled, isConnected, restoreSession]);
 
   useEffect(() => {
     const previousAddress = previousAddressRef.current;
@@ -376,11 +398,13 @@ export function SiweSessionProvider({
       session,
       error,
       isSignedIn:
-        status === "signed_in" && sameAddress(session?.address, address),
+        status === "signed_in" &&
+        sameAddress(session?.address, address) &&
+        session?.chainId === chainId,
       signIn,
       signOut,
     }),
-    [address, error, session, signIn, signOut, status],
+    [address, chainId, error, session, signIn, signOut, status],
   );
 
   return (

@@ -2,6 +2,8 @@ export type FrozenArtworkRelease = Readonly<{
   expectedTokenId: bigint;
   imageUri: string;
   metadataUri: string;
+  imageCapability?: string;
+  operationId?: string;
 }>;
 
 export type SubmittedReleaseStatus = "success" | "reverted" | "unknown";
@@ -61,5 +63,9 @@ export async function recoverContendedArtworkRelease(
       expectedTokenId: nextTokenId,
       imageUri: frozen.imageUri,
     }),
+    ...(frozen.imageCapability
+      ? { imageCapability: frozen.imageCapability }
+      : {}),
+    ...(frozen.operationId ? { operationId: frozen.operationId } : {}),
   };
 }
