@@ -7,6 +7,7 @@ import {
   createCreatorMetadataJson,
   MAX_CREATOR_IMAGE_BYTES,
 } from "@/features/fame/creatorMetadata";
+import { estimateCreatorImagesRemaining } from "@/features/fame/creatorUploadFunding";
 import { liveClient as basePublicClient } from "@/viem/base-client";
 import { buildNodeIrysUploader } from "@/service/irys_backend_client_node";
 import {
@@ -61,25 +62,6 @@ function safeTokenId(tokenId: number | undefined) {
   return tokenId !== undefined && Number.isSafeInteger(tokenId) && tokenId >= 0
     ? tokenId
     : 0;
-}
-
-export function estimateCreatorImagesRemaining(
-  baseBalanceWei: bigint,
-  estimatedUploadWei: bigint,
-  loadedIrysBalanceWei = 0n,
-) {
-  if (estimatedUploadWei <= 0n) {
-    return 0;
-  }
-  const availableBase =
-    baseBalanceWei > BASE_GAS_RESERVE_WEI
-      ? baseBalanceWei - BASE_GAS_RESERVE_WEI
-      : 0n;
-  const availableIrys = loadedIrysBalanceWei > 0n ? loadedIrysBalanceWei : 0n;
-  const count = (availableBase + availableIrys) / estimatedUploadWei;
-  return count > BigInt(Number.MAX_SAFE_INTEGER)
-    ? Number.MAX_SAFE_INTEGER
-    : Number(count);
 }
 
 async function estimateIrysUploadWei(

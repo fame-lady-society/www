@@ -3,8 +3,12 @@ import { describe, it } from "node:test";
 
 process.env.NEXT_PUBLIC_BASE_RPC_URL_1 ||= "http://127.0.0.1:1";
 
-const { estimateCreatorImagesRemaining, getCreatorUploadFundingSnapshot } =
-  await import("./creator_upload_funding");
+const { getCreatorUploadFundingSnapshot } = await import(
+  "./creator_upload_funding"
+);
+const { estimateCreatorImagesRemaining } = await import(
+  "../features/fame/creatorUploadFunding"
+);
 
 describe("creator upload funding estimates", () => {
   it("reserves the Base gas buffer before counting approximate uploads", () => {
