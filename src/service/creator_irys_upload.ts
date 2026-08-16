@@ -30,6 +30,13 @@ export type CreatorMetadataResult = {
   metadataUri: string;
 };
 
+type BrowserIrysUploadReceipt = {
+  id?: unknown;
+  txid?: unknown;
+  tx_id?: unknown;
+  transactionId?: unknown;
+};
+
 type BrowserIrysUploader = {
   uploadFile: (
     file: File,
@@ -37,16 +44,60 @@ type BrowserIrysUploader = {
       tags: { name: string; value: string }[];
       upload: { paidBy: string };
     },
-  ) => Promise<{ id?: string; txid?: string; transactionId?: string }>;
+  ) => Promise<
+    BrowserIrysUploadReceipt & {
+      data?: BrowserIrysUploadReceipt;
+      receipt?: BrowserIrysUploadReceipt;
+    }
+  >;
 };
 
-function transactionIdFromResult(result: {
-  id?: string;
-  txid?: string;
-  transactionId?: string;
-}) {
-  const transactionId = result.id ?? result.txid ?? result.transactionId;
-  if (!transactionId || !/^[A-Za-z0-9_-]{43}$/.test(transactionId)) {
+const IRYS_TRANSACTION_ID_RE = /^[A-Za-z0-9_-]{43}$/;
+
+function transactionIdFromResult(
+  result: BrowserIrysUploadReceipt & {
+    data?: BrowserIrysUploadReceipt;
+    receipt?: BrowserIrysUploadReceipt;
+  },
+) {
+  const candidates = [
+    result.id,
+    result.txid,
+    result.tx_id,
+    result.transactionId,
+    result.data?.id,
+    result.data?.txid,
+    result.data?.tx_id,
+    result.data?.transactionId,
+    result.receipt?.id,
+    result.receipt?.txid,
+    result.receipt?.tx_id,
+    result.receipt?.transactionId,
+  ];
+  const transactionId = candidates
+    .map((value) => (typeof value === "string" ? value.trim() : null))
+    .find((value): value is string => value !== null && IRYS_TRANSACTION_ID_RE.test(value));
+  if (!transactionId) {
+    console.error("[creator-upload] invalid Irys upload receipt", {
+      keys: Object.keys(result),
+      candidateTypes: [
+        result.id,
+        result.txid,
+        result.tx_id,
+        result.transactionId,
+        result.data?.id,
+        result.data?.txid,
+        result.data?.tx_id,
+        result.data?.transactionId,
+        result.receipt?.id,
+        result.receipt?.txid,
+        result.receipt?.tx_id,
+        result.receipt?.transactionId,
+      ].map((value) => ({
+        type: typeof value,
+        length: typeof value === "string" ? value.length : undefined,
+      })),
+    });
     throw new Error("Irys upload returned an invalid transaction id");
   }
   return transactionId;
