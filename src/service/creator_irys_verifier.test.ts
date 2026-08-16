@@ -152,7 +152,7 @@ describe("creator Irys image verification", () => {
     );
   });
 
-  it("follows Irys gateway redirects only to the trusted Irys CDN", async () => {
+  it("follows HTTPS Irys gateway redirects without coupling to a CDN hostname", async () => {
     const bytes = image();
     const requests: URL[] = [];
     const verifier = createCreatorIrysVerifier(
@@ -178,7 +178,7 @@ describe("creator Irys image verification", () => {
           return new Response(null, {
             status: 302,
             headers: {
-              location: `https://cdn.mainnet-1.datasprite-cdn.com/${TX_ID}/`,
+              location: `https://future-irys-cdn.example/${TX_ID}/`,
             },
           });
         }
@@ -195,7 +195,7 @@ describe("creator Irys image verification", () => {
     );
     assert.deepEqual(
       requests.map((request) => request.origin),
-      [IRYS_GATEWAY_ORIGIN, "https://cdn.mainnet-1.datasprite-cdn.com"],
+      [IRYS_GATEWAY_ORIGIN, "https://future-irys-cdn.example"],
     );
   });
 });

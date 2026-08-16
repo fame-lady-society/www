@@ -13,7 +13,6 @@ import type { IrysSponsoredUploader } from "@/service/irys_sponsored_upload";
 export const IRYS_GATEWAY_ORIGIN = "https://gateway.irys.xyz";
 export const IRYS_BASE_CURRENCY = "base-eth";
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
-const IRYS_CDN_HOST_SUFFIX = ".datasprite-cdn.com";
 const MAX_IRYS_DATA_REDIRECTS = 3;
 
 export type CreatorIrysTransaction = {
@@ -192,13 +191,11 @@ function assertMetadataTags(input: {
   }
 }
 
-function isAllowedIrysDataUrl(value: URL): boolean {
+function isAllowedIrysRedirectUrl(value: URL): boolean {
   return (
     value.protocol === "https:" &&
     !value.username &&
-    !value.password &&
-    (value.origin === IRYS_GATEWAY_ORIGIN ||
-      value.hostname.endsWith(IRYS_CDN_HOST_SUFFIX))
+    !value.password
   );
 }
 
@@ -321,7 +318,7 @@ export function createCreatorIrysVerifier(
           const location = response.headers.get("location");
           if (!location) throw new Error("Irys image redirect is missing location");
           const nextUrl = new URL(location, dataUrl);
-          if (!isAllowedIrysDataUrl(nextUrl)) {
+          if (!isAllowedIrysRedirectUrl(nextUrl)) {
             throw new Error("Irys image redirected to an untrusted origin");
           }
           dataUrl = nextUrl;
