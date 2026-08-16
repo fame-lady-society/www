@@ -20,12 +20,30 @@ const baseRpcTransportConfig = {
   },
 } satisfies HttpTransportConfig;
 
+const liveBaseRpcTransportConfig = {
+  batch: true,
+  retryCount: 10,
+  fetchOptions: {
+    cache: "no-store",
+  },
+} satisfies HttpTransportConfig;
+
 function createBaseRpcTransports() {
   return baseRpcUrls().map((rpc) => http(rpc, baseRpcTransportConfig));
 }
 
 export const client = createPublicClient({
   transport: fallback(createBaseRpcTransports()),
+  chain: base,
+  batch: {
+    multicall: true,
+  },
+});
+
+export const liveClient = createPublicClient({
+  transport: fallback(
+    baseRpcUrls().map((rpc) => http(rpc, liveBaseRpcTransportConfig)),
+  ),
   chain: base,
   batch: {
     multicall: true,

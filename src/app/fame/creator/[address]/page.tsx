@@ -7,6 +7,16 @@ import { CreatorPortal } from "./CreatorPortal";
 import { ReleaseArtwork } from "./ReleaseArtwork";
 import { ChainSelector } from "../ChainSelector";
 import { CreatorBaseNetworkGate } from "./CreatorBaseNetworkGate";
+import { getCreatorUploadFundingSnapshot } from "@/service/creator_upload_funding";
+
+async function ReleaseArtworkWithFunding({
+  address,
+}: {
+  address: `0x${string}`;
+}) {
+  const funding = await getCreatorUploadFundingSnapshot();
+  return <ReleaseArtwork address={address} initialFunding={funding} />;
+}
 
 async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
   const [tokenIds, pools, artPoolRange] = await Promise.all([
@@ -51,7 +61,7 @@ export default async function CreatorAddressPage(props: {
     >
       <CreatorBaseNetworkGate>
         <div className="mx-auto w-full max-w-4xl px-4 pt-8">
-          <ReleaseArtwork address={address} />
+          <ReleaseArtworkWithFunding address={address} />
         </div>
         <Suspense
           fallback={

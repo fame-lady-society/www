@@ -12,17 +12,23 @@ const source = readFileSync(
 );
 
 describe("sponsored creator metadata uploader UI contract", () => {
-  it("exposes the signature, direct-upload, limit, and retry states", () => {
+  it("exposes the signature, preview, direct-upload, limit, and reset states", () => {
     for (const phrase of [
       "Approve sponsored image upload",
       "Uploading the image directly to Irys",
       "FLS pays Irys storage",
-      "Retry metadata only",
       "MAX_CREATOR_IMAGE_BYTES",
       "revokeCreatorImageAuthorization",
+      "Selected artwork preview",
+      "Image uploaded — release below",
+      "Update metadata",
+      "Reset everything",
+      "URL.createObjectURL",
     ]) {
       assert.equal(source.includes(phrase), true, phrase);
     }
+    assert.match(source, /disabled=\{busy \|\| Boolean\(imageUpload\)\}/);
+    assert.match(source, /if \(!file \|\| busy \|\| imageUpload\) return/);
     assert.equal(source.includes("new FormData"), false);
   });
 });

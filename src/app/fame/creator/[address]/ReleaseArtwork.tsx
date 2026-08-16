@@ -20,14 +20,13 @@ import {
   creatorArtistMagicAbi,
   useReadCreatorArtistMagicNextTokenId,
 } from "@/wagmi";
-import {
-  SponsoredCreatorMetadataUploader,
-} from "./SponsoredCreatorMetadataUploader";
+import { SponsoredCreatorMetadataUploader } from "./SponsoredCreatorMetadataUploader";
 import {
   finalizeCreatorMetadata,
   reauthorizeCreatorMetadata,
 } from "@/service/creator_irys_upload";
 import { useHasCreatorRole } from "./useHasCreatorRole";
+import type { CreatorUploadFundingSnapshot } from "@/features/fame/creatorUploadFunding";
 import {
   createArtworkReleaseSingleFlight,
   recoverContendedArtworkRelease,
@@ -63,7 +62,13 @@ function releaseButtonLabel(phase: ReleasePhase, tokenId: bigint) {
   }
 }
 
-export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
+export function ReleaseArtwork({
+  address,
+  initialFunding,
+}: {
+  address: `0x${string}`;
+  initialFunding: CreatorUploadFundingSnapshot;
+}) {
   const contract = creatorArtistMagicAddress(base.id);
   const connection = useConnection();
   const connectedAddress = connection.address;
@@ -75,9 +80,8 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
   const [release, setRelease] = useState<FrozenArtworkRelease | null>(null);
   const [phase, setPhase] = useState<ReleasePhase>("idle");
   const [message, setMessage] = useState<string | null>(null);
-  const submitSingleFlight = useRef(
-    createArtworkReleaseSingleFlight(),
-  ).current;
+  const [uploaderResetKey, setUploaderResetKey] = useState(0);
+  const submitSingleFlight = useRef(createArtworkReleaseSingleFlight()).current;
   const nextTokenId = useReadCreatorArtistMagicNextTokenId({
     chainId: base.id,
     address: contract,
@@ -169,9 +173,10 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
         }
         setPhase("idle");
         setMessage(
-          `Society #${frozen.expectedTokenId.toString()} was released.`,
+          `Society #${frozen.expectedTokenId.toString()} metadata was updated and the release boundary advanced. Ownership did not change.`,
         );
         setRelease(null);
+        setUploaderResetKey((key) => key + 1);
         await nextTokenId.refetch();
         router.refresh();
       } catch (error) {
@@ -189,9 +194,10 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
           if (failureResolution === "complete") {
             setPhase("idle");
             setMessage(
-              `Society #${frozen.expectedTokenId.toString()} was released.`,
+              `Society #${frozen.expectedTokenId.toString()} metadata was updated and the release boundary advanced. Ownership did not change.`,
             );
             setRelease(null);
+            setUploaderResetKey((key) => key + 1);
             await nextTokenId.refetch();
             router.refresh();
             return;
@@ -260,12 +266,23 @@ export function ReleaseArtwork({ address }: { address: `0x${string}` }) {
             <Typography>
               Next release: Society #{boundary.toString()}
             </Typography>
+            <Typography color="text.secondary" variant="body2">
+              Releasing updates this token&apos;s metadata and advances the
+              boundary; it does not mint or transfer ownership.
+            </Typography>
             <SponsoredCreatorMetadataUploader
               key={boundary.toString()}
+              resetKey={uploaderResetKey}
+              initialFunding={initialFunding}
               address={address}
               tokenId={Number(boundary)}
               mode="release"
-              onComplete={({ metadataUri, imageUri, imageCapability, operationId }) => {
+              onComplete={({
+                metadataUri,
+                imageUri,
+                imageCapability,
+                operationId,
+              }) => {
                 setRelease({
                   expectedTokenId: BigInt(boundary),
                   imageUri,
