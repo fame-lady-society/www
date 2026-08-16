@@ -35,6 +35,7 @@ type BrowserIrysUploadReceipt = {
   txid?: unknown;
   tx_id?: unknown;
   transactionId?: unknown;
+  verify?: unknown;
 };
 
 type BrowserIrysUploader = {
@@ -52,7 +53,7 @@ type BrowserIrysUploader = {
   >;
 };
 
-const IRYS_TRANSACTION_ID_RE = /^[A-Za-z0-9_-]{43}$/;
+const IRYS_TRANSACTION_ID_RE = /^[A-Za-z0-9_-]+$/;
 
 function transactionIdFromResult(
   result: BrowserIrysUploadReceipt & {
@@ -176,6 +177,12 @@ export async function uploadCreatorImageWithUploader(input: {
     tags,
     upload: { paidBy: input.authorization.sponsorAddress },
   });
+  if (typeof result.verify === "function") {
+    const receiptVerified = await result.verify();
+    if (!receiptVerified) {
+      throw new Error("Irys upload receipt verification failed");
+    }
+  }
   const imageTxId = transactionIdFromResult(result);
   return {
     ...input.authorization,

@@ -12,7 +12,7 @@ import type { IrysSponsoredUploader } from "@/service/irys_sponsored_upload";
 
 export const IRYS_GATEWAY_ORIGIN = "https://gateway.irys.xyz";
 export const IRYS_BASE_CURRENCY = "base-eth";
-const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 export type CreatorIrysTransaction = {
   id: string;

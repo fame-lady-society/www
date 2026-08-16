@@ -17,6 +17,7 @@ const CREATOR = "0x0000000000000000000000000000000000000001";
 const SPONSOR = "0x0000000000000000000000000000000000000009";
 const OPERATION = "cu_test-operation-123456";
 const TX_ID = "i".repeat(43);
+const LONG_TX_ID = "j".repeat(44);
 const METADATA_TX_ID = "m".repeat(43);
 
 function image() {
@@ -63,6 +64,11 @@ describe("creator Irys image verification", () => {
 
   it("rejects malformed URI, wrong currency, and MIME/content mismatch", async () => {
     assert.equal(parseCreatorIrysGatewayUri("https://example.com/image"), null);
+    assert.equal(
+      parseCreatorIrysGatewayUri(`https://gateway.irys.xyz/${LONG_TX_ID}`)
+        ?.transactionId,
+      LONG_TX_ID,
+    );
     const bytes = image();
     await assert.rejects(
       verifyCreatorImage({

@@ -46,11 +46,12 @@ describe("creator upload capabilities", () => {
   });
 
   it("requires an image transaction for metadata capabilities", () => {
+    const imageTxId = "j".repeat(44);
     const issued = createCreatorUploadCapability({
       ...baseInput,
       purpose: "metadata-finalization",
-      imageUri: `https://gateway.irys.xyz/${"i".repeat(43)}`,
-      imageTxId: "i".repeat(43),
+      imageUri: `https://gateway.irys.xyz/${imageTxId}`,
+      imageTxId,
     });
     assert.equal(verifyCreatorUploadCapability(issued.token)?.purpose, "metadata-finalization");
   });

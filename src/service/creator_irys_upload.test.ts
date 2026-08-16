@@ -6,6 +6,7 @@ import { uploadCreatorImageWithUploader } from "./creator_irys_upload";
 const ADDRESS = "0x0000000000000000000000000000000000000001" as const;
 const SPONSOR = "0x0000000000000000000000000000000000000009" as const;
 const TX_ID = "i".repeat(43);
+const LONG_TX_ID = "j".repeat(44);
 
 describe("creator browser Irys upload", () => {
   it("passes paidBy and the operation tags to Irys", async () => {
@@ -20,7 +21,7 @@ describe("creator browser Irys upload", () => {
       uploader: {
         uploadFile: async (_file, options) => {
           received = options;
-          return { id: TX_ID };
+          return { id: TX_ID, verify: async () => true };
         },
       },
       address: ADDRESS,
@@ -70,6 +71,56 @@ describe("creator browser Irys upload", () => {
     });
 
     assert.equal(result.imageTxId, TX_ID);
+  });
+
+  it("accepts 44-character Irys transaction ids", async () => {
+    const file = new File(["image"], "creator.png", { type: "image/png" });
+    const hash = creatorContentHash(new Uint8Array(await file.arrayBuffer()));
+    const result = await uploadCreatorImageWithUploader({
+      uploader: {
+        uploadFile: async () => ({ id: LONG_TX_ID }),
+      },
+      address: ADDRESS,
+      tokenId: 123,
+      mode: "update",
+      file,
+      authorization: {
+        capability: "capability",
+        operationId: "cu_test-operation-123456",
+        sponsorAddress: SPONSOR,
+        expiresAt: Date.now() + 300_000,
+        imageHash: hash,
+      },
+    });
+
+    assert.equal(result.imageTxId, LONG_TX_ID);
+  });
+
+  it("rejects an invalid Irys receipt signature", async () => {
+    const file = new File(["image"], "creator.png", { type: "image/png" });
+    const hash = creatorContentHash(new Uint8Array(await file.arrayBuffer()));
+    await assert.rejects(
+      uploadCreatorImageWithUploader({
+        uploader: {
+          uploadFile: async () => ({
+            id: TX_ID,
+            verify: async () => false,
+          }),
+        },
+        address: ADDRESS,
+        tokenId: 123,
+        mode: "update",
+        file,
+        authorization: {
+          capability: "capability",
+          operationId: "cu_test-operation-123456",
+          sponsorAddress: SPONSOR,
+          expiresAt: Date.now() + 300_000,
+          imageHash: hash,
+        },
+      }),
+      /receipt verification failed/,
+    );
   });
 
   it("does not upload when the selected file changed after authorization", async () => {

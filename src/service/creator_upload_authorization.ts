@@ -122,7 +122,7 @@ function parseCapabilityPayload(value: unknown): CreatorUploadCapability | null 
     if (
       typeof payload.imageUri !== "string" ||
       typeof payload.imageTxId !== "string" ||
-      !/^[A-Za-z0-9_-]{43}$/.test(payload.imageTxId)
+      !/^[A-Za-z0-9_-]+$/.test(payload.imageTxId)
     ) {
       return null;
     }
