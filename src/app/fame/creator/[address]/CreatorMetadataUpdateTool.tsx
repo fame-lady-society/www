@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -136,24 +137,26 @@ function CreatorArtworkCard({
       : `FAME Society #${artwork.tokenId}`;
   const contents = (
     <>
-      <div className="relative aspect-square overflow-hidden rounded bg-gray-950 ring-1 ring-gray-200">
+      <div className="relative aspect-square overflow-hidden bg-[#16140f] ring-1 ring-inset ring-[#c9aa67]/20">
         <Image
           src={imageFailed ? FAME_METADATA_FALLBACK_IMAGE : imageUrl}
           alt={`${name} current artwork`}
           fill
           sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
-          className="object-cover transition group-hover:scale-[1.02]"
+          className="fame-artwork object-cover"
           onError={() => setImageFailed(true)}
         />
         {!ready || imageFailed ? (
-          <span className="absolute inset-x-2 bottom-2 rounded bg-black/75 px-2 py-1 text-xs text-white">
-            Preview unavailable — still selectable
+          <span className="absolute inset-x-3 bottom-3 border-l border-[#c9aa67] bg-[#0d0c0a]/90 px-3 py-2 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#e4cd96] backdrop-blur">
+            Preview unavailable
           </span>
         ) : null}
       </div>
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <span className="truncate text-sm font-medium">{name}</span>
-        <span className="font-mono text-xs text-gray-500">
+        <span className="truncate text-sm font-medium tracking-[-0.01em] text-[#f4eee2]">
+          {name}
+        </span>
+        <span className="font-mono text-[0.68rem] tabular-nums text-[#8f8779]">
           #{artwork.tokenId}
         </span>
       </div>
@@ -163,7 +166,7 @@ function CreatorArtworkCard({
     <button
       type="button"
       onClick={() => onSelect(artwork)}
-      className="group text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      className="group fame-focus w-full text-left"
       aria-label={`Update metadata for token ${artwork.tokenId}`}
     >
       {contents}
@@ -602,18 +605,20 @@ export function CreatorMetadataUpdateTool({
 
   if (roles.isError) {
     return (
-      <section className="rounded-lg border border-red-200 bg-white p-5 shadow-sm sm:p-7">
-        <p className="text-center text-red-700" role="alert">
-          The CREATOR role could not be checked. {roles.errorMessage}
-        </p>
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            className="rounded border border-indigo-600 px-4 py-2 text-indigo-700"
-            onClick={() => void roles.refetch()}
-          >
-            Retry role check
-          </button>
+      <section className="mx-auto max-w-[1440px] px-4 py-16 text-[#f4eee2] sm:px-8">
+        <div className="border-l border-[#c96f67] bg-[#2a1512] p-5 sm:p-7">
+          <p className="text-[#efc1b8]" role="alert">
+            The CREATOR role could not be checked. {roles.errorMessage}
+          </p>
+          <div className="mt-5">
+            <button
+              type="button"
+              className="fame-action fame-focus border border-[#c9aa67]/50 px-4 py-2 text-[#f4eee2] hover:border-[#c9aa67]"
+              onClick={() => void roles.refetch()}
+            >
+              Retry role check
+            </button>
+          </div>
         </div>
       </section>
     );
@@ -623,8 +628,8 @@ export function CreatorMetadataUpdateTool({
 
   if (restoredPendingAccount !== address.toLowerCase()) {
     return (
-      <section className="rounded-lg border border-indigo-200 bg-white p-5 shadow-sm sm:p-7">
-        <p role="status" className="text-center text-gray-600">
+      <section className="mx-auto max-w-[1440px] px-4 py-16 text-[#f4eee2] sm:px-8">
+        <p role="status" className="fame-kicker text-[#bdb4a4]">
           Checking for a previously submitted metadata update…
         </p>
       </section>
@@ -651,32 +656,52 @@ export function CreatorMetadataUpdateTool({
     reconciliationNow - submittedAt >= 15 * 60 * 1000;
 
   return (
-    <section className="rounded-lg border border-indigo-200 bg-white p-5 shadow-sm sm:p-7">
-      <h1 className="text-3xl font-bold">Update released artwork</h1>
-      <p className="mt-2 text-gray-600">
-        Replace metadata for any released Society token without changing its
-        ownership or pool position.
-      </p>
+    <section className="mx-auto max-w-[1440px] px-4 pb-24 pt-8 text-[#f4eee2] sm:px-8 sm:pt-12">
+      <Link
+        href={`/fame/creator/${address}`}
+        className="fame-focus inline-flex text-xs font-bold uppercase tracking-[0.14em] text-[#c9aa67] transition hover:text-[#f4eee2]"
+      >
+        ← Creator portal
+      </Link>
+      <header className="mt-8 grid gap-8 border-b border-[#c9aa67]/20 pb-10 lg:grid-cols-12 lg:items-end">
+        <div className="lg:col-span-8">
+          <p className="fame-kicker text-[#c9aa67]">Released collection</p>
+          <h1 className="fame-display mt-3 max-w-4xl text-5xl leading-[0.94] sm:text-6xl lg:text-7xl">
+            Metadata studio.
+          </h1>
+        </div>
+        <div className="lg:col-span-4 lg:border-l lg:border-[#c9aa67]/25 lg:pl-7">
+          <p className="max-w-md text-sm leading-6 text-[#bdb4a4]">
+            Replace the artwork metadata for any released Society token. Its
+            owner and Art Pool position stay exactly where they are.
+          </p>
+          {!selected && artworks.length > 0 ? (
+            <p className="fame-kicker mt-5 text-[#8f8779]">
+              {artworks.length} artwork{artworks.length === 1 ? "" : "s"} loaded
+            </p>
+          ) : null}
+        </div>
+      </header>
 
       {selected ? (
-        <div className="mt-6 space-y-5">
+        <div className="mt-8 space-y-7">
           <button
             type="button"
-            className="text-sm font-medium text-indigo-700 hover:text-indigo-900"
+            className="fame-focus text-xs font-bold uppercase tracking-[0.14em] text-[#c9aa67] transition hover:text-[#f4eee2] disabled:opacity-40"
             onClick={updateAnother}
             disabled={busy && !confirmed}
           >
             ← Back to released artwork
           </button>
-          <div className="grid gap-5 sm:grid-cols-[200px_1fr]">
+          <div className="grid gap-8 lg:grid-cols-[minmax(260px,420px)_1fr] lg:gap-12">
             <div>
               <CreatorArtworkCard artwork={selected} />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5 lg:border-l lg:border-[#c9aa67]/20 lg:pl-10">
               <div>
                 <label
                   htmlFor="creator-update-metadata-url"
-                  className="block text-sm font-medium"
+                  className="fame-kicker block text-[#bdb4a4]"
                 >
                   New metadata URL
                 </label>
@@ -687,7 +712,7 @@ export function CreatorMetadataUpdateTool({
                   onChange={(event) => setMetadataUrl(event.target.value)}
                   placeholder="https://example.com/metadata.json"
                   disabled={busy || confirmed}
-                  className="mt-2 w-full rounded border border-gray-300 p-3"
+                  className="fame-focus mt-3 w-full border border-[#c9aa67]/30 bg-[#16140f] p-3 text-[#f4eee2] placeholder:text-[#6f685d] disabled:opacity-50"
                 />
               </div>
               {!confirmed ? (
@@ -712,7 +737,7 @@ export function CreatorMetadataUpdateTool({
                   (busy && phase !== "submitted_unknown") ||
                   confirmed
                 }
-                className="rounded bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                className="fame-action fame-focus bg-[#c9aa67] px-5 py-3 font-bold text-[#0d0c0a] transition hover:bg-[#dfc584] disabled:cursor-not-allowed disabled:bg-[#554b37] disabled:text-[#93866d]"
               >
                 {updatePhaseLabel(phase)}
               </button>
@@ -721,11 +746,11 @@ export function CreatorMetadataUpdateTool({
                   role="status"
                   className={
                     phase === "error"
-                      ? "rounded bg-red-50 p-3 text-sm text-red-700"
+                      ? "border-l border-[#c96f67] bg-[#2a1512] p-3 text-sm text-[#efc1b8]"
                       : phase === "submitted_unknown" ||
                           phase === "confirmed_refresh_pending"
-                        ? "rounded bg-amber-50 p-3 text-sm text-amber-800"
-                        : "rounded bg-green-50 p-3 text-sm text-green-800"
+                        ? "border-l border-[#c9aa67] bg-[#241f14] p-3 text-sm text-[#e4cd96]"
+                        : "border-l border-[#7fa68a] bg-[#132019] p-3 text-sm text-[#b9d6c1]"
                   }
                 >
                   {message}
@@ -737,7 +762,7 @@ export function CreatorMetadataUpdateTool({
                     href={`https://basescan.org/tx/${submittedHash}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm font-medium text-indigo-700 underline"
+                    className="fame-focus text-sm font-medium text-[#c9aa67] underline underline-offset-4"
                   >
                     View transaction on BaseScan
                   </a>
@@ -745,7 +770,7 @@ export function CreatorMetadataUpdateTool({
                     <button
                       type="button"
                       onClick={clearVerifiedDroppedUpdate}
-                      className="rounded border border-amber-700 px-3 py-2 text-sm font-medium text-amber-800"
+                      className="fame-action fame-focus border border-[#c9aa67]/50 px-3 py-2 text-sm font-medium text-[#e4cd96] hover:border-[#c9aa67]"
                     >
                       I verified it was dropped — clear record
                     </button>
@@ -758,7 +783,7 @@ export function CreatorMetadataUpdateTool({
                   onClick={() =>
                     void completeConfirmedUpdate(metadataUrl.trim())
                   }
-                  className="rounded border border-amber-700 px-5 py-3 font-semibold text-amber-800 hover:bg-amber-50"
+                  className="fame-action fame-focus border border-[#c9aa67]/50 px-5 py-3 font-semibold text-[#e4cd96] hover:border-[#c9aa67]"
                 >
                   Retry updated preview
                 </button>
@@ -767,7 +792,7 @@ export function CreatorMetadataUpdateTool({
                 <button
                   type="button"
                   onClick={updateAnother}
-                  className="rounded border border-indigo-600 px-5 py-3 font-semibold text-indigo-700 hover:bg-indigo-50"
+                  className="fame-action fame-focus border border-[#c9aa67]/50 px-5 py-3 font-semibold text-[#f4eee2] hover:border-[#c9aa67]"
                 >
                   Update another token
                 </button>
@@ -776,12 +801,12 @@ export function CreatorMetadataUpdateTool({
           </div>
         </div>
       ) : (
-        <div className="mt-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="mt-8">
+          <div className="grid gap-4 border-l border-[#c9aa67] bg-[#16140f] p-5 sm:grid-cols-[1fr_auto] sm:items-end sm:p-6">
             <div className="flex-1">
               <label
                 htmlFor="creator-token-id"
-                className="block text-sm font-medium"
+                className="fame-kicker block text-[#bdb4a4]"
               >
                 Go directly to token ID
               </label>
@@ -794,43 +819,55 @@ export function CreatorMetadataUpdateTool({
                   if (event.key === "Enter") void lookupToken();
                 }}
                 placeholder="646"
-                className="mt-2 w-full rounded border border-gray-300 p-3"
+                className="fame-focus mt-3 w-full border border-[#c9aa67]/30 bg-[#0d0c0a] p-3 text-[#f4eee2] placeholder:text-[#6f685d]"
               />
             </div>
             <button
               type="button"
               onClick={() => void lookupToken()}
               disabled={lookupPending}
-              className="rounded bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:bg-gray-400"
+              className="fame-action fame-focus bg-[#c9aa67] px-5 py-3 font-bold text-[#0d0c0a] transition hover:bg-[#dfc584] disabled:bg-[#554b37] disabled:text-[#93866d]"
             >
               {lookupPending ? "Loading…" : "Find token"}
             </button>
           </div>
           {lookupError ? (
-            <p className="mt-2 text-sm text-red-700" role="alert">
+            <p
+              className="mt-3 border-l border-[#c96f67] bg-[#2a1512] p-3 text-sm text-[#efc1b8]"
+              role="alert"
+            >
               {lookupError}
             </p>
           ) : null}
 
           {catalog.isPending ? (
-            <p className="py-10 text-center" role="status">
-              Loading released artwork…
-            </p>
+            <div
+              className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4"
+              role="status"
+              aria-label="Loading released artwork"
+            >
+              {Array.from({ length: 8 }, (_, index) => (
+                <div key={index}>
+                  <div className="fame-skeleton aspect-square bg-[#16140f]" />
+                  <div className="fame-skeleton mt-3 h-4 w-2/3 bg-[#16140f]" />
+                </div>
+              ))}
+            </div>
           ) : catalog.isError ? (
-            <div className="py-10 text-center">
-              <p className="text-red-700">
+            <div className="mt-8 border-l border-[#c96f67] bg-[#2a1512] p-5">
+              <p className="text-[#efc1b8]">
                 Released artwork could not be loaded.
               </p>
               <button
                 type="button"
-                className="mt-4 rounded border border-indigo-600 px-4 py-2 text-indigo-700"
+                className="fame-action fame-focus mt-4 border border-[#c9aa67]/50 px-4 py-2 text-[#f4eee2] hover:border-[#c9aa67]"
                 onClick={() => void catalog.refetch()}
               >
                 Try again
               </button>
             </div>
           ) : artworks.length === 0 ? (
-            <p className="py-10 text-center text-gray-600">
+            <p className="py-14 text-center text-[#8f8779]">
               No released artwork is available.
             </p>
           ) : (
@@ -847,12 +884,12 @@ export function CreatorMetadataUpdateTool({
               {catalog.hasNextPage || catalog.isFetchNextPageError ? (
                 <div
                   ref={loadMoreRef}
-                  className="flex min-h-24 items-center justify-center py-8 text-sm text-gray-600"
+                  className="flex min-h-24 items-center justify-center py-8 text-sm text-[#8f8779]"
                 >
                   {catalog.isFetchNextPageError ? (
                     <button
                       type="button"
-                      className="rounded border border-indigo-600 px-4 py-2 text-indigo-700"
+                      className="fame-action fame-focus border border-[#c9aa67]/50 px-4 py-2 text-[#f4eee2] hover:border-[#c9aa67]"
                       onClick={() => void catalog.fetchNextPage()}
                     >
                       Retry loading artwork

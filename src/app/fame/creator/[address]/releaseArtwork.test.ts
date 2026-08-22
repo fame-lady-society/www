@@ -88,9 +88,10 @@ describe("creator artwork release", () => {
     );
     assert.ok(source.indexOf("<ReleaseArtwork") < source.indexOf("<Suspense"));
     assert.ok(
-      source.indexOf("<CreatorMetadataUpdateTool") <
+      source.indexOf("<CreatorMetadataUpdateLink") <
         source.indexOf("<Suspense"),
     );
+    assert.doesNotMatch(source, /<CreatorMetadataUpdateTool/);
     assert.match(source, /Loading owned artwork tools/);
     assert.doesNotMatch(source, /getDN404Storage/);
   });
@@ -102,6 +103,19 @@ describe("creator artwork release", () => {
     );
     assert.match(source, /Owned artwork tools unavailable/);
     assert.match(source, /Creator-wide metadata updates/);
+  });
+
+  it("keeps the released collection browser on a dedicated creator route", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/app/fame/creator/[address]/metadata/page.tsx",
+      ),
+      "utf8",
+    );
+    assert.match(source, /FAME Metadata Studio/);
+    assert.match(source, /<CreatorMetadataUpdateTool address=\{address\}/);
+    assert.match(source, /className="fame-surface"/);
   });
 
   it("uses CreatorArtistMagic as the creator portal pool authority", () => {

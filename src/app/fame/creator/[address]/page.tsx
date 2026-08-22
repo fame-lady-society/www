@@ -7,7 +7,7 @@ import { CreatorPortal } from "./CreatorPortal";
 import { ReleaseArtwork } from "./ReleaseArtwork";
 import { ChainSelector } from "../ChainSelector";
 import { CreatorBaseNetworkGate } from "./CreatorBaseNetworkGate";
-import { CreatorMetadataUpdateTool } from "./CreatorMetadataUpdateTool";
+import { CreatorMetadataUpdateLink } from "./CreatorMetadataUpdateLink";
 
 async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
   let tokenIds: bigint[];
@@ -25,7 +25,7 @@ async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
         <h2 className="text-2xl font-bold">Owned artwork tools unavailable</h2>
         <p className="mt-3 text-gray-600">
           Owned-token swaps could not be loaded. Creator-wide metadata updates
-          remain available above.
+          remain available in the metadata studio above.
         </p>
       </div>
     );
@@ -67,8 +67,8 @@ export default async function CreatorAddressPage(props: {
     >
       <CreatorBaseNetworkGate>
         <div className="mx-auto w-full max-w-4xl px-4 pt-8">
+          <CreatorMetadataUpdateLink address={address} />
           <ReleaseArtwork address={address} />
-          <CreatorMetadataUpdateTool address={address} />
         </div>
         <Suspense
           fallback={

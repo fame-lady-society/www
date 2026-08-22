@@ -450,18 +450,18 @@ export function SponsoredCreatorMetadataUploader({
           : "Select an image";
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white/60 p-3">
+    <div className="border border-[#c9aa67]/20 bg-[#11100d] p-4 text-[#f4eee2]">
       <div className="space-y-3">
         {funding?.sponsorAddress ? (
-          <div className="rounded border border-gray-300 bg-gray-50 p-3 text-sm text-gray-700">
+          <div className="border border-[#c9aa67]/20 bg-[#16140f] p-4 text-sm text-[#bdb4a4]">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <div className="font-semibold text-gray-900">Upload funding</div>
-              <div className="text-xs text-gray-500">
+              <div className="font-semibold text-[#f4eee2]">Upload funding</div>
+              <div className="text-xs text-[#8f8779]">
                 Server-side metadata signer · Base
               </div>
             </div>
             <div className="mt-3">
-              <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="text-xs font-medium uppercase tracking-wide text-[#8f8779]">
                 Funding address
               </div>
               <CopyToClipboard text={funding.sponsorAddress} clipboard>
@@ -469,11 +469,11 @@ export function SponsoredCreatorMetadataUploader({
                   <button
                     type="button"
                     onClick={handleClick}
-                    className="mt-1 flex w-full items-center justify-between gap-3 rounded border border-gray-300 bg-white px-3 py-2 text-left font-mono text-xs text-gray-800 transition hover:border-indigo-500 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="fame-focus mt-1 flex w-full items-center justify-between gap-3 border border-[#c9aa67]/30 bg-[#0d0c0a] px-3 py-2 text-left font-mono text-xs text-[#bdb4a4] transition hover:border-[#c9aa67] hover:text-[#f4eee2]"
                     aria-label="Copy upload funding address"
                   >
                     <span className="break-all">{funding.sponsorAddress}</span>
-                    <span className="shrink-0 font-sans text-xs font-semibold text-indigo-700">
+                    <span className="shrink-0 font-sans text-xs font-semibold text-[#c9aa67]">
                       Copy
                     </span>
                   </button>
@@ -482,39 +482,39 @@ export function SponsoredCreatorMetadataUploader({
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-[#8f8779]">
                   Base balance
                 </div>
-                <div className="mt-1 font-mono text-sm text-gray-900">
+                <div className="mt-1 font-mono text-sm text-[#f4eee2]">
                   {funding.baseBalanceEth ?? "Unavailable"} ETH
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-[#8f8779]">
                   Loaded Irys balance
                 </div>
-                <div className="mt-1 font-mono text-sm text-gray-900">
+                <div className="mt-1 font-mono text-sm text-[#f4eee2]">
                   {funding.loadedIrysBalanceEth ?? "Not checked"} ETH
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-[#8f8779]">
                   This image + metadata
                 </div>
-                <div className="mt-1 font-mono text-sm text-gray-900">
+                <div className="mt-1 font-mono text-sm text-[#f4eee2]">
                   {estimatedUploadLabel}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-[#8f8779]">
                   Approx. full uploads
                 </div>
-                <div className="mt-1 font-mono text-sm text-gray-900">
+                <div className="mt-1 font-mono text-sm text-[#f4eee2]">
                   {estimatedImagesLabel}
                 </div>
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-500">
+            <p className="mt-3 text-xs leading-5 text-[#8f8779]">
               Estimate includes the Irys image and metadata costs with the
               existing 10% buffer. Approximate uploads combine the loaded Irys
               balance with Base ETH above the approximately{" "}
@@ -522,17 +522,20 @@ export function SponsoredCreatorMetadataUploader({
               debited when the signer&apos;s loaded Irys balance needs a top-up.
             </p>
             {funding.error && (
-              <p className="mt-2 text-xs text-amber-700">{funding.error}</p>
+              <p className="mt-2 text-xs text-[#e4cd96]">{funding.error}</p>
             )}
           </div>
         ) : funding?.error ? (
-          <p className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <p className="border-l border-[#c9aa67] bg-[#241f14] p-3 text-sm text-[#e4cd96]">
             {funding.error}
           </p>
         ) : null}
 
         <div>
-          <label htmlFor={inputId} className="mb-2 block text-sm font-medium">
+          <label
+            htmlFor={inputId}
+            className="fame-kicker mb-2 block text-[#bdb4a4]"
+          >
             Image for generated metadata
           </label>
           <input
@@ -544,17 +547,17 @@ export function SponsoredCreatorMetadataUploader({
             onChange={(event) =>
               resetForFile(event.currentTarget.files?.[0] ?? null)
             }
-            className="block w-full text-sm text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-indigo-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-indigo-700 disabled:opacity-60"
+            className="block w-full text-sm text-[#bdb4a4] file:mr-3 file:border-0 file:bg-[#c9aa67] file:px-3 file:py-2 file:text-sm file:font-bold file:text-[#0d0c0a] hover:file:bg-[#dfc584] disabled:opacity-60"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-[#8f8779]">
             PNG, JPG, GIF, or WebP up to {limitLabel}. Uploads go directly to
             Irys.
           </p>
         </div>
 
         {file && previewUrl && (
-          <div className="grid gap-3 rounded border border-gray-300 bg-gray-50 p-3 sm:grid-cols-[minmax(0,160px)_1fr]">
-            <div className="flex min-h-40 items-center justify-center overflow-hidden rounded bg-gray-950">
+          <div className="grid gap-4 border border-[#c9aa67]/20 bg-[#16140f] p-3 sm:grid-cols-[minmax(0,160px)_1fr]">
+            <div className="flex min-h-40 items-center justify-center overflow-hidden bg-[#0d0c0a]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
@@ -562,12 +565,14 @@ export function SponsoredCreatorMetadataUploader({
                 className="max-h-40 w-full object-contain"
               />
             </div>
-            <div className="self-center text-sm text-gray-700">
-              <div className="font-medium">Selected image preview</div>
-              <div className="mt-1 break-words text-gray-600">
+            <div className="self-center text-sm text-[#bdb4a4]">
+              <div className="font-medium text-[#f4eee2]">
+                Selected image preview
+              </div>
+              <div className="mt-1 break-words text-[#bdb4a4]">
                 {file.name} · {formatImageSize(file.size)}
               </div>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-[#8f8779]">
                 Confirm this is the artwork you want before approving the
                 sponsored upload.
               </p>
@@ -581,7 +586,7 @@ export function SponsoredCreatorMetadataUploader({
               type="button"
               onClick={() => void signIn?.()}
               disabled={busy}
-              className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="fame-action fame-focus border border-[#c9aa67]/50 px-3 py-2 text-sm font-medium text-[#f4eee2] hover:border-[#c9aa67] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Sign in
             </button>
@@ -590,7 +595,7 @@ export function SponsoredCreatorMetadataUploader({
             type="button"
             onClick={() => void handleUpload()}
             disabled={!file || busy || !isSignedIn || Boolean(imageUpload)}
-            className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="fame-action fame-focus bg-[#c9aa67] px-3 py-2 text-sm font-bold text-[#0d0c0a] hover:bg-[#dfc584] disabled:cursor-not-allowed disabled:bg-[#554b37] disabled:text-[#93866d]"
           >
             {busy
               ? "Working…"
@@ -598,13 +603,13 @@ export function SponsoredCreatorMetadataUploader({
                 ? "Image uploaded — release below"
                 : "Approve sponsored image upload"}
           </button>
-          <span className="text-sm text-gray-600" role="status">
+          <span className="text-sm text-[#8f8779]" role="status">
             {stateCopy(state, isSignedIn)}
           </span>
         </div>
 
         {imageUpload && (
-          <div className="flex flex-wrap items-center gap-3 rounded border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950">
+          <div className="flex flex-wrap items-center gap-3 border-l border-[#c9aa67] bg-[#241f14] p-3 text-sm text-[#e4cd96]">
             <span>
               {mode === "release"
                 ? "The image upload is locked. Release the Society below, update metadata if needed, or reset everything."
@@ -614,7 +619,7 @@ export function SponsoredCreatorMetadataUploader({
               type="button"
               onClick={() => void updateMetadata()}
               disabled={busy}
-              className="rounded border border-indigo-700 px-3 py-2 font-medium text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="fame-action fame-focus border border-[#c9aa67]/50 px-3 py-2 font-medium text-[#f4eee2] hover:border-[#c9aa67] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Update metadata
             </button>
@@ -622,7 +627,7 @@ export function SponsoredCreatorMetadataUploader({
               type="button"
               onClick={resetEverything}
               disabled={busy}
-              className="rounded border border-gray-500 px-3 py-2 font-medium text-gray-700 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="fame-action fame-focus border border-[#8f8779]/50 px-3 py-2 font-medium text-[#bdb4a4] hover:border-[#bdb4a4] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Reset everything
             </button>
@@ -630,23 +635,23 @@ export function SponsoredCreatorMetadataUploader({
         )}
 
         {error && (
-          <p className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
+          <p className="border-l border-[#c96f67] bg-[#2a1512] p-3 text-sm text-[#efc1b8]">
             {error}
           </p>
         )}
 
         {imageUpload && (
           <div className="text-sm">
-            <div className="text-xs text-gray-500">Image URI</div>
-            <div className="break-words text-gray-800">
+            <div className="text-xs text-[#8f8779]">Image URI</div>
+            <div className="break-words text-[#bdb4a4]">
               {imageUpload.imageUri}
             </div>
           </div>
         )}
         {metadataUri && (
           <div className="text-sm">
-            <div className="text-xs text-gray-500">Metadata URI</div>
-            <div className="break-words text-gray-800">{metadataUri}</div>
+            <div className="text-xs text-[#8f8779]">Metadata URI</div>
+            <div className="break-words text-[#bdb4a4]">{metadataUri}</div>
           </div>
         )}
       </div>
