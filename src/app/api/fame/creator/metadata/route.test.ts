@@ -333,10 +333,11 @@ describe("/api/fame/creator/metadata", () => {
       `https://gateway.irys.xyz/${METADATA_TX_ID}`,
     );
     assert.equal(injected.uploads.length, 1);
-    assert.equal(
-      JSON.parse(injected.uploads[0].content.toString()).image,
-      imageUri,
+    const uploadedMetadata = JSON.parse(
+      injected.uploads[0].content.toString(),
     );
+    assert.equal(uploadedMetadata.name, "FAME Society");
+    assert.equal(uploadedMetadata.image, imageUri);
     assert.equal(injected.wasRevoked(), true);
   });
 

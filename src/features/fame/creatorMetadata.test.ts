@@ -6,6 +6,7 @@ import {
   MAX_CREATOR_IMAGE_BYTES,
   creatorContentHash,
   creatorImageTags,
+  createCreatorMetadataJson,
   findCreatorTag,
   isReleasedCreatorUpdateToken,
   validateCreatorImageDescriptor,
@@ -14,6 +15,14 @@ import {
 const CREATOR = "0x0000000000000000000000000000000000000001";
 
 describe("creator metadata image contract", () => {
+  it("uses a stable collection name without the token ID", () => {
+    const metadata = JSON.parse(
+      createCreatorMetadataJson(123, "https://example.com/image.png"),
+    );
+
+    assert.equal(metadata.name, "FAME Society");
+  });
+
   it("recognizes only released update token IDs", () => {
     assert.equal(isReleasedCreatorUpdateToken(1, 650n), true);
     assert.equal(isReleasedCreatorUpdateToken(649, 650n), true);
