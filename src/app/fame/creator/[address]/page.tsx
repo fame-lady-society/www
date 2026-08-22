@@ -7,23 +7,29 @@ import { CreatorPortal } from "./CreatorPortal";
 import { ReleaseArtwork } from "./ReleaseArtwork";
 import { ChainSelector } from "../ChainSelector";
 import { CreatorBaseNetworkGate } from "./CreatorBaseNetworkGate";
-import { getCreatorUploadFundingSnapshot } from "@/service/creator_upload_funding";
-
-async function ReleaseArtworkWithFunding({
-  address,
-}: {
-  address: `0x${string}`;
-}) {
-  const funding = await getCreatorUploadFundingSnapshot();
-  return <ReleaseArtwork address={address} initialFunding={funding} />;
-}
+import { CreatorMetadataUpdateTool } from "./CreatorMetadataUpdateTool";
 
 async function ExistingArtworkPortal({ address }: { address: `0x${string}` }) {
-  const [tokenIds, pools, artPoolRange] = await Promise.all([
-    fetchBaseNftLadiesData({ owner: address }),
-    getFamePools(),
-    getArtPoolRange(),
-  ]);
+  let tokenIds: bigint[];
+  let pools: Awaited<ReturnType<typeof getFamePools>>;
+  let artPoolRange: Awaited<ReturnType<typeof getArtPoolRange>>;
+  try {
+    [tokenIds, pools, artPoolRange] = await Promise.all([
+      fetchBaseNftLadiesData({ owner: address }),
+      getFamePools(),
+      getArtPoolRange(),
+    ]);
+  } catch {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 text-center">
+        <h2 className="text-2xl font-bold">Owned artwork tools unavailable</h2>
+        <p className="mt-3 text-gray-600">
+          Owned-token swaps could not be loaded. Creator-wide metadata updates
+          remain available above.
+        </p>
+      </div>
+    );
+  }
   return (
     <CreatorPortal
       address={address}
@@ -61,7 +67,8 @@ export default async function CreatorAddressPage(props: {
     >
       <CreatorBaseNetworkGate>
         <div className="mx-auto w-full max-w-4xl px-4 pt-8">
-          <ReleaseArtworkWithFunding address={address} />
+          <ReleaseArtwork address={address} />
+          <CreatorMetadataUpdateTool address={address} />
         </div>
         <Suspense
           fallback={

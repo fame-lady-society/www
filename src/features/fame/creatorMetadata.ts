@@ -1,4 +1,5 @@
 import { getAddress, isAddress, keccak256 } from "viem";
+import { isFameCollectionTokenId } from "./collection";
 
 export const CREATOR_METADATA_UPLOAD_MODES = [
   "art",
@@ -85,7 +86,10 @@ export function creatorImageTags(input: {
   contentHash: string;
 }): CreatorUploadTag[] {
   return [
-    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    {
+      name: CREATOR_UPLOAD_TAGS.application,
+      value: CREATOR_UPLOAD_APPLICATION_ID,
+    },
     { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
     {
       name: CREATOR_UPLOAD_TAGS.creator,
@@ -110,7 +114,10 @@ export function creatorMetadataTags(input: {
 }): CreatorUploadTag[] {
   const bytes = new TextEncoder().encode(input.content);
   return [
-    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    {
+      name: CREATOR_UPLOAD_TAGS.application,
+      value: CREATOR_UPLOAD_APPLICATION_ID,
+    },
     { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
     {
       name: CREATOR_UPLOAD_TAGS.creator,
@@ -120,7 +127,10 @@ export function creatorMetadataTags(input: {
     { name: CREATOR_UPLOAD_TAGS.mode, value: input.mode },
     { name: CREATOR_UPLOAD_TAGS.purpose, value: "metadata" },
     { name: CREATOR_UPLOAD_TAGS.contentType, value: "application/json" },
-    { name: CREATOR_UPLOAD_TAGS.contentLength, value: String(bytes.byteLength) },
+    {
+      name: CREATOR_UPLOAD_TAGS.contentLength,
+      value: String(bytes.byteLength),
+    },
     { name: CREATOR_UPLOAD_TAGS.contentHash, value: creatorContentHash(bytes) },
     { name: "Fame-Creator-Image-Uri", value: input.imageUri },
   ];
@@ -182,6 +192,17 @@ export function canUploadCreatorMetadata(
     case "update":
       return roles.isCreator;
   }
+}
+
+export function isReleasedCreatorUpdateToken(
+  tokenId: number,
+  nextTokenId: number | bigint,
+) {
+  return (
+    Number.isSafeInteger(tokenId) &&
+    isFameCollectionTokenId(tokenId) &&
+    BigInt(tokenId) < BigInt(nextTokenId)
+  );
 }
 
 export function createCreatorMetadataJson(tokenId: number, imageUrl: string) {

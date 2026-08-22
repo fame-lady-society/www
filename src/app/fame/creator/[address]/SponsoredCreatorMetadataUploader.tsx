@@ -34,6 +34,7 @@ type SponsoredCreatorMetadataUploaderProps = {
   onComplete: (result: SponsoredCreatorMetadataResult) => void;
   initialFunding?: CreatorUploadFundingSnapshot;
   resetKey?: number;
+  onBusyChange?: (busy: boolean) => void;
 };
 
 export type SponsoredCreatorMetadataResult = CreatorMetadataResult & {
@@ -116,6 +117,7 @@ export function SponsoredCreatorMetadataUploader({
   onComplete,
   initialFunding,
   resetKey,
+  onBusyChange,
 }: SponsoredCreatorMetadataUploaderProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -138,8 +140,20 @@ export function SponsoredCreatorMetadataUploader({
   );
   const [fundingLoading, setFundingLoading] = useState(false);
   const fundingRequestId = useRef(0);
+  const mounted = useRef(true);
 
   const busy = isBusy(state);
+
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const refreshFunding = useCallback(
     async (selectedImageBytes?: number) => {
@@ -277,11 +291,13 @@ export function SponsoredCreatorMetadataUploader({
     });
     setMetadataUri(result.metadataUri);
     setState("done");
-    onComplete({
-      ...result,
-      imageCapability: upload.capability,
-      operationId: upload.operationId,
-    });
+    if (mounted.current) {
+      onComplete({
+        ...result,
+        imageCapability: upload.capability,
+        operationId: upload.operationId,
+      });
+    }
     void refreshFunding(file?.size);
     return result;
   };
@@ -402,11 +418,13 @@ export function SponsoredCreatorMetadataUploader({
       }
       setMetadataUri(result.metadataUri);
       setState("done");
-      onComplete({
-        ...result,
-        imageCapability: imageUpload.capability,
-        operationId: imageUpload.operationId,
-      });
+      if (mounted.current) {
+        onComplete({
+          ...result,
+          imageCapability: imageUpload.capability,
+          operationId: imageUpload.operationId,
+        });
+      }
       void refreshFunding(file?.size);
     } catch (retryError) {
       setState("error");

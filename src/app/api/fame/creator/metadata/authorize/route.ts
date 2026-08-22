@@ -9,6 +9,7 @@ import {
   canUploadCreatorMetadata,
   decodeCreatorPortalRoles,
   isCreatorMetadataUploadMode,
+  isReleasedCreatorUpdateToken,
   normalizeCreatorAddress,
   validateCreatorImageDescriptor,
   type CreatorImageType,
@@ -49,6 +50,7 @@ type AuthorizationRequest = {
 export type CreatorMetadataAuthorizeDeps = {
   getSession: (request: NextRequest) => SessionData | null;
   readRoles: (address: Address) => Promise<bigint>;
+  readNextTokenId: () => Promise<number | bigint>;
   createUploader: () => Promise<IrysSponsoredUploader>;
   getSponsorAddress: () => Address;
   getMaxFundAmount: () => Promise<bigint>;
@@ -85,7 +87,9 @@ function safeJsonBody(value: unknown): value is AuthorizationRequest {
   );
 }
 
-async function parseBody(request: NextRequest): Promise<AuthorizationRequest | null> {
+async function parseBody(
+  request: NextRequest,
+): Promise<AuthorizationRequest | null> {
   const contentType = request.headers.get("content-type")?.split(";", 1)[0];
   if (contentType !== "application/json") return null;
   const contentLength = request.headers.get("content-length");
@@ -93,7 +97,9 @@ async function parseBody(request: NextRequest): Promise<AuthorizationRequest | n
     return null;
   }
   const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES) {
+  if (
+    new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES
+  ) {
     return null;
   }
   try {
@@ -138,6 +144,12 @@ const defaultDeps: CreatorMetadataAuthorizeDeps = {
       functionName: "rolesOf",
       args: [address],
     }),
+  readNextTokenId: async () =>
+    readContract(basePublicClient, {
+      address: creatorArtistMagicAddress(base.id),
+      abi: creatorArtistMagicAbi,
+      functionName: "nextTokenId",
+    }),
   createUploader: defaultCreateUploader,
   getSponsorAddress: defaultSponsorAddress,
   getMaxFundAmount: defaultGetMaxFundAmount,
@@ -158,7 +170,10 @@ export async function handleCreatorMetadataAuthorize(
   if (!cookie) return jsonError("Unauthorized", 401);
   const body = await parseBody(request);
   if (!body) return jsonError("Invalid request body", 422);
-  if (!isAddress(body.address) || !isAddressEqual(body.address, session.address)) {
+  if (
+    !isAddress(body.address) ||
+    !isAddressEqual(body.address, session.address)
+  ) {
     return jsonError("Unauthorized", 403);
   }
   if (!isCreatorMetadataUploadMode(body.mode)) {
@@ -176,6 +191,13 @@ export async function handleCreatorMetadataAuthorize(
   const roles = decodeCreatorPortalRoles(await deps.readRoles(body.address));
   if (!canUploadCreatorMetadata(roles, body.mode)) {
     return jsonError("Forbidden", 403);
+  }
+  if (body.mode === "update") {
+    if (
+      !isReleasedCreatorUpdateToken(body.tokenId, await deps.readNextTokenId())
+    ) {
+      return jsonError("Token is outside the released FAME range", 400);
+    }
   }
 
   const creatorAddress = normalizeCreatorAddress(body.address);

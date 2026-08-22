@@ -7,7 +7,10 @@ import {
   digestSessionCookie,
   verifyCreatorUploadCapability,
 } from "@/service/creator_upload_authorization";
-import type { CreatorUploadJournal, CreatorUploadOperation } from "@/service/creator_upload_journal";
+import type {
+  CreatorUploadJournal,
+  CreatorUploadOperation,
+} from "@/service/creator_upload_journal";
 
 process.env.SESSION_SECRET ||= "test-session-secret";
 process.env.CREATOR_UPLOAD_CAPABILITY_SECRET ||= "test-creator-upload-secret";
@@ -58,7 +61,10 @@ function deps(): CreatorUploadJournal {
     releaseCreator: async () => undefined,
     createOperation: async () => true,
     getOperation: async () => operation,
-    updateOperation: async (_operationId, patch) => ({ ...operation, ...patch }),
+    updateOperation: async (_operationId, patch) => ({
+      ...operation,
+      ...patch,
+    }),
     acquireFinalization: async () => null,
     releaseFinalization: async () => null,
   };
@@ -81,6 +87,7 @@ describe("/api/fame/creator/metadata/reauthorize", () => {
           expiresAt: Date.now() + 60_000,
         }),
         readRoles: async () => 2n,
+        readNextTokenId: async () => 650n,
         journal: deps(),
       },
     );
@@ -108,9 +115,103 @@ describe("/api/fame/creator/metadata/reauthorize", () => {
           expiresAt: Date.now() + 60_000,
         }),
         readRoles: async () => 2n,
+        readNextTokenId: async () => 650n,
         journal: deps(),
       },
     );
     assert.equal(response.status, 404);
+  });
+
+  it("rejects update reauthorization outside the released token range", async () => {
+    const updateOperation = {
+      ...operation,
+      mode: "update" as const,
+      tokenId: 650,
+    };
+    const response = await handleCreatorMetadataReauthorize(
+      request({
+        address: CREATOR,
+        tokenId: 650,
+        mode: "update",
+        operationId: updateOperation.operationId,
+        imageUri: IMAGE_URI,
+      }),
+      {
+        getSession: () => ({
+          address: CREATOR,
+          chainId: 8453,
+          expiresAt: Date.now() + 60_000,
+        }),
+        readRoles: async () => 2n,
+        readNextTokenId: async () => 650n,
+        journal: {
+          ...deps(),
+          getOperation: async () => updateOperation,
+        },
+      },
+    );
+    assert.equal(response.status, 400);
+  });
+
+  it("does not retarget an update operation to another released token", async () => {
+    const updateOperation = {
+      ...operation,
+      mode: "update" as const,
+      tokenId: 123,
+    };
+    const response = await handleCreatorMetadataReauthorize(
+      request({
+        address: CREATOR,
+        tokenId: 124,
+        mode: "update",
+        operationId: updateOperation.operationId,
+        imageUri: IMAGE_URI,
+      }),
+      {
+        getSession: () => ({
+          address: CREATOR,
+          chainId: 8453,
+          expiresAt: Date.now() + 60_000,
+        }),
+        readRoles: async () => 2n,
+        readNextTokenId: async () => 650n,
+        journal: {
+          ...deps(),
+          getOperation: async () => updateOperation,
+        },
+      },
+    );
+    assert.equal(response.status, 404);
+  });
+
+  it("requires the CREATOR role for update reauthorization", async () => {
+    const updateOperation = {
+      ...operation,
+      mode: "update" as const,
+      tokenId: 123,
+    };
+    const response = await handleCreatorMetadataReauthorize(
+      request({
+        address: CREATOR,
+        tokenId: 123,
+        mode: "update",
+        operationId: updateOperation.operationId,
+        imageUri: IMAGE_URI,
+      }),
+      {
+        getSession: () => ({
+          address: CREATOR,
+          chainId: 8453,
+          expiresAt: Date.now() + 60_000,
+        }),
+        readRoles: async () => 0n,
+        readNextTokenId: async () => 650n,
+        journal: {
+          ...deps(),
+          getOperation: async () => updateOperation,
+        },
+      },
+    );
+    assert.equal(response.status, 403);
   });
 });

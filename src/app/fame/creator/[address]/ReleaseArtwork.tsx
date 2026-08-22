@@ -28,11 +28,11 @@ import {
 import { useHasCreatorRole } from "./useHasCreatorRole";
 import type { CreatorUploadFundingSnapshot } from "@/features/fame/creatorUploadFunding";
 import {
-  createArtworkReleaseSingleFlight,
   recoverContendedArtworkRelease,
   resolveArtworkReleaseFailure,
   type FrozenArtworkRelease,
 } from "./releaseArtworkState";
+import { createTransactionSingleFlight } from "./submittedTransactionState";
 
 type ReleasePhase =
   | "idle"
@@ -67,7 +67,7 @@ export function ReleaseArtwork({
   initialFunding,
 }: {
   address: `0x${string}`;
-  initialFunding: CreatorUploadFundingSnapshot;
+  initialFunding?: CreatorUploadFundingSnapshot;
 }) {
   const contract = creatorArtistMagicAddress(base.id);
   const connection = useConnection();
@@ -81,7 +81,7 @@ export function ReleaseArtwork({
   const [phase, setPhase] = useState<ReleasePhase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [uploaderResetKey, setUploaderResetKey] = useState(0);
-  const submitSingleFlight = useRef(createArtworkReleaseSingleFlight()).current;
+  const submitSingleFlight = useRef(createTransactionSingleFlight()).current;
   const nextTokenId = useReadCreatorArtistMagicNextTokenId({
     chainId: base.id,
     address: contract,

@@ -3,11 +3,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "node:test";
 import {
-  createArtworkReleaseSingleFlight,
-  reconcileSubmittedArtworkRelease,
   recoverContendedArtworkRelease,
   resolveArtworkReleaseFailure,
 } from "./releaseArtworkState";
+import {
+  createTransactionSingleFlight,
+  reconcileSubmittedTransaction,
+} from "./submittedTransactionState";
 
 describe("creator artwork release", () => {
   it("allows only one release submission while the first is pending", async () => {
@@ -15,7 +17,7 @@ describe("creator artwork release", () => {
     const firstPending = new Promise<void>((resolve) => {
       finishFirst = resolve;
     });
-    const runSingleFlight = createArtworkReleaseSingleFlight();
+    const runSingleFlight = createTransactionSingleFlight();
     let submissions = 0;
 
     const first = runSingleFlight(async () => {
@@ -85,8 +87,21 @@ describe("creator artwork release", () => {
       "utf8",
     );
     assert.ok(source.indexOf("<ReleaseArtwork") < source.indexOf("<Suspense"));
+    assert.ok(
+      source.indexOf("<CreatorMetadataUpdateTool") <
+        source.indexOf("<Suspense"),
+    );
     assert.match(source, /Loading owned artwork tools/);
     assert.doesNotMatch(source, /getDN404Storage/);
+  });
+
+  it("keeps creator-wide updates independent from owned-token loading", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "src/app/fame/creator/[address]/page.tsx"),
+      "utf8",
+    );
+    assert.match(source, /Owned artwork tools unavailable/);
+    assert.match(source, /Creator-wide metadata updates/);
   });
 
   it("uses CreatorArtistMagic as the creator portal pool authority", () => {
@@ -104,15 +119,15 @@ describe("creator artwork release", () => {
 
   it("classifies confirmed, reverted, and unknown submitted transactions", async () => {
     assert.equal(
-      await reconcileSubmittedArtworkRelease(async () => "success"),
+      await reconcileSubmittedTransaction(async () => "success"),
       "success",
     );
     assert.equal(
-      await reconcileSubmittedArtworkRelease(async () => "reverted"),
+      await reconcileSubmittedTransaction(async () => "reverted"),
       "reverted",
     );
     assert.equal(
-      await reconcileSubmittedArtworkRelease(async () => {
+      await reconcileSubmittedTransaction(async () => {
         throw new Error("receipt unavailable");
       }),
       "unknown",
