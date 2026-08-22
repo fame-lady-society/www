@@ -12,6 +12,7 @@ import {
   creatorMetadataTags,
   decodeCreatorPortalRoles,
   isCreatorMetadataUploadMode,
+  isReleasedCreatorUpdateToken,
   normalizeCreatorAddress,
   type CreatorMetadataUploadMode,
 } from "@/features/fame/creatorMetadata";
@@ -53,6 +54,7 @@ type CreatorMetadataFinalizeRequest = {
 export type CreatorMetadataUploadDeps = {
   getSession: (request: NextRequest) => SessionData | null;
   readRoles: (address: Address) => Promise<bigint>;
+  readNextTokenId: () => Promise<number | bigint>;
   createUploader: () => Promise<IrysSponsoredUploader>;
   createVerifier: (uploader: IrysSponsoredUploader) => CreatorIrysVerifier;
   getMaxFundAmount: () => Promise<bigint>;
@@ -95,7 +97,9 @@ async function parseBody(
     return null;
   }
   const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES) {
+  if (
+    new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES
+  ) {
     return null;
   }
   try {
@@ -134,13 +138,22 @@ const defaultDeps: CreatorMetadataUploadDeps = {
       functionName: "rolesOf",
       args: [address],
     }),
+  readNextTokenId: async () =>
+    readContract(basePublicClient, {
+      address: creatorArtistMagicAddress(base.id),
+      abi: creatorArtistMagicAbi,
+      functionName: "nextTokenId",
+    }),
   createUploader: defaultCreateUploader,
   createVerifier: (uploader) => createCreatorIrysVerifier(uploader),
   getMaxFundAmount: defaultGetMaxFundAmount,
   journal: createCreatorUploadJournal(),
 };
 
-async function revokeImageApproval(uploader: IrysSponsoredUploader, address: string) {
+async function revokeImageApproval(
+  uploader: IrysSponsoredUploader,
+  address: string,
+) {
   if (!uploader.approval) {
     throw new Error("Irys approval support is unavailable");
   }
@@ -185,7 +198,10 @@ export async function handleCreatorMetadataUpload(
   if (!cookie) return jsonError("Unauthorized", 401);
   const body = await parseBody(request);
   if (!body) return jsonError("Invalid request body", 422);
-  if (!isAddress(body.address) || !isAddressEqual(body.address, session.address)) {
+  if (
+    !isAddress(body.address) ||
+    !isAddressEqual(body.address, session.address)
+  ) {
     return jsonError("Unauthorized", 403);
   }
   if (!isCreatorMetadataUploadMode(body.mode)) {
@@ -215,7 +231,8 @@ export async function handleCreatorMetadataUpload(
   }
   if (
     capability.purpose === "metadata-finalization" &&
-    (capability.tokenId !== body.tokenId || capability.imageUri !== body.imageUri)
+    (capability.tokenId !== body.tokenId ||
+      capability.imageUri !== body.imageUri)
   ) {
     return jsonError("Metadata authorization scope mismatch", 403);
   }
@@ -224,6 +241,13 @@ export async function handleCreatorMetadataUpload(
   if (!canUploadCreatorMetadata(roles, body.mode)) {
     return jsonError("Forbidden", 403);
   }
+  if (body.mode === "update") {
+    if (
+      !isReleasedCreatorUpdateToken(body.tokenId, await deps.readNextTokenId())
+    ) {
+      return jsonError("Token is outside the released FAME range", 400);
+    }
+  }
 
   const operation = await deps.journal.getOperation(capability.operationId);
   if (
@@ -231,6 +255,8 @@ export async function handleCreatorMetadataUpload(
     operation.creatorAddress.toLowerCase() !== creatorAddress.toLowerCase() ||
     operation.sessionDigest !== capability.sessionDigest ||
     operation.mode !== capability.mode ||
+    (capability.mode === "update" &&
+      operation.tokenId !== capability.tokenId) ||
     operation.imageHash !== capability.imageHash ||
     operation.imageBytes !== capability.imageBytes
   ) {
@@ -259,7 +285,8 @@ export async function handleCreatorMetadataUpload(
     lease,
     CREATOR_UPLOAD_LEASE_SECONDS,
   );
-  if (!locked) return jsonError("Upload finalization is already in progress", 409);
+  if (!locked)
+    return jsonError("Upload finalization is already in progress", 409);
 
   let imageVerified = false;
   try {
@@ -302,7 +329,10 @@ export async function handleCreatorMetadataUpload(
         await revokeImageApproval(uploader, creatorAddress);
       }
       await deps.journal.releaseCreator(creatorAddress, capability.operationId);
-      return NextResponse.json({ imageUri: verifiedImage.imageUri, metadataUri });
+      return NextResponse.json({
+        imageUri: verifiedImage.imageUri,
+        metadataUri,
+      });
     }
 
     if (capability.purpose === "image-upload") {
@@ -317,7 +347,10 @@ export async function handleCreatorMetadataUpload(
       uploader,
       bytes: metadataBytes + 4096,
       maxFundAmount: await deps.getMaxFundAmount(),
-      logContext: { operationId: capability.operationId, kind: "creator-metadata" },
+      logContext: {
+        operationId: capability.operationId,
+        kind: "creator-metadata",
+      },
     });
     const metadataUri = await uploadToIrys({
       uploader,
@@ -332,7 +365,8 @@ export async function handleCreatorMetadataUpload(
       }),
     });
     const metadataTxId = parseCreatorIrysGatewayUri(metadataUri)?.transactionId;
-    if (!metadataTxId) throw new Error("Metadata upload returned an invalid URI");
+    if (!metadataTxId)
+      throw new Error("Metadata upload returned an invalid URI");
     await deps.journal.updateOperation(capability.operationId, {
       status: "finalized",
       metadataUri,

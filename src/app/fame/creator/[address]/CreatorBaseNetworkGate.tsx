@@ -24,9 +24,7 @@ export function CreatorBaseNetworkGate({ children }: PropsWithChildren) {
 
     void switchChain({ chainId: base.id }).catch((error: unknown) => {
       setSwitchError(
-        error instanceof Error
-          ? error.message
-          : "Unable to switch to Base.",
+        error instanceof Error ? error.message : "Unable to switch to Base.",
       );
     });
   }, [chainId, isConnected, retryCount, switchChain]);
@@ -34,18 +32,18 @@ export function CreatorBaseNetworkGate({ children }: PropsWithChildren) {
   if (!isConnected || chainId === base.id) return children;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-12 text-center">
+    <div className="mx-auto w-full max-w-4xl px-4 py-16 text-center text-[#f4eee2]">
       {switchError ? (
         <>
           <h1 className="text-2xl font-semibold">Base is required</h1>
-          <p className="mt-3 text-gray-600">
+          <p className="mt-3 text-[#bdb4a4]">
             Switch to Base to load Creator Portal token images and tools.
           </p>
-          <p className="mt-2 text-sm text-red-600">{switchError}</p>
+          <p className="mt-2 text-sm text-[#efc1b8]">{switchError}</p>
           <button
             type="button"
             onClick={() => setRetryCount((count) => count + 1)}
-            className="mt-5 rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            className="fame-action fame-focus mt-5 bg-[#c9aa67] px-4 py-2 font-bold text-[#0d0c0a] hover:bg-[#dfc584]"
           >
             Try switching again
           </button>

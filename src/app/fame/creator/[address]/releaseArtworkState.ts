@@ -1,3 +1,5 @@
+import { reconcileSubmittedTransaction } from "./submittedTransactionState";
+
 export type FrozenArtworkRelease = Readonly<{
   expectedTokenId: bigint;
   imageUri: string;
@@ -6,40 +8,14 @@ export type FrozenArtworkRelease = Readonly<{
   operationId?: string;
 }>;
 
-export type SubmittedReleaseStatus = "success" | "reverted" | "unknown";
 export type ReleaseFailureResolution = "complete" | "recover" | "block";
-
-export function createArtworkReleaseSingleFlight() {
-  let active = false;
-
-  return async (task: () => Promise<void>): Promise<boolean> => {
-    if (active) return false;
-    active = true;
-    try {
-      await task();
-      return true;
-    } finally {
-      active = false;
-    }
-  };
-}
-
-export async function reconcileSubmittedArtworkRelease(
-  readReceiptStatus: () => Promise<"success" | "reverted">,
-): Promise<SubmittedReleaseStatus> {
-  try {
-    return await readReceiptStatus();
-  } catch {
-    return "unknown";
-  }
-}
 
 export async function resolveArtworkReleaseFailure(
   wasSubmitted: boolean,
   readReceiptStatus: () => Promise<"success" | "reverted">,
 ): Promise<ReleaseFailureResolution> {
   if (!wasSubmitted) return "recover";
-  const status = await reconcileSubmittedArtworkRelease(readReceiptStatus);
+  const status = await reconcileSubmittedTransaction(readReceiptStatus);
   if (status === "success") return "complete";
   if (status === "reverted") return "recover";
   return "block";

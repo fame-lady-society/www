@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
 import { MAX_CREATOR_IMAGE_BYTES } from "@/features/fame/creatorMetadata";
 import type { CreatorUploadJournal } from "@/service/creator_upload_journal";
+import { verifyCreatorUploadCapability } from "@/service/creator_upload_authorization";
 
 process.env.SESSION_SECRET ||= "test-session-secret";
 process.env.CREATOR_UPLOAD_CAPABILITY_SECRET ||= "test-creator-upload-secret";
@@ -60,7 +61,9 @@ function journal(): CreatorUploadJournal {
   };
 }
 
-function deps(overrides: Partial<Parameters<typeof handleCreatorMetadataAuthorize>[1]> = {}) {
+function deps(
+  overrides: Partial<Parameters<typeof handleCreatorMetadataAuthorize>[1]> = {},
+) {
   let approvalCreated = false;
   let approvalRevoked = false;
   const uploader = {
@@ -85,6 +88,7 @@ function deps(overrides: Partial<Parameters<typeof handleCreatorMetadataAuthoriz
       expiresAt: Date.now() + 60_000,
     }),
     readRoles: async () => 2n,
+    readNextTokenId: async () => 650n,
     createUploader: async () => uploader,
     getSponsorAddress: () => SPONSOR,
     getMaxFundAmount: async () => 100_000n,
@@ -118,6 +122,12 @@ describe("/api/fame/creator/metadata/authorize", () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.match(body.capability, /^ey/);
+    const capability = verifyCreatorUploadCapability(
+      body.capability,
+      1_700_000_000_000,
+    );
+    assert.equal(capability?.tokenId, 123);
+    assert.equal(capability?.mode, "update");
     assert.equal(body.sponsorAddress, SPONSOR);
     assert.equal(body.operationId.startsWith("cu_"), true);
   });
@@ -140,6 +150,25 @@ describe("/api/fame/creator/metadata/authorize", () => {
       }),
     );
     assert.equal(wrongChain.status, 403);
+  });
+
+  it("rejects update uploads outside the released token range", async () => {
+    const response = await handleCreatorMetadataAuthorize(
+      makeRequest(validBody({ tokenId: 650 })),
+      deps(),
+    );
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {
+      error: "Token is outside the released FAME range",
+    });
+  });
+
+  it("requires the CREATOR role for update uploads", async () => {
+    const response = await handleCreatorMetadataAuthorize(
+      makeRequest(validBody()),
+      deps({ readRoles: async () => 0n }),
+    );
+    assert.equal(response.status, 403);
   });
 
   it("rejects invalid image policy before sponsor approval", async () => {

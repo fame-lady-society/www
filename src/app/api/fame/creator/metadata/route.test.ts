@@ -74,7 +74,11 @@ function makeJournal(initial?: CreatorUploadOperation): CreatorUploadJournal {
       const current = records.get(operationId);
       if (!current) return null;
       leases.add(operationId);
-      const next = { ...current, status: "finalizing" as const, finalizationLease: lease };
+      const next = {
+        ...current,
+        status: "finalizing" as const,
+        finalizationLease: lease,
+      };
       records.set(operationId, next);
       return next;
     },
@@ -161,6 +165,7 @@ function makeDeps(image: Uint8Array, operation = makeOperation(image)) {
       expiresAt: Date.now() + 60_000,
     }),
     readRoles: async () => 2n,
+    readNextTokenId: async () => 650n,
     createUploader: async () => uploader,
     createVerifier: () => verifier,
     getMaxFundAmount: async () => 100n,
@@ -194,11 +199,78 @@ function requestBody(operation: CreatorUploadOperation, imageUri: string) {
 }
 
 describe("/api/fame/creator/metadata", () => {
+  it("rejects update finalization outside the released token range", async () => {
+    const image = makePng();
+    const operation = { ...makeOperation(image), tokenId: 650 };
+    const injected = makeDeps(image, operation);
+    const response = await handleCreatorMetadataUpload(
+      makeRequest(
+        requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`),
+      ),
+      injected,
+    );
+    assert.equal(response.status, 400);
+  });
+
+  it("rejects a metadata capability retargeted from another update token", async () => {
+    const image = makePng();
+    const operation = {
+      ...makeOperation(image),
+      imageUri: `https://gateway.irys.xyz/${IMAGE_TX_ID}`,
+      imageTxId: IMAGE_TX_ID,
+      status: "image_verified" as const,
+    };
+    const tokenId = 124;
+    const capability = createCreatorUploadCapability({
+      purpose: "metadata-finalization",
+      operationId: operation.operationId,
+      address: CREATOR,
+      sessionDigest: operation.sessionDigest,
+      tokenId,
+      mode: "update",
+      imageType: operation.imageType,
+      imageBytes: operation.imageBytes,
+      imageHash: operation.imageHash,
+      sponsorAddress: operation.sponsorAddress,
+      approvalAmount: operation.approvalAmount,
+      imageUri: operation.imageUri,
+      imageTxId: operation.imageTxId,
+    }).token;
+    const response = await handleCreatorMetadataUpload(
+      makeRequest({
+        address: CREATOR,
+        tokenId,
+        mode: "update",
+        imageUri: operation.imageUri,
+        capability,
+      }),
+      makeDeps(image, operation),
+    );
+    assert.equal(response.status, 404);
+  });
+
+  it("requires the CREATOR role for update finalization", async () => {
+    const image = makePng();
+    const operation = makeOperation(image);
+    const response = await handleCreatorMetadataUpload(
+      makeRequest(
+        requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`),
+      ),
+      { ...makeDeps(image, operation), readRoles: async () => 0n },
+    );
+    assert.equal(response.status, 403);
+  });
+
   it("returns 401 when unauthenticated", async () => {
     const image = makePng();
     const injected = makeDeps(image);
     const response = await handleCreatorMetadataUpload(
-      makeRequest(requestBody(makeOperation(image), `https://gateway.irys.xyz/${IMAGE_TX_ID}`)),
+      makeRequest(
+        requestBody(
+          makeOperation(image),
+          `https://gateway.irys.xyz/${IMAGE_TX_ID}`,
+        ),
+      ),
       { ...injected, getSession: () => null },
     );
     assert.equal(response.status, 401);
@@ -212,21 +284,34 @@ describe("/api/fame/creator/metadata", () => {
     formData.set("address", CREATOR);
     formData.set("tokenId", "123");
     formData.set("mode", "update");
-    formData.set("image", new File(["image"], "creator.png", { type: "image/png" }));
+    formData.set(
+      "image",
+      new File(["image"], "creator.png", { type: "image/png" }),
+    );
     const multipart = new NextRequest(
       "https://fameladysociety.com/api/fame/creator/metadata",
-      { method: "POST", body: formData, headers: { cookie: `siwe=${SESSION_COOKIE}` } },
+      {
+        method: "POST",
+        body: formData,
+        headers: { cookie: `siwe=${SESSION_COOKIE}` },
+      },
     );
-    assert.equal(await handleCreatorMetadataUpload(multipart, injected).then((r) => r.status), 422);
+    assert.equal(
+      await handleCreatorMetadataUpload(multipart, injected).then(
+        (r) => r.status,
+      ),
+      422,
+    );
 
     const substituted = {
       ...requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`),
       address: OTHER,
     };
     assert.equal(
-      await handleCreatorMetadataUpload(makeRequest(substituted), injected).then(
-        (r) => r.status,
-      ),
+      await handleCreatorMetadataUpload(
+        makeRequest(substituted),
+        injected,
+      ).then((r) => r.status),
       403,
     );
   });
@@ -243,18 +328,30 @@ describe("/api/fame/creator/metadata", () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.imageUri, imageUri);
-    assert.equal(body.metadataUri, `https://gateway.irys.xyz/${METADATA_TX_ID}`);
+    assert.equal(
+      body.metadataUri,
+      `https://gateway.irys.xyz/${METADATA_TX_ID}`,
+    );
     assert.equal(injected.uploads.length, 1);
-    assert.equal(JSON.parse(injected.uploads[0].content.toString()).image, imageUri);
+    const uploadedMetadata = JSON.parse(
+      injected.uploads[0].content.toString(),
+    );
+    assert.equal(uploadedMetadata.name, "FAME Society");
+    assert.equal(uploadedMetadata.image, imageUri);
     assert.equal(injected.wasRevoked(), true);
   });
 
   it("fails closed when the declared MIME does not match image bytes", async () => {
     const image = makePng();
-    const operation = { ...makeOperation(image), imageType: "image/jpeg" as const };
+    const operation = {
+      ...makeOperation(image),
+      imageType: "image/jpeg" as const,
+    };
     const injected = makeDeps(image, operation);
     const response = await handleCreatorMetadataUpload(
-      makeRequest(requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`)),
+      makeRequest(
+        requestBody(operation, `https://gateway.irys.xyz/${IMAGE_TX_ID}`),
+      ),
       injected,
     );
     assert.equal(response.status, 422);

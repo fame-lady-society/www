@@ -7,6 +7,7 @@ import {
   canUploadCreatorMetadata,
   decodeCreatorPortalRoles,
   isCreatorMetadataUploadMode,
+  isReleasedCreatorUpdateToken,
   normalizeCreatorAddress,
 } from "@/features/fame/creatorMetadata";
 import { creatorArtistMagicAddress } from "@/features/fame/contract";
@@ -35,6 +36,7 @@ type ReauthorizeRequest = {
 type ReauthorizeDeps = {
   getSession: (request: NextRequest) => SessionData | null;
   readRoles: (address: Address) => Promise<bigint>;
+  readNextTokenId: () => Promise<number | bigint>;
   journal: CreatorUploadJournal;
 };
 
@@ -69,8 +71,7 @@ function trustedOrigin(request: NextRequest) {
 
 async function readBody(request: NextRequest) {
   if (
-    request.headers.get("content-type")?.split(";", 1)[0] !==
-    "application/json"
+    request.headers.get("content-type")?.split(";", 1)[0] !== "application/json"
   ) {
     return null;
   }
@@ -79,7 +80,9 @@ async function readBody(request: NextRequest) {
     return null;
   }
   const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES) {
+  if (
+    new TextEncoder().encode(text).byteLength > CREATOR_UPLOAD_MAX_BODY_BYTES
+  ) {
     return null;
   }
   try {
@@ -99,6 +102,12 @@ const defaultDeps: ReauthorizeDeps = {
       functionName: "rolesOf",
       args: [address],
     }),
+  readNextTokenId: async () =>
+    readContract(basePublicClient, {
+      address: creatorArtistMagicAddress(base.id),
+      abi: creatorArtistMagicAbi,
+      functionName: "nextTokenId",
+    }),
   journal: createCreatorUploadJournal(),
 };
 
@@ -114,7 +123,10 @@ export async function handleCreatorMetadataReauthorize(
   const cookie = request.cookies.get("siwe")?.value;
   const body = await readBody(request);
   if (!cookie || !body) return jsonError("Invalid request", 422);
-  if (!isAddress(body.address) || !isAddressEqual(body.address, session.address)) {
+  if (
+    !isAddress(body.address) ||
+    !isAddressEqual(body.address, session.address)
+  ) {
     return jsonError("Unauthorized", 403);
   }
   if (!isCreatorMetadataUploadMode(body.mode)) {
@@ -128,6 +140,8 @@ export async function handleCreatorMetadataReauthorize(
     !operation ||
     operation.creatorAddress.toLowerCase() !== creatorAddress.toLowerCase() ||
     operation.sessionDigest !== digestSessionCookie(cookie) ||
+    operation.mode !== body.mode ||
+    (body.mode === "update" && operation.tokenId !== body.tokenId) ||
     operation.imageUri !== body.imageUri ||
     operation.imageTxId !== parsedUri.transactionId ||
     (operation.status !== "image_verified" && operation.status !== "finalized")
@@ -137,6 +151,13 @@ export async function handleCreatorMetadataReauthorize(
   const roles = decodeCreatorPortalRoles(await deps.readRoles(body.address));
   if (!canUploadCreatorMetadata(roles, body.mode)) {
     return jsonError("Forbidden", 403);
+  }
+  if (body.mode === "update") {
+    if (
+      !isReleasedCreatorUpdateToken(body.tokenId, await deps.readNextTokenId())
+    ) {
+      return jsonError("Token is outside the released FAME range", 400);
+    }
   }
   const result = createCreatorUploadCapability({
     purpose: "metadata-finalization",

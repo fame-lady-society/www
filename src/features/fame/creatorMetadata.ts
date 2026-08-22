@@ -1,4 +1,5 @@
 import { getAddress, isAddress, keccak256 } from "viem";
+import { isFameCollectionTokenId } from "./collection";
 
 export const CREATOR_METADATA_UPLOAD_MODES = [
   "art",
@@ -85,7 +86,10 @@ export function creatorImageTags(input: {
   contentHash: string;
 }): CreatorUploadTag[] {
   return [
-    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    {
+      name: CREATOR_UPLOAD_TAGS.application,
+      value: CREATOR_UPLOAD_APPLICATION_ID,
+    },
     { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
     {
       name: CREATOR_UPLOAD_TAGS.creator,
@@ -110,7 +114,10 @@ export function creatorMetadataTags(input: {
 }): CreatorUploadTag[] {
   const bytes = new TextEncoder().encode(input.content);
   return [
-    { name: CREATOR_UPLOAD_TAGS.application, value: CREATOR_UPLOAD_APPLICATION_ID },
+    {
+      name: CREATOR_UPLOAD_TAGS.application,
+      value: CREATOR_UPLOAD_APPLICATION_ID,
+    },
     { name: CREATOR_UPLOAD_TAGS.operation, value: input.operationId },
     {
       name: CREATOR_UPLOAD_TAGS.creator,
@@ -120,7 +127,10 @@ export function creatorMetadataTags(input: {
     { name: CREATOR_UPLOAD_TAGS.mode, value: input.mode },
     { name: CREATOR_UPLOAD_TAGS.purpose, value: "metadata" },
     { name: CREATOR_UPLOAD_TAGS.contentType, value: "application/json" },
-    { name: CREATOR_UPLOAD_TAGS.contentLength, value: String(bytes.byteLength) },
+    {
+      name: CREATOR_UPLOAD_TAGS.contentLength,
+      value: String(bytes.byteLength),
+    },
     { name: CREATOR_UPLOAD_TAGS.contentHash, value: creatorContentHash(bytes) },
     { name: "Fame-Creator-Image-Uri", value: input.imageUri },
   ];
@@ -184,9 +194,20 @@ export function canUploadCreatorMetadata(
   }
 }
 
+export function isReleasedCreatorUpdateToken(
+  tokenId: number,
+  nextTokenId: number | bigint,
+) {
+  return (
+    Number.isSafeInteger(tokenId) &&
+    isFameCollectionTokenId(tokenId) &&
+    BigInt(tokenId) < BigInt(nextTokenId)
+  );
+}
+
 export function createCreatorMetadataJson(tokenId: number, imageUrl: string) {
   return JSON.stringify({
-    name: `FAME Society #${tokenId}`,
+    name: "FAME Society",
     image: imageUrl,
     description:
       "Experience the innovative $FAME token from the Fame Lady Society, a DN404 project seamlessly integrating ERC20 and ERC721 standards. Each $FAME token is part of a revolutionary system where owning multiples of 1 million $FAME automatically mints a rare and exclusive Society NFT to your wallet. These NFTs, backed by 1 million $FAME tokens each, merge the worlds of liquidity and ownership, offering both stability and exclusivity.\n\nWhen you hold a Society NFT, you're not just an owner; you're part of a vibrant, empowering community dedicated to transparency, community governance, and women's empowerment in Web3. Selling any portion of the associated 1 million $FAME will cause the NFT to vanish, reflecting the unique balance of value and rarity within the Fame Lady Society ecosystem.\n\nThe Fame Lady Society, born from the pioneering all-female generative PFP project, continues to push boundaries by promoting true decentralization and sustainability. Fame Lady Society's mission is to transform Web3 into 'webWE,' ensuring every member has a voice in shaping the future. Join us in this exciting journey and redefine how NFTs and tokens can be traded and gamified.",
