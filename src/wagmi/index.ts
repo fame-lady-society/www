@@ -11203,7 +11203,7 @@ export const wrappedNftConfig = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const wrappedNftDonationVaultAbi = [
   {
@@ -11277,14 +11277,14 @@ export const wrappedNftDonationVaultAbi = [
 ] as const
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const wrappedNftDonationVaultAddress = {
-  1: '0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b',
+  1: '0x582097Da47E57FD6DBBc5261560CC087631f4FcD',
 } as const
 
 /**
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const wrappedNftDonationVaultConfig = {
   address: wrappedNftDonationVaultAddress,
@@ -25307,7 +25307,7 @@ export const useWatchWrappedNftTransferEvent =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useReadWrappedNftDonationVault =
   /*#__PURE__*/ createUseReadContract({
@@ -25318,7 +25318,7 @@ export const useReadWrappedNftDonationVault =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `functionName` set to `"underlying"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useReadWrappedNftDonationVaultUnderlying =
   /*#__PURE__*/ createUseReadContract({
@@ -25330,7 +25330,7 @@ export const useReadWrappedNftDonationVaultUnderlying =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `functionName` set to `"vault"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useReadWrappedNftDonationVaultVault =
   /*#__PURE__*/ createUseReadContract({
@@ -25342,7 +25342,7 @@ export const useReadWrappedNftDonationVaultVault =
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `functionName` set to `"wrappedNFT"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useReadWrappedNftDonationVaultWrappedNft =
   /*#__PURE__*/ createUseReadContract({
@@ -25354,7 +25354,7 @@ export const useReadWrappedNftDonationVaultWrappedNft =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useWriteWrappedNftDonationVault =
   /*#__PURE__*/ createUseWriteContract({
@@ -25365,7 +25365,7 @@ export const useWriteWrappedNftDonationVault =
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `functionName` set to `"wrapAndDonate"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useWriteWrappedNftDonationVaultWrapAndDonate =
   /*#__PURE__*/ createUseWriteContract({
@@ -25377,7 +25377,7 @@ export const useWriteWrappedNftDonationVaultWrapAndDonate =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useSimulateWrappedNftDonationVault =
   /*#__PURE__*/ createUseSimulateContract({
@@ -25388,7 +25388,7 @@ export const useSimulateWrappedNftDonationVault =
 /**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `functionName` set to `"wrapAndDonate"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useSimulateWrappedNftDonationVaultWrapAndDonate =
   /*#__PURE__*/ createUseSimulateContract({
@@ -25400,7 +25400,7 @@ export const useSimulateWrappedNftDonationVaultWrapAndDonate =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useWatchWrappedNftDonationVaultEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
@@ -25411,7 +25411,7 @@ export const useWatchWrappedNftDonationVaultEvent =
 /**
  * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link wrappedNftDonationVaultAbi}__ and `eventName` set to `"WrappedAndDonated"`
  *
- * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b)
+ * [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x582097Da47E57FD6DBBc5261560CC087631f4FcD)
  */
 export const useWatchWrappedNftDonationVaultWrappedAndDonatedEvent =
   /*#__PURE__*/ createUseWatchContractEvent({

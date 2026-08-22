@@ -110,7 +110,7 @@ export default defineConfig({
         {
           name: "WrappedNFTDonationVault",
           address: {
-            [mainnet.id]: "0x7a276F4B91A97267D652500aa4aB8b2Fa388fb9b",
+            [mainnet.id]: "0x582097Da47E57FD6DBBc5261560CC087631f4FcD",
           },
         },
 
