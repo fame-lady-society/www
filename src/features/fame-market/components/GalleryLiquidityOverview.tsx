@@ -107,7 +107,7 @@ export function GalleryLiquidityEducationCard({
 
         <MarketplaceStakingExplainer />
 
-        <Box sx={{ p: { xs: 2.5, sm: 4 }, pt: { xs: 1, sm: 1.5 } }}>
+        <Box sx={{ p: { xs: 2.5, sm: 4 }, pt: { xs: 1, sm: 1.5 } }} component="div">
           <Typography component="h3" variant="h5">
             Live marketplace numbers
           </Typography>
