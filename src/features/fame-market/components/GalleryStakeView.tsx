@@ -35,9 +35,9 @@ export function GalleryStakeView() {
             Marketplace liquidity
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-            Provide whole Society NFTs to the gallery, earn your current share
-            of provider premiums per marketplace transaction, and exit through
-            the marketplace’s credited position controls.
+            Provide a Society NFT to the marketplace’s shared inventory and earn
+            your current share of provider fees. Staking transfers the NFT out
+            of your wallet—it does not simply lock it in place.
           </Typography>
           <Button
             variant="outlined"

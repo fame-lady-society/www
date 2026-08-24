@@ -1,5 +1,7 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -12,6 +14,7 @@ import {
 } from "../liquidity/position";
 import type { GalleryLiquidityProviderPosition } from "../liquidity/reads";
 import type { GalleryGlobalState, GalleryHookProjection } from "../types";
+import { MarketplaceStakingExplainer } from "./MarketplaceStakingExplainer";
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -73,21 +76,22 @@ export function GalleryLiquidityEducationCard({
       )
     : null;
   return (
-    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 4 } }}>
-      <Stack spacing={3}>
+    <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+      <Stack spacing={0}>
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"
           alignItems={{ xs: "stretch", md: "flex-start" }}
           spacing={2}
+          sx={{ p: { xs: 2.5, sm: 4 } }}
         >
           <div>
             <Typography component="h2" variant="h4">
-              Back marketplace liquidity.
+              How marketplace staking works.
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-              Stake a whole Society NFT with its attached 1,000,000 FAME and
-              earn FAME on every marketplace sale.
+              You are providing inventory to a live marketplace—not parking an
+              NFT in a vault. Understand what can happen to it before you stake.
             </Typography>
           </div>
           {showCta ? (
@@ -101,78 +105,87 @@ export function GalleryLiquidityEducationCard({
           ) : null}
         </Stack>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat
-            label="Pool inventory"
-            value={
-              global
-                ? `${global.inventory.toString()} Society NFTs`
-                : "Loading…"
-            }
-          />
-          <Stat
-            label="Active providers"
-            value={
-              global
-                ? `${global.activeProviderCount.toString()} / ${global.activeProviderCap.toString()}`
-                : "Loading…"
-            }
-          />
-          <Stat
-            label="Credited provider units"
-            value={global ? global.totalProviderUnits.toString() : "Loading…"}
-          />
-          <Stat
-            label="Prospective 1-unit current share"
-            value={
-              prospectiveShare === null ? (
-                "Loading…"
-              ) : (
-                <>
-                  <FameAmount amount={prospectiveShare} /> per marketplace sale
-                </>
-              )
-            }
-          />
-          <Stat
-            label="Total premium"
-            value={global ? <FameAmount amount={global.premium} /> : "Loading…"}
-          />
-          <Stat
-            label="Provider portion"
-            value={
-              global ? <FameAmount amount={global.providerFee} /> : "Loading…"
-            }
-          />
-          <Stat
-            label="Community portion"
-            value={
-              global ? <FameAmount amount={global.communityFee} /> : "Loading…"
-            }
-          />
-        </div>
+        <MarketplaceStakingExplainer />
 
-        <Stack spacing={1}>
-          <Typography>
-            You deposit a whole Society NFT with its attached 1,000,000 FAME.
+        <Box sx={{ p: { xs: 2.5, sm: 4 }, pt: { xs: 1, sm: 1.5 } }}>
+          <Typography component="h3" variant="h5">
+            Live marketplace numbers
           </Typography>
-          <Typography>
-            You may withdraw a different Society from the marketplace. Your
-            original NFT is not reserved.
+          <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 720 }}>
+            Your fee share changes as NFTs and providers enter or leave the
+            marketplace.
           </Typography>
-          <Typography>
-            The withdrawal premium reaches 0 after 24 hours. You can exit sooner
-            by paying the current premium.
-          </Typography>
-          <Typography color="warning.main" fontWeight={700}>
-            Do not transfer Society NFTs directly to the marketplace. They
-            become irreversible, uncredited donations. Use the staking actions
-            on these pages.
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            Your per-sale share can change as the pool changes.
-          </Typography>
-        </Stack>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              label="NFTs in marketplace"
+              value={
+                global
+                  ? `${global.inventory.toString()} Society ${global.inventory === 1n ? "NFT" : "NFTs"}`
+                  : "Loading…"
+              }
+            />
+            <Stat
+              label="Active liquidity providers"
+              value={
+                global
+                  ? `${global.activeProviderCount.toString()} / ${global.activeProviderCap.toString()}`
+                  : "Loading…"
+              }
+            />
+            <Stat
+              label="Provider NFTs staked"
+              value={global ? global.totalProviderUnits.toString() : "Loading…"}
+            />
+            <Stat
+              label="Your share with 1 NFT"
+              value={
+                prospectiveShare === null ? (
+                  "Loading…"
+                ) : (
+                  <>
+                    <FameAmount amount={prospectiveShare} /> per marketplace
+                    sale
+                  </>
+                )
+              }
+            />
+            <Stat
+              label="Marketplace fee per sale"
+              value={
+                global ? <FameAmount amount={global.premium} /> : "Loading…"
+              }
+            />
+            <Stat
+              label="Paid to providers"
+              value={
+                global ? <FameAmount amount={global.providerFee} /> : "Loading…"
+              }
+            />
+            <Stat
+              label="Paid to community"
+              value={
+                global ? (
+                  <FameAmount amount={global.communityFee} />
+                ) : (
+                  "Loading…"
+                )
+              }
+            />
+          </div>
+
+          <Stack spacing={2} sx={{ mt: 3 }}>
+            <Typography>
+              The withdrawal fee reaches 0 after 24 hours. You can exit sooner
+              by paying the current withdrawal fee.
+            </Typography>
+            <Alert severity="warning" variant="outlined">
+              <strong>Only use the staking actions on these pages.</strong> Do
+              not transfer Society NFTs directly to the marketplace contract.
+              Direct transfers become irreversible, uncredited donations.
+            </Alert>
+          </Stack>
+        </Box>
       </Stack>
     </Paper>
   );

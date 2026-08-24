@@ -42,7 +42,7 @@ describe("gallery liquidity overview", () => {
     const html = renderToStaticMarkup(
       <GalleryLiquidityEducationCard global={global} showCta={false} />,
     );
-    assert.match(html, /Pool inventory/i);
+    assert.match(html, /NFTs in marketplace/i);
     assert.match(html, /5 Society NFTs/);
     assert.match(html, /2 \/ 88/);
     assert.match(html, /30 FAME/);
@@ -79,11 +79,21 @@ describe("gallery liquidity overview", () => {
     const html = renderToStaticMarkup(
       <GalleryLiquidityEducationCard global={global} showCta={false} />,
     );
+    assert.match(html, /This is not a locker/i);
+    assert.match(html, /Your NFT leaves your wallet/i);
     assert.match(html, /whole Society NFT with its attached 1,000,000 FAME/i);
-    assert.match(html, /earn FAME on every marketplace sale/i);
-    assert.match(html, /different Society from the marketplace/i);
-    assert.match(html, /premium reaches 0 after 24 hours/i);
-    assert.match(html, /exit sooner by paying the current premium/i);
+    assert.match(html, /Someone can buy it/i);
+    assert.match(html, /metadata swap/i);
+    assert.match(html, /FAME Society NFTs · Base/i);
+    assert.match(html, /\/images\/fame-society\/base-token-1\.jpg/);
+    assert.match(html, /\/images\/fame-society\/base-token-2\.jpg/);
+    assert.doesNotMatch(html, /collage-1104/i);
+    assert.match(html, /earn a share of marketplace fees/i);
+    assert.match(html, /original NFT is not reserved/i);
+    assert.match(html, /Same NFT back/i);
+    assert.match(html, /No guarantee/i);
+    assert.match(html, /withdrawal fee reaches 0 after 24 hours/i);
+    assert.match(html, /exit sooner by paying the current withdrawal fee/i);
     assert.match(html, /irreversible, uncredited donations/i);
     assert.doesNotMatch(
       html,
