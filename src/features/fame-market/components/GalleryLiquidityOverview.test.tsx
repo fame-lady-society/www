@@ -90,8 +90,6 @@ describe("gallery liquidity overview", () => {
     assert.doesNotMatch(html, /collage-1104/i);
     assert.match(html, /earn a share of marketplace fees/i);
     assert.match(html, /original NFT is not reserved/i);
-    assert.match(html, /Same NFT back/i);
-    assert.match(html, /No guarantee/i);
     assert.match(html, /withdrawal fee reaches 0 after 24 hours/i);
     assert.match(html, /exit sooner by paying the current withdrawal fee/i);
     assert.match(html, /irreversible, uncredited donations/i);

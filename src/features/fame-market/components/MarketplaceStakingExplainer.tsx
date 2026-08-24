@@ -372,26 +372,6 @@ export function MarketplaceStakingExplainer() {
           While you provide an NFT, you earn a share of marketplace fees.
         </Typography>
       </Stack>
-
-      <Typography
-        component="p"
-        variant="h5"
-        sx={{ px: 2, pt: 2.5, pb: 3, textAlign: "center" }}
-      >
-        Same NFT back?{" "}
-        <Box
-          component="strong"
-          sx={{
-            color: "warning.main",
-            font: "inherit",
-            textDecoration: "underline",
-            textDecorationThickness: "2px",
-            textUnderlineOffset: "5px",
-          }}
-        >
-          No guarantee.
-        </Box>
-      </Typography>
     </Box>
   );
 }
