@@ -67,6 +67,8 @@ export const initialGalleryPurchaseState: GalleryPurchaseState = {
   refreshFailure: null,
 };
 
+const GALLERY_PURCHASE_APPROVAL_CONFIRMATIONS = 3;
+
 export type GalleryPurchaseEvent =
   | { type: "connecting" }
   | { type: "switching_chain" }
@@ -319,7 +321,10 @@ export async function executeGalleryPurchase({
 
     let approvalReceipt: GalleryPurchaseReceipt;
     try {
-      approvalReceipt = await dependencies.waitForReceipt(approvalHash, 1);
+      approvalReceipt = await dependencies.waitForReceipt(
+        approvalHash,
+        GALLERY_PURCHASE_APPROVAL_CONFIRMATIONS,
+      );
     } catch (cause) {
       return failure(dependencies, "approval_receipt", cause);
     }

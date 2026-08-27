@@ -185,7 +185,7 @@ describe("gallery purchase queue", () => {
     assert.strictEqual(written.writtenPurchase, test.purchaseRequest);
   });
 
-  it("trusts a successful approval receipt without rereading allowance", async () => {
+  it("waits for three approval confirmations before continuing", async () => {
     const test = harness([0n]);
     const result = await executeGalleryPurchase({
       terms,
@@ -196,11 +196,11 @@ describe("gallery purchase queue", () => {
     assert.equal(test.calls.filter((call) => call === "allowance").length, 1);
     assert.deepEqual(
       test.calls.filter((call) => call.startsWith("wait approval")),
-      ["wait approval 1"],
+      ["wait approval 3"],
     );
     assert.ok(
       test.calls.indexOf("resolve:false") >
-        test.calls.indexOf("wait approval 1"),
+        test.calls.indexOf("wait approval 3"),
     );
   });
 
