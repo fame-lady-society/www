@@ -13,10 +13,15 @@ import type {
   FameMetadataResult,
 } from "@/features/fame/metadata/types";
 
-export function galleryMetadataQueryOptions(revision: FameArtworkRevision) {
+export function galleryMetadataQueryOptions(
+  revision: FameArtworkRevision,
+  hydratedMetadata?: FameMetadataResult,
+) {
   const trimmedTokenUri = revision.tokenUri.trim();
   let initialData: (() => FameMetadataResult) | undefined;
-  if (trimmedTokenUri.startsWith("data:")) {
+  if (hydratedMetadata?.status === "ready") {
+    initialData = () => hydratedMetadata;
+  } else if (trimmedTokenUri.startsWith("data:")) {
     const inlineMetadata = decodeInlineFameMetadata(revision.tokenUri);
     if (inlineMetadata.status === "ready") {
       initialData = () => inlineMetadata;
@@ -35,8 +40,13 @@ export function galleryMetadataQueryOptions(revision: FameArtworkRevision) {
   };
 }
 
-export function useGalleryMetadata(revision: FameArtworkRevision) {
-  const query = useQuery(galleryMetadataQueryOptions(revision));
+export function useGalleryMetadata(
+  revision: FameArtworkRevision,
+  hydratedMetadata?: FameMetadataResult,
+) {
+  const query = useQuery(
+    galleryMetadataQueryOptions(revision, hydratedMetadata),
+  );
   return {
     metadata:
       query.data ?? fameMetadataFailure("Token metadata is unavailable"),

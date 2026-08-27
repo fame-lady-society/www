@@ -1,14 +1,12 @@
 import type { OrderedBurnPoolSnapshot } from "@/service/fame";
 import { FAME_METADATA_FALLBACK_IMAGE } from "@/service/fameMetadata";
+import {
+  FAME_COLLECTION_LAST_TOKEN_ID,
+  parseFameCollectionTokenIdParam,
+} from "@/features/fame/collection";
 
 /** Fixed Society collection size on Base (IDs 1..888). */
-export const SOCIETY_TOKEN_ID_MAX = 888;
-
-/**
- * Canonical positive decimal token ID only: no empty, signed, fractional,
- * zero-padded, non-numeric, zero, negative, or out-of-range values.
- */
-const CANONICAL_TOKEN_ID_PATTERN = /^[1-9]\d*$/;
+export const SOCIETY_TOKEN_ID_MAX = FAME_COLLECTION_LAST_TOKEN_ID;
 
 export type ParsedTargetId =
   | { status: "invalid_id"; raw: string }
@@ -52,19 +50,8 @@ export type BurnPoolTargetResolution =
  * and values outside 1..SOCIETY_TOKEN_ID_MAX.
  */
 export function parseTargetIdParam(raw: string): ParsedTargetId {
-  if (!CANONICAL_TOKEN_ID_PATTERN.test(raw)) {
-    return { status: "invalid_id", raw };
-  }
-
-  // Safe: pattern guarantees a positive integer decimal string with no leading zeros.
-  const tokenId = Number(raw);
-  if (
-    !Number.isSafeInteger(tokenId) ||
-    tokenId < 1 ||
-    tokenId > SOCIETY_TOKEN_ID_MAX
-  ) {
-    return { status: "invalid_id", raw };
-  }
+  const tokenId = parseFameCollectionTokenIdParam(raw);
+  if (tokenId === null) return { status: "invalid_id", raw };
 
   return { status: "valid", tokenId, raw };
 }

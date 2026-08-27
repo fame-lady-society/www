@@ -29,6 +29,10 @@ describe("successor gallery query keys", () => {
       galleryQueryKeys.token(identity, 100n, 2n),
     );
     assert.notDeepEqual(
+      galleryQueryKeys.token(identity, 100n, 1n),
+      galleryQueryKeys.tokenAvailability(identity, 100n, 1n),
+    );
+    assert.notDeepEqual(
       galleryQueryKeys.account(identity, 100n, account),
       galleryQueryKeys.authority(identity, 100n, account),
     );

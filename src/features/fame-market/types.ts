@@ -70,6 +70,11 @@ export type GalleryTokenState = {
   artworkError: string | null;
 };
 
+export type GalleryTokenAvailability = {
+  tokenId: bigint;
+  target: GalleryArtworkTarget | null;
+};
+
 export type GalleryCustodyState = {
   tokenId: bigint;
   owner: Address;

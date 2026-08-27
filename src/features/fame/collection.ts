@@ -3,6 +3,7 @@ export const FAME_COLLECTION_FIRST_TOKEN_ID = 1;
 export const FAME_COLLECTION_LAST_TOKEN_ID = 888;
 export const FAME_COLLECTION_TOKEN_COUNT =
   FAME_COLLECTION_LAST_TOKEN_ID - FAME_COLLECTION_FIRST_TOKEN_ID + 1;
+const CANONICAL_FAME_TOKEN_ID_PATTERN = /^[1-9]\d*$/;
 
 export function isFameCollectionTokenId(tokenId: number): boolean {
   return (
@@ -10,6 +11,14 @@ export function isFameCollectionTokenId(tokenId: number): boolean {
     tokenId >= FAME_COLLECTION_FIRST_TOKEN_ID &&
     tokenId <= FAME_COLLECTION_LAST_TOKEN_ID
   );
+}
+
+export function parseFameCollectionTokenIdParam(raw: string): number | null {
+  if (!CANONICAL_FAME_TOKEN_ID_PATTERN.test(raw)) return null;
+  const tokenId = Number(raw);
+  return Number.isSafeInteger(tokenId) && isFameCollectionTokenId(tokenId)
+    ? tokenId
+    : null;
 }
 
 export function fameCollectionTokenIds(): number[] {

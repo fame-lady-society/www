@@ -69,8 +69,12 @@ function discoverySource(
 
 export function useGalleryDiscovery({
   poolTargets = [],
+  enabled = true,
+  scanOnMount = true,
 }: {
   poolTargets?: readonly GalleryArtworkTarget[];
+  enabled?: boolean;
+  scanOnMount?: boolean;
 } = {}) {
   const config = useGalleryRuntime();
   const marketplace = config.addresses.gallery;
@@ -91,8 +95,9 @@ export function useGalleryDiscovery({
   ].join(":");
   const publicClient = usePublicClient({ chainId: config.chainId });
   const source = useMemo(
-    () => (publicClient ? discoverySource(publicClient, config) : null),
-    [config, publicClient],
+    () =>
+      enabled && publicClient ? discoverySource(publicClient, config) : null,
+    [config, enabled, publicClient],
   );
   const cacheIdentity = useMemo(
     () =>
@@ -107,7 +112,7 @@ export function useGalleryDiscovery({
     [cacheIdentity],
   );
   const [heldTargets, setHeldTargets] = useState<GalleryArtworkTarget[]>([]);
-  const [isScanning, setIsScanning] = useState(Boolean(source));
+  const [isScanning, setIsScanning] = useState(Boolean(source && scanOnMount));
   const [scanCompleted, setScanCompleted] = useState(false);
   const pendingScan = useRef<ReturnType<typeof discoverGalleryHoldings> | null>(
     null,
@@ -115,7 +120,7 @@ export function useGalleryDiscovery({
   const scanGeneration = useRef(0);
 
   useEffect(() => {
-    if (!source) {
+    if (!source || !scanOnMount) {
       setIsScanning(false);
       return;
     }
@@ -178,7 +183,7 @@ export function useGalleryDiscovery({
     return () => {
       active = false;
     };
-  }, [cacheIdentity, deploymentKey, marketplace, source, storage]);
+  }, [cacheIdentity, deploymentKey, marketplace, scanOnMount, source, storage]);
 
   const revalidateAffectedTokenIds = useCallback(
     async (tokenIds: readonly bigint[]) => {

@@ -12,14 +12,12 @@ import {
 import {
   captureGalleryBlock,
   galleryReadAddresses,
-  readGalleryGlobalState,
+  readGalleryTokenAvailability,
   type GalleryMulticallClient,
 } from "../reads";
-import type { GalleryGlobalState, GalleryHookProjection } from "../types";
+import type { GalleryHookProjection, GalleryTokenAvailability } from "../types";
 
-export function useGalleryGlobalState({
-  enabled = true,
-}: { enabled?: boolean } = {}) {
+export function useGalleryTokenAvailability(tokenId: bigint) {
   const config = useGalleryRuntime();
   const identity: GalleryQueryIdentity = {
     chainId: config.chainId,
@@ -27,15 +25,13 @@ export function useGalleryGlobalState({
     marketplaceAddress: config.addresses.gallery,
     deploymentBlock: config.deployment.blockNumber,
   };
-  const publicClient = usePublicClient({
-    chainId: config.chainId,
-  });
+  const publicClient = usePublicClient({ chainId: config.chainId });
   const client = publicClient as unknown as GalleryMulticallClient | undefined;
   const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
   const [blockCaptureFailed, setBlockCaptureFailed] = useState(false);
 
   const capture = useCallback(async () => {
-    if (!client || !enabled) return null;
+    if (!client) return null;
     setBlockCaptureFailed(false);
     try {
       const capturedBlock = await captureGalleryBlock(client);
@@ -46,11 +42,11 @@ export function useGalleryGlobalState({
       setBlockCaptureFailed(true);
       return null;
     }
-  }, [client, enabled]);
+  }, [client]);
 
   useEffect(() => {
     let active = true;
-    if (!client || !enabled) {
+    if (!client) {
       setBlockNumber(null);
       setBlockCaptureFailed(false);
       return;
@@ -69,38 +65,42 @@ export function useGalleryGlobalState({
     return () => {
       active = false;
     };
-  }, [client, enabled]);
+  }, [client, tokenId]);
 
   const query = useQuery({
-    queryKey: galleryQueryKeys.global(identity, blockNumber ?? 0n),
+    queryKey: galleryQueryKeys.tokenAvailability(
+      identity,
+      blockNumber ?? 0n,
+      tokenId,
+    ),
     queryFn: () => {
       if (!client || blockNumber === null) {
         throw new Error("Gallery public client is unavailable");
       }
-      return readGalleryGlobalState(
+      return readGalleryTokenAvailability(
         client,
         blockNumber,
+        tokenId,
         galleryReadAddresses(config.addresses),
       );
     },
-    enabled: enabled && Boolean(client) && blockNumber !== null,
+    enabled: Boolean(client) && blockNumber !== null,
     ...GALLERY_CANONICAL_QUERY_OPTIONS,
   });
 
-  const projection: GalleryHookProjection<GalleryGlobalState> = !enabled
-    ? { status: "idle" }
-    : blockCaptureFailed
+  const projection: GalleryHookProjection<GalleryTokenAvailability> =
+    blockCaptureFailed
       ? {
           status: "failure",
           blockNumber: null,
-          message: "Gallery global state is unavailable",
+          message: `Gallery token ${tokenId} availability is unavailable`,
         }
       : !client || blockNumber === null || query.isPending
         ? { status: "loading" }
         : query.data ?? {
             status: "failure",
             blockNumber,
-            message: "Gallery global state is unavailable",
+            message: `Gallery token ${tokenId} availability is unavailable`,
           };
 
   const refresh = useCallback(async () => {
@@ -111,11 +111,5 @@ export function useGalleryGlobalState({
     }
   }, [blockNumber, capture, query]);
 
-  return {
-    projection,
-    blockNumber,
-    isRefreshing: query.isFetching && !query.isPending,
-    refresh,
-    captureBlock: capture,
-  };
+  return { projection, refresh };
 }
