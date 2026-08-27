@@ -41,4 +41,26 @@ describe("gallery metadata query", () => {
     assert.equal(typeof initialData, "function");
     assert.equal(initialData?.().status, "ready");
   });
+
+  it("hydrates a matching server-resolved revision without refetching", () => {
+    const revision = {
+      tokenId: "12",
+      tokenUri: "https://gateway.irys.xyz/example/metadata.json",
+      artworkHash: `0x${"cd".repeat(32)}` as `0x${string}`,
+    };
+    const hydratedMetadata = {
+      status: "ready" as const,
+      image: "https://gateway.irys.xyz/example/artwork.png",
+      name: "Golden Hour",
+      description: null,
+      attributes: [],
+      error: null,
+    };
+
+    const initialData = galleryMetadataQueryOptions(
+      revision,
+      hydratedMetadata,
+    ).initialData;
+    assert.deepEqual(initialData?.(), hydratedMetadata);
+  });
 });

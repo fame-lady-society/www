@@ -7,13 +7,11 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useRouter } from "next/navigation";
 import {
   memo,
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -33,13 +31,14 @@ import { useGalleryGlobalState } from "../hooks/useGalleryGlobalState";
 import { useGalleryMetadata } from "../hooks/useGalleryMetadata";
 import { useGalleryPoolState } from "../hooks/useGalleryPoolState";
 import { useGalleryPurchase } from "../hooks/useGalleryPurchase";
+import { useGalleryPurchaseReceiptRedirect } from "../hooks/useGalleryPurchaseReceiptRedirect";
 import type {
   GalleryArtworkTarget,
   GalleryCheckoutQuote,
   GalleryPaymentAsset,
 } from "../types";
+import { fameMarketTokenPath } from "../tokenRoute";
 import type { Hash } from "viem";
-import type { GalleryPurchaseState } from "../transactions/purchaseQueue";
 import { ArtworkCard } from "./ArtworkCard";
 import { GalleryAssetSelect } from "./GalleryAssetSelect";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
@@ -70,12 +69,6 @@ const CHECKOUT_PAYMENT_ASSETS = [
   "ETH",
   "USDC",
 ] as const satisfies readonly GalleryPaymentAsset[];
-
-export function galleryPurchaseReceiptHref(state: GalleryPurchaseState) {
-  return state.status === "verified" && state.purchaseHash
-    ? `/fame/market/purchase/${state.purchaseHash}`
-    : null;
-}
 
 export function GalleryFundingLink({ chainId }: { chainId: number }) {
   if (chainId !== base.id) return null;
@@ -162,11 +155,14 @@ export function GalleryPaymentPanel({
   if (paymentAsset === "FAME") {
     paymentDetails = null;
   } else if (quoteLoading) {
+    const article = paymentAsset === "ETH" ? "an" : "a";
     paymentDetails = (
-      <Alert severity="info">Finding a protected {paymentAsset} route…</Alert>
+      <Alert severity="info">
+        Finding {article} {paymentAsset} route…
+      </Alert>
     );
   } else if (quoteError || !quote || quoteExpired) {
-    let errorMessage = "No protected checkout route is available.";
+    let errorMessage = "No checkout route is available.";
     if (quoteExpired) {
       errorMessage = "This checkout quote expired. Refresh it before buying.";
     } else if (quoteError) {
@@ -397,6 +393,7 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
               purchaseInProgress={
                 purchaseLocked && activeArtworkKey === artwork.stableKey
               }
+              href={fameMarketTokenPath(artwork.tokenId)}
               onBuy={() => onBuy(artwork.stableKey)}
               onRetry={() => onRetry(artwork.stableKey)}
               tokenSymbol={purchaseTokenSymbol}
@@ -465,6 +462,7 @@ function GalleryMetadataArtworkCard({
       purchaseLocked={purchaseLocked}
       purchaseInProgress={purchaseInProgress}
       tokenSymbol={tokenSymbol}
+      href={fameMarketTokenPath(tokenId)}
       onBuy={onBuy}
       onRetry={() => {
         onRetry();
@@ -474,7 +472,7 @@ function GalleryMetadataArtworkCard({
   );
 }
 
-function useGalleryChainOnPageLoad(targetChainId: number) {
+export function useGalleryChainOnPageLoad(targetChainId: number) {
   const connection = useConnection();
   const { mutate: switchChain } = useSwitchChain();
   const shouldSwitch = needsConnectedChainSwitch({
@@ -492,8 +490,6 @@ function useGalleryChainOnPageLoad(targetChainId: number) {
 
 export function GalleryView() {
   const config = useGalleryRuntime();
-  const router = useRouter();
-  const openedPurchaseReceipt = useRef<string | null>(null);
   const [paymentAsset, setPaymentAsset] = useState<GalleryPaymentAsset>("FAME");
   useGalleryChainOnPageLoad(config.chainId);
   const global = useGalleryGlobalState();
@@ -568,18 +564,7 @@ export function GalleryView() {
     (checkoutQuote.quote !== null &&
       checkoutQuote.quote.expiresAt.getTime() > Date.now() &&
       !checkoutQuote.isLoading);
-  const purchaseReceiptHref = galleryPurchaseReceiptHref(purchase.state);
-
-  useEffect(() => {
-    if (
-      purchaseReceiptHref === null ||
-      openedPurchaseReceipt.current === purchaseReceiptHref
-    ) {
-      return;
-    }
-    openedPurchaseReceipt.current = purchaseReceiptHref;
-    router.push(purchaseReceiptHref);
-  }, [purchaseReceiptHref, router]);
+  useGalleryPurchaseReceiptRedirect(purchase.state);
 
   const retryArtwork = useCallback(
     (stableKey: string) => {

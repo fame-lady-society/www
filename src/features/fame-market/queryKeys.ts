@@ -54,6 +54,16 @@ export const galleryQueryKeys = {
       tokenId.toString(),
     ] as const;
   },
+  tokenAvailability(
+    identity: GalleryQueryIdentity,
+    blockNumber: bigint,
+    tokenId: bigint,
+  ) {
+    return [
+      ...this.token(identity, blockNumber, tokenId),
+      "availability",
+    ] as const;
+  },
   accounts(identity: GalleryQueryIdentity, blockNumber: bigint) {
     return this.projection(identity, "account", blockNumber);
   },

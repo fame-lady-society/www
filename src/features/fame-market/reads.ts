@@ -12,6 +12,7 @@ import {
   universalPoolArtMarketplaceAbi,
 } from "../../wagmi";
 import type { GalleryRuntimeConfig } from "./config/galleryRuntime";
+import { galleryHeldTarget } from "./discovery/recoveryScan";
 import type {
   GalleryAccountState,
   GalleryArtworkTarget,
@@ -22,6 +23,7 @@ import type {
   GalleryProjectionFailure,
   GalleryProjectionResult,
   GalleryTargetKind,
+  GalleryTokenAvailability,
   GalleryTokenState,
 } from "./types";
 
@@ -579,6 +581,76 @@ export async function readGalleryTokenState(
     states.get(tokenId) ??
     failure(`Gallery token ${tokenId} state is unavailable`, blockNumber)
   );
+}
+
+export async function readGalleryTokenAvailability(
+  client: GalleryMulticallClient,
+  blockNumber: bigint,
+  tokenId: bigint,
+  addresses: GalleryReadAddresses,
+): Promise<GalleryProjectionResult<GalleryTokenAvailability>> {
+  const [token, pool] = await Promise.all([
+    readGalleryTokenState(client, blockNumber, tokenId, addresses),
+    readGalleryPoolState(client, blockNumber, [tokenId], addresses),
+  ]);
+
+  if (pool.status === "failure") {
+    return failure(
+      `Gallery token ${tokenId} pool availability is unavailable`,
+      blockNumber,
+    );
+  }
+  if (pool.data.failedMembershipTokenIds.includes(tokenId)) {
+    return failure(
+      `Gallery token ${tokenId} pool membership is unavailable`,
+      blockNumber,
+    );
+  }
+  if (pool.data.ambiguousTokenIds.includes(tokenId)) {
+    return failure(
+      `Gallery token ${tokenId} pool membership is ambiguous`,
+      blockNumber,
+    );
+  }
+  if (token.status === "failure") return token;
+
+  const poolTarget = pool.data.targets.find(
+    (candidate) => candidate.tokenId === tokenId,
+  );
+  if (poolTarget) {
+    if (token.data.marketplaceHeld) {
+      return failure(
+        `Gallery token ${tokenId} availability is contradictory`,
+        blockNumber,
+      );
+    }
+    if (poolTarget.artworkError !== null) {
+      return failure(
+        `Gallery token ${tokenId} artwork identity is unavailable`,
+        blockNumber,
+      );
+    }
+    return {
+      status: "success",
+      blockNumber,
+      data: { tokenId, target: poolTarget },
+    };
+  }
+
+  if (token.data.marketplaceHeld && token.data.artworkError !== null) {
+    return failure(
+      `Gallery token ${tokenId} artwork identity is unavailable`,
+      blockNumber,
+    );
+  }
+  const target = token.data.marketplaceHeld
+    ? galleryHeldTarget(token.data)
+    : null;
+  return {
+    status: "success",
+    blockNumber,
+    data: { tokenId, target },
+  };
 }
 
 export async function readGalleryAccountState(

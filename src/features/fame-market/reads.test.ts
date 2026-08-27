@@ -9,6 +9,7 @@ import {
   readGalleryGlobalState,
   readMarketplaceLandingAuthority,
   readGalleryPoolState,
+  readGalleryTokenAvailability,
   readGalleryTokenStates,
   type GalleryMulticallClient,
 } from "./reads";
@@ -314,6 +315,162 @@ describe("successor gallery canonical reads", () => {
       message: "Gallery token 2 ownership is unavailable",
     });
     assert.equal(states.get(3n)?.status, "success");
+  });
+
+  it("resolves held, pool, and unlisted token availability at one block", async () => {
+    const held = createClient((functionName, tokenId) => {
+      if (functionName === "ownerAt") return success(addresses.marketplace);
+      if (
+        functionName === "isTokenInMintPool" ||
+        functionName === "isTokenInBurnedPool"
+      ) {
+        return success(false);
+      }
+      return standardResult(functionName, tokenId);
+    });
+    const heldResult = await readGalleryTokenAvailability(
+      held.client,
+      550n,
+      1n,
+      addresses,
+    );
+    assert.equal(heldResult.status, "success");
+    assert.deepEqual(
+      heldResult.status === "success" && heldResult.data.target,
+      {
+        targetId: "held:1",
+        kind: "held",
+        tokenId: 1n,
+        artworkHash: artwork,
+        tokenUri: "data:token/1",
+        artworkError: null,
+      },
+    );
+
+    const pool = createClient((functionName, tokenId) => {
+      if (functionName === "ownerAt") return success(feeRecipient);
+      return standardResult(functionName, tokenId);
+    });
+    const poolResult = await readGalleryTokenAvailability(
+      pool.client,
+      551n,
+      2n,
+      addresses,
+    );
+    assert.equal(poolResult.status, "success");
+    assert.equal(
+      poolResult.status === "success" && poolResult.data.target?.targetId,
+      "pool:mint:2",
+    );
+
+    const unlisted = createClient((functionName, tokenId) => {
+      if (functionName === "ownerAt") return success(feeRecipient);
+      if (
+        functionName === "isTokenInMintPool" ||
+        functionName === "isTokenInBurnedPool"
+      ) {
+        return success(false);
+      }
+      return standardResult(functionName, tokenId);
+    });
+    const unlistedResult = await readGalleryTokenAvailability(
+      unlisted.client,
+      552n,
+      1n,
+      addresses,
+    );
+    assert.deepEqual(unlistedResult, {
+      status: "success",
+      blockNumber: 552n,
+      data: { tokenId: 1n, target: null },
+    });
+
+    for (const mock of [held, pool, unlisted]) {
+      assert.ok(
+        mock.multicalls.every((multicall) =>
+          [550n, 551n, 552n].includes(multicall.blockNumber),
+        ),
+      );
+    }
+  });
+
+  it("fails token availability closed for ambiguous or contradictory state", async () => {
+    const ambiguous = createClient((functionName, tokenId) => {
+      if (
+        functionName === "isTokenInMintPool" ||
+        functionName === "isTokenInBurnedPool"
+      ) {
+        return success(true);
+      }
+      return standardResult(functionName, tokenId);
+    });
+    assert.deepEqual(
+      await readGalleryTokenAvailability(ambiguous.client, 553n, 1n, addresses),
+      {
+        status: "failure",
+        blockNumber: 553n,
+        message: "Gallery token 1 pool membership is ambiguous",
+      },
+    );
+
+    const contradictory = createClient((functionName, tokenId) => {
+      if (functionName === "ownerAt") return success(addresses.marketplace);
+      if (functionName === "isTokenInMintPool") return success(true);
+      if (functionName === "isTokenInBurnedPool") return success(false);
+      return standardResult(functionName, tokenId);
+    });
+    assert.deepEqual(
+      await readGalleryTokenAvailability(
+        contradictory.client,
+        554n,
+        1n,
+        addresses,
+      ),
+      {
+        status: "failure",
+        blockNumber: 554n,
+        message: "Gallery token 1 availability is contradictory",
+      },
+    );
+
+    const missingOwner = createClient((functionName, tokenId) =>
+      functionName === "ownerAt"
+        ? { status: "failure", error: new Error("owner unavailable") }
+        : standardResult(functionName, tokenId),
+    );
+    assert.deepEqual(
+      await readGalleryTokenAvailability(
+        missingOwner.client,
+        555n,
+        2n,
+        addresses,
+      ),
+      {
+        status: "failure",
+        blockNumber: 555n,
+        message: "Gallery token 2 ownership is unavailable",
+      },
+    );
+
+    const missingArtwork = createClient((functionName, tokenId) => {
+      if (functionName === "ownerAt") return success(feeRecipient);
+      return functionName === "artworkHash"
+        ? { status: "failure", error: new Error("artwork unavailable") }
+        : standardResult(functionName, tokenId);
+    });
+    assert.deepEqual(
+      await readGalleryTokenAvailability(
+        missingArtwork.client,
+        556n,
+        2n,
+        addresses,
+      ),
+      {
+        status: "failure",
+        blockNumber: 556n,
+        message: "Gallery token 2 artwork identity is unavailable",
+      },
+    );
   });
 
   it("distinguishes owner, non-owner, and owner-read failure", async () => {
