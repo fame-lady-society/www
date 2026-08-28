@@ -41,6 +41,24 @@ export function fameMarketBaseUrl() {
   return new URL(process.env.OG_BASE_URL ?? "https://www.fameladysociety.com");
 }
 
+export function fameMarketOgArtworkUrl(
+  rawArtwork: string,
+  baseUrl = fameMarketBaseUrl(),
+) {
+  if (rawArtwork.startsWith("data:")) return rawArtwork;
+
+  const artwork = new URL(rawArtwork, baseUrl).toString();
+  if (rawArtwork.startsWith("/")) return artwork;
+
+  // next/og embeds image bytes into an intermediate SVG. Bound remote artwork
+  // first so large originals cannot exceed the renderer's XML buffer limit.
+  const optimizerUrl = new URL("/_next/image", baseUrl);
+  optimizerUrl.searchParams.set("url", artwork);
+  optimizerUrl.searchParams.set("w", "640");
+  optimizerUrl.searchParams.set("q", "75");
+  return optimizerUrl.toString();
+}
+
 export async function loadFameMarketTokenPresentation(
   tokenId: number,
   dependencies: FameMarketTokenPresentationDependencies = defaultDependencies,

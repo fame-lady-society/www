@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { notFound } from "next/navigation";
 import {
-  fameMarketBaseUrl,
+  fameMarketOgArtworkUrl,
   fameMarketTokenName,
   getFameMarketTokenPresentation,
   parseFameMarketTokenId,
@@ -21,9 +21,7 @@ export default async function Image({
 
   const presentation = await getFameMarketTokenPresentation(tokenId);
   const name = fameMarketTokenName(presentation);
-  const artwork = presentation.metadata.image.startsWith("/")
-    ? new URL(presentation.metadata.image, fameMarketBaseUrl()).toString()
-    : presentation.metadata.image;
+  const artwork = fameMarketOgArtworkUrl(presentation.metadata.image);
 
   return new ImageResponse(
     (
