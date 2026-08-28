@@ -114,15 +114,13 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
         <div className="pointer-events-none absolute left-[-10rem] top-[-8rem] -z-10 h-[34rem] w-[34rem] rounded-full bg-[#c9aa67]/[0.07] blur-[120px]" />
         <div className="mx-auto grid min-h-[calc(100dvh-68px)] max-w-[1440px] items-center gap-10 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-12 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="relative z-10 lg:col-span-7 lg:py-12">
-            <p className="fame-kicker">Base · token meets collection</p>
-            <h1 className="fame-display mt-6 max-w-4xl text-balance text-[clamp(4.2rem,9vw,8.8rem)] leading-[0.82]">
-              Hold the token.
-              <span className="mt-2 block text-[#c9aa67]">Meet Society.</span>
+            <p className="fame-kicker">Token · NFT · Art</p>
+            <h1 className="fame-display mt-6 max-w-4xl text-balance text-[clamp(3.7rem,7.5vw,7.5rem)] leading-[0.86]">
+              Liquidity-backed
+              <span className="mt-2 block text-[#c9aa67]">NFT</span>
             </h1>
-            <p className="mt-8 max-w-xl text-pretty text-base leading-7 text-[#bdb4a4] sm:text-lg sm:leading-8">
-              One million FAME resolves to one Society NFT. Trade the token,
-              collect the artwork, or rotate toward the Society you want—all on
-              Base.
+            <p className="mt-8 font-mono text-base uppercase tracking-[0.08em] text-[#bdb4a4] sm:text-lg">
+              1M $FAME = 1 Society NFT
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <PrimaryLink href="/fame/swap">Trade FAME</PrimaryLink>

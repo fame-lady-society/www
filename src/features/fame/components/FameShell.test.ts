@@ -17,6 +17,20 @@ describe("FAME route shell", () => {
     }
   });
 
+  it("defines an explicit Twitter card for the FAME landing", () => {
+    const page = source("src/app/fame/page.tsx");
+    assert.match(page, /url:\s*"\/images\/fame\/fame-social-card\.png"/);
+    assert.match(page, /width:\s*1200/);
+    assert.match(page, /height:\s*630/);
+    assert.match(page, /\$FAME — Liquidity-backed NFT/);
+    assert.match(page, /1M \$FAME = 1 Society NFT\./);
+    assert.match(page, /openGraph:\s*\{\s*images:\s*\[fameSocialCard\]/);
+    assert.match(page, /twitter:\s*\{/);
+    assert.match(page, /card:\s*"summary_large_image"/);
+    assert.match(page, /site:\s*"@FameLadySociety"/);
+    assert.match(page, /twitter:\s*\{[\s\S]*?images:\s*\[fameSocialCard\]/);
+  });
+
   it("reuses the shared FAME main inside the marketplace shell", () => {
     const shell = source(
       "src/features/fame-market/components/BaseGalleryShell.tsx",
@@ -61,6 +75,13 @@ describe("FAME route shell", () => {
     assert.doesNotMatch(landing, /BurnPoolImage|burnPool|unrevealed/);
     assert.doesNotMatch(landing, /href="\/fame\/gallery"/);
     assert.match(landing, /1 million \$FAME = 1 Society NFT/);
+    assert.match(landing, /Token · NFT · Art/);
+    assert.match(landing, /Liquidity-backed/);
+    assert.match(landing, /1M \$FAME = 1 Society NFT/);
+    assert.doesNotMatch(
+      landing,
+      /token meets collection|Hold the token|Meet Society/,
+    );
     assert.match(landing, /<SocietyNftReadinessRail/);
     assert.match(landing, /<FameFAQ/);
     assert.match(
