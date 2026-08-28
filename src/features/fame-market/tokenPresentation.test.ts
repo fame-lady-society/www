@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type { FameMetadataResult } from "@/features/fame/metadata";
 import {
   buildFameMarketTokenMetadata,
+  fameMarketOgArtworkUrl,
   fameMarketTokenDescription,
   loadFameMarketTokenPresentation,
   parseFameMarketTokenId,
@@ -18,6 +19,27 @@ const readyMetadata: FameMetadataResult = {
 };
 
 describe("FAME market token presentation", () => {
+  it("bounds remote OG artwork through the same-site image optimizer", () => {
+    const baseUrl = new URL("https://preview.fameladysociety.com");
+    const remoteArtwork =
+      "https://gateway.irys.xyz/XTFiwD9qk2KTuhr1vNihaAqmUKMQ2RxWvK2vykDc56Y";
+
+    assert.equal(
+      fameMarketOgArtworkUrl(remoteArtwork, baseUrl),
+      "https://preview.fameladysociety.com/_next/image?url=https%3A%2F%2Fgateway.irys.xyz%2FXTFiwD9qk2KTuhr1vNihaAqmUKMQ2RxWvK2vykDc56Y&w=640&q=75",
+    );
+    assert.equal(
+      fameMarketOgArtworkUrl("/images/fame/gold-leaf-square.png", baseUrl),
+      "https://preview.fameladysociety.com/images/fame/gold-leaf-square.png",
+    );
+
+    const inlineArtwork = "data:image/png;base64,c21hbGw=";
+    assert.equal(
+      fameMarketOgArtworkUrl(inlineArtwork, baseUrl),
+      inlineArtwork,
+    );
+  });
+
   it("accepts only canonical Society token route parameters", () => {
     assert.equal(parseFameMarketTokenId("1"), 1);
     assert.equal(parseFameMarketTokenId("888"), 888);
