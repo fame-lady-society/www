@@ -12,19 +12,19 @@ const fameSocialCard = {
   url: "/images/fame/fame-social-card.png",
   width: 1200,
   height: 630,
-  alt: "$FAME — Hold the token. Meet Society.",
+  alt: "Liquidity-backed NFT — 1M $FAME = 1 Society NFT",
 } as const;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.fameladysociety.com"),
-  title: "$FAME",
-  description: "The home of $FAME.",
+  title: "$FAME — Liquidity-backed NFT",
+  description: "1M $FAME = 1 Society NFT.",
   openGraph: { images: [fameSocialCard] },
   twitter: {
     card: "summary_large_image",
     site: "@FameLadySociety",
-    title: "$FAME",
-    description: "The home of $FAME.",
+    title: "$FAME — Liquidity-backed NFT",
+    description: "1M $FAME = 1 Society NFT.",
     images: [fameSocialCard],
   },
   // Keep frame discovery local and static; the landing must not fetch itself.
