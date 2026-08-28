@@ -17,6 +17,18 @@ describe("FAME route shell", () => {
     }
   });
 
+  it("defines an explicit Twitter card for the FAME landing", () => {
+    const page = source("src/app/fame/page.tsx");
+    assert.match(page, /url:\s*"\/images\/fame\/fame-social-card\.png"/);
+    assert.match(page, /width:\s*1200/);
+    assert.match(page, /height:\s*630/);
+    assert.match(page, /openGraph:\s*\{\s*images:\s*\[fameSocialCard\]/);
+    assert.match(page, /twitter:\s*\{/);
+    assert.match(page, /card:\s*"summary_large_image"/);
+    assert.match(page, /site:\s*"@FameLadySociety"/);
+    assert.match(page, /twitter:\s*\{[\s\S]*?images:\s*\[fameSocialCard\]/);
+  });
+
   it("reuses the shared FAME main inside the marketplace shell", () => {
     const shell = source(
       "src/features/fame-market/components/BaseGalleryShell.tsx",
