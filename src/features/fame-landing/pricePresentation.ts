@@ -5,6 +5,10 @@ import {
   type FameLandingQuoteValue,
   type FameLandingSnapshot,
 } from "./snapshot";
+import {
+  marketCapInputPlaceholder,
+  type MarketCapCalculatorData,
+} from "./marketCapCalculator";
 
 export type PriceValue = Readonly<{ value: string | null }>;
 export type LandingCurrencyValues = Readonly<{
@@ -34,6 +38,7 @@ export type LandingMarketPresentation = Readonly<{
   marketCap: LandingCurrencyValues;
   marketplaceSupply: string | null;
   liquidity: LandingLiquidity;
+  calculator: MarketCapCalculatorData;
 }>;
 
 const DEFI_FAME_AMOUNT = 1_000_000n * 10n ** 18n;
@@ -73,8 +78,9 @@ export function formatPrice(
   maximumFractionDigits = symbol === "USDC" ? 2 : symbol === "ETH" ? 3 : 2,
 ): string {
   const base = 10n ** BigInt(decimals);
+  const displaySymbol = symbol === "ETH" ? "Ξ" : symbol;
   const compact = compactAmount(amount, base);
-  if (compact) return `${compact} ${symbol}`;
+  if (compact) return `${compact} ${displaySymbol}`;
 
   const negative = amount < 0n;
   const absolute = negative ? -amount : amount;
@@ -82,7 +88,7 @@ export function formatPrice(
   const discardedBase = 10n ** BigInt(decimals - visibleDigits);
   const rounded = (absolute + discardedBase / 2n) / discardedBase;
   if (absolute > 0n && rounded === 0n) {
-    return `<0.${"0".repeat(Math.max(0, visibleDigits - 1))}1 ${symbol}`;
+    return `<0.${"0".repeat(Math.max(0, visibleDigits - 1))}1 ${displaySymbol}`;
   }
 
   const visibleBase = 10n ** BigInt(visibleDigits);
@@ -91,7 +97,7 @@ export function formatPrice(
     .toString()
     .padStart(visibleDigits, "0")
     .replace(/0+$/u, "");
-  return `${negative ? "-" : ""}${grouped(whole)}${fraction ? `.${fraction}` : ""} ${symbol}`;
+  return `${negative ? "-" : ""}${grouped(whole)}${fraction ? `.${fraction}` : ""} ${displaySymbol}`;
 }
 
 const DEFI_FAME_LABEL = formatPrice(DEFI_FAME_AMOUNT, 18, "FAME");
@@ -137,25 +143,54 @@ function marketplaceSupply(
   );
 }
 
-function marketCapValue(
+function marketCapAmount(
   totalSupply: bigint | null,
   buy: FameLandingFieldState<FameLandingQuoteValue>,
   sell: FameLandingFieldState<FameLandingQuoteValue>,
-  currency: "USDC" | "ETH",
-): PriceValue {
+): bigint | null {
   if (
     totalSupply === null ||
     buy.status !== "available" ||
     sell.status !== "available"
   ) {
-    return { value: null };
+    return null;
   }
 
   const amount =
     ((BigInt(buy.value.amount) + BigInt(sell.value.amount)) * totalSupply) /
     (2n * DEFI_FAME_AMOUNT);
+  return amount;
+}
+
+function marketCapValue(
+  amount: bigint | null,
+  currency: "USDC" | "ETH",
+): PriceValue {
+  if (amount === null) return { value: null };
   return {
     value: formatPrice(amount, currency === "USDC" ? 6 : 18, currency, 1),
+  };
+}
+
+function calculatorConversion(
+  quotes: FameLandingSnapshot["fields"]["quotes"],
+): MarketCapCalculatorData["conversion"] {
+  const buyUsdc = quotes.defiBuyUsdc;
+  const buyEth = quotes.defiBuyEth;
+  const sellUsdc = quotes.defiSellUsdc;
+  const sellEth = quotes.defiSellEth;
+  if (
+    buyUsdc.status !== "available" ||
+    buyEth.status !== "available" ||
+    sellUsdc.status !== "available" ||
+    sellEth.status !== "available"
+  ) {
+    return null;
+  }
+
+  return {
+    buy: { usdc: buyUsdc.value.amount, eth: buyEth.value.amount },
+    sell: { usdc: sellUsdc.value.amount, eth: sellEth.value.amount },
   };
 }
 
@@ -202,6 +237,16 @@ export function presentLandingMarket(
     marketplace.status === "available"
       ? BigInt(marketplace.value.totalSupply)
       : null;
+  const marketCapUsdc = marketCapAmount(
+    totalSupply,
+    quotes.defiBuyUsdc,
+    quotes.defiSellUsdc,
+  );
+  const marketCapEth = marketCapAmount(
+    totalSupply,
+    quotes.defiBuyEth,
+    quotes.defiSellEth,
+  );
 
   return {
     prices: {
@@ -222,21 +267,19 @@ export function presentLandingMarket(
       },
     },
     marketCap: {
-      USDC: marketCapValue(
-        totalSupply,
-        quotes.defiBuyUsdc,
-        quotes.defiSellUsdc,
-        "USDC",
-      ),
-      ETH: marketCapValue(
-        totalSupply,
-        quotes.defiBuyEth,
-        quotes.defiSellEth,
-        "ETH",
-      ),
+      USDC: marketCapValue(marketCapUsdc, "USDC"),
+      ETH: marketCapValue(marketCapEth, "ETH"),
     },
     marketplaceSupply: marketplaceSupply(marketplace),
     liquidity: presentLiquidity(snapshot),
+    calculator: {
+      currentMarketCapUsdc: marketCapUsdc?.toString() ?? null,
+      currentMarketCapInput:
+        marketCapUsdc === null
+          ? null
+          : marketCapInputPlaceholder(marketCapUsdc),
+      conversion: calculatorConversion(quotes),
+    },
   };
 }
 
@@ -251,5 +294,10 @@ export function emptyLandingMarket(): LandingMarketPresentation {
     marketCap: { USDC: empty, ETH: empty },
     marketplaceSupply: null,
     liquidity: emptyLandingLiquidity(),
+    calculator: {
+      currentMarketCapUsdc: null,
+      currentMarketCapInput: null,
+      conversion: null,
+    },
   };
 }

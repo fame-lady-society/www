@@ -10,22 +10,22 @@ const market: LandingMarketPresentation = {
     defiBuy: {
       fame: "1M FAME",
       USDC: { value: "250 USDC" },
-      ETH: { value: "0.42 ETH" },
+      ETH: { value: "0.42 Ξ" },
     },
     defiSell: {
       fame: "1M FAME",
       USDC: { value: "240 USDC" },
-      ETH: { value: "0.41 ETH" },
+      ETH: { value: "0.41 Ξ" },
     },
     nftBuy: {
       fame: "1.05M FAME",
       USDC: { value: "262.5 USDC" },
-      ETH: { value: "0.44 ETH" },
+      ETH: { value: "0.44 Ξ" },
     },
   },
   marketCap: {
     USDC: { value: "242K USDC" },
-    ETH: { value: "409.9 ETH" },
+    ETH: { value: "409.9 Ξ" },
   },
   marketplaceSupply: "987.7M FAME",
   liquidity: {
@@ -52,6 +52,14 @@ const market: LandingMarketPresentation = {
         value: "500 frxUSD",
       },
     ],
+  },
+  calculator: {
+    currentMarketCapUsdc: "242000000000",
+    currentMarketCapInput: { value: "242", unit: "K" },
+    conversion: {
+      buy: { usdc: "250000000", eth: "420000000000000000" },
+      sell: { usdc: "240000000", eth: "410000000000000000" },
+    },
   },
 };
 
@@ -89,7 +97,7 @@ describe("FAME market board", () => {
     const markup = renderToStaticMarkup(<FameMarketBoard market={partial} />);
 
     assert.equal((markup.match(/aria-label="Loading"/g) ?? []).length, 2);
-    assert.match(markup, /0.42 ETH/);
+    assert.match(markup, /0.42 Ξ/);
     assert.match(markup, /240 USDC/);
     assert.match(markup, /25M FAME/);
   });

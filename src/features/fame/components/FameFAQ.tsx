@@ -67,8 +67,8 @@ export const FameFAQ: FC = () => (
             <WrappedLink href="/fame/market">Society Marketplace</WrappedLink>.
           </Typography>
           <Typography component="p">
-            Marketplace checkout supports FAME, ETH, or USDC. Keep a small
-            amount of ETH for Base gas even when paying with FAME or USDC.
+            Marketplace checkout supports FAME, Ξ, or USDC. Keep a small amount
+            of Ξ for Base gas even when paying with FAME or USDC.
           </Typography>
         </>
       }
@@ -151,8 +151,8 @@ export const FameFAQ: FC = () => (
       answer={
         <>
           <Typography component="p" mb={2}>
-            FAME and Society are on Base chain 8453. Base uses ETH for gas.
-            Verify that your wallet is on Base before signing a transaction.
+            FAME and Society are on Base chain 8453. Base uses Ξ for gas. Verify
+            that your wallet is on Base before signing a transaction.
           </Typography>
           <Typography component="p">
             Use the verified contract addresses above this FAQ when adding FAME

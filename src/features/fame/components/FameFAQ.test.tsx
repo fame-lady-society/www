@@ -33,8 +33,8 @@ describe("FAME FAQ", () => {
     assert.match(html, /1 wei self-transfer/i);
     assert.match(html, /href="\/fame\/swap"/);
     assert.match(html, /href="\/fame\/market"/);
-    assert.match(html, /FAME, ETH, or USDC/);
-    assert.match(html, /ETH for Base gas/);
+    assert.match(html, /FAME, Ξ, or USDC/);
+    assert.match(html, /Ξ for Base gas/);
   });
 
   it("sets expectations for pricing, redemption, rotation, and liquidity", () => {

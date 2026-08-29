@@ -17,10 +17,10 @@ function parsedFixture() {
 
 describe("FAME landing snapshot presentation", () => {
   it("keeps normal prices compact", () => {
-    assert.equal(formatPrice(108_821_009_700_020_240n, 18, "ETH"), "0.109 ETH");
+    assert.equal(formatPrice(108_821_009_700_020_240n, 18, "ETH"), "0.109 Ξ");
     assert.equal(formatPrice(202_946_333n, 6, "USDC"), "202.95 USDC");
     assert.equal(formatPrice(233_430_200n, 6, "USDC"), "233.43 USDC");
-    assert.equal(formatPrice(120_934_000_000_000_000n, 18, "ETH"), "0.121 ETH");
+    assert.equal(formatPrice(120_934_000_000_000_000n, 18, "ETH"), "0.121 Ξ");
   });
 
   it("abbreviates thousands and millions to at most one decimal", () => {
@@ -36,22 +36,30 @@ describe("FAME landing snapshot presentation", () => {
       defiBuy: {
         fame: "1M FAME",
         USDC: { value: "250 USDC" },
-        ETH: { value: "0.42 ETH" },
+        ETH: { value: "0.42 Ξ" },
       },
       defiSell: {
         fame: "1M FAME",
         USDC: { value: "240 USDC" },
-        ETH: { value: "0.41 ETH" },
+        ETH: { value: "0.41 Ξ" },
       },
       nftBuy: {
         fame: "1.05M FAME",
         USDC: { value: "262.5 USDC" },
-        ETH: { value: "0.44 ETH" },
+        ETH: { value: "0.44 Ξ" },
       },
     });
     assert.deepEqual(market.marketCap, {
       USDC: { value: "242K USDC" },
-      ETH: { value: "409.9 ETH" },
+      ETH: { value: "409.9 Ξ" },
+    });
+    assert.deepEqual(market.calculator, {
+      currentMarketCapUsdc: "241975308645",
+      currentMarketCapInput: { value: "242", unit: "K" },
+      conversion: {
+        buy: { usdc: "250000000", eth: "420000000000000000" },
+        sell: { usdc: "240000000", eth: "410000000000000000" },
+      },
     });
     assert.equal(market.marketplaceSupply, "987.7M FAME");
     assert.deepEqual(market.liquidity, {
@@ -95,10 +103,10 @@ describe("FAME landing snapshot presentation", () => {
     });
 
     assert.equal(market.prices.defiBuy.USDC.value, null);
-    assert.equal(market.prices.defiBuy.ETH.value, "0.42 ETH");
+    assert.equal(market.prices.defiBuy.ETH.value, "0.42 Ξ");
     assert.equal(market.prices.defiSell.USDC.value, "240 USDC");
     assert.equal(market.marketCap.USDC.value, null);
-    assert.equal(market.marketCap.ETH.value, "409.9 ETH");
+    assert.equal(market.marketCap.ETH.value, "409.9 Ξ");
     assert.equal(market.liquidity.fame.value, "25M FAME");
   });
 
@@ -120,7 +128,7 @@ describe("FAME landing snapshot presentation", () => {
     assert.equal(market.marketCap.USDC.value, null);
     assert.equal(market.marketCap.ETH.value, null);
     assert.equal(market.prices.nftBuy.USDC.value, "262.5 USDC");
-    assert.equal(market.prices.nftBuy.ETH.value, "0.44 ETH");
+    assert.equal(market.prices.nftBuy.ETH.value, "0.44 Ξ");
     assert.equal(market.liquidity.fame.value, "25M FAME");
     assert.deepEqual(
       market.liquidity.counterAssets.map(({ value }) => value),
@@ -146,15 +154,15 @@ describe("FAME landing snapshot presentation", () => {
       market.liquidity.counterAssets.every(({ value }) => value === null),
     );
     assert.equal(market.prices.defiBuy.USDC.value, "250 USDC");
-    assert.equal(market.prices.defiBuy.ETH.value, "0.42 ETH");
+    assert.equal(market.prices.defiBuy.ETH.value, "0.42 Ξ");
     assert.equal(market.prices.defiSell.USDC.value, "240 USDC");
-    assert.equal(market.prices.defiSell.ETH.value, "0.41 ETH");
+    assert.equal(market.prices.defiSell.ETH.value, "0.41 Ξ");
     assert.equal(market.prices.nftBuy.fame, "1.05M FAME");
     assert.equal(market.prices.nftBuy.USDC.value, "262.5 USDC");
-    assert.equal(market.prices.nftBuy.ETH.value, "0.44 ETH");
+    assert.equal(market.prices.nftBuy.ETH.value, "0.44 Ξ");
     assert.equal(market.marketplaceSupply, "987.7M FAME");
     assert.equal(market.marketCap.USDC.value, "242K USDC");
-    assert.equal(market.marketCap.ETH.value, "409.9 ETH");
+    assert.equal(market.marketCap.ETH.value, "409.9 Ξ");
   });
 
   it("provides one complete established unavailable market state", () => {

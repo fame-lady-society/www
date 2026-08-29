@@ -434,7 +434,7 @@ export function SponsoredCreatorMetadataUploader({
 
   const limitLabel = `${Math.floor(MAX_CREATOR_IMAGE_BYTES / (1024 * 1024))} MB`;
   const estimatedUploadLabel = funding?.estimatedUploadEth
-    ? `~${funding.estimatedUploadEth} ETH`
+    ? `~${funding.estimatedUploadEth} Ξ`
     : fundingLoading
       ? "Checking…"
       : file
@@ -486,7 +486,7 @@ export function SponsoredCreatorMetadataUploader({
                   Base balance
                 </div>
                 <div className="mt-1 font-mono text-sm text-[#f4eee2]">
-                  {funding.baseBalanceEth ?? "Unavailable"} ETH
+                  {funding.baseBalanceEth ?? "Unavailable"} Ξ
                 </div>
               </div>
               <div>
@@ -494,7 +494,7 @@ export function SponsoredCreatorMetadataUploader({
                   Loaded Irys balance
                 </div>
                 <div className="mt-1 font-mono text-sm text-[#f4eee2]">
-                  {funding.loadedIrysBalanceEth ?? "Not checked"} ETH
+                  {funding.loadedIrysBalanceEth ?? "Not checked"} Ξ
                 </div>
               </div>
               <div>
@@ -517,9 +517,9 @@ export function SponsoredCreatorMetadataUploader({
             <p className="mt-3 text-xs leading-5 text-[#8f8779]">
               Estimate includes the Irys image and metadata costs with the
               existing 10% buffer. Approximate uploads combine the loaded Irys
-              balance with Base ETH above the approximately{" "}
-              {funding.baseGasReserveEth} ETH gas reserve. Base ETH is only
-              debited when the signer&apos;s loaded Irys balance needs a top-up.
+              balance with Base Ξ above the approximately{" "}
+              {funding.baseGasReserveEth} Ξ gas reserve. Base Ξ is only debited
+              when the signer&apos;s loaded Irys balance needs a top-up.
             </p>
             {funding.error && (
               <p className="mt-2 text-xs text-[#e4cd96]">{funding.error}</p>

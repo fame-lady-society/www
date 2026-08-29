@@ -88,7 +88,7 @@ describe("FAME route shell", () => {
       landing,
       /import \{ FameFAQ \} from "@\/features\/fame\/components\/FameFAQ"/,
     );
-    assert.match(landing, /atomic route from ETH or USDC/);
+    assert.match(landing, /atomic route from Ξ or USDC/);
     assert.doesNotMatch(landing, /atomic route from ETH, USDC, or WETH/);
   });
 });

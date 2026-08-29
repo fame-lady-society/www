@@ -9,6 +9,7 @@ import Link from "next/link";
 import type { FC, ReactNode } from "react";
 import { CopyToClipboard } from "@/components/CopyToClipboard";
 import { DefaultProvider } from "@/context/default";
+import { FameMarketCapCalculator } from "@/features/fame-landing/components/FameMarketCapCalculator";
 import { FameMarketBoard } from "@/features/fame-landing/components/FameMarketBoard";
 import type { LandingMarketPresentation } from "@/features/fame-landing/pricePresentation";
 import { FameFAQ } from "@/features/fame/components/FameFAQ";
@@ -167,6 +168,10 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
         <FameMarketBoard market={market} />
       </section>
 
+      <section className="relative z-10 mx-auto mt-6 max-w-[1320px] px-4 sm:px-8">
+        <FameMarketCapCalculator data={market.calculator} />
+      </section>
+
       <section className="mx-auto max-w-[1320px] px-5 py-28 sm:px-8 lg:py-40">
         <header className="grid gap-6 border-b border-[#c9aa67]/25 pb-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
@@ -200,7 +205,7 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
                 </h3>
                 <p className="mt-5 max-w-sm text-sm leading-6 text-[#bdb4a4]">
                   Choose artwork first, then pay directly with FAME or use an
-                  atomic route from ETH or USDC.
+                  atomic route from Ξ or USDC.
                 </p>
               </div>
               <div className="mt-20">

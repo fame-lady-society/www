@@ -40,7 +40,7 @@ function PriceCard({ title, row }: { title: string; row: LandingPriceRow }) {
           </dd>
         </div>
         <div className="flex min-h-6 items-center justify-between gap-4">
-          <dt className="text-[#9f9789]">ETH</dt>
+          <dt className="text-[#9f9789]">Ξ</dt>
           <dd>
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
@@ -87,7 +87,7 @@ function MarketplaceCard({ row }: { row: LandingPriceRow }) {
           </dd>
         </div>
         <div className="flex min-h-6 items-center justify-between gap-4">
-          <dt className="text-[#0d0c0a]/65">ETH</dt>
+          <dt className="text-[#0d0c0a]/65">Ξ</dt>
           <dd>
             {row.ETH.value ? (
               <span className="font-medium tabular-nums">{row.ETH.value}</span>
@@ -132,7 +132,7 @@ function MarketCapCard({
           </dd>
         </div>
         <div className="flex min-h-6 items-center justify-between gap-4">
-          <dt className="text-[#9f9789]">ETH</dt>
+          <dt className="text-[#9f9789]">Ξ</dt>
           <dd>
             {values.ETH.value ? (
               <span className="font-medium tabular-nums">
