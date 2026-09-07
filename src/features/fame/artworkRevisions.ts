@@ -1,7 +1,8 @@
-import type { Abi, Address } from "viem";
+import { isHash, type Abi, type Address, type Hash } from "viem";
 import type { FameArtworkRevision } from "./metadata";
 
 const REVISION_READ_CHUNK_SIZE = 64;
+const ARTWORK_LOCATION_MULTICALL_BATCH_SIZE = 1_048_576;
 export const FAME_ARTWORK_REVISION_READ_CONCURRENCY = 2;
 
 type RevisionContract = Readonly<{
@@ -19,6 +20,7 @@ export type FameArtworkRevisionClient = Readonly<{
   getBlockNumber(): Promise<bigint>;
   multicall(input: {
     allowFailure: true;
+    batchSize?: number;
     blockNumber: bigint;
     contracts: readonly RevisionContract[];
   }): Promise<readonly RevisionResult[]>;
@@ -27,6 +29,16 @@ export type FameArtworkRevisionClient = Readonly<{
 export type FameArtworkRevisionSnapshot = Readonly<{
   blockNumber: bigint;
   revisions: readonly FameArtworkRevision[];
+}>;
+
+export type FameArtworkLocation = Readonly<{
+  tokenId: number;
+  artworkHash: Hash;
+}>;
+
+export type FameArtworkLocationSnapshot = Readonly<{
+  blockNumber: bigint;
+  locations: readonly FameArtworkLocation[];
 }>;
 
 function chunks<T>(values: readonly T[], size: number) {
@@ -41,6 +53,48 @@ function successful(result: RevisionResult | undefined) {
   return result?.status === "success" ? result.result : null;
 }
 
+function validateTokenIds(tokenIds: readonly number[]) {
+  if (
+    tokenIds.some(
+      (tokenId) =>
+        !Number.isSafeInteger(tokenId) || tokenId < 1 || tokenId > 888,
+    )
+  ) {
+    throw new Error("FAME artwork revision token ID is invalid.");
+  }
+}
+
+export async function readFameArtworkLocations(
+  client: FameArtworkRevisionClient,
+  marketplace: Address,
+  marketplaceAbi: Abi,
+  tokenIds: readonly number[],
+  blockNumber?: bigint,
+): Promise<FameArtworkLocationSnapshot> {
+  validateTokenIds(tokenIds);
+  const pinnedBlock = blockNumber ?? (await client.getBlockNumber());
+  const uniqueTokenIds = [...new Set(tokenIds)];
+  const results = await client.multicall({
+    allowFailure: true,
+    batchSize: ARTWORK_LOCATION_MULTICALL_BATCH_SIZE,
+    blockNumber: pinnedBlock,
+    contracts: uniqueTokenIds.map((tokenId) => ({
+      address: marketplace,
+      abi: marketplaceAbi,
+      functionName: "artworkHash" as const,
+      args: [BigInt(tokenId)] as const,
+    })),
+  });
+  const locations = uniqueTokenIds.flatMap((tokenId, index) => {
+    const artworkHash = successful(results[index]);
+    return typeof artworkHash === "string" && isHash(artworkHash)
+      ? [{ tokenId, artworkHash }]
+      : [];
+  });
+
+  return { blockNumber: pinnedBlock, locations };
+}
+
 export async function readFameArtworkRevisions(
   client: FameArtworkRevisionClient,
   creatorMagic: Address,
@@ -50,14 +104,7 @@ export async function readFameArtworkRevisions(
   tokenIds: readonly number[],
   blockNumber?: bigint,
 ): Promise<FameArtworkRevisionSnapshot> {
-  if (
-    tokenIds.some(
-      (tokenId) =>
-        !Number.isSafeInteger(tokenId) || tokenId < 1 || tokenId > 888,
-    )
-  ) {
-    throw new Error("FAME artwork revision token ID is invalid.");
-  }
+  validateTokenIds(tokenIds);
 
   const pinnedBlock = blockNumber ?? (await client.getBlockNumber());
   const tokenChunks = chunks([...new Set(tokenIds)], REVISION_READ_CHUNK_SIZE);

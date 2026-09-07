@@ -14,6 +14,7 @@ import {
   imageFromFameMetadata,
 } from "./fameMetadata";
 import {
+  readFameArtworkLocations,
   readFameArtworkRevisions,
   type FameArtworkRevisionClient,
 } from "@/features/fame/artworkRevisions";
@@ -149,6 +150,79 @@ export async function getFameArtworkRevisions(
   return {
     blockNumber: snapshot.blockNumber.toString(),
     revisions: snapshot.revisions,
+  };
+}
+
+export async function getFameArtworkLocations(
+  tokenIds: readonly number[],
+  blockNumber?: string,
+) {
+  const stack = baseFameV3Stack();
+  const snapshot = await readFameArtworkLocations(
+    baseClient as unknown as FameArtworkRevisionClient,
+    stack.marketplace,
+    universalPoolArtMarketplaceAbi,
+    tokenIds,
+    blockNumber === undefined ? undefined : BigInt(blockNumber),
+  );
+  return {
+    blockNumber: snapshot.blockNumber.toString(),
+    locations: snapshot.locations,
+  };
+}
+
+export async function getFameArtworkRevisionAt(
+  tokenId: number,
+  artworkHash: `0x${string}`,
+  blockNumber: string,
+) {
+  const creatorMagic = baseFameV3Stack().creatorMagic;
+  const tokenUri = await baseClient.readContract({
+    abi: creatorArtistMagicAbi,
+    address: creatorMagic,
+    functionName: "tokenURI",
+    args: [BigInt(tokenId)],
+    blockNumber: BigInt(blockNumber),
+  });
+  return { tokenId: tokenId.toString(), tokenUri, artworkHash };
+}
+
+export async function getFameMetadataRegistry(blockNumber?: string) {
+  const creatorMagic = baseFameV3Stack().creatorMagic;
+  const pinnedBlock =
+    blockNumber === undefined
+      ? await baseClient.getBlockNumber()
+      : BigInt(blockNumber);
+  const nextMetadataId = await baseClient.readContract({
+    abi: creatorArtistMagicAbi,
+    address: creatorMagic,
+    functionName: "getNextMetadataId",
+    blockNumber: pinnedBlock,
+  });
+  const metadataIds = Array.from(
+    { length: Math.max(0, Number(nextMetadataId) - 1) },
+    (_, index) => index + 1,
+  );
+  const results = await baseClient.multicall({
+    allowFailure: true,
+    blockNumber: pinnedBlock,
+    contracts: metadataIds.map((metadataId) => ({
+      abi: creatorArtistMagicAbi,
+      address: creatorMagic,
+      functionName: "getMetadataById" as const,
+      args: [BigInt(metadataId)] as const,
+    })),
+  });
+
+  return {
+    blockNumber: pinnedBlock.toString(),
+    entries: metadataIds.map((metadataId, index) => {
+      const result = results[index];
+      if (result?.status !== "success" || typeof result.result !== "string") {
+        throw new Error(`FAME metadata registry ${metadataId} is unavailable.`);
+      }
+      return { metadataId, tokenUri: result.result };
+    }),
   };
 }
 

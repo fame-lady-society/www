@@ -1,7 +1,11 @@
 import { unstable_cache } from "next/cache";
 import { fameMetadataFailure, loadFameMetadata } from "./loader";
 import { FAME_METADATA_CACHE_SCHEMA_VERSION } from "./schema";
-import type { FameArtworkRevision, FameMetadataResult } from "./types";
+import type {
+  FameArtworkRevision,
+  FameMetadataIdentity,
+  FameMetadataResult,
+} from "./types";
 
 export type FameMetadataCache = <Value>(
   producer: () => Promise<Value>,
@@ -19,6 +23,11 @@ export type FameMetadataResolver = (
   signal?: AbortSignal,
 ) => Promise<FameMetadataResult>;
 
+export type FameMetadataIdentityResolver = (
+  identity: FameMetadataIdentity,
+  signal?: AbortSignal,
+) => Promise<FameMetadataResult>;
+
 type FameMetadataResolverDependencies = Readonly<{
   cache?: FameMetadataCache;
   loadMetadata?: FameMetadataLoader;
@@ -29,7 +38,7 @@ class FameMetadataResolutionError extends Error {}
 const nextDataCache: FameMetadataCache = (producer, keyParts, options) =>
   unstable_cache(producer, keyParts, options);
 
-export function fameMetadataCacheKey(revision: FameArtworkRevision) {
+export function fameMetadataCacheKey(revision: FameMetadataIdentity) {
   return [
     `fame-metadata-${FAME_METADATA_CACHE_SCHEMA_VERSION}`,
     revision.tokenUri,
@@ -40,6 +49,12 @@ export function fameMetadataCacheKey(revision: FameArtworkRevision) {
 export function createFameMetadataResolver(
   dependencies: FameMetadataResolverDependencies = {},
 ): FameMetadataResolver {
+  return createFameMetadataIdentityResolver(dependencies);
+}
+
+function createFameMetadataIdentityResolver(
+  dependencies: FameMetadataResolverDependencies = {},
+): FameMetadataIdentityResolver {
   const cache = dependencies.cache ?? nextDataCache;
   const loadMetadata =
     dependencies.loadMetadata ??
@@ -72,4 +87,6 @@ export function createFameMetadataResolver(
   };
 }
 
-export const resolveFameMetadata = createFameMetadataResolver();
+export const resolveFameMetadataIdentity = createFameMetadataIdentityResolver();
+export const resolveFameMetadata: FameMetadataResolver =
+  resolveFameMetadataIdentity;
