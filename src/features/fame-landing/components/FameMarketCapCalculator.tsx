@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import IosShare from "@mui/icons-material/IosShare";
+import { shareMarketCap } from "../marketCapShare";
 import {
   calculateMarketCap,
   consumeMarketCapUnitSuffix,
@@ -23,6 +25,31 @@ export function FameMarketCapCalculator({
   );
   const calculation = calculateMarketCap(input, unit, data);
   const invalid = calculation.status === "invalid";
+  const sharingRef = useRef(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+
+  async function handleShare() {
+    if (calculation.status !== "available" || sharingRef.current) return;
+    sharingRef.current = true;
+    setSharing(true);
+    setShareMessage("");
+    try {
+      const result = await shareMarketCap(calculation);
+      if (result === "downloaded") {
+        setShareMessage(
+          "Image downloaded. This browser doesn’t support sharing images directly.",
+        );
+      }
+    } catch (error) {
+      if (!(error instanceof Error && error.name === "AbortError")) {
+        setShareMessage("Couldn’t share the image. Please try again.");
+      }
+    } finally {
+      sharingRef.current = false;
+      setSharing(false);
+    }
+  }
 
   function handleInputChange(value: string) {
     const withUnit = consumeMarketCapUnitSuffix(value);
@@ -40,16 +67,23 @@ export function FameMarketCapCalculator({
       aria-labelledby="fame-market-cap-calculator-title"
       className="bg-[#11100d] p-5 sm:p-8 lg:p-10"
     >
-      <header className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+      <header className="mb-6 flex items-center justify-between gap-3">
         <h2
           id="fame-market-cap-calculator-title"
           className="fame-display text-3xl sm:text-4xl"
         >
           Market cap calculator
         </h2>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c9aa67]">
-          Editable
-        </p>
+        <button
+          type="button"
+          aria-label="Share market cap calculation"
+          title="Share market cap calculation"
+          disabled={calculation.status !== "available" || sharing}
+          onClick={handleShare}
+          className="fame-focus inline-flex size-11 shrink-0 items-center justify-center text-[#c9aa67] transition-colors hover:bg-[#c9aa67]/10 hover:text-[#f4eee2] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <IosShare aria-hidden="true" fontSize="small" />
+        </button>
       </header>
 
       <p className="max-w-5xl text-lg leading-9 text-[#f4eee2] sm:text-xl sm:leading-10">
@@ -135,6 +169,13 @@ export function FameMarketCapCalculator({
             {calculation.message}
           </span>
         )}
+      </p>
+      <p
+        role="status"
+        className="mt-2 text-sm text-[#c9aa67]"
+        aria-live="polite"
+      >
+        {shareMessage}
       </p>
     </section>
   );
