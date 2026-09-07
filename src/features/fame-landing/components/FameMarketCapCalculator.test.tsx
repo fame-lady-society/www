@@ -19,7 +19,8 @@ describe("FAME market-cap calculator component", () => {
     );
 
     assert.match(markup, /Market cap calculator/);
-    assert.match(markup, />Editable</);
+    assert.doesNotMatch(markup, />Editable</);
+    assert.match(markup, /aria-label="Share market cap calculation"/);
     assert.match(markup, /id="fame-market-cap-input"/);
     assert.match(markup, /placeholder="242"/);
     assert.match(markup, /Market cap amount, editable/);
