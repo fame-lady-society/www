@@ -6,7 +6,7 @@ import { createBaseGalleryRuntime } from "@/features/fame-market/config/baseGall
 import {
   buildFameMarketTokenMetadata,
   fameMarketBaseUrl,
-  fameMarketTokenPath,
+  fameMarketTokenCanonicalPath,
   getFameMarketTokenPresentation,
   parseFameMarketTokenId,
 } from "@/features/fame-market/tokenPresentation";
@@ -38,7 +38,7 @@ export default async function Page({ params }: Props) {
 
   const presentation = await getFameMarketTokenPresentation(tokenId);
   const canonicalUrl = new URL(
-    fameMarketTokenPath(tokenId),
+    fameMarketTokenCanonicalPath(presentation),
     fameMarketBaseUrl(),
   ).toString();
 

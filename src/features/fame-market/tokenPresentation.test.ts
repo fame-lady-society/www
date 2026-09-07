@@ -8,6 +8,10 @@ import {
   loadFameMarketTokenPresentation,
   parseFameMarketTokenId,
 } from "./tokenPresentation";
+import {
+  fameMarketArtworkPath,
+  parseFameMarketArtworkHash,
+} from "./tokenRoute";
 
 const readyMetadata: FameMetadataResult = {
   status: "ready",
@@ -19,6 +23,23 @@ const readyMetadata: FameMetadataResult = {
 };
 
 describe("FAME market token presentation", () => {
+  it("builds canonical artwork routes from validated hashes", () => {
+    const artworkHash = `0x${"AB".repeat(32)}`;
+    const normalized = `0x${"ab".repeat(32)}`;
+
+    assert.equal(parseFameMarketArtworkHash(artworkHash), normalized);
+    assert.equal(fameMarketArtworkPath(artworkHash), `/fame/art/${normalized}`);
+    for (const invalid of [
+      "",
+      "ab".repeat(32),
+      `0x${"ab".repeat(31)}`,
+      `0x${"ab".repeat(33)}`,
+      `0x${"zz".repeat(32)}`,
+    ]) {
+      assert.equal(parseFameMarketArtworkHash(invalid), null);
+    }
+  });
+
   it("bounds remote OG artwork through the same-site image optimizer", () => {
     const baseUrl = new URL("https://preview.fameladysociety.com");
     const remoteArtwork =
@@ -34,10 +55,7 @@ describe("FAME market token presentation", () => {
     );
 
     const inlineArtwork = "data:image/png;base64,c21hbGw=";
-    assert.equal(
-      fameMarketOgArtworkUrl(inlineArtwork, baseUrl),
-      inlineArtwork,
-    );
+    assert.equal(fameMarketOgArtworkUrl(inlineArtwork, baseUrl), inlineArtwork);
   });
 
   it("accepts only canonical Society token route parameters", () => {
@@ -95,9 +113,14 @@ describe("FAME market token presentation", () => {
   });
 
   it("builds canonical Open Graph and Twitter metadata without listing claims", () => {
+    const artworkHash = `0x${"ab".repeat(32)}` as const;
     const metadata = buildFameMarketTokenMetadata({
       tokenId: 42,
-      revision: null,
+      revision: {
+        tokenId: "42",
+        tokenUri: "https://arweave.net/metadata",
+        artworkHash,
+      },
       metadata: readyMetadata,
     });
 
@@ -106,8 +129,10 @@ describe("FAME market token presentation", () => {
       metadata.description,
       "A Society artwork in the late afternoon light.",
     );
-    assert.deepEqual(metadata.alternates, { canonical: "/fame/market/42" });
-    assert.equal(metadata.openGraph?.url, "/fame/market/42");
+    assert.deepEqual(metadata.alternates, {
+      canonical: `/fame/art/${artworkHash}`,
+    });
+    assert.equal(metadata.openGraph?.url, `/fame/art/${artworkHash}`);
     assert.equal(
       (metadata.twitter as { card?: string } | undefined)?.card,
       "summary_large_image",
@@ -115,10 +140,19 @@ describe("FAME market token presentation", () => {
     assert.doesNotMatch(String(metadata.description), /available now|price/iu);
   });
 
+  it("keeps the legacy token URL when an artwork hash is unavailable", () => {
+    const metadata = buildFameMarketTokenMetadata({
+      tokenId: 42,
+      revision: null,
+      metadata: readyMetadata,
+    });
+
+    assert.deepEqual(metadata.alternates, { canonical: "/fame/market/42" });
+    assert.equal(metadata.openGraph?.url, "/fame/market/42");
+  });
+
   it("bounds long social descriptions", () => {
     const description = fameMarketTokenDescription({
-      tokenId: 8,
-      revision: null,
       metadata: { ...readyMetadata, description: "word ".repeat(80) },
     });
     assert.ok(description.length <= 160);

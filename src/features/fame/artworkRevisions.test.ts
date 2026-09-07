@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type { Abi, Address } from "viem";
 import {
   FAME_ARTWORK_REVISION_READ_CONCURRENCY,
+  readFameArtworkLocations,
   readFameArtworkRevisions,
   type FameArtworkRevisionClient,
 } from "./artworkRevisions";
@@ -13,6 +14,38 @@ const creatorMagicAbi = [] as unknown as Abi;
 const marketplaceAbi = [] as unknown as Abi;
 
 describe("FAME artwork revision reads", () => {
+  it("scans artwork locations without reading every token URI", async () => {
+    const functions: string[] = [];
+    const client: FameArtworkRevisionClient = {
+      getBlockNumber: async () => 321n,
+      multicall: async ({ batchSize, blockNumber, contracts }) => {
+        assert.equal(batchSize, 1_048_576);
+        assert.equal(blockNumber, 321n);
+        return contracts.map(({ functionName, args }) => {
+          functions.push(functionName);
+          return {
+            status: "success" as const,
+            result: `0x${args[0].toString(16).padStart(64, "0")}`,
+          };
+        });
+      },
+    };
+
+    const snapshot = await readFameArtworkLocations(
+      client,
+      marketplace,
+      marketplaceAbi,
+      [2, 1, 2],
+    );
+
+    assert.equal(snapshot.blockNumber, 321n);
+    assert.deepEqual(functions, ["artworkHash", "artworkHash"]);
+    assert.deepEqual(snapshot.locations, [
+      { tokenId: 2, artworkHash: `0x${"2".padStart(64, "0")}` },
+      { tokenId: 1, artworkHash: `0x${"1".padStart(64, "0")}` },
+    ]);
+  });
+
   it("pins every read to one block and preserves exact token URIs", async () => {
     const blocks: bigint[] = [];
     const client: FameArtworkRevisionClient = {

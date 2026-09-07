@@ -4,6 +4,11 @@ export type FameArtworkRevision = Readonly<{
   artworkHash?: `0x${string}`;
 }>;
 
+export type FameMetadataIdentity = Pick<
+  FameArtworkRevision,
+  "tokenUri" | "artworkHash"
+>;
+
 export type FameMetadataAttribute = {
   traitType: string;
   value: string;

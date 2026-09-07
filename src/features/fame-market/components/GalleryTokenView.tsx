@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
+import type { Hash } from "viem";
 import type {
   FameArtworkRevision,
   FameMetadataResult,
@@ -36,7 +37,10 @@ import type {
   GalleryPaymentAsset,
   GalleryTokenAvailability,
 } from "../types";
-import { fameMarketTokenFallbackName } from "../tokenRoute";
+import {
+  fameMarketArtworkPath,
+  fameMarketTokenFallbackName,
+} from "../tokenRoute";
 import { GalleryPaymentPanel, useGalleryChainOnPageLoad } from "./GalleryView";
 import { GalleryPurchaseDisclosureModal } from "./GalleryPurchaseDisclosureModal";
 import { GalleryPurchaseModal } from "./GalleryPurchaseModal";
@@ -47,16 +51,86 @@ export type GalleryTokenDetailState =
   | { status: "unlisted" }
   | { status: "listed"; target: GalleryArtworkTarget };
 
+function useGalleryArtworkShare({
+  canonicalUrl,
+  metadata,
+  notificationKey,
+}: {
+  canonicalUrl: string;
+  metadata: FameMetadataResult;
+  notificationKey: string;
+}) {
+  const { addNotification } = useNotifications();
+  return useCallback(async () => {
+    const name =
+      metadata.status === "ready" && metadata.name
+        ? metadata.name
+        : fameMarketTokenFallbackName();
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${name} | FAME Marketplace`,
+          text: `View ${name} in the FAME Marketplace.`,
+          url: canonicalUrl,
+        });
+        return;
+      }
+      if (!navigator.clipboard) {
+        throw new Error("Sharing is not supported by this browser.");
+      }
+      await navigator.clipboard.writeText(canonicalUrl);
+      addNotification({
+        id: `fame-market-artwork-${notificationKey}-copied`,
+        message: "Artwork link copied",
+        type: "success",
+      });
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === "AbortError") return;
+      console.error(
+        `[fame market artwork:${notificationKey}] Sharing failed`,
+        cause,
+      );
+      addNotification({
+        id: `fame-market-artwork-${notificationKey}-share-error`,
+        message:
+          cause instanceof Error
+            ? cause.message
+            : "The artwork link could not be shared.",
+        type: "error",
+      });
+    }
+  }, [addNotification, canonicalUrl, metadata, notificationKey]);
+}
+
+export function galleryArtworkShareUrl(
+  canonicalUrl: string,
+  artworkHash?: Hash | null,
+) {
+  return artworkHash
+    ? new URL(fameMarketArtworkPath(artworkHash), canonicalUrl).toString()
+    : canonicalUrl;
+}
+
 export function galleryTokenDetailState(
   projection: GalleryHookProjection<GalleryTokenAvailability>,
+  expectedArtworkHash?: Hash | null,
 ): GalleryTokenDetailState {
   if (projection.status === "failure") {
     return { status: "failure", message: projection.message };
   }
   if (projection.status !== "success") return { status: "loading" };
-  return projection.data.target
-    ? { status: "listed", target: projection.data.target }
-    : { status: "unlisted" };
+  if (!projection.data.target) return { status: "unlisted" };
+  if (
+    expectedArtworkHash &&
+    projection.data.target.artworkHash?.toLowerCase() !==
+      expectedArtworkHash.toLowerCase()
+  ) {
+    return {
+      status: "failure",
+      message: "This artwork has moved to another Society token.",
+    };
+  }
+  return { status: "listed", target: projection.data.target };
 }
 
 function AvailabilityPanel({
@@ -115,6 +189,13 @@ function AvailabilityPanel({
             This permanent page will stay available if the token is listed again
             later.
           </Typography>
+          <Button
+            variant="outlined"
+            onClick={onRetry}
+            sx={{ alignSelf: "start" }}
+          >
+            Check again
+          </Button>
         </Stack>
       </Paper>
     );
@@ -361,26 +442,67 @@ export function GalleryTokenDetailContent({
   );
 }
 
+export function GalleryArtworkUnavailableView({
+  metadata,
+  canonicalUrl,
+  message,
+}: {
+  metadata: FameMetadataResult;
+  canonicalUrl: string;
+  message: string;
+}) {
+  const router = useRouter();
+  const share = useGalleryArtworkShare({
+    canonicalUrl,
+    metadata,
+    notificationKey: canonicalUrl,
+  });
+
+  return (
+    <GalleryTokenDetailContent
+      metadata={metadata}
+      onRetryArtwork={() => router.refresh()}
+      onShare={() => void share()}
+      purchasePanel={
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" onClick={() => router.refresh()}>
+              Try again
+            </Button>
+          }
+        >
+          {message}
+        </Alert>
+      }
+    />
+  );
+}
+
 export function GalleryTokenView({
   tokenId,
   initialRevision,
   initialMetadata,
   canonicalUrl,
+  expectedArtworkHash,
 }: {
   tokenId: number;
   initialRevision: FameArtworkRevision | null;
   initialMetadata: FameMetadataResult;
   canonicalUrl: string;
+  expectedArtworkHash?: Hash;
 }) {
   const config = useGalleryRuntime();
   const router = useRouter();
-  const { addNotification } = useNotifications();
   const tokenIdBigInt = BigInt(tokenId);
   const [paymentAsset, setPaymentAsset] = useState<GalleryPaymentAsset>("FAME");
   useGalleryChainOnPageLoad(config.chainId);
 
   const availability = useGalleryTokenAvailability(tokenIdBigInt);
-  const state = galleryTokenDetailState(availability.projection);
+  const state = galleryTokenDetailState(
+    availability.projection,
+    expectedArtworkHash,
+  );
   const target = state.status === "listed" ? state.target : null;
   const poolTargets = useMemo(
     () => (target && target.kind !== "held" ? [target] : []),
@@ -463,7 +585,8 @@ export function GalleryTokenView({
 
   const retryAvailability = useCallback(() => {
     void Promise.all([availability.refresh(), global.refresh()]);
-  }, [availability, global]);
+    if (expectedArtworkHash) router.refresh();
+  }, [availability, expectedArtworkHash, global, router]);
   const retryArtwork = useCallback(() => {
     if (target?.tokenUri) {
       void liveMetadata.retry();
@@ -471,42 +594,16 @@ export function GalleryTokenView({
     }
     router.refresh();
   }, [liveMetadata, router, target?.tokenUri]);
-  const share = useCallback(async () => {
-    const name =
-      metadata.status === "ready" && metadata.name
-      ? metadata.name
-        : fameMarketTokenFallbackName();
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${name} | FAME Marketplace`,
-          text: `View ${name} in the FAME Marketplace.`,
-          url: canonicalUrl,
-        });
-        return;
-      }
-      if (!navigator.clipboard) {
-        throw new Error("Sharing is not supported by this browser.");
-      }
-      await navigator.clipboard.writeText(canonicalUrl);
-      addNotification({
-        id: `fame-market-token-${tokenId}-copied`,
-        message: "Token link copied",
-        type: "success",
-      });
-    } catch (cause) {
-      if (cause instanceof Error && cause.name === "AbortError") return;
-      console.error(`[fame market token:${tokenId}] Sharing failed`, cause);
-      addNotification({
-        id: `fame-market-token-${tokenId}-share-error`,
-        message:
-          cause instanceof Error
-            ? cause.message
-            : "The token link could not be shared.",
-        type: "error",
-      });
-    }
-  }, [addNotification, canonicalUrl, metadata, tokenId]);
+  const shareUrl = galleryArtworkShareUrl(
+    canonicalUrl,
+    expectedArtworkHash ?? target?.artworkHash,
+  );
+  const share = useGalleryArtworkShare({
+    canonicalUrl: shareUrl,
+    metadata,
+    notificationKey:
+      expectedArtworkHash ?? target?.artworkHash ?? tokenId.toString(),
+  });
 
   let resolvedState = state;
   if (state.status === "listed" && global.projection.status === "failure") {

@@ -8,7 +8,11 @@ import {
 } from "@/features/fame/metadata";
 import { parseFameCollectionTokenIdParam } from "@/features/fame/collection";
 import { getFameArtworkRevisions } from "@/service/fame";
-import { fameMarketTokenFallbackName, fameMarketTokenPath } from "./tokenRoute";
+import {
+  fameMarketArtworkPath,
+  fameMarketArtworkOrTokenPath,
+  fameMarketTokenFallbackName,
+} from "./tokenRoute";
 
 export { fameMarketTokenPath } from "./tokenRoute";
 
@@ -88,7 +92,9 @@ export const getFameMarketTokenPresentation = cache(
   loadFameMarketTokenPresentation,
 );
 
-export function fameMarketTokenName(presentation: FameMarketTokenPresentation) {
+export function fameMarketTokenName(
+  presentation: Pick<FameMarketTokenPresentation, "metadata">,
+) {
   return presentation.metadata.status === "ready" && presentation.metadata.name
     ? presentation.metadata.name
     : fameMarketTokenFallbackName();
@@ -101,7 +107,7 @@ function conciseDescription(description: string) {
 }
 
 export function fameMarketTokenDescription(
-  presentation: FameMarketTokenPresentation,
+  presentation: Pick<FameMarketTokenPresentation, "metadata">,
 ) {
   if (
     presentation.metadata.status === "ready" &&
@@ -115,10 +121,26 @@ export function fameMarketTokenDescription(
 export function buildFameMarketTokenMetadata(
   presentation: FameMarketTokenPresentation,
 ): Metadata {
+  const canonical = fameMarketTokenCanonicalPath(presentation);
+  return buildFameMarketMetadata(presentation, canonical);
+}
+
+export function fameMarketTokenCanonicalPath(
+  presentation: FameMarketTokenPresentation,
+) {
+  return fameMarketArtworkOrTokenPath(
+    presentation.tokenId,
+    presentation.revision?.artworkHash,
+  );
+}
+
+export function buildFameMarketMetadata(
+  presentation: Pick<FameMarketTokenPresentation, "metadata">,
+  canonical: string,
+): Metadata {
   const name = fameMarketTokenName(presentation);
   const title = `${name} | FAME Marketplace`;
   const description = fameMarketTokenDescription(presentation);
-  const canonical = fameMarketTokenPath(presentation.tokenId);
 
   return {
     title,

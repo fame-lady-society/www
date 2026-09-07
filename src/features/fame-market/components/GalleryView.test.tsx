@@ -193,7 +193,10 @@ describe("TEST gallery public view", () => {
     assert.match(ethLoading, /Finding an ETH route…/u);
     assert.match(usdcLoading, /Finding a USDC route…/u);
     assert.match(unavailable, /No checkout route is available/);
-    assert.doesNotMatch(`${ethLoading}${usdcLoading}${unavailable}`, /protected/iu);
+    assert.doesNotMatch(
+      `${ethLoading}${usdcLoading}${unavailable}`,
+      /protected/iu,
+    );
   });
 
   it("limits ETH and WETH checkout amounts to four decimal places", () => {
@@ -330,23 +333,37 @@ describe("TEST gallery public view", () => {
     assert.doesNotMatch(html, /token|route|source|pool|inventory/i);
   });
 
-  it("links the card content to its permanent token page outside the Buy action", () => {
+  it("links the card content to its permanent artwork page outside the Buy action", () => {
+    const artworkHash = `0x${"ab".repeat(32)}` as const;
     const html = renderToStaticMarkup(
-      <ArtworkCard
-        metadata={readyMetadata("Sunrise")}
-        purchaseLocked={false}
-        href="/fame/market/42"
+      <GalleryArtworkGrid
+        artworks={[
+          {
+            stableKey: "held:42",
+            tokenId: 42n,
+            artworkHash,
+            metadata: readyMetadata("Sunrise"),
+          },
+        ]}
+        totalPrice={price}
         onBuy={() => undefined}
         onRetry={() => undefined}
       />,
     );
 
-    assert.equal(html.match(/href="\/fame\/market\/42"/gu)?.length, 1);
-    assert.match(html, /<a[^>]*href="\/fame\/market\/42"[^>]*>/u);
+    const artworkPath = `/fame/art/${artworkHash}`;
+    assert.equal(
+      html.match(new RegExp(`href="${artworkPath}"`, "gu"))?.length,
+      1,
+    );
+    assert.match(html, new RegExp(`<a[^>]*href="${artworkPath}"[^>]*>`, "u"));
     assert.match(html, /<button[^>]*>Buy with TEST<\/button>/u);
     assert.doesNotMatch(
       html,
-      /<a[^>]*href="\/fame\/market\/42"[^>]*>[^]*Buy with TEST[^]*<\/a>/u,
+      new RegExp(
+        `<a[^>]*href="${artworkPath}"[^>]*>[^]*Buy with TEST[^]*<\\/a>`,
+        "u",
+      ),
     );
   });
 

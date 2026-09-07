@@ -7,6 +7,7 @@ import type { GalleryArtworkTarget } from "../types";
 import {
   GalleryTokenDetailContent,
   GalleryTokenPurchasePanel,
+  galleryArtworkShareUrl,
   galleryTokenDetailState,
 } from "./GalleryTokenView";
 
@@ -59,6 +60,20 @@ function purchasePanel(
 }
 
 describe("FAME marketplace token detail page", () => {
+  it("upgrades recovered legacy share URLs to the live artwork identity", () => {
+    assert.equal(
+      galleryArtworkShareUrl(
+        "https://www.fameladysociety.com/fame/market/42",
+        target.artworkHash,
+      ),
+      `https://www.fameladysociety.com/fame/art/${target.artworkHash}`,
+    );
+    assert.equal(
+      galleryArtworkShareUrl("https://www.fameladysociety.com/fame/market/42"),
+      "https://www.fameladysociety.com/fame/market/42",
+    );
+  });
+
   it("maps canonical projections to loading, failure, unlisted, and listed states", () => {
     assert.deepEqual(galleryTokenDetailState({ status: "loading" }), {
       status: "loading",
@@ -86,6 +101,24 @@ describe("FAME marketplace token detail page", () => {
         data: { tokenId: 42n, target },
       }),
       { status: "listed", target },
+    );
+
+    assert.deepEqual(
+      galleryTokenDetailState(
+        {
+          status: "success",
+          blockNumber: 3n,
+          data: {
+            tokenId: 42n,
+            target: { ...target, artworkHash: `0x${"33".repeat(32)}` },
+          },
+        },
+        target.artworkHash,
+      ),
+      {
+        status: "failure",
+        message: "This artwork has moved to another Society token.",
+      },
     );
   });
 
@@ -117,6 +150,7 @@ describe("FAME marketplace token detail page", () => {
     const html = renderToStaticMarkup(purchasePanel({ status: "unlisted" }));
     assert.match(html, /Not currently for sale/);
     assert.match(html, /permanent page will stay available/);
+    assert.match(html, /Check again/);
     assert.doesNotMatch(html, /Buy with/);
   });
 

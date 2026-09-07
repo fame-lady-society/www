@@ -37,7 +37,7 @@ import type {
   GalleryCheckoutQuote,
   GalleryPaymentAsset,
 } from "../types";
-import { fameMarketTokenPath } from "../tokenRoute";
+import { fameMarketArtworkOrTokenPath } from "../tokenRoute";
 import type { Hash } from "viem";
 import { ArtworkCard } from "./ArtworkCard";
 import { GalleryAssetSelect } from "./GalleryAssetSelect";
@@ -393,7 +393,10 @@ export const GalleryArtworkGrid = memo(function GalleryArtworkGrid({
               purchaseInProgress={
                 purchaseLocked && activeArtworkKey === artwork.stableKey
               }
-              href={fameMarketTokenPath(artwork.tokenId)}
+              href={fameMarketArtworkOrTokenPath(
+                artwork.tokenId,
+                artwork.artworkHash,
+              )}
               onBuy={() => onBuy(artwork.stableKey)}
               onRetry={() => onRetry(artwork.stableKey)}
               tokenSymbol={purchaseTokenSymbol}
@@ -462,7 +465,7 @@ function GalleryMetadataArtworkCard({
       purchaseLocked={purchaseLocked}
       purchaseInProgress={purchaseInProgress}
       tokenSymbol={tokenSymbol}
-      href={fameMarketTokenPath(tokenId)}
+      href={fameMarketArtworkOrTokenPath(tokenId, artworkHash)}
       onBuy={onBuy}
       onRetry={() => {
         onRetry();
