@@ -72,11 +72,7 @@ describe("market cap sharing", () => {
       });
       const pending = shareMarketCap(calculation);
       assert.ok(payload, "share must be invoked synchronously with the click");
-      assert.deepEqual(Object.keys(payload), ["files", "text"]);
-      assert.equal(
-        payload.text,
-        "What would your Society NFT be worth?\n\nAt a $1,000,000 market cap:\n• 1 Society NFT = $1,126.13\n• 1 $FAME = $0.001126\n\nExplore the possibilities:\nhttps://fameladysociety.com/fame",
-      );
+      assert.deepEqual(Object.keys(payload), ["files"]);
       assert.equal(payload.files?.length, 1);
       assert.equal(payload.files?.[0].type, "image/png");
       assert.ok((payload.files?.[0].size ?? 0) > 0);

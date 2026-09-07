@@ -83,11 +83,8 @@ export function createMarketCapShareImage(calculation: AvailableCalculation) {
 export async function shareMarketCap(calculation: AvailableCalculation) {
   const { file, dataUrl } = createMarketCapShareImage(calculation);
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    const values = marketCapShareValues(calculation);
-    await navigator.share({
-      files: [file],
-      text: `What would your Society NFT be worth?\n\nAt a ${values.marketCap} market cap:\n• 1 Society NFT = ${values.society}\n• 1 $FAME = ${values.fame}\n\nExplore the possibilities:\nhttps://fameladysociety.com/fame`,
-    });
+    // Extra share fields make native macOS Copy duplicate the image attachment.
+    await navigator.share({ files: [file] });
     return "shared";
   }
 
