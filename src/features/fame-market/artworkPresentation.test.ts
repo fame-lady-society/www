@@ -10,8 +10,8 @@ const targetRevision: FameArtworkRevision = {
   artworkHash: targetHash,
 };
 
-function completeLocations() {
-  return Array.from({ length: 888 }, (_, index) => ({
+function completeLocations(nextTokenId = 654) {
+  return Array.from({ length: nextTokenId - 1 }, (_, index) => ({
     tokenId: index + 1,
     artworkHash: `0x${(index + 1).toString(16).padStart(64, "0")}` as const,
   }));
@@ -34,7 +34,11 @@ describe("FAME market artwork presentation", () => {
     locations[651] = { tokenId: 652, artworkHash: targetHash };
     let revisionBlock: string | undefined;
     const result = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({ blockNumber: "123", locations }),
+      readLocations: async () => ({
+        blockNumber: "123",
+        nextTokenId: 654,
+        locations,
+      }),
       readRevision: async (tokenId, artworkHash, blockNumber) => {
         assert.equal(tokenId, 652);
         assert.equal(artworkHash, targetHash);
@@ -56,7 +60,11 @@ describe("FAME market artwork presentation", () => {
   it("distinguishes unknown, ambiguous, and failed artwork lookups", async () => {
     const unrelated = completeLocations();
     const unknown = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({ blockNumber: "123", locations: unrelated }),
+      readLocations: async () => ({
+        blockNumber: "123",
+        nextTokenId: 654,
+        locations: unrelated,
+      }),
       readRevision: async () => {
         throw new Error("not reached");
       },
@@ -69,6 +77,7 @@ describe("FAME market artwork presentation", () => {
 
     const ambiguous = await loadFameMarketArtworkPresentation(targetHash, {
       readLocations: async () => ({
+        nextTokenId: 654,
         locations: unrelated.map((location) =>
           location.tokenId === 652 || location.tokenId === 653
             ? { ...location, artworkHash: targetHash }
@@ -96,6 +105,7 @@ describe("FAME market artwork presentation", () => {
         {
           readLocations: async () => ({
             blockNumber: "123",
+            nextTokenId: 654,
             locations: unrelated.map((location) =>
               location.tokenId === 652
                 ? { ...location, artworkHash: targetHash }
@@ -132,7 +142,11 @@ describe("FAME market artwork presentation", () => {
     const locations = completeLocations();
 
     const result = await loadFameMarketArtworkPresentation(archivedHash, {
-      readLocations: async () => ({ blockNumber: "456", locations }),
+      readLocations: async () => ({
+        blockNumber: "456",
+        nextTokenId: 654,
+        locations,
+      }),
       readRevision: async () => null,
       readRegistry: async (blockNumber) => {
         assert.equal(blockNumber, "456");
@@ -144,5 +158,28 @@ describe("FAME market artwork presentation", () => {
     assert.equal(result.status, "unassigned");
     assert.equal(result.revision, null);
     assert.equal(result.metadata.status, "ready");
+  });
+
+  it("ignores duplicate artwork aliases outside the released range", async () => {
+    const locations = completeLocations();
+    locations[444] = { tokenId: 445, artworkHash: targetHash };
+
+    const result = await loadFameMarketArtworkPresentation(targetHash, {
+      readLocations: async () => ({
+        blockNumber: "789",
+        nextTokenId: 654,
+        locations,
+      }),
+      readRevision: async (tokenId) => ({
+        ...targetRevision,
+        tokenId: tokenId.toString(),
+      }),
+      readRegistry: async () => ({ entries: [] }),
+      resolveMetadata: metadataFor,
+    });
+
+    assert.equal(result.status, "found");
+    if (result.status !== "found") return;
+    assert.equal(result.tokenId, 445);
   });
 });

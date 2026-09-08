@@ -1,8 +1,8 @@
 import type { Abi, Address } from "viem";
 import { baseFameV3Stack } from "@/features/fame/contract";
 import {
+  asFameReleasedTokenBoundary,
   FAME_COLLECTION_FIRST_TOKEN_ID,
-  FAME_COLLECTION_LAST_TOKEN_ID,
   isFameCollectionTokenId,
 } from "@/features/fame/collection";
 import { readFameArtworkRevisions } from "@/features/fame/artworkRevisions";
@@ -139,24 +139,7 @@ export async function readFameCreatorCatalog(
       },
     ],
   });
-  const rawNextTokenId = successful(boundary[0]);
-  const nextTokenIdValue =
-    typeof rawNextTokenId === "bigint"
-      ? rawNextTokenId
-      : typeof rawNextTokenId === "number" &&
-          Number.isSafeInteger(rawNextTokenId)
-        ? BigInt(rawNextTokenId)
-        : null;
-  if (
-    nextTokenIdValue === null ||
-    nextTokenIdValue < BigInt(FAME_COLLECTION_FIRST_TOKEN_ID) ||
-    nextTokenIdValue > BigInt(FAME_COLLECTION_LAST_TOKEN_ID + 1)
-  ) {
-    throw new Error(
-      "CreatorArtistMagic returned an invalid released boundary.",
-    );
-  }
-  const nextTokenId = Number(nextTokenIdValue);
+  const nextTokenId = asFameReleasedTokenBoundary(successful(boundary[0]));
   const { tokenIds, nextCursor } = releasedTokenIds(nextTokenId, options);
 
   const snapshot = await readFameArtworkRevisions(

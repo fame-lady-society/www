@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { keccak256, stringToHex, type Hash } from "viem";
-import { fameCollectionTokenIds } from "@/features/fame/collection";
+import { FAME_COLLECTION_FIRST_TOKEN_ID } from "@/features/fame/collection";
 import {
   fameMetadataFailure,
   resolveFameMetadataIdentity,
@@ -9,7 +9,7 @@ import {
   type FameMetadataResult,
 } from "@/features/fame/metadata";
 import {
-  getFameArtworkLocations,
+  getFameReleasedArtworkLocations,
   getFameArtworkRevisionAt,
   getFameMetadataRegistry,
 } from "@/service/fame";
@@ -17,6 +17,7 @@ import {
 type FameMarketArtworkPresentationDependencies = Readonly<{
   readLocations: () => Promise<{
     blockNumber?: string;
+    nextTokenId: number;
     locations: readonly { tokenId: number; artworkHash: Hash }[];
   }>;
   readRevision: (
@@ -33,8 +34,8 @@ type FameMarketArtworkPresentationDependencies = Readonly<{
 }>;
 
 const readCachedArtworkLocations = unstable_cache(
-  async () => getFameArtworkLocations(fameCollectionTokenIds()),
-  ["fame-market-artwork-locations-v2"],
+  async () => getFameReleasedArtworkLocations(),
+  ["fame-market-released-artwork-locations-v1"],
   { revalidate: 10 },
 );
 
@@ -76,14 +77,15 @@ export async function loadFameMarketArtworkPresentation(
   dependencies: FameMarketArtworkPresentationDependencies = defaultDependencies,
 ): Promise<FameMarketArtworkPresentation> {
   try {
-    const tokenIds = fameCollectionTokenIds();
     const snapshot = await dependencies.readLocations();
     const matches = snapshot.locations.filter(
       (location) =>
         location.artworkHash.toLowerCase() === artworkHash.toLowerCase(),
     );
 
-    if (snapshot.locations.length !== tokenIds.length) {
+    const releasedTokenCount =
+      snapshot.nextTokenId - FAME_COLLECTION_FIRST_TOKEN_ID;
+    if (snapshot.locations.length !== releasedTokenCount) {
       throw new Error("Artwork location scan is incomplete");
     }
 
