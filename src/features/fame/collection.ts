@@ -13,6 +13,25 @@ export function isFameCollectionTokenId(tokenId: number): boolean {
   );
 }
 
+export function asFameReleasedTokenBoundary(value: unknown): number {
+  const boundary =
+    typeof value === "bigint"
+      ? value
+      : typeof value === "number" && Number.isSafeInteger(value)
+        ? BigInt(value)
+        : null;
+  if (
+    boundary === null ||
+    boundary < BigInt(FAME_COLLECTION_FIRST_TOKEN_ID) ||
+    boundary > BigInt(FAME_COLLECTION_LAST_TOKEN_ID + 1)
+  ) {
+    throw new Error(
+      "CreatorArtistMagic returned an invalid released boundary.",
+    );
+  }
+  return Number(boundary);
+}
+
 export function parseFameCollectionTokenIdParam(raw: string): number | null {
   if (!CANONICAL_FAME_TOKEN_ID_PATTERN.test(raw)) return null;
   const tokenId = Number(raw);

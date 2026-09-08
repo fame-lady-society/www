@@ -1,5 +1,10 @@
 import { isHash, type Abi, type Address, type Hash } from "viem";
 import type { FameArtworkRevision } from "./metadata";
+import {
+  asFameReleasedTokenBoundary,
+  FAME_COLLECTION_FIRST_TOKEN_ID,
+  isFameCollectionTokenId,
+} from "./collection";
 
 const REVISION_READ_CHUNK_SIZE = 64;
 const ARTWORK_LOCATION_MULTICALL_BATCH_SIZE = 1_048_576;
@@ -8,8 +13,8 @@ export const FAME_ARTWORK_REVISION_READ_CONCURRENCY = 2;
 type RevisionContract = Readonly<{
   address: Address;
   abi: Abi;
-  functionName: "tokenURI" | "artworkHash";
-  args: readonly [bigint];
+  functionName: "nextTokenId" | "tokenURI" | "artworkHash";
+  args?: readonly [bigint];
 }>;
 
 type RevisionResult =
@@ -41,6 +46,11 @@ export type FameArtworkLocationSnapshot = Readonly<{
   locations: readonly FameArtworkLocation[];
 }>;
 
+export type FameReleasedArtworkLocationSnapshot = FameArtworkLocationSnapshot &
+  Readonly<{
+    nextTokenId: number;
+  }>;
+
 function chunks<T>(values: readonly T[], size: number) {
   const result: T[][] = [];
   for (let index = 0; index < values.length; index += size) {
@@ -57,7 +67,7 @@ function validateTokenIds(tokenIds: readonly number[]) {
   if (
     tokenIds.some(
       (tokenId) =>
-        !Number.isSafeInteger(tokenId) || tokenId < 1 || tokenId > 888,
+        !Number.isSafeInteger(tokenId) || !isFameCollectionTokenId(tokenId),
     )
   ) {
     throw new Error("FAME artwork revision token ID is invalid.");
@@ -93,6 +103,44 @@ export async function readFameArtworkLocations(
   });
 
   return { blockNumber: pinnedBlock, locations };
+}
+
+export async function readFameReleasedArtworkLocations(
+  client: FameArtworkRevisionClient,
+  creatorMagic: Address,
+  creatorMagicAbi: Abi,
+  marketplace: Address,
+  marketplaceAbi: Abi,
+  blockNumber?: bigint,
+): Promise<FameReleasedArtworkLocationSnapshot> {
+  const pinnedBlock = blockNumber ?? (await client.getBlockNumber());
+  const boundary = await client.multicall({
+    allowFailure: true,
+    blockNumber: pinnedBlock,
+    contracts: [
+      {
+        address: creatorMagic,
+        abi: creatorMagicAbi,
+        functionName: "nextTokenId",
+      },
+    ],
+  });
+  const nextTokenId = asFameReleasedTokenBoundary(successful(boundary[0]));
+  const tokenIds = Array.from(
+    { length: nextTokenId - FAME_COLLECTION_FIRST_TOKEN_ID },
+    (_, index) => FAME_COLLECTION_FIRST_TOKEN_ID + index,
+  );
+  if (tokenIds.length === 0) {
+    return { blockNumber: pinnedBlock, nextTokenId, locations: [] };
+  }
+  const snapshot = await readFameArtworkLocations(
+    client,
+    marketplace,
+    marketplaceAbi,
+    tokenIds,
+    pinnedBlock,
+  );
+  return { ...snapshot, nextTokenId };
 }
 
 export async function readFameArtworkRevisions(

@@ -14,7 +14,7 @@ import {
   imageFromFameMetadata,
 } from "./fameMetadata";
 import {
-  readFameArtworkLocations,
+  readFameReleasedArtworkLocations,
   readFameArtworkRevisions,
   type FameArtworkRevisionClient,
 } from "@/features/fame/artworkRevisions";
@@ -153,20 +153,19 @@ export async function getFameArtworkRevisions(
   };
 }
 
-export async function getFameArtworkLocations(
-  tokenIds: readonly number[],
-  blockNumber?: string,
-) {
+export async function getFameReleasedArtworkLocations(blockNumber?: string) {
   const stack = baseFameV3Stack();
-  const snapshot = await readFameArtworkLocations(
+  const snapshot = await readFameReleasedArtworkLocations(
     baseClient as unknown as FameArtworkRevisionClient,
+    stack.creatorMagic,
+    creatorArtistMagicAbi,
     stack.marketplace,
     universalPoolArtMarketplaceAbi,
-    tokenIds,
     blockNumber === undefined ? undefined : BigInt(blockNumber),
   );
   return {
     blockNumber: snapshot.blockNumber.toString(),
+    nextTokenId: snapshot.nextTokenId,
     locations: snapshot.locations,
   };
 }
