@@ -1,7 +1,6 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { keccak256, stringToHex, type Hash } from "viem";
-import { FAME_COLLECTION_FIRST_TOKEN_ID } from "@/features/fame/collection";
 import {
   fameMetadataFailure,
   resolveFameMetadataIdentity,
@@ -9,16 +8,15 @@ import {
   type FameMetadataResult,
 } from "@/features/fame/metadata";
 import {
-  getFameReleasedArtworkLocations,
+  findFameArtworkLocation,
   getFameArtworkRevisionAt,
   getFameMetadataRegistry,
 } from "@/service/fame";
 
 type FameMarketArtworkPresentationDependencies = Readonly<{
-  readLocations: () => Promise<{
+  findLocation: (artworkHash: Hash) => Promise<{
     blockNumber?: string;
-    nextTokenId: number;
-    locations: readonly { tokenId: number; artworkHash: Hash }[];
+    location: { tokenId: number; artworkHash: Hash } | null;
   }>;
   readRevision: (
     tokenId: number,
@@ -33,9 +31,9 @@ type FameMarketArtworkPresentationDependencies = Readonly<{
   ) => Promise<FameMetadataResult>;
 }>;
 
-const readCachedArtworkLocations = unstable_cache(
-  async () => getFameReleasedArtworkLocations(),
-  ["fame-market-released-artwork-locations-v1"],
+const findCachedArtworkLocation = unstable_cache(
+  async (artworkHash: Hash) => findFameArtworkLocation(artworkHash),
+  ["fame-market-first-artwork-location-v1"],
   { revalidate: 10 },
 );
 
@@ -46,7 +44,7 @@ const readCachedMetadataRegistry = unstable_cache(
 );
 
 const defaultDependencies: FameMarketArtworkPresentationDependencies = {
-  readLocations: readCachedArtworkLocations,
+  findLocation: findCachedArtworkLocation,
   readRevision: async (tokenId, artworkHash, blockNumber) => {
     if (!blockNumber) return null;
     return getFameArtworkRevisionAt(tokenId, artworkHash, blockNumber);
@@ -67,7 +65,6 @@ export type FameMarketArtworkPresentation =
       tokenId: number;
       revision: FameArtworkRevision;
     })
-  | (ArtworkResolutionBase & { status: "ambiguous" })
   | (ArtworkResolutionBase & { status: "unassigned" })
   | (ArtworkResolutionBase & { status: "unavailable" })
   | (ArtworkResolutionBase & { status: "not-found" });
@@ -77,19 +74,9 @@ export async function loadFameMarketArtworkPresentation(
   dependencies: FameMarketArtworkPresentationDependencies = defaultDependencies,
 ): Promise<FameMarketArtworkPresentation> {
   try {
-    const snapshot = await dependencies.readLocations();
-    const matches = snapshot.locations.filter(
-      (location) =>
-        location.artworkHash.toLowerCase() === artworkHash.toLowerCase(),
-    );
+    const snapshot = await dependencies.findLocation(artworkHash);
 
-    const releasedTokenCount =
-      snapshot.nextTokenId - FAME_COLLECTION_FIRST_TOKEN_ID;
-    if (snapshot.locations.length !== releasedTokenCount) {
-      throw new Error("Artwork location scan is incomplete");
-    }
-
-    if (matches.length === 0) {
+    if (!snapshot.location) {
       const registry = await dependencies.readRegistry(snapshot.blockNumber);
       const archived = registry.entries.find(
         ({ tokenUri }) =>
@@ -116,7 +103,7 @@ export async function loadFameMarketArtworkPresentation(
       };
     }
 
-    const location = matches[0]!;
+    const location = snapshot.location;
     const revision = await dependencies.readRevision(
       location.tokenId,
       location.artworkHash,
@@ -124,9 +111,6 @@ export async function loadFameMarketArtworkPresentation(
     );
     if (!revision) throw new Error("Artwork metadata revision is unavailable");
     const metadata = await dependencies.resolveMetadata(revision);
-    if (matches.length > 1) {
-      return { status: "ambiguous", artworkHash, revision, metadata };
-    }
 
     return {
       status: "found",

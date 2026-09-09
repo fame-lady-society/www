@@ -3,8 +3,7 @@ import { describe, it } from "node:test";
 import type { Abi, Address } from "viem";
 import {
   FAME_ARTWORK_REVISION_READ_CONCURRENCY,
-  readFameArtworkLocations,
-  readFameReleasedArtworkLocations,
+  findFameReleasedArtworkLocation,
   readFameArtworkRevisions,
   type FameArtworkRevisionClient,
 } from "./artworkRevisions";
@@ -13,6 +12,7 @@ const creatorMagic = "0x1111111111111111111111111111111111111111" as Address;
 const marketplace = "0x2222222222222222222222222222222222222222" as Address;
 const creatorMagicAbi = [] as unknown as Abi;
 const marketplaceAbi = [] as unknown as Abi;
+const targetHash = `0x${"ab".repeat(32)}` as const;
 
 function tokenIdFromArgs(args: readonly [bigint] | undefined) {
   if (!args) throw new Error("Expected a token ID argument");
@@ -20,48 +20,18 @@ function tokenIdFromArgs(args: readonly [bigint] | undefined) {
 }
 
 describe("FAME artwork revision reads", () => {
-  it("scans artwork locations without reading every token URI", async () => {
-    const functions: string[] = [];
-    const client: FameArtworkRevisionClient = {
-      getBlockNumber: async () => 321n,
-      multicall: async ({ batchSize, blockNumber, contracts }) => {
-        assert.equal(batchSize, 1_048_576);
-        assert.equal(blockNumber, 321n);
-        return contracts.map(({ functionName, args }) => {
-          functions.push(functionName);
-          return {
-            status: "success" as const,
-            result: `0x${tokenIdFromArgs(args).toString(16).padStart(64, "0")}`,
-          };
-        });
-      },
-    };
-
-    const snapshot = await readFameArtworkLocations(
-      client,
-      marketplace,
-      marketplaceAbi,
-      [2, 1, 2],
-    );
-
-    assert.equal(snapshot.blockNumber, 321n);
-    assert.deepEqual(functions, ["artworkHash", "artworkHash"]);
-    assert.deepEqual(snapshot.locations, [
-      { tokenId: 2, artworkHash: `0x${"2".padStart(64, "0")}` },
-      { tokenId: 1, artworkHash: `0x${"1".padStart(64, "0")}` },
-    ]);
-  });
-
-  it("scans only released token slots at the boundary block", async () => {
+  it("stops scanning after the first batch containing a match", async () => {
     const calls: Array<{
+      batchSize: number | undefined;
       blockNumber: bigint;
       functions: string[];
       tokenIds: bigint[];
     }> = [];
     const client: FameArtworkRevisionClient = {
       getBlockNumber: async () => 654321n,
-      multicall: async ({ blockNumber, contracts }) => {
+      multicall: async ({ batchSize, blockNumber, contracts }) => {
         calls.push({
+          batchSize,
           blockNumber,
           functions: contracts.map(({ functionName }) => functionName),
           tokenIds: contracts.flatMap(({ args }) => (args ? [args[0]] : [])),
@@ -71,30 +41,78 @@ describe("FAME artwork revision reads", () => {
         }
         return contracts.map(({ args }) => ({
           status: "success" as const,
-          result: `0x${tokenIdFromArgs(args).toString(16).padStart(64, "0")}`,
+          result:
+            tokenIdFromArgs(args) === 445n
+              ? targetHash
+              : `0x${tokenIdFromArgs(args).toString(16).padStart(64, "0")}`,
         }));
       },
     };
 
-    const snapshot = await readFameReleasedArtworkLocations(
+    const snapshot = await findFameReleasedArtworkLocation(
       client,
       creatorMagic,
       creatorMagicAbi,
       marketplace,
       marketplaceAbi,
+      targetHash,
     );
 
     assert.equal(snapshot.blockNumber, 654321n);
-    assert.equal(snapshot.nextTokenId, 654);
-    assert.equal(snapshot.locations.length, 653);
+    assert.deepEqual(snapshot.location, {
+      tokenId: 445,
+      artworkHash: targetHash,
+    });
+    assert.equal(calls.length, 8);
     assert.deepEqual(
       calls.map(({ blockNumber }) => blockNumber),
-      [654321n, 654321n],
+      Array(8).fill(654321n),
     );
     assert.deepEqual(calls[0]?.functions, ["nextTokenId"]);
     assert.equal(calls[1]?.tokenIds[0], 1n);
-    assert.equal(calls[1]?.tokenIds.at(-1), 653n);
-    assert.equal(calls[1]?.tokenIds.includes(759n), false);
+    assert.equal(calls.at(-1)?.tokenIds[0], 385n);
+    assert.equal(calls.at(-1)?.tokenIds.at(-1), 448n);
+    assert.equal(
+      calls.slice(1).every(({ batchSize }) => batchSize === 1_048_576),
+      true,
+    );
+    assert.equal(
+      calls.some(({ tokenIds }) => tokenIds.includes(449n)),
+      false,
+    );
+  });
+
+  it("returns no match after scanning the released range", async () => {
+    const scannedTokenIds: bigint[] = [];
+    const client: FameArtworkRevisionClient = {
+      getBlockNumber: async () => 123n,
+      multicall: async ({ contracts }) => {
+        if (contracts[0]?.functionName === "nextTokenId") {
+          return [{ status: "success" as const, result: 4n }];
+        }
+        return contracts.map(({ args }) => {
+          const tokenId = tokenIdFromArgs(args);
+          scannedTokenIds.push(tokenId);
+          return {
+            status: "success" as const,
+            result: `0x${tokenId.toString(16).padStart(64, "0")}`,
+          };
+        });
+      },
+    };
+
+    const snapshot = await findFameReleasedArtworkLocation(
+      client,
+      creatorMagic,
+      creatorMagicAbi,
+      marketplace,
+      marketplaceAbi,
+      targetHash,
+    );
+
+    assert.equal(snapshot.blockNumber, 123n);
+    assert.equal(snapshot.location, null);
+    assert.deepEqual(scannedTokenIds, [1n, 2n, 3n]);
   });
 
   it("pins every read to one block and preserves exact token URIs", async () => {

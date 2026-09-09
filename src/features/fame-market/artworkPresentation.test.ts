@@ -10,13 +10,6 @@ const targetRevision: FameArtworkRevision = {
   artworkHash: targetHash,
 };
 
-function completeLocations(nextTokenId = 654) {
-  return Array.from({ length: nextTokenId - 1 }, (_, index) => ({
-    tokenId: index + 1,
-    artworkHash: `0x${(index + 1).toString(16).padStart(64, "0")}` as const,
-  }));
-}
-
 function metadataFor(revision: Pick<FameArtworkRevision, "tokenUri">) {
   return Promise.resolve({
     status: "ready" as const,
@@ -30,14 +23,11 @@ function metadataFor(revision: Pick<FameArtworkRevision, "tokenUri">) {
 
 describe("FAME market artwork presentation", () => {
   it("resolves an artwork hash to its current Society token", async () => {
-    const locations = completeLocations();
-    locations[651] = { tokenId: 652, artworkHash: targetHash };
     let revisionBlock: string | undefined;
     const result = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({
+      findLocation: async (artworkHash) => ({
         blockNumber: "123",
-        nextTokenId: 654,
-        locations,
+        location: { tokenId: 652, artworkHash },
       }),
       readRevision: async (tokenId, artworkHash, blockNumber) => {
         assert.equal(tokenId, 652);
@@ -57,13 +47,11 @@ describe("FAME market artwork presentation", () => {
     assert.equal(result.metadata.status, "ready");
   });
 
-  it("distinguishes unknown, ambiguous, and failed artwork lookups", async () => {
-    const unrelated = completeLocations();
+  it("distinguishes unknown and failed artwork lookups", async () => {
     const unknown = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({
+      findLocation: async () => ({
         blockNumber: "123",
-        nextTokenId: 654,
-        locations: unrelated,
+        location: null,
       }),
       readRevision: async () => {
         throw new Error("not reached");
@@ -75,42 +63,15 @@ describe("FAME market artwork presentation", () => {
     });
     assert.equal(unknown.status, "not-found");
 
-    const ambiguous = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({
-        nextTokenId: 654,
-        locations: unrelated.map((location) =>
-          location.tokenId === 652 || location.tokenId === 653
-            ? { ...location, artworkHash: targetHash }
-            : location,
-        ),
-      }),
-      readRevision: async () => targetRevision,
-      readRegistry: async () => ({ entries: [] }),
-      resolveMetadata: async () => ({
-        status: "ready",
-        image: "/image.png",
-        name: "Duplicated artwork",
-        description: null,
-        attributes: [],
-        error: null,
-      }),
-    });
-    assert.equal(ambiguous.status, "ambiguous");
-
     const previousError = console.error;
     console.error = () => undefined;
     try {
       const missingRevision = await loadFameMarketArtworkPresentation(
         targetHash,
         {
-          readLocations: async () => ({
+          findLocation: async () => ({
             blockNumber: "123",
-            nextTokenId: 654,
-            locations: unrelated.map((location) =>
-              location.tokenId === 652
-                ? { ...location, artworkHash: targetHash }
-                : location,
-            ),
+            location: { tokenId: 652, artworkHash: targetHash },
           }),
           readRevision: async () => null,
           readRegistry: async () => ({ entries: [] }),
@@ -120,7 +81,7 @@ describe("FAME market artwork presentation", () => {
       assert.equal(missingRevision.status, "unavailable");
 
       const unavailable = await loadFameMarketArtworkPresentation(targetHash, {
-        readLocations: async () => {
+        findLocation: async () => {
           throw new Error("RPC unavailable");
         },
         readRevision: async () => null,
@@ -139,13 +100,11 @@ describe("FAME market artwork presentation", () => {
     const archivedUri = "https://gateway.irys.xyz/archived-metadata";
     const { keccak256, stringToHex } = await import("viem");
     const archivedHash = keccak256(stringToHex(archivedUri));
-    const locations = completeLocations();
 
     const result = await loadFameMarketArtworkPresentation(archivedHash, {
-      readLocations: async () => ({
+      findLocation: async () => ({
         blockNumber: "456",
-        nextTokenId: 654,
-        locations,
+        location: null,
       }),
       readRevision: async () => null,
       readRegistry: async (blockNumber) => {
@@ -160,15 +119,11 @@ describe("FAME market artwork presentation", () => {
     assert.equal(result.metadata.status, "ready");
   });
 
-  it("ignores duplicate artwork aliases outside the released range", async () => {
-    const locations = completeLocations();
-    locations[444] = { tokenId: 445, artworkHash: targetHash };
-
+  it("uses the first released artwork location returned by discovery", async () => {
     const result = await loadFameMarketArtworkPresentation(targetHash, {
-      readLocations: async () => ({
+      findLocation: async () => ({
         blockNumber: "789",
-        nextTokenId: 654,
-        locations,
+        location: { tokenId: 445, artworkHash: targetHash },
       }),
       readRevision: async (tokenId) => ({
         ...targetRevision,

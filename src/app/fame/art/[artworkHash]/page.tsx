@@ -85,11 +85,9 @@ export default async function Page({ params }: Props) {
       metadata={presentation.metadata}
       canonicalUrl={canonicalUrl}
       message={
-        presentation.status === "ambiguous"
-          ? "This artwork currently appears on more than one Society token. Purchasing is disabled until its location is unambiguous."
-          : presentation.status === "unassigned"
-            ? "This artwork is not currently assigned to a Society token, so it is not available to purchase."
-            : "The artwork’s current Society token could not be confirmed. Purchasing is disabled until Base state is available."
+        presentation.status === "unassigned"
+          ? "This artwork is not currently assigned to a Society token, so it is not available to purchase."
+          : "The artwork’s current Society token could not be confirmed. Purchasing is disabled until Base state is available."
       }
     />,
   );
