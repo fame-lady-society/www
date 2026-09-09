@@ -7,6 +7,7 @@ import {
 } from "./collection";
 
 const REVISION_READ_CHUNK_SIZE = 64;
+const ARTWORK_LOCATION_SCAN_SIZE = 64;
 const ARTWORK_LOCATION_MULTICALL_BATCH_SIZE = 1_048_576;
 export const FAME_ARTWORK_REVISION_READ_CONCURRENCY = 2;
 
@@ -41,15 +42,10 @@ export type FameArtworkLocation = Readonly<{
   artworkHash: Hash;
 }>;
 
-export type FameArtworkLocationSnapshot = Readonly<{
+export type FameArtworkLocationMatchSnapshot = Readonly<{
   blockNumber: bigint;
-  locations: readonly FameArtworkLocation[];
+  location: FameArtworkLocation | null;
 }>;
-
-export type FameReleasedArtworkLocationSnapshot = FameArtworkLocationSnapshot &
-  Readonly<{
-    nextTokenId: number;
-  }>;
 
 function chunks<T>(values: readonly T[], size: number) {
   const result: T[][] = [];
@@ -74,45 +70,15 @@ function validateTokenIds(tokenIds: readonly number[]) {
   }
 }
 
-export async function readFameArtworkLocations(
-  client: FameArtworkRevisionClient,
-  marketplace: Address,
-  marketplaceAbi: Abi,
-  tokenIds: readonly number[],
-  blockNumber?: bigint,
-): Promise<FameArtworkLocationSnapshot> {
-  validateTokenIds(tokenIds);
-  const pinnedBlock = blockNumber ?? (await client.getBlockNumber());
-  const uniqueTokenIds = [...new Set(tokenIds)];
-  const results = await client.multicall({
-    allowFailure: true,
-    batchSize: ARTWORK_LOCATION_MULTICALL_BATCH_SIZE,
-    blockNumber: pinnedBlock,
-    contracts: uniqueTokenIds.map((tokenId) => ({
-      address: marketplace,
-      abi: marketplaceAbi,
-      functionName: "artworkHash" as const,
-      args: [BigInt(tokenId)] as const,
-    })),
-  });
-  const locations = uniqueTokenIds.flatMap((tokenId, index) => {
-    const artworkHash = successful(results[index]);
-    return typeof artworkHash === "string" && isHash(artworkHash)
-      ? [{ tokenId, artworkHash }]
-      : [];
-  });
-
-  return { blockNumber: pinnedBlock, locations };
-}
-
-export async function readFameReleasedArtworkLocations(
+export async function findFameReleasedArtworkLocation(
   client: FameArtworkRevisionClient,
   creatorMagic: Address,
   creatorMagicAbi: Abi,
   marketplace: Address,
   marketplaceAbi: Abi,
+  targetArtworkHash: Hash,
   blockNumber?: bigint,
-): Promise<FameReleasedArtworkLocationSnapshot> {
+): Promise<FameArtworkLocationMatchSnapshot> {
   const pinnedBlock = blockNumber ?? (await client.getBlockNumber());
   const boundary = await client.multicall({
     allowFailure: true,
@@ -126,21 +92,53 @@ export async function readFameReleasedArtworkLocations(
     ],
   });
   const nextTokenId = asFameReleasedTokenBoundary(successful(boundary[0]));
-  const tokenIds = Array.from(
-    { length: nextTokenId - FAME_COLLECTION_FIRST_TOKEN_ID },
-    (_, index) => FAME_COLLECTION_FIRST_TOKEN_ID + index,
-  );
-  if (tokenIds.length === 0) {
-    return { blockNumber: pinnedBlock, nextTokenId, locations: [] };
+  const normalizedTarget = targetArtworkHash.toLowerCase();
+
+  for (
+    let firstTokenId = FAME_COLLECTION_FIRST_TOKEN_ID;
+    firstTokenId < nextTokenId;
+    firstTokenId += ARTWORK_LOCATION_SCAN_SIZE
+  ) {
+    const tokenIds = Array.from(
+      {
+        length: Math.min(
+          ARTWORK_LOCATION_SCAN_SIZE,
+          nextTokenId - firstTokenId,
+        ),
+      },
+      (_, index) => firstTokenId + index,
+    );
+    const results = await client.multicall({
+      allowFailure: true,
+      batchSize: ARTWORK_LOCATION_MULTICALL_BATCH_SIZE,
+      blockNumber: pinnedBlock,
+      contracts: tokenIds.map((tokenId) => ({
+        address: marketplace,
+        abi: marketplaceAbi,
+        functionName: "artworkHash" as const,
+        args: [BigInt(tokenId)] as const,
+      })),
+    });
+    const matchIndex = results.findIndex((result) => {
+      const artworkHash = successful(result);
+      return (
+        typeof artworkHash === "string" &&
+        isHash(artworkHash) &&
+        artworkHash.toLowerCase() === normalizedTarget
+      );
+    });
+    if (matchIndex >= 0) {
+      return {
+        blockNumber: pinnedBlock,
+        location: {
+          tokenId: tokenIds[matchIndex]!,
+          artworkHash: targetArtworkHash,
+        },
+      };
+    }
   }
-  const snapshot = await readFameArtworkLocations(
-    client,
-    marketplace,
-    marketplaceAbi,
-    tokenIds,
-    pinnedBlock,
-  );
-  return { ...snapshot, nextTokenId };
+
+  return { blockNumber: pinnedBlock, location: null };
 }
 
 export async function readFameArtworkRevisions(
