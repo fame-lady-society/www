@@ -15,6 +15,7 @@ import MuiInput from "@mui/material/Input";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { Link } from "@mui/material";
 import { formatEther, parseEther } from "viem";
+import { WrapFundingAlert } from "./WrapFundingAlert";
 
 const Input = styled(MuiInput)`
   width: 64px;
@@ -78,16 +79,22 @@ const TipSlider: FC<{
 };
 
 export const DevTipModal: FC<{
+  balance?: bigint;
+  chainId: number;
   wrapCost: bigint;
   numberOfTokens: number;
   open: boolean;
   handleClose: (reason: TipCloseReason, tip?: bigint) => void;
-}> = ({ wrapCost, open, handleClose, numberOfTokens }) => {
+}> = ({ wrapCost, open, handleClose, numberOfTokens, balance, chainId }) => {
   const [tip, setTip] = useState<bigint | undefined>();
   const [tipPerToken, setTipPerToken] = useState(0);
   useEffect(() => {
     setTip(parseEther((tipPerToken * numberOfTokens).toString()));
   }, [numberOfTokens, tipPerToken]);
+  const baseCost = wrapCost * BigInt(numberOfTokens);
+  const totalCost = baseCost + (tip || 0n);
+  const insufficientFunds = balance !== undefined && balance <= totalCost;
+  const insufficientWithoutTip = balance !== undefined && balance <= baseCost;
   const tipString = useMemo(
     () =>
       formatEther(tip || 0n)
@@ -183,9 +190,13 @@ export const DevTipModal: FC<{
               )}
             </Typography>
             <TipSlider onChange={setTipPerToken} value={tipPerToken} />
+            {insufficientFunds && (
+              <WrapFundingAlert chainId={chainId} balance={balance} cost={totalCost} scope="these tokens with the selected tip" />
+            )}
           </CardContent>
           <CardActions>
             <Button
+              disabled={insufficientFunds}
               onClick={() => handleClose("confirm", tip)}
               variant="outlined"
               color="success"
@@ -203,6 +214,7 @@ export const DevTipModal: FC<{
               Cancel
             </Button>
             <Button
+              disabled={insufficientWithoutTip}
               onClick={() => handleClose("confirm", 0n)}
               variant="outlined"
               color="success"

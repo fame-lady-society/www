@@ -13,13 +13,15 @@ import Switch from "@mui/material/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import { DevTipModal, TipCloseReason } from "./DevTipModal";
-import { useEnsAddress } from "wagmi";
+import { useBalance, useEnsAddress } from "wagmi";
+import { WrapFundingAlert } from "./WrapFundingAlert";
 import { useAccount } from "@/hooks/useAccount";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { isAddress } from "viem";
 
 export const WrapCard: FC<{
+  chainId: number;
   isApprovedForAll?: boolean;
   tokenIds: readonly bigint[];
   transactionInProgress?: boolean;
@@ -30,6 +32,7 @@ export const WrapCard: FC<{
   onRevoke: () => void;
   nonce: number;
 }> = ({
+  chainId,
   isApprovedForAll,
   tokenIds,
   transactionInProgress,
@@ -56,6 +59,15 @@ export const WrapCard: FC<{
     name: sendToInput,
   });
   const { address } = useAccount();
+  const { data: balance } = useBalance({
+    address,
+    chainId,
+    query: { enabled: Boolean(address), refetchInterval: 15_000 },
+  });
+  const selectedCost = wrapCost * BigInt(selectedTokenIds.length);
+  const allCost = wrapCost * BigInt(tokenIds.length);
+  const cannotWrapSelected = balance !== undefined && balance.value <= selectedCost;
+  const cannotWrapAll = balance !== undefined && balance.value <= allCost;
 
   useEffect(() => {
     if (nonce) {
@@ -127,6 +139,14 @@ export const WrapCard: FC<{
       <Box component="div">
         {tokenIds.length > 0 ? (
           <>
+            {cannotWrapAll && (
+              <WrapFundingAlert
+                chainId={chainId}
+                balance={balance?.value}
+                cost={selectedTokenIds.length > 0 && cannotWrapSelected ? selectedCost : allCost}
+                scope={selectedTokenIds.length > 0 && cannotWrapSelected ? "the selected tokens" : "all your tokens"}
+              />
+            )}
             {/* Turbo Wrap Banner */}
             <Box
               component="div"
@@ -160,6 +180,7 @@ export const WrapCard: FC<{
                 disabled={
                   transactionInProgress ||
                   !isApprovedForAll ||
+                  cannotWrapAll ||
                   (transferTo && !(resolvedAddress && isAddress(resolvedAddress)))
                 }
                 sx={{
@@ -459,6 +480,7 @@ export const WrapCard: FC<{
               transactionInProgress ||
               !isApprovedForAll ||
               selectedTokenIds.length === 0 ||
+              cannotWrapSelected ||
               (transferTo && !(resolvedAddress && isAddress(resolvedAddress)))
             }
             sx={{
@@ -514,6 +536,8 @@ export const WrapCard: FC<{
         open={isTipRequested}
         numberOfTokens={isTurboWrap ? tokenIds.length : selectedTokenIds.length}
         wrapCost={wrapCost}
+        balance={balance?.value}
+        chainId={chainId}
       />
     </>
   );
