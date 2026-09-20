@@ -30,6 +30,7 @@ import {
 import { WriteContractData } from "wagmi/query";
 import { useRouter } from "next/navigation";
 import { WrapCard } from "./WrapCard";
+import { WrapFundingAlert } from "./WrapFundingAlert";
 import { DonateCard } from "./DonateCard";
 import { UnwrapCard } from "./UnwrapCard";
 import { TransactionsModal } from "./TransactionsModal";
@@ -37,7 +38,12 @@ import { Transaction } from "../types";
 import { DonationCelebration } from "./DonationCelebration";
 import { useChainContracts } from "@/hooks/useChainContracts";
 import { useNotifications } from "@/features/notifications/Context";
-import { ContractFunctionRevertedError, UserRejectedRequestError } from "viem";
+import {
+  BaseError,
+  InsufficientFundsError,
+  ContractFunctionRevertedError,
+  UserRejectedRequestError,
+} from "viem";
 import { mainnet, sepolia } from "viem/chains";
 import { useNetworkChain } from "../hooks/useNetworkChain";
 import { needsConnectedChainSwitch } from "@/utils/connectedChain";
@@ -211,6 +217,10 @@ export const WrapPage: FC<{
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const isTinyScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [fundingError, setFundingError] = useState(false);
+  useEffect(() => {
+    setFundingError(false);
+  }, [address, targetChainId]);
   const { writeContractAsync } = useWriteContract({
     mutation: {
       onError: (e) => {
@@ -413,6 +423,7 @@ export const WrapPage: FC<{
       value: bigint;
     }) => {
       if (writeContractAsync) {
+        setFundingError(false);
         try {
           const response = await writeContractAsync({
             chainId: chain?.id,
@@ -431,6 +442,11 @@ export const WrapPage: FC<{
             },
           ]);
         } catch (e) {
+          setFundingError(
+            e instanceof BaseError &&
+              e.walk((cause) => cause instanceof InsufficientFundsError) instanceof
+                InsufficientFundsError,
+          );
           console.error(e);
         }
       }
@@ -441,6 +457,7 @@ export const WrapPage: FC<{
   const onWrap = useCallback(
     async ({ args, value }: { args: [bigint[]]; value: bigint }) => {
       if (writeContractAsync) {
+        setFundingError(false);
         try {
           const response = await writeContractAsync({
             chainId: chain?.id,
@@ -459,6 +476,11 @@ export const WrapPage: FC<{
             },
           ]);
         } catch (e) {
+          setFundingError(
+            e instanceof BaseError &&
+              e.walk((cause) => cause instanceof InsufficientFundsError) instanceof
+                InsufficientFundsError,
+          );
           console.error(e);
         }
       }
@@ -1034,7 +1056,11 @@ export const WrapPage: FC<{
           <Grid2 xs={12}>
             <AnimatedFadeIn component="div" delay={200}>
               <StyledCard>
+                {fundingError && (
+                  <WrapFundingAlert chainId={targetChainId} scope="your tokens" />
+                )}
                 <WrapCard
+                  chainId={targetChainId}
                   isApprovedForAll={isWrappedApprovedForAll}
                   onApprove={onApprove}
                   onRevoke={onRevoke}
