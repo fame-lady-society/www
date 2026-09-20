@@ -26,6 +26,9 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { isAddress } from "viem";
+import { useQuery } from "@tanstack/react-query";
+import { useAppKit } from "@reown/appkit/react";
+import { useSiweSession } from "@/context/SiweSession";
 
 interface UnwrapCardProps {
   network: "mainnet" | "sepolia";
@@ -42,10 +45,15 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
 }) => {
   const { address } = useAccount();
   const [expanded, setExpanded] = useState(false);
-  const [tokenIds, setTokenIds] = useState<bigint[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const { open } = useAppKit();
+  const {
+    isSignedIn,
+    status,
+    error: signInError,
+    signIn,
+    signOut,
+    session,
+  } = useSiweSession();
   const [selectedTokenIds, setSelectedTokenIds] = useState<bigint[]>([]);
   const [transferTo, setTransferTo] = useState(false);
   const [sendToInput, setSendToInput] = useState<string>("");
@@ -55,57 +63,49 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
     name: sendToInput,
   });
 
-  const fetchWrappedTokens = useCallback(async () => {
-    if (!address) return;
-
-    setIsLoading(true);
-    setFetchError(null);
-
-    try {
+  const {
+    data: tokenIds = [],
+    isFetching: isLoading,
+    isSuccess: hasFetched,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      "wrap-owned-tokens",
+      network,
+      address,
+      session?.expiresAt,
+      nonce,
+    ],
+    enabled: expanded && !!address && isSignedIn,
+    retry: false,
+    queryFn: async ({ signal }) => {
       const endpoint =
         network === "sepolia" ? "/api/sepolia/owned" : "/api/ethereum/owned";
-      const response = await fetch(endpoint);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setFetchError("Please sign in to view your wrapped tokens");
-        } else {
-          setFetchError("Failed to fetch tokens");
-        }
-        return;
+      const response = await fetch(endpoint, { signal });
+      if (response.status === 401) {
+        await signOut();
+        throw new Error("Please sign in to view your wrapped tokens");
       }
-
+      if (!response.ok) throw new Error("Failed to fetch tokens");
       const ownedTokens: number[] = await response.json();
-      setTokenIds(ownedTokens.map((id) => BigInt(id)));
-      setHasFetched(true);
-    } catch (error) {
-      setFetchError("Failed to fetch tokens");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [address, network]);
+      return ownedTokens.map((id) => BigInt(id));
+    },
+  });
 
-  // Reset selection and refetch when nonce changes (after successful transaction)
   useEffect(() => {
-    if (nonce && hasFetched) {
-      setSelectedTokenIds([]);
-      fetchWrappedTokens();
-    }
-  }, [nonce, hasFetched, fetchWrappedTokens]);
+    setSelectedTokenIds([]);
+    setShowFarewellModal(false);
+  }, [address, network, nonce, isSignedIn]);
 
   const handleExpand = useCallback(() => {
-    const newExpanded = !expanded;
-    setExpanded(newExpanded);
-
-    if (newExpanded && !hasFetched && !isLoading) {
-      fetchWrappedTokens();
-    }
-  }, [expanded, hasFetched, isLoading, fetchWrappedTokens]);
+    setExpanded((value) => !value);
+  }, []);
 
   const handleRefresh = useCallback(() => {
     setSelectedTokenIds([]);
-    fetchWrappedTokens();
-  }, [fetchWrappedTokens]);
+    void refetch();
+  }, [refetch]);
 
   const handleUnwrapClick = useCallback(() => {
     setShowFarewellModal(true);
@@ -188,9 +188,13 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {expanded
-              ? hasFetched
-                ? `${tokenIds.length} wrapped token${tokenIds.length !== 1 ? "s" : ""} found`
-                : "Loading..."
+              ? !isSignedIn
+                ? "Sign in to view your wrapped tokens"
+                : isLoading
+                  ? "Loading..."
+                  : hasFetched
+                    ? `${tokenIds.length} wrapped token${tokenIds.length !== 1 ? "s" : ""} found`
+                    : "Unable to load wrapped tokens"
               : "Click to view and unwrap your Fame Lady Society NFTs"}
           </Typography>
         </Box>
@@ -208,7 +212,34 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
 
       <Collapse in={expanded} unmountOnExit>
         <Box component="div" sx={{ pt: 3 }}>
-          {isLoading ? (
+          {!isSignedIn ? (
+            <Box component="div" sx={{ p: 3, textAlign: "center" }}>
+              <Typography mb={2}>
+                Sign in to view your wrapped tokens.
+              </Typography>
+              {signInError && (
+                <Typography role="alert" color="error.main" mb={2}>
+                  {signInError}
+                </Typography>
+              )}
+              <Button
+                variant="outlined"
+                disabled={status === "checking" || status === "signing"}
+                onClick={() => {
+                  if (!address) void open({ view: "Connect" });
+                  else void signIn();
+                }}
+              >
+                {status === "checking"
+                  ? "Checking sign-in…"
+                  : status === "signing"
+                    ? "Confirm in your wallet…"
+                    : address
+                      ? "Sign in"
+                      : "Connect wallet"}
+              </Button>
+            </Box>
+          ) : isLoading ? (
             <Box
               component="div"
               sx={{
@@ -236,7 +267,7 @@ export const UnwrapCard: FC<UnwrapCardProps> = ({
               }}
             >
               <Typography color="error.main" mb={2}>
-                {fetchError}
+                {fetchError.message}
               </Typography>
               <Button
                 variant="outlined"
