@@ -1,9 +1,8 @@
 import { fetchAllOwnersIterable } from "@/service/fetchAllOwnersIterable";
 import { wrappedNftAddress } from "@/wagmi";
-import { NextRequest } from "next/server";
 import { client as viemClient } from "@/viem/sepolia-client";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const owners = await fetchAllOwnersIterable({
     contractAddress: wrappedNftAddress[11155111],
     totalSupply: 8888n,
@@ -23,14 +22,21 @@ export async function GET(req: NextRequest) {
   return new Response(
     JSON.stringify({
       owners: Object.fromEntries(
-        [...reversedOwners.entries()].map(([key, value]) => [key.toLowerCase(), value]),
+        [...reversedOwners.entries()].map(([key, value]) => [
+          key.toLowerCase(),
+          value,
+        ]),
       ),
     }),
     {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "CDN-Cache-Control": "max-age=300, stale-while-revalidate=300",
+      },
     },
   );
 }
 
-export const revalidate = 300;
-export const dynamic = "force-static";
+// Owner scans need live RPC access and must not run during the build.
+export const dynamic = "force-dynamic";
