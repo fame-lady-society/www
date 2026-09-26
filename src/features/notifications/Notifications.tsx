@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import Snackbar, { SnackbarCloseReason } from "@mui/material/Snackbar";
 import { useNotifications, type Notification } from "./Context";
+import { FameApprovalWarning } from "./FameApprovalWarning";
 
 export const Notifications: FC = () => {
   const { notifications, removeNotification } = useNotifications();
@@ -43,23 +44,26 @@ export const Notifications: FC = () => {
   }, [notifications, messageInfo, processQueue]);
 
   return (
-    <Snackbar
-      key={messageInfo?.id}
-      open={messageInfo !== null}
-      autoHideDuration={messageInfo?.autoHideMs}
-      onClose={handleClose}
-      message={messageInfo?.message}
-      anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      ContentProps={{
-        sx: {
-          backgroundColor: messageInfo?.type === "error" ? "red" : "white",
-          color: messageInfo?.type === "error" ? "white" : "black",
-        },
-      }}
-      style={{
-        // translate down 50px to avoid the header
-        top: "80px",
-      }}
-    />
+    <>
+      <FameApprovalWarning />
+      <Snackbar
+        key={messageInfo?.id}
+        open={messageInfo !== null}
+        autoHideDuration={messageInfo?.autoHideMs}
+        onClose={handleClose}
+        message={messageInfo?.message}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        ContentProps={{
+          sx: {
+            backgroundColor: messageInfo?.type === "error" ? "red" : "white",
+            color: messageInfo?.type === "error" ? "white" : "black",
+          },
+        }}
+        style={{
+          // translate down 50px to avoid the header
+          top: "80px",
+        }}
+      />
+    </>
   );
 };
