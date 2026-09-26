@@ -1,10 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import {
-  existsSync,
-  readFileSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import type { Readable } from "node:stream";
 
 const ENV_LOCAL_PATH = ".env.local";
@@ -29,18 +24,6 @@ const anvilBindHostArg =
   argValue("--host");
 const anvilPublicHostArg =
   argValue("--anvil-public-host") ?? argValue("--public-host");
-
-const fallbackRpcJsonEnv = [
-  "NEXT_PUBLIC_SEPOLIA_RPC_JSON",
-  "NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON",
-  "NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON",
-] as const;
-
-const fallbackRpcUrlEnv = [
-  "NEXT_PUBLIC_MAINNET_RPC_URL_1",
-  "NEXT_PUBLIC_POLYGON_RPC_URL_1",
-  "NEXT_PUBLIC_POLYGON_RPC_URL_2",
-] as const;
 
 let forkRpcUrl: string | null = null;
 let routerAddress: string | null = null;
@@ -86,18 +69,12 @@ function envLines(): string[] {
   }
 
   const values: Record<string, string> = {
-    NEXT_PUBLIC_BASE_RPC_URL_1: forkRpcUrl,
+    NEXT_PUBLIC_FAME_FORK_MODE: "1",
+    NEXT_PUBLIC_FAME_FORK_RPC_URL: forkRpcUrl,
+    BASE_RPC_URL: forkRpcUrl,
     NEXT_PUBLIC_FAME_ROUTER_ADDRESS: routerAddress,
     NEXT_PUBLIC_FAME_SWAP_SLIPPAGE_BPS: slippageBps,
   };
-
-  for (const name of fallbackRpcJsonEnv) {
-    values[name] = process.env[name] ?? JSON.stringify([forkRpcUrl]);
-  }
-
-  for (const name of fallbackRpcUrlEnv) {
-    values[name] = process.env[name] ?? forkRpcUrl;
-  }
 
   return Object.entries(values).map(
     ([name, value]) => `${name}=${JSON.stringify(value)}`,
@@ -121,8 +98,8 @@ function maybeWriteEnvLocal(): void {
 }
 
 function handleLine(line: string): void {
-  if (line.startsWith("NEXT_PUBLIC_BASE_RPC_URL_1=")) {
-    forkRpcUrl = line.slice("NEXT_PUBLIC_BASE_RPC_URL_1=".length).trim();
+  if (line.startsWith("NEXT_PUBLIC_FAME_FORK_RPC_URL=")) {
+    forkRpcUrl = line.slice("NEXT_PUBLIC_FAME_FORK_RPC_URL=".length).trim();
     maybeWriteEnvLocal();
     return;
   }

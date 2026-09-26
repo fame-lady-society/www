@@ -524,7 +524,10 @@ function candidateFilterForRouteLabTarget(
 ): ((candidate: FameRouteCandidate) => boolean) | undefined {
   if (!hasRouteLabTargetFilter(filter)) return undefined;
   return (candidate) => {
-    if (filter.routeId && !candidateMatchesRouteArtifact(candidate, filter.routeId)) {
+    if (
+      filter.routeId &&
+      !candidateMatchesRouteArtifact(candidate, filter.routeId)
+    ) {
       return false;
     }
     return candidateMatchesPoolTarget(candidate, filter);
@@ -872,8 +875,7 @@ export async function runQuoteApiRouteLab(
   options: QuoteApiRouteLabOptions,
 ): Promise<FameRouteLabRow[]> {
   const config = getFameSwapConfig();
-  const rpcUrl =
-    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl = process.env.BASE_RPC_URL;
   const client = rpcUrl
     ? createPublicClient({
         chain: base,
@@ -1594,8 +1596,7 @@ export async function runLiveRouteLab(
 ): Promise<FameRouteLabRow[]> {
   assertRouteLabRequestedRouteArtifact(options.requestedRouteId);
   const config = getFameSwapConfig();
-  const rpcUrl =
-    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl = process.env.BASE_RPC_URL;
   const client = rpcUrl
     ? createPublicClient({
         chain: base,
@@ -1852,9 +1853,7 @@ function indexedPoolStateSummaryLine(
     .join(", ");
 }
 
-function quoteApiSummaryLine(
-  quoteApi: FameRouteLabRow["quoteApi"],
-): string {
+function quoteApiSummaryLine(quoteApi: FameRouteLabRow["quoteApi"]): string {
   if (!quoteApi) return "not used";
   const diagnostics = quoteApi.diagnostics;
   return [
@@ -2272,22 +2271,22 @@ if (shouldRunCli()) {
             targetFilter,
           })
         : args.includes("--indexed")
-        ? await runIndexedRouteLab(corpus, {
-            poolStateClient: routeLabIndexedPoolStateClientFromEnv(),
-            fallbackAdapter: await routeLabIndexedFallbackAdapterFromEnv(),
-            currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
-            maxFreshnessBlocks: optionalSafeIntegerEnv(
-              "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
-            ),
-            requestedRouteId,
-            targetFilter,
-          })
-        : args.includes("--deterministic")
-          ? await runRouteLab(corpus, { requestedRouteId, targetFilter })
-          : await runSnapshotRouteLab(corpus, {
+          ? await runIndexedRouteLab(corpus, {
+              poolStateClient: routeLabIndexedPoolStateClientFromEnv(),
+              fallbackAdapter: await routeLabIndexedFallbackAdapterFromEnv(),
+              currentBlock: await routeLabIndexedCurrentBlockFromEnv(),
+              maxFreshnessBlocks: optionalSafeIntegerEnv(
+                "FAME_POOL_STATE_MAX_FRESHNESS_BLOCKS",
+              ),
               requestedRouteId,
               targetFilter,
-            });
+            })
+          : args.includes("--deterministic")
+            ? await runRouteLab(corpus, { requestedRouteId, targetFilter })
+            : await runSnapshotRouteLab(corpus, {
+                requestedRouteId,
+                targetFilter,
+              });
     if (args.includes("--markdown")) {
       console.log(formatRouteLabMarkdown(rows));
     } else {

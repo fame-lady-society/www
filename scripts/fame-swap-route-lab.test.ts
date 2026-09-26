@@ -399,9 +399,9 @@ describe("FAME route lab", () => {
       },
     };
     const previousBaseRpcUrl = process.env.BASE_RPC_URL;
-    const previousPublicBaseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    const previousPublicBaseRpcUrl = process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
     delete process.env.BASE_RPC_URL;
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    delete process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
 
     try {
       const fixedRows = await runQuoteApiRouteLab(corpus, {
@@ -430,9 +430,9 @@ describe("FAME route lab", () => {
       if (previousBaseRpcUrl === undefined) delete process.env.BASE_RPC_URL;
       else process.env.BASE_RPC_URL = previousBaseRpcUrl;
       if (previousPublicBaseRpcUrl === undefined) {
-        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+        delete process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
       } else {
-        process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousPublicBaseRpcUrl;
+        process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = previousPublicBaseRpcUrl;
       }
     }
   });

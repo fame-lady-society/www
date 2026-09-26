@@ -2,57 +2,29 @@ import {
   fameLadySocietyAddress,
   namedLadyRendererAddress as namedLadyRendererAddressAll,
 } from "@/wagmi";
-import { createPublicClient, http, fallback, createWalletClient } from "viem";
+import { createPublicClient, createWalletClient, http, fallback } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
+import { rpcUrls } from "./rpcUrls";
+
+function transport() {
+  return fallback(
+    rpcUrls(mainnet).map((url) =>
+      http(url, {
+        batch: true,
+        fetchOptions: { next: { revalidate: 60 } },
+      }),
+    ),
+  );
+}
 
 export const client = createPublicClient({
-  transport: fallback([
-    http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
-      batch: true,
-      retryCount: 5,
-      retryDelay: 500,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-  ]),
   chain: mainnet,
+  transport: transport(),
 });
-
 export const walletClient = createWalletClient({
-  transport: fallback([
-    http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1!, {
-      batch: true,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-    http(`https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`, {
-      batch: true,
-      fetchOptions: {
-        next: {
-          revalidate: 60,
-        },
-      },
-    }),
-    http(
-      `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-      {
-        batch: true,
-        fetchOptions: {
-          next: {
-            revalidate: 60,
-          },
-        },
-      },
-    ),
-  ]),
   chain: mainnet,
+  transport: transport(),
 });
 
 export const createSignerAccount = () =>

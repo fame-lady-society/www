@@ -1,33 +1,17 @@
-export type RpcUrls = [string, ...string[]];
+import type { Chain } from "viem";
 
-function isRpcUrls(value: unknown): value is RpcUrls {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every(
-      (rpc): rpc is string => typeof rpc === "string" && rpc.trim().length > 0,
-    )
-  );
-}
-
-export function parseRpcUrls(
-  value: string | undefined,
-  envName: string,
-): RpcUrls {
-  if (!value?.trim()) {
-    throw new Error(`${envName} must be set to a JSON array of RPC URLs.`);
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(value);
-  } catch (error) {
-    throw new Error(`${envName} must be valid JSON.`, { cause: error });
-  }
-
-  if (!isRpcUrls(parsed)) {
-    throw new Error(`${envName} must be a non-empty JSON array of RPC URLs.`);
-  }
-
-  return parsed;
+// Non-public environment variables are read only during server execution.
+// Browser callers always use the chain's credential-free public endpoints.
+export function rpcUrls(chain: Chain): readonly string[] {
+  if (typeof window !== "undefined") return chain.rpcUrls.default.http;
+  const configured: Record<number, string | undefined> = {
+    1: process.env.MAINNET_RPC_URL,
+    8453: process.env.BASE_RPC_URL,
+    137: process.env.POLYGON_RPC_URL,
+    11155111: process.env.SEPOLIA_RPC_URL,
+    84532: process.env.BASE_SEPOLIA_RPC_URL,
+    80002: process.env.POLYGON_AMOY_RPC_URL,
+  };
+  const url = configured[chain.id]?.trim();
+  return url ? [url] : chain.rpcUrls.default.http;
 }

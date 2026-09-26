@@ -149,8 +149,7 @@ async function readReserveStates(
 }
 
 export async function buildFamePoolStateSnapshot(): Promise<FamePoolStateSnapshotFile> {
-  const rpcUrl =
-    process.env.BASE_RPC_URL ?? process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl = process.env.BASE_RPC_URL;
   if (!rpcUrl) {
     throw new Error("Base RPC is not configured for snapshot generation.");
   }

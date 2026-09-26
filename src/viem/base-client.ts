@@ -8,7 +8,8 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { baseRpcUrls } from "./baseRpcUrls";
+import { baseRpcUrls, fameForkModeEnabled } from "./baseRpcUrls";
+import { rpcUrls } from "./rpcUrls";
 
 const baseRpcTransportConfig = {
   batch: true,
@@ -29,7 +30,9 @@ const liveBaseRpcTransportConfig = {
 } satisfies HttpTransportConfig;
 
 function createBaseRpcTransports() {
-  return baseRpcUrls().map((rpc) => http(rpc, baseRpcTransportConfig));
+  return (fameForkModeEnabled() ? baseRpcUrls() : rpcUrls(base)).map((rpc) =>
+    http(rpc, baseRpcTransportConfig),
+  );
 }
 
 export const client = createPublicClient({
@@ -42,7 +45,9 @@ export const client = createPublicClient({
 
 export const liveClient = createPublicClient({
   transport: fallback(
-    baseRpcUrls().map((rpc) => http(rpc, liveBaseRpcTransportConfig)),
+    (fameForkModeEnabled() ? baseRpcUrls() : rpcUrls(base)).map((rpc) =>
+      http(rpc, liveBaseRpcTransportConfig),
+    ),
   ),
   chain: base,
   batch: {

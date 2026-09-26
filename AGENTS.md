@@ -12,7 +12,8 @@
 1. Install dependencies with `yarn install`.
 2. Copy `.env.example` to `.env.local` and provide required secrets:
    - `ETHERSCAN_API_KEY`, `BASESCAN_API_KEY` (wagmi codegen)
-   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `NEXT_PUBLIC_ALCHEMY_KEY`, `INFURA_KEY`, `INFURA_IPFS_KEY`
+   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`; optional server-only RPC URLs listed in `.env.example`
+   - `INFURA_KEY`, `INFURA_IPFS_KEY` only for IPFS upload work
    - `SESSION_SECRET`, `SEPOLIA_SIGNER_PRIVATE_KEY`, `MAINNET_SIGNER_PRIVATE_KEY`
 3. Start the dev server with `yarn dev` (served on `http://localhost:3000`).
 
@@ -63,3 +64,7 @@
 - Next.js docs: https://nextjs.org/docs
 - wagmi CLI: https://wagmi.sh/cli
 - Fame Lady Society: https://fameladysociety.com
+
+## RPC credentials
+
+Browser wallet transports use public chain endpoints. Never add paid RPC URLs or provider keys to `NEXT_PUBLIC_*` or `next.config.js` `env`. Server RPC endpoints use the unprefixed variables in `.env.example`. Shared viem clients select those only during server execution. The explicit FAME fork harness accepts only a credential-free loopback browser URL.

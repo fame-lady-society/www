@@ -26,7 +26,7 @@ FAME_SWAP_KEEP_FORK_ALIVE=1 \
 bun run fame-swap:fork-smoke
 ```
 
-The keep-alive mode prints `NEXT_PUBLIC_BASE_RPC_URL_1`, `NEXT_PUBLIC_FAME_ROUTER_ADDRESS`, and `NEXT_PUBLIC_FAME_SWAP_SLIPPAGE_BPS`. Start `yarn dev` in another shell with those values so `/fame/swap` targets the local fork router.
+The keep-alive mode prints `NEXT_PUBLIC_FAME_FORK_MODE=1`, matching `BASE_RPC_URL` and `NEXT_PUBLIC_FAME_FORK_RPC_URL`, `NEXT_PUBLIC_FAME_ROUTER_ADDRESS`, and `NEXT_PUBLIC_FAME_SWAP_SLIPPAGE_BPS`. Start `yarn dev` in another shell with those values so `/fame/swap` targets the local fork router.
 
 For a package command that only starts the fork and deploys the local router:
 
@@ -48,11 +48,7 @@ When the fork runs inside WSL and the browser or wallet runs on Windows, bind An
 doppler run -- bun run fame-swap:fork:wsl -- --write-env-local
 ```
 
-That keeps the printed `NEXT_PUBLIC_BASE_RPC_URL_1` as a Windows-friendly localhost URL while Anvil listens on `0.0.0.0`. If Windows localhost forwarding is unavailable, pass the WSL IP explicitly:
-
-```bash
-doppler run -- bun run fame-swap:fork -- --write-env-local --wsl --public-host <wsl-ip>
-```
+The printed `NEXT_PUBLIC_FAME_FORK_RPC_URL` stays on localhost while Anvil listens on `0.0.0.0`. The browser fork endpoint requires loopback; configure Windows localhost forwarding rather than exposing a remote RPC URL.
 
 `fame-swap:fork` and `fame-swap:local-dev` ignore any router address already present in Doppler or a Bun-loaded `.env.local` by default, so they always deploy a fresh local router into the fork. Set `FAME_SWAP_USE_CONFIGURED_ROUTER=1` to validate against a preconfigured router address instead.
 
