@@ -157,7 +157,8 @@ export function FameApprovalWarningView({
   onRevoke: () => void;
   onRetry: () => void;
 }) {
-  if (approved !== true && !readError && !hash) return null;
+  if (approved === false || (approved !== true && !readError && !hash))
+    return null;
 
   return (
     <Snackbar open anchorOrigin={{ vertical: "bottom", horizontal: "left" }}>

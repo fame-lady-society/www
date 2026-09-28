@@ -63,16 +63,24 @@ describe("FAME operator approval warning", () => {
     assert.doesNotMatch(html, /Close|Dismiss/);
   });
 
-  it("keeps submitted transactions visible until verification and disables duplicate submissions", () => {
+  it("keeps submitted transactions visible while approval remains and disables duplicate submissions", () => {
     const hash = `0x${"1".repeat(64)}` as Hash;
     const html = render({
-      approved: false,
+      approved: true,
       hash,
       status: "Waiting for Base confirmation…",
     });
     assert.match(html, /Revoke this approval or your FAME is at risk/);
     assert.match(html, /<button[^>]*disabled/);
     assert.match(html, new RegExp(`https://basescan.org/tx/${hash}`));
+  });
+
+  it("hides a submitted warning as soon as the approval read is false", () => {
+    const hash = `0x${"1".repeat(64)}` as Hash;
+    assert.equal(
+      render({ approved: false, hash, status: "Waiting for Base confirmation…" }),
+      "",
+    );
   });
 
   it("reports failed reads without claiming an approval exists", () => {
