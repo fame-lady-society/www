@@ -1,0 +1,5211 @@
+{
+  "version": "fame-chart-v1",
+  "mode": "snapshot",
+  "baseCursor": null,
+  "cursor": "eyJ2IjoxLCJyZXZpc2lvbiI6ImFkYjFhZjRiZGRkNzBiYzU4NTgyM2YwNjliY2RlY2E4MTMwMTA0MzViNDMwYmI2ZWQwMDUwZjFlYjYwOTg0MDciLCJnZW5lcmF0aW9uIjoiY2IwMzU2ODEwYzdiYmE4NmUzMjMxNDc4ZjFiOGZiYTM4OGMyZjA5ZGMxNDBiOTU0ZTg0OGY1NmQ1NzIyZWQ2MiIsImN1cnJlbmN5IjoiVVNEQyIsInNlcmllcyI6Im1hcmtldCIsImZyb20iOjE3OTEzNDk4MDAsInRvIjoxNzkxNDM2MjAwfQ",
+  "currency": "USDC",
+  "series": "market",
+  "from": 1791349800,
+  "to": 1791436200,
+  "resolution": 300,
+  "policyRevision": "adb1af4bddd70bc585823f069bcdeca813010435b430bb6ed0050f1eb6098407",
+  "publicationId": "cb0356810c7bba86e3231478f1b8fba388c2f09dc140b954e848f56d5722ed62",
+  "publishedThroughTimestamp": 1791436200,
+  "priceMethod": "fame-balance-weighted-spot-v1",
+  "candleMethod": "spot-events-at-bucket-end-rate",
+  "conversionMethod": "bucket-end-spot",
+  "pools": [
+    "scale-equalizer-frxusd-fame",
+    "scale-equalizer-scale-fame",
+    "scale-equalizer-weth-fame",
+    "slipstream-basedflick-fame",
+    "uniswap-v2-fame-direct"
+  ],
+  "upserts": [
+    {
+      "timestamp": 1791349800,
+      "publicationStatus": "published",
+      "price": "0.000228500729903662",
+      "candle": {
+        "open": "0.000228500729903662",
+        "high": "0.000228500729903662",
+        "low": "0.000228500729903662",
+        "close": "0.000228500729903662",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91621.777041835335594880",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791350100,
+      "publicationStatus": "published",
+      "price": "0.000228490166922961",
+      "candle": {
+        "open": "0.000228490166922961",
+        "high": "0.000228490166922961",
+        "low": "0.000228490166922961",
+        "close": "0.000228490166922961",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91617.541630474477690945",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791350400,
+      "publicationStatus": "published",
+      "price": "0.000228493640413998",
+      "candle": {
+        "open": "0.000228493640413998",
+        "high": "0.000228493640413998",
+        "low": "0.000228493640413998",
+        "close": "0.000228493640413998",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91618.923678922478102401",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791350700,
+      "publicationStatus": "published",
+      "price": "0.000228540834569345",
+      "candle": {
+        "open": "0.000228540834569345",
+        "high": "0.000228540834569345",
+        "low": "0.000228540834569345",
+        "close": "0.000228540834569345",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91637.846996401487111480",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791351000,
+      "publicationStatus": "published",
+      "price": "0.000228772821666993",
+      "candle": {
+        "open": "0.000228772821666993",
+        "high": "0.000228772821666993",
+        "low": "0.000228772821666993",
+        "close": "0.000228772821666993",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91730.866461191872607570",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791351300,
+      "publicationStatus": "published",
+      "price": "0.000228730922064418",
+      "candle": {
+        "open": "0.000228730922064418",
+        "high": "0.000228730922064418",
+        "low": "0.000228730922064418",
+        "close": "0.000228730922064418",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91714.058484926422554178",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791351600,
+      "publicationStatus": "published",
+      "price": "0.000228762282708392",
+      "candle": {
+        "open": "0.000228762282708392",
+        "high": "0.000228762282708392",
+        "low": "0.000228762282708392",
+        "close": "0.000228762282708392",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91726.633105788653863651",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791351900,
+      "publicationStatus": "published",
+      "price": "0.000228830511486467",
+      "candle": {
+        "open": "0.000228830511486467",
+        "high": "0.000228830511486467",
+        "low": "0.000228830511486467",
+        "close": "0.000228830511486467",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91753.990582280513750695",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791352200,
+      "publicationStatus": "published",
+      "price": "0.000228909649320795",
+      "candle": {
+        "open": "0.000228909649320795",
+        "high": "0.000228909649320795",
+        "low": "0.000228909649320795",
+        "close": "0.000228909649320795",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91785.722269814500150484",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791352500,
+      "publicationStatus": "published",
+      "price": "0.000229022659456839",
+      "candle": {
+        "open": "0.000229022659456839",
+        "high": "0.000229022659456839",
+        "low": "0.000229022659456839",
+        "close": "0.000229022659456839",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91831.035645355073450116",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791352800,
+      "publicationStatus": "published",
+      "price": "0.000228938615672252",
+      "candle": {
+        "open": "0.000228938615672252",
+        "high": "0.000228938615672252",
+        "low": "0.000228938615672252",
+        "close": "0.000228938615672252",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91797.337355853627817976",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791353100,
+      "publicationStatus": "published",
+      "price": "0.000228908143479407",
+      "candle": {
+        "open": "0.000228908143479407",
+        "high": "0.000228908143479407",
+        "low": "0.000228908143479407",
+        "close": "0.000228908143479407",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91785.118951753876216955",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791353400,
+      "publicationStatus": "published",
+      "price": "0.000228915696292151",
+      "candle": {
+        "open": "0.000228915696292151",
+        "high": "0.000228915696292151",
+        "low": "0.000228915696292151",
+        "close": "0.000228915696292151",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91788.150509967171434981",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791353700,
+      "publicationStatus": "published",
+      "price": "0.000228659156147620",
+      "candle": {
+        "open": "0.000228659156147620",
+        "high": "0.000228659156147620",
+        "low": "0.000228659156147620",
+        "close": "0.000228659156147620",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91685.291797123392416591",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791354000,
+      "publicationStatus": "published",
+      "price": "0.000228563106052393",
+      "candle": {
+        "open": "0.000228563106052393",
+        "high": "0.000228563106052393",
+        "low": "0.000228563106052393",
+        "close": "0.000228563106052393",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91646.778289402065092069",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791354300,
+      "publicationStatus": "published",
+      "price": "0.000228611449068083",
+      "candle": {
+        "open": "0.000228611449068083",
+        "high": "0.000228611449068083",
+        "low": "0.000228611449068083",
+        "close": "0.000228611449068083",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91666.162689796153800902",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791354600,
+      "publicationStatus": "published",
+      "price": "0.000228849869428093",
+      "candle": {
+        "open": "0.000228849869428093",
+        "high": "0.000228849869428093",
+        "low": "0.000228849869428093",
+        "close": "0.000228849869428093",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91761.761481936154092236",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791354900,
+      "publicationStatus": "published",
+      "price": "0.000228912584253621",
+      "candle": {
+        "open": "0.000228912584253621",
+        "high": "0.000228912584253621",
+        "low": "0.000228912584253621",
+        "close": "0.000228912584253621",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91786.910048661928961017",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791355200,
+      "publicationStatus": "published",
+      "price": "0.000229181501149880",
+      "candle": {
+        "open": "0.000229181501149880",
+        "high": "0.000229181501149880",
+        "low": "0.000229181501149880",
+        "close": "0.000229181501149880",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91894.737051552791119824",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791355500,
+      "publicationStatus": "published",
+      "price": "0.000228958980829794",
+      "candle": {
+        "open": "0.000228958980829794",
+        "high": "0.000228958980829794",
+        "low": "0.000228958980829794",
+        "close": "0.000228958980829794",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91805.514342721646432845",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791355800,
+      "publicationStatus": "published",
+      "price": "0.000228952051550521",
+      "candle": {
+        "open": "0.000228952051550521",
+        "high": "0.000228952051550521",
+        "low": "0.000228952051550521",
+        "close": "0.000228952051550521",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91802.736635005303003685",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791356100,
+      "publicationStatus": "published",
+      "price": "0.000228915338354695",
+      "candle": {
+        "open": "0.000228915338354695",
+        "high": "0.000228915338354695",
+        "low": "0.000228915338354695",
+        "close": "0.000228915338354695",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91788.015839708125513497",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791356400,
+      "publicationStatus": "published",
+      "price": "0.000228819054982501",
+      "candle": {
+        "open": "0.000228819054982501",
+        "high": "0.000228819054982501",
+        "low": "0.000228819054982501",
+        "close": "0.000228819054982501",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91749.402386053973358581",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791356700,
+      "publicationStatus": "published",
+      "price": "0.000228818106072936",
+      "candle": {
+        "open": "0.000228818106072936",
+        "high": "0.000228818106072936",
+        "low": "0.000228818106072936",
+        "close": "0.000228818106072936",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91749.011915241281180107",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791357000,
+      "publicationStatus": "published",
+      "price": "0.000228849997817400",
+      "candle": {
+        "open": "0.000228849997817400",
+        "high": "0.000228849997817400",
+        "low": "0.000228849997817400",
+        "close": "0.000228849997817400",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91761.790055004205461478",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791357300,
+      "publicationStatus": "published",
+      "price": "0.000228754451581718",
+      "candle": {
+        "open": "0.000228754451581718",
+        "high": "0.000228754451581718",
+        "low": "0.000228754451581718",
+        "close": "0.000228754451581718",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91723.479139174944156594",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791357600,
+      "publicationStatus": "published",
+      "price": "0.000228781334467438",
+      "candle": {
+        "open": "0.000228781334467438",
+        "high": "0.000228781334467438",
+        "low": "0.000228781334467438",
+        "close": "0.000228781334467438",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91734.258297188961847845",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791357900,
+      "publicationStatus": "published",
+      "price": "0.000228797862630070",
+      "candle": {
+        "open": "0.000228797862630070",
+        "high": "0.000228797862630070",
+        "low": "0.000228797862630070",
+        "close": "0.000228797862630070",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91740.879230149417586535",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791358200,
+      "publicationStatus": "published",
+      "price": "0.000228989621226785",
+      "candle": {
+        "open": "0.000228989621226785",
+        "high": "0.000228989621226785",
+        "low": "0.000228989621226785",
+        "close": "0.000228989621226785",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91817.764464395621050641",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791358500,
+      "publicationStatus": "published",
+      "price": "0.000229016649836830",
+      "candle": {
+        "open": "0.000229016649836830",
+        "high": "0.000229016649836830",
+        "low": "0.000229016649836830",
+        "close": "0.000229016649836830",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91828.589846470121136001",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791358800,
+      "publicationStatus": "published",
+      "price": "0.000229010386585396",
+      "candle": {
+        "open": "0.000229010386585396",
+        "high": "0.000229010386585396",
+        "low": "0.000229010386585396",
+        "close": "0.000229010386585396",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91826.076491136364374323",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791359100,
+      "publicationStatus": "published",
+      "price": "0.000228920864113363",
+      "candle": {
+        "open": "0.000228920864113363",
+        "high": "0.000228920864113363",
+        "low": "0.000228920864113363",
+        "close": "0.000228920864113363",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91790.175067566758440218",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791359400,
+      "publicationStatus": "published",
+      "price": "0.000228757500839238",
+      "candle": {
+        "open": "0.000228757500839238",
+        "high": "0.000228757500839238",
+        "low": "0.000228757500839238",
+        "close": "0.000228757500839238",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91724.671759554353598462",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791359700,
+      "publicationStatus": "published",
+      "price": "0.000228678323888177",
+      "candle": {
+        "open": "0.000228678323888177",
+        "high": "0.000228678323888177",
+        "low": "0.000228678323888177",
+        "close": "0.000228678323888177",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91692.924402380449979576",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791360000,
+      "publicationStatus": "published",
+      "price": "0.000228731139804216",
+      "candle": {
+        "open": "0.000228731139804216",
+        "high": "0.000228731139804216",
+        "low": "0.000228731139804216",
+        "close": "0.000228731139804216",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91714.101850217271819136",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791360300,
+      "publicationStatus": "published",
+      "price": "0.000228621655044088",
+      "candle": {
+        "open": "0.000228621655044088",
+        "high": "0.000228621655044088",
+        "low": "0.000228621655044088",
+        "close": "0.000228621655044088",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91670.201907004609982953",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791360600,
+      "publicationStatus": "published",
+      "price": "0.000228552544867687",
+      "candle": {
+        "open": "0.000228552544867687",
+        "high": "0.000228552544867687",
+        "low": "0.000228552544867687",
+        "close": "0.000228552544867687",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91642.490816608878176494",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791360900,
+      "publicationStatus": "published",
+      "price": "0.000228442570700227",
+      "candle": {
+        "open": "0.000228442570700227",
+        "high": "0.000228442570700227",
+        "low": "0.000228442570700227",
+        "close": "0.000228442570700227",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91598.399705631547477712",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791361200,
+      "publicationStatus": "published",
+      "price": "0.000228608945999479",
+      "candle": {
+        "open": "0.000228608945999479",
+        "high": "0.000228608945999479",
+        "low": "0.000228608945999479",
+        "close": "0.000228608945999479",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91665.115428751449512481",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791361500,
+      "publicationStatus": "published",
+      "price": "0.000228671257581696",
+      "candle": {
+        "open": "0.000228671257581696",
+        "high": "0.000228671257581696",
+        "low": "0.000228671257581696",
+        "close": "0.000228671257581696",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91690.119249780759960769",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791361800,
+      "publicationStatus": "published",
+      "price": "0.000228634153980573",
+      "candle": {
+        "open": "0.000228634153980573",
+        "high": "0.000228634153980573",
+        "low": "0.000228634153980573",
+        "close": "0.000228634153980573",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91675.242241878574663382",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791362100,
+      "publicationStatus": "published",
+      "price": "0.000228608758565455",
+      "candle": {
+        "open": "0.000228608758565455",
+        "high": "0.000228608758565455",
+        "low": "0.000228608758565455",
+        "close": "0.000228608758565455",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91665.060042498029460069",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791362400,
+      "publicationStatus": "published",
+      "price": "0.000228395923890602",
+      "candle": {
+        "open": "0.000228395923890602",
+        "high": "0.000228395923890602",
+        "low": "0.000228395923890602",
+        "close": "0.000228395923890602",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91579.720299217833239829",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791362700,
+      "publicationStatus": "published",
+      "price": "0.000228357421708929",
+      "candle": {
+        "open": "0.000228357421708929",
+        "high": "0.000228357421708929",
+        "low": "0.000228357421708929",
+        "close": "0.000228357421708929",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91564.282183685483461949",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791363000,
+      "publicationStatus": "published",
+      "price": "0.000228281953778157",
+      "candle": {
+        "open": "0.000228281953778157",
+        "high": "0.000228281953778157",
+        "low": "0.000228281953778157",
+        "close": "0.000228281953778157",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91534.021994644675258842",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791363300,
+      "publicationStatus": "published",
+      "price": "0.000228214488249861",
+      "candle": {
+        "open": "0.000228214488249861",
+        "high": "0.000228214488249861",
+        "low": "0.000228214488249861",
+        "close": "0.000228214488249861",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91506.970560816225306725",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791363600,
+      "publicationStatus": "published",
+      "price": "0.000228202029682420",
+      "candle": {
+        "open": "0.000228202029682420",
+        "high": "0.000228202029682420",
+        "low": "0.000228202029682420",
+        "close": "0.000228202029682420",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91502.005992751022611608",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791363900,
+      "publicationStatus": "published",
+      "price": "0.000228005166350319",
+      "candle": {
+        "open": "0.000228005166350319",
+        "high": "0.000228005166350319",
+        "low": "0.000228005166350319",
+        "close": "0.000228005166350319",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91423.070207670150054443",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791364200,
+      "publicationStatus": "published",
+      "price": "0.000228061591062713",
+      "candle": {
+        "open": "0.000228061591062713",
+        "high": "0.000228061591062713",
+        "low": "0.000228061591062713",
+        "close": "0.000228061591062713",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91445.694679801303162874",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791364500,
+      "publicationStatus": "published",
+      "price": "0.000227903262840701",
+      "candle": {
+        "open": "0.000227903262840701",
+        "high": "0.000227903262840701",
+        "low": "0.000227903262840701",
+        "close": "0.000227903262840701",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91382.210218924022969040",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791364800,
+      "publicationStatus": "published",
+      "price": "0.000227824682549766",
+      "candle": {
+        "open": "0.000227824682549766",
+        "high": "0.000227824682549766",
+        "low": "0.000227824682549766",
+        "close": "0.000227824682549766",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91350.747773414301565935",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791365100,
+      "publicationStatus": "published",
+      "price": "0.000227822542844811",
+      "candle": {
+        "open": "0.000227823384227466",
+        "high": "0.000227823384227466",
+        "low": "0.000227822542844811",
+        "close": "0.000227822542844811",
+        "coverage": "complete"
+      },
+      "volume": "0.084353369076666240",
+      "inventory": "91350.055213739780326965",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 1,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791365400,
+      "publicationStatus": "published",
+      "price": "0.000227169078356822",
+      "candle": {
+        "open": "0.000227169078356822",
+        "high": "0.000227169078356822",
+        "low": "0.000227169078356822",
+        "close": "0.000227169078356822",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91088.033247752472914942",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791365700,
+      "publicationStatus": "published",
+      "price": "0.000227212615983908",
+      "candle": {
+        "open": "0.000227212615983908",
+        "high": "0.000227212615983908",
+        "low": "0.000227212615983908",
+        "close": "0.000227212615983908",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91105.490393843635784620",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791366000,
+      "publicationStatus": "published",
+      "price": "0.000227180081706755",
+      "candle": {
+        "open": "0.000227180081706755",
+        "high": "0.000227180081706755",
+        "low": "0.000227180081706755",
+        "close": "0.000227180081706755",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91092.475220449449945741",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791366300,
+      "publicationStatus": "published",
+      "price": "0.000227215779653602",
+      "candle": {
+        "open": "0.000227215779653602",
+        "high": "0.000227215779653602",
+        "low": "0.000227215779653602",
+        "close": "0.000227215779653602",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91106.788972346235850336",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791366600,
+      "publicationStatus": "published",
+      "price": "0.000226914229518705",
+      "candle": {
+        "open": "0.000226889874307770",
+        "high": "0.000226914229518705",
+        "low": "0.000226889874307770",
+        "close": "0.000226914229518705",
+        "coverage": "complete"
+      },
+      "volume": "2.445227532895843665",
+      "inventory": "90981.001652524667955187",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 1,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791366900,
+      "publicationStatus": "published",
+      "price": "0.000226972578033288",
+      "candle": {
+        "open": "0.000226972578033288",
+        "high": "0.000226972578033288",
+        "low": "0.000226972578033288",
+        "close": "0.000226972578033288",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "91004.393278908600918467",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791367200,
+      "publicationStatus": "published",
+      "price": "0.000226924954405218",
+      "candle": {
+        "open": "0.000226924954405218",
+        "high": "0.000226924954405218",
+        "low": "0.000226924954405218",
+        "close": "0.000226924954405218",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90985.288566219915958481",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791367500,
+      "publicationStatus": "published",
+      "price": "0.000226246467860187",
+      "candle": {
+        "open": "0.000226246726466503",
+        "high": "0.000226322357588569",
+        "low": "0.000226246467860187",
+        "close": "0.000226246467860187",
+        "coverage": "complete"
+      },
+      "volume": "15.219076108437096051",
+      "inventory": "90713.236507410509038444",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 2,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791367800,
+      "publicationStatus": "published",
+      "price": "0.000226172611042078",
+      "candle": {
+        "open": "0.000226172611042078",
+        "high": "0.000226172611042078",
+        "low": "0.000226172611042078",
+        "close": "0.000226172611042078",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90683.400729603872880981",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791368100,
+      "publicationStatus": "published",
+      "price": "0.000226307955347399",
+      "candle": {
+        "open": "0.000226307955347399",
+        "high": "0.000226307955347399",
+        "low": "0.000226307955347399",
+        "close": "0.000226307955347399",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90737.666472838792213259",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791368400,
+      "publicationStatus": "published",
+      "price": "0.000226399475650517",
+      "candle": {
+        "open": "0.000226399475650517",
+        "high": "0.000226399475650517",
+        "low": "0.000226399475650517",
+        "close": "0.000226399475650517",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90774.361162416249319010",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791368700,
+      "publicationStatus": "published",
+      "price": "0.000226304592814076",
+      "candle": {
+        "open": "0.000226288266175766",
+        "high": "0.000226304592814076",
+        "low": "0.000226288266175766",
+        "close": "0.000226304592814076",
+        "coverage": "complete"
+      },
+      "volume": "1.639106611048194241",
+      "inventory": "90733.007000832292736589",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 1,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791369000,
+      "publicationStatus": "published",
+      "price": "0.000225649566781672",
+      "candle": {
+        "open": "0.000225649566781672",
+        "high": "0.000225649566781672",
+        "low": "0.000225649566781672",
+        "close": "0.000225649566781672",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90470.386586787187875061",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791369300,
+      "publicationStatus": "published",
+      "price": "0.000225502623277962",
+      "candle": {
+        "open": "0.000225502623277962",
+        "high": "0.000225502623277962",
+        "low": "0.000225502623277962",
+        "close": "0.000225502623277962",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90411.473133076804000616",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791369600,
+      "publicationStatus": "published",
+      "price": "0.000225352594009109",
+      "candle": {
+        "open": "0.000225352594009109",
+        "high": "0.000225352594009109",
+        "low": "0.000225352594009109",
+        "close": "0.000225352594009109",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90351.321526032432394985",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791369900,
+      "publicationStatus": "published",
+      "price": "0.000225420372715709",
+      "candle": {
+        "open": "0.000225420372715709",
+        "high": "0.000225420372715709",
+        "low": "0.000225420372715709",
+        "close": "0.000225420372715709",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90378.496138771544578312",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791370200,
+      "publicationStatus": "published",
+      "price": "0.000225804451465201",
+      "candle": {
+        "open": "0.000225804451465201",
+        "high": "0.000225804451465201",
+        "low": "0.000225804451465201",
+        "close": "0.000225804451465201",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90532.488058215824934787",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791370500,
+      "publicationStatus": "published",
+      "price": "0.000225718021641902",
+      "candle": {
+        "open": "0.000225718021641902",
+        "high": "0.000225718021641902",
+        "low": "0.000225718021641902",
+        "close": "0.000225718021641902",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90497.836119009417415691",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791370800,
+      "publicationStatus": "published",
+      "price": "0.000225511106350045",
+      "candle": {
+        "open": "0.000225511106350045",
+        "high": "0.000225511106350045",
+        "low": "0.000225511106350045",
+        "close": "0.000225511106350045",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90414.878636719708273604",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791371100,
+      "publicationStatus": "published",
+      "price": "0.000225759222255386",
+      "candle": {
+        "open": "0.000225759222255386",
+        "high": "0.000225759222255386",
+        "low": "0.000225759222255386",
+        "close": "0.000225759222255386",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90514.356122313057525016",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791371400,
+      "publicationStatus": "published",
+      "price": "0.000225828947662600",
+      "candle": {
+        "open": "0.000225828947662600",
+        "high": "0.000225828947662600",
+        "low": "0.000225828947662600",
+        "close": "0.000225828947662600",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90542.312334049013775794",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791371700,
+      "publicationStatus": "published",
+      "price": "0.000225372405464016",
+      "candle": {
+        "open": "0.000225372405464016",
+        "high": "0.000225372405464016",
+        "low": "0.000225372405464016",
+        "close": "0.000225372405464016",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90359.270285529093218776",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791372000,
+      "publicationStatus": "published",
+      "price": "0.000225411441652132",
+      "candle": {
+        "open": "0.000225411441652132",
+        "high": "0.000225411441652132",
+        "low": "0.000225411441652132",
+        "close": "0.000225411441652132",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90374.937171066479067917",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791372300,
+      "publicationStatus": "published",
+      "price": "0.000225420936387882",
+      "candle": {
+        "open": "0.000225420936387882",
+        "high": "0.000225420936387882",
+        "low": "0.000225420936387882",
+        "close": "0.000225420936387882",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90378.748066307560711683",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791372600,
+      "publicationStatus": "published",
+      "price": "0.000225328366712320",
+      "candle": {
+        "open": "0.000225328366712320",
+        "high": "0.000225328366712320",
+        "low": "0.000225328366712320",
+        "close": "0.000225328366712320",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90341.655236035880242912",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791372900,
+      "publicationStatus": "published",
+      "price": "0.000225122096153949",
+      "candle": {
+        "open": "0.000225122096153949",
+        "high": "0.000225122096153949",
+        "low": "0.000225122096153949",
+        "close": "0.000225122096153949",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90258.954877185103038352",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791373200,
+      "publicationStatus": "published",
+      "price": "0.000225200898129344",
+      "candle": {
+        "open": "0.000225200898129344",
+        "high": "0.000225200898129344",
+        "low": "0.000225200898129344",
+        "close": "0.000225200898129344",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90290.548560803836295227",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791373500,
+      "publicationStatus": "published",
+      "price": "0.000225233475110576",
+      "candle": {
+        "open": "0.000225233475110576",
+        "high": "0.000225233475110576",
+        "low": "0.000225233475110576",
+        "close": "0.000225233475110576",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90303.616774189384021567",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791373800,
+      "publicationStatus": "published",
+      "price": "0.000225372224808590",
+      "candle": {
+        "open": "0.000225372224808590",
+        "high": "0.000225372224808590",
+        "low": "0.000225372224808590",
+        "close": "0.000225372224808590",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90359.250635809877108753",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791374100,
+      "publicationStatus": "published",
+      "price": "0.000225504509709970",
+      "candle": {
+        "open": "0.000225504509709970",
+        "high": "0.000225504509709970",
+        "low": "0.000225504509709970",
+        "close": "0.000225504509709970",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90412.287321608429563745",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791374400,
+      "publicationStatus": "published",
+      "price": "0.000225379658892503",
+      "candle": {
+        "open": "0.000225379658892503",
+        "high": "0.000225379658892503",
+        "low": "0.000225379658892503",
+        "close": "0.000225379658892503",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90362.232600394151446912",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791374700,
+      "publicationStatus": "published",
+      "price": "0.000225510399567946",
+      "candle": {
+        "open": "0.000225510399567946",
+        "high": "0.000225510399567946",
+        "low": "0.000225510399567946",
+        "close": "0.000225510399567946",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90414.650659714047786156",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791375000,
+      "publicationStatus": "published",
+      "price": "0.000225705660229645",
+      "candle": {
+        "open": "0.000225705660229645",
+        "high": "0.000225705660229645",
+        "low": "0.000225705660229645",
+        "close": "0.000225705660229645",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90492.929091095142350202",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791375300,
+      "publicationStatus": "published",
+      "price": "0.000225495776756499",
+      "candle": {
+        "open": "0.000225495776756499",
+        "high": "0.000225495776756499",
+        "low": "0.000225495776756499",
+        "close": "0.000225495776756499",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90408.780168175590790939",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791375600,
+      "publicationStatus": "published",
+      "price": "0.000225542523589141",
+      "candle": {
+        "open": "0.000225542523589141",
+        "high": "0.000225542523589141",
+        "low": "0.000225542523589141",
+        "close": "0.000225542523589141",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90427.521930974252753701",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791375900,
+      "publicationStatus": "published",
+      "price": "0.000225054862708946",
+      "candle": {
+        "open": "0.000225054862708946",
+        "high": "0.000225054862708946",
+        "low": "0.000225054862708946",
+        "close": "0.000225054862708946",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90232.004847149015191507",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791376200,
+      "publicationStatus": "published",
+      "price": "0.000225286480930935",
+      "candle": {
+        "open": "0.000225286480930935",
+        "high": "0.000225286480930935",
+        "low": "0.000225286480930935",
+        "close": "0.000225286480930935",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90324.869306593047499618",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791376500,
+      "publicationStatus": "published",
+      "price": "0.000225429053204169",
+      "candle": {
+        "open": "0.000225429053204169",
+        "high": "0.000225429053204169",
+        "low": "0.000225429053204169",
+        "close": "0.000225429053204169",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90382.030888617827352466",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791376800,
+      "publicationStatus": "published",
+      "price": "0.000224799509690763",
+      "candle": {
+        "open": "0.000224799509690763",
+        "high": "0.000224799509690763",
+        "low": "0.000224799509690763",
+        "close": "0.000224799509690763",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90129.627518321838017524",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791377100,
+      "publicationStatus": "published",
+      "price": "0.000224734946526462",
+      "candle": {
+        "open": "0.000224734946526462",
+        "high": "0.000224734946526462",
+        "low": "0.000224734946526462",
+        "close": "0.000224734946526462",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90103.740932966107688897",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791377400,
+      "publicationStatus": "published",
+      "price": "0.000224757696399779",
+      "candle": {
+        "open": "0.000224757829276148",
+        "high": "0.000224794942518354",
+        "low": "0.000224757696399779",
+        "close": "0.000224757696399779",
+        "coverage": "complete"
+      },
+      "volume": "7.464020191835171672",
+      "inventory": "90112.887298441707767405",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 2,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791377700,
+      "publicationStatus": "published",
+      "price": "0.000225037022940406",
+      "candle": {
+        "open": "0.000225037022940406",
+        "high": "0.000225037022940406",
+        "low": "0.000225037022940406",
+        "close": "0.000225037022940406",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "90224.757204694687844691",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791378000,
+      "publicationStatus": "published",
+      "price": "0.000224359917884928",
+      "candle": {
+        "open": "0.000224333739682226",
+        "high": "0.000224359917884928",
+        "low": "0.000224333739682226",
+        "close": "0.000224359917884928",
+        "coverage": "complete"
+      },
+      "volume": "2.627997833174564787",
+      "inventory": "89948.016214918953549740",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 1,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791378300,
+      "publicationStatus": "published",
+      "price": "0.000224015577881314",
+      "candle": {
+        "open": "0.000224015577881314",
+        "high": "0.000224015577881314",
+        "low": "0.000224015577881314",
+        "close": "0.000224015577881314",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89809.967898167369681395",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791378600,
+      "publicationStatus": "published",
+      "price": "0.000224008654226118",
+      "candle": {
+        "open": "0.000224008654226118",
+        "high": "0.000224008654226118",
+        "low": "0.000224008654226118",
+        "close": "0.000224008654226118",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89807.192166318208738706",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791378900,
+      "publicationStatus": "published",
+      "price": "0.000224092150615657",
+      "candle": {
+        "open": "0.000224092150615657",
+        "high": "0.000224092150615657",
+        "low": "0.000224092150615657",
+        "close": "0.000224092150615657",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89840.665550889964313058",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791379200,
+      "publicationStatus": "published",
+      "price": "0.000224049203329117",
+      "candle": {
+        "open": "0.000224049203329117",
+        "high": "0.000224049203329117",
+        "low": "0.000224049203329117",
+        "close": "0.000224049203329117",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89823.447657742024413241",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791379500,
+      "publicationStatus": "published",
+      "price": "0.000224082034470435",
+      "candle": {
+        "open": "0.000224082034470435",
+        "high": "0.000224082034470435",
+        "low": "0.000224082034470435",
+        "close": "0.000224082034470435",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89836.609911487979706294",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791379800,
+      "publicationStatus": "published",
+      "price": "0.000224207707144796",
+      "candle": {
+        "open": "0.000224207707144796",
+        "high": "0.000224207707144796",
+        "low": "0.000224207707144796",
+        "close": "0.000224207707144796",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89886.999693414627134214",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791380100,
+      "publicationStatus": "published",
+      "price": "0.000223586835806601",
+      "candle": {
+        "open": "0.000223586835806601",
+        "high": "0.000223586835806601",
+        "low": "0.000223586835806601",
+        "close": "0.000223586835806601",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89638.124710470803594168",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791380400,
+      "publicationStatus": "published",
+      "price": "0.000223778904325014",
+      "candle": {
+        "open": "0.000223778904325014",
+        "high": "0.000223778904325014",
+        "low": "0.000223778904325014",
+        "close": "0.000223778904325014",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89715.126476541870066243",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791380700,
+      "publicationStatus": "published",
+      "price": "0.000223992691026864",
+      "candle": {
+        "open": "0.000223992691026864",
+        "high": "0.000223992691026864",
+        "low": "0.000223992691026864",
+        "close": "0.000223992691026864",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89800.835231462444983431",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791381000,
+      "publicationStatus": "published",
+      "price": "0.000220964819501867",
+      "candle": {
+        "open": "0.000225251403285054",
+        "high": "0.000225251403285054",
+        "low": "0.000220964819501867",
+        "close": "0.000220964819501867",
+        "coverage": "complete"
+      },
+      "volume": "470.974973474103808187",
+      "inventory": "89442.641711074799613679",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 8,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791381300,
+      "publicationStatus": "published",
+      "price": "0.000220597086542668",
+      "candle": {
+        "open": "0.000220597086542668",
+        "high": "0.000220597086542668",
+        "low": "0.000220597086542668",
+        "close": "0.000220597086542668",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89294.345707996862713288",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791381600,
+      "publicationStatus": "published",
+      "price": "0.000220208827103781",
+      "candle": {
+        "open": "0.000220208827103781",
+        "high": "0.000220208827103781",
+        "low": "0.000220208827103781",
+        "close": "0.000220208827103781",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89137.184929265893320426",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791381900,
+      "publicationStatus": "published",
+      "price": "0.000220348686257437",
+      "candle": {
+        "open": "0.000220348686257437",
+        "high": "0.000220348686257437",
+        "low": "0.000220348686257437",
+        "close": "0.000220348686257437",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89193.795231015075775388",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791382200,
+      "publicationStatus": "published",
+      "price": "0.000219984087474429",
+      "candle": {
+        "open": "0.000219984087474429",
+        "high": "0.000219984087474429",
+        "low": "0.000219984087474429",
+        "close": "0.000219984087474429",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89046.215126123271723534",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791382500,
+      "publicationStatus": "published",
+      "price": "0.000219694770831460",
+      "candle": {
+        "open": "0.000219694770831460",
+        "high": "0.000219694770831460",
+        "low": "0.000219694770831460",
+        "close": "0.000219694770831460",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88929.104295770403627997",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791382800,
+      "publicationStatus": "published",
+      "price": "0.000220212002071281",
+      "candle": {
+        "open": "0.000220212002071281",
+        "high": "0.000220212002071281",
+        "low": "0.000220212002071281",
+        "close": "0.000220212002071281",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89138.475478165032957683",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791383100,
+      "publicationStatus": "published",
+      "price": "0.000219908531477372",
+      "candle": {
+        "open": "0.000219908531477372",
+        "high": "0.000219908531477372",
+        "low": "0.000219908531477372",
+        "close": "0.000219908531477372",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89015.637129214052655228",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791383400,
+      "publicationStatus": "published",
+      "price": "0.000220032394155335",
+      "candle": {
+        "open": "0.000220032394155335",
+        "high": "0.000220032394155335",
+        "low": "0.000220032394155335",
+        "close": "0.000220032394155335",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89065.775318458988000018",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791383700,
+      "publicationStatus": "published",
+      "price": "0.000219839278085318",
+      "candle": {
+        "open": "0.000219839278085318",
+        "high": "0.000219839278085318",
+        "low": "0.000219839278085318",
+        "close": "0.000219839278085318",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88987.605230230153484493",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791384000,
+      "publicationStatus": "published",
+      "price": "0.000219708844327070",
+      "candle": {
+        "open": "0.000219708844327070",
+        "high": "0.000219708844327070",
+        "low": "0.000219708844327070",
+        "close": "0.000219708844327070",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88934.807871681046239243",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791384300,
+      "publicationStatus": "published",
+      "price": "0.000219744323431041",
+      "candle": {
+        "open": "0.000219744323431041",
+        "high": "0.000219744323431041",
+        "low": "0.000219744323431041",
+        "close": "0.000219744323431041",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88949.169207262693863339",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791384600,
+      "publicationStatus": "published",
+      "price": "0.000219892666248637",
+      "candle": {
+        "open": "0.000219892666248637",
+        "high": "0.000219892666248637",
+        "low": "0.000219892666248637",
+        "close": "0.000219892666248637",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89009.214755050070408124",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791384900,
+      "publicationStatus": "published",
+      "price": "0.000219948582726733",
+      "candle": {
+        "open": "0.000219948582726733",
+        "high": "0.000219948582726733",
+        "low": "0.000219948582726733",
+        "close": "0.000219948582726733",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89031.848790476486472064",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791385200,
+      "publicationStatus": "published",
+      "price": "0.000219728625925834",
+      "candle": {
+        "open": "0.000219728625925834",
+        "high": "0.000219728625925834",
+        "low": "0.000219728625925834",
+        "close": "0.000219728625925834",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88942.820245029105607912",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791385500,
+      "publicationStatus": "published",
+      "price": "0.000219803056074285",
+      "candle": {
+        "open": "0.000219803056074285",
+        "high": "0.000219803056074285",
+        "low": "0.000219803056074285",
+        "close": "0.000219803056074285",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88972.960631295250414670",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791385800,
+      "publicationStatus": "published",
+      "price": "0.000220262888147396",
+      "candle": {
+        "open": "0.000220262888147396",
+        "high": "0.000220262888147396",
+        "low": "0.000220262888147396",
+        "close": "0.000220262888147396",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89159.093462764296063594",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791386100,
+      "publicationStatus": "published",
+      "price": "0.000219929375243097",
+      "candle": {
+        "open": "0.000219929375243097",
+        "high": "0.000219929375243097",
+        "low": "0.000219929375243097",
+        "close": "0.000219929375243097",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89024.103146186041509575",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791386400,
+      "publicationStatus": "published",
+      "price": "0.000219844217084373",
+      "candle": {
+        "open": "0.000219844217084373",
+        "high": "0.000219844217084373",
+        "low": "0.000219844217084373",
+        "close": "0.000219844217084373",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88989.632565995609400473",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791386700,
+      "publicationStatus": "published",
+      "price": "0.000219748108157977",
+      "candle": {
+        "open": "0.000219748108157977",
+        "high": "0.000219748108157977",
+        "low": "0.000219748108157977",
+        "close": "0.000219748108157977",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88950.729300542287638074",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791387000,
+      "publicationStatus": "published",
+      "price": "0.000220120918361388",
+      "candle": {
+        "open": "0.000220120918361388",
+        "high": "0.000220120918361388",
+        "low": "0.000220120918361388",
+        "close": "0.000220120918361388",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89101.607189547454578024",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791387300,
+      "publicationStatus": "published",
+      "price": "0.000220113948164662",
+      "candle": {
+        "open": "0.000220113948164662",
+        "high": "0.000220113948164662",
+        "low": "0.000220113948164662",
+        "close": "0.000220113948164662",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89098.775405552683440499",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791387600,
+      "publicationStatus": "published",
+      "price": "0.000220166819429960",
+      "candle": {
+        "open": "0.000220166819429960",
+        "high": "0.000220166819429960",
+        "low": "0.000220166819429960",
+        "close": "0.000220166819429960",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89120.176810813024925303",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791387900,
+      "publicationStatus": "published",
+      "price": "0.000220112329328203",
+      "candle": {
+        "open": "0.000220112329328203",
+        "high": "0.000220112329328203",
+        "low": "0.000220112329328203",
+        "close": "0.000220112329328203",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89098.077799842988113435",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791388200,
+      "publicationStatus": "published",
+      "price": "0.000220358773263203",
+      "candle": {
+        "open": "0.000220358773263203",
+        "high": "0.000220358773263203",
+        "low": "0.000220358773263203",
+        "close": "0.000220358773263203",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89197.818963621511484712",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791388500,
+      "publicationStatus": "published",
+      "price": "0.000220514334361350",
+      "candle": {
+        "open": "0.000220514334361350",
+        "high": "0.000220514334361350",
+        "low": "0.000220514334361350",
+        "close": "0.000220514334361350",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89260.787389473681420127",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791388800,
+      "publicationStatus": "published",
+      "price": "0.000220875893966144",
+      "candle": {
+        "open": "0.000220875893966144",
+        "high": "0.000220875893966144",
+        "low": "0.000220875893966144",
+        "close": "0.000220875893966144",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89407.131715007620685264",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791389100,
+      "publicationStatus": "published",
+      "price": "0.000221287349833216",
+      "candle": {
+        "open": "0.000221287349833216",
+        "high": "0.000221287349833216",
+        "low": "0.000221287349833216",
+        "close": "0.000221287349833216",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89573.662338145232044392",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791389400,
+      "publicationStatus": "published",
+      "price": "0.000220744693505542",
+      "candle": {
+        "open": "0.000220744693505542",
+        "high": "0.000220744693505542",
+        "low": "0.000220744693505542",
+        "close": "0.000220744693505542",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89354.004571004816728228",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791389700,
+      "publicationStatus": "published",
+      "price": "0.000220875273601276",
+      "candle": {
+        "open": "0.000220875273601276",
+        "high": "0.000220875273601276",
+        "low": "0.000220875273601276",
+        "close": "0.000220875273601276",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89406.859994116165485604",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791390000,
+      "publicationStatus": "published",
+      "price": "0.000220761733413923",
+      "candle": {
+        "open": "0.000220761733413923",
+        "high": "0.000220761733413923",
+        "low": "0.000220761733413923",
+        "close": "0.000220761733413923",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89360.901157452874496799",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791390300,
+      "publicationStatus": "published",
+      "price": "0.000220559300733250",
+      "candle": {
+        "open": "0.000220559300733250",
+        "high": "0.000220559300733250",
+        "low": "0.000220559300733250",
+        "close": "0.000220559300733250",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89278.959957304161928723",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791390600,
+      "publicationStatus": "published",
+      "price": "0.000220780467219996",
+      "candle": {
+        "open": "0.000220780467219996",
+        "high": "0.000220780467219996",
+        "low": "0.000220780467219996",
+        "close": "0.000220780467219996",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89368.484868366806768181",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791390900,
+      "publicationStatus": "published",
+      "price": "0.000220436911732810",
+      "candle": {
+        "open": "0.000220436911732810",
+        "high": "0.000220436911732810",
+        "low": "0.000220436911732810",
+        "close": "0.000220436911732810",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89229.419782608636499462",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791391200,
+      "publicationStatus": "published",
+      "price": "0.000220213731615935",
+      "candle": {
+        "open": "0.000220213731615935",
+        "high": "0.000220213731615935",
+        "low": "0.000220213731615935",
+        "close": "0.000220213731615935",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89139.081201222866998913",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791391500,
+      "publicationStatus": "published",
+      "price": "0.000220144970102959",
+      "candle": {
+        "open": "0.000220144970102959",
+        "high": "0.000220144970102959",
+        "low": "0.000220144970102959",
+        "close": "0.000220144970102959",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89111.247745765834085378",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791391800,
+      "publicationStatus": "published",
+      "price": "0.000220269492881158",
+      "candle": {
+        "open": "0.000220269492881158",
+        "high": "0.000220269492881158",
+        "low": "0.000220269492881158",
+        "close": "0.000220269492881158",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89161.684205866624669286",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791392100,
+      "publicationStatus": "published",
+      "price": "0.000220343887631760",
+      "candle": {
+        "open": "0.000220343887631760",
+        "high": "0.000220343887631760",
+        "low": "0.000220343887631760",
+        "close": "0.000220343887631760",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89191.803401150561481776",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791392400,
+      "publicationStatus": "published",
+      "price": "0.000220636817646713",
+      "candle": {
+        "open": "0.000220636817646713",
+        "high": "0.000220636817646713",
+        "low": "0.000220636817646713",
+        "close": "0.000220636817646713",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89310.393454890150296475",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791392700,
+      "publicationStatus": "published",
+      "price": "0.000220568720278015",
+      "candle": {
+        "open": "0.000220568720278015",
+        "high": "0.000220568720278015",
+        "low": "0.000220568720278015",
+        "close": "0.000220568720278015",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89282.828783041390727788",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791393000,
+      "publicationStatus": "published",
+      "price": "0.000220634496000680",
+      "candle": {
+        "open": "0.000220634496000680",
+        "high": "0.000220634496000680",
+        "low": "0.000220634496000680",
+        "close": "0.000220634496000680",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89309.461118468942036863",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791393300,
+      "publicationStatus": "published",
+      "price": "0.000220531901950350",
+      "candle": {
+        "open": "0.000220531901950350",
+        "high": "0.000220531901950350",
+        "low": "0.000220531901950350",
+        "close": "0.000220531901950350",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89267.932806796929962015",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791393600,
+      "publicationStatus": "published",
+      "price": "0.000220288433915238",
+      "candle": {
+        "open": "0.000220288433915238",
+        "high": "0.000220288433915238",
+        "low": "0.000220288433915238",
+        "close": "0.000220288433915238",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89169.380905743832828658",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791393900,
+      "publicationStatus": "published",
+      "price": "0.000219746808165919",
+      "candle": {
+        "open": "0.000219746808165919",
+        "high": "0.000219746808165919",
+        "low": "0.000219746808165919",
+        "close": "0.000219746808165919",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88950.140136042933939050",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791394200,
+      "publicationStatus": "published",
+      "price": "0.000219755672567018",
+      "candle": {
+        "open": "0.000219753394473390",
+        "high": "0.000219854014822348",
+        "low": "0.000219753394473390",
+        "close": "0.000219755672567018",
+        "coverage": "complete"
+      },
+      "volume": "20.271117927788354024",
+      "inventory": "88953.050147355591587172",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 2,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791394500,
+      "publicationStatus": "published",
+      "price": "0.000219515617037083",
+      "candle": {
+        "open": "0.000219515617037083",
+        "high": "0.000219515617037083",
+        "low": "0.000219515617037083",
+        "close": "0.000219515617037083",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88856.298492990448568783",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791394800,
+      "publicationStatus": "published",
+      "price": "0.000218454407439187",
+      "candle": {
+        "open": "0.000218454594583067",
+        "high": "0.000218502460828534",
+        "low": "0.000218454407439187",
+        "close": "0.000218454407439187",
+        "coverage": "complete"
+      },
+      "volume": "9.722510297088634975",
+      "inventory": "88426.758953102844438065",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 2,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791395100,
+      "publicationStatus": "published",
+      "price": "0.000218851697361192",
+      "candle": {
+        "open": "0.000218851697361192",
+        "high": "0.000218851697361192",
+        "low": "0.000218851697361192",
+        "close": "0.000218851697361192",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88587.417450776350771564",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791395400,
+      "publicationStatus": "published",
+      "price": "0.000218867204204104",
+      "candle": {
+        "open": "0.000218867204204104",
+        "high": "0.000218867204204104",
+        "low": "0.000218867204204104",
+        "close": "0.000218867204204104",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88593.694239563653404548",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791395700,
+      "publicationStatus": "published",
+      "price": "0.000218923646355032",
+      "candle": {
+        "open": "0.000218923646355032",
+        "high": "0.000218923646355032",
+        "low": "0.000218923646355032",
+        "close": "0.000218923646355032",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88616.540947780162590967",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791396000,
+      "publicationStatus": "published",
+      "price": "0.000219562327597501",
+      "candle": {
+        "open": "0.000219562327597501",
+        "high": "0.000219562327597501",
+        "low": "0.000219562327597501",
+        "close": "0.000219562327597501",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88875.056680889825295419",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791396300,
+      "publicationStatus": "published",
+      "price": "0.000219656959411404",
+      "candle": {
+        "open": "0.000219656959411404",
+        "high": "0.000219656959411404",
+        "low": "0.000219656959411404",
+        "close": "0.000219656959411404",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88913.360134412909881589",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791396600,
+      "publicationStatus": "published",
+      "price": "0.000219676574173397",
+      "candle": {
+        "open": "0.000219676574173397",
+        "high": "0.000219676574173397",
+        "low": "0.000219676574173397",
+        "close": "0.000219676574173397",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88921.299815548041719711",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791396900,
+      "publicationStatus": "published",
+      "price": "0.000219347612302544",
+      "candle": {
+        "open": "0.000219347612302544",
+        "high": "0.000219347612302544",
+        "low": "0.000219347612302544",
+        "close": "0.000219347612302544",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88788.123078540890780241",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791397200,
+      "publicationStatus": "published",
+      "price": "0.000219386184897195",
+      "candle": {
+        "open": "0.000219386184897195",
+        "high": "0.000219386184897195",
+        "low": "0.000219386184897195",
+        "close": "0.000219386184897195",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88803.736402358616296596",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791397500,
+      "publicationStatus": "published",
+      "price": "0.000219528417889050",
+      "candle": {
+        "open": "0.000219528417889050",
+        "high": "0.000219528417889050",
+        "low": "0.000219528417889050",
+        "close": "0.000219528417889050",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88861.310151122246058401",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791397800,
+      "publicationStatus": "published",
+      "price": "0.000219457460250968",
+      "candle": {
+        "open": "0.000219457460250968",
+        "high": "0.000219457460250968",
+        "low": "0.000219457460250968",
+        "close": "0.000219457460250968",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88832.587860619185206177",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791398100,
+      "publicationStatus": "published",
+      "price": "0.000219530203263520",
+      "candle": {
+        "open": "0.000219530203263520",
+        "high": "0.000219530203263520",
+        "low": "0.000219530203263520",
+        "close": "0.000219530203263520",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88862.020040094403837493",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791398400,
+      "publicationStatus": "published",
+      "price": "0.000219521937000119",
+      "candle": {
+        "open": "0.000219521937000119",
+        "high": "0.000219521937000119",
+        "low": "0.000219521937000119",
+        "close": "0.000219521937000119",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88858.681325780789071129",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791398700,
+      "publicationStatus": "published",
+      "price": "0.000219728101746742",
+      "candle": {
+        "open": "0.000219728101746742",
+        "high": "0.000219728101746742",
+        "low": "0.000219728101746742",
+        "close": "0.000219728101746742",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88942.151509115779107346",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791399000,
+      "publicationStatus": "published",
+      "price": "0.000220068634152849",
+      "candle": {
+        "open": "0.000220068634152849",
+        "high": "0.000220068634152849",
+        "low": "0.000220068634152849",
+        "close": "0.000220068634152849",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89079.992514957247539442",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791399300,
+      "publicationStatus": "published",
+      "price": "0.000219961182133289",
+      "candle": {
+        "open": "0.000219961182133289",
+        "high": "0.000219961182133289",
+        "low": "0.000219961182133289",
+        "close": "0.000219961182133289",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89036.497992291490454174",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791399600,
+      "publicationStatus": "published",
+      "price": "0.000219910820744696",
+      "candle": {
+        "open": "0.000219910820744696",
+        "high": "0.000219910820744696",
+        "low": "0.000219910820744696",
+        "close": "0.000219910820744696",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89016.112665271847437179",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791399900,
+      "publicationStatus": "published",
+      "price": "0.000219926329353732",
+      "candle": {
+        "open": "0.000219926329353732",
+        "high": "0.000219926329353732",
+        "low": "0.000219926329353732",
+        "close": "0.000219926329353732",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89022.390253631516528068",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791400200,
+      "publicationStatus": "published",
+      "price": "0.000219909613390992",
+      "candle": {
+        "open": "0.000219909613390992",
+        "high": "0.000219909613390992",
+        "low": "0.000219909613390992",
+        "close": "0.000219909613390992",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89015.623951581144173047",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791400500,
+      "publicationStatus": "published",
+      "price": "0.000220079654342490",
+      "candle": {
+        "open": "0.000220079654342490",
+        "high": "0.000220079654342490",
+        "low": "0.000220079654342490",
+        "close": "0.000220079654342490",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89084.453276979661663738",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791400800,
+      "publicationStatus": "published",
+      "price": "0.000220239067599019",
+      "candle": {
+        "open": "0.000220239067599019",
+        "high": "0.000220239067599019",
+        "low": "0.000220239067599019",
+        "close": "0.000220239067599019",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89148.980714693001167001",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791401100,
+      "publicationStatus": "published",
+      "price": "0.000220302775754439",
+      "candle": {
+        "open": "0.000220302775754439",
+        "high": "0.000220302775754439",
+        "low": "0.000220302775754439",
+        "close": "0.000220302775754439",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89174.768399562278378684",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791401400,
+      "publicationStatus": "published",
+      "price": "0.000220395341801483",
+      "candle": {
+        "open": "0.000220395341801483",
+        "high": "0.000220395341801483",
+        "low": "0.000220395341801483",
+        "close": "0.000220395341801483",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89212.238025085901602431",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791401700,
+      "publicationStatus": "published",
+      "price": "0.000220335769635502",
+      "candle": {
+        "open": "0.000220335769635502",
+        "high": "0.000220335769635502",
+        "low": "0.000220335769635502",
+        "close": "0.000220335769635502",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89188.123914332862247078",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791402000,
+      "publicationStatus": "published",
+      "price": "0.000220428177047717",
+      "candle": {
+        "open": "0.000220428177047717",
+        "high": "0.000220428177047717",
+        "low": "0.000220428177047717",
+        "close": "0.000220428177047717",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89225.528667678468116316",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791402300,
+      "publicationStatus": "published",
+      "price": "0.000220350724901904",
+      "candle": {
+        "open": "0.000220350724901904",
+        "high": "0.000220350724901904",
+        "low": "0.000220350724901904",
+        "close": "0.000220350724901904",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89194.177520180942302575",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791402600,
+      "publicationStatus": "published",
+      "price": "0.000220423047806948",
+      "candle": {
+        "open": "0.000220423047806948",
+        "high": "0.000220423047806948",
+        "low": "0.000220423047806948",
+        "close": "0.000220423047806948",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89223.452449102189843302",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791402900,
+      "publicationStatus": "published",
+      "price": "0.000220526885324316",
+      "candle": {
+        "open": "0.000220526885324316",
+        "high": "0.000220526885324316",
+        "low": "0.000220526885324316",
+        "close": "0.000220526885324316",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89265.483890433895242429",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791403200,
+      "publicationStatus": "published",
+      "price": "0.000220993637154982",
+      "candle": {
+        "open": "0.000220777327254985",
+        "high": "0.000220993637154982",
+        "low": "0.000220777327254985",
+        "close": "0.000220993637154982",
+        "coverage": "complete"
+      },
+      "volume": "21.914670991615878303",
+      "inventory": "89410.687336717703932279",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 1,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791403500,
+      "publicationStatus": "published",
+      "price": "0.000221117446912470",
+      "candle": {
+        "open": "0.000221117446912470",
+        "high": "0.000221117446912470",
+        "low": "0.000221117446912470",
+        "close": "0.000221117446912470",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89460.700274456762839903",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791403800,
+      "publicationStatus": "published",
+      "price": "0.000221155568833927",
+      "candle": {
+        "open": "0.000221155568833927",
+        "high": "0.000221155568833927",
+        "low": "0.000221155568833927",
+        "close": "0.000221155568833927",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89476.123742463321155504",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791404100,
+      "publicationStatus": "published",
+      "price": "0.000221260846536525",
+      "candle": {
+        "open": "0.000221260846536525",
+        "high": "0.000221260846536525",
+        "low": "0.000221260846536525",
+        "close": "0.000221260846536525",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89518.718674537107788579",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791404400,
+      "publicationStatus": "published",
+      "price": "0.000221259730123917",
+      "candle": {
+        "open": "0.000221259730123917",
+        "high": "0.000221259730123917",
+        "low": "0.000221259730123917",
+        "close": "0.000221259730123917",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89518.266993358563030889",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791404700,
+      "publicationStatus": "published",
+      "price": "0.000221327360693201",
+      "candle": {
+        "open": "0.000221327360693201",
+        "high": "0.000221327360693201",
+        "low": "0.000221327360693201",
+        "close": "0.000221327360693201",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89545.632122107265716003",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791405000,
+      "publicationStatus": "published",
+      "price": "0.000221146646897954",
+      "candle": {
+        "open": "0.000221146646897954",
+        "high": "0.000221146646897954",
+        "low": "0.000221146646897954",
+        "close": "0.000221146646897954",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89472.518452204570473718",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791405300,
+      "publicationStatus": "published",
+      "price": "0.000220749970088094",
+      "candle": {
+        "open": "0.000220749970088094",
+        "high": "0.000220749970088094",
+        "low": "0.000220749970088094",
+        "close": "0.000220749970088094",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.029889090020863981",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791405600,
+      "publicationStatus": "published",
+      "price": "0.000220733865844030",
+      "candle": {
+        "open": "0.000220733865844030",
+        "high": "0.000220733865844030",
+        "low": "0.000220733865844030",
+        "close": "0.000220733865844030",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89305.514215179456812248",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791405900,
+      "publicationStatus": "published",
+      "price": "0.000220895614769727",
+      "candle": {
+        "open": "0.000220895614769727",
+        "high": "0.000220895614769727",
+        "low": "0.000220895614769727",
+        "close": "0.000220895614769727",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89370.954978571903476840",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791406200,
+      "publicationStatus": "published",
+      "price": "0.000220964772798269",
+      "candle": {
+        "open": "0.000220964772798269",
+        "high": "0.000220964772798269",
+        "low": "0.000220964772798269",
+        "close": "0.000220964772798269",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89398.935116080004912588",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791406500,
+      "publicationStatus": "published",
+      "price": "0.000221022874452616",
+      "candle": {
+        "open": "0.000221022874452616",
+        "high": "0.000221022874452616",
+        "low": "0.000221022874452616",
+        "close": "0.000221022874452616",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89422.442038502105872431",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791406800,
+      "publicationStatus": "published",
+      "price": "0.000221058396397502",
+      "candle": {
+        "open": "0.000221058396397502",
+        "high": "0.000221058396397502",
+        "low": "0.000221058396397502",
+        "close": "0.000221058396397502",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89436.813601792208614448",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791407100,
+      "publicationStatus": "published",
+      "price": "0.000221028129717908",
+      "candle": {
+        "open": "0.000221028129717908",
+        "high": "0.000221028129717908",
+        "low": "0.000221028129717908",
+        "close": "0.000221028129717908",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89424.568227712684294950",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791407400,
+      "publicationStatus": "published",
+      "price": "0.000220908480901343",
+      "candle": {
+        "open": "0.000220908480901343",
+        "high": "0.000220908480901343",
+        "low": "0.000220908480901343",
+        "close": "0.000220908480901343",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89376.160286396425865475",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791407700,
+      "publicationStatus": "published",
+      "price": "0.000220914120907533",
+      "candle": {
+        "open": "0.000220914120907533",
+        "high": "0.000220914120907533",
+        "low": "0.000220914120907533",
+        "close": "0.000220914120907533",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89378.434797081719778544",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791408000,
+      "publicationStatus": "published",
+      "price": "0.000220920498080485",
+      "candle": {
+        "open": "0.000220920498080485",
+        "high": "0.000220920498080485",
+        "low": "0.000220920498080485",
+        "close": "0.000220920498080485",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89381.012984743184248271",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791408300,
+      "publicationStatus": "published",
+      "price": "0.000220835811627970",
+      "candle": {
+        "open": "0.000220835811627970",
+        "high": "0.000220835811627970",
+        "low": "0.000220835811627970",
+        "close": "0.000220835811627970",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89346.750317449127550655",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791408600,
+      "publicationStatus": "published",
+      "price": "0.000220687397002245",
+      "candle": {
+        "open": "0.000220687397002245",
+        "high": "0.000220687397002245",
+        "low": "0.000220687397002245",
+        "close": "0.000220687397002245",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89286.704338526438241693",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791408900,
+      "publicationStatus": "published",
+      "price": "0.000220635794361035",
+      "candle": {
+        "open": "0.000220635794361035",
+        "high": "0.000220635794361035",
+        "low": "0.000220635794361035",
+        "close": "0.000220635794361035",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89265.820025361154176256",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791409200,
+      "publicationStatus": "published",
+      "price": "0.000220535149079888",
+      "candle": {
+        "open": "0.000220535149079888",
+        "high": "0.000220535149079888",
+        "low": "0.000220535149079888",
+        "close": "0.000220535149079888",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89225.100696154992321256",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791409500,
+      "publicationStatus": "published",
+      "price": "0.000220536566299449",
+      "candle": {
+        "open": "0.000220536566299449",
+        "high": "0.000220536566299449",
+        "low": "0.000220536566299449",
+        "close": "0.000220536566299449",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89225.666591288014699312",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791409800,
+      "publicationStatus": "published",
+      "price": "0.000220434090836112",
+      "candle": {
+        "open": "0.000220434090836112",
+        "high": "0.000220434090836112",
+        "low": "0.000220434090836112",
+        "close": "0.000220434090836112",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89184.206300114323882910",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791410100,
+      "publicationStatus": "published",
+      "price": "0.000220533144638662",
+      "candle": {
+        "open": "0.000220533144638662",
+        "high": "0.000220533144638662",
+        "low": "0.000220533144638662",
+        "close": "0.000220533144638662",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89224.281470167229624769",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791410400,
+      "publicationStatus": "published",
+      "price": "0.000220495104571782",
+      "candle": {
+        "open": "0.000220495104571782",
+        "high": "0.000220495104571782",
+        "low": "0.000220495104571782",
+        "close": "0.000220495104571782",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89208.891122747779053696",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791410700,
+      "publicationStatus": "published",
+      "price": "0.000220496065492865",
+      "candle": {
+        "open": "0.000220496065492865",
+        "high": "0.000220496065492865",
+        "low": "0.000220496065492865",
+        "close": "0.000220496065492865",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89209.279894653678489129",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791411000,
+      "publicationStatus": "published",
+      "price": "0.000220617485942210",
+      "candle": {
+        "open": "0.000220617485942210",
+        "high": "0.000220617485942210",
+        "low": "0.000220617485942210",
+        "close": "0.000220617485942210",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89258.375951792517940487",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791411300,
+      "publicationStatus": "published",
+      "price": "0.000220422683483719",
+      "candle": {
+        "open": "0.000220422683483719",
+        "high": "0.000220422683483719",
+        "low": "0.000220422683483719",
+        "close": "0.000220422683483719",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89179.551342212658425082",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791411600,
+      "publicationStatus": "published",
+      "price": "0.000220661119417884",
+      "candle": {
+        "open": "0.000220661119417884",
+        "high": "0.000220661119417884",
+        "low": "0.000220661119417884",
+        "close": "0.000220661119417884",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89276.018316889084939270",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791411900,
+      "publicationStatus": "published",
+      "price": "0.000220659995834739",
+      "candle": {
+        "open": "0.000220659995834739",
+        "high": "0.000220659995834739",
+        "low": "0.000220659995834739",
+        "close": "0.000220659995834739",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89275.563551434842433817",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791412200,
+      "publicationStatus": "published",
+      "price": "0.000220751611540945",
+      "candle": {
+        "open": "0.000220751611540945",
+        "high": "0.000220751611540945",
+        "low": "0.000220751611540945",
+        "close": "0.000220751611540945",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.629650647154539699",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791412500,
+      "publicationStatus": "published",
+      "price": "0.000220752539528588",
+      "candle": {
+        "open": "0.000220752539528588",
+        "high": "0.000220752539528588",
+        "low": "0.000220752539528588",
+        "close": "0.000220752539528588",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.999942837498297001",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791412800,
+      "publicationStatus": "published",
+      "price": "0.000220752152884132",
+      "candle": {
+        "open": "0.000220752152884132",
+        "high": "0.000220752152884132",
+        "low": "0.000220752152884132",
+        "close": "0.000220752152884132",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.839293146516239687",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791413100,
+      "publicationStatus": "published",
+      "price": "0.000220751018990136",
+      "candle": {
+        "open": "0.000220751018990136",
+        "high": "0.000220751018990136",
+        "low": "0.000220751018990136",
+        "close": "0.000220751018990136",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.379963897455315860",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791413400,
+      "publicationStatus": "published",
+      "price": "0.000220750277552818",
+      "candle": {
+        "open": "0.000220750277552818",
+        "high": "0.000220750277552818",
+        "low": "0.000220750277552818",
+        "close": "0.000220750277552818",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89312.079635702020948677",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791413700,
+      "publicationStatus": "published",
+      "price": "0.000220771781582362",
+      "candle": {
+        "open": "0.000220771781582362",
+        "high": "0.000220771781582362",
+        "low": "0.000220771781582362",
+        "close": "0.000220771781582362",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89320.780690609590167282",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791414000,
+      "publicationStatus": "published",
+      "price": "0.000220770513609948",
+      "candle": {
+        "open": "0.000220770513609948",
+        "high": "0.000220770513609948",
+        "low": "0.000220770513609948",
+        "close": "0.000220770513609948",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89320.267688901579484233",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791414300,
+      "publicationStatus": "published",
+      "price": "0.000220644194970252",
+      "candle": {
+        "open": "0.000220644194970252",
+        "high": "0.000220644194970252",
+        "low": "0.000220644194970252",
+        "close": "0.000220644194970252",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89269.161400356250563779",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791414600,
+      "publicationStatus": "published",
+      "price": "0.000220572268266811",
+      "candle": {
+        "open": "0.000220572268266811",
+        "high": "0.000220572268266811",
+        "low": "0.000220572268266811",
+        "close": "0.000220572268266811",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89240.057816093339311809",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791414900,
+      "publicationStatus": "published",
+      "price": "0.000220899298486464",
+      "candle": {
+        "open": "0.000220899298486464",
+        "high": "0.000220899298486464",
+        "low": "0.000220899298486464",
+        "close": "0.000220899298486464",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89372.368396262855547322",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791415200,
+      "publicationStatus": "published",
+      "price": "0.000220983938529360",
+      "candle": {
+        "open": "0.000220983938529360",
+        "high": "0.000220983938529360",
+        "low": "0.000220983938529360",
+        "close": "0.000220983938529360",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89406.610115040268851016",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791415500,
+      "publicationStatus": "published",
+      "price": "0.000221188812819735",
+      "candle": {
+        "open": "0.000221188812819735",
+        "high": "0.000221188812819735",
+        "low": "0.000221188812819735",
+        "close": "0.000221188812819735",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89489.498625788371209595",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791415800,
+      "publicationStatus": "published",
+      "price": "0.000221369666275188",
+      "candle": {
+        "open": "0.000221369666275188",
+        "high": "0.000221369666275188",
+        "low": "0.000221369666275188",
+        "close": "0.000221369666275188",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89562.669155836101595418",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791416100,
+      "publicationStatus": "published",
+      "price": "0.000221293433353529",
+      "candle": {
+        "open": "0.000221293433353529",
+        "high": "0.000221293433353529",
+        "low": "0.000221293433353529",
+        "close": "0.000221293433353529",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89531.826665104399712473",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791416400,
+      "publicationStatus": "published",
+      "price": "0.000221237173067736",
+      "candle": {
+        "open": "0.000221237173067736",
+        "high": "0.000221237173067736",
+        "low": "0.000221237173067736",
+        "close": "0.000221237173067736",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89509.050175217932373516",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791416700,
+      "publicationStatus": "published",
+      "price": "0.000221225529008270",
+      "candle": {
+        "open": "0.000221225529008270",
+        "high": "0.000221225529008270",
+        "low": "0.000221225529008270",
+        "close": "0.000221225529008270",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89504.327353693863127807",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791417000,
+      "publicationStatus": "published",
+      "price": "0.000221134749963137",
+      "candle": {
+        "open": "0.000221134749963137",
+        "high": "0.000221134749963137",
+        "low": "0.000221134749963137",
+        "close": "0.000221134749963137",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89467.600360186266850380",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791417300,
+      "publicationStatus": "published",
+      "price": "0.000221134625001935",
+      "candle": {
+        "open": "0.000221134625001935",
+        "high": "0.000221134625001935",
+        "low": "0.000221134625001935",
+        "close": "0.000221134625001935",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89467.549803111065564801",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791417600,
+      "publicationStatus": "published",
+      "price": "0.000220993489064108",
+      "candle": {
+        "open": "0.000220993489064108",
+        "high": "0.000220993489064108",
+        "low": "0.000220993489064108",
+        "close": "0.000220993489064108",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89410.449653495076799008",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791417900,
+      "publicationStatus": "published",
+      "price": "0.000220958666464417",
+      "candle": {
+        "open": "0.000220958666464417",
+        "high": "0.000220958666464417",
+        "low": "0.000220958666464417",
+        "close": "0.000220958666464417",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89396.354158196295268037",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791418200,
+      "publicationStatus": "published",
+      "price": "0.000220876406630537",
+      "candle": {
+        "open": "0.000220876406630537",
+        "high": "0.000220876406630537",
+        "low": "0.000220876406630537",
+        "close": "0.000220876406630537",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89363.073297928635146243",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791418500,
+      "publicationStatus": "published",
+      "price": "0.000221190850332190",
+      "candle": {
+        "open": "0.000221190850332190",
+        "high": "0.000221190850332190",
+        "low": "0.000221190850332190",
+        "close": "0.000221190850332190",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89490.291606100919442610",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791418800,
+      "publicationStatus": "published",
+      "price": "0.000221093890920956",
+      "candle": {
+        "open": "0.000221093890920956",
+        "high": "0.000221093890920956",
+        "low": "0.000221093890920956",
+        "close": "0.000221093890920956",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89451.063559255798219027",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791419100,
+      "publicationStatus": "published",
+      "price": "0.000220991013907921",
+      "candle": {
+        "open": "0.000220991013907921",
+        "high": "0.000220991013907921",
+        "low": "0.000220991013907921",
+        "close": "0.000220991013907921",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89409.441356364230596081",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791419400,
+      "publicationStatus": "published",
+      "price": "0.000220989807709695",
+      "candle": {
+        "open": "0.000220989807709695",
+        "high": "0.000220989807709695",
+        "low": "0.000220989807709695",
+        "close": "0.000220989807709695",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89408.934593314382426466",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791419700,
+      "publicationStatus": "published",
+      "price": "0.000220950590022577",
+      "candle": {
+        "open": "0.000220950590022577",
+        "high": "0.000220950590022577",
+        "low": "0.000220950590022577",
+        "close": "0.000220950590022577",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89393.067814561162340005",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791420000,
+      "publicationStatus": "published",
+      "price": "0.000220952322027349",
+      "candle": {
+        "open": "0.000220952322027349",
+        "high": "0.000220952322027349",
+        "low": "0.000220952322027349",
+        "close": "0.000220952322027349",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89393.756164619572399234",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791420300,
+      "publicationStatus": "published",
+      "price": "0.000221210843214445",
+      "candle": {
+        "open": "0.000221210843214445",
+        "high": "0.000221210843214445",
+        "low": "0.000221210843214445",
+        "close": "0.000221210843214445",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89498.350987023596380541",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791420600,
+      "publicationStatus": "published",
+      "price": "0.000221258698953081",
+      "candle": {
+        "open": "0.000221258698953081",
+        "high": "0.000221258698953081",
+        "low": "0.000221258698953081",
+        "close": "0.000221258698953081",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89517.712557909406226816",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791420900,
+      "publicationStatus": "published",
+      "price": "0.000221291281037034",
+      "candle": {
+        "open": "0.000221291281037034",
+        "high": "0.000221291281037034",
+        "low": "0.000221291281037034",
+        "close": "0.000221291281037034",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89530.888449432534366491",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791421200,
+      "publicationStatus": "published",
+      "price": "0.000221759536421571",
+      "candle": {
+        "open": "0.000221759536421571",
+        "high": "0.000221759536421571",
+        "low": "0.000221759536421571",
+        "close": "0.000221759536421571",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89720.297773646731655975",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791421500,
+      "publicationStatus": "published",
+      "price": "0.000221988712915910",
+      "candle": {
+        "open": "0.000221988712915910",
+        "high": "0.000221988712915910",
+        "low": "0.000221988712915910",
+        "close": "0.000221988712915910",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89813.018819573481600365",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791421800,
+      "publicationStatus": "published",
+      "price": "0.000221761922240996",
+      "candle": {
+        "open": "0.000221761922240996",
+        "high": "0.000221761922240996",
+        "low": "0.000221761922240996",
+        "close": "0.000221761922240996",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89721.244840265077665632",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791422100,
+      "publicationStatus": "published",
+      "price": "0.000221749602672157",
+      "candle": {
+        "open": "0.000221749602672157",
+        "high": "0.000221749602672157",
+        "low": "0.000221749602672157",
+        "close": "0.000221749602672157",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89716.213400967421988277",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791422400,
+      "publicationStatus": "published",
+      "price": "0.000221328518498894",
+      "candle": {
+        "open": "0.000221328518498894",
+        "high": "0.000221328518498894",
+        "low": "0.000221328518498894",
+        "close": "0.000221328518498894",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89545.868172555499239194",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791422700,
+      "publicationStatus": "published",
+      "price": "0.000221631556299714",
+      "candle": {
+        "open": "0.000221631556299714",
+        "high": "0.000221631556299714",
+        "low": "0.000221631556299714",
+        "close": "0.000221631556299714",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89668.496434509778692470",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791423000,
+      "publicationStatus": "published",
+      "price": "0.000221922380389134",
+      "candle": {
+        "open": "0.000221922380389134",
+        "high": "0.000221922380389134",
+        "low": "0.000221922380389134",
+        "close": "0.000221922380389134",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89786.188691965749745315",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791423300,
+      "publicationStatus": "published",
+      "price": "0.000221826443920064",
+      "candle": {
+        "open": "0.000221826443920064",
+        "high": "0.000221826443920064",
+        "low": "0.000221826443920064",
+        "close": "0.000221826443920064",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89747.399079540329165638",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791423600,
+      "publicationStatus": "published",
+      "price": "0.000221798534345295",
+      "candle": {
+        "open": "0.000221798534345295",
+        "high": "0.000221798534345295",
+        "low": "0.000221798534345295",
+        "close": "0.000221798534345295",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89736.131190660369692561",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791423900,
+      "publicationStatus": "published",
+      "price": "0.000221809155858910",
+      "candle": {
+        "open": "0.000221809155858910",
+        "high": "0.000221809155858910",
+        "low": "0.000221809155858910",
+        "close": "0.000221809155858910",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89740.428164678951674348",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791424200,
+      "publicationStatus": "published",
+      "price": "0.000221696956546562",
+      "candle": {
+        "open": "0.000221696956546562",
+        "high": "0.000221696956546562",
+        "low": "0.000221696956546562",
+        "close": "0.000221696956546562",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89695.048418497568115812",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791424500,
+      "publicationStatus": "published",
+      "price": "0.000221420191828057",
+      "candle": {
+        "open": "0.000221419342536295",
+        "high": "0.000221506885880651",
+        "low": "0.000221419342536295",
+        "close": "0.000221420191828057",
+        "coverage": "complete"
+      },
+      "volume": "17.630971483134611452",
+      "inventory": "89582.738246893104489761",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 2,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791424800,
+      "publicationStatus": "published",
+      "price": "0.000221592162563265",
+      "candle": {
+        "open": "0.000221592162563265",
+        "high": "0.000221592162563265",
+        "low": "0.000221592162563265",
+        "close": "0.000221592162563265",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89652.657617706089343343",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791425100,
+      "publicationStatus": "published",
+      "price": "0.000221413733629493",
+      "candle": {
+        "open": "0.000221413733629493",
+        "high": "0.000221413733629493",
+        "low": "0.000221413733629493",
+        "close": "0.000221413733629493",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89580.468456218019335771",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791425400,
+      "publicationStatus": "published",
+      "price": "0.000221319641008972",
+      "candle": {
+        "open": "0.000221319641008972",
+        "high": "0.000221319641008972",
+        "low": "0.000221319641008972",
+        "close": "0.000221319641008972",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89542.403002887006055839",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791425700,
+      "publicationStatus": "published",
+      "price": "0.000221150296850340",
+      "candle": {
+        "open": "0.000221150296850340",
+        "high": "0.000221150296850340",
+        "low": "0.000221150296850340",
+        "close": "0.000221150296850340",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89473.894008162198852464",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791426000,
+      "publicationStatus": "published",
+      "price": "0.000221312608937867",
+      "candle": {
+        "open": "0.000221312608937867",
+        "high": "0.000221312608937867",
+        "low": "0.000221312608937867",
+        "close": "0.000221312608937867",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89539.564710420740886503",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791426300,
+      "publicationStatus": "published",
+      "price": "0.000221416870683478",
+      "candle": {
+        "open": "0.000221416870683478",
+        "high": "0.000221416870683478",
+        "low": "0.000221416870683478",
+        "close": "0.000221416870683478",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89581.747156201850847884",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791426600,
+      "publicationStatus": "published",
+      "price": "0.000221511092941886",
+      "candle": {
+        "open": "0.000221511092941886",
+        "high": "0.000221511092941886",
+        "low": "0.000221511092941886",
+        "close": "0.000221511092941886",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89619.868054582930886784",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791426900,
+      "publicationStatus": "published",
+      "price": "0.000221702999557726",
+      "candle": {
+        "open": "0.000221702999557726",
+        "high": "0.000221702999557726",
+        "low": "0.000221702999557726",
+        "close": "0.000221702999557726",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89697.510082456817293415",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791427200,
+      "publicationStatus": "published",
+      "price": "0.000221857502056520",
+      "candle": {
+        "open": "0.000221857502056520",
+        "high": "0.000221857502056520",
+        "low": "0.000221857502056520",
+        "close": "0.000221857502056520",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89760.019052337265567861",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791427500,
+      "publicationStatus": "published",
+      "price": "0.000221924274793071",
+      "candle": {
+        "open": "0.000221924274793071",
+        "high": "0.000221924274793071",
+        "low": "0.000221924274793071",
+        "close": "0.000221924274793071",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89787.034117222308101776",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791427800,
+      "publicationStatus": "published",
+      "price": "0.000221618474874825",
+      "candle": {
+        "open": "0.000221618474874825",
+        "high": "0.000221618474874825",
+        "low": "0.000221618474874825",
+        "close": "0.000221618474874825",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89663.312914976546163841",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791428100,
+      "publicationStatus": "published",
+      "price": "0.000221575210636559",
+      "candle": {
+        "open": "0.000221575210636559",
+        "high": "0.000221575210636559",
+        "low": "0.000221575210636559",
+        "close": "0.000221575210636559",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89645.818565170399070527",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791428400,
+      "publicationStatus": "published",
+      "price": "0.000221199981338701",
+      "candle": {
+        "open": "0.000221199981338701",
+        "high": "0.000221199981338701",
+        "low": "0.000221199981338701",
+        "close": "0.000221199981338701",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89494.007517205240048865",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791428700,
+      "publicationStatus": "published",
+      "price": "0.000220895580212819",
+      "candle": {
+        "open": "0.000220895580212819",
+        "high": "0.000220895580212819",
+        "low": "0.000220895580212819",
+        "close": "0.000220895580212819",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89370.866666421252851341",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791429000,
+      "publicationStatus": "published",
+      "price": "0.000220806899986397",
+      "candle": {
+        "open": "0.000220806899986397",
+        "high": "0.000220806899986397",
+        "low": "0.000220806899986397",
+        "close": "0.000220806899986397",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89334.988213131706402634",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791429300,
+      "publicationStatus": "published",
+      "price": "0.000220600134151762",
+      "candle": {
+        "open": "0.000220600134151762",
+        "high": "0.000220600134151762",
+        "low": "0.000220600134151762",
+        "close": "0.000220600134151762",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89251.334416314583573950",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791429600,
+      "publicationStatus": "published",
+      "price": "0.000220780231938052",
+      "candle": {
+        "open": "0.000220780231938052",
+        "high": "0.000220780231938052",
+        "low": "0.000220780231938052",
+        "close": "0.000220780231938052",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89324.198790815817343045",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791429900,
+      "publicationStatus": "published",
+      "price": "0.000220854127707510",
+      "candle": {
+        "open": "0.000220854127707510",
+        "high": "0.000220854127707510",
+        "low": "0.000220854127707510",
+        "close": "0.000220854127707510",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89354.103168157476315446",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791430200,
+      "publicationStatus": "published",
+      "price": "0.000220677768021036",
+      "candle": {
+        "open": "0.000220677768021036",
+        "high": "0.000220677768021036",
+        "low": "0.000220677768021036",
+        "close": "0.000220677768021036",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89282.749534529754104210",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791430500,
+      "publicationStatus": "published",
+      "price": "0.000220661860771368",
+      "candle": {
+        "open": "0.000220661860771368",
+        "high": "0.000220661860771368",
+        "low": "0.000220661860771368",
+        "close": "0.000220661860771368",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89276.300757945056831182",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791430800,
+      "publicationStatus": "published",
+      "price": "0.000220531523139418",
+      "candle": {
+        "open": "0.000220531523139418",
+        "high": "0.000220531523139418",
+        "low": "0.000220531523139418",
+        "close": "0.000220531523139418",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89223.568463944914964461",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791431100,
+      "publicationStatus": "published",
+      "price": "0.000220541840278709",
+      "candle": {
+        "open": "0.000220541840278709",
+        "high": "0.000220541840278709",
+        "low": "0.000220541840278709",
+        "close": "0.000220541840278709",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89227.742576836544793381",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791431400,
+      "publicationStatus": "published",
+      "price": "0.000220304302480239",
+      "candle": {
+        "open": "0.000220304302480239",
+        "high": "0.000220304302480239",
+        "low": "0.000220304302480239",
+        "close": "0.000220304302480239",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89131.638889323894564159",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791431700,
+      "publicationStatus": "published",
+      "price": "0.000220252243246302",
+      "candle": {
+        "open": "0.000220252243246302",
+        "high": "0.000220252243246302",
+        "low": "0.000220252243246302",
+        "close": "0.000220252243246302",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89110.576700402849925465",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791432000,
+      "publicationStatus": "published",
+      "price": "0.000219978454409164",
+      "candle": {
+        "open": "0.000219978454409164",
+        "high": "0.000219978454409164",
+        "low": "0.000219978454409164",
+        "close": "0.000219978454409164",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88999.806587743128569048",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791432300,
+      "publicationStatus": "published",
+      "price": "0.000220422738676603",
+      "candle": {
+        "open": "0.000220422738676603",
+        "high": "0.000220422738676603",
+        "low": "0.000220422738676603",
+        "close": "0.000220422738676603",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89179.556130754118030451",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791432600,
+      "publicationStatus": "published",
+      "price": "0.000220026976207972",
+      "candle": {
+        "open": "0.000220026976207972",
+        "high": "0.000220026976207972",
+        "low": "0.000220026976207972",
+        "close": "0.000220026976207972",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89019.437647857302723669",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791432900,
+      "publicationStatus": "published",
+      "price": "0.000219731616031068",
+      "candle": {
+        "open": "0.000219731616031068",
+        "high": "0.000219731616031068",
+        "low": "0.000219731616031068",
+        "close": "0.000219731616031068",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88899.940153318326669257",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791433200,
+      "publicationStatus": "published",
+      "price": "0.000220245130464858",
+      "candle": {
+        "open": "0.000220245130464858",
+        "high": "0.000220245130464858",
+        "low": "0.000220245130464858",
+        "close": "0.000220245130464858",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89107.750323126309162547",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791433500,
+      "publicationStatus": "published",
+      "price": "0.000220860654243507",
+      "candle": {
+        "open": "0.000220860654243507",
+        "high": "0.000220860654243507",
+        "low": "0.000220860654243507",
+        "close": "0.000220860654243507",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89356.757893332484309073",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791433800,
+      "publicationStatus": "published",
+      "price": "0.000220601998228994",
+      "candle": {
+        "open": "0.000220601998228994",
+        "high": "0.000220601998228994",
+        "low": "0.000220601998228994",
+        "close": "0.000220601998228994",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89252.110217278014504584",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791434100,
+      "publicationStatus": "published",
+      "price": "0.000219988671470283",
+      "candle": {
+        "open": "0.000219988671470283",
+        "high": "0.000219988671470283",
+        "low": "0.000219988671470283",
+        "close": "0.000219988671470283",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89003.962737160281118104",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791434400,
+      "publicationStatus": "published",
+      "price": "0.000219820050002857",
+      "candle": {
+        "open": "0.000219820050002857",
+        "high": "0.000219820050002857",
+        "low": "0.000219820050002857",
+        "close": "0.000219820050002857",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88935.741444401603523473",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791434700,
+      "publicationStatus": "published",
+      "price": "0.000219907170004925",
+      "candle": {
+        "open": "0.000219907170004925",
+        "high": "0.000219907170004925",
+        "low": "0.000219907170004925",
+        "close": "0.000219907170004925",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "88970.986210186929235344",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791435000,
+      "publicationStatus": "published",
+      "price": "0.000220183807968328",
+      "candle": {
+        "open": "0.000220183807968328",
+        "high": "0.000220183807968328",
+        "low": "0.000220183807968328",
+        "close": "0.000220183807968328",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89082.892724835922227584",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791435300,
+      "publicationStatus": "published",
+      "price": "0.000220013871167372",
+      "candle": {
+        "open": "0.000220013871167372",
+        "high": "0.000220013871167372",
+        "low": "0.000220013871167372",
+        "close": "0.000220013871167372",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89014.139303017735227846",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791435600,
+      "publicationStatus": "published",
+      "price": "0.000220106878601107",
+      "candle": {
+        "open": "0.000220106878601107",
+        "high": "0.000220106878601107",
+        "low": "0.000220106878601107",
+        "close": "0.000220106878601107",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89051.768592626380406076",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    },
+    {
+      "timestamp": 1791435900,
+      "publicationStatus": "published",
+      "price": "0.000220101763683556",
+      "candle": {
+        "open": "0.000220101763683556",
+        "high": "0.000220101763683556",
+        "low": "0.000220101763683556",
+        "close": "0.000220101763683556",
+        "coverage": "reference-only"
+      },
+      "volume": "0.000000000000000000",
+      "inventory": "89049.699596746710560866",
+      "volumeStatus": "complete",
+      "inventoryStatus": "complete",
+      "tradeCount": 0,
+      "eventCoverage": "complete"
+    }
+  ],
+  "removedTimestamps": []
+}

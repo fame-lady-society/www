@@ -166,6 +166,11 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
 
       <section className="relative z-10 mx-auto -mt-10 max-w-[1320px] px-4 sm:px-8">
         <FameMarketBoard market={market} />
+        <div className="mt-5 flex justify-end">
+          <TextLink href="/fame/chart">
+            View the FAME chart <Arrow />
+          </TextLink>
+        </div>
       </section>
 
       <section className="relative z-10 mx-auto mt-6 max-w-[1320px] px-4 sm:px-8">

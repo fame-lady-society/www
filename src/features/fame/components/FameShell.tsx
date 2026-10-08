@@ -19,6 +19,7 @@ const fameDestinations: ReadonlyArray<{
   page: FameNavigationPage;
 }> = [
   { href: "/fame", label: "FAME", page: "landing" },
+  { href: "/fame/chart", label: "Chart", page: "chart" },
   { href: "/fame/market", label: "Market", page: "marketplace" },
   { href: "/fame/gallery", label: "Gallery", page: "gallery" },
   { href: "/fame/rotate", label: "Rotate", page: "rotator" },

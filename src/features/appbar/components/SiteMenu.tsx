@@ -9,6 +9,7 @@ import DollarIcon from "@mui/icons-material/MonetizationOn";
 import PersonIcon from "@mui/icons-material/Person";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import { FC } from "react";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import { WrappedLink } from "@/components/WrappedLink";
@@ -76,6 +77,16 @@ export const SiteMenu: FC<{
             </Typography>
           }
         />
+      </MenuItem>
+      <MenuItem
+        component={WrappedLink}
+        href="/fame/chart"
+        disabled={activeFamePage === "chart"}
+      >
+        <ListItemIcon>
+          <ShowChartIcon />
+        </ListItemIcon>
+        <ListItemText primary="FAME Chart" />
       </MenuItem>
       <MenuItem
         component={WrappedLink}
