@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import {
   closedDay,
+  DAY,
   parseChart,
   mergeChart,
   combineCharts,
@@ -16,16 +18,26 @@ export class HistoryFetchError extends Error {
     super(code);
   }
 }
-export function useHistory(currency: Currency, series: string[]) {
+export function useHistory(
+  currency: Currency,
+  series: string[],
+  preloadOlder = true,
+) {
   const client = useQueryClient();
+  const [pages, setPages] = useState(preloadOlder ? 1 : 0);
+  // Keep an older day loaded behind the initial 24-hour viewport.
+  const requests = Array.from({ length: pages + 1 }, (_, page) =>
+    series.map((id) => ({ id, page })),
+  ).flat();
   const queries = useQueries({
-    queries: series.map((id) => {
-      const queryKey = ["fame-chart-v1", currency, id, "24h"];
+    queries: requests.map(({ id, page }) => {
+      const queryKey = ["fame-chart-v1", currency, id, "latest", page];
       return {
         queryKey,
         queryFn: async ({ signal }: { signal: AbortSignal }) => {
           const previous = client.getQueryData<ChartState>(queryKey),
-            bounds = closedDay();
+            end = closedDay().to - page * DAY,
+            bounds = { from: end - DAY, to: end };
           let cursor = previous?.cursor;
           for (let attempt = 0; attempt < 2; attempt++) {
             const expected = {
@@ -81,11 +93,29 @@ export function useHistory(currency: Currency, series: string[]) {
       };
     }),
   });
-  const states = queries.flatMap((q) => (q.data ? [q.data] : []));
+  const readySeries = new Set(
+    queries
+      .slice(0, series.length)
+      .flatMap((q) => (q.data ? [q.data.series] : [])),
+  );
+  const states = queries.flatMap((q) =>
+    q.data && readySeries.has(q.data.series) ? [q.data] : [],
+  );
+  const data = combineCharts(states);
+  const isFetching = queries.some((q) => q.isFetching);
   return {
-    data: combineCharts(states),
+    data,
+    loadOlder: () => {
+      if (
+        isFetching ||
+        queries.some((q) => q.error) ||
+        data?.buckets[0]?.publicationStatus === "outside-published-window"
+      )
+        return;
+      setPages(pages + 1);
+    },
     error: queries.find((q) => q.error)?.error ?? null,
-    isFetching: queries.some((q) => q.isFetching),
+    isFetching,
     loadingSeries: series.filter((_, i) => !queries[i].data),
     refetch: () => Promise.all(queries.map((q) => q.refetch())),
   };

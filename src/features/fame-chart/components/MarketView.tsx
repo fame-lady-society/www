@@ -1,4 +1,5 @@
 "use client";
+import { TransactionTable } from "./TransactionTable";
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { HistoryTable } from "./HistoryTable";
@@ -8,12 +9,11 @@ import {
   selectedPool,
   poolLabel,
   timeLabel,
-  volumeSummary,
   MARKET,
   seriesColor,
   toggleSeries,
 } from "../presentation";
-import type { Currency, History } from "../history";
+import { type Currency, type History } from "../history";
 import { HistoryFetchError } from "../useHistory";
 const MarketCanvas = dynamic(
   () => import("./MarketCanvas").then((m) => m.MarketCanvas),
@@ -23,6 +23,7 @@ const buttonClass =
   "fame-focus min-h-11 whitespace-nowrap px-4 text-sm hover:bg-[#c9aa67]/15 aria-pressed:bg-[#c9aa67] aria-pressed:text-[#0d0c0a]";
 export function MarketView({
   history,
+  onLoadOlder,
   selection,
   onSelectionChange,
   loadingSeries = [],
@@ -33,6 +34,7 @@ export function MarketView({
   onRefresh,
 }: {
   history?: History;
+  onLoadOlder?: () => void;
   selection: string[];
   onSelectionChange: (ids: string[]) => void;
   loadingSeries?: string[];
@@ -184,6 +186,7 @@ export function MarketView({
             )}
             <MarketCanvas
               history={data}
+              onLoadOlder={onLoadOlder}
               currency={currency}
               poolIds={poolIds}
               hours={hours}
@@ -285,34 +288,7 @@ export function MarketView({
           </div>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 pb-6 sm:grid-cols-2 xl:grid-cols-3">
-        {poolIds.map((id) => {
-          const last = data?.buckets.findLast(
-            (b) => selectedPool(b, id)?.price != null,
-          );
-          const summary = volumeSummary(rows, id);
-          return (
-            <div key={id} className="min-w-0">
-              <p className="text-sm" style={{ color: seriesColor(id) }}>
-                {poolLabel(id)} · {currency} per FAME
-              </p>
-              <p className="mt-2 text-2xl tabular-nums">
-                {formatDecimal(last && selectedPool(last, id)?.price)}
-              </p>
-              <p className="mt-2 text-xs text-[#bdb4a4]">
-                {last
-                  ? `${timeLabel(last.timestamp, true)} UTC`
-                  : "No price available"}
-              </p>
-              <p className="mt-2 text-xs tabular-nums text-[#bdb4a4]">
-                {summary.incomplete ? "Recorded" : `${hours}h`}{" "}
-                {id === MARKET ? "market" : "pool"} volume:{" "}
-                {formatDecimal(summary.value)} {currency}
-              </p>
-            </div>
-          );
-        })}
-      </div>
+      <TransactionTable currency={currency} />
       <p className="mt-4 text-xs leading-6 text-[#bdb4a4]">
         Blended always includes the backend’s tracked market; selecting pools
         does not recalculate it. Comparison volumes are overlaid, not added

@@ -143,3 +143,30 @@ it("preserves comparison selection and historical viewport behavior", () => {
     { from: 19, to: 39 },
   );
 });
+
+it("combines older windows without duplicating overlapping series", () => {
+  const current = mergeChart(undefined, parseChart(usdc));
+  const older = {
+    ...current,
+    from: current.from - 86400,
+    to: current.to - 86400,
+    buckets: current.buckets.map((b) => ({
+      ...b,
+      timestamp: b.timestamp - 86400,
+    })),
+  };
+  const combined = combineCharts([current, older])!;
+  assert.equal(combined.from, older.from);
+  assert.equal(combined.to, current.to);
+  assert.equal(combined.buckets.length, 576);
+  assert.deepEqual(combined.buckets[0].market.price, older.buckets[0].price);
+  assert.deepEqual(
+    refreshedViewport({ from: -60, to: 227 }, current, combined),
+    { from: 228, to: 515 },
+  );
+  const duplicate = combineCharts([
+    current,
+    { ...older, buckets: current.buckets },
+  ])!;
+  assert.equal(duplicate.buckets.at(-1)!.series.length, 1);
+});

@@ -12,6 +12,7 @@ function ChartContent() {
   const query = useHistory(currency, selection);
   return (
     <MarketView
+      onLoadOlder={query.loadOlder}
       selection={selection}
       onSelectionChange={setSelection}
       loadingSeries={query.loadingSeries}

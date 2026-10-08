@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import assert from "node:assert/strict";
 import { it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -7,21 +8,28 @@ import { HistoryFetchError } from "../useHistory";
 import { MarketView } from "./MarketView";
 const render = (props: Partial<Parameters<typeof MarketView>[0]> = {}) =>
   renderToStaticMarkup(
-    <MarketView
-      selection={["market"]}
-      onSelectionChange={() => {}}
-      currency="USDC"
-      onCurrencyChange={() => {}}
-      error={null}
-      fetching={false}
-      onRefresh={() => {}}
-      {...props}
-    />,
+    <QueryClientProvider client={new QueryClient()}>
+      <MarketView
+        selection={["market"]}
+        onSelectionChange={() => {}}
+        currency="USDC"
+        onCurrencyChange={() => {}}
+        error={null}
+        fetching={false}
+        onRefresh={() => {}}
+        {...props}
+      />
+    </QueryClientProvider>,
   );
 it("has spot candles, pool controls and explicit conversion labels", () => {
   const html = render({
     history: combineCharts([mergeChart(undefined, parseChart(fixture))])!,
   });
+  assert.match(html, /aria-label="Transactions"/);
+  assert(
+    html.indexOf('aria-label="Transactions"') <
+      html.indexOf("Blended always includes"),
+  );
   assert.match(html, /aria-label="Chart series"/);
   assert.match(html, /aria-pressed="true"[^>]*>USDC/);
   assert.match(html, /Five-minute sampled history/);
@@ -36,7 +44,7 @@ it("has spot candles, pool controls and explicit conversion labels", () => {
     html,
     /type="checkbox"[^>]*disabled=""[^>]*checked=""[^>]*value="market"/,
   );
-  assert.match(html, /market volume/);
+  assert.doesNotMatch(html, /market volume:|pool volume:/);
 });
 it("distinguishes not-ready, loading, refresh errors and currency changes", () => {
   assert.match(render(), /Loading market history/);

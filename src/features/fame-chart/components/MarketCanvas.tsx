@@ -28,6 +28,8 @@ export function MarketCanvas({
   hours,
   reset,
   onSelect,
+  onLoadOlder,
+  preview = false,
 }: {
   history: History;
   currency: Currency;
@@ -35,6 +37,8 @@ export function MarketCanvas({
   hours: number;
   reset: number;
   onSelect: (timestamp: number | null) => void;
+  onLoadOlder?: () => void;
+  preview?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
@@ -52,13 +56,14 @@ export function MarketCanvas({
   const previousSelection = useRef<string | null>(null);
   const selection = useRef<number | null>(null);
   const updating = useRef(false);
-  const latest = useRef({ history, onSelect });
+  const latest = useRef({ history, onSelect, onLoadOlder });
   useEffect(() => {
-    latest.current = { history, onSelect };
-  }, [history, onSelect]);
+    latest.current = { history, onSelect, onLoadOlder };
+  }, [history, onSelect, onLoadOlder]);
 
   useEffect(() => {
     const seriesMap = rendered.current;
+    const element = container.current!;
     const api = createChart(container.current!, {
       autoSize: true,
       layout: {
@@ -69,7 +74,7 @@ export function MarketCanvas({
         panes: {
           separatorColor: "#3b3323",
           separatorHoverColor: "#c9aa67",
-          enableResize: true,
+          enableResize: !preview,
         },
       },
       grid: { vertLines: { visible: false }, horzLines: { color: "#252119" } },
@@ -78,8 +83,6 @@ export function MarketCanvas({
         timeVisible: true,
         secondsVisible: false,
         borderColor: "#3b3323",
-        fixLeftEdge: true,
-        fixRightEdge: true,
         minBarSpacing: 0.5,
         tickMarkFormatter: (time: number) => timeLabel(time),
       },
@@ -92,9 +95,23 @@ export function MarketCanvas({
         vertLine: { color: "#c9aa67" },
         horzLine: { color: "#c9aa67" },
       },
-      handleScroll: { vertTouchDrag: false },
+      handleScroll: preview ? false : { vertTouchDrag: false },
+      handleScale: !preview,
     });
     chart.current = api;
+    // Freeze the displayed scales before a pan or wheel gesture changes time.
+    // Currency/series changes and explicit range presets fit them again.
+    const lockPriceScales = () => {
+      const item = seriesMap.values().next().value;
+      if (!item) return;
+      item.price.priceScale().applyOptions({ autoScale: false });
+      item.volume.priceScale().applyOptions({ autoScale: false });
+    };
+    element.addEventListener("pointerdown", lockPriceScales, { capture: true });
+    element.addEventListener("wheel", lockPriceScales, {
+      capture: true,
+      passive: true,
+    });
     const crosshair = (event: {
       time?: unknown;
       logical?: number | null;
@@ -112,8 +129,16 @@ export function MarketCanvas({
       selection.current = timestamp;
       current.onSelect(timestamp);
     };
+    const visibleRange = (range: { from: number; to: number } | null) => {
+      if (!updating.current && range && range.from < 12)
+        latest.current.onLoadOlder?.();
+    };
+    api.timeScale().subscribeVisibleLogicalRangeChange(visibleRange);
     api.subscribeCrosshairMove(crosshair);
     return () => {
+      element.removeEventListener("pointerdown", lockPriceScales, true);
+      element.removeEventListener("wheel", lockPriceScales, true);
+      api.timeScale().unsubscribeVisibleLogicalRangeChange(visibleRange);
       api.unsubscribeCrosshairMove(crosshair);
       api.remove(); // Also disconnects the library's autoSize ResizeObserver.
       chart.current = null;
@@ -121,7 +146,7 @@ export function MarketCanvas({
       previous.current = null;
       previousSelection.current = null;
     };
-  }, []);
+  }, [preview]);
 
   useEffect(() => {
     const api = chart.current!;
@@ -249,6 +274,10 @@ export function MarketCanvas({
 
   useEffect(() => {
     const length = latest.current.history.buckets.length;
+    for (const item of rendered.current.values()) {
+      item.price.priceScale().applyOptions({ autoScale: true });
+      item.volume.priceScale().applyOptions({ autoScale: true });
+    }
     chart.current!.timeScale().setVisibleLogicalRange({
       from: length - (hours * 3600) / INTERVAL - 0.5,
       to: length - 0.5,
@@ -258,7 +287,11 @@ export function MarketCanvas({
   return (
     <div
       ref={container}
-      className="h-[390px] w-full sm:h-[480px]"
+      className={
+        preview
+          ? "h-[260px] w-full sm:h-[320px]"
+          : "h-[390px] w-full sm:h-[480px]"
+      }
       role="img"
       aria-label={`FAME ${currency} five-minute spot candles and volume. Use the data table below for values.`}
     />

@@ -10,6 +10,7 @@ import type { FC, ReactNode } from "react";
 import { CopyToClipboard } from "@/components/CopyToClipboard";
 import { DefaultProvider } from "@/context/default";
 import { FameMarketCapCalculator } from "@/features/fame-landing/components/FameMarketCapCalculator";
+import { FameChartPreview } from "@/features/fame-chart/components/FameChartPreview";
 import { FameMarketBoard } from "@/features/fame-landing/components/FameMarketBoard";
 import type { LandingMarketPresentation } from "@/features/fame-landing/pricePresentation";
 import { FameFAQ } from "@/features/fame/components/FameFAQ";
@@ -166,11 +167,7 @@ const Content: FC<{ market: LandingMarketPresentation }> = ({ market }) => {
 
       <section className="relative z-10 mx-auto -mt-10 max-w-[1320px] px-4 sm:px-8">
         <FameMarketBoard market={market} />
-        <div className="mt-5 flex justify-end">
-          <TextLink href="/fame/chart">
-            View the FAME chart <Arrow />
-          </TextLink>
-        </div>
+        <FameChartPreview />
       </section>
 
       <section className="relative z-10 mx-auto mt-6 max-w-[1320px] px-4 sm:px-8">

@@ -340,25 +340,34 @@ export function combineCharts(states: ChartState[]): History | undefined {
         s.currency === anchor.currency &&
         s.policyRevision === anchor.policyRevision,
     );
-  const maps = valid.map((s) => ({
-    state: s,
-    buckets: new Map(s.buckets.map((b) => [b.timestamp, b])),
-  }));
+  const from = Math.min(...valid.map((s) => s.from));
+  const maps = [...valid]
+    .sort((a, b) => b.to - a.to)
+    .map((s) => ({
+      state: s,
+      buckets: new Map(s.buckets.map((b) => [b.timestamp, b])),
+    }));
   return {
     currency: anchor.currency,
-    from: anchor.from,
+    from,
     to: anchor.to,
     pools: anchor.pools,
     publishedThroughTimestamp: Math.min(
       ...valid.map((s) => s.publishedThroughTimestamp),
     ),
-    buckets: Array.from({ length: (anchor.to - anchor.from) / 300 }, (_, i) => {
-      const timestamp = anchor.from + i * 300,
+    buckets: Array.from({ length: (anchor.to - from) / 300 }, (_, i) => {
+      const timestamp = from + i * 300,
         rows = maps.flatMap(({ state, buckets }) => {
           const b = buckets.get(timestamp);
           return b ? [{ state, b }] : [];
         });
-      const m = rows.find((r) => r.state.series === "market")?.b,
+      // Adjacent rolling windows can overlap; prefer the newest window per series.
+      const uniqueRows = rows.filter(
+        (row, index) =>
+          rows.findIndex((other) => other.state.series === row.state.series) ===
+          index,
+      );
+      const m = uniqueRows.find((r) => r.state.series === "market")?.b,
         other = rows.find((r) => r.b.marketVolume)?.b.marketVolume;
       const unavailable: MarketMetric = { status: "unavailable", value: null };
       return {
@@ -384,7 +393,10 @@ export function combineCharts(states: ChartState[]): History | undefined {
                 ? "partial"
                 : "missing"),
         },
-        series: rows.map(({ state, b }) => ({ ...b, poolId: state.series })),
+        series: uniqueRows.map(({ state, b }) => ({
+          ...b,
+          poolId: state.series,
+        })),
       };
     }),
   };
