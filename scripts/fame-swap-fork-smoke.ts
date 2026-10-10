@@ -636,7 +636,9 @@ async function keepForkAliveIfRequested(
 
   console.log("");
   console.log("FAME swap fork remains running. Use this web env:");
-  console.log(`NEXT_PUBLIC_BASE_RPC_URL_1=${anvilUrl}`);
+  console.log("NEXT_PUBLIC_FAME_FORK_MODE=1");
+  console.log(`NEXT_PUBLIC_FAME_FORK_RPC_URL=${anvilUrl}`);
+  console.log(`BASE_RPC_URL=${anvilUrl}`);
   console.log(`NEXT_PUBLIC_FAME_ROUTER_ADDRESS=${routerAddress}`);
   console.log(`NEXT_PUBLIC_FAME_SWAP_SLIPPAGE_BPS=${slippageBps.toString()}`);
   console.log("Press Ctrl-C to stop the fork.");
@@ -793,11 +795,10 @@ async function deployLocalRouter(
 
 async function main(): Promise<void> {
   logProgress("starting");
-  const rpcUrl =
-    envValue("BASE_RPC_URL") ?? envValue("NEXT_PUBLIC_BASE_RPC_URL_1");
+  const rpcUrl = envValue("BASE_RPC_URL");
   if (!rpcUrl) {
     throw new Error(
-      "Set BASE_RPC_URL or NEXT_PUBLIC_BASE_RPC_URL_1 to a Base RPC URL before running the fork smoke test.",
+      "Set BASE_RPC_URL to a Base RPC URL before running the fork smoke test.",
     );
   }
 

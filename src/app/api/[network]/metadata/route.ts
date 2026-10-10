@@ -103,9 +103,9 @@ async function getBackendIrysUploader() {
     throw new Error("METADATA_PRIVATE_KEY not configured");
   }
 
-  const rpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+  const rpcUrl = process.env.BASE_RPC_URL;
   if (!rpcUrl) {
-    throw new Error("NEXT_PUBLIC_BASE_RPC_URL_1 not configured");
+    throw new Error("BASE_RPC_URL not configured");
   }
 
   return buildNodeIrysUploader({
@@ -113,7 +113,10 @@ async function getBackendIrysUploader() {
   });
 }
 
-export async function GET(request: NextRequest, props: { params: Promise<{ network: string }> }) {
+export async function GET(
+  request: NextRequest,
+  props: { params: Promise<{ network: string }> },
+) {
   const params = await props.params;
   const session = getSession(request);
   if (!session) {
@@ -216,7 +219,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ netwo
   }
 }
 
-export async function POST(request: NextRequest, props: { params: Promise<{ network: string }> }) {
+export async function POST(
+  request: NextRequest,
+  props: { params: Promise<{ network: string }> },
+) {
   const params = await props.params;
   const session = getSession(request);
   if (!session) {

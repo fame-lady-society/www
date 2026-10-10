@@ -9,19 +9,22 @@ import {
   sepolia,
 } from "viem/chains";
 
-process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON ||= JSON.stringify([
-  "http://localhost:8545",
-]);
-process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON ||= JSON.stringify([
-  "http://localhost:8545",
-]);
-process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON ||= JSON.stringify([
-  "http://localhost:8545",
-]);
-
 describe("global wagmi configuration", () => {
   it("exposes all six supported networks with explicit transports", async () => {
+    const previous = process.env.BASE_RPC_URL;
+    process.env.BASE_RPC_URL = "https://paid.example/private-test-key";
     const { chains, transports } = await import("./wagmiConfig");
+    if (previous === undefined) delete process.env.BASE_RPC_URL;
+    else process.env.BASE_RPC_URL = previous;
+    for (const chain of chains) {
+      const transport = transports[chain.id]({ chain });
+      assert.deepEqual(
+        transport.value?.transports.map(
+          (item: { value: { url: string } }) => item.value.url,
+        ),
+        chain.rpcUrls.default.http,
+      );
+    }
     const expectedIds = [
       mainnet.id,
       base.id,

@@ -2,94 +2,55 @@ import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import { baseRpcUrls, baseServerRpcUrl } from "./baseRpcUrls";
 
-const originalBaseRpcUrl1 = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
-const originalBaseRpcUrl2 = process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
-const originalBaseServerRpcUrl = process.env.BASE_RPC_URL;
-const originalFameForkMode = process.env.NEXT_PUBLIC_FAME_FORK_MODE;
-
-function restoreEnv(name: string, value: string | undefined) {
-  if (value === undefined) {
-    delete process.env[name];
-  } else {
-    process.env[name] = value;
-  }
-}
-
+const names = [
+  "BASE_RPC_URL",
+  "NEXT_PUBLIC_FAME_FORK_RPC_URL",
+  "NEXT_PUBLIC_FAME_FORK_MODE",
+] as const;
+const original = Object.fromEntries(
+  names.map((name) => [name, process.env[name]]),
+);
 afterEach(() => {
-  restoreEnv("NEXT_PUBLIC_BASE_RPC_URL_1", originalBaseRpcUrl1);
-  restoreEnv("NEXT_PUBLIC_BASE_RPC_URL_2", originalBaseRpcUrl2);
-  restoreEnv("BASE_RPC_URL", originalBaseServerRpcUrl);
-  restoreEnv("NEXT_PUBLIC_FAME_FORK_MODE", originalFameForkMode);
+  for (const name of names) {
+    if (original[name] === undefined) delete process.env[name];
+    else process.env[name] = original[name];
+  }
 });
 
-describe("baseRpcUrls", () => {
-  it("keeps configured Base RPC URLs ahead of the public fallback", () => {
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "https://primary.example";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_2 = "https://secondary.example";
-
-    assert.deepEqual(baseRpcUrls(), [
-      "https://primary.example",
-      "https://secondary.example",
-      "https://mainnet.base.org",
-    ]);
-  });
-
-  it("deduplicates the public Base fallback", () => {
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "https://mainnet.base.org";
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
-
+describe("Base RPC boundary", () => {
+  it("keeps paid server endpoints out of browser configuration", () => {
+    delete process.env.NEXT_PUBLIC_FAME_FORK_MODE;
+    process.env.BASE_RPC_URL = "https://paid.example/private-key";
     assert.deepEqual(baseRpcUrls(), ["https://mainnet.base.org"]);
+    assert.equal(baseServerRpcUrl(), "https://paid.example/private-key");
   });
-
-  it("uses only the configured loopback browser RPC in fork mode", () => {
-    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://127.0.0.1:8545";
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
-
-    assert.deepEqual(baseRpcUrls(), ["http://127.0.0.1:8545"]);
-  });
-
-  it("requires a loopback browser RPC and rejects a second RPC in fork mode", () => {
-    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
-
-    assert.throws(
-      () => baseRpcUrls(),
-      /NEXT_PUBLIC_BASE_RPC_URL_1.*fork mode/u,
-    );
-
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "https://mainnet.base.org";
-    assert.throws(() => baseRpcUrls(), /loopback/u);
-
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://localhost:8545";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_2 = "http://127.0.0.1:9545";
-    assert.throws(() => baseRpcUrls(), /NEXT_PUBLIC_BASE_RPC_URL_2/u);
-  });
-
-  it("requires the same loopback server and browser RPC in fork mode", () => {
-    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://localhost:8545";
-    delete process.env.BASE_RPC_URL;
-
-    assert.throws(() => baseServerRpcUrl(), /BASE_RPC_URL.*fork mode/u);
-
-    process.env.BASE_RPC_URL = "https://mainnet.base.org";
-    assert.throws(() => baseServerRpcUrl(), /loopback/u);
-
-    process.env.BASE_RPC_URL = "http://[::1]:8545";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://[::1]:8545";
-    assert.equal(baseServerRpcUrl(), "http://[::1]:8545");
-
-    process.env.BASE_RPC_URL = "http://127.0.0.1:8545";
-    assert.throws(() => baseServerRpcUrl(), /must match/u);
-  });
-
-  it("preserves the existing server RPC fallback outside fork mode", () => {
+  it("keeps the live server quote endpoint explicitly configured", () => {
     delete process.env.NEXT_PUBLIC_FAME_FORK_MODE;
     delete process.env.BASE_RPC_URL;
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "https://primary.example";
-
-    assert.equal(baseServerRpcUrl(), "https://primary.example");
+    assert.equal(baseServerRpcUrl(), undefined);
+  });
+  it("allows only a credential-free loopback URL in the explicit fork harness", () => {
+    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
+    for (const url of [
+      "https://paid.example/key",
+      "http://secret@localhost:8545",
+      "http://localhost:8545?key=secret",
+      "http://localhost:8545#secret",
+    ]) {
+      process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = url;
+      assert.throws(() => baseRpcUrls(), /loopback|credentials/u);
+    }
+    process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = "http://127.0.0.1:8545";
+    assert.deepEqual(baseRpcUrls(), ["http://127.0.0.1:8545"]);
+  });
+  it("requires matching server and browser fork endpoints", () => {
+    process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
+    process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = "http://localhost:8545";
+    delete process.env.BASE_RPC_URL;
+    assert.throws(() => baseServerRpcUrl(), /BASE_RPC_URL/u);
+    process.env.BASE_RPC_URL = "http://localhost:9545";
+    assert.throws(() => baseServerRpcUrl(), /must match/u);
+    process.env.BASE_RPC_URL = "http://localhost:8545";
+    assert.equal(baseServerRpcUrl(), "http://localhost:8545");
   });
 });

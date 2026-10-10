@@ -1,19 +1,19 @@
 import { createPublicClient, http, fallback } from "viem";
 import { polygonAmoy } from "viem/chains";
+import { rpcUrls } from "./rpcUrls";
+
+function transport() {
+  return fallback(
+    rpcUrls(polygonAmoy).map((url) =>
+      http(url, {
+        batch: true,
+        fetchOptions: { next: { revalidate: 60 } },
+      }),
+    ),
+  );
+}
 
 export const client = createPublicClient({
-  transport: fallback([
-    ...JSON.parse(process.env.NEXT_PUBLIC_POLYGON_AMOY_RPCS_JSON ?? "[]").map(
-      (rpc) =>
-        http(rpc, {
-          batch: true,
-          fetchOptions: {
-            next: {
-              revalidate: 60,
-            },
-          },
-        }),
-    ),
-  ]),
   chain: polygonAmoy,
+  transport: transport(),
 });

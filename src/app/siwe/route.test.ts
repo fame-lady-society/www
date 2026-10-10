@@ -4,13 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { privateKeyToAccount } from "viem/accounts";
 
 process.env.SESSION_SECRET ||= "test-session-secret";
-process.env.NEXT_PUBLIC_SEPOLIA_RPC_JSON ||= JSON.stringify([
-  "http://localhost:8545",
-]);
-process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON ||= JSON.stringify([
-  "http://localhost:8545",
-]);
-process.env.NEXT_PUBLIC_MAINNET_RPC_URL_1 ||= "http://127.0.0.1:1";
+process.env.SEPOLIA_RPC_URL ||= "http://localhost:8545";
+process.env.BASE_SEPOLIA_RPC_URL ||= "http://localhost:8545";
+process.env.MAINNET_RPC_URL ||= "http://127.0.0.1:1";
 
 async function createVerificationRequest({
   chainId = 1,

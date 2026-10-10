@@ -556,8 +556,7 @@ describe("/api/fame/swap/quote", () => {
     const snapshot = createSnapshotQuoteAdapter();
     const previousForkMode = process.env.NEXT_PUBLIC_FAME_FORK_MODE;
     const previousServerRpc = process.env.BASE_RPC_URL;
-    const previousBrowserRpc = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
-    const previousBrowserRpc2 = process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
+    const previousBrowserRpc = process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
     const previousPoolApiUrl = process.env.FAME_POOL_API_URL;
     const previousServiceToken = process.env.FAME_POOL_STATE_SERVICE_TOKEN;
     const previousFetch = globalThis.fetch;
@@ -565,8 +564,7 @@ describe("/api/fame/swap/quote", () => {
 
     process.env.NEXT_PUBLIC_FAME_FORK_MODE = "1";
     process.env.BASE_RPC_URL = "http://127.0.0.1:8545";
-    process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = "http://127.0.0.1:8545";
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
+    process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = "http://127.0.0.1:8545";
     process.env.FAME_POOL_API_URL = "https://society.example";
     process.env.FAME_POOL_STATE_SERVICE_TOKEN = "unit-token";
     globalThis.fetch = async () => {
@@ -632,11 +630,8 @@ describe("/api/fame/swap/quote", () => {
       if (previousServerRpc === undefined) delete process.env.BASE_RPC_URL;
       else process.env.BASE_RPC_URL = previousServerRpc;
       if (previousBrowserRpc === undefined)
-        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
-      else process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousBrowserRpc;
-      if (previousBrowserRpc2 === undefined)
-        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_2;
-      else process.env.NEXT_PUBLIC_BASE_RPC_URL_2 = previousBrowserRpc2;
+        delete process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
+      else process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = previousBrowserRpc;
       if (previousPoolApiUrl === undefined)
         delete process.env.FAME_POOL_API_URL;
       else process.env.FAME_POOL_API_URL = previousPoolApiUrl;
@@ -1878,9 +1873,9 @@ describe("/api/fame/swap/quote", () => {
   });
 
   it("does not fall back to deterministic caps when live liquidity quotes are unavailable", async () => {
-    const previousRpc = process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    const previousRpc = process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
     const previousServerRpc = process.env.BASE_RPC_URL;
-    delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+    delete process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
     delete process.env.BASE_RPC_URL;
     try {
       const response = await POST(
@@ -1904,9 +1899,9 @@ describe("/api/fame/swap/quote", () => {
       );
     } finally {
       if (previousRpc === undefined) {
-        delete process.env.NEXT_PUBLIC_BASE_RPC_URL_1;
+        delete process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL;
       } else {
-        process.env.NEXT_PUBLIC_BASE_RPC_URL_1 = previousRpc;
+        process.env.NEXT_PUBLIC_FAME_FORK_RPC_URL = previousRpc;
       }
       if (previousServerRpc === undefined) {
         delete process.env.BASE_RPC_URL;

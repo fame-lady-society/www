@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-process.env.NEXT_PUBLIC_BASE_RPC_URL_1 ||= "http://127.0.0.1:1";
+process.env.BASE_RPC_URL ||= "http://127.0.0.1:1";
 
 const { getCreatorUploadFundingSnapshot } = await import(
   "./creator_upload_funding"

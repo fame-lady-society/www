@@ -1,47 +1,26 @@
-import { claimToFameFromNetwork } from "@/features/claim-to-fame/contracts";
-import {
-  bulkMinterAddress,
-} from "@/wagmi";
-import { createPublicClient, http, fallback, createWalletClient } from "viem";
+import { bulkMinterAddress } from "@/wagmi";
+import { createPublicClient, createWalletClient, http, fallback } from "viem";
 import { baseSepolia } from "viem/chains";
-import { parseRpcUrls } from "./rpcUrls";
+import { rpcUrls } from "./rpcUrls";
 
-const baseSepoliaRpcUrls = parseRpcUrls(
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON,
-  "NEXT_PUBLIC_BASE_SEPOLIA_RPC_JSON",
-);
+function transport() {
+  return fallback(
+    rpcUrls(baseSepolia).map((url) =>
+      http(url, {
+        batch: true,
+        fetchOptions: { next: { revalidate: 60 } },
+      }),
+    ),
+  );
+}
 
 export const client = createPublicClient({
-  transport: fallback([
-    ...baseSepoliaRpcUrls.map((rpc) =>
-      http(rpc, {
-        batch: true,
-        fetchOptions: {
-          next: {
-            revalidate: 60,
-          },
-        },
-      }),
-    ),
-  ]),
   chain: baseSepolia,
+  transport: transport(),
 });
-
 export const walletClient = createWalletClient({
-  transport: fallback([
-    ...baseSepoliaRpcUrls.map((rpc) =>
-      http(rpc, {
-        batch: true,
-        fetchOptions: {
-          next: {
-            revalidate: 60,
-          },
-        },
-      }),
-    ),
-  ]),
   chain: baseSepolia,
+  transport: transport(),
 });
-
 
 export const flsTokenAddress = bulkMinterAddress[baseSepolia.id];
