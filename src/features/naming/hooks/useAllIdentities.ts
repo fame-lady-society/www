@@ -1,146 +1,90 @@
 "use client";
 
-import { useMemo } from "react";
-import { useReadContract, useReadContracts } from "wagmi";
-import { sepolia, mainnet, baseSepolia } from "viem/chains";
-import {
-  flsNamingAbi,
-  flsNamingAddress,
-  useReadFlsNamingNextTokenId,
-} from "@/wagmi";
+import { useCallback, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePublicClient } from "wagmi";
+import { flsNamingAddress } from "@/wagmi";
 import type { NetworkType } from "./useOwnedGateNftTokens";
-import {
-  SOCIAL_PROVIDERS,
-  decodeAttestationV1,
-  getSocialAttestationKey,
-  type SocialProviderId,
-} from "@/features/naming/attestations";
+import { getChainId } from "../utils/networkUtils";
+import { readIdentityIndex } from "../services/identityIndex";
 
-export interface Identity {
-  tokenId: bigint;
-  name: string;
-  primaryAddress: `0x${string}`;
-  primaryTokenId: bigint;
-  socialHandles: Partial<Record<SocialProviderId, string>>;
-}
+export type { Identity } from "../services/identityIndex";
 
-function getChainId(network: NetworkType) {
-  switch (network) {
-    case "sepolia":
-      return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
-    case "base-sepolia":
-      return baseSepolia.id;
-    default:
-      throw new Error(`Unsupported network: ${network}`);
-  }
-}
-
-export function useAllIdentities(network: NetworkType) {
+export function useAllIdentities(
+  network: NetworkType,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   const chainId = getChainId(network);
-  const contractAddress = flsNamingAddress[chainId as keyof typeof flsNamingAddress];
-
-  const { data: nextTokenId, isLoading: isLoadingNextTokenId } =
-    useReadContract({
-      address: contractAddress,
-      abi: flsNamingAbi,
-      functionName: "nextTokenId" as const,
-      chainId,
-    });
-
-  const tokenIds = useMemo(() => {
-    if (!nextTokenId || nextTokenId <= 1n) return [];
-    const ids: bigint[] = [];
-    for (let i = 1n; i < nextTokenId; i++) {
-      ids.push(i);
-    }
-    return ids;
-  }, [nextTokenId]);
-
-  const contracts = useMemo(() => {
-    if (!contractAddress) return [];
-    return tokenIds.map((tokenId) => ({
-      address: contractAddress,
-      abi: flsNamingAbi,
-      functionName: "getIdentity" as const,
-      args: [tokenId] as const,
-      chainId,
-    }));
-  }, [tokenIds, contractAddress, chainId]);
-
-  const metadataContracts = useMemo(() => {
-    if (!contractAddress) return [];
-    return tokenIds.flatMap((tokenId) =>
-      SOCIAL_PROVIDERS.map((provider) => ({
-        address: contractAddress,
-        abi: flsNamingAbi,
-        functionName: "getMetadata" as const,
-        args: [tokenId, getSocialAttestationKey(provider)] as const,
+  const address = flsNamingAddress[chainId as keyof typeof flsNamingAddress];
+  const client = usePublicClient({ chainId });
+  const queryClient = useQueryClient();
+  const minimumReadBlock = useRef<
+    { chainId: number; blockNumber: bigint } | undefined
+  >(undefined);
+  const queryKey = ["flsNamingIdentities", chainId, address] as const;
+  const readIndex = useCallback(
+    async (minimumBlock?: bigint) => {
+      if (!client) throw new Error("Network unavailable. Please try again.");
+      const head = await client.getBlockNumber({ cacheTime: 0 });
+      const saved = minimumReadBlock.current;
+      const cachedBlock = queryClient.getQueryData<{ blockNumber: bigint }>([
+        "flsNamingIdentities",
         chainId,
-      })),
-    );
-  }, [tokenIds, contractAddress, chainId]);
+        address,
+      ])?.blockNumber;
+      let blockNumber = head;
+      for (const floor of [
+        minimumBlock,
+        saved?.chainId === chainId ? saved.blockNumber : undefined,
+        cachedBlock,
+      ]) {
+        if (floor !== undefined && floor > blockNumber) blockNumber = floor;
+      }
+      return readIdentityIndex(client, address, blockNumber);
+    },
+    [client, address, chainId, queryClient],
+  );
+  const query = useQuery({
+    queryKey,
+    queryFn: () => readIndex(),
+    enabled: enabled && !!client,
+  });
 
-  const { data: identitiesData, isLoading: isLoadingIdentities } =
-    useReadContracts({
-      contracts,
-      query: {
-        enabled: contracts.length > 0,
-      },
-    });
-
-  const { data: metadataResults, isLoading: isLoadingMetadata } =
-    useReadContracts({
-      contracts: metadataContracts,
-      query: {
-        enabled: metadataContracts.length > 0,
-      },
-    });
-
-  const identities = useMemo<Identity[]>(() => {
-    if (!identitiesData) return [];
-
-    return identitiesData
-      .map((result, index) => {
-        if (result.status !== "success" || !result.result) return null;
-        const [name, primaryAddress, primaryTokenId] = result.result as [
-          string,
-          `0x${string}`,
-          bigint
-        ];
-        // Filter out burned identities (primaryAddress is zero)
-        if (primaryAddress === "0x0000000000000000000000000000000000000000") {
-          return null;
-        }
-
-        const socialHandles: Partial<Record<SocialProviderId, string>> = {};
-        const offset = index * SOCIAL_PROVIDERS.length;
-        SOCIAL_PROVIDERS.forEach((provider, providerIndex) => {
-          const metadataResult = metadataResults?.[offset + providerIndex];
-          if (!metadataResult || metadataResult.status !== "success") return;
-          if (typeof metadataResult.result !== "string") return;
-
-          const attestation = decodeAttestationV1(metadataResult.result);
-          if (attestation?.handle) {
-            socialHandles[provider] = attestation.handle;
-          }
-        });
-
-        return {
-          tokenId: tokenIds[index],
-          name,
-          primaryAddress,
-          primaryTokenId,
-          socialHandles,
+  const refetchIdentities = useCallback(
+    async (minimumBlock?: bigint) => {
+      if (minimumBlock !== undefined) {
+        const saved = minimumReadBlock.current;
+        minimumReadBlock.current = {
+          chainId,
+          blockNumber:
+            saved?.chainId === chainId && saved.blockNumber > minimumBlock
+              ? saved.blockNumber
+              : minimumBlock,
         };
-      })
-      .filter((identity): identity is Identity => identity !== null);
-  }, [identitiesData, tokenIds, metadataResults]);
+      }
+      const key = ["flsNamingIdentities", chainId, address] as const;
+      // Cancel older reads before publishing the index after a sync receipt.
+      await queryClient.cancelQueries({ queryKey: key, exact: true });
+      await queryClient.invalidateQueries({
+        queryKey: key,
+        exact: true,
+        refetchType: "none",
+      });
+      await queryClient.fetchQuery({
+        queryKey: key,
+        queryFn: () => readIndex(minimumBlock),
+        staleTime: 0,
+      });
+    },
+    [queryClient, chainId, address, readIndex],
+  );
 
   return {
-    identities,
-    isLoading: isLoadingNextTokenId || isLoadingIdentities || isLoadingMetadata,
-    totalCount: nextTokenId ? Number(nextTokenId) - 1 : 0,
+    identities: query.data?.identities ?? [],
+    totalCount: query.data?.totalCount ?? 0,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
+    refetchIdentities,
   };
 }

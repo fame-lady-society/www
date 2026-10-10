@@ -17,11 +17,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useEnsName } from "wagmi";
 import type { Address } from "viem";
 import { useIdentity } from "../hooks/useIdentity";
+import { useAllIdentities } from "../hooks/useAllIdentities";
 import { useIdentityPermissions } from "../hooks/useIdentityPermissions";
 import { useAccount } from "@/hooks/useAccount";
 import type { NetworkType } from "../hooks/useOwnedGateNftTokens";
 import { encodeIdentifier } from "../utils/networkUtils";
 import { SocialCheckmark } from "./SocialCheckmark";
+import { IdentitySyncButton } from "./IdentitySyncButton";
 import { mainnet } from "viem/chains";
 
 export interface PublicProfileViewProps {
@@ -36,7 +38,10 @@ interface VerifiedAddressRowProps {
 
 const BASE_IMAGE_URL = "https://fame.support/fls/thumb/";
 
-const VerifiedAddressRow: FC<VerifiedAddressRowProps> = ({ address, isPrimary }) => {
+const VerifiedAddressRow: FC<VerifiedAddressRowProps> = ({
+  address,
+  isPrimary,
+}) => {
   const { data: ensName } = useEnsName({ address, chainId: mainnet.id });
   const [copied, setCopied] = useState(false);
   const resetTimeout = useRef<number | null>(null);
@@ -80,8 +85,14 @@ const VerifiedAddressRow: FC<VerifiedAddressRowProps> = ({ address, isPrimary })
           cursor: "copy",
         }}
       >
-        <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
-          <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
+        <Box
+          component="div"
+          sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}
+          >
             {ensName ?? address}
           </Typography>
           {ensName && (
@@ -107,9 +118,19 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
   network,
   identifier,
 }) => {
-  const { identity, isLoading, notFound } = useIdentity(network, identifier);
+  const { identity, isLoading, notFound, error, refetchIdentity } = useIdentity(
+    network,
+    identifier,
+  );
+  const { refetchIdentities } = useAllIdentities(network, { enabled: false });
   const permissions = useIdentityPermissions(identity);
   const { isConnected } = useAccount();
+
+  const refreshProfile = async (minimumBlock?: bigint) => {
+    // Publish the index first: a burned profile will unmount its sync dialog.
+    if (minimumBlock !== undefined) await refetchIdentities(minimumBlock);
+    await refetchIdentity(minimumBlock);
+  };
 
   if (isLoading) {
     return (
@@ -131,12 +152,14 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
     return (
       <Box component="div" sx={{ textAlign: "center", py: 8 }}>
         <Typography variant="h5" gutterBottom>
-          Identity not found
+          {error ? "Unable to load identity" : "Identity not found"}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          The identity &ldquo;{identifier}&rdquo; does not exist.
+          {error
+            ? "Please reload the page to try again."
+            : `The identity “${identifier}” does not exist.`}
         </Typography>
-        <Button component={Link} href={`/${network}/profile`} variant="outlined">
+        <Button component={Link} href={`/${network}/~`} variant="outlined">
           Back to all identities
         </Button>
       </Box>
@@ -148,7 +171,6 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
   const verifiedSocial = identity.socialAttestations.filter(
     (attestation) => attestation.verified,
   );
-
 
   return (
     <Box component="div" sx={{ maxWidth: 800, mx: "auto" }}>
@@ -165,16 +187,35 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
             }}
           >
             <Box component="div">
-              <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Avatar src={`${BASE_IMAGE_URL}${identity.primaryTokenId}`} sx={{ marginRight: 1 }}/>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+              <Box
+                component="div"
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <Avatar
+                  src={`${BASE_IMAGE_URL}${identity.primaryTokenId}`}
+                  sx={{ marginRight: 1 }}
+                />
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  sx={{ fontWeight: 700 }}
+                >
                   {identity.name}
                 </Typography>
                 {verifiedSocial.length > 0 && <SocialCheckmark />}
               </Box>
             </Box>
 
-            <Box component="div" sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Box
+              component="div"
+              sx={{ display: "flex", gap: 1, alignItems: "center" }}
+            >
+              <IdentitySyncButton
+                key={`${network}:${identity.tokenId}`}
+                network={network}
+                tokenId={identity.tokenId}
+                refreshProfile={refreshProfile}
+              />
               {permissions.isPrimary && (
                 <>
                   <Chip label="You are Primary" color="primary" />
@@ -190,7 +231,11 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
                 </>
               )}
               {permissions.isVerifiedNotPrimary && (
-                <Chip label="You are Verified" color="success" variant="outlined" />
+                <Chip
+                  label="You are Verified"
+                  color="success"
+                  variant="outlined"
+                />
               )}
             </Box>
           </Box>
@@ -255,7 +300,10 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
             <Typography variant="h6" gutterBottom>
               Social Accounts
             </Typography>
-            <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Box
+              component="div"
+              sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+            >
               {identity.socialAttestations.map((attestation) => (
                 <Box
                   component="div"
@@ -285,12 +333,18 @@ export const PublicProfileView: FC<PublicProfileViewProps> = ({
           <Typography variant="h6" gutterBottom>
             Verified Addresses
           </Typography>
-          <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box
+            component="div"
+            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+          >
             {identity.verifiedAddresses.map((address) => (
               <VerifiedAddressRow
                 key={address}
                 address={address}
-                isPrimary={address.toLowerCase() === identity.primaryAddress.toLowerCase()}
+                isPrimary={
+                  address.toLowerCase() ===
+                  identity.primaryAddress.toLowerCase()
+                }
               />
             ))}
           </Box>

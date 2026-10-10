@@ -18,8 +18,9 @@ export interface ProfileListProps {
 }
 
 export const ProfileList: FC<ProfileListProps> = ({ network }) => {
-  const { identities, isLoading, totalCount } = useAllIdentities(network);
-  const { address, isConnected } = useAccount();
+  const { identities, isLoading, error, totalCount } =
+    useAllIdentities(network);
+  const { isConnected } = useAccount();
 
   if (isLoading) {
     return (
@@ -91,8 +92,14 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
         )}
       </Box>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Unable to load the latest profiles. Please reload the page.
+        </Alert>
+      )}
+
       {/* Empty state */}
-      {identities.length === 0 && (
+      {identities.length === 0 && !error && (
         <Box
           component="div"
           sx={{
@@ -125,7 +132,13 @@ export const ProfileList: FC<ProfileListProps> = ({ network }) => {
       {identities.length > 0 && (
         <Grid2 container spacing={3}>
           {identities.map((identity) => (
-            <Grid2 xs={12} sm={6} md={4} lg={3} key={identity.tokenId.toString()}>
+            <Grid2
+              xs={12}
+              sm={6}
+              md={4}
+              lg={3}
+              key={identity.tokenId.toString()}
+            >
               <ProfileCard identity={identity} network={network} />
             </Grid2>
           ))}

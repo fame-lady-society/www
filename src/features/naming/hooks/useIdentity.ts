@@ -1,302 +1,109 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useReadContract, useReadContracts } from "wagmi";
-import { sepolia, mainnet, baseSepolia } from "viem/chains";
-import { keccak256, toHex } from "viem";
-import {
-  flsNamingAbi,
-  flsNamingAddress,
-} from "@/wagmi";
+import { useCallback, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePublicClient } from "wagmi";
+import { flsNamingAddress } from "@/wagmi";
+import { readIdentityProfile } from "../services/identityProfile";
+import { getChainId } from "../utils/networkUtils";
 import type { NetworkType } from "./useOwnedGateNftTokens";
-import {
-  SOCIAL_PROVIDERS,
-  getSocialAttestationKey,
-  getSocialAttestationStatus,
-  safeHexToString,
-  type SocialAttestationStatus,
-} from "@/features/naming/attestations";
 
-export interface FullIdentity {
-  tokenId: bigint;
-  name: string;
-  primaryAddress: `0x${string}`;
-  primaryTokenId: bigint;
-  verifiedAddresses: readonly `0x${string}`[];
-  description: string;
-  website: string;
-  socialAttestations: SocialAttestationStatus[];
-}
-
-// Standard metadata keys
-export const METADATA_KEYS = {
-  description: keccak256(toHex("description")),
-  website: keccak256(toHex("website")),
-} as const;
-
-function isAddressValue(value: string): value is `0x${string}` {
-  return /^0x[a-fA-F0-9]{40}$/.test(value);
-}
-
-function getChainId(network: NetworkType) {
-  switch (network) {
-    case "sepolia":
-      return sepolia.id;
-    case "mainnet":
-      return mainnet.id;
-    case "base-sepolia":
-      return baseSepolia.id;
-    default:
-      throw new Error(`Unsupported network: ${network}`);
-  }
-}
+export { METADATA_KEYS, type FullIdentity } from "../services/identityProfile";
 
 export function useIdentity(
   network: NetworkType,
-  identifier: string | bigint | undefined
+  identifier: string | bigint | undefined,
 ) {
   const chainId = getChainId(network);
-  const contractAddress = flsNamingAddress[chainId as keyof typeof flsNamingAddress];
-
-  // Determine if identifier is a name (string) or tokenId (bigint/number)
-  const isNameLookup =
-    typeof identifier === "string" && !/^\d+$/.test(identifier);
-  const nameToResolve = isNameLookup ? identifier : undefined;
-  const directTokenId =
-    !isNameLookup && identifier !== undefined
-      ? BigInt(identifier)
-      : undefined;
-
-  // Resolve name to tokenId if needed
-  const {
-    data: resolvedTokenId,
-    isLoading: isResolvingName,
-    refetch: refetchResolvedTokenId,
-  } = useReadContract({
-    address: contractAddress,
-    abi: flsNamingAbi,
-    functionName: "resolveName" as const,
+  const address = flsNamingAddress[chainId as keyof typeof flsNamingAddress];
+  const client = usePublicClient({ chainId });
+  const queryClient = useQueryClient();
+  const minimumReadBlock = useRef<
+    { chainId: number; blockNumber: bigint } | undefined
+  >(undefined);
+  const queryKey = [
+    "flsNamingIdentity",
     chainId,
-    args: nameToResolve ? [nameToResolve] : undefined,
-    query: {
-      enabled: !!nameToResolve,
-    },
-  });
-
-  const tokenId = directTokenId ?? resolvedTokenId;
-
-  // Fetch identity data
-  const {
-    data: identityData,
-    isLoading: isLoadingIdentity,
-    refetch: refetchIdentityData,
-  } = useReadContract({
-    address: contractAddress,
-    abi: flsNamingAbi,
-    functionName: "getIdentity" as const,
-    chainId,
-    args: tokenId ? [tokenId] : undefined,
-    query: {
-      enabled: !!tokenId && tokenId !== 0n,
-    },
-  });
-
-  // Fetch verified addresses
-  const {
-    data: verifiedAddresses,
-    isLoading: isLoadingVerified,
-    refetch: refetchVerifiedAddresses,
-  } = useReadContract({
-    address: contractAddress,
-    abi: flsNamingAbi,
-    functionName: "getVerifiedAddresses" as const,
-    chainId,
-    args: tokenId ? [tokenId] : undefined,
-    query: {
-      enabled: !!tokenId && tokenId !== 0n,
-    },
-  });
-
-  // Fetch metadata (description and website)
-  const metadataContracts = useMemo(() => {
-    if (!contractAddress || !tokenId || tokenId === 0n) return [];
-    return [
-      {
-        address: contractAddress,
-        abi: flsNamingAbi,
-        functionName: "getMetadata" as const,
-        args: [tokenId, METADATA_KEYS.description] as const,
+    address,
+    identifier?.toString(),
+  ] as const;
+  const readProfile = useCallback(
+    async (minimumBlock?: bigint) => {
+      if (!client) throw new Error("Network unavailable. Please try again.");
+      if (identifier === undefined) throw new Error("Identity is required.");
+      const head = await client.getBlockNumber({ cacheTime: 0 });
+      const saved = minimumReadBlock.current;
+      const cachedBlock = queryClient.getQueryData<{ blockNumber: bigint }>([
+        "flsNamingIdentity",
         chainId,
-      },
-      {
-        address: contractAddress,
-        abi: flsNamingAbi,
-        functionName: "getMetadata" as const,
-        args: [tokenId, METADATA_KEYS.website] as const,
+        address,
+        identifier.toString(),
+      ])?.blockNumber;
+      let blockNumber = head;
+      for (const floor of [
+        minimumBlock,
+        saved?.chainId === chainId ? saved.blockNumber : undefined,
+        cachedBlock,
+      ]) {
+        if (floor !== undefined && floor > blockNumber) blockNumber = floor;
+      }
+      return readIdentityProfile(
+        client,
+        address,
         chainId,
-      },
-      ...SOCIAL_PROVIDERS.map((provider) => ({
-        address: contractAddress,
-        abi: flsNamingAbi,
-        functionName: "getMetadata" as const,
-        args: [tokenId, getSocialAttestationKey(provider)] as const,
-        chainId,
-      })),
-    ];
-  }, [contractAddress, tokenId, chainId]);
-
-  const {
-    data: metadataResults,
-    isLoading: isLoadingMetadata,
-    refetch: refetchMetadataResults,
-  } = useReadContracts({
-    contracts: metadataContracts,
-    query: {
-      enabled: metadataContracts.length > 0,
+        identifier,
+        blockNumber,
+      );
     },
+    [client, address, chainId, identifier, queryClient],
+  );
+  const query = useQuery({
+    queryKey,
+    queryFn: () => readProfile(),
+    enabled: !!client && identifier !== undefined,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
-  const [socialAttestations, setSocialAttestations] = useState<
-    SocialAttestationStatus[]
-  >([]);
-
-  useEffect(() => {
-    let active = true;
-
-    if (!identityData || !contractAddress || !metadataResults) {
-      setSocialAttestations([]);
-      return () => {
-        active = false;
-      };
-    }
-
-    const [name] = identityData;
-    const attestorEnv = process.env.NEXT_PUBLIC_SOCIAL_ATTESTOR_ADDRESS;
-    const attestorAddress =
-      typeof attestorEnv === "string" && isAddressValue(attestorEnv)
-        ? attestorEnv
-        : null;
-    const expectedAudience =
-      typeof process.env.NEXT_PUBLIC_SOCIAL_ATTESTATION_AUD === "string"
-        ? process.env.NEXT_PUBLIC_SOCIAL_ATTESTATION_AUD
-        : undefined;
-
-    if (!attestorAddress) {
-      setSocialAttestations([]);
-      return () => {
-        active = false;
-      };
-    }
-
-    const namehash = keccak256(toHex(name));
-    const offset = 2;
-
-    const run = async () => {
-      const entries: SocialAttestationStatus[] = [];
-      for (let index = 0; index < SOCIAL_PROVIDERS.length; index += 1) {
-        const provider = SOCIAL_PROVIDERS[index];
-        const result = metadataResults[offset + index];
-        if (!result || result.status !== "success") continue;
-
-        const status = await getSocialAttestationStatus(provider, result.result, {
+  const refetchIdentity = useCallback(
+    async (minimumBlock?: bigint) => {
+      if (minimumBlock !== undefined) {
+        const saved = minimumReadBlock.current;
+        minimumReadBlock.current = {
           chainId,
-          verifyingContract: contractAddress,
-          attestorAddress,
-          namehash,
-          expectedAudience,
-        });
-
-        if (status) {
-          entries.push(status);
-        }
+          blockNumber:
+            saved?.chainId === chainId && saved.blockNumber > minimumBlock
+              ? saved.blockNumber
+              : minimumBlock,
+        };
       }
-
-      if (active) {
-        setSocialAttestations(entries);
-      }
-    };
-
-    run().catch(() => {
-      if (active) {
-        setSocialAttestations([]);
-      }
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [identityData, contractAddress, metadataResults, chainId]);
-
-
-  const identity = useMemo<FullIdentity | null>(() => {
-    if (!identityData || !tokenId) return null;
-
-    const [name, primaryAddress, primaryTokenId] = identityData;
-
-    // Check if identity exists (non-zero primary address)
-    if (primaryAddress === "0x0000000000000000000000000000000000000000") {
-      return null;
-    }
-
-    const descriptionResult =
-      metadataResults?.[0]?.status === "success"
-        ? metadataResults[0].result
-        : undefined;
-    const websiteResult =
-      metadataResults?.[1]?.status === "success"
-        ? metadataResults[1].result
-        : undefined;
-
-    const description = safeHexToString(descriptionResult) ?? "";
-    const website = safeHexToString(websiteResult) ?? "";
-
-    return {
-      tokenId,
-      name,
-      primaryAddress,
-      primaryTokenId,
-      verifiedAddresses: verifiedAddresses ?? [],
-      description,
-      website,
-      socialAttestations,
-    };
-  }, [identityData, tokenId, verifiedAddresses, metadataResults, socialAttestations]);
-
-  const refetchIdentity = useCallback(async () => {
-    const actions: Promise<unknown>[] = [];
-
-    if (nameToResolve) {
-      actions.push(refetchResolvedTokenId());
-    }
-
-    if (tokenId && tokenId !== 0n) {
-      actions.push(refetchIdentityData());
-      actions.push(refetchVerifiedAddresses());
-    }
-
-    if (metadataContracts.length > 0) {
-      actions.push(refetchMetadataResults());
-    }
-
-    await Promise.all(actions);
-  }, [
-    nameToResolve,
-    tokenId,
-    metadataContracts.length,
-    refetchResolvedTokenId,
-    refetchIdentityData,
-    refetchVerifiedAddresses,
-    refetchMetadataResults,
-  ]);
+      const key = [
+        "flsNamingIdentity",
+        chainId,
+        address,
+        identifier?.toString(),
+      ] as const;
+      // Discard older in-flight reads before publishing the post-sync profile.
+      await queryClient.cancelQueries({ queryKey: key, exact: true });
+      await queryClient.invalidateQueries({
+        queryKey: key,
+        exact: true,
+        refetchType: "none",
+      });
+      await queryClient.fetchQuery({
+        queryKey: key,
+        queryFn: () => readProfile(minimumBlock),
+        staleTime: 0,
+      });
+    },
+    [queryClient, chainId, address, identifier, readProfile],
+  );
 
   return {
-    identity,
-    isLoading:
-      isResolvingName ||
-      isLoadingIdentity ||
-      isLoadingVerified ||
-      isLoadingMetadata,
-    notFound: !isResolvingName && !isLoadingIdentity && !identity && !!identifier,
+    identity: query.data?.identity ?? null,
+    isLoading: query.isLoading,
+    error: query.error,
+    notFound: query.isSuccess && query.data.identity === null,
     refetchIdentity,
   };
 }
