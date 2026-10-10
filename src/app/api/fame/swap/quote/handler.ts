@@ -24,8 +24,6 @@ const MAX_JSON_BODY_BYTES = 4_096;
 const MAX_UINT256 = (1n << 256n) - 1n;
 const QUOTE_REQUEST_TIMEOUT_MS = 15_000;
 const QUOTE_RESPONSE_CUSHION_MS = 1_500;
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 90;
 
 interface ParsedQuoteBody {
   tokenIn: Address;
@@ -51,8 +49,6 @@ interface FameSwapQuotePostDependencies {
   ) => FameAsyncQuoteAdapter | Promise<FameAsyncQuoteAdapter>;
   quoteApiClient?: FamePoolQuoteClient | null;
 }
-
-const rateLimitBuckets = new Map<string, { resetAt: number; count: number }>();
 
 function json(data: unknown, init?: ResponseInit): Response {
   return new Response(
@@ -81,30 +77,6 @@ function bodyTooLarge(request: NextRequest): boolean {
 
   const parsed = Number(contentLength);
   return Number.isFinite(parsed) && parsed > MAX_JSON_BODY_BYTES;
-}
-
-function clientRateLimitKey(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim() ||
-    "local"
-  );
-}
-
-function rateLimited(request: NextRequest): boolean {
-  const now = Date.now();
-  const key = clientRateLimitKey(request);
-  const current = rateLimitBuckets.get(key);
-  if (!current || current.resetAt <= now) {
-    rateLimitBuckets.set(key, {
-      resetAt: now + RATE_LIMIT_WINDOW_MS,
-      count: 1,
-    });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > RATE_LIMIT_MAX_REQUESTS;
 }
 
 function parseQuoteBody(value: unknown): ParsedQuoteBody | string {
@@ -239,10 +211,6 @@ export async function handleFameSwapQuotePost(
   if (bodyTooLarge(request)) {
     return json({ error: "Quote request body is too large." }, { status: 413 });
   }
-  if (rateLimited(request)) {
-    return json({ error: "Too many FAME quote requests." }, { status: 429 });
-  }
-
   let bodyJson: unknown;
   try {
     bodyJson = await request.json();

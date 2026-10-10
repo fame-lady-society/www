@@ -70,7 +70,7 @@ const readinessCache = new Map<
 
 /**
  * The non-HTTP execution boundary for FAME quotes.  HTTP concerns (body
- * parsing, rate limiting, and debug serialization) intentionally stay in the
+ * parsing and debug serialization) intentionally stay in the
  * route handler; callers cannot provide server credentials here.
  */
 export interface FameExactInputQuoteRequest {
